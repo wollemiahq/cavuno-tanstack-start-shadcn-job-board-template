@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-router';
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -17,7 +18,12 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { MembershipsPageView, type LoadMoreMembers } from './-memberships';
+import {
+  MembershipsPageView,
+  type GetMembershipCheckoutState,
+  type LoadMoreMembers,
+  type StartMembershipCheckout,
+} from './-memberships';
 import {
   createMembershipsLoader,
   type MembershipsLoaderDependencies,
@@ -25,7 +31,11 @@ import {
 } from './-memberships-loader';
 
 import type { MembershipRoster } from '@/server/membership-pages';
-import type { Plan, PublicCompany } from '@cavuno/board';
+import type {
+  MembershipCheckoutSession,
+  Plan,
+  PublicCompany,
+} from '@cavuno/board';
 
 const plan = {
   object: 'plan',
@@ -66,6 +76,15 @@ const plan = {
   },
 } satisfies Plan;
 
+/** The board team assigns a free membership; nothing to buy. */
+const freePlan = {
+  ...plan,
+  id: 'plan-free',
+  name: 'Community member',
+  kind: 'free',
+  price: null,
+} satisfies Plan;
+
 function company(slug: string): PublicCompany {
   return {
     id: `company-${slug}`,
@@ -98,6 +117,17 @@ const page: MembershipsPageData = {
 };
 
 const loadMoreMembers = vi.fn<LoadMoreMembers>();
+const startCheckoutAction = vi.fn<StartMembershipCheckout>();
+const getCheckoutStateAction = vi.fn<GetMembershipCheckoutState>();
+const acme = { slug: 'acme', name: 'Acme' };
+const kit = {
+  object: 'checkout_session',
+  sessionId: 'cs_member',
+  clientSecret: 'secret',
+  stripeAccountId: 'acct_1',
+  publishableKey: 'pk_test',
+  offerType: 'recurring',
+} satisfies MembershipCheckoutSession;
 
 /**
  * The page renders typed `Link`s (Join, and every roster company card), so
@@ -106,6 +136,7 @@ const loadMoreMembers = vi.fn<LoadMoreMembers>();
  */
 async function renderPage(
   props: React.ComponentProps<typeof MembershipsPageView>,
+  { waitForHeading = true }: { waitForHeading?: boolean } = {},
 ) {
   const rootRoute = createRootRoute();
   const indexRoute = createRoute({
@@ -138,7 +169,9 @@ async function renderPage(
   const result = render(<RouterProvider router={router} />);
   // The router mounts asynchronously; wait for the page heading before
   // asserting anything about the page.
-  await screen.findByRole('heading', { level: 1, name: 'Memberships' });
+  if (waitForHeading) {
+    await screen.findByRole('heading', { level: 1, name: 'Memberships' });
+  }
   return result;
 }
 
@@ -217,12 +250,32 @@ describe('memberships page', () => {
     );
   });
 
-  it('sends a signed-in viewer to the employer dashboard and says who grants a membership', async () => {
+  it('sends a signed-in viewer with no approved company to the dashboard to connect one', async () => {
     await renderPage({
       plans: [plan],
       rosters: [roster],
       seo: { boardName: 'Example Jobs' },
-      viewer: { kind: 'signed-in' },
+      viewer: { kind: 'signed-in', companies: [] },
+      loadMoreMembers: loadMoreMembers,
+    });
+
+    expect(screen.getByRole('link', { name: 'Join' })).toHaveAttribute(
+      'href',
+      '/employers/dashboard',
+    );
+    expect(
+      screen.getByText(
+        'Connect an approved company first. Open your employer dashboard to add one.',
+      ),
+    ).toBeVisible();
+  });
+
+  it('keeps the dashboard link for a free plan, which the board team assigns', async () => {
+    await renderPage({
+      plans: [freePlan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: { kind: 'signed-in', companies: [acme] },
       loadMoreMembers: loadMoreMembers,
     });
 
@@ -235,6 +288,123 @@ describe('memberships page', () => {
         'Memberships are granted by the board team. Open your employer dashboard to continue.',
       ),
     ).toBeVisible();
+  });
+
+  it('starts checkout for the approved company and mounts the embedded form', async () => {
+    startCheckoutAction.mockResolvedValue({ ok: true, data: kit });
+    await renderPage({
+      plans: [plan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: { kind: 'signed-in', companies: [acme] },
+      loadMoreMembers: loadMoreMembers,
+      startCheckoutAction,
+    });
+
+    // One company: no picker, the button buys for it directly.
+    expect(screen.queryByLabelText('Buy for')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+
+    await waitFor(() => {
+      expect(startCheckoutAction).toHaveBeenCalledWith({
+        data: {
+          companySlug: 'acme',
+          planId: plan.id,
+          returnPath: '/memberships?company=acme',
+        },
+      });
+    });
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Complete your purchase',
+      }),
+    ).toBeVisible();
+    expect(screen.getByTestId('paywall-embedded-checkout')).toBeInTheDocument();
+  });
+
+  it('lets a viewer who manages several companies choose which one joins', async () => {
+    startCheckoutAction.mockResolvedValue({ ok: true, data: kit });
+    await renderPage({
+      plans: [plan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: {
+        kind: 'signed-in',
+        companies: [acme, { slug: 'globex', name: 'Globex' }],
+      },
+      loadMoreMembers: loadMoreMembers,
+      startCheckoutAction,
+    });
+
+    fireEvent.change(screen.getByLabelText('Buy for'), {
+      target: { value: 'globex' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+
+    await waitFor(() => {
+      expect(startCheckoutAction).toHaveBeenCalledWith({
+        data: expect.objectContaining({ companySlug: 'globex' }),
+      });
+    });
+  });
+
+  it('shows the API refusal when the company already holds a membership', async () => {
+    startCheckoutAction.mockResolvedValue({
+      ok: false,
+      code: 'membership_seat_taken',
+      message: 'This company already has a membership.',
+    });
+    await renderPage({
+      plans: [plan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: { kind: 'signed-in', companies: [acme] },
+      loadMoreMembers: loadMoreMembers,
+      startCheckoutAction,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+
+    expect(
+      await screen.findByText(
+        'This company already has a membership, or has one awaiting payment.',
+      ),
+    ).toHaveAttribute('role', 'alert');
+    expect(screen.queryByTestId('paywall-embedded-checkout')).toBeNull();
+  });
+
+  it('polls the returned session and confirms the membership once complete', async () => {
+    getCheckoutStateAction.mockResolvedValue({
+      object: 'checkout_session_state',
+      status: 'complete',
+      clientSecret: null,
+    });
+    const invalidate = vi.fn().mockResolvedValue(undefined);
+    await renderPage(
+      {
+        plans: [plan],
+        rosters: [roster],
+        seo: { boardName: 'Example Jobs' },
+        viewer: { kind: 'signed-in', companies: [acme] },
+        loadMoreMembers: loadMoreMembers,
+        getCheckoutStateAction,
+        invalidate,
+        returning: { sessionId: 'cs_1', companySlug: 'acme' },
+      },
+      { waitForHeading: false },
+    );
+
+    expect(await screen.findByText('Confirming your purchase…')).toBeVisible();
+    await waitFor(() => {
+      expect(getCheckoutStateAction).toHaveBeenCalledWith({
+        data: { companySlug: 'acme', sessionId: 'cs_1' },
+      });
+    });
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Your membership is active.',
+    );
+    expect(invalidate).toHaveBeenCalled();
   });
 
   it('renders a quote-only membership as its CTA, never as a price', async () => {

@@ -40,7 +40,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (7) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>+4 more in the JSON ledger |
-| `empty` | Used (42) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+39 more in the JSON ledger |
+| `empty` | Used (43) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+40 more in the JSON ledger |
 | `field` | Used (29) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+26 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (23) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+20 more in the JSON ledger |
@@ -48,12 +48,12 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `input-otp` | Used (1) | `src/routes/-auth.verify-email-required.tsx` |
 | `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |
 | `kbd` | Available | Installed for adoption when the product needs this behavior. |
-| `label` | Used (5) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer-job-form.tsx`<br>`src/components/experience-section.tsx`<br>+2 more in the JSON ledger |
+| `label` | Used (6) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer-job-form.tsx`<br>`src/components/experience-section.tsx`<br>+3 more in the JSON ledger |
 | `marker` | Used (1) | `src/components/messages/thread-view.tsx` |
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `message-scroller` | Used (1) | `src/components/messages/thread-view.tsx` |
-| `native-select` | Used (2) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/profile-form.tsx` |
+| `native-select` | Used (3) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/profile-form.tsx`<br>`src/routes/-memberships.tsx` |
 | `navigation-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `pagination` | Used (2) | `src/components/board/cursor-pagination.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |
@@ -68,7 +68,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `skeleton` | Used (7) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+4 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
 | `sonner` | Used (1) | `src/routes/__root.tsx` |
-| `spinner` | Used (18) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>+15 more in the JSON ledger |
+| `spinner` | Used (19) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>+16 more in the JSON ledger |
 | `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
 | `table` | Used (3) | `src/components/board/salary-sections.tsx`<br>`src/components/employer/company-members-table.tsx`<br>`src/routes/-employers.company-jobs.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
