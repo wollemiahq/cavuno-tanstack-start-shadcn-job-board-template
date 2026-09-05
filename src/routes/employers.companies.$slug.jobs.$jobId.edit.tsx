@@ -1,9 +1,10 @@
 /**
  * Company workspace — Edit a job. Shares `EmployerJobForm` with "Post a job",
- * prefilled from the job's full detail. A DRAFT owns the plan picker + payment
- * step here (the same billing choice as posting), so a held draft is published
- * from its own edit page rather than an inline popover on the jobs list. A
- * published/expired job edits its details only.
+ * prefilled from the job's full detail. A DRAFT or an EXPIRED job owns the
+ * plan picker + payment step here (the same billing choice as posting), so a
+ * held draft is published — and a lapsed job renewed — from its own edit page
+ * rather than an inline popover on the jobs list. A published job edits its
+ * details only.
  */
 import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 

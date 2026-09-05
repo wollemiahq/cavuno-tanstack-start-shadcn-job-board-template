@@ -3,8 +3,8 @@
 /**
  * The shared employer job form — used by both "Post a job" (create) and the
  * per-job "Edit job" page. It owns the role field set plus, when the job can be
- * published (a draft with credits/plans available), the billing picker and
- * checkout step. The route decides the mode and passes the workspace data; the
+ * published (a draft or an expired job, with credits/plans available), the
+ * billing picker and checkout step. The route decides the mode and passes the workspace data; the
  * form owns the create/update + checkout orchestration so the two surfaces
  * never drift.
  */
@@ -434,11 +434,16 @@ export function EmployerJobForm({
     return (code: string) => byCode.get(code) ?? code;
   }, [countryChoices]);
 
-  // The billing step shows on create, and on a draft edit (a draft is the only
-  // status that still needs publishing). Published/expired/archived jobs edit
+  // The billing step shows on create, and on an edit of a job that still
+  // needs publishing: a held draft, or an EXPIRED job whose paid window has
+  // lapsed. "Republish" on the jobs list routes an expired job here after the
+  // board answers 402, so this is the only place a renewal can be paid for —
+  // hiding the picker made renewal a dead end. Published/archived jobs edit
   // their details only.
-  const isDraftEdit = mode.kind === 'edit' && mode.status === 'draft';
-  const showBilling = mode.kind === 'create' || isDraftEdit;
+  const needsPublishing =
+    mode.kind === 'edit' &&
+    (mode.status === 'draft' || mode.status === 'expired');
+  const showBilling = mode.kind === 'create' || needsPublishing;
   const canPublish = billingOptions.length > 0 || plans.length > 0;
   const billingRequired = mode.kind === 'create' && canPublish;
 
@@ -764,7 +769,7 @@ export function EmployerJobForm({
       setMessage(boardErrorMessage(result));
       return;
     }
-    if (isDraftEdit && selectedBilling) {
+    if (needsPublishing && selectedBilling) {
       setCommittedCheckoutJobId(mode.jobId);
       await runCheckout(mode.jobId);
       return;
@@ -781,7 +786,7 @@ export function EmployerJobForm({
         ? canPublish
           ? m.postJob_submitButtonLabel()
           : m.employerCompany_createDraftLabel()
-        : isDraftEdit && selectedBilling
+        : needsPublishing && selectedBilling
           ? m.employerEditJob_publishSaveLabel()
           : m.employerEditJob_saveLabel();
 
