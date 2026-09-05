@@ -22,7 +22,11 @@
 import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-/** The key committed in wrangler.jsonc. `board-key-gate.test.ts` pins these together. */
+/**
+ * The key committed in wrangler.jsonc. Not pinned to that file by a test —
+ * every fork swaps the key, so such a test would go red on correct use.
+ * Rotating the committed key upstream means updating this constant by hand.
+ */
 export const REFERENCE_BOARD_KEY = 'pk_d9ce40a106227b615ec710de3f3d73dc';
 
 export function usesReferenceBoardKey(wranglerSource) {
@@ -67,7 +71,15 @@ function main() {
 // file URLs: `import.meta.url` is symlink-resolved and percent-encoded, so a
 // string-built `file://${argv[1]}` silently never matches on a symlinked
 // checkout (`/tmp` on macOS), a path with a space, or Windows.
-const invokedDirectly =
-  process.argv[1] !== undefined &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
-if (invokedDirectly) main();
+function invokedDirectly() {
+  try {
+    return (
+      process.argv[1] !== undefined &&
+      import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+    );
+  } catch {
+    // argv[1] is not a file (`node -`, a vanished launcher): not a CLI run.
+    return false;
+  }
+}
+if (invokedDirectly()) main();

@@ -34,8 +34,11 @@ describe('reference board key deploy gate', () => {
   // in its own key (the whole point of the gate) must not inherit a red test.
   it('refuses a config that still carries the reference key', () => {
     expect(
-      usesReferenceBoardKey(`"CAVUNO_BOARD": "${REFERENCE_BOARD_KEY}"`),
+      usesReferenceBoardKey(
+        '"CAVUNO_BOARD": "pk_d9ce40a106227b615ec710de3f3d73dc"',
+      ),
     ).toBe(true);
+    expect(REFERENCE_BOARD_KEY).toBe('pk_d9ce40a106227b615ec710de3f3d73dc');
   });
 
   it('passes once an operator has swapped in their own key', () => {
