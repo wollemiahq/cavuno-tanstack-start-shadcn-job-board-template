@@ -19,7 +19,8 @@
  * wrangler directly against a patched config whose CAVUNO_BOARD is already
  * the tenant's own key.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 /** The key committed in wrangler.jsonc. `board-key-gate.test.ts` pins these together. */
 export const REFERENCE_BOARD_KEY = 'pk_d9ce40a106227b615ec710de3f3d73dc';
@@ -62,4 +63,11 @@ function main() {
   process.exit(1);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// Run only as a CLI, not when the test imports the predicate. Compare real
+// file URLs: `import.meta.url` is symlink-resolved and percent-encoded, so a
+// string-built `file://${argv[1]}` silently never matches on a symlinked
+// checkout (`/tmp` on macOS), a path with a space, or Windows.
+const invokedDirectly =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+if (invokedDirectly) main();

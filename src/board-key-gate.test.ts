@@ -15,9 +15,11 @@ import { join } from 'node:path';
  * without swapping it serves the reference board under its own domain. A
  * production board did exactly that on 2026-09-04.
  *
- * The gate is only as good as its constant, so pin the constant to the file
- * it guards: rotate the committed key and this test tells you the gate went
- * blind, instead of the gate silently passing forever.
+ * The predicate and the `predeploy` wiring are what is pinned here. The live
+ * wrangler.jsonc is deliberately NOT asserted to contain the key: every fork
+ * swaps it, and the template must not ship a test that goes red on correct
+ * use. Rotating the committed key upstream means updating REFERENCE_BOARD_KEY
+ * by hand.
  */
 const wranglerSource = readFileSync(
   join(import.meta.dirname, '..', 'wrangler.jsonc'),
@@ -28,13 +30,16 @@ const packageJson: { scripts?: Record<string, string> } = JSON.parse(
 );
 
 describe('reference board key deploy gate', () => {
-  it('still recognises the key wrangler.jsonc actually commits', () => {
-    expect(wranglerSource).toContain(REFERENCE_BOARD_KEY);
-    expect(usesReferenceBoardKey(wranglerSource)).toBe(true);
+  // Asserted against a fixture, not the live wrangler.jsonc: a fork that swaps
+  // in its own key (the whole point of the gate) must not inherit a red test.
+  it('refuses a config that still carries the reference key', () => {
+    expect(
+      usesReferenceBoardKey(`"CAVUNO_BOARD": "${REFERENCE_BOARD_KEY}"`),
+    ).toBe(true);
   });
 
   it('passes once an operator has swapped in their own key', () => {
-    const swapped = wranglerSource.replace(
+    const swapped = wranglerSource.replaceAll(
       REFERENCE_BOARD_KEY,
       'pk_0000000000000000000000000000000f',
     );
