@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import { analytics as boardAnalytics } from '@cavuno/board/analytics';
 import {
@@ -864,5 +864,76 @@ describe('ApplyButton native apply extras', () => {
       m.applyButton_resumeUploadError(),
     );
     expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries only the upload after a resume failure, never the apply', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_1' }));
+    const onUploadResume = vi
+      .fn<() => Promise<{ id: string }>>()
+      .mockRejectedValueOnce(new Error('upload failed'))
+      .mockResolvedValueOnce({ id: 'app_1' });
+    renderNative({ onApply, onUploadResume });
+
+    fireEvent.change(
+      await screen.findByLabelText(m.applyButton_resumeLabel()),
+      {
+        target: { files: [resumeFile()] },
+      },
+    );
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    await screen.findByRole('alert');
+
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    await screen.findByRole('link', { name: /applied/i });
+    expect(onUploadResume).toHaveBeenCalledTimes(2);
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('forgets a chosen resume when the pane switches to another job', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_1' }));
+    const onUploadResume = vi.fn(async () => ({ id: 'app_1' }));
+    // Same component instance, new job: the master-detail pane does this
+    // when the candidate picks another result.
+    function Host() {
+      const [jobSlug, setJobSlug] = useState('platform-engineer');
+      return (
+        <>
+          <button type="button" onClick={() => setJobSlug('data-engineer')}>
+            switch job
+          </button>
+          <ApplyButton
+            {...base}
+            jobSlug={jobSlug}
+            applicationUrl={null}
+            applyAction="gateway_native"
+            viewer={{ emailVerified: true }}
+            onPrepareApply={async () => ({
+              object: 'apply_approval_plan',
+              kind: 'not_required',
+            })}
+            onApply={onApply}
+            onUploadResume={onUploadResume}
+          />
+        </>
+      );
+    }
+    renderWithConversion(<Host />);
+
+    const input = await screen.findByLabelText<HTMLInputElement>(
+      m.applyButton_resumeLabel(),
+    );
+    fireEvent.change(input, { target: { files: [resumeFile()] } });
+    expect(input.files).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'switch job' }));
+
+    const fresh = await screen.findByLabelText<HTMLInputElement>(
+      m.applyButton_resumeLabel(),
+    );
+    expect(fresh.files).toHaveLength(0);
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    await screen.findByRole('link', { name: /applied/i });
+    expect(onUploadResume).not.toHaveBeenCalled();
   });
 });

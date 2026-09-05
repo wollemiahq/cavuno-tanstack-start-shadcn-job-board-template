@@ -483,6 +483,24 @@ export function ApplyButton({
           className="flex flex-col gap-3"
           onSubmit={async (event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
+            if (state === 'resume-error') {
+              // The application already exists; only the attachment is
+              // outstanding. Re-running apply here would re-hash an edited
+              // cover note and trip the approval replay guard.
+              setState('applying');
+              try {
+                if (onUploadResume && resumeFile) {
+                  await onUploadResume({
+                    jobSlug: action.jobSlug,
+                    file: resumeFile,
+                  });
+                }
+                setState('applied');
+              } catch {
+                setState('resume-error');
+              }
+              return;
+            }
             setState('applying');
             trackApplyClick('native');
             const note = coverNote.trim();
@@ -504,7 +522,7 @@ export function ApplyButton({
               // The application exists from here on. A failed resume upload
               // must not read as a failed application: say so, and leave the
               // form submittable so the candidate can retry the attachment
-              // (native apply is idempotent for the same job).
+              // alone (see the `resume-error` branch above).
               if (onUploadResume && resumeFile) {
                 try {
                   await onUploadResume({
