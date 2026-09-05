@@ -131,6 +131,61 @@ describe('JobSearchPage — search results pattern', () => {
     expect(detail).toHaveTextContent('Selected job details');
   });
 
+  it('reports the page the loader actually served when ?page= is past the API window', async () => {
+    // The loader clamps the offset to the last API-reachable page (500 at 20
+    // a page), so the range label, the active page and Next must describe
+    // page 500 — not the 600 in the URL.
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[jobVm]}
+          count={12_000}
+          page={600}
+          pageSize={20}
+          filters={{}}
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          selectedJob={undefined}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/?page=600'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    await screen.findByRole('main');
+    expect(
+      screen.getByText(
+        m.jobSearch_resultsShowingRange({
+          from: '9,981',
+          to: '10,000',
+          count: '12,000',
+        }),
+      ),
+    ).toBeInTheDocument();
+    const nav = screen.getByRole('navigation', {
+      name: m.pagination_ariaLabel(),
+    });
+    expect(within(nav).getByText('500').closest('a')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(
+      within(nav).getByRole('link', { name: m.pagination_nextPageLabel() }),
+    ).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('uses the full results canvas for a search with no matching jobs', async () => {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({

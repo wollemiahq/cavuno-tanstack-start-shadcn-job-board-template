@@ -119,14 +119,42 @@ export function cursorPageHref(
   return `${url.pathname}${defaultStringifySearch(search)}${url.hash}`;
 }
 
-/** Zero-based API offset for a 1-based page. */
-export function pageToOffset(page: number, pageSize: number): number {
-  return (page - 1) * pageSize;
+/**
+ * The Board API's deep-offset ceiling: any catalog read whose
+ * `offset + limit` exceeds this is refused with a 400
+ * (`pagination_offset_too_large`) rather than served slowly. `?page=` is
+ * public input, so a page past the window must never reach the API as-is —
+ * an uncaught 400 in a loader is a 500 for the visitor (seen live on a board
+ * with more than 10k results in one listing: `?page=500` rendered,
+ * `?page=600` crashed).
+ */
+export const MAX_OFFSET_WINDOW = 10_000;
+
+/** The last 1-based page whose full window still fits under the API ceiling. */
+export function lastReachablePage(pageSize: number): number {
+  return Math.max(1, Math.floor(MAX_OFFSET_WINDOW / pageSize));
 }
 
-/** Number of pages a result `count` spans at this page size. */
+/** Clamp a 1-based page to the API-reachable range. */
+export function clampPage(page: number, pageSize: number): number {
+  return Math.min(page, lastReachablePage(pageSize));
+}
+
+/**
+ * Zero-based API offset for a 1-based page. Clamped so `offset + pageSize`
+ * never exceeds {@link MAX_OFFSET_WINDOW} — a deeper page serves the last
+ * reachable one instead of crashing the loader.
+ */
+export function pageToOffset(page: number, pageSize: number): number {
+  return (clampPage(page, pageSize) - 1) * pageSize;
+}
+
+/**
+ * Number of pages a result `count` spans at this page size, capped at the
+ * last API-reachable page so the pagination nav never links into the 400.
+ */
 export function totalPages(count: number, pageSize: number): number {
-  return Math.ceil(count / pageSize);
+  return Math.min(Math.ceil(count / pageSize), lastReachablePage(pageSize));
 }
 
 /** Whether the pagination nav should render — only once a second page exists. */

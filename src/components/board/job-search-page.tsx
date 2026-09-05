@@ -42,7 +42,7 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { localizePath } from '@/lib/localized-path';
-import { listingPageHref } from '@/lib/pagination';
+import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
 
@@ -90,7 +90,7 @@ export function JobSearchPage({
   jobs,
   count,
   gatedCount,
-  page,
+  page: requestedPage,
   pageSize,
   filters,
   language,
@@ -130,6 +130,9 @@ export function JobSearchPage({
   viewer: { emailVerified: boolean } | null;
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
+  // The loader served the last API-reachable page for anything deeper, so
+  // the range label, the active page and Next/Previous must agree with it.
+  const page = clampPage(requestedPage, pageSize);
   const rails = useListingAdRails(ads, startAd, endAd);
   // The EXTERNAL localized URL — post-auth redirects must land back on
   // /fr/emplois, not the delocalized router path.

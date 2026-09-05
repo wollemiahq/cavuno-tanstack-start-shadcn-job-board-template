@@ -25,6 +25,7 @@ import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import { entityCount } from '../lib/entity-count';
 import {
   listingPageHref,
+  clampPage,
   pageSearchValue,
   parsePageParam,
   searchString,
@@ -82,7 +83,7 @@ function CompanyJobsPage() {
   const navigate = Route.useNavigate();
   const currentHref = useLocation({ select: (loc) => loc.href });
 
-  const currentPage = search.page ?? 1;
+  const currentPage = clampPage(search.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
   const count = page.count ?? 0;
   const locale = getLocale();
 
