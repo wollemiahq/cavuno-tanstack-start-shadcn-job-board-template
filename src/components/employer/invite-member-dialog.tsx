@@ -67,6 +67,7 @@ export function InviteMemberDialog({
     <Dialog open={open} onOpenChange={close}>
       <DialogContent>
         <form
+          method="post"
           className="contents"
           onSubmit={async (event) => {
             event.preventDefault();

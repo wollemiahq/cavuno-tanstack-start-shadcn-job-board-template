@@ -232,6 +232,7 @@ function WorkEmailStep({
 
   return (
     <form
+      method="post"
       className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();

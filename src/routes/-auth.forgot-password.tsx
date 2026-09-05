@@ -77,6 +77,7 @@ export function ForgotPasswordView({
   return (
     <AuthCard title={m.authForgotPassword_title()}>
       <form
+        method="post"
         className="grid gap-4"
         onSubmit={async (event) => {
           event.preventDefault();
