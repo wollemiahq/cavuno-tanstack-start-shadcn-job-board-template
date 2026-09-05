@@ -73,6 +73,8 @@ export function safeReturnTo(value: string | undefined): string | null {
   return pathname === RETURN_PATH ? null : safe;
 }
 
+const RETURN_PATH_MAX_LENGTH = 400;
+
 /**
  * This page's path, still carrying the buyer's captured destination, for every
  * hop that leaves the page and comes back: the loader's sign-in bounce, and
@@ -82,8 +84,6 @@ export function safeReturnTo(value: string | undefined): string | null {
  * here. Stripe's `session_id` is appended by the API, which joins with `&`
  * when the path already carries a query.
  */
-const RETURN_PATH_MAX_LENGTH = 400;
-
 export function accessReturnPath(returnTo: string | null): string {
   if (returnTo === null) return RETURN_PATH;
   const nested = `${RETURN_PATH}?returnTo=${encodeURIComponent(returnTo)}`;
