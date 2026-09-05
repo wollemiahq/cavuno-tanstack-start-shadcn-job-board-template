@@ -541,6 +541,7 @@ describe('ApplyButton native approval flow', () => {
     expect(onApply).toHaveBeenCalledWith(
       'australia-role',
       'aar_receipt_abcdefghijklmnopqrstuvwxyz',
+      undefined,
     );
     expect(
       await screen.findByRole('link', { name: /view applications/i }),
@@ -602,7 +603,13 @@ describe('ApplyButton native approval flow', () => {
     );
     fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
-    await waitFor(() => expect(onApply).toHaveBeenCalledWith('australia-role'));
+    await waitFor(() =>
+      expect(onApply).toHaveBeenCalledWith(
+        'australia-role',
+        undefined,
+        undefined,
+      ),
+    );
     expect(
       await screen.findByRole('link', { name: /view applications/i }),
     ).not.toBeNull();
@@ -729,5 +736,133 @@ describe('ApplyButton guest apply', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toBe(m.apply_guestNotAllowedError());
+  });
+});
+
+/**
+ * Hosted parity: the signed-in native path collects a cover note and an
+ * optional per-application resume. The guest form on the same board already
+ * collects more than a bare button does.
+ */
+describe('ApplyButton native apply extras', () => {
+  const resumeFile = () =>
+    new File(['cv'], 'cv.pdf', { type: 'application/pdf' });
+
+  function renderNative(props: {
+    onApply: (
+      jobSlug: string,
+      approvalReceipt?: string,
+      body?: { coverNote?: string },
+    ) => Promise<{ id: string } | void>;
+    onUploadResume?: (input: {
+      jobSlug: string;
+      file: File;
+    }) => Promise<{ id: string } | void>;
+  }) {
+    renderWithConversion(
+      <ApplyButton
+        {...base}
+        jobSlug="platform-engineer"
+        applicationUrl={null}
+        applyAction="gateway_native"
+        viewer={{ emailVerified: true }}
+        onPrepareApply={async () => ({
+          object: 'apply_approval_plan',
+          kind: 'not_required',
+        })}
+        {...props}
+      />,
+    );
+  }
+
+  it('sends the cover note the candidate typed with the native apply', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_1' }));
+    renderNative({
+      onApply,
+      onUploadResume: vi.fn(async () => ({ id: 'app_1' })),
+    });
+
+    fireEvent.change(
+      await screen.findByLabelText(m.applyButton_coverNoteLabel()),
+      { target: { value: '  I ship boards.  ' } },
+    );
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    await waitFor(() =>
+      expect(onApply).toHaveBeenCalledWith('platform-engineer', undefined, {
+        coverNote: 'I ship boards.',
+      }),
+    );
+  });
+
+  it('uploads the chosen resume after the application is created', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_1' }));
+    const onUploadResume = vi.fn(async () => ({ id: 'app_1' }));
+    renderNative({ onApply, onUploadResume });
+
+    const file = resumeFile();
+    fireEvent.change(
+      await screen.findByLabelText(m.applyButton_resumeLabel()),
+      {
+        target: { files: [file] },
+      },
+    );
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    await waitFor(() =>
+      expect(onUploadResume).toHaveBeenCalledWith({
+        jobSlug: 'platform-engineer',
+        file,
+      }),
+    );
+    expect(onApply).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByRole('link', { name: /view applications/i }),
+    ).not.toBeNull();
+  });
+
+  it('keeps one-click apply: no resume chosen means no upload call', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_1' }));
+    const onUploadResume = vi.fn(async () => ({ id: 'app_1' }));
+    renderNative({ onApply, onUploadResume });
+
+    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+
+    await waitFor(() =>
+      expect(onApply).toHaveBeenCalledWith(
+        'platform-engineer',
+        undefined,
+        undefined,
+      ),
+    );
+    expect(onUploadResume).not.toHaveBeenCalled();
+  });
+
+  it('omits the resume field when no upload handler is wired', async () => {
+    renderNative({ onApply: vi.fn(async () => ({ id: 'app_1' })) });
+
+    await screen.findByLabelText(m.applyButton_coverNoteLabel());
+    expect(screen.queryByLabelText(m.applyButton_resumeLabel())).toBeNull();
+  });
+
+  it('says the application was sent when only the resume upload fails', async () => {
+    const onApply = vi.fn(async () => ({ id: 'app_1' }));
+    const onUploadResume = vi.fn(async () => {
+      throw new Error('upload failed');
+    });
+    renderNative({ onApply, onUploadResume });
+
+    fireEvent.change(
+      await screen.findByLabelText(m.applyButton_resumeLabel()),
+      {
+        target: { files: [resumeFile()] },
+      },
+    );
+    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      m.applyButton_resumeUploadError(),
+    );
+    expect(onApply).toHaveBeenCalledTimes(1);
   });
 });

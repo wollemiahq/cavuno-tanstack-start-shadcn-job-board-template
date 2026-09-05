@@ -170,6 +170,7 @@ const dependencies: SelectedJobDetailDependencies = {
   applyToJob: vi.fn(),
   prepareApplyToJob: vi.fn(),
   applyToJobAsGuest: vi.fn(),
+  uploadApplicationResume: vi.fn(),
   saveJob: vi.fn(),
 };
 
