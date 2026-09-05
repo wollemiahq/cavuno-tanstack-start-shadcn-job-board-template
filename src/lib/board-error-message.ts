@@ -43,6 +43,8 @@ export const CODE_MESSAGES = {
   company_required: m.boardError_companyRequiredText,
   already_on_plan: m.boardError_alreadyOnPlanText,
   stripe_not_connected: m.boardError_stripeNotConnectedText,
+  membership_plan_not_found: m.boardError_membershipPlanNotFoundText,
+  membership_seat_taken: m.boardError_membershipSeatTakenText,
   // Employer dashboard / posting flow:
   employer_job_slug_taken: m.boardError_jobSlugTakenText,
   employer_jobs_quota_exceeded: m.boardError_jobsQuotaText,

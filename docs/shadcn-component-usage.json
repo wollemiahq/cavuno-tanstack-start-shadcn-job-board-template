@@ -493,6 +493,7 @@
         "src/routes/-employers.company-jobs.tsx",
         "src/routes/-employers.index.tsx",
         "src/routes/-employers.talent-access.tsx",
+        "src/routes/-memberships.tsx",
         "src/routes/-messages-dock-controller.tsx",
         "src/routes/-restricted-talent-directory.tsx",
         "src/routes/companies.$companySlug.index.tsx",
@@ -625,7 +626,8 @@
         "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/resume-upload.tsx",
-        "src/routes/-auth.verify-email-required.tsx"
+        "src/routes/-auth.verify-email-required.tsx",
+        "src/routes/-memberships.tsx"
       ]
     },
     {
@@ -659,7 +661,8 @@
       "status": "used",
       "productionReferences": [
         "src/components/preview/preview-board-settings.tsx",
-        "src/components/profile-form.tsx"
+        "src/components/profile-form.tsx",
+        "src/routes/-memberships.tsx"
       ]
     },
     {
@@ -805,6 +808,7 @@
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.onboarding.tsx",
         "src/routes/-employers.talent-access.tsx",
+        "src/routes/-memberships.tsx",
         "src/routes/-talent-unlock-gate.tsx"
       ]
     },
