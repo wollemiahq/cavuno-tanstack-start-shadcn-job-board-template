@@ -32,7 +32,10 @@ import {
   type JobFormSource,
 } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
-import { planFeatureLines, planFeaturedChoice } from '@/board/plan-view-model';
+import {
+  planFeatureLines,
+  planOffersFeaturedChoice,
+} from '@/board/plan-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
@@ -469,29 +472,40 @@ export function EmployerJobForm({
   /**
    * The featured choice the current billing selection offers, or `null`
    * when there is nothing to choose (no slots, or the board auto-features).
-   * `defaultOn` pre-ticks a single-post purchase that includes a featured
-   * slot — that slot is being bought for THIS job, so leaving it unticked
-   * would forfeit what was paid for.
+   * `hint` tells a credit holder how many slots remain (the plan card
+   * already says what a new purchase includes). `defaultOn` pre-ticks a
+   * single-post purchase that includes a featured slot — that slot is being
+   * bought for THIS job, so leaving it unticked would forfeit what was paid
+   * for.
    */
   function featuredChoiceFor(
     value: string | null,
-  ): { remaining: number | null; defaultOn: boolean } | null {
+  ): { hint: string | null; defaultOn: boolean } | null {
     if (!value) return null;
     if (value.startsWith('option:')) {
       const option = billingOptions.find(
         (candidate) => `option:${candidate.id}` === value,
       );
       if (!option) return null;
-      if (option.featuredUnlimited)
-        return { remaining: null, defaultOn: false };
+      if (option.featuredUnlimited) {
+        return {
+          hint: m.employerCompany_featuredUnlimitedText(),
+          defaultOn: false,
+        };
+      }
       return option.featuredRemaining > 0
-        ? { remaining: option.featuredRemaining, defaultOn: false }
+        ? {
+            hint: m.employerCompany_featuredSlotsRemaining({
+              count: option.featuredRemaining,
+              countLabel: option.featuredRemaining.toLocaleString(locale),
+            }),
+            defaultOn: false,
+          }
         : null;
     }
     const plan = plans.find((candidate) => `plan:${candidate.id}` === value);
-    if (!plan) return null;
-    const choice = planFeaturedChoice(plan);
-    return choice ? { ...choice, defaultOn: plan.kind === 'one_time' } : null;
+    if (!plan || !planOffersFeaturedChoice(plan)) return null;
+    return { hint: null, defaultOn: plan.kind === 'one_time' };
   }
   const featuredChoice = featuredChoiceFor(selectedBilling);
   const [status, setStatus] = useState<
@@ -1372,15 +1386,11 @@ export function EmployerJobForm({
                       <span className="text-sm font-medium">
                         {m.employerCompany_featureListingLabel()}
                       </span>
-                      <span className="text-muted-foreground text-xs">
-                        {featuredChoice.remaining === null
-                          ? m.employerCompany_featuredUnlimitedText()
-                          : m.employerCompany_featuredSlotsRemaining({
-                              count: featuredChoice.remaining,
-                              countLabel:
-                                featuredChoice.remaining.toLocaleString(locale),
-                            })}
-                      </span>
+                      {featuredChoice.hint ? (
+                        <span className="text-muted-foreground text-xs">
+                          {featuredChoice.hint}
+                        </span>
+                      ) : null}
                     </span>
                   </FieldLabel>
                 ) : null}

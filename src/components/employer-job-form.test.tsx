@@ -441,7 +441,6 @@ describe('EmployerJobForm', () => {
         name: /Feature this listing/,
       });
       expect(box).not.toBeChecked();
-      expect(screen.getByText(/2 featured slots left/)).toBeInTheDocument();
       fireEvent.click(box);
       fireEvent.submit(container.querySelector('form')!);
 
@@ -468,7 +467,10 @@ describe('EmployerJobForm', () => {
       const oneTime: JobPostingPlan = {
         ...featuredPlan,
         kind: 'one_time',
-        features: [{ key: 'jobs.featured_slots', value: '1' }],
+        features: [
+          { key: 'jobs.featured_slots', value: '1' },
+          { key: 'jobs.feature_selection_mode', value: 'manual' },
+        ],
       };
       const { container } = await renderDraftEdit([oneTime]);
 
@@ -483,23 +485,54 @@ describe('EmployerJobForm', () => {
     });
 
     it('offers no choice on a plan without featured slots or one that auto-features', async () => {
+      // A plan with slots but no explicit selection mode auto-features too —
+      // the platform treats a missing mode as `auto`, so a checkbox there
+      // would be a control that lies.
       const auto: JobPostingPlan = {
         ...featuredPlan,
+        id: 'plan-auto',
+        name: 'Auto',
         features: [
           { key: 'jobs.featured_slots', value: '3' },
           { key: 'jobs.feature_selection_mode', value: 'auto' },
         ],
       };
-      await renderDraftEdit([plan, { ...auto, id: 'plan-auto', name: 'Auto' }]);
+      const unset: JobPostingPlan = {
+        ...featuredPlan,
+        id: 'plan-unset',
+        name: 'Unset',
+        features: [{ key: 'jobs.featured_slots', value: '3' }],
+      };
+      await renderDraftEdit([plan, auto, unset]);
+
+      for (const name of [/Growth/, /Auto/, /Unset/]) {
+        fireEvent.click(screen.getByRole('radio', { name }));
+        expect(
+          screen.queryByRole('checkbox', { name: /Feature this listing/ }),
+        ).not.toBeInTheDocument();
+      }
+    });
+
+    it('drops the tick when the buyer switches to another plan', async () => {
+      const other: JobPostingPlan = {
+        ...featuredPlan,
+        id: 'plan-other',
+        name: 'Other',
+      };
+      const { container } = await renderDraftEdit([featuredPlan, other]);
 
       fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+      fireEvent.click(
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      );
+      fireEvent.click(screen.getByRole('radio', { name: /Other/ }));
       expect(
-        screen.queryByRole('checkbox', { name: /Feature this listing/ }),
-      ).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole('radio', { name: /Auto/ }));
-      expect(
-        screen.queryByRole('checkbox', { name: /Feature this listing/ }),
-      ).not.toBeInTheDocument();
+        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+      ).not.toBeChecked();
+      fireEvent.submit(container.querySelector('form')!);
+
+      await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+      expect('isFeatured' in checkoutBody()).toBe(false);
     });
 
     it('offers the choice on a reusable credit that still holds featured slots', async () => {
