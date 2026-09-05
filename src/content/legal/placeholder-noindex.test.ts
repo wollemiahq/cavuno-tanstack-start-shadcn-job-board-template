@@ -72,6 +72,7 @@ describe('legal placeholder noindex registry', () => {
       'utf8',
     );
     expect(source).toContain('isLegalPlaceholder(data.type)');
+    expect(source).toContain("{ name: 'robots', content: 'noindex' }");
   });
 
   it.each(LEGAL_ROUTES)(
