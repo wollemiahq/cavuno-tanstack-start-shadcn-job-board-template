@@ -36,7 +36,7 @@ const mocks = {
   useSearch: vi.fn<() => AccessSearch>(),
 };
 
-import { AccessPageView } from './-access-page';
+import { AccessPageView, accessReturnPath, safeReturnTo } from './-access-page';
 
 const grant = {
   object: 'access_grant',
@@ -184,6 +184,86 @@ describe('candidate access actions', () => {
     ).toBeNull();
   });
 
+  it('carries the captured destination into the Stripe checkout return path', async () => {
+    // Redirect-based methods (3DS/SCA, iDEAL, Klarna) navigate away, so the
+    // in-page `onComplete` never fires: the destination has to ride the
+    // `return_url` or the buyer parks on this page.
+    mocks.useLoaderData.mockReturnValue({ grant, offers: [offer] });
+    mocks.useSearch.mockReturnValue({ returnTo: '/jobs?q=react' });
+    // Rejecting keeps the plan picker mounted; the call arguments are the
+    // subject here, not the Stripe iframe.
+    mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
+
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+
+    await waitFor(() => {
+      expect(mocks.startCheckout).toHaveBeenCalledWith({
+        data: {
+          offerKey: 'monthly',
+          returnPath: '/account/access?returnTo=%2Fjobs%3Fq%3Dreact',
+        },
+      });
+    });
+  });
+
+  it('drops an unsafe captured destination from the checkout return path', async () => {
+    mocks.useLoaderData.mockReturnValue({ grant, offers: [offer] });
+    mocks.useSearch.mockReturnValue({ returnTo: 'https://evil.example/phish' });
+    // Rejecting keeps the plan picker mounted; the call arguments are the
+    // subject here, not the Stripe iframe.
+    mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
+
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+
+    await waitFor(() => {
+      expect(mocks.startCheckout).toHaveBeenCalledWith({
+        data: { offerKey: 'monthly', returnPath: '/account/access' },
+      });
+    });
+  });
+
+  it('carries the captured destination into the billing-portal return path', async () => {
+    mocks.useLoaderData.mockReturnValue({
+      grant: {
+        ...grant,
+        hasAccess: true,
+        status: 'active',
+        offerType: 'recurring',
+      },
+      offers: [],
+    });
+    mocks.useSearch.mockReturnValue({ returnTo: '/jobs?q=react' });
+    mocks.openBillingPortal.mockResolvedValue({
+      url: 'https://billing.example/session',
+    });
+
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: { href: '' },
+    });
+
+    await renderAccessPage();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Manage subscription' }),
+    );
+
+    await waitFor(() => {
+      expect(mocks.openBillingPortal).toHaveBeenCalledWith({
+        data: { returnPath: '/account/access?returnTo=%2Fjobs%3Fq%3Dreact' },
+      });
+    });
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: originalLocation,
+    });
+  });
+
   it('opens the billing portal for a recurring subscription', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
@@ -313,5 +393,24 @@ describe('candidate access actions', () => {
     expect(
       screen.getByRole('button', { name: 'Manage subscription' }),
     ).toBeVisible();
+  });
+});
+
+describe('accessReturnPath', () => {
+  it('keeps this page as the return path when there is nothing to return to', () => {
+    expect(accessReturnPath(null)).toBe('/account/access');
+  });
+
+  it('nests the captured destination so a hop away and back preserves it', () => {
+    expect(accessReturnPath('/jobs')).toBe('/account/access?returnTo=%2Fjobs');
+  });
+
+  it.each([
+    'https://evil.example/phish',
+    '//evil.example',
+    '/\\evil.example',
+    '/account/access',
+  ])('refuses %s as a captured destination', (value) => {
+    expect(accessReturnPath(safeReturnTo(value))).toBe('/account/access');
   });
 });
