@@ -19,6 +19,7 @@ import { loadOgFont } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
 import { ogImageSrc } from '../lib/og-image';
 import { renderOgPng } from '../lib/og-render';
+import { OG_META_SEPARATOR, ogSubsetText } from '../lib/og-text';
 import { ogThemeTokens } from '../lib/og-theme';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
@@ -88,15 +89,20 @@ async function renderBlogOg(post: Post): Promise<Response> {
     dateLabel: post.publishedAt ? formatDate(language, post.publishedAt) : null,
   };
 
-  // Subset the font to exactly the glyphs the card renders (incl. the
-  // "· Blog" eyebrow and the "…" truncation marker).
-  const text = [
-    `${card.boardName} · ${card.blogLabel}…`,
-    truncate(card.title, 70),
-    card.excerpt ? truncate(card.excerpt, 140) : '',
-    card.authorName ?? '',
-    card.dateLabel ?? '',
-  ].join(' ');
+  // Subset the font to exactly the glyphs the card renders — including the
+  // separator in the "{board} · Blog" eyebrow and the "…" truncation marker,
+  // neither of which comes from board content.
+  const text = ogSubsetText(
+    [
+      card.boardName,
+      card.blogLabel,
+      truncate(card.title, 70),
+      card.excerpt ? truncate(card.excerpt, 140) : '',
+      card.authorName ?? '',
+      card.dateLabel ?? '',
+    ],
+    [OG_META_SEPARATOR, '…'],
+  );
   const font = await loadOgFont(text);
 
   return renderOgPng(

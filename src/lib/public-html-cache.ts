@@ -51,7 +51,16 @@ export const DOC_VARY_COOKIE_PREFIXES = [
 ] as const;
 
 const BROWSER_CACHE_CONTROL = 'public, max-age=0, must-revalidate';
-const EDGE_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=300';
+/**
+ * The platform gateway's edge-cache opt-in value. Exported because it is the
+ * starter's one edge-freshness contract: any public response that wants the
+ * gateway to serve it from cache (HTML here, the OG cards in og-render.ts)
+ * sends THIS on `Cloudflare-CDN-Cache-Control`. The gateway caps the fresh
+ * window at 300s and keys on the board content version, so a board edit
+ * still invalidates.
+ */
+export const EDGE_CACHE_CONTROL =
+  'public, max-age=60, stale-while-revalidate=300';
 
 type EdgeCacheStorage = { default?: Cache };
 

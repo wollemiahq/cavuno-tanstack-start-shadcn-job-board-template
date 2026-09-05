@@ -14,7 +14,13 @@ import { loadOgFont } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
 import { ogImageSrc } from '../lib/og-image';
 import { renderOgPng } from '../lib/og-render';
-import { ogStyleValue, ogText, ogUrlAttr } from '../lib/og-text';
+import {
+  OG_META_SEPARATOR,
+  ogStyleValue,
+  ogSubsetText,
+  ogText,
+  ogUrlAttr,
+} from '../lib/og-text';
 import { ogThemeTokens } from '../lib/og-theme';
 
 import { locationLabel } from '@/lib/location-labels';
@@ -74,8 +80,9 @@ async function renderJobOg(job: Job): Promise<Response> {
       job.salaryCurrency,
     ) ?? '';
 
-  // Subset the theme font to exactly the glyphs the card renders.
-  const text = [title, company, location, salary].join(' ');
+  // Subset the theme font to exactly the glyphs the card renders — the meta
+  // separator included, or it paints as a tofu box before the salary.
+  const text = ogSubsetText([title, company, location, salary]);
   const font = await loadOgFont(text);
   const logo = await logoSrc;
 
@@ -97,7 +104,7 @@ async function renderJobOg(job: Job): Promise<Response> {
               </div>
               <div style="display:flex;font-size:72px;font-weight:600;color:${t['--foreground']};line-height:1.1;">${ogText(title)}</div>
               <div style="display:flex;gap:16px;font-size:32px;color:${t['--foreground-subtle'] ?? t['--foreground']};">
-                ${metaParts.map((part) => `<div style="display:flex;">${part}</div>`).join(`<div style="display:flex;color:${t['--border']};">·</div>`)}
+                ${metaParts.map((part) => `<div style="display:flex;">${part}</div>`).join(`<div style="display:flex;color:${t['--border']};">${OG_META_SEPARATOR}</div>`)}
               </div>
             </div>`;
 
