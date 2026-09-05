@@ -682,6 +682,7 @@ export function PostJobForm({
 
   return (
     <form
+      method="post"
       ref={formRef}
       className="flex flex-col gap-10"
       aria-busy={status.kind === 'pending'}

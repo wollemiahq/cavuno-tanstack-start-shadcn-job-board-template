@@ -355,6 +355,7 @@ export function ApplyButton({
       }
       return (
         <form
+          method="post"
           className="flex flex-col gap-3"
           onSubmit={async (event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
