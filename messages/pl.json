@@ -818,6 +818,24 @@
   "employerCompany_deleteLabel": "Usuń",
   "employerCompany_descriptionLabel": "Opis",
   "employerCompany_draftNoticeText": "Nowe oferty pozostają wersjami roboczymi — opublikuj i opłać poniżej.",
+  "employerCompany_featureListingLabel": "Wyróżnij tę ofertę",
+  "employerCompany_featuredSlotsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Pozostało 1 wyróżnienie w tym planie",
+        "countPlural=few": "Pozostały {countLabel} wyróżnienia w tym planie",
+        "countPlural=many": "Pozostało {countLabel} wyróżnień w tym planie",
+        "countPlural=*": "Pozostało {countLabel} wyróżnienia w tym planie"
+      }
+    }
+  ],
+  "employerCompany_featuredUnlimitedText": "Wyróżnienia bez limitu w tym planie",
   "employerCompany_freeLabel": "Bezpłatnie",
   "employerCompany_genericError": "Coś poszło nie tak.",
   "employerCompany_invoiceSentText": "Faktura została wysłana na Twój adres e-mail.",

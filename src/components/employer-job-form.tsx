@@ -32,13 +32,14 @@ import {
   type JobFormSource,
 } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
-import { planFeatureLines } from '@/board/plan-view-model';
+import { planFeatureLines, planFeaturedChoice } from '@/board/plan-view-model';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
   FieldContent,
@@ -63,6 +64,7 @@ import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
   CreateEmployerJobBody,
   EmployerBillingOption,
+  EmployerCheckoutBody,
   EmployerJob,
   JobPostingPlan,
   RemotePermitTaxonomyEntry,
@@ -458,6 +460,40 @@ export function EmployerJobForm({
   );
   /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
   const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
+  // Featured slots are sold by a plan or held on a reusable credit, but the
+  // platform only features a post when the checkout body says `isFeatured`
+  // (unless the board auto-features). Until this choice existed a buyer on a
+  // manual-selection board paid the featured price and got a standard listing.
+  const [featureListing, setFeatureListing] = useState(false);
+
+  /**
+   * The featured choice the current billing selection offers, or `null`
+   * when there is nothing to choose (no slots, or the board auto-features).
+   * `defaultOn` pre-ticks a single-post purchase that includes a featured
+   * slot — that slot is being bought for THIS job, so leaving it unticked
+   * would forfeit what was paid for.
+   */
+  function featuredChoiceFor(
+    value: string | null,
+  ): { remaining: number | null; defaultOn: boolean } | null {
+    if (!value) return null;
+    if (value.startsWith('option:')) {
+      const option = billingOptions.find(
+        (candidate) => `option:${candidate.id}` === value,
+      );
+      if (!option) return null;
+      if (option.featuredUnlimited)
+        return { remaining: null, defaultOn: false };
+      return option.featuredRemaining > 0
+        ? { remaining: option.featuredRemaining, defaultOn: false }
+        : null;
+    }
+    const plan = plans.find((candidate) => `plan:${candidate.id}` === value);
+    if (!plan) return null;
+    const choice = planFeaturedChoice(plan);
+    return choice ? { ...choice, defaultOn: plan.kind === 'one_time' } : null;
+  }
+  const featuredChoice = featuredChoiceFor(selectedBilling);
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'error' | 'committed'
   >('idle');
@@ -608,10 +644,13 @@ export function EmployerJobForm({
           planId: (selectedBilling ?? '').replace(/^plan:/, ''),
         };
 
+    const body: EmployerCheckoutBody = { billing };
+    if (featuredChoice && featureListing) body.isFeatured = true;
+
     let checkout: Awaited<ReturnType<typeof actions.checkoutJob>>;
     try {
       checkout = await actions.checkoutJob({
-        data: { slug, id: jobId, body: { billing } },
+        data: { slug, id: jobId, body },
       });
     } catch {
       setStatus('committed');
@@ -1219,9 +1258,12 @@ export function EmployerJobForm({
               <Field data-invalid={fieldErrors.billing || undefined}>
                 <RadioGroup
                   value={selectedBilling}
-                  onValueChange={(value: string | null) =>
-                    setSelectedBilling(value ?? null)
-                  }
+                  onValueChange={(value: string | null) => {
+                    setSelectedBilling(value ?? null);
+                    setFeatureListing(
+                      featuredChoiceFor(value ?? null)?.defaultOn ?? false,
+                    );
+                  }}
                   className="gap-4"
                   aria-label={m.employerCompany_choosePlanHeading()}
                 >
@@ -1313,6 +1355,35 @@ export function EmployerJobForm({
                     </div>
                   ) : null}
                 </RadioGroup>
+                {featuredChoice ? (
+                  <FieldLabel
+                    htmlFor="billing-feature-listing"
+                    className="flex cursor-pointer items-start gap-3 font-normal"
+                  >
+                    <Checkbox
+                      id="billing-feature-listing"
+                      className="mt-0.5 shrink-0"
+                      checked={featureListing}
+                      onCheckedChange={(checked) =>
+                        setFeatureListing(checked === true)
+                      }
+                    />
+                    <span className="grid gap-0.5">
+                      <span className="text-sm font-medium">
+                        {m.employerCompany_featureListingLabel()}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {featuredChoice.remaining === null
+                          ? m.employerCompany_featuredUnlimitedText()
+                          : m.employerCompany_featuredSlotsRemaining({
+                              count: featuredChoice.remaining,
+                              countLabel:
+                                featuredChoice.remaining.toLocaleString(locale),
+                            })}
+                      </span>
+                    </span>
+                  </FieldLabel>
+                ) : null}
                 {fieldErrors.billing ? (
                   <FieldError>
                     {m.employerPostJob_billingRequiredError()}

@@ -788,6 +788,22 @@
   "employerCompany_deleteLabel": "⁧⟦Ðéĺéţé⟧⁩",
   "employerCompany_descriptionLabel": "⁧⟦Ðéšçŕíþţíóñ⟧⁩",
   "employerCompany_draftNoticeText": "⁧⟦Ñéŵ ĵóƀš áŕé ĥéĺð ðŕáƒţš — þúƀĺíšĥ & þáý ƀéĺóŵ.⟧⁩",
+  "employerCompany_featureListingLabel": "⁧⟦Ƒéáţúŕé ţĥíš ĺíšţíñğ⟧⁩",
+  "employerCompany_featuredSlotsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "⁧⟦1 ƒéáţúŕéð šĺóţ ĺéƒţ óñ ţĥíš þĺáñ⟧⁩",
+        "countPlural=*": "⁧⟦{countLabel} ƒéáţúŕéð šĺóţš ĺéƒţ óñ ţĥíš þĺáñ⟧⁩"
+      }
+    }
+  ],
+  "employerCompany_featuredUnlimitedText": "⁧⟦Úñĺíɱíţéð ƒéáţúŕéð ĺíšţíñğš óñ ţĥíš þĺáñ⟧⁩",
   "employerCompany_freeLabel": "⁧⟦Ƒŕéé⟧⁩",
   "employerCompany_genericError": "⁧⟦Šóɱéţĥíñğ ŵéñţ ŵŕóñğ.⟧⁩",
   "employerCompany_invoiceSentText": "⁧⟦Áñ íñṽóíçé ŵáš éɱáíĺéð ţó ýóú.⟧⁩",

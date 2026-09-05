@@ -788,6 +788,22 @@
   "employerCompany_deleteLabel": "Supprimer",
   "employerCompany_descriptionLabel": "Description",
   "employerCompany_draftNoticeText": "Les nouvelles offres restent des brouillons — publiez et payez ci-dessous.",
+  "employerCompany_featureListingLabel": "Mettre cette offre en avant",
+  "employerCompany_featuredSlotsRemaining": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 mise en avant restante sur ce plan",
+        "countPlural=*": "{countLabel} mises en avant restantes sur ce plan"
+      }
+    }
+  ],
+  "employerCompany_featuredUnlimitedText": "Mises en avant illimitées sur ce plan",
   "employerCompany_freeLabel": "Gratuit",
   "employerCompany_genericError": "Une erreur est survenue.",
   "employerCompany_invoiceSentText": "Une facture vous a été envoyée par e-mail.",

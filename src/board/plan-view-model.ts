@@ -3,6 +3,32 @@ import { getLocale } from '../paraglide/runtime';
 
 import type { JobPostingPlan } from '@cavuno/board';
 
+function featureMap(plan: Pick<JobPostingPlan, 'features'>) {
+  return new Map(
+    (plan.features ?? []).flatMap((feature) =>
+      feature.key ? [[feature.key, feature.value ?? ''] as const] : [],
+    ),
+  );
+}
+
+/**
+ * Whether buying this plan lets the employer feature THIS post, and how many
+ * featured slots it sells (`null` = unlimited). `null` when there is no
+ * choice to make: the plan sells no featured slots, or it features every
+ * post automatically (`jobs.feature_selection_mode = auto`), in which case
+ * the platform features the job without being asked.
+ */
+export function planFeaturedChoice(
+  plan: Pick<JobPostingPlan, 'features'>,
+): { remaining: number | null } | null {
+  const byKey = featureMap(plan);
+  if (byKey.get('jobs.feature_selection_mode') === 'auto') return null;
+  const raw = byKey.get('jobs.featured_slots');
+  if (raw === 'unlimited') return { remaining: null };
+  const slots = Number(raw);
+  return Number.isFinite(slots) && slots > 0 ? { remaining: slots } : null;
+}
+
 /**
  * Human-readable lines for a job-posting plan's structured features — the
  * `{key, value}` pairs the plans API emits (`jobs.duration_days`,
@@ -12,11 +38,7 @@ import type { JobPostingPlan } from '@cavuno/board';
 export function planFeatureLines(
   plan: Pick<JobPostingPlan, 'features'>,
 ): string[] {
-  const byKey = new Map(
-    (plan.features ?? []).flatMap((feature) =>
-      feature.key ? [[feature.key, feature.value ?? ''] as const] : [],
-    ),
-  );
+  const byKey = featureMap(plan);
   const lines: string[] = [];
   const locale = getLocale();
 
