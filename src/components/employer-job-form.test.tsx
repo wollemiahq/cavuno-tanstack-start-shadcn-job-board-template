@@ -368,6 +368,37 @@ describe('EmployerJobForm', () => {
     expect(mocks.checkoutJob).not.toHaveBeenCalled();
   });
 
+  it('shows the plan picker for the other ways a job stops being live', async () => {
+    // The jobs list offers "Republish" for an archived job and for a
+    // `published` one whose expiry has passed but whose stored status has
+    // not been re-stamped yet. Both land here after a 402, so both need
+    // the picker.
+    for (const job of [
+      { ...draftJob, status: 'archived' as const },
+      {
+        ...draftJob,
+        status: 'published' as const,
+        expiresAt: '2020-01-01T00:00:00.000Z',
+      },
+    ]) {
+      const { unmount } = await renderWithRouter(
+        <EmployerJobForm
+          dependencies={dependencies}
+          slug="acme"
+          locale="en-AU"
+          remotePermits={null}
+          plans={[plan]}
+          billingOptions={[]}
+          officeLocationSuggestions={suggestions}
+          mode={{ kind: 'edit', jobId: 'job-1', status: job.status }}
+          job={job}
+        />,
+      );
+      expect(screen.getByRole('radio', { name: /Growth/ })).toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it('hides the plan picker when editing a published job', async () => {
     await renderWithRouter(
       <EmployerJobForm
