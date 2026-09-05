@@ -3,7 +3,7 @@
 /**
  * The shared employer job form — used by both "Post a job" (create) and the
  * per-job "Edit job" page. It owns the role field set plus, when the job can be
- * published (a draft or an expired job, with credits/plans available), the
+ * published (any job that is not live, with credits/plans available), the
  * billing picker and checkout step. The route decides the mode and passes the
  * workspace data; the form owns the create/update + checkout orchestration so
  * the two surfaces never drift.
@@ -58,7 +58,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
-import { isEmployerJobExpired } from '@/lib/employer-job-labels';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
@@ -436,15 +435,13 @@ export function EmployerJobForm({
   }, [countryChoices]);
 
   // The billing step shows on create, and on an edit of any job that is not
-  // live: a held draft, an expired or archived job, or a `published` one
-  // whose expiry has simply passed (the jobs list uses the same rule to offer
-  // "Republish"). Republish routes here after the board answers 402, so this
-  // is the only place a renewal can be paid for — hiding the picker made
-  // renewal a dead end. A live published job edits its details only.
-  const needsPublishing =
-    mode.kind === 'edit' &&
-    (mode.status !== 'published' ||
-      (job !== undefined && isEmployerJobExpired(job)));
+  // live: a held draft, an expired or archived job. The route passes
+  // `expired` for a published job whose expiry has already passed, mirroring
+  // the jobs list, whose "Republish" routes here after the board answers 402
+  // — so this is the only place a renewal can be paid for, and hiding the
+  // picker made renewal a dead end. A live published job edits its details
+  // only.
+  const needsPublishing = mode.kind === 'edit' && mode.status !== 'published';
   const showBilling = mode.kind === 'create' || needsPublishing;
   const canPublish = billingOptions.length > 0 || plans.length > 0;
   const billingRequired = mode.kind === 'create' && canPublish;
