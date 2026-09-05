@@ -254,20 +254,10 @@ function RootChrome({
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
-  const router = useRouter();
-  // A route that owns `<main>` only does so while something of its own
-  // renders. When its loader failed and it has no errorComponent, the
-  // router-default error page (which owns no landmark) renders in its place,
-  // so the chrome supplies `<main>`. Routes with their own errorComponent
-  // (the candidate pages) keep rendering their own landmark on error.
+  // Only while its component renders; the router-default error page supplies
+  // the landmark itself when it stands in for one of these routes.
   const ownsMain = useRouterState({
-    select: (s) =>
-      s.matches.some(
-        (match) =>
-          match.staticData?.ownsMain &&
-          (match.status !== 'error' ||
-            router.routesById[match.routeId]?.options.errorComponent),
-      ),
+    select: (s) => s.matches.some((match) => match.staticData?.ownsMain),
   });
   const fillsViewport = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
@@ -283,6 +273,7 @@ function RootChrome({
     select: (state) => resolveShellBreadcrumbTrail(state.matches),
   });
   const navigate = useNavigate();
+  const router = useRouter();
   const conversionAnalytics = useMemo(
     () => resolveBoardConversionAnalytics(board.analytics),
     [board.analytics],

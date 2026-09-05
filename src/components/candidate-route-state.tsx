@@ -1,3 +1,4 @@
+import { useRouter, type ErrorComponentProps } from '@tanstack/react-router';
 import { CircleAlert } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -13,7 +14,6 @@ import {
   EmptyMedia,
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { ErrorComponentProps } from '@tanstack/react-router';
 
 export function CandidateRoutePending({
   label,
@@ -122,7 +122,8 @@ export function CandidateProfilePendingPage() {
   );
 }
 
-export function CandidateRouteErrorPage({ error, reset }: ErrorComponentProps) {
+export function CandidateRouteErrorPage({ error }: ErrorComponentProps) {
+  const router = useRouter();
   return (
     <>
       <ClientErrorReporter error={error} />
@@ -131,7 +132,9 @@ export function CandidateRouteErrorPage({ error, reset }: ErrorComponentProps) {
         description={m.candidateAccount_errorBody()}
         retryLabel={m.candidateAccount_retryLabel()}
         navigationLabel={m.accountShell_candidateNavigationLabel()}
-        reset={reset}
+        // TanStack's `reset` only clears the boundary and the errored match
+        // rethrows at once; invalidating re-runs the loader.
+        reset={() => void router.invalidate()}
       />
     </>
   );

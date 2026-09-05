@@ -320,10 +320,11 @@ PLACE at the failing match, and on the server it never rethrows, so without
 a default the built-in "Something went wrong!" component ships in the HTML —
 and the root route's own `errorComponent` for a failing ROOT loader.
 
-It owns no `<main>`: the chrome renders one around the outlet when a match
-has errored (see `__root.tsx`), and the root wraps it in one when the chrome
-itself never mounted. It does render `Page`, which owns the design-token
-scope, since no route component is there to do so.
+Landmark: when it stands in for a route that owns `<main>` (`staticData.ownsMain`,
+where the chrome renders only a `div#main-content`), it supplies the `<main>`
+that route's component would have; otherwise the chrome's `<main>` is already
+around it. The root wraps it in one when the chrome never mounted. It always
+renders `Page`, which owns the design-token scope.
 
 It reads NO loader data. The root loader is one of the things that can
 fail, so board context may never have resolved; copy comes from the

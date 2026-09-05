@@ -323,18 +323,28 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
  */
 async function renderRejectingLoaderOnServer(
   defaultErrorComponent: typeof AppRouteErrorPage | undefined,
+  options: { ownsMain?: boolean } = {},
 ) {
+  const ownsMain = options.ownsMain ?? false;
   const rootRoute = createRootRoute({
     errorComponent: AppRouteErrorPage,
-    component: () => (
-      <main data-testid="chrome-main">
-        <Outlet />
-      </main>
-    ),
+    // Like RootChrome: a route that owns <main> gets a plain div from the
+    // chrome and renders the landmark itself.
+    component: () =>
+      ownsMain ? (
+        <div id="main-content">
+          <Outlet />
+        </div>
+      ) : (
+        <main data-testid="chrome-main">
+          <Outlet />
+        </main>
+      ),
   });
   const jobsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/jobs',
+    staticData: ownsMain ? { ownsMain: true } : {},
     loader: () => Promise.reject(new Error('Board API 500')),
     component: () => <h1>Jobs</h1>,
   });
@@ -370,6 +380,17 @@ describe('server render of a rejecting public loader', () => {
 
   it('renders inside the chrome without a second main landmark', async () => {
     const html = await renderRejectingLoaderOnServer(AppRouteErrorPage);
+
+    expect(html.match(/<main\b/g)).toHaveLength(1);
+    expect(html).toContain('data-layout="app-route-error"');
+  });
+
+  it('supplies the main landmark when it stands in for a route that owns it', async () => {
+    // /jobs, /, job detail: the chrome renders div#main-content and the route
+    // component owns <main>. With the component gone, the error page does.
+    const html = await renderRejectingLoaderOnServer(AppRouteErrorPage, {
+      ownsMain: true,
+    });
 
     expect(html.match(/<main\b/g)).toHaveLength(1);
     expect(html).toContain('data-layout="app-route-error"');

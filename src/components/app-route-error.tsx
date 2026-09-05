@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { isRateLimited } from '@cavuno/board';
-import { Link, useRouter } from '@tanstack/react-router';
+import { Link, useMatch, useRouter } from '@tanstack/react-router';
 import { CircleAlert } from 'lucide-react';
 
 import { serializeDataSourceCookie } from '../lib/data-source';
@@ -31,10 +31,11 @@ import type { ErrorComponentProps } from '@tanstack/react-router';
  * a default the built-in "Something went wrong!" component ships in the HTML —
  * and the root route's own `errorComponent` for a failing ROOT loader.
  *
- * It owns no `<main>`: the chrome renders one around the outlet when a match
- * has errored (see `__root.tsx`), and the root wraps it in one when the chrome
- * itself never mounted. It does render `Page`, which owns the design-token
- * scope, since no route component is there to do so.
+ * Landmark: when it stands in for a route that owns `<main>` (`staticData.ownsMain`,
+ * where the chrome renders only a `div#main-content`), it supplies the `<main>`
+ * that route's component would have; otherwise the chrome's `<main>` is already
+ * around it. The root wraps it in one when the chrome never mounted. It always
+ * renders `Page`, which owns the design-token scope.
  *
  * It reads NO loader data. The root loader is one of the things that can
  * fail, so board context may never have resolved; copy comes from the
@@ -105,6 +106,12 @@ export function AppRouteErrorPage({
   loadDataSourceFacts?: () => Promise<PreviewDataSourceFacts>;
 }) {
   const router = useRouter();
+  // The match this page replaced. Read here rather than in the chrome so the
+  // landmark travels with the page — including through the pending window of
+  // a retry, when the match is no longer in its error state.
+  const ownsMain = Boolean(
+    useMatch({ strict: false, select: (match) => match.staticData?.ownsMain }),
+  );
   // The one distinction worth surfacing: rate limiting is transient and
   // waiting actually fixes it, so "try again in a moment" would mislead.
   // Server-function errors cross the wire as plain Errors, so the SDK guard
@@ -139,7 +146,7 @@ export function AppRouteErrorPage({
     window.location.reload();
   }
 
-  return (
+  const page = (
     <AppRouteError
       title={m.appError_heading()}
       description={
@@ -164,4 +171,5 @@ export function AppRouteErrorPage({
       }
     />
   );
+  return ownsMain ? <main>{page}</main> : page;
 }
