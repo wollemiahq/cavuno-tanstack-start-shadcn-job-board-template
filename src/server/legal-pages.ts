@@ -2,7 +2,11 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
-import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
+import {
+  isLegalPlaceholder,
+  resolveLegalContent,
+  resolveLegalEntity,
+} from '../content/legal';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { LEGAL_PAGES, type LegalPageViewModel } from '../lib/legal';
@@ -69,6 +73,10 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
       };
 
       const description = content.description;
+      // Template scaffolding must not be indexed under the operator's brand.
+      // The pages ship saying "Do not ship it as a real policy", the footer
+      // links them from every page, and marketing.xml submits them — noindex
+      // is the one signal that outranks a sitemap entry.
       const head = {
         meta: [
           {
@@ -78,6 +86,9 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
             name: 'description',
             content: description,
           },
+          ...(isLegalPlaceholder(data.type)
+            ? [{ name: 'robots', content: 'noindex' }]
+            : []),
         ],
         links: [{ rel: 'canonical', href: selfUrl(seo.origin, meta.path) }],
       };
