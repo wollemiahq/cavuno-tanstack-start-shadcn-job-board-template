@@ -35,13 +35,13 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { entityCount } from '@/lib/entity-count';
-import { listingPageHref } from '@/lib/pagination';
+import { clampPage, listingPageHref } from '@/lib/pagination';
 import { chromeEntity } from '@/lib/site-chrome';
 
 export function CompanySearchPage({
   companies,
   count,
-  page,
+  page: requestedPage,
   pageSize,
   heading,
   breadcrumb,
@@ -75,6 +75,9 @@ export function CompanySearchPage({
   endAd?: AdPlacement;
   ads?: BoardAdsConfig;
 }) {
+  // The loader served the last API-reachable page for anything deeper, so
+  // the range label, the active page and Next/Previous must agree with it.
+  const page = clampPage(requestedPage, pageSize);
   const rails = useListingAdRails(ads, startAd, endAd);
   const currentHref = useLocation({ select: (location) => location.href });
   const hasActiveSearch = Boolean(query || breadcrumb);

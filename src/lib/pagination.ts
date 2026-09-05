@@ -137,7 +137,7 @@ export function lastReachablePage(pageSize: number): number {
 
 /** Clamp a 1-based page to the API-reachable range. */
 export function clampPage(page: number, pageSize: number): number {
-  return Math.min(Math.max(1, page), lastReachablePage(pageSize));
+  return Math.min(page, lastReachablePage(pageSize));
 }
 
 /**

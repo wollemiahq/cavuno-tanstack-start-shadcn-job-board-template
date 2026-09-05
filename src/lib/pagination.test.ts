@@ -191,11 +191,11 @@ describe('pageToOffset (1-based page ⇒ 0-based API offset)', () => {
 });
 
 describe('clampPage (page ⇒ API-reachable page)', () => {
-  it('keeps in-range pages and folds the rest onto the edges', () => {
+  it('keeps in-range pages and folds deeper ones onto the last reachable page', () => {
     expect(clampPage(1, 20)).toBe(1);
     expect(clampPage(500, 20)).toBe(500);
     expect(clampPage(501, 20)).toBe(500);
-    expect(clampPage(0, 20)).toBe(1);
+    expect(clampPage(2000, 24)).toBe(416);
   });
 });
 
@@ -219,7 +219,7 @@ describe('totalPages (ceil of count / pageSize)', () => {
     // not render links into the 400. 12,000 jobs at 20 a page is 600 pages,
     // but only 500 fit under the ceiling.
     expect(totalPages(12_000, 20)).toBe(500);
-    expect(totalPages(12_000, 24)).toBe(lastReachablePage(24));
+    expect(totalPages(12_000, 24)).toBe(416);
   });
 });
 

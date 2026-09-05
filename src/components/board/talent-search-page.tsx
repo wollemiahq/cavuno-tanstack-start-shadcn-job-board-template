@@ -52,7 +52,7 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
-import { listingPageHref } from '@/lib/pagination';
+import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { TalentSearch } from '@/lib/talent-search';
 import {
   talentListFiltersEqual,
@@ -74,7 +74,7 @@ export function TalentSearchPage({
   q,
   skill,
   count,
-  page,
+  page: requestedPage,
   pageSize,
   language,
   onPageChange,
@@ -111,6 +111,9 @@ export function TalentSearchPage({
   ads?: BoardAdsConfig;
   profileUnlocks?: boolean;
 }) {
+  // The loader served the last API-reachable page for anything deeper, so
+  // the range label, the active page and Next/Previous must agree with it.
+  const page = clampPage(requestedPage, pageSize);
   const rails = useListingAdRails(ads, startAd, endAd);
   const { employerCompanies } = useRootSession();
   const [workspace, setWorkspace] = useState<{
