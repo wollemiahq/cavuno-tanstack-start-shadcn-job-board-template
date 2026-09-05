@@ -1,15 +1,17 @@
 /**
  * The candidate job-access paywall page component, colocated with the
  * `/account/access` route as a non-route module (leading `-`) so the route file
- * exports only `Route` and stays cleanly code-split. Reads its route data via
+ * exports only `Route` and its loader factory, and stays cleanly code-split. Reads its route data via
  * `getRouteApi` (repo convention) rather than importing the route back.
  *
  * Return path: viewers arrive from a gated jobs listing via the "Unlock more
  * roles" teaser, which carries the originating path as `?returnTo=…`. It rides
- * the URL through the plan picker and the in-page embedded checkout (Stripe's
- * `onComplete` never navigates away, so the param survives), and once the grant
- * is confirmed we send the buyer back there — sanitized with `safeRedirectPath`.
- * With no captured path the entitled state is the fallback destination.
+ * the URL through the plan picker and the in-page embedded checkout, and it is
+ * handed to Stripe as part of the return path too — so a redirect-based method
+ * (3DS/SCA, iDEAL, Klarna), which navigates away and never fires `onComplete`,
+ * still comes back carrying it. Once the grant is confirmed we send the buyer
+ * back there — sanitized with `safeRedirectPath`. With no captured path the
+ * entitled state is the fallback destination.
  */
 import { useCallback, useEffect, useState } from 'react';
 
@@ -64,11 +66,31 @@ const routeApi = getRouteApi('/account_/access');
  * to the fallback, and we drop a path that points back at this page to avoid a
  * post-payment loop. Returns null when there is no safe path to return to.
  */
-function safeReturnTo(value: string | undefined): string | null {
+export function safeReturnTo(value: string | undefined): string | null {
   if (!value) return null;
   const safe = safeRedirectPath(value, RETURN_PATH);
   const pathname = safe.split(/[?#]/, 1)[0];
   return pathname === RETURN_PATH ? null : safe;
+}
+
+const RETURN_PATH_MAX_LENGTH = 400;
+
+/**
+ * This page's path, still carrying the buyer's captured destination, for every
+ * hop that leaves the page and comes back: the loader's sign-in bounce, and
+ * Stripe's `return_url`. Without it a redirect-based payment method (3DS/SCA,
+ * iDEAL, Klarna) — which navigates away, so the in-page `onComplete` never
+ * fires — returns to a bare `/account/access?session_id=…` and the buyer parks
+ * here. Stripe's `session_id` is appended by the API, which joins with `&`
+ * when the path already carries a query.
+ */
+export function accessReturnPath(returnTo: string | null): string {
+  if (returnTo === null) return RETURN_PATH;
+  const nested = `${RETURN_PATH}?returnTo=${encodeURIComponent(returnTo)}`;
+  // The API copies the return path into Stripe session metadata, which caps
+  // a value at 500 characters. A long search URL would fail checkout
+  // outright; falling back to the bare page is the pre-existing behaviour.
+  return nested.length > RETURN_PATH_MAX_LENGTH ? RETURN_PATH : nested;
 }
 
 /**
@@ -181,7 +203,9 @@ export function AccessPage() {
         await router.invalidate();
       }}
       navigate={async (href) => {
-        await router.navigate({ href });
+        // Replace, so Back from the destination does not land on this page
+        // and get bounced forward again by the same effect.
+        await router.navigate({ href, replace: true });
       }}
       reportActionError={toastActionError}
     />
@@ -218,6 +242,9 @@ export function AccessPageView({
   // Where the buyer was browsing when they hit the paywall (sanitized). It
   // rides the URL from the "Unlock more roles" teaser through the whole flow.
   const returnTo = safeReturnTo(returnToRaw);
+  // What Stripe brings the buyer back to — this page WITH the captured
+  // destination, so a redirect-based method returns with it intact.
+  const returnPath = accessReturnPath(returnTo);
 
   const [kit, setKit] = useState<AccessCheckoutSession | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -290,7 +317,7 @@ export function AccessPageView({
     setBusy(offer.offerKey);
     try {
       const mountKit = await startCheckoutAction({
-        data: { offerKey: offer.offerKey, returnPath: RETURN_PATH },
+        data: { offerKey: offer.offerKey, returnPath },
       });
       setKit(mountKit);
     } catch {
@@ -304,6 +331,8 @@ export function AccessPageView({
     setBusy('portal');
     try {
       const { url } = await openBillingPortalAction({
+        // The portal return carries no session id, so nothing on this page
+        // would consume a nested destination — keep it bare.
         data: { returnPath: RETURN_PATH },
       });
       window.location.href = url;

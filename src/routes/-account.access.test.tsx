@@ -36,7 +36,7 @@ const mocks = {
   useSearch: vi.fn<() => AccessSearch>(),
 };
 
-import { AccessPageView } from './-access-page';
+import { AccessPageView, accessReturnPath, safeReturnTo } from './-access-page';
 
 const grant = {
   object: 'access_grant',
@@ -184,6 +184,62 @@ describe('candidate access actions', () => {
     ).toBeNull();
   });
 
+  it('carries the captured destination into the Stripe checkout return path', async () => {
+    // Redirect-based methods (3DS/SCA, iDEAL, Klarna) navigate away, so the
+    // in-page `onComplete` never fires: the destination has to ride the
+    // `return_url` or the buyer parks on this page.
+    mocks.useLoaderData.mockReturnValue({ grant, offers: [offer] });
+    mocks.useSearch.mockReturnValue({ returnTo: '/jobs?q=react' });
+    // Rejecting keeps the plan picker mounted; the call arguments are the
+    // subject here, not the Stripe iframe.
+    mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
+
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+
+    await waitFor(() => {
+      expect(mocks.startCheckout).toHaveBeenCalledWith({
+        data: {
+          offerKey: 'monthly',
+          returnPath: '/account/access?returnTo=%2Fjobs%3Fq%3Dreact',
+        },
+      });
+    });
+  });
+
+  it('drops an unsafe captured destination from the checkout return path', async () => {
+    mocks.useLoaderData.mockReturnValue({ grant, offers: [offer] });
+    mocks.useSearch.mockReturnValue({ returnTo: 'https://evil.example/phish' });
+    // Rejecting keeps the plan picker mounted; the call arguments are the
+    // subject here, not the Stripe iframe.
+    mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
+
+    await renderAccessPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+
+    await waitFor(() => {
+      expect(mocks.startCheckout).toHaveBeenCalledWith({
+        data: { offerKey: 'monthly', returnPath: '/account/access' },
+      });
+    });
+  });
+
+  it('bounces the buyer to the destination once Stripe returns with a session id', async () => {
+    // The redirect-based return: `?returnTo=…&session_id=…` with the grant
+    // already active. This is the combination the nested return path makes
+    // reachable, so it is pinned here.
+    mocks.useLoaderData.mockReturnValue({
+      grant: { ...grant, hasAccess: true },
+      offers: [offer],
+    });
+    mocks.useSearch.mockReturnValue({ returnTo: '/jobs', session_id: 'cs_x' });
+
+    await renderAccessPage();
+
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/jobs'));
+    expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  });
+
   it('opens the billing portal for a recurring subscription', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant: {
@@ -194,7 +250,12 @@ describe('candidate access actions', () => {
       },
       offers: [],
     });
-    mocks.useSearch.mockReturnValue({ session_id: undefined });
+    // A captured destination must NOT ride the portal return: nothing on the
+    // page consumes it without a session id.
+    mocks.useSearch.mockReturnValue({
+      session_id: undefined,
+      returnTo: '/jobs',
+    });
     mocks.openBillingPortal.mockResolvedValue({
       url: 'https://billing.example/session',
     });
@@ -313,5 +374,29 @@ describe('candidate access actions', () => {
     expect(
       screen.getByRole('button', { name: 'Manage subscription' }),
     ).toBeVisible();
+  });
+});
+
+describe('accessReturnPath', () => {
+  it('keeps this page as the return path when there is nothing to return to', () => {
+    expect(accessReturnPath(null)).toBe('/account/access');
+  });
+
+  it('nests the captured destination so a hop away and back preserves it', () => {
+    expect(accessReturnPath('/jobs')).toBe('/account/access?returnTo=%2Fjobs');
+  });
+
+  it('falls back to the bare page when the nested path would exceed the Stripe metadata cap', () => {
+    const long = `/jobs?q=${'a'.repeat(500)}`;
+    expect(accessReturnPath(long)).toBe('/account/access');
+  });
+
+  it.each([
+    'https://evil.example/phish',
+    '//evil.example',
+    '/\\evil.example',
+    '/account/access',
+  ])('refuses %s as a captured destination', (value) => {
+    expect(accessReturnPath(safeReturnTo(value))).toBe('/account/access');
   });
 });

@@ -14,7 +14,7 @@ import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { getAccessGrant, getPaywallOffers } from '../server/paywall';
 import { getSeoBase } from '../server/queries';
-import { AccessPage, RETURN_PATH } from './-access-page';
+import { AccessPage, accessReturnPath, safeReturnTo } from './-access-page';
 
 import {
   CandidateRouteErrorPage,
@@ -23,6 +23,7 @@ import {
 import {
   incomingAuthSearch,
   mergeAuthConversionSearch,
+  type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
@@ -30,30 +31,42 @@ import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 type AccessSearch = { session_id?: string; returnTo?: string };
 
-export const Route = createFileRoute('/account_/access')({
-  staticData: { ownsMain: true },
-  pendingComponent: CandidateRoutePendingPage,
-  errorComponent: CandidateRouteErrorPage,
-  // Keys are omitted rather than set to `undefined` when absent, so plain
-  // `<Link to="/account/access">` (the header avatar menu) needs no search
-  // prop and renders without a trailing `?`. `returnTo` is kept raw here and
-  // sanitized with `safeRedirectPath` at the point of navigation.
-  validateSearch: (search: UrlSearchInput): AccessSearch => {
-    const out: AccessSearch = {};
-    const sessionId = searchString(search.session_id);
-    const returnTo = searchString(search.returnTo);
-    if (sessionId) out.session_id = sessionId;
-    if (returnTo) out.returnTo = returnTo;
-    return out;
-  },
-  loader: async ({ location }) => {
+/** Only the raw `returnTo` is read from the location; the rest is the router's. */
+type AccessLocation = { search?: UrlSearchInput };
+
+export type AccessLoaderDependencies = {
+  getAccessGrant: () => ReturnType<typeof getAccessGrant>;
+  getPaywallOffers: () => ReturnType<typeof getPaywallOffers>;
+  getSeoBase: () => ReturnType<typeof getSeoBase>;
+};
+
+const accessLoaderDependencies: AccessLoaderDependencies = {
+  getAccessGrant,
+  getPaywallOffers,
+  getSeoBase,
+};
+
+/**
+ * The loader, dependency-explicit so its auth bounces are testable. Both
+ * bounces carry the buyer's OWN destination nested inside this page's path:
+ * sending bare `/account/access` truncates the listing they were unlocking,
+ * so they come back from sign-in with no memory of it.
+ */
+export function createAccessLoader(
+  dependencies: AccessLoaderDependencies = accessLoaderDependencies,
+) {
+  return async (context: { location: LocationAuthSearch & AccessLocation }) => {
+    const { location } = context;
+    const returnTo = accessReturnPath(
+      safeReturnTo(searchString(location.search?.returnTo)),
+    );
     try {
       const [grant, offers, seo] = await Promise.all([
-        getAccessGrant(),
-        getPaywallOffers(),
+        dependencies.getAccessGrant(),
+        dependencies.getPaywallOffers(),
         // Was `seo: await getSeoBase()` in the return — a second serial wave
         // hidden in an object literal.
-        getSeoBase(),
+        dependencies.getSeoBase(),
       ]);
       return { grant, offers: offers.data, seo };
     } catch (error) {
@@ -63,7 +76,7 @@ export const Route = createFileRoute('/account_/access')({
         throw redirect({
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
-            { returnTo: RETURN_PATH },
+            { returnTo },
             incomingAuthSearch(location),
           ),
         });
@@ -71,12 +84,32 @@ export const Route = createFileRoute('/account_/access')({
       if (authFailure === 'unauthenticated') {
         throw redirect({
           to: '/auth/sign-in',
-          search: { returnTo: RETURN_PATH },
+          search: { returnTo },
         });
       }
       throw error;
     }
+  };
+}
+
+export const Route = createFileRoute('/account_/access')({
+  staticData: { ownsMain: true },
+  pendingComponent: CandidateRoutePendingPage,
+  errorComponent: CandidateRouteErrorPage,
+  // Keys are omitted rather than set to `undefined` when absent, so plain
+  // `<Link to="/account/access">` (the header avatar menu) needs no search
+  // prop and renders without a trailing `?`. `returnTo` is kept raw here and
+  // sanitized with `safeRedirectPath` at the point of navigation and, in the
+  // loader, before it is nested into an auth bounce.
+  validateSearch: (search: UrlSearchInput): AccessSearch => {
+    const out: AccessSearch = {};
+    const sessionId = searchString(search.session_id);
+    const returnTo = searchString(search.returnTo);
+    if (sessionId) out.session_id = sessionId;
+    if (returnTo) out.returnTo = returnTo;
+    return out;
   },
+  loader: createAccessLoader(),
   head: ({ loaderData }) => ({
     meta: [
       {

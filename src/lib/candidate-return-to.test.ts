@@ -20,6 +20,14 @@ describe('candidateReturnTo', () => {
     ).toBe('/jobs?q=designer&location=Sydney&selectedJob=product-designer');
   });
 
+  it('keeps a nested returnTo, so the paywall hop survives sign-in', () => {
+    // `/account/access?returnTo=/jobs` bounces an anonymous visitor to
+    // sign-in; truncating the query here strands the buyer on the paywall.
+    expect(candidateReturnTo('/account/access?returnTo=%2Fjobs')).toBe(
+      '/account/access?returnTo=%2Fjobs',
+    );
+  });
+
   it.each([
     undefined,
     '',
