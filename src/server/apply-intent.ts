@@ -12,6 +12,7 @@ import {
 
 import { isTrustedApplyGatewayUrl } from '@/lib/apply-gateway-url';
 import { withApplyGatewayCapability } from '@/lib/board';
+import { localizePath } from '@/lib/localized-path';
 import { searchString } from '@/lib/pagination';
 
 export const APPLY_SESSION_COOKIE = '__Host-cavuno_apply_session';
@@ -213,6 +214,26 @@ export function ordinaryFallbackRedirect({
     status: 303,
     headers: {
       location: applicationUrl,
+      'cache-control': 'no-store',
+      'referrer-policy': 'strict-origin',
+      'x-robots-tag': 'noindex, nofollow',
+    },
+  });
+}
+
+/**
+ * `/apply` is an action, not a page. A GET still reaches it — crawlers follow
+ * the form action, and the route matches case-insensitively — and a route
+ * with only a POST handler fell through to the SPA shell: an indexable, blank
+ * 200 on every board. Send the visitor to the listing. The target is built
+ * from the request locale, never derived from the request path, so nothing
+ * the client sent is echoed into `Location`.
+ */
+export function applyGetRedirect(): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: localizePath('/jobs'),
       'cache-control': 'no-store',
       'referrer-policy': 'strict-origin',
       'x-robots-tag': 'noindex, nofollow',

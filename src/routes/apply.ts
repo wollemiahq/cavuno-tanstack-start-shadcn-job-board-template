@@ -1,10 +1,12 @@
 /**
- * POST-only real-Apply handoff for the current TanStack starter.
+ * Real-Apply handoff for the current TanStack starter.
  *
- * It intentionally has no GET handler and never accepts a destination or
- * country from the browser. Enhanced clients receive the opaque gateway URL;
- * plain forms receive a 303. Either way, the candidate's browser reaches the
- * user-edge gateway directly so Cavuno never evaluates this server's IP.
+ * POST is the only action. GET redirects to the listing: without a handler a
+ * GET fell through to the SPA shell as a blank, indexable 200. The POST never
+ * accepts a destination or country from the browser. Enhanced clients receive
+ * the opaque gateway URL; plain forms receive a 303. Either way, the
+ * candidate's browser reaches the user-edge gateway directly so Cavuno never
+ * evaluates this server's IP.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -26,6 +28,7 @@ import { decideSession } from '@/lib/session-middleware';
 import {
   applyJobSlug,
   applyJsonGateway,
+  applyGetRedirect,
   applyJsonRedirect,
   applySessionKey,
   createApplyIntent,
@@ -51,6 +54,7 @@ function applyErrorResponse(status: 400 | 503): Response {
 export const Route = createFileRoute('/apply')({
   server: {
     handlers: {
+      GET: () => applyGetRedirect(),
       POST: async ({ request }) => {
         const wantsJson = wantsApplyJson(request);
         if (!isSameOriginApplyRequest(request)) {
