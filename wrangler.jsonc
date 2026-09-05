@@ -9,7 +9,13 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/server.ts",
   // COMMITTED DEFAULT: a public real-data reference board, shared with the
-  // other Cavuno starters. Point at your own board by swapping CAVUNO_BOARD.
+  // other Cavuno starters, so `pnpm dev` shows real jobs on a fresh clone.
+  //
+  // SWAP CAVUNO_BOARD BEFORE YOU DEPLOY. Leaving it serves the reference
+  // board's jobs, companies, SEO and robots.txt from YOUR domain — the app
+  // does not notice, because it only checks that the var is set. `pnpm run
+  // deploy` refuses while this key is here (scripts/check-board-key.mjs);
+  // a bare `wrangler deploy` does not, so swap it, don't rely on the gate.
   "vars": {
     "CAVUNO_API_URL": "https://api.cavuno.com",
     // replace with your board's pk_ before deploy
