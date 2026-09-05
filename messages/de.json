@@ -182,6 +182,8 @@
   "appError_switchToYourBoard": "Zurück zu deinem Board",
   "applyButton_applicationStateUnknownText": "Wir konnten nicht prüfen, ob du dich bereits beworben hast. Versuch es erneut, bevor du dich bewirbst.",
   "applyButton_applyLabel": "Bewerben",
+  "applyButton_resumeLabel": "Lebenslauf (optional)",
+  "applyButton_resumeUploadError": "Deine Bewerbung wurde gesendet, aber der Lebenslauf wurde nicht angenommen. Hänge eine PDF- oder Word-Datei unter 10 MB an.",
   "applyButton_retryApplicationStateLabel": "Bewerbungsstatus prüfen",
   "apply_applicationSubmitError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   "apply_appliedViewApplicationsLabel": "Beworben — Bewerbungen ansehen",

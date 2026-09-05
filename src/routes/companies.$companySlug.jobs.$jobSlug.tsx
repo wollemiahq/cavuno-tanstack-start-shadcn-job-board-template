@@ -27,6 +27,7 @@ import {
   applyToJob,
   applyToJobAsGuest,
   prepareApplyToJob,
+  uploadApplicationResume,
 } from '../server/applications';
 import { subscribeJobAlert } from '../server/queries';
 import { createJobDetailLoader } from './-job-detail-loader';
@@ -49,6 +50,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { applicationResumeFormData } from '@/lib/apply-resume';
 import { companyIntro } from '@/lib/company-intro';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/$jobSlug')({
@@ -126,8 +128,13 @@ function JobDetailPage() {
             onPrepareApply={(jobSlug) =>
               prepareApplyToJob({ data: { jobSlug } })
             }
-            onApply={(jobSlug, approvalReceipt) =>
-              applyToJob({ data: { jobSlug, approvalReceipt } })
+            onApply={(jobSlug, approvalReceipt, body) =>
+              applyToJob({ data: { jobSlug, approvalReceipt, body } })
+            }
+            onUploadResume={({ jobSlug, file }) =>
+              uploadApplicationResume({
+                data: applicationResumeFormData(jobSlug, file),
+              })
             }
           />
         }

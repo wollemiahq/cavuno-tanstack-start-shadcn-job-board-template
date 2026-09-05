@@ -441,10 +441,11 @@ Props:
 - `jobSlug: string | null`
 - `language: string`
 - `nativeApplications?: boolean | undefined`
-- `onApply: (jobSlug: string, approvalReceipt?: string | undefined) => Promise<void | { id: string; }>`
+- `onApply: (jobSlug: string, approvalReceipt?: string | undefined, body?: { coverNote?: string | undefined; } | undefined) => Pr…`
 - `onGuestApply?: ((input: { jobSlug: string; name?: string | undefined; email: string; coverNote?: string | undefined; }) => Promise<{…`
 - `onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>`
 - `onRetryApplicationState?: (() => void) | undefined`
+- `onUploadResume?: ((input: { jobSlug: string; file: File; }) => Promise<void | { id: string; }>) | undefined`
 - `registrationWall?: boolean | undefined`
 - `returnTo: string`
 - `viewer: { emailVerified: boolean; } | null`

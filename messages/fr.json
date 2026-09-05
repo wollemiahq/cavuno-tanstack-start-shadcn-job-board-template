@@ -182,6 +182,8 @@
   "appError_switchToYourBoard": "Revenir à votre site",
   "applyButton_applicationStateUnknownText": "Nous n’avons pas pu vérifier si vous aviez déjà postulé. Réessayez avant de postuler.",
   "applyButton_applyLabel": "Postuler",
+  "applyButton_resumeLabel": "CV (facultatif)",
+  "applyButton_resumeUploadError": "Votre candidature a été envoyée, mais le CV n’a pas été accepté. Joignez un fichier PDF ou Word de moins de 10 Mo.",
   "applyButton_retryApplicationStateLabel": "Vérifier l’état de la candidature",
   "apply_applicationSubmitError": "Une erreur est survenue. Veuillez réessayer.",
   "apply_appliedViewApplicationsLabel": "Candidature envoyée — voir mes candidatures",

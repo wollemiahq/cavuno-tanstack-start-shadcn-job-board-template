@@ -7,6 +7,7 @@ import {
   applyToJob,
   applyToJobAsGuest,
   prepareApplyToJob,
+  uploadApplicationResume,
 } from '../server/applications';
 import { getBoardContext } from '../server/queries';
 
@@ -16,6 +17,7 @@ import { ApplyButton } from '@/components/board/apply-button';
 import { JobSearchDetailState } from '@/components/board/job-search-detail-state';
 import { JobSearchResultDetail } from '@/components/board/job-search-result-detail';
 import { SaveJobButton } from '@/components/board/save-job-button';
+import { applicationResumeFormData } from '@/lib/apply-resume';
 import { companyIntro } from '@/lib/company-intro';
 
 export type SelectedJobDetailDependencies = {
@@ -28,6 +30,9 @@ export type SelectedJobDetailDependencies = {
   applyToJobAsGuest: (options: {
     data: Parameters<typeof applyToJobAsGuest>[0]['data'];
   }) => ReturnType<typeof applyToJobAsGuest>;
+  uploadApplicationResume: (options: {
+    data: FormData;
+  }) => ReturnType<typeof uploadApplicationResume>;
   saveJob: (options: { data: { jobId: string } }) => ReturnType<typeof saveJob>;
 };
 
@@ -35,6 +40,7 @@ const selectedJobDetailDependencies: SelectedJobDetailDependencies = {
   applyToJob,
   prepareApplyToJob,
   applyToJobAsGuest,
+  uploadApplicationResume,
   saveJob,
 };
 
@@ -96,8 +102,13 @@ export function SelectedJobDetail({
       onPrepareApply={(jobSlug) =>
         dependencies.prepareApplyToJob({ data: { jobSlug } })
       }
-      onApply={(jobSlug, approvalReceipt) =>
-        dependencies.applyToJob({ data: { jobSlug, approvalReceipt } })
+      onApply={(jobSlug, approvalReceipt, body) =>
+        dependencies.applyToJob({ data: { jobSlug, approvalReceipt, body } })
+      }
+      onUploadResume={({ jobSlug, file }) =>
+        dependencies.uploadApplicationResume({
+          data: applicationResumeFormData(jobSlug, file),
+        })
       }
     />
   ) : undefined;

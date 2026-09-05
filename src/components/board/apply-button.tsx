@@ -60,6 +60,9 @@ export type ApplyButtonDependencies = {
   >;
 };
 
+/** File types Cavuno accepts for a per-application resume (hosted parity). */
+const APPLICATION_RESUME_ACCEPT = '.pdf,.doc,.docx,.odt,.rtf,.txt';
+
 const applyButtonDependencies: ApplyButtonDependencies = {
   loadGatewayApply: () => import('@/lib/gateway-apply'),
 };
@@ -75,6 +78,7 @@ export function ApplyButton({
   returnTo,
   onPrepareApply,
   onApply,
+  onUploadResume,
   applicationState = 'not-requested',
   onRetryApplicationState,
   applicationsHref = '/me/applications',
@@ -106,11 +110,26 @@ export function ApplyButton({
    */
   /** Ask Cavuno whether this native Apply needs a browser-edge receipt. */
   onPrepareApply: (jobSlug: string) => Promise<NativeApplyPrepareResult>;
-  /** Submit natively; a receipt id is present only when preparation required it. */
+  /**
+   * Submit natively; a receipt id is present only when preparation required it.
+   * `body` carries the candidate-supplied facts collected on this page (today
+   * the optional cover note) — the platform accepts them on the same apply
+   * call the guest form already uses.
+   */
   onApply: (
     jobSlug: string,
     approvalReceipt?: string,
+    body?: { coverNote?: string },
   ) => Promise<{ id: string } | void>;
+  /**
+   * Attach an optional per-application resume after a successful native
+   * apply. Providing it is what renders the resume field: omit it and the
+   * signed-in form collects a cover note only.
+   */
+  onUploadResume?: (input: {
+    jobSlug: string;
+    file: File;
+  }) => Promise<{ id: string } | void>;
   /**
    * Seed the private application lookup. `unknown` is deliberately distinct
    * from `not-applied`: it blocks another submission until a retry resolves.
@@ -192,14 +211,19 @@ export function ApplyButton({
     | 'location-denied'
     | 'guest-submitted'
     | 'guest-not-allowed'
+    | 'resume-error'
   >('idle');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestCoverNote, setGuestCoverNote] = useState('');
+  const [coverNote, setCoverNote] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [trackedJob, setTrackedJob] = useState(jobSlug);
   if (jobSlug !== trackedJob) {
     setTrackedJob(jobSlug);
     setState('idle');
+    setCoverNote('');
+    setResumeFile(null);
   }
 
   const { action, copy } = toApplyButtonVM({
@@ -449,42 +473,118 @@ export function ApplyButton({
         </form>
       );
     case 'native':
+      // Hosted parity: a signed-in candidate may attach a cover note and a
+      // per-application resume. Both are optional, so the one-click path
+      // (submit straight away, profile resume attached server-side) stays
+      // exactly one click.
       return (
-        <div className="flex flex-col gap-1">
-          <Button
-            size="lg"
-            disabled={state === 'applying'}
-            onClick={async () => {
+        <form
+          method="post"
+          className="flex flex-col gap-3"
+          onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            if (state === 'resume-error') {
+              // The application already exists; only the attachment is
+              // outstanding. Re-running apply here would re-hash an edited
+              // cover note and trip the approval replay guard.
               setState('applying');
-              trackApplyClick('native');
               try {
-                const application = await runNativeApply({
-                  jobSlug: action.jobSlug,
-                  prepare: onPrepareApply,
-                  submit: onApply,
-                });
-                const applicationId = application?.id;
-                if (applicationId !== undefined) {
-                  trackApplySubmit(applicationId);
+                if (onUploadResume && resumeFile) {
+                  await onUploadResume({
+                    jobSlug: action.jobSlug,
+                    file: resumeFile,
+                  });
                 }
                 setState('applied');
-              } catch (error) {
-                // A stale verification state routes to the verify page;
-                // any other failure surfaces loudly (never a silent
-                // revert — "fail loud", and never an unhandled rejection).
-                if (String(error).includes('EMAIL_UNVERIFIED')) {
-                  window.location.assign(candidateVerifyEmailHref(returnTo));
+              } catch {
+                setState('resume-error');
+              }
+              return;
+            }
+            setState('applying');
+            trackApplyClick('native');
+            const note = coverNote.trim();
+            try {
+              const application = await runNativeApply({
+                jobSlug: action.jobSlug,
+                prepare: onPrepareApply,
+                submit: (jobSlug, approvalReceipt) =>
+                  onApply(
+                    jobSlug,
+                    approvalReceipt,
+                    note ? { coverNote: note } : undefined,
+                  ),
+              });
+              const applicationId = application?.id;
+              if (applicationId !== undefined) {
+                trackApplySubmit(applicationId);
+              }
+              // The application exists from here on. A failed resume upload
+              // must not read as a failed application: say so, and leave the
+              // form submittable so the candidate can retry the attachment
+              // alone (see the `resume-error` branch above).
+              if (onUploadResume && resumeFile) {
+                try {
+                  await onUploadResume({
+                    jobSlug: action.jobSlug,
+                    file: resumeFile,
+                  });
+                } catch {
+                  setState('resume-error');
                   return;
                 }
-                setState(
-                  error instanceof NativeApplyApprovalError &&
-                    error.reason === 'denied'
-                    ? 'location-denied'
-                    : 'error',
-                );
               }
-            }}
-          >
+              setState('applied');
+            } catch (error) {
+              // A stale verification state routes to the verify page;
+              // any other failure surfaces loudly (never a silent
+              // revert — "fail loud", and never an unhandled rejection).
+              if (String(error).includes('EMAIL_UNVERIFIED')) {
+                window.location.assign(candidateVerifyEmailHref(returnTo));
+                return;
+              }
+              setState(
+                error instanceof NativeApplyApprovalError &&
+                  error.reason === 'denied'
+                  ? 'location-denied'
+                  : 'error',
+              );
+            }
+          }}
+        >
+          <Field>
+            <FieldLabel htmlFor="native-apply-cover-note">
+              {copy.guestCoverNoteLabel}
+            </FieldLabel>
+            <Textarea
+              id="native-apply-cover-note"
+              name="coverNote"
+              rows={4}
+              value={coverNote}
+              onChange={(event) => setCoverNote(event.target.value)}
+            />
+          </Field>
+          {onUploadResume ? (
+            <Field>
+              <FieldLabel htmlFor="native-apply-resume">
+                {m.applyButton_resumeLabel()}
+              </FieldLabel>
+              <Input
+                // Uncontrolled: re-key per job so a file picked for the
+                // previous job cannot linger in the DOM after a same-route
+                // navigation (the similar-jobs rail) while state says none.
+                key={jobSlug}
+                id="native-apply-resume"
+                name="resume"
+                type="file"
+                accept={APPLICATION_RESUME_ACCEPT}
+                onChange={(event) =>
+                  setResumeFile(event.target.files?.[0] ?? null)
+                }
+              />
+            </Field>
+          ) : null}
+          <Button type="submit" size="lg" disabled={state === 'applying'}>
             {state === 'applying'
               ? copy.applyingLabel
               : m.applyButton_applyLabel()}
@@ -494,8 +594,13 @@ export function ApplyButton({
               {copy.applicationSubmitError}
             </p>
           ) : null}
+          {state === 'resume-error' ? (
+            <p role="alert" className="text-destructive text-sm">
+              {m.applyButton_resumeUploadError()}
+            </p>
+          ) : null}
           {locationDialog}
-        </div>
+        </form>
       );
   }
 }
