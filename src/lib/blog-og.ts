@@ -10,7 +10,7 @@
  * Text goes through `ogText`, NOT an HTML entity escaper: workers-og's
  * HTMLRewriter hands text nodes over raw, so `&amp;` would paint literally.
  */
-import { ogStyleValue, ogText, ogUrlAttr } from './og-text';
+import { OG_META_SEPARATOR, ogStyleValue, ogText, ogUrlAttr } from './og-text';
 
 /** Cap to `max` glyphs (ellipsis included), so text never overflows the frame. */
 export function truncate(value: string, max: number): string {
@@ -59,7 +59,7 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
       <div style="display:flex;width:1200px;height:14px;background:${themeColor};"></div>
       <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;padding:72px 80px;">
         <div style="display:flex;flex-direction:column;gap:28px;">
-          <div style="display:flex;font-size:28px;color:#6b7280;">${boardName} · ${blogLabel}</div>
+          <div style="display:flex;font-size:28px;color:#6b7280;">${boardName} ${OG_META_SEPARATOR} ${blogLabel}</div>
           <div style="display:flex;font-size:64px;font-weight:600;color:#111827;line-height:1.1;">${title}</div>
           ${
             excerpt

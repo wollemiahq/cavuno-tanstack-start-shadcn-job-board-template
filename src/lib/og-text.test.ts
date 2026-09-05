@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { ogStyleValue, ogText, ogUrlAttr } from './og-text';
+import {
+  OG_META_SEPARATOR,
+  ogStyleValue,
+  ogSubsetText,
+  ogText,
+  ogUrlAttr,
+} from './og-text';
 
 describe('ogText', () => {
   it('leaves & and quotes raw — HTMLRewriter does not decode entities', () => {
@@ -25,5 +31,22 @@ describe('ogUrlAttr', () => {
 describe('ogStyleValue', () => {
   it('drops quotes, angle brackets and declaration separators', () => {
     expect(ogStyleValue('Inter";<x>')).toBe('Interx');
+  });
+});
+
+describe('ogSubsetText', () => {
+  it('includes the separator the card paints between meta parts', () => {
+    const text = ogSubsetText(['Pilot', 'Acme', 'Berlin', '90–100']);
+    // Omitted, Google Fonts ships no glyph for it and satori draws tofu.
+    expect(text).toContain(OG_META_SEPARATOR);
+  });
+
+  it('drops empty parts and appends every extra glyph', () => {
+    expect(ogSubsetText(['Pilot', '', null, undefined, 'Acme'])).toBe(
+      `Pilot Acme ${OG_META_SEPARATOR}`,
+    );
+    expect(ogSubsetText(['Pilot'], [OG_META_SEPARATOR, '…'])).toBe(
+      `Pilot ${OG_META_SEPARATOR} …`,
+    );
   });
 });

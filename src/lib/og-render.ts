@@ -1,10 +1,11 @@
 import { ImageResponse } from 'workers-og';
 
+import { ogPngResponse } from './og-cache';
+
 import type { OgFont } from './og-font';
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const OG_CACHE_CONTROL = 'public, immutable, no-transform, max-age=31536000';
 
 /**
  * Render a 1200×630 PNG share card and hand back a fully materialised
@@ -31,10 +32,5 @@ export async function renderOgPng(
   if (png.byteLength === 0) {
     throw new Error('OG renderer produced an empty image');
   }
-  return new Response(png, {
-    headers: {
-      'Content-Type': 'image/png',
-      'Cache-Control': OG_CACHE_CONTROL,
-    },
-  });
+  return ogPngResponse(png);
 }
