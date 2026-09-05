@@ -62,6 +62,34 @@ export const LEGAL_CONTENT = {
   },
 } satisfies Record<LegalLocale, Record<LegalPageType, LegalPageContent>>;
 
+/**
+ * Legal/about pages still carrying `<LegalPlaceholderCallout>`.
+ *
+ * A placeholder policy must not be indexed under the operator's brand: these
+ * pages ship saying "Do not ship it as a real policy", they are linked from
+ * every footer, and `marketing.xml` submits them to Google. `getLegalPageView`
+ * emits `robots: noindex` for everything listed here, so a fork that has not
+ * written its policies yet is not asking to be indexed with template
+ * scaffolding under its own domain.
+ *
+ * OPERATOR: delete a page's entry in the same edit that replaces its copy for
+ * the locales you serve — leaving it listed keeps your real policy out of the
+ * index. `placeholder-noindex.test.ts` fails if a page stays listed after its
+ * last callout is gone.
+ */
+export const LEGAL_PLACEHOLDER_PAGES: ReadonlySet<LegalPageType> = new Set([
+  'about',
+  'privacy-policy',
+  'terms-of-service',
+  'cookie-policy',
+  'impressum',
+]);
+
+/** Is this page still template scaffolding rather than the operator's own copy? */
+export function isLegalPlaceholder(type: LegalPageType): boolean {
+  return LEGAL_PLACEHOLDER_PAGES.has(type);
+}
+
 const LEGAL_LOCALES = [
   'en',
   'de',
