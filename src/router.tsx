@@ -1,6 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 
 import { NotFound } from './components/app-not-found';
+import { RouteErrorPage } from './components/app-route-error';
 import { delocalizeSegments, localizeSegments } from './lib/localized-path';
 import { deLocalizeUrl, localizeUrl } from './paraglide/runtime';
 import { routeTree } from './routeTree.gen';
@@ -35,10 +36,19 @@ export function getRouter() {
     // job board content.
     defaultStaleTime: 30_000,
     // The default 404 is a real shadcn Empty page instead of TanStack's
-    // built-in placeholder. The error boundary is deliberately NOT set here:
-    // a router-wide default would give every route its own boundary, so an
-    // error would never reach the root's `errorComponent`.
+    // built-in placeholder.
     defaultNotFoundComponent: NotFound,
+    // A rejected loader is rendered IN PLACE at the failing match, never
+    // rethrown to the root: on the server `Match` renders
+    // `(route.errorComponent ?? defaultErrorComponent) || ErrorComponent`, so
+    // without this default a Board API failure on any public page ships
+    // TanStack's unstyled "Something went wrong!" in the HTML — and, since
+    // that component never mounts `useClientErrorReport`, Cavuno never hears
+    // about it. The client path does rethrow, which is why the root
+    // `errorComponent` alone looked sufficient in jsdom tests. The candidate
+    // routes keep their own `CandidateRouteErrorPage`; the root keeps the
+    // standalone `AppRouteErrorPage` for a failing root loader.
+    defaultErrorComponent: RouteErrorPage,
     // Paraglide locale routing: route matching sees the
     // delocalized path (/de/jobs → /jobs), rendered hrefs re-localize for
     // the current locale. The base locale stays unprefixed.

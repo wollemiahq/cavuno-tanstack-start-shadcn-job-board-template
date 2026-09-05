@@ -15,12 +15,18 @@
  * retry loops forever. The page gains a "Switch back to your board" action
  * that clears the data-source cookie — only when dual-source facts say so.
  *
- * Note the routers below deliberately set no `defaultErrorComponent`: that
- * option would give every child route its own boundary and catch the error
- * BEFORE it ever reached the root, silently voiding what these assert. The
- * real router (src/router.tsx) sets no such default either.
+ * The client-side routers below set no `defaultErrorComponent`, so the error
+ * is caught by the ROOT boundary — that is the client contract. The server is
+ * different, and that is what the "server render" block pins: TanStack's
+ * `Match` renders a rejected loader in place using
+ * `(route.errorComponent ?? defaultErrorComponent) || ErrorComponent`, and
+ * never rethrows. Without a default, production HTML for a failed loader
+ * carried the framework's "Something went wrong!" — and, since that component
+ * never mounts `useClientErrorReport`, the failure was invisible to Cavuno.
  */
 import '@testing-library/jest-dom/vitest';
+import { renderToString } from 'react-dom/server';
+
 import {
   Outlet,
   RouterProvider,
@@ -44,8 +50,16 @@ const mocks = {
   getDataSourceFacts: vi.fn<() => Promise<PreviewDataSourceFacts>>(),
 };
 
-import { AppRouteError, AppRouteErrorPage } from './app-route-error';
+import {
+  AppRouteError,
+  AppRouteErrorPage,
+  RouteErrorPage,
+} from './app-route-error';
 
+import {
+  CLIENT_ERROR_PATH,
+  resetClientErrorReports,
+} from '@/lib/client-error-report';
 import { m } from '@/paraglide/messages';
 
 /** Captures every `document.cookie = …` write. */
@@ -287,5 +301,110 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
     expect(
       screen.queryByRole('button', { name: m.appError_switchToYourBoard() }),
     ).toBeNull();
+  });
+});
+
+/**
+ * The production shape of a loader failure: SSR of a public route whose
+ * loader rejects, under a root wired like `__root.tsx`. `isServer: true`
+ * selects the branch of `Match` that renders the error in place instead of
+ * rethrowing; `defaultErrorComponent` is the knob under test.
+ */
+async function renderRejectingLoaderOnServer(
+  defaultErrorComponent: typeof RouteErrorPage | undefined,
+) {
+  const rootRoute = createRootRoute({
+    errorComponent: AppRouteErrorPage,
+    component: () => (
+      <main data-testid="chrome-main">
+        <Outlet />
+      </main>
+    ),
+  });
+  const jobsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/jobs',
+    loader: () => Promise.reject(new Error('Board API 500')),
+    component: () => <h1>Jobs</h1>,
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([jobsRoute]),
+    history: createMemoryHistory({ initialEntries: ['/jobs'] }),
+    isServer: true,
+    defaultErrorComponent,
+  });
+  await router.load();
+  return renderToString(<RouterProvider router={router} />);
+}
+
+describe('server render of a rejecting public loader', () => {
+  it('without a router default, TanStack ships its own fallback in the HTML', async () => {
+    // The trap this suite guards against, pinned so a future "tidy-up" of
+    // router.tsx cannot silently reintroduce it.
+    const html = await renderRejectingLoaderOnServer(undefined);
+
+    expect(html).toContain('Something went wrong!');
+    expect(html).toContain('Show Error');
+    expect(html).not.toContain('data-layout="route-error"');
+  });
+
+  it('with RouteErrorPage as the default, the designed page renders in place', async () => {
+    const html = await renderRejectingLoaderOnServer(RouteErrorPage);
+
+    expect(html).toContain(m.appError_heading());
+    expect(html).toContain(m.appError_retryAction());
+    expect(html).not.toContain('Something went wrong!');
+    expect(html).not.toContain('<h1>Jobs</h1>');
+  });
+
+  it('renders inside the chrome without a second main landmark', async () => {
+    const html = await renderRejectingLoaderOnServer(RouteErrorPage);
+
+    expect(html.match(/<main\b/g)).toHaveLength(1);
+    expect(html).toContain('data-layout="route-error"');
+    expect(html).not.toContain('data-layout="app-route-error"');
+  });
+});
+
+describe('RouteErrorPage (router default, inside the chrome)', () => {
+  it('reports the error to Cavuno and adds no second main landmark', async () => {
+    // The reporter's real transport: one beacon to the Worker's same-origin
+    // crash path. Fresh dedupe set so an earlier test's report cannot mask
+    // this one.
+    resetClientErrorReports();
+    const sendBeacon = vi.fn().mockReturnValue(true);
+    vi.stubGlobal('navigator', { ...navigator, sendBeacon });
+    const error = new Error('Board API 500');
+    // Chrome stands in for RootLayout: it already owns the page's <main>.
+    const rootRoute = createRootRoute({
+      component: () => (
+        <main>
+          <Outlet />
+        </main>
+      ),
+    });
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => <RouteErrorPage error={error} reset={vi.fn()} />,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    await screen.findByRole('heading', {
+      level: 1,
+      name: m.appError_heading(),
+    });
+    await waitFor(() => expect(sendBeacon).toHaveBeenCalledOnce());
+    // SAFETY: the reporter's only beacon call is `sendBeacon(path, Blob)`,
+    // pinned by client-error-report.test.ts; the call count above is 1.
+    const [path, blob] = sendBeacon.mock.calls[0] as [string, Blob];
+    expect(path).toBe(CLIENT_ERROR_PATH);
+    expect(await blob.text()).toContain('"message":"Board API 500"');
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    vi.unstubAllGlobals();
   });
 });

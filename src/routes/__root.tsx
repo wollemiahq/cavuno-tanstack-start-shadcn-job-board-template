@@ -192,13 +192,11 @@ export const Route = createRootRoute({
   },
   shellComponent: RootDocument,
   component: RootLayout,
-  // The tree-wide backstop for a rejecting loader: a `Failed to fetch` inside
-  // a public route's loader escaped every boundary and left the page blank.
-  // Only the candidate routes carry their own errorComponent; a route without
-  // one surfaces its error here, so this covers every public,
-  // SEO-load-bearing page. Deliberately at the root rather than the router's
-  // `defaultErrorComponent` — that option would give EVERY route its own
-  // boundary, so an error would never reach the root at all.
+  // The backstop for the ROOT loader failing (board context, offer gate):
+  // nothing else is mounted, so this is the standalone variant with its own
+  // `<main>`. A rejecting loader in a child route is rendered at that match
+  // by the router's `defaultErrorComponent` (see src/router.tsx) inside the
+  // chrome — it does not bubble here on the server.
   errorComponent: AppRouteErrorPage,
 });
 
