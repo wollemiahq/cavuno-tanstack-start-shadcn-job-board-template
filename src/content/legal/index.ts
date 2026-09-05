@@ -72,9 +72,10 @@ export const LEGAL_CONTENT = {
  * written its policies yet is not asking to be indexed with template
  * scaffolding under its own domain.
  *
- * OPERATOR: delete a page's entry in the same edit that deletes its callout —
- * leaving it listed keeps your real policy out of the index.
- * `placeholder-noindex.test.ts` fails if the two ever drift.
+ * OPERATOR: delete a page's entry in the same edit that replaces its copy for
+ * the locales you serve — leaving it listed keeps your real policy out of the
+ * index. `placeholder-noindex.test.ts` fails if a page stays listed after its
+ * last callout is gone.
  */
 export const LEGAL_PLACEHOLDER_PAGES: ReadonlySet<LegalPageType> = new Set([
   'about',
