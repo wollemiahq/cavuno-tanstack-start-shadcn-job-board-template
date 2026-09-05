@@ -313,18 +313,23 @@ Props:
 
 ### AppRouteError — `src/components/app-route-error.tsx`
 
-The public-facing route error state — the root route's backstop for a
-loader rejection anywhere in the tree (a Board API 500/timeout, a failed
-`serverFnFetcher`). Without it TanStack has no error boundary above the
-six candidate routes, so a rejecting public loader left the page blank.
+The public-facing route error state for a loader rejection anywhere in the
+tree (a Board API 500/timeout, a failed `serverFnFetcher`). It is mounted
+from two places, which differ only in what surrounds it:
 
-Two constraints shape this surface:
- - It stands in for `RootLayout`, so it renders its own `<main>` and its
-   own `Page` (which owns the design-token scope) — the header/footer chrome
-   is NOT mounted around it.
- - It reads NO loader data. The root loader is one of the things that can
-   fail, so board context may never have resolved; copy comes from the
-   Paraglide seam and the recovery link is a static typed route.
+ - `RouteErrorPage` is the router's `defaultErrorComponent`. TanStack
+   renders a rejected loader IN PLACE at the failing match — on the server
+   it never rethrows, so without a default the built-in "Something went
+   wrong!" component ships in the HTML and nothing reports the failure.
+   Here `RootLayout` is already mounted around it, so it renders inside the
+   chrome's `<main>` and owns no landmark of its own.
+ - `AppRouteErrorPage` is the root route's own `errorComponent`, for when
+   the ROOT loader is what failed. Nothing else is mounted, so it renders
+   its own `<main>` and its own `Page` (which owns the design-token scope).
+
+Both read NO loader data. The root loader is one of the things that can
+fail, so board context may never have resolved; copy comes from the
+Paraglide seam and the recovery link is a static typed route.
 
 Dual-source sticky-demo: when the active data source is a dead demo tenant,
 retry re-hits the same dead tenant. This surface probes
@@ -337,6 +342,7 @@ Props:
 - `homeLabel: string`
 - `reset: () => void`
 - `retryLabel: string`
+- `standalone?: boolean | undefined`
 - `switchToYourBoard?: { label: string; onClick: () => void; } | null | undefined`
 - `title: string`
 
@@ -345,6 +351,15 @@ Props:
 Props:
 
 - `loadDataSourceFacts?: (() => Promise<PreviewDataSourceFacts>) | undefined`
+- `standalone?: boolean | undefined`
+
+### RouteErrorPage — `src/components/app-route-error.tsx`
+
+The router-wide `defaultErrorComponent`: the same surface as
+`AppRouteErrorPage`, rendered inside the already-mounted chrome. Every
+route without its own `errorComponent` gets this — on the server as well,
+which is what keeps the framework's unstyled fallback (and its silence
+towards Cavuno) out of production HTML.
 
 ### AuthCard — `src/components/auth-form.tsx`
 
