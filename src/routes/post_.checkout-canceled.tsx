@@ -6,7 +6,7 @@ import { PostCheckoutCanceledView } from './-post-checkout-outcome';
 
 import { headTitle } from '@/lib/page-title';
 
-export const Route = createFileRoute('/post/checkout-canceled')({
+export const Route = createFileRoute('/post_/checkout-canceled')({
   staticData: { ownsMain: true },
   loader: () => getSeoBase(),
   head: ({ loaderData }) => ({

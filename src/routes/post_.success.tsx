@@ -6,7 +6,7 @@ import { PostCheckoutSuccessView } from './-post-checkout-outcome';
 
 import { headTitle } from '@/lib/page-title';
 
-export const Route = createFileRoute('/post/success')({
+export const Route = createFileRoute('/post_/success')({
   staticData: { ownsMain: true },
   loader: () => getSeoBase(),
   head: ({ loaderData }) => ({

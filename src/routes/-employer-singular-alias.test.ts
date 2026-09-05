@@ -1,7 +1,7 @@
 import { isRedirect } from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
 
-import { Route as StripeSuccessRoute } from './employer.$slug.jobs';
+import { Route as StripeSuccessRoute } from './employer.$slug.jobs.index';
 import { Route as StripeBackRoute } from './employer.$slug.jobs.new';
 import { Route as InviteAliasRoute } from './employer.invites.accept';
 
@@ -91,7 +91,7 @@ function runStripeSuccessBeforeLoad(pathname: string, searchStr: string) {
       },
       cause: 'enter',
       matches: [],
-      routeId: '/employer/$slug/jobs',
+      routeId: '/employer/$slug/jobs/',
     });
   } catch (error) {
     return error;

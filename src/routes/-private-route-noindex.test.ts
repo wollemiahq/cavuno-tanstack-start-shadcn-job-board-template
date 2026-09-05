@@ -18,8 +18,8 @@ import { Route as SignInRoute } from './auth.sign-in';
 import { Route as MatchesRoute } from './matches';
 import { Route as AlertsRoute } from './me.alerts';
 import { Route as MessagesRoute } from './messages';
-import { Route as PostCanceledRoute } from './post.checkout-canceled';
-import { Route as PostSuccessRoute } from './post.success';
+import { Route as PostCanceledRoute } from './post_.checkout-canceled';
+import { Route as PostSuccessRoute } from './post_.success';
 import { Route as SavedRoute } from './saved-jobs';
 
 const privateRouteHeads = [
