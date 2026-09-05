@@ -161,9 +161,18 @@ function JoinAction({
     buttonVariants({ variant: plan.isRecommended ? 'default' : 'outline' }),
     'w-full',
   );
-  const [companySlug, setCompanySlug] = useState(
-    viewer.kind === 'signed-in' ? (viewer.companies[0]?.slug ?? '') : '',
-  );
+  // The viewer is anonymous on the first render — the session hydrates after
+  // mount — so seeding this from `viewer` with `useState` captured '' and never
+  // re-ran, leaving `disabled={!companySlug}` stuck on. With one company there
+  // is no <select> to set it either, so a single-company employer could never
+  // buy (live gate, 2026-09-05). Hold only the explicit choice and fall back to
+  // the first company, which follows `viewer` as it hydrates.
+  const [chosenSlug, setChosenSlug] = useState('');
+  const companies = viewer.kind === 'signed-in' ? viewer.companies : [];
+  const companySlug =
+    companies.find((company) => company.slug === chosenSlug)?.slug ??
+    companies[0]?.slug ??
+    '';
 
   if (plan.pricingMode === 'contact') {
     if (!plan.ctaDestination) return null;
@@ -221,7 +230,7 @@ function JoinAction({
           <NativeSelect
             id={selectId}
             value={companySlug}
-            onChange={(event) => setCompanySlug(event.target.value)}
+            onChange={(event) => setChosenSlug(event.target.value)}
           >
             {viewer.companies.map((company) => (
               <NativeSelectOption key={company.slug} value={company.slug}>

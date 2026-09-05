@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useEffect, useState } from 'react';
+
 import {
   RouterProvider,
   createMemoryHistory,
@@ -20,6 +22,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   MembershipsPageView,
+  type MembershipsViewer,
   type GetMembershipCheckoutState,
   type LoadMoreMembers,
   type StartMembershipCheckout,
@@ -321,6 +324,69 @@ describe('memberships page', () => {
       }),
     ).toBeVisible();
     expect(screen.getByTestId('paywall-embedded-checkout')).toBeInTheDocument();
+  });
+
+  /**
+   * The session hydrates AFTER mount, so the page's first render is anonymous
+   * and only later becomes signed-in. Seeding the selected company with
+   * `useState` captured that first, empty value and never re-ran, so
+   * `disabled={!companySlug}` stuck on — and with exactly one company there is
+   * no <select> to set it either. A single-company employer could therefore
+   * never buy a membership (found on the live gate, 2026-09-05).
+   *
+   * Every other case in this file passes a signed-in viewer from mount, which
+   * is why none of them caught it — the transition is the bug.
+   */
+  it('enables Join for one company when the session hydrates after mount', async () => {
+    function HydratingPage() {
+      const [viewer, setViewer] = useState<MembershipsViewer>({
+        kind: 'anonymous',
+      });
+      useEffect(() => {
+        setViewer({ kind: 'signed-in', companies: [acme] });
+      }, []);
+      return (
+        <MembershipsPageView
+          plans={[plan]}
+          rosters={[roster]}
+          seo={{ boardName: 'Example Jobs' }}
+          viewer={viewer}
+          loadMoreMembers={loadMoreMembers}
+        />
+      );
+    }
+
+    const rootRoute = createRootRoute();
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([
+        createRoute({
+          getParentRoute: () => rootRoute,
+          path: '/',
+          component: () => <HydratingPage />,
+        }),
+        createRoute({
+          getParentRoute: () => rootRoute,
+          path: '/auth/sign-in',
+          component: () => <h1>Sign in</h1>,
+        }),
+        createRoute({
+          getParentRoute: () => rootRoute,
+          path: '/employers/dashboard',
+          component: () => <h1>Dashboard</h1>,
+        }),
+        createRoute({
+          getParentRoute: () => rootRoute,
+          path: '/companies/$companySlug',
+          component: () => <h1>Company</h1>,
+        }),
+      ]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+    await screen.findByRole('heading', { level: 1, name: 'Memberships' });
+
+    const join = await screen.findByRole('button', { name: 'Join' });
+    expect(join).toBeEnabled();
   });
 
   it('lets a viewer who manages several companies choose which one joins', async () => {
