@@ -127,4 +127,30 @@ describe('credential forms declare method="post"', () => {
       `<form> without method="post":\n${offenders.join('\n')}`,
     ).toEqual([]);
   });
+
+  /**
+   * Two signed-in forms carry no secret, so the scan above never sees them —
+   * but a native submit still writes their fields into the URL, history and
+   * referrer. Seen live 2026-09-05: forcing the degraded path on `/settings`
+   * produced `/settings?email=leak-probe%40example.com`.
+   *
+   * Listed by path rather than widening the scan to every email input: the
+   * board's public alert and search forms take an address too, and putting a
+   * GET query in the URL is the whole point of those.
+   */
+  const PII_FORM_FILES = [
+    'components/settings-email-card.tsx',
+    'components/profile-form.tsx',
+  ];
+
+  it('signed-in email and profile forms declare method="post"', () => {
+    const offenders = PII_FORM_FILES.filter((relative) => {
+      const source = readFileSync(join(import.meta.dirname, relative), 'utf8');
+      return !/\bmethod="post"/.test(withoutComments(source));
+    });
+    expect(
+      offenders,
+      `<form> without method="post":\n${offenders.join('\n')}`,
+    ).toEqual([]);
+  });
 });

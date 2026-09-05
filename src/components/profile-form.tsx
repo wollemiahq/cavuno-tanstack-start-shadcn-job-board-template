@@ -188,6 +188,7 @@ export function ProfileForm({
 
   return (
     <form
+      method="post"
       data-test="profile-form"
       className="space-y-4"
       onSubmit={async (event) => {

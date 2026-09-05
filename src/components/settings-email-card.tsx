@@ -98,6 +98,7 @@ export function SettingsEmailCard({
         <CardDescription>{m.settingsEmail_description()}</CardDescription>
       </CardHeader>
       <form
+        method="post"
         className="contents"
         onSubmit={async (event) => {
           event.preventDefault();
