@@ -219,3 +219,23 @@ export function ordinaryFallbackRedirect({
     },
   });
 }
+
+/**
+ * `/apply` is an action, not a page. A GET still reaches it — the back
+ * button after the gateway hop lands here, and crawlers follow the form
+ * action — and a route with only a POST handler fell through to the SPA
+ * shell: an indexable, blank 200 on every board. Send the visitor to the
+ * listing instead, keeping any locale prefix (`/de/apply` → `/de/jobs`).
+ */
+export function applyGetRedirect(request: Request): Response {
+  const url = new URL(request.url);
+  const location = url.pathname.replace(/\/apply\/?$/, '/jobs');
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: location.startsWith('/') ? location : '/jobs',
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex, nofollow',
+    },
+  });
+}
