@@ -12,9 +12,12 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import {
+  clampPage,
   cursorPageHref,
   cursorSearchValue,
+  lastReachablePage,
   listingPageHref,
+  MAX_OFFSET_WINDOW,
   pageSearchValue,
   pageToOffset,
   parsePageParam,
@@ -166,6 +169,34 @@ describe('pageToOffset (1-based page ⇒ 0-based API offset)', () => {
     expect(pageToOffset(2, 20)).toBe(20);
     expect(pageToOffset(3, 24)).toBe(48);
   });
+
+  it('never asks the API for a window past its deep-offset ceiling', () => {
+    // `?page=` is public input. The API 400s any `offset + limit` beyond
+    // MAX_OFFSET_WINDOW, and an uncaught 400 in a loader is a 500 page —
+    // live, `/jobs?page=600` crashed while `?page=500` rendered. Deeper
+    // pages collapse onto the last page that still fits.
+    for (const pageSize of [20, 24, 12]) {
+      const last = lastReachablePage(pageSize);
+      expect(pageToOffset(last, pageSize) + pageSize).toBeLessThanOrEqual(
+        MAX_OFFSET_WINDOW,
+      );
+      expect(pageToOffset(last + 1, pageSize)).toBe(
+        pageToOffset(last, pageSize),
+      );
+      expect(pageToOffset(2000, pageSize)).toBe(pageToOffset(last, pageSize));
+    }
+    expect(lastReachablePage(20)).toBe(500);
+    expect(pageToOffset(600, 20)).toBe(9980);
+  });
+});
+
+describe('clampPage (page ⇒ API-reachable page)', () => {
+  it('keeps in-range pages and folds the rest onto the edges', () => {
+    expect(clampPage(1, 20)).toBe(1);
+    expect(clampPage(500, 20)).toBe(500);
+    expect(clampPage(501, 20)).toBe(500);
+    expect(clampPage(0, 20)).toBe(1);
+  });
 });
 
 describe('totalPages (ceil of count / pageSize)', () => {
@@ -181,6 +212,14 @@ describe('totalPages (ceil of count / pageSize)', () => {
 
   it('is zero pages for an empty result set', () => {
     expect(totalPages(0, 20)).toBe(0);
+  });
+
+  it('caps the nav at the last API-reachable page', () => {
+    // A listing with more results than the API will ever page through must
+    // not render links into the 400. 12,000 jobs at 20 a page is 600 pages,
+    // but only 500 fit under the ceiling.
+    expect(totalPages(12_000, 20)).toBe(500);
+    expect(totalPages(12_000, 24)).toBe(lastReachablePage(24));
   });
 });
 
