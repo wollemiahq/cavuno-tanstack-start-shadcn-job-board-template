@@ -374,6 +374,7 @@
         "src/components/alert-manager.tsx",
         "src/components/board/jobs-filter-toolbar.tsx",
         "src/components/custom-fields-group.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/experience-section.tsx",
         "src/components/marketing-consent-settings.tsx",
         "src/components/notification-settings.tsx",
