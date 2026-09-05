@@ -18,6 +18,8 @@ import { Route as SignInRoute } from './auth.sign-in';
 import { Route as MatchesRoute } from './matches';
 import { Route as AlertsRoute } from './me.alerts';
 import { Route as MessagesRoute } from './messages';
+import { Route as PostCanceledRoute } from './post.checkout-canceled';
+import { Route as PostSuccessRoute } from './post.success';
 import { Route as SavedRoute } from './saved-jobs';
 
 const privateRouteHeads = [
@@ -33,6 +35,8 @@ const privateRouteHeads = [
     '/auth/confirm-email-change',
     ConfirmEmailChangeRoute.options.head?.toString(),
   ],
+  ['/post/success', PostSuccessRoute.options.head?.toString()],
+  ['/post/checkout-canceled', PostCanceledRoute.options.head?.toString()],
 ] as const;
 
 describe('private / transactional routes are noindex (robots.txt stays permissive)', () => {

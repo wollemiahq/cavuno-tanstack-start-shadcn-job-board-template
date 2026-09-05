@@ -37,6 +37,8 @@ import { Route as EmployersIndexRouteImport } from './routes/employers.index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
+import { Route as PostSuccessRouteImport } from './routes/post.success'
+import { Route as PostCheckoutCanceledRouteImport } from './routes/post.checkout-canceled'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
@@ -73,6 +75,7 @@ import { Route as JobsSkillsSkillRouteImport } from './routes/jobs.skills.$skill
 import { Route as EmployersOnboardingSlugRouteImport } from './routes/employers.onboarding.$slug'
 import { Route as EmployersInvitesAcceptRouteImport } from './routes/employers.invites.accept'
 import { Route as EmployerInvitesAcceptRouteImport } from './routes/employer.invites.accept'
+import { Route as EmployerSlugJobsRouteImport } from './routes/employer.$slug.jobs'
 import { Route as CompaniesMarketsMarketRouteImport } from './routes/companies.markets.$market'
 import { Route as BlogTagTagSlugRouteImport } from './routes/blog.tag.$tagSlug'
 import { Route as BlogOgChar123postSlugChar125DotjsonRouteImport } from './routes/blog.og.{$postSlug}[.]json'
@@ -243,6 +246,16 @@ const SitemapFileRoute = SitemapFileRouteImport.update({
   id: '/sitemap/$file',
   path: '/sitemap/$file',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PostSuccessRoute = PostSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => PostRoute,
+} as any)
+const PostCheckoutCanceledRoute = PostCheckoutCanceledRouteImport.update({
+  id: '/checkout-canceled',
+  path: '/checkout-canceled',
+  getParentRoute: () => PostRoute,
 } as any)
 const PHandleRoute = PHandleRouteImport.update({
   id: '/p/$handle',
@@ -426,6 +439,11 @@ const EmployerInvitesAcceptRoute = EmployerInvitesAcceptRouteImport.update({
   path: '/employer/invites/accept',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerSlugJobsRoute = EmployerSlugJobsRouteImport.update({
+  id: '/employer/$slug/jobs',
+  path: '/employer/$slug/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompaniesMarketsMarketRoute = CompaniesMarketsMarketRouteImport.update({
   id: '/companies/markets/$market',
   path: '/companies/markets/$market',
@@ -552,9 +570,9 @@ const EmployersCompaniesSlugMembersRoute =
     getParentRoute: () => rootRouteImport,
   } as any)
 const EmployerSlugJobsNewRoute = EmployerSlugJobsNewRouteImport.update({
-  id: '/employer/$slug/jobs/new',
-  path: '/employer/$slug/jobs/new',
-  getParentRoute: () => rootRouteImport,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => EmployerSlugJobsRoute,
 } as any)
 const CompaniesCompanySlugSalariesCategorySlugRoute =
   CompaniesCompanySlugSalariesCategorySlugRouteImport.update({
@@ -613,7 +631,7 @@ export interface FileRoutesByFullPath {
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
-  '/post': typeof PostRoute
+  '/post': typeof PostRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -647,6 +665,8 @@ export interface FileRoutesByFullPath {
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
+  '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
+  '/post/success': typeof PostSuccessRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -660,6 +680,7 @@ export interface FileRoutesByFullPath {
   '/blog/og/{$postSlug}.json': typeof BlogOgChar123postSlugChar125DotjsonRoute
   '/blog/tag/$tagSlug': typeof BlogTagTagSlugRoute
   '/companies/markets/$market': typeof CompaniesMarketsMarketRoute
+  '/employer/$slug/jobs': typeof EmployerSlugJobsRouteWithChildren
   '/employer/invites/accept': typeof EmployerInvitesAcceptRoute
   '/employers/invites/accept': typeof EmployersInvitesAcceptRoute
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
@@ -709,7 +730,7 @@ export interface FileRoutesByTo {
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
-  '/post': typeof PostRoute
+  '/post': typeof PostRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -743,6 +764,8 @@ export interface FileRoutesByTo {
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
+  '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
+  '/post/success': typeof PostSuccessRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog': typeof BlogIndexRoute
   '/companies': typeof CompaniesIndexRoute
@@ -756,6 +779,7 @@ export interface FileRoutesByTo {
   '/blog/og/{$postSlug}.json': typeof BlogOgChar123postSlugChar125DotjsonRoute
   '/blog/tag/$tagSlug': typeof BlogTagTagSlugRoute
   '/companies/markets/$market': typeof CompaniesMarketsMarketRoute
+  '/employer/$slug/jobs': typeof EmployerSlugJobsRouteWithChildren
   '/employer/invites/accept': typeof EmployerInvitesAcceptRoute
   '/employers/invites/accept': typeof EmployersInvitesAcceptRoute
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
@@ -806,7 +830,7 @@ export interface FileRoutesById {
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
-  '/post': typeof PostRoute
+  '/post': typeof PostRouteWithChildren
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -840,6 +864,8 @@ export interface FileRoutesById {
   '/me/applications': typeof MeApplicationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
+  '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
+  '/post/success': typeof PostSuccessRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -853,6 +879,7 @@ export interface FileRoutesById {
   '/blog/og/{$postSlug}.json': typeof BlogOgChar123postSlugChar125DotjsonRoute
   '/blog/tag/$tagSlug': typeof BlogTagTagSlugRoute
   '/companies/markets/$market': typeof CompaniesMarketsMarketRoute
+  '/employer/$slug/jobs': typeof EmployerSlugJobsRouteWithChildren
   '/employer/invites/accept': typeof EmployerInvitesAcceptRoute
   '/employers/invites/accept': typeof EmployersInvitesAcceptRoute
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
@@ -938,6 +965,8 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
+    | '/post/checkout-canceled'
+    | '/post/success'
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
@@ -951,6 +980,7 @@ export interface FileRouteTypes {
     | '/blog/og/{$postSlug}.json'
     | '/blog/tag/$tagSlug'
     | '/companies/markets/$market'
+    | '/employer/$slug/jobs'
     | '/employer/invites/accept'
     | '/employers/invites/accept'
     | '/employers/onboarding/$slug'
@@ -1034,6 +1064,8 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
+    | '/post/checkout-canceled'
+    | '/post/success'
     | '/sitemap/$file'
     | '/blog'
     | '/companies'
@@ -1047,6 +1079,7 @@ export interface FileRouteTypes {
     | '/blog/og/{$postSlug}.json'
     | '/blog/tag/$tagSlug'
     | '/companies/markets/$market'
+    | '/employer/$slug/jobs'
     | '/employer/invites/accept'
     | '/employers/invites/accept'
     | '/employers/onboarding/$slug'
@@ -1130,6 +1163,8 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/messages/$conversationId'
     | '/p/$handle'
+    | '/post/checkout-canceled'
+    | '/post/success'
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
@@ -1143,6 +1178,7 @@ export interface FileRouteTypes {
     | '/blog/og/{$postSlug}.json'
     | '/blog/tag/$tagSlug'
     | '/companies/markets/$market'
+    | '/employer/$slug/jobs'
     | '/employer/invites/accept'
     | '/employers/invites/accept'
     | '/employers/onboarding/$slug'
@@ -1193,7 +1229,7 @@ export interface RootRouteChildren {
   MembershipsRoute: typeof MembershipsRoute
   MessagesRoute: typeof MessagesRouteWithChildren
   PasswordRoute: typeof PasswordRoute
-  PostRoute: typeof PostRoute
+  PostRoute: typeof PostRouteWithChildren
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SavedJobsRoute: typeof SavedJobsRoute
@@ -1238,6 +1274,7 @@ export interface RootRouteChildren {
   BlogOgChar123postSlugChar125DotjsonRoute: typeof BlogOgChar123postSlugChar125DotjsonRoute
   BlogTagTagSlugRoute: typeof BlogTagTagSlugRoute
   CompaniesMarketsMarketRoute: typeof CompaniesMarketsMarketRoute
+  EmployerSlugJobsRoute: typeof EmployerSlugJobsRouteWithChildren
   EmployerInvitesAcceptRoute: typeof EmployerInvitesAcceptRoute
   EmployersInvitesAcceptRoute: typeof EmployersInvitesAcceptRoute
   EmployersOnboardingSlugRoute: typeof EmployersOnboardingSlugRoute
@@ -1250,7 +1287,6 @@ export interface RootRouteChildren {
   SalariesTitlesIndexRoute: typeof SalariesTitlesIndexRoute
   CompaniesCompanySlugJobsJobSlugRoute: typeof CompaniesCompanySlugJobsJobSlugRouteWithChildren
   CompaniesCompanySlugSalariesCategorySlugRoute: typeof CompaniesCompanySlugSalariesCategorySlugRoute
-  EmployerSlugJobsNewRoute: typeof EmployerSlugJobsNewRoute
   EmployersCompaniesSlugMembersRoute: typeof EmployersCompaniesSlugMembersRoute
   EmployersCompaniesSlugProfileRoute: typeof EmployersCompaniesSlugProfileRoute
   JobsLocationsLocationKeywordRoute: typeof JobsLocationsLocationKeywordRoute
@@ -1470,6 +1506,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/sitemap/$file'
       preLoaderRoute: typeof SitemapFileRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/post/success': {
+      id: '/post/success'
+      path: '/success'
+      fullPath: '/post/success'
+      preLoaderRoute: typeof PostSuccessRouteImport
+      parentRoute: typeof PostRoute
+    }
+    '/post/checkout-canceled': {
+      id: '/post/checkout-canceled'
+      path: '/checkout-canceled'
+      fullPath: '/post/checkout-canceled'
+      preLoaderRoute: typeof PostCheckoutCanceledRouteImport
+      parentRoute: typeof PostRoute
     }
     '/p/$handle': {
       id: '/p/$handle'
@@ -1723,6 +1773,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployerInvitesAcceptRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/$slug/jobs': {
+      id: '/employer/$slug/jobs'
+      path: '/employer/$slug/jobs'
+      fullPath: '/employer/$slug/jobs'
+      preLoaderRoute: typeof EmployerSlugJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/companies/markets/$market': {
       id: '/companies/markets/$market'
       path: '/companies/markets/$market'
@@ -1879,10 +1936,10 @@ declare module '@tanstack/react-router' {
     }
     '/employer/$slug/jobs/new': {
       id: '/employer/$slug/jobs/new'
-      path: '/employer/$slug/jobs/new'
+      path: '/new'
       fullPath: '/employer/$slug/jobs/new'
       preLoaderRoute: typeof EmployerSlugJobsNewRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof EmployerSlugJobsRoute
     }
     '/companies/$companySlug/salaries/$categorySlug': {
       id: '/companies/$companySlug/salaries/$categorySlug'
@@ -1948,6 +2005,18 @@ const MessagesRouteWithChildren = MessagesRoute._addFileChildren(
   MessagesRouteChildren,
 )
 
+interface PostRouteChildren {
+  PostCheckoutCanceledRoute: typeof PostCheckoutCanceledRoute
+  PostSuccessRoute: typeof PostSuccessRoute
+}
+
+const PostRouteChildren: PostRouteChildren = {
+  PostCheckoutCanceledRoute: PostCheckoutCanceledRoute,
+  PostSuccessRoute: PostSuccessRoute,
+}
+
+const PostRouteWithChildren = PostRoute._addFileChildren(PostRouteChildren)
+
 interface BlogPostSlugRouteChildren {
   BlogPostSlugOgRoute: typeof BlogPostSlugOgRoute
 }
@@ -1959,6 +2028,17 @@ const BlogPostSlugRouteChildren: BlogPostSlugRouteChildren = {
 const BlogPostSlugRouteWithChildren = BlogPostSlugRoute._addFileChildren(
   BlogPostSlugRouteChildren,
 )
+
+interface EmployerSlugJobsRouteChildren {
+  EmployerSlugJobsNewRoute: typeof EmployerSlugJobsNewRoute
+}
+
+const EmployerSlugJobsRouteChildren: EmployerSlugJobsRouteChildren = {
+  EmployerSlugJobsNewRoute: EmployerSlugJobsNewRoute,
+}
+
+const EmployerSlugJobsRouteWithChildren =
+  EmployerSlugJobsRoute._addFileChildren(EmployerSlugJobsRouteChildren)
 
 interface CompaniesCompanySlugJobsJobSlugRouteChildren {
   CompaniesCompanySlugJobsJobSlugOgRoute: typeof CompaniesCompanySlugJobsJobSlugOgRoute
@@ -1989,7 +2069,7 @@ const rootRouteChildren: RootRouteChildren = {
   MembershipsRoute: MembershipsRoute,
   MessagesRoute: MessagesRouteWithChildren,
   PasswordRoute: PasswordRoute,
-  PostRoute: PostRoute,
+  PostRoute: PostRouteWithChildren,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SavedJobsRoute: SavedJobsRoute,
@@ -2035,6 +2115,7 @@ const rootRouteChildren: RootRouteChildren = {
     BlogOgChar123postSlugChar125DotjsonRoute,
   BlogTagTagSlugRoute: BlogTagTagSlugRoute,
   CompaniesMarketsMarketRoute: CompaniesMarketsMarketRoute,
+  EmployerSlugJobsRoute: EmployerSlugJobsRouteWithChildren,
   EmployerInvitesAcceptRoute: EmployerInvitesAcceptRoute,
   EmployersInvitesAcceptRoute: EmployersInvitesAcceptRoute,
   EmployersOnboardingSlugRoute: EmployersOnboardingSlugRoute,
@@ -2049,7 +2130,6 @@ const rootRouteChildren: RootRouteChildren = {
     CompaniesCompanySlugJobsJobSlugRouteWithChildren,
   CompaniesCompanySlugSalariesCategorySlugRoute:
     CompaniesCompanySlugSalariesCategorySlugRoute,
-  EmployerSlugJobsNewRoute: EmployerSlugJobsNewRoute,
   EmployersCompaniesSlugMembersRoute: EmployersCompaniesSlugMembersRoute,
   EmployersCompaniesSlugProfileRoute: EmployersCompaniesSlugProfileRoute,
   JobsLocationsLocationKeywordRoute: JobsLocationsLocationKeywordRoute,
