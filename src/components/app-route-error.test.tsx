@@ -16,13 +16,13 @@
  * that clears the data-source cookie — only when dual-source facts say so.
  *
  * The client-side routers below set no `defaultErrorComponent`, so the error
- * is caught by the ROOT boundary — that is the client contract. The server is
+ * reaches the ROOT boundary — the shape of a failing root loader, and how the
+ * page behaved everywhere before the router default existed. The server is
  * different, and that is what the "server render" block pins: TanStack's
  * `Match` renders a rejected loader in place using
  * `(route.errorComponent ?? defaultErrorComponent) || ErrorComponent`, and
  * never rethrows. Without a default, production HTML for a failed loader
- * carried the framework's "Something went wrong!" — and, since that component
- * never mounts `useClientErrorReport`, the failure was invisible to Cavuno.
+ * carried the framework's "Something went wrong!" until hydration.
  */
 import '@testing-library/jest-dom/vitest';
 import { renderToString } from 'react-dom/server';
@@ -50,11 +50,7 @@ const mocks = {
   getDataSourceFacts: vi.fn<() => Promise<PreviewDataSourceFacts>>(),
 };
 
-import {
-  AppRouteError,
-  AppRouteErrorPage,
-  RouteErrorPage,
-} from './app-route-error';
+import { AppRouteError, AppRouteErrorPage } from './app-route-error';
 
 import {
   CLIENT_ERROR_PATH,
@@ -104,12 +100,17 @@ afterEach(() => {
  */
 async function renderRejectingLoader() {
   const caughtErrors: unknown[] = [];
+  const loader = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')));
   const rootRoute = createRootRoute({
+    // Wired like `__root.tsx`: the root supplies the `<main>` the chrome
+    // would have owned.
     errorComponent: (props) => (
-      <AppRouteErrorPage
-        {...props}
-        loadDataSourceFacts={mocks.getDataSourceFacts}
-      />
+      <main>
+        <AppRouteErrorPage
+          {...props}
+          loadDataSourceFacts={mocks.getDataSourceFacts}
+        />
+      </main>
     ),
     component: () => <Outlet />,
   });
@@ -124,7 +125,7 @@ async function renderRejectingLoader() {
     // The reproduced failure: a server-function fetch rejecting inside the
     // company loader's Promise.all. The route has no errorComponent of its
     // own — like every public route on this board.
-    loader: () => Promise.reject(new TypeError('Failed to fetch')),
+    loader,
     component: () => <h1>Company</h1>,
   });
   const router = createRouter({
@@ -140,6 +141,7 @@ async function renderRejectingLoader() {
   await screen.findByRole('heading', { level: 1 });
   expect(caughtErrors).toHaveLength(1);
   expect(caughtErrors[0]).toBeInstanceOf(TypeError);
+  return { loader };
 }
 
 /** The surface renders a typed `Link`, so it only mounts under a router. */
@@ -155,7 +157,7 @@ async function renderInRouter(node: React.ReactNode) {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   render(<RouterProvider router={router} />);
-  await screen.findByRole('main');
+  await screen.findByRole('heading', { level: 1 });
 }
 
 describe('public route error backstop', () => {
@@ -186,12 +188,21 @@ describe('public route error backstop', () => {
     ).toHaveAttribute('href', '/');
   });
 
-  it('renders a main landmark, since it stands in for the root layout', async () => {
+  it('keeps a single main landmark when it stands in for the root layout', async () => {
     await renderRejectingLoader();
 
-    // RootLayout (header/footer/<main>) is replaced by the errorComponent,
-    // so this surface owes the page its own single main landmark.
-    expect(screen.getByRole('main')).toBeInTheDocument();
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+  });
+
+  it('"Try again" re-runs the failed loader, not just the boundary', async () => {
+    const { loader } = await renderRejectingLoader();
+    expect(loader).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.appError_retryAction() }),
+    );
+
+    await waitFor(() => expect(loader).toHaveBeenCalledTimes(2));
   });
 
   it('retries the failed route in place rather than navigating away', async () => {
@@ -311,7 +322,7 @@ describe('sticky-demo escape hatch on the error surface (F1)', () => {
  * rethrowing; `defaultErrorComponent` is the knob under test.
  */
 async function renderRejectingLoaderOnServer(
-  defaultErrorComponent: typeof RouteErrorPage | undefined,
+  defaultErrorComponent: typeof AppRouteErrorPage | undefined,
 ) {
   const rootRoute = createRootRoute({
     errorComponent: AppRouteErrorPage,
@@ -345,11 +356,11 @@ describe('server render of a rejecting public loader', () => {
 
     expect(html).toContain('Something went wrong!');
     expect(html).toContain('Show Error');
-    expect(html).not.toContain('data-layout="route-error"');
+    expect(html).not.toContain('data-layout="app-route-error"');
   });
 
-  it('with RouteErrorPage as the default, the designed page renders in place', async () => {
-    const html = await renderRejectingLoaderOnServer(RouteErrorPage);
+  it('with AppRouteErrorPage as the default, the designed page renders in place', async () => {
+    const html = await renderRejectingLoaderOnServer(AppRouteErrorPage);
 
     expect(html).toContain(m.appError_heading());
     expect(html).toContain(m.appError_retryAction());
@@ -358,15 +369,14 @@ describe('server render of a rejecting public loader', () => {
   });
 
   it('renders inside the chrome without a second main landmark', async () => {
-    const html = await renderRejectingLoaderOnServer(RouteErrorPage);
+    const html = await renderRejectingLoaderOnServer(AppRouteErrorPage);
 
     expect(html.match(/<main\b/g)).toHaveLength(1);
-    expect(html).toContain('data-layout="route-error"');
-    expect(html).not.toContain('data-layout="app-route-error"');
+    expect(html).toContain('data-layout="app-route-error"');
   });
 });
 
-describe('RouteErrorPage (router default, inside the chrome)', () => {
+describe('AppRouteErrorPage as the router default, inside the chrome', () => {
   it('reports the error to Cavuno and adds no second main landmark', async () => {
     // The reporter's real transport: one beacon to the Worker's same-origin
     // crash path. Fresh dedupe set so an earlier test's report cannot mask
@@ -386,7 +396,7 @@ describe('RouteErrorPage (router default, inside the chrome)', () => {
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,
       path: '/',
-      component: () => <RouteErrorPage error={error} reset={vi.fn()} />,
+      component: () => <AppRouteErrorPage error={error} reset={vi.fn()} />,
     });
     const router = createRouter({
       routeTree: rootRoute.addChildren([indexRoute]),

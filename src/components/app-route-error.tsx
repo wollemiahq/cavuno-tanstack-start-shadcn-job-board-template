@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { isRateLimited } from '@cavuno/board';
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { CircleAlert } from 'lucide-react';
 
 import { serializeDataSourceCookie } from '../lib/data-source';
@@ -25,20 +25,18 @@ import type { ErrorComponentProps } from '@tanstack/react-router';
 
 /**
  * The public-facing route error state for a loader rejection anywhere in the
- * tree (a Board API 500/timeout, a failed `serverFnFetcher`). It is mounted
- * from two places, which differ only in what surrounds it:
+ * tree (a Board API 500/timeout, a failed `serverFnFetcher`). It is the
+ * router's `defaultErrorComponent` — TanStack renders a rejected loader IN
+ * PLACE at the failing match, and on the server it never rethrows, so without
+ * a default the built-in "Something went wrong!" component ships in the HTML —
+ * and the root route's own `errorComponent` for a failing ROOT loader.
  *
- *  - `RouteErrorPage` is the router's `defaultErrorComponent`. TanStack
- *    renders a rejected loader IN PLACE at the failing match — on the server
- *    it never rethrows, so without a default the built-in "Something went
- *    wrong!" component ships in the HTML and nothing reports the failure.
- *    Here `RootLayout` is already mounted around it, so it renders inside the
- *    chrome's `<main>` and owns no landmark of its own.
- *  - `AppRouteErrorPage` is the root route's own `errorComponent`, for when
- *    the ROOT loader is what failed. Nothing else is mounted, so it renders
- *    its own `<main>` and its own `Page` (which owns the design-token scope).
+ * It owns no `<main>`: the chrome renders one around the outlet when a match
+ * has errored (see `__root.tsx`), and the root wraps it in one when the chrome
+ * itself never mounted. It does render `Page`, which owns the design-token
+ * scope, since no route component is there to do so.
  *
- * Both read NO loader data. The root loader is one of the things that can
+ * It reads NO loader data. The root loader is one of the things that can
  * fail, so board context may never have resolved; copy comes from the
  * Paraglide seam and the recovery link is a static typed route.
  *
@@ -54,7 +52,6 @@ export function AppRouteError({
   homeLabel,
   reset,
   switchToYourBoard,
-  standalone = true,
 }: {
   title: string;
   description: string;
@@ -63,49 +60,39 @@ export function AppRouteError({
   reset: () => void;
   /** Dual-source escape hatch — only when stuck on a dead demo tenant. */
   switchToYourBoard?: { label: string; onClick: () => void } | null;
-  /**
-   * `true` (root errorComponent): no layout is mounted, so render `Page` and
-   * a `<main>` landmark. `false` (router default): the chrome's `<main>` is
-   * already around us — a second one would be a duplicate landmark.
-   */
-  standalone?: boolean;
 }) {
-  const body = (
-    <Empty className="min-h-[calc(100dvh-8rem)] border-0 p-6">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <CircleAlert aria-hidden="true" />
-        </EmptyMedia>
-        <h1 className="font-heading text-xl font-semibold tracking-tight">
-          {title}
-        </h1>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <Button type="button" onClick={reset}>
-          {retryLabel}
-        </Button>
-        {switchToYourBoard ? (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={switchToYourBoard.onClick}
-          >
-            {switchToYourBoard.label}
-          </Button>
-        ) : null}
-        <Link to="/" className={buttonVariants({ variant: 'outline' })}>
-          {homeLabel}
-        </Link>
-      </EmptyContent>
-    </Empty>
-  );
-  if (!standalone) {
-    return <div data-layout="route-error">{body}</div>;
-  }
   return (
     <Page width="wide">
-      <main data-layout="app-route-error">{body}</main>
+      <div data-layout="app-route-error">
+        <Empty className="min-h-[calc(100dvh-8rem)] border-0 p-6">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <CircleAlert aria-hidden="true" />
+            </EmptyMedia>
+            <h1 className="font-heading text-xl font-semibold tracking-tight">
+              {title}
+            </h1>
+            <EmptyDescription>{description}</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button type="button" onClick={reset}>
+              {retryLabel}
+            </Button>
+            {switchToYourBoard ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={switchToYourBoard.onClick}
+              >
+                {switchToYourBoard.label}
+              </Button>
+            ) : null}
+            <Link to="/" className={buttonVariants({ variant: 'outline' })}>
+              {homeLabel}
+            </Link>
+          </EmptyContent>
+        </Empty>
+      </div>
     </Page>
   );
 }
@@ -114,13 +101,11 @@ export function AppRouteErrorPage({
   error,
   reset,
   loadDataSourceFacts = getDataSourceFacts,
-  standalone = true,
 }: ErrorComponentProps & {
   /** Injectable environment probe for isolated boundary tests. */
   loadDataSourceFacts?: () => Promise<PreviewDataSourceFacts>;
-  /** See `AppRouteError`. */
-  standalone?: boolean;
 }) {
+  const router = useRouter();
   // The one distinction worth surfacing: rate limiting is transient and
   // waiting actually fixes it, so "try again in a moment" would mislead.
   // Server-function errors cross the wire as plain Errors, so the SDK guard
@@ -163,8 +148,14 @@ export function AppRouteErrorPage({
       }
       retryLabel={m.appError_retryAction()}
       homeLabel={m.appError_homeLink()}
-      reset={reset}
-      standalone={standalone}
+      // `reset` alone only clears the boundary: the match is still in its
+      // error state and rethrows immediately. Invalidating re-runs the loader,
+      // which is what "try again" promises. (`reset` is undefined on the
+      // server render; the client boundary supplies the real one.)
+      reset={() => {
+        void router.invalidate();
+        reset?.();
+      }}
       switchToYourBoard={
         stuckOnDemo
           ? {
@@ -175,15 +166,4 @@ export function AppRouteErrorPage({
       }
     />
   );
-}
-
-/**
- * The router-wide `defaultErrorComponent`: the same surface as
- * `AppRouteErrorPage`, rendered inside the already-mounted chrome. Every
- * route without its own `errorComponent` gets this — on the server as well,
- * which is what keeps the framework's unstyled fallback (and its silence
- * towards Cavuno) out of production HTML.
- */
-export function RouteErrorPage(props: ErrorComponentProps) {
-  return <AppRouteErrorPage {...props} standalone={false} />;
 }

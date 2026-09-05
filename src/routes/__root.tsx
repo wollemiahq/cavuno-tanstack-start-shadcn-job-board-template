@@ -31,8 +31,8 @@ import { getRootShellData } from '../server/root-shell';
 import { themeMeta, themeTokens } from '../theme/resolved';
 import { useBlogSuggestions } from './-use-blog-suggestions';
 import { useCompanyMarketSuggestions } from './-use-company-market-suggestions';
-import '../styles.css';
 import { useKeywordSuggestions } from './-use-keyword-suggestions';
+import '../styles.css';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AlternateLinks } from '@/components/alternate-links';
@@ -78,6 +78,7 @@ import {
 } from '@/lib/shell-breadcrumb';
 import { parseTalentSearch } from '@/lib/talent-search';
 import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
+import type { ErrorComponentProps } from '@tanstack/react-router';
 
 const LazyFooter = lazy(() =>
   import('../components/Footer').then((mod) => ({ default: mod.default })),
@@ -193,12 +194,20 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
   component: RootLayout,
   // The backstop for the ROOT loader failing (board context, offer gate):
-  // nothing else is mounted, so this is the standalone variant with its own
-  // `<main>`. A rejecting loader in a child route is rendered at that match
-  // by the router's `defaultErrorComponent` (see src/router.tsx) inside the
-  // chrome — it does not bubble here on the server.
-  errorComponent: AppRouteErrorPage,
+  // nothing else is mounted, so this supplies the page's `<main>`. A rejecting
+  // loader in a child route is rendered at that match by the router's
+  // `defaultErrorComponent` (see src/router.tsx) inside the chrome — it does
+  // not bubble here on the server.
+  errorComponent: RootErrorPage,
 });
+
+function RootErrorPage(props: ErrorComponentProps) {
+  return (
+    <main>
+      <AppRouteErrorPage {...props} />
+    </main>
+  );
+}
 
 function RootLayout() {
   const { board, offerGate, publishableKey } = Route.useLoaderData();
@@ -245,8 +254,13 @@ function RootChrome({
   const isFullBleed = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fullBleed),
   });
+  // A route that owns `<main>` only does so while its component renders. When
+  // its loader failed the error page renders in its place, so the chrome
+  // supplies the landmark.
   const ownsMain = useRouterState({
-    select: (s) => s.matches.some((match) => match.staticData?.ownsMain),
+    select: (s) =>
+      s.matches.some((match) => match.staticData?.ownsMain) &&
+      !s.matches.some((match) => match.status === 'error'),
   });
   const fillsViewport = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
