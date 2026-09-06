@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from 'react';
 import { countryOptions } from '@cavuno/board/format';
 import { Check, ImagePlus } from 'lucide-react';
 
+import { planOffersFeaturedChoice } from '../board/plan-view-model';
 import {
   DEFAULT_SALARY_TIMEFRAME,
   ensureProtocol,
@@ -40,6 +41,7 @@ import {
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
+import { Checkbox } from './ui/checkbox';
 import {
   Empty,
   EmptyDescription,
@@ -342,6 +344,15 @@ export function PostJobForm({
   // screen to fix. The invoice goes to the contact email collected above —
   // this body carries no email field of its own.
   const invoiceBillingRequired = selectedPlan?.invoiceOnly === true;
+  // Under `jobs.feature_selection_mode: manual` the platform computes
+  // `shouldFeature = featureMode === 'auto' || input.isFeatured`, so a plan
+  // can advertise "Includes 1 featured post" and never deliver one unless the
+  // buyer's opt-in is sent. The employer workspace already offers this; the
+  // public wizard did not, so an anonymous poster could pay for a featured
+  // slot and get a standard listing.
+  const offersFeaturedChoice =
+    selectedPlan !== undefined && planOffersFeaturedChoice(selectedPlan);
+  const [featureListing, setFeatureListing] = useState(false);
   const [invoiceBilling, setInvoiceBilling] = useState<InvoiceBillingDraft>(
     () => emptyInvoiceBillingDraft(),
   );
@@ -612,6 +623,7 @@ export function PostJobForm({
         selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
       };
+      if (offersFeaturedChoice && featureListing) input.isFeatured = true;
       if (invoiceBillingRequired) {
         input.invoiceBilling = publicInvoiceBillingBody(invoiceBilling);
       }
@@ -1116,6 +1128,24 @@ export function PostJobForm({
             );
           })}
         </RadioGroup>
+        {offersFeaturedChoice ? (
+          <FieldLabel
+            htmlFor="post-feature-listing"
+            className="flex cursor-pointer items-start gap-3 pt-4 font-normal"
+          >
+            <Checkbox
+              id="post-feature-listing"
+              className="mt-0.5 shrink-0"
+              checked={featureListing}
+              onCheckedChange={(checked) => setFeatureListing(checked === true)}
+            />
+            <span className="grid gap-0.5">
+              <span className="text-sm font-medium">
+                {m.employerCompany_featureListingLabel()}
+              </span>
+            </span>
+          </FieldLabel>
+        ) : null}
         {invoiceBillingRequired ? (
           <div className="grid gap-3 pt-4">
             <div className="grid gap-1">

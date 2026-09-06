@@ -46,6 +46,14 @@ export type JobPostingFormInput = {
   /** Period the figures are quoted against; only sent with a full range. */
   salaryTimeframe?: SalaryTimeframe;
   selectedPlan?: string;
+  /**
+   * Buyer's featured opt-in. Only meaningful on a plan whose
+   * `jobs.feature_selection_mode` is `manual` — the platform computes
+   * `shouldFeature = featureMode === 'auto' || input.isFeatured`, so under
+   * manual selection a plan can sell featured slots and never deliver one
+   * unless this is sent.
+   */
+  isFeatured?: boolean;
   logoUrl?: string;
   /**
    * Billing details for an invoice-collected plan. Required by the platform
@@ -87,6 +95,8 @@ export function toCreateJobPostingInput(
       // figures to qualify says nothing.
       salaryTimeframe: salaryRangeEnabled ? data.salaryTimeframe : undefined,
       selectedPlan: data.selectedPlan,
+      // Sits INSIDE `submission` on this body, unlike `invoiceBilling`.
+      isFeatured: data.isFeatured,
     },
     remoteWorkPermitCountryCodes: data.remoteWorkPermitCountryCodes,
     logoUrl: data.logoUrl,
