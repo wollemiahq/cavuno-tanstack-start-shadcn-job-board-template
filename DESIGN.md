@@ -1745,6 +1745,16 @@ Props:
 - `search: HeaderSearchState & { onSubmit: (submission: HeaderSearchSubmission) => void; keywordSuggestions: KeywordSuggestionSt…`
 - `value: string`
 
+### InvoiceBillingFields — `src/components/invoice-billing-fields.tsx`
+
+Props:
+
+- `idPrefix?: string | undefined`
+- `invalid?: boolean | undefined`
+- `onChange: (next: InvoiceBillingDraft) => void`
+- `showEmail?: boolean | undefined`
+- `value: InvoiceBillingDraft`
+
 ### JobAlertFloatingPromptView — `src/components/job-alert-floating-prompt-view.tsx`
 
 Props:

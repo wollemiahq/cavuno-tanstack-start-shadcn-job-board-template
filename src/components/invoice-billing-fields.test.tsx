@@ -45,14 +45,11 @@ describe('invoice billing completeness', () => {
     expect(invoiceBillingIncomplete(complete)).toBe(false);
   });
 
-  it('only requires an email where the wire carries one', () => {
-    const noEmail = { ...complete, email: '' };
-    expect(invoiceBillingIncomplete(noEmail)).toBe(true);
-    // The public /post body has no `email` field; the invoice goes to the
-    // contact email the wizard already collected.
-    expect(invoiceBillingIncomplete(noEmail, { requireEmail: false })).toBe(
-      false,
-    );
+  it('does not require an email — the platform falls back to the contact address', () => {
+    // `employer-checkout.ts` resolves the recipient as
+    // `invoiceBilling?.email?.trim() || contactEmail`. Requiring it here
+    // would block a submit the API accepts.
+    expect(invoiceBillingIncomplete({ ...complete, email: '' })).toBe(false);
   });
 
   it('postal code stays optional — not every country uses one', () => {
@@ -75,6 +72,14 @@ describe('invoice billing wire shapes', () => {
       billingName: 'Acme Ltd',
       address: { line1: '1 Test Street', city: 'London', country: 'GB' },
     });
+  });
+
+  it('omits a blank email rather than sending an empty string', () => {
+    // Sending '' would work by accident via the platform's `|| contactEmail`
+    // fallback. Omitting it makes the fallback the contract.
+    expect(invoiceBillingBody({ ...complete, email: '' })).not.toHaveProperty(
+      'email',
+    );
   });
 
   it('carries postal code and tax id when given', () => {

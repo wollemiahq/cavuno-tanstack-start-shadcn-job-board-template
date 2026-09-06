@@ -44,20 +44,19 @@ export function emptyInvoiceBillingDraft(email = ''): InvoiceBillingDraft {
 /**
  * The parts the platform refuses to raise an invoice without.
  *
- * `requireEmail` is false on the public `/post` flow: that body carries no
- * `email` field at all and the platform falls back to the contact email the
- * wizard already collects. The employer checkout body does take one.
+ * Email is NOT among them, deliberately. `employer-checkout.ts` resolves the
+ * recipient as `invoiceBilling?.email?.trim() || contactEmail`, so a blank
+ * one falls back to the company's contact address. Requiring it here would
+ * be stricter than the platform and would block a submit the API accepts.
+ * The field is still offered — an operator often wants invoices going to
+ * accounts payable rather than the hiring contact.
  */
-export function invoiceBillingIncomplete(
-  draft: InvoiceBillingDraft,
-  { requireEmail = true }: { requireEmail?: boolean } = {},
-): boolean {
+export function invoiceBillingIncomplete(draft: InvoiceBillingDraft): boolean {
   return (
     draft.billingName.trim() === '' ||
     draft.line1.trim() === '' ||
     draft.city.trim() === '' ||
-    draft.country.trim() === '' ||
-    (requireEmail && !draft.email.includes('@'))
+    draft.country.trim() === ''
   );
 }
 
@@ -78,9 +77,12 @@ export interface PublicInvoiceBillingBody {
   taxId?: string;
 }
 
-/** Employer checkout shape — the same, plus the billing email it accepts. */
+/**
+ * Employer checkout shape — the same, plus the optional billing email it
+ * accepts. Optional because the platform falls back to the contact address.
+ */
 export interface EmployerInvoiceBillingBody extends PublicInvoiceBillingBody {
-  email: string;
+  email?: string;
 }
 
 function addressBody(draft: InvoiceBillingDraft): InvoiceBillingAddressBody {
@@ -111,11 +113,20 @@ export function publicInvoiceBillingBody(
   return body;
 }
 
-/** Wire shape for `EmployerCheckoutBody.invoiceBilling` — carries `email`. */
+/**
+ * Wire shape for `EmployerCheckoutBody.invoiceBilling`.
+ *
+ * `email` is omitted when blank rather than sent as `''`, so the platform's
+ * `|| contactEmail` fallback is what decides — sending an empty string would
+ * work by accident, which is not the same as working by contract.
+ */
 export function invoiceBillingBody(
   draft: InvoiceBillingDraft,
 ): EmployerInvoiceBillingBody {
-  return { ...publicInvoiceBillingBody(draft), email: trimmed(draft.email) };
+  const body: EmployerInvoiceBillingBody = publicInvoiceBillingBody(draft);
+  const email = trimmed(draft.email);
+  if (email) body.email = email;
+  return body;
 }
 
 export function InvoiceBillingFields({
