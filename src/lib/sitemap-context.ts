@@ -34,7 +34,6 @@ export interface SitemapBucketContext {
   readonly bucket: SitemapBucket;
   /** Newest content in the bucket, from the board's published sitemap index. */
   readonly lastModified?: string;
-  readonly entries: readonly SitemapEntry[];
   readonly chunks: readonly (readonly SitemapEntry[])[];
 }
 
@@ -185,11 +184,20 @@ export function sitemapXmlResponse(xml: string): Response {
   });
 }
 
+/**
+ * Normalise the wire stamp once, here, because this is what gets persisted to
+ * the shared edge snapshot for an hour: a value that is not a real date is
+ * dropped rather than emitted as an invalid `<lastmod>` (which makes crawlers
+ * reject the whole file) or crashing every isolate that reads the snapshot.
+ */
+function isoTimestamp(value: Date | string | undefined): string | undefined {
+  if (value === undefined || value === '') return undefined;
+  const time = value instanceof Date ? value : new Date(value);
+  return Number.isFinite(time.getTime()) ? time.toISOString() : undefined;
+}
+
 function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
-  const lastModified =
-    entry.lastModified instanceof Date
-      ? entry.lastModified.toISOString()
-      : entry.lastModified;
+  const lastModified = isoTimestamp(entry.lastModified);
   return lastModified ? { url: entry.url, lastModified } : { url: entry.url };
 }
 
@@ -209,10 +217,10 @@ export async function buildSitemapContext(
         const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
         const built: SitemapBucketContext = {
           bucket,
-          entries,
           chunks: chunks.length > 0 ? chunks : [[]],
         };
-        return lastModified ? { ...built, lastModified } : built;
+        const stamp = isoTimestamp(lastModified);
+        return stamp ? { ...built, lastModified: stamp } : built;
       },
     ),
   );

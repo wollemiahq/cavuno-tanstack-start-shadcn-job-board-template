@@ -100,6 +100,30 @@ describe('hosted-shaped sitemap context', () => {
     expect(findSitemapChunk(context, 'jobs-details', 2)).toHaveLength(1);
   });
 
+  it('drops a stamp that is not a real date instead of persisting it', async () => {
+    // A bad value would sit in the shared edge snapshot for an hour and
+    // either crash the renderer or make crawlers reject the whole file.
+    const context = await buildSitemapContext(board, ORIGIN, {
+      listedBucketEntries: vi.fn(async () => [
+        { bucket: 'marketing' as const, lastModified: 'unknown' },
+      ]),
+      buildBucketEntries: vi.fn(async () => [
+        { url: `${ORIGIN}/`, lastModified: 'not a date' },
+        {
+          url: `${ORIGIN}/about`,
+          lastModified: new Date('2026-09-01T00:00:00Z'),
+        },
+      ]),
+    });
+
+    const [bucket] = context.buckets;
+    expect(bucket?.lastModified).toBeUndefined();
+    expect(bucket?.chunks.flat()).toEqual([
+      { url: `${ORIGIN}/` },
+      { url: `${ORIGIN}/about`, lastModified: '2026-09-01T00:00:00.000Z' },
+    ]);
+  });
+
   it('retains an indexed chunk-zero urlset for an enabled empty bucket', async () => {
     const context = await buildSitemapContext(
       board,
@@ -243,17 +267,19 @@ describe('hosted-shaped sitemap context', () => {
     const skills = context.buckets.find(
       (entry) => entry.bucket === 'jobs-skills',
     );
-    expect(details?.entries.map((entry) => entry.url)).toHaveLength(TOTAL);
-    expect(details?.entries.map((entry) => entry.url)).toContain(
+    expect(details?.chunks.flat().map((entry) => entry.url)).toHaveLength(
+      TOTAL,
+    );
+    expect(details?.chunks.flat().map((entry) => entry.url)).toContain(
       `${ORIGIN}/companies/acme/jobs/job-0`,
     );
-    expect(details?.entries.map((entry) => entry.url)).toContain(
+    expect(details?.chunks.flat().map((entry) => entry.url)).toContain(
       `${ORIGIN}/companies/acme/jobs/job-${TOTAL - 1}`,
     );
-    expect(categories?.entries.map((entry) => entry.url)).toEqual([
+    expect(categories?.chunks.flat().map((entry) => entry.url)).toEqual([
       `${ORIGIN}/jobs/engineering`,
     ]);
-    expect(skills?.entries.map((entry) => entry.url)).toEqual([
+    expect(skills?.chunks.flat().map((entry) => entry.url)).toEqual([
       `${ORIGIN}/jobs/skills/typescript`,
     ]);
   });
@@ -293,7 +319,11 @@ describe('hosted-shaped sitemap context', () => {
         async () => ({
           object: 'board_sitemap',
           buckets: [
-            { bucket: 'jobs-details', count: 3 },
+            {
+              bucket: 'jobs-details',
+              count: 3,
+              lastModified: '2026-09-05T18:00:37.956Z',
+            },
             { bucket: 'marketing', count: 0 },
           ],
         }),
@@ -314,15 +344,22 @@ describe('hosted-shaped sitemap context', () => {
     const details = context.buckets.find(
       (entry) => entry.bucket === 'jobs-details',
     );
-    expect(details?.entries.map((entry) => entry.url)).toEqual([
+    expect(details?.chunks.flat().map((entry) => entry.url)).toEqual([
       `${ORIGIN}/companies/acme/jobs/job-1`,
       `${ORIGIN}/jobs/locations/adelaide-sa-australia/skills/a320`,
       `${ORIGIN}/companies/acme/jobs/job-2`,
     ]);
     // The wire stamp survives to the entry that `renderUrlset` reads.
-    expect(details?.entries.at(-1)?.lastModified).toBe(
+    expect(details?.chunks.flat().at(-1)?.lastModified).toBe(
       '2026-08-29T03:15:23.828Z',
     );
-    expect(details?.entries[0]?.lastModified).toBeUndefined();
+    expect(details?.chunks.flat()[0]?.lastModified).toBeUndefined();
+    // The bucket-level stamp reaches the index entry for its chunk file.
+    expect(details?.lastModified).toBe('2026-09-05T18:00:37.956Z');
+    expect(
+      sitemapIndexEntries(ORIGIN, context).find((entry) =>
+        entry.url.endsWith('/jobs-details.xml'),
+      )?.lastModified,
+    ).toBe('2026-09-05T18:00:37.956Z');
   });
 });

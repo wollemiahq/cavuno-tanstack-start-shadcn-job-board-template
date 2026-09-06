@@ -23,17 +23,23 @@ const SNAPSHOT: SitemapContext = {
     {
       bucket: 'marketing',
       lastModified: '2026-09-01T00:00:00.000Z',
-      entries: [
-        {
-          url: 'https://jobs.example/',
-          lastModified: '2026-08-30T12:00:00.000Z',
-        },
-      ],
       chunks: [
         [
           {
             url: 'https://jobs.example/',
             lastModified: '2026-08-30T12:00:00.000Z',
+          },
+        ],
+      ],
+    },
+    {
+      bucket: 'jobs-details',
+      lastModified: '2026-09-02T00:00:00.000Z',
+      chunks: [
+        [
+          {
+            url: 'https://jobs.example/companies/acme/jobs/eng',
+            lastModified: '2026-08-29T03:15:23.828Z',
           },
         ],
       ],
@@ -95,10 +101,15 @@ describe('sitemap XML cache headers', () => {
     const index = await (await getIndex()).text();
     expect(index).toContain('<lastmod>2026-09-01T00:00:00.000Z</lastmod>');
 
-    const file = await (
+    // Localized bucket → renderUrlsetWithAlternates; job bucket → renderUrlset.
+    const marketing = await (
       await getFile({ params: { file: 'marketing.xml' } })
     ).text();
-    expect(file).toContain('<lastmod>2026-08-30T12:00:00.000Z</lastmod>');
+    expect(marketing).toContain('<lastmod>2026-08-30T12:00:00.000Z</lastmod>');
+    const jobs = await (
+      await getFile({ params: { file: 'jobs-details.xml' } })
+    ).text();
+    expect(jobs).toContain('<lastmod>2026-08-29T03:15:23.828Z</lastmod>');
   });
 
   it('omits the gateway edge cache header on a 404', async () => {
