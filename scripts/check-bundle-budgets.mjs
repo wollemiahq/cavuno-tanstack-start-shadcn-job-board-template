@@ -41,7 +41,10 @@ const BUDGETS = {
   // 4 KiB (~1.8%) over the measurement rather than the ~2 KiB #125 left:
   // enough that a dependency bump or an ordinary change does not trip the
   // gate, tight enough to still catch a stray heavy import.
-  shell: { raw: 730_000, gzip: 226_000 },
+  // Advertising adds ~1.7 KiB gzip (222.4 KiB total). Keep initialization
+  // eager to avoid another request before ads can start; the operator accepted
+  // this measured feature cost. Other budgets remain unchanged.
+  shell: { raw: 730_000, gzip: 228_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
