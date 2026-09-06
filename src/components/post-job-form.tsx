@@ -19,6 +19,13 @@ import {
 } from '../lib/post-form';
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
+import {
+  emptyInvoiceBillingDraft,
+  InvoiceBillingFields,
+  invoiceBillingIncomplete,
+  publicInvoiceBillingBody,
+  type InvoiceBillingDraft,
+} from './invoice-billing-fields';
 import { PageSection } from './layout/page';
 import { RichTextEditor, type RichTextEditorProps } from './rich-text-editor';
 import { Alert, AlertDescription } from './ui/alert';
@@ -330,6 +337,15 @@ export function PostJobForm({
     defaultPlanId,
   );
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
+  // An invoice-collected plan needs company name + street/city/country or the
+  // platform refuses to raise the invoice and the submit 422s with nothing on
+  // screen to fix. The invoice goes to the contact email collected above —
+  // this body carries no email field of its own.
+  const invoiceBillingRequired = selectedPlan?.invoiceOnly === true;
+  const [invoiceBilling, setInvoiceBilling] = useState<InvoiceBillingDraft>(
+    () => emptyInvoiceBillingDraft(),
+  );
+  const [invoiceBillingInvalid, setInvoiceBillingInvalid] = useState(false);
   // A free plan publishes on submit; a paid plan hands off to checkout — the
   // primary label names whichever the chosen plan will do.
   const submitLabel =
@@ -560,6 +576,15 @@ export function PostJobForm({
       }
     }
 
+    if (invoiceBillingRequired && invoiceBillingIncomplete(invoiceBilling)) {
+      setInvoiceBillingInvalid(true);
+      updateFormState({
+        status: { kind: 'error', message: m.invoiceBilling_requiredError() },
+      });
+      return;
+    }
+    setInvoiceBillingInvalid(false);
+
     updateFormState({ status: { kind: 'pending' } });
 
     // Empty strings / empty selections are"unanswered", not values.
@@ -587,6 +612,9 @@ export function PostJobForm({
         selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
       };
+      if (invoiceBillingRequired) {
+        input.invoiceBilling = publicInvoiceBillingBody(invoiceBilling);
+      }
       if (jobForm.salary.visible) {
         input.salaryMin = salaryMin;
         input.salaryMax = salaryMax;
@@ -1088,6 +1116,25 @@ export function PostJobForm({
             );
           })}
         </RadioGroup>
+        {invoiceBillingRequired ? (
+          <div className="grid gap-3 pt-4">
+            <div className="grid gap-1">
+              <span className="text-sm font-medium">
+                {m.invoiceBilling_heading()}
+              </span>
+              <span className="text-muted-foreground text-xs">
+                {m.invoiceBilling_description()}
+              </span>
+            </div>
+            <InvoiceBillingFields
+              value={invoiceBilling}
+              onChange={setInvoiceBilling}
+              invalid={invoiceBillingInvalid}
+              idPrefix="post-invoice-billing"
+              showEmail={false}
+            />
+          </div>
+        ) : null}
       </PageSection>
 
       {status.kind === 'error' ? (

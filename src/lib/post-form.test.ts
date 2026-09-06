@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ensureProtocol,
+  toCreateJobPostingInput,
   isRichTextEmpty,
   looksLikeDomain,
   sanitizeLinkUrl,
@@ -144,5 +145,38 @@ describe('toSocialUrl', () => {
   it('returns an empty string for empty input', () => {
     expect(toSocialUrl('', 'x.com')).toBe('');
     expect(toSocialUrl('   ', 'x.com')).toBe('');
+  });
+});
+
+describe('invoice billing passes through to the wire body', () => {
+  const submission = {
+    companyName: 'Acme',
+    contactName: 'A Person',
+    contactEmail: 'hiring@acme.test',
+    title: 'Role',
+    description: '<p>x</p>',
+    employmentType: 'full_time',
+    remoteOption: 'remote',
+    officeLocations: [],
+    applicationUrl: 'https://acme.test/apply',
+  };
+
+  it('carries invoiceBilling as a sibling of submission', () => {
+    const body = toCreateJobPostingInput({
+      ...submission,
+      invoiceBilling: {
+        billingName: 'Acme Ltd',
+        address: { line1: '1 Test Street', city: 'London', country: 'GB' },
+      },
+    });
+    expect(body.invoiceBilling).toEqual({
+      billingName: 'Acme Ltd',
+      address: { line1: '1 Test Street', city: 'London', country: 'GB' },
+    });
+  });
+
+  it('omits it entirely for a plan that is not invoice-collected', () => {
+    const body = toCreateJobPostingInput(submission);
+    expect(body.invoiceBilling).toBeUndefined();
   });
 });

@@ -4,6 +4,7 @@
  * unit-tested without rendering the form.
  */
 
+import type { PublicInvoiceBillingBody } from '../components/invoice-billing-fields';
 import type { CreateJobPostingInput } from '@cavuno/board';
 
 /** The periods the API quotes `salaryMin`/`salaryMax` against. */
@@ -46,6 +47,13 @@ export type JobPostingFormInput = {
   salaryTimeframe?: SalaryTimeframe;
   selectedPlan?: string;
   logoUrl?: string;
+  /**
+   * Billing details for an invoice-collected plan. Required by the platform
+   * whenever the chosen plan is `invoiceOnly` — `validateInvoiceBillingDetails`
+   * refuses a blank company name or address and the submit 422s. No `email`
+   * field here: this body has none, and the invoice goes to `contactEmail`.
+   */
+  invoiceBilling?: PublicInvoiceBillingBody;
   /** Board-defined custom field answers, keyed by definition key. */
   customFieldValues?: Record<string, string | string[] | boolean | number>;
 };
@@ -82,6 +90,7 @@ export function toCreateJobPostingInput(
     },
     remoteWorkPermitCountryCodes: data.remoteWorkPermitCountryCodes,
     logoUrl: data.logoUrl,
+    invoiceBilling: data.invoiceBilling,
   };
 }
 
