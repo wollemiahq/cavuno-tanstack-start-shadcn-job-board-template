@@ -1,6 +1,7 @@
 import {
   pageSearchValue,
   parsePageParam,
+  searchQueryString,
   searchString,
   type UrlSearchInput,
   type UrlSearchValue,
@@ -16,17 +17,13 @@ export interface CompaniesSearch {
 
 export type CompaniesListingSearch = Omit<CompaniesSearch, 'selectedCompany'>;
 
-function stringSearchValue(value: UrlSearchValue) {
-  return searchString(value);
-}
-
 function selectedCompanySearchValue(value: UrlSearchValue) {
   return searchString(value)?.trim() || undefined;
 }
 
 export function parseCompaniesSearch(search: UrlSearchInput): CompaniesSearch {
   return {
-    query: stringSearchValue(search.query),
+    query: searchQueryString(search.query),
     page: pageSearchValue(parsePageParam(search.page)),
     selectedCompany: selectedCompanySearchValue(search.selectedCompany),
   };

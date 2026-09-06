@@ -6,6 +6,7 @@ import {
 import {
   pageSearchValue,
   parsePageParam,
+  searchQueryString,
   searchString,
   type UrlSearchInput,
 } from '@/lib/pagination';
@@ -20,7 +21,7 @@ export interface JobsSearch extends ListingFilters {
 export function parseJobsSearch(search: UrlSearchInput): JobsSearch {
   const listingSearch = {
     ...search,
-    q: searchString(search.q) ?? search.query,
+    q: searchQueryString(search.q) ?? searchQueryString(search.query),
   };
   const selectedJob = searchString(search.selectedJob)?.trim() || undefined;
 

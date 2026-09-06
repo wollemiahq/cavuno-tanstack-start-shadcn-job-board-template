@@ -1,6 +1,7 @@
 import {
   pageSearchValue,
   parsePageParam,
+  searchQueryString,
   searchString,
   type UrlSearchInput,
   type UrlSearchValue,
@@ -76,7 +77,7 @@ function sortValue(value: UrlSearchValue): TalentSearch['sort'] {
 
 export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
   return {
-    q: stringSearchValue(search.q),
+    q: searchQueryString(search.q),
     skill: stringSearchValue(search.skill),
     jobSearchStatus: jobSearchStatusValue(search.jobSearchStatus),
     languages: stringSearchValue(search.languages),
