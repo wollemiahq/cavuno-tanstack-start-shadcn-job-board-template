@@ -21,6 +21,7 @@ import {
   toSalaryRailVM,
   type RailItem,
 } from '@/board/salary-view-model';
+import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import { CompanyCard } from '@/components/board/company-card';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobCard } from '@/components/board/job-card';
@@ -246,11 +247,11 @@ function CompanyPage() {
           ) : null}
         </div>
 
-        {/* Key-facts rail — right column on desktop, sticky as the profile
-            scrolls. Last in the DOM so it stacks BELOW the content on narrow
+        {/* Key-facts sidebar — right column on desktop, scrolling with the
+            profile. Last in the DOM so it stacks BELOW the content on narrow
             screens (reading and tab order follow the visual order); the
             explicit lg column placement lifts it back alongside. */}
-        <aside className="flex flex-col gap-8 lg:sticky lg:top-8 lg:col-start-2 lg:row-start-1 lg:self-start">
+        <aside className="flex flex-col gap-8 lg:col-start-2 lg:row-start-1 lg:self-start">
           <Card>
             <CardContent className="flex flex-col gap-4">
               {website ? (
@@ -291,7 +292,14 @@ function CompanyPage() {
             </CardContent>
           </Card>
 
-          {/* Similar companies sit directly under the key-facts card, the same
+          <BoardAdSlot
+            placement="company:detail.sidebar"
+            layout="rectangle"
+            media="(min-width: 1024px)"
+            className="mx-auto"
+          />
+
+          {/* Similar companies follow the key facts and advertising, the same
               way similar jobs sit under the apply card on job detail. Deferred
               (streamed via <Await>): the rail fills in when the search backend
               answers, and stays hidden while it resolves or if it degrades to

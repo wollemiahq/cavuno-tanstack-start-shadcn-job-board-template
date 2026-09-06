@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { adsSlot, adsSlotFromFile } from './site-ads';
+import { adsSlot, adsSlotFromFile, resolveAdsSlot } from './site-ads';
 
 describe('stock src/ads.json', () => {
   it('yields no slots until an operator fills placement ids', () => {
@@ -31,5 +31,26 @@ describe('adsSlotFromFile', () => {
     });
     expect(adsSlotFromFile(file, 'search:rail.end')).toBeNull();
     expect(adsSlotFromFile(file, 'blog:post.sidebar')).toBeNull();
+  });
+});
+
+describe('resolveAdsSlot', () => {
+  it('falls back to the board default for unconfigured placements', () => {
+    expect(resolveAdsSlot('custom', ' 1234567890 ')).toEqual({
+      slotId: '1234567890',
+    });
+  });
+  it('prefers a direct unit override over the default', () => {
+    expect(resolveAdsSlot('custom', '1234567890', ' 9876543210 ')).toEqual({
+      slotId: '9876543210',
+    });
+  });
+  it('fails closed for an invalid explicit override', () => {
+    expect(resolveAdsSlot('custom', '1234567890', 'short')).toBeNull();
+  });
+  it('requires a valid default when no override exists', () => {
+    expect(resolveAdsSlot('custom')).toBeNull();
+    expect(resolveAdsSlot('custom', null)).toBeNull();
+    expect(resolveAdsSlot('custom', 'short')).toBeNull();
   });
 });

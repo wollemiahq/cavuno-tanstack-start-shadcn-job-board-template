@@ -307,9 +307,9 @@ export function BlogArticleContent({
             </figure>
           ) : null}
 
-          <div className="grid min-w-0 grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-[14rem_minmax(0,1fr)_16rem]">
+          <div className="grid min-w-0 grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[12rem_minmax(0,1fr)_20rem]">
             {hasToc ? (
-              <aside className="hidden lg:col-start-1 lg:row-start-1 lg:block">
+              <aside className="hidden xl:col-start-1 xl:row-start-1 xl:block">
                 <ArticleToc
                   headings={headings}
                   className="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto"
@@ -317,11 +317,11 @@ export function BlogArticleContent({
               </aside>
             ) : null}
 
-            <div className="flex min-w-0 flex-col gap-10 lg:col-start-2 lg:row-start-1">
+            <div className="flex min-w-0 flex-col gap-10 lg:col-start-1 lg:row-start-1 xl:col-start-2">
               {hasToc ? (
                 <ArticleToc
                   headings={headings}
-                  className="bg-muted rounded-3xl p-5 lg:hidden"
+                  className="bg-muted rounded-3xl p-5 xl:hidden"
                 />
               ) : null}
 
@@ -405,19 +405,14 @@ export function BlogArticleContent({
               ) : null}
             </div>
 
-            <aside className="hidden lg:col-start-3 lg:row-start-1 lg:block">
-              <PostMeta
-                post={post}
-                language={language}
-                links={links}
-                className="sticky top-8"
+            <aside className="hidden space-y-6 lg:col-start-2 lg:row-start-1 lg:block lg:self-start xl:col-start-3">
+              <PostMeta post={post} language={language} links={links} />
+              <BoardAdSlot
+                placement="blog:post.sidebar"
+                ads={ads}
+                layout="rectangle"
+                media="(min-width: 1024px)"
               />
-              {ads?.enabled && ads.clientId ? (
-                <BoardAdSlot
-                  placement="blog:post.sidebar"
-                  clientId={ads.clientId}
-                />
-              ) : null}
             </aside>
           </div>
 

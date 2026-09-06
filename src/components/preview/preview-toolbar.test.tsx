@@ -27,6 +27,10 @@ const mocks = {
   invalidate: vi.fn<PreviewToolbarDependencies['invalidate']>(),
 };
 
+import {
+  BoardAdPreviewProvider,
+  useBoardAdPreview,
+} from '../board/board-ad-preview';
 import { PreviewToolbarView } from './preview-toolbar';
 
 const capable: PreviewCapability = { canPreview: true, reason: 'sandbox' };
@@ -67,6 +71,7 @@ const config: PreviewBoardConfig = {
 };
 
 interface RenderToolbarOptions {
+  adPreviewEnabled?: boolean;
   capability?: PreviewCapability;
   viewer?: PreviewViewer | null;
   activePersonaId?: string | null;
@@ -77,6 +82,7 @@ interface RenderToolbarOptions {
 }
 
 function renderToolbar({
+  adPreviewEnabled = false,
   capability = capable,
   viewer = null,
   activePersonaId = null,
@@ -86,26 +92,92 @@ function renderToolbar({
   dataSource = 'board',
 }: RenderToolbarOptions = {}) {
   return render(
-    <PreviewToolbarView
-      capability={capability}
-      personas={personasOverride}
-      activePersonaId={activePersonaId}
-      viewer={viewer}
-      config={config}
-      demoConfigured={demoConfigured}
-      demoBoardPrivate={demoBoardPrivate}
-      dataSource={dataSource}
-      dependencies={{
-        switchPersona: mocks.switchPersona,
-        updateSandboxFlags: mocks.updateSandboxFlags,
-        reseedSandbox: mocks.reseedSandbox,
-        exitPreview: mocks.exitPreview,
-        listSandboxEmails: mocks.listSandboxEmails,
-        invalidate: mocks.invalidate,
-      }}
-    />,
+    <BoardAdPreviewProvider enabled={adPreviewEnabled}>
+      {adPreviewEnabled && <AdPreviewState />}
+      <PreviewToolbarView
+        capability={capability}
+        personas={personasOverride}
+        activePersonaId={activePersonaId}
+        viewer={viewer}
+        config={config}
+        demoConfigured={demoConfigured}
+        demoBoardPrivate={demoBoardPrivate}
+        dataSource={dataSource}
+        dependencies={{
+          switchPersona: mocks.switchPersona,
+          updateSandboxFlags: mocks.updateSandboxFlags,
+          reseedSandbox: mocks.reseedSandbox,
+          exitPreview: mocks.exitPreview,
+          listSandboxEmails: mocks.listSandboxEmails,
+          invalidate: mocks.invalidate,
+        }}
+      />
+    </BoardAdPreviewProvider>,
   );
 }
+
+function AdPreviewState() {
+  const { previewAds } = useBoardAdPreview();
+  return <output aria-label="Ad preview state">{String(previewAds)}</output>;
+}
+
+describe('ad placement preview', () => {
+  afterEach(() => sessionStorage.clear());
+
+  it('lets local development preview placements without enabling persona actions', async () => {
+    renderToolbar({
+      capability: { canPreview: false, reason: 'not-sandbox' },
+      adPreviewEnabled: true,
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Development preview' }),
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Emails' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('switch', { name: 'Ad placements' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+    expect(
+      screen.queryByRole('switch', { name: 'Blog' }),
+    ).not.toBeInTheDocument();
+    const toggle = await screen.findByRole('switch', { name: 'Ad placements' });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    await waitFor(() =>
+      expect(screen.getByLabelText('Ad preview state')).toHaveTextContent(
+        'true',
+      ),
+    );
+    cleanup();
+    renderToolbar({ adPreviewEnabled: true });
+    await waitFor(() =>
+      expect(screen.getByLabelText('Ad preview state')).toHaveTextContent(
+        'true',
+      ),
+    );
+    openMenu();
+    fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+    fireEvent.click(
+      await screen.findByRole('switch', { name: 'Ad placements' }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText('Ad preview state')).toHaveTextContent(
+        'false',
+      ),
+    );
+  });
+
+  it('ignores saved previews when unavailable', () => {
+    sessionStorage.setItem('cavuno:preview-ad-placements', 'true');
+    renderToolbar();
+    openMenu();
+    expect(
+      screen.queryByRole('switch', { name: 'Ad placements' }),
+    ).not.toBeInTheDocument();
+  });
+});
 
 // Open the persona menu via its stable, labelled floating trigger.
 function openMenu() {

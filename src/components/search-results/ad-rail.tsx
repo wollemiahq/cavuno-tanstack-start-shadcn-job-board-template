@@ -26,7 +26,7 @@ export function AdRail({
       data-slot="ad-rail"
       data-side={side}
       className={cn(
-        'sticky top-6 hidden min-h-[600px] w-40 min-w-40 self-start overflow-hidden min-[1600px]:block',
+        'hidden min-h-[600px] w-40 min-w-40 self-start overflow-hidden min-[1600px]:block',
         className,
       )}
     >

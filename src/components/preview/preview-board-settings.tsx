@@ -16,6 +16,7 @@ import {
 import { m } from '../../paraglide/messages';
 import { updateSandboxFlags } from '../../server/preview';
 
+import { useBoardAdPreview } from '@/components/board/board-ad-preview';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -139,7 +140,9 @@ export function PreviewBoardSettingsSheetView({
   onOpenChange,
   updateFlags,
   invalidate,
+  allowRemoteSettings = true,
 }: {
+  allowRemoteSettings?: boolean;
   config: PreviewBoardConfig;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -148,6 +151,7 @@ export function PreviewBoardSettingsSheetView({
   ) => ReturnType<typeof updateSandboxFlags>;
   invalidate: () => Promise<void>;
 }) {
+  const { available, previewAds, setPreviewAds } = useBoardAdPreview();
   const [pendingFlags, setPendingFlags] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -274,7 +278,9 @@ export function PreviewBoardSettingsSheetView({
         <SheetHeader className="p-4">
           <SheetTitle>{m.previewToolbar_boardSettings()}</SheetTitle>
           <SheetDescription>
-            {m.previewToolbar_boardSettingsSubtitle()}
+            {allowRemoteSettings
+              ? m.previewToolbar_boardSettingsSubtitle()
+              : 'Preview how your board looks.'}
           </SheetDescription>
         </SheetHeader>
 
@@ -300,7 +306,29 @@ export function PreviewBoardSettingsSheetView({
             </div>
           ) : null}
           <ul className="flex flex-col gap-4">
-            {PREVIEW_FEATURE_FLAGS.map((flag) => (
+            {available ? (
+              <li className="flex items-start justify-between gap-3">
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="preview-ad-placements"
+                    className="text-sm font-medium"
+                  >
+                    Ad placements
+                  </label>
+                  <span className="text-muted-foreground text-xs">
+                    Show placeholders where ads would appear.
+                  </span>
+                </div>
+                <Switch
+                  id="preview-ad-placements"
+                  className="mt-0.5"
+                  checked={previewAds}
+                  onCheckedChange={setPreviewAds}
+                  aria-label="Ad placements"
+                />
+              </li>
+            ) : null}
+            {(allowRemoteSettings ? PREVIEW_FEATURE_FLAGS : []).map((flag) => (
               <FlagControl
                 key={flag.key}
                 flag={flag}

@@ -12,7 +12,7 @@ import { m } from '../../paraglide/messages';
  * Anatomy: page header (company avatar + name link, display title, meta
  * pills, posted date) → two-column body. The main column carries the
  * sanitized description prose, facts, taxonomy links, and operator custom
- * fields. The sticky right rail is a stack: the ACTIONS card (full-width
+ * fields. The right rail is a stack: the ACTIONS card (full-width
  * primary Apply on top, a two-up Save + Copy-link row beneath it) → the alert
  * signup card → the compact about-company card → the similar-jobs grid. On
  * mobile the actions card is a fixed bottom bar under the header.
@@ -30,6 +30,7 @@ import type {
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
+import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
@@ -124,6 +125,7 @@ export function JobDetail({
 }) {
   return (
     <PageLayout
+      railSticky={false}
       band={
         <div className="border-border bg-muted/50 border-b">
           <Container width="wide">
@@ -194,7 +196,7 @@ export function JobDetail({
         <>
           {/* Sidebar actions card: full-width primary Apply on top, then a
               two-up row of the Save and Copy-link controls beneath it. On
-              mobile it is a fixed bottom bar; on lg it joins the sticky rail. */}
+              mobile it is a fixed bottom bar; on lg it joins the sidebar. */}
           <div
             data-slot="job-actions"
             className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
@@ -217,6 +219,12 @@ export function JobDetail({
           {/* Sidebar stack under the actions card: alerts → about-company →
               similar jobs. The caller owns each section so a deferred, streamed
               rail can stay hidden until it resolves with content. */}
+          <BoardAdSlot
+            placement="job:detail.sidebar"
+            layout="rectangle"
+            media="(min-width: 1024px)"
+            className="mx-auto"
+          />
           {alertSlot}
           {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
           {similarSlot}

@@ -12,7 +12,7 @@ const FloatingStackContext = createContext<HTMLElement | null>(null);
  * cookie banner is the LCP element on listing pages) paints at its FINAL
  * fixed position on first paint instead of jumping there after hydration. */
 const STACK_REGION_CLASS =
-  'pointer-events-none fixed end-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end';
+  'pointer-events-none fixed end-4 bottom-[var(--board-ad-footer-height,0px)] z-(--z-floating-stack) flex flex-col items-end';
 
 /**
  * Shared bottom-right stacking region for floating widgets (the job-alert

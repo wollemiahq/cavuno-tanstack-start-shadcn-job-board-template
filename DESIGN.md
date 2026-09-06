@@ -502,14 +502,42 @@ Props:
 - `allActive?: boolean | undefined`
 - `tags: ({ id: string; name: string; slug: string; description: string | null; } & { object: "public_blog_tag"; })[]`
 
+### BoardAdFooter — `src/components/board/board-ad-footer.tsx`
+
+Google owns the real anchor. Preview dimensions illustrate a compact bar,
+not a guarantee of Google's serving size. No manual unit is made sticky here.
+
+Props:
+
+- `hasMobileBottomBar?: boolean | undefined`
+
+### BoardAdPreviewProvider — `src/components/board/board-ad-preview.tsx`
+
+Local, nonsecret development preference; never enables real advertising.
+
+Props:
+
+- `children: ReactNode`
+- `enabled: boolean`
+
 ### BoardAdSlot — `src/components/board/board-ad-slot.tsx`
 
 Props:
 
+- `ads?: BoardAdsConfig | undefined`
 - `className?: string | undefined`
-- `clientId: string`
-- `layout?: "responsive" | "rail" | undefined`
-- `placement: string`
+- `layout?: "responsive" | "rail" | "rectangle" | "footer" | undefined`
+- `media?: string | undefined`
+- `onStatusChange?: ((status: AdStatus) => void) | undefined`
+- `placement?: string | undefined`
+- `slotId?: string | undefined`
+
+### BoardAdsProvider — `src/components/board/board-ads-provider.tsx`
+
+Props:
+
+- `ads: BoardAdsConfig`
+- `children: ReactNode`
 
 ### Breadcrumb — `src/components/board/breadcrumb.tsx`
 
@@ -1851,6 +1879,7 @@ Props:
 - `children: ReactNode`
 - `rail?: ReactNode`
 - `railLabel?: string | undefined`
+- `railSticky?: boolean | undefined`
 
 ### LegalPageView — `src/components/legal-page.tsx`
 
@@ -2262,6 +2291,7 @@ invalidate, so the control reverts to the real `config` prop.
 
 Props:
 
+- `allowRemoteSettings?: boolean | undefined`
 - `config: PreviewBoardConfig`
 - `invalidate: () => Promise<void>`
 - `onOpenChange: (open: boolean) => void`
@@ -2312,8 +2342,8 @@ Props:
 ### PreviewToolbarView — `src/components/preview/preview-toolbar.tsx`
 
 The developer-preview toolbar for the sandbox preview state
-spec. A floating, unobtrusive pill that renders ONLY when the server-side
-capability check passes (`sandbox: true`), never on a tenant board.
+spec. Server capability gates persona tools. Local development can also
+render a limited toolbar for visual ad placement previews.
 
 Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, the persona
 menu gains a top "Your board (real data)" entry that sets the data-source
@@ -3728,6 +3758,7 @@ Props:
 - `aside?: ReactNode`
 - `asideLabel?: string | undefined`
 - `asideOrder?: "before" | "after" | undefined`
+- `asideSticky?: boolean | undefined`
 - `children: ReactNode`
 - `header?: ReactNode`
 

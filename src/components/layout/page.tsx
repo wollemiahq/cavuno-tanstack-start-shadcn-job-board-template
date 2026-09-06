@@ -176,11 +176,13 @@ export type PageContentProps =
       aside?: never;
       asideLabel?: never;
       asideOrder?: never;
+      asideSticky?: never;
     })
   | (PageContentBaseProps & {
       aside: ReactNode;
       asideLabel: string;
       asideOrder?: 'before' | 'after';
+      asideSticky?: boolean;
     });
 
 /**
@@ -196,6 +198,7 @@ export function PageContent({
   aside,
   asideLabel,
   asideOrder = 'after',
+  asideSticky = true,
   ...props
 }: PageContentProps) {
   const primary = (
@@ -215,7 +218,8 @@ export function PageContent({
       data-slot="page-aside"
       aria-label={asideLabel}
       className={cn(
-        'flex flex-col gap-6 lg:sticky lg:top-8 lg:row-start-1 lg:self-start',
+        'flex flex-col gap-6 lg:row-start-1 lg:self-start',
+        asideSticky && 'lg:sticky lg:top-8',
         asideOrder === 'before' ? 'lg:col-start-1' : 'lg:col-start-2',
       )}
     >
