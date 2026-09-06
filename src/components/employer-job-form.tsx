@@ -36,6 +36,13 @@ import {
   planFeatureLines,
   planOffersFeaturedChoice,
 } from '@/board/plan-view-model';
+import {
+  emptyInvoiceBillingDraft,
+  InvoiceBillingFields,
+  invoiceBillingBody,
+  invoiceBillingIncomplete,
+  type InvoiceBillingDraft,
+} from '@/components/invoice-billing-fields';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { RichTextEditor } from '@/components/rich-text-editor';
@@ -182,12 +189,14 @@ function clientFieldErrorMessage(errors: {
   officeLocations: boolean;
   applicationTarget: boolean;
   billing: boolean;
+  invoiceBilling: boolean;
 }): string | null {
   if (errors.description) return m.postJob_descriptionRequiredError();
   if (errors.officeLocations) return m.postJob_officeLocationsRequiredError();
   if (errors.applicationTarget)
     return m.employerPostJob_applyTargetRequiredError();
   if (errors.billing) return m.employerPostJob_billingRequiredError();
+  if (errors.invoiceBilling) return m.invoiceBilling_requiredError();
   return null;
 }
 
@@ -463,6 +472,9 @@ export function EmployerJobForm({
   );
   /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
   const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
+  const [invoiceBilling, setInvoiceBilling] = useState<InvoiceBillingDraft>(
+    () => emptyInvoiceBillingDraft(),
+  );
   // Featured slots are sold by a plan or held on a reusable credit, but the
   // platform only features a post when the checkout body says `isFeatured`
   // (unless the board auto-features). Until this choice existed a buyer on a
@@ -517,6 +529,14 @@ export function EmployerJobForm({
     return { hint: null, defaultOn: plan.kind === 'one_time' };
   }
   const featuredChoice = featuredChoiceFor(selectedBilling);
+  // An invoice-collected plan cannot be raised without company name and a
+  // street/city/country — the platform validator refuses it and the checkout
+  // 422s with nothing on screen to fix. Only `new` plan selections can be
+  // invoice plans; a stored billing option is an existing paid arrangement.
+  const selectedInvoicePlan =
+    plans.find((candidate) => `plan:${candidate.id}` === selectedBilling) ??
+    null;
+  const invoiceBillingRequired = selectedInvoicePlan?.invoiceOnly === true;
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'error' | 'committed'
   >('idle');
@@ -537,6 +557,7 @@ export function EmployerJobForm({
     officeLocationCountry?: boolean;
     applicationTarget?: boolean;
     billing?: boolean;
+    invoiceBilling?: boolean;
   }>({});
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -669,6 +690,9 @@ export function EmployerJobForm({
 
     const body: EmployerCheckoutBody = { billing };
     if (featuredChoice && featureListing) body.isFeatured = true;
+    if (invoiceBillingRequired) {
+      body.invoiceBilling = invoiceBillingBody(invoiceBilling);
+    }
 
     let checkout: Awaited<ReturnType<typeof actions.checkoutJob>>;
     try {
@@ -741,6 +765,8 @@ export function EmployerJobForm({
         form.officeLocations.length === 0,
       applicationTarget: applyExternal,
       billing: billingRequired && selectedBilling === null,
+      invoiceBilling:
+        invoiceBillingRequired && invoiceBillingIncomplete(invoiceBilling),
     };
     setFieldErrors(errors);
     const fieldMessage = clientFieldErrorMessage(errors);
@@ -1407,6 +1433,24 @@ export function EmployerJobForm({
                   <FieldError>
                     {m.employerPostJob_billingRequiredError()}
                   </FieldError>
+                ) : null}
+                {invoiceBillingRequired ? (
+                  <div className="grid gap-3 pt-2">
+                    <div className="grid gap-1">
+                      <span className="text-sm font-medium">
+                        {m.invoiceBilling_heading()}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {m.invoiceBilling_description()}
+                      </span>
+                    </div>
+                    <InvoiceBillingFields
+                      value={invoiceBilling}
+                      onChange={setInvoiceBilling}
+                      invalid={fieldErrors.invoiceBilling}
+                      idPrefix="employer-invoice-billing"
+                    />
+                  </div>
                 ) : null}
               </Field>
             ) : (
