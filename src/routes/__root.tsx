@@ -515,7 +515,7 @@ function RootChrome({
             <FloatingStackProvider>
               <NavigationProgress />
               {fillsViewport ? (
-                <div className="md:grid md:h-[calc(100dvh-var(--board-ad-footer-height,0px))] md:grid-rows-[auto_minmax(0,1fr)]">
+                <div className="md:grid md:h-[calc(100dvh-var(--board-ad-footer-height,0px)-var(--board-ad-top-height,0px))] md:grid-rows-[auto_minmax(0,1fr)]">
                   {header}
                   {routeContent}
                 </div>

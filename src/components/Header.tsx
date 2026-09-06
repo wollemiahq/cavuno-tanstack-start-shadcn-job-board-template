@@ -365,7 +365,7 @@ export default function Header({
           // Sticky keeps the real header (and its single search field) at the
           // top while the mobile nav panel is open, so the panel can pin with
           // CSS `top-16` (matches min-h-16) instead of getBoundingClientRect.
-          'border-border text-foreground sticky top-0 z-50 border-b',
+          'border-border text-foreground sticky top-[var(--board-ad-top-height,0px)] z-50 border-b',
           ...menuColorClasses(MENU_COLOR),
         )}
       >

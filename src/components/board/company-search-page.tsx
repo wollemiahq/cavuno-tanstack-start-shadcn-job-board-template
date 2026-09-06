@@ -1,11 +1,11 @@
 'use client';
-
 import { companyMarketPath } from '@cavuno/board/paths';
 import { Link, useLocation } from '@tanstack/react-router';
 import { Building2 } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
+import { ListingAdResults } from './listing-ad-results';
 
 import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
@@ -178,7 +178,7 @@ export function CompanySearchPage({
                   <div className="space-y-4">{resultsBar}</div>
 
                   <InPlaceListingSelect onSelect={selection.onResultActivate}>
-                    <div className="space-y-3">
+                    <ListingAdResults ads={ads}>
                       {companyVms.map((vm, index) => {
                         const companySlug = companySlugs[index]!;
                         return (
@@ -190,7 +190,7 @@ export function CompanySearchPage({
                           </div>
                         );
                       })}
-                    </div>
+                    </ListingAdResults>
                   </InPlaceListingSelect>
 
                   <ListingPagination
