@@ -22,8 +22,21 @@ const SNAPSHOT: SitemapContext = {
   buckets: [
     {
       bucket: 'marketing',
-      urls: ['https://jobs.example/'],
-      chunks: [['https://jobs.example/']],
+      lastModified: '2026-09-01T00:00:00.000Z',
+      entries: [
+        {
+          url: 'https://jobs.example/',
+          lastModified: '2026-08-30T12:00:00.000Z',
+        },
+      ],
+      chunks: [
+        [
+          {
+            url: 'https://jobs.example/',
+            lastModified: '2026-08-30T12:00:00.000Z',
+          },
+        ],
+      ],
     },
   ],
 };
@@ -76,6 +89,16 @@ describe('sitemap XML cache headers', () => {
     expect(res.headers.get('Cloudflare-CDN-Cache-Control')).toBe(
       SITEMAP_EDGE_CACHE_CONTROL,
     );
+  });
+
+  it('stamps <lastmod> on the index from the bucket and on the urlset from each entry', async () => {
+    const index = await (await getIndex()).text();
+    expect(index).toContain('<lastmod>2026-09-01T00:00:00.000Z</lastmod>');
+
+    const file = await (
+      await getFile({ params: { file: 'marketing.xml' } })
+    ).text();
+    expect(file).toContain('<lastmod>2026-08-30T12:00:00.000Z</lastmod>');
   });
 
   it('omits the gateway edge cache header on a 404', async () => {

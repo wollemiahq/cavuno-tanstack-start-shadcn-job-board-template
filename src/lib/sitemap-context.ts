@@ -1,10 +1,12 @@
 import {
   SITEMAP_CHUNK_SIZE,
   bucketFilename,
-  buildBucketUrls,
+  buildBucketEntries,
   chunk,
-  listedBuckets,
+  listedBucketEntries,
   type SitemapBucket,
+  type SitemapIndexEntry,
+  type SitemapUrlEntry,
 } from '@cavuno/board/sitemap';
 
 import type { BoardSdk } from '@cavuno/board';
@@ -18,18 +20,33 @@ export interface SitemapContext {
   readonly buckets: readonly SitemapBucketContext[];
 }
 
+/**
+ * One sitemap URL as persisted in the shared snapshot. Strings only, so the
+ * JSON round trip through the edge cache is lossless.
+ */
+export interface SitemapEntry {
+  readonly url: string;
+  /** ISO 8601, from the board's published sitemap; absent → no `<lastmod>`. */
+  readonly lastModified?: string;
+}
+
 export interface SitemapBucketContext {
   readonly bucket: SitemapBucket;
-  readonly urls: readonly string[];
-  readonly chunks: readonly (readonly string[])[];
+  /** Newest content in the bucket, from the board's published sitemap index. */
+  readonly lastModified?: string;
+  readonly entries: readonly SitemapEntry[];
+  readonly chunks: readonly (readonly SitemapEntry[])[];
 }
 
 type SitemapSource = {
-  listedBuckets: typeof listedBuckets;
-  buildBucketUrls: typeof buildBucketUrls;
+  listedBucketEntries: typeof listedBucketEntries;
+  buildBucketEntries: typeof buildBucketEntries;
 };
 
-const DEFAULT_SOURCE: SitemapSource = { listedBuckets, buildBucketUrls };
+const DEFAULT_SOURCE: SitemapSource = {
+  listedBucketEntries,
+  buildBucketEntries,
+};
 
 // Hosted boards keep their complete context longer than the individual route
 // responses. This template mirrors that ratio: each XML response is cached for
@@ -40,7 +57,8 @@ export const SITEMAP_RESPONSE_CACHE_CONTROL = 'public, max-age=300';
 // for up to 24h. Browser Cache-Control alone is a cold miss after 5 minutes.
 export const SITEMAP_EDGE_CACHE_CONTROL = 'public, max-age=300';
 export const SITEMAP_CONTEXT_TTL_MS = 60 * 60 * 1_000;
-const SITEMAP_CONTEXT_CACHE_VERSION = 'v1';
+// v2: entries carry `lastModified`; a v1 snapshot holds bare strings.
+const SITEMAP_CONTEXT_CACHE_VERSION = 'v2';
 
 type CachedContext = {
   expiresAt: number;
@@ -167,26 +185,36 @@ export function sitemapXmlResponse(xml: string): Response {
   });
 }
 
+function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
+  const lastModified =
+    entry.lastModified instanceof Date
+      ? entry.lastModified.toISOString()
+      : entry.lastModified;
+  return lastModified ? { url: entry.url, lastModified } : { url: entry.url };
+}
+
 export async function buildSitemapContext(
   board: BoardSdk,
   origin: string,
   source: SitemapSource = DEFAULT_SOURCE,
 ): Promise<SitemapContext> {
   const catalog = memoizingBoardView(board);
-  const buckets = await source.listedBuckets(catalog);
+  const listed = await source.listedBucketEntries(catalog);
   const built = await Promise.all(
-    buckets.map(async (bucket): Promise<SitemapBucketContext> => {
-      const urls = await source.buildBucketUrls(catalog, origin, bucket);
-      const chunks = chunk(urls, SITEMAP_CHUNK_SIZE);
-
-      return {
-        bucket,
-        urls,
-        // Preserve the SDK's empty-bucket contract: chunk zero remains a valid
-        // empty urlset and is discoverable from the index.
-        chunks: chunks.length > 0 ? chunks : [[]],
-      };
-    }),
+    listed.map(
+      async ({ bucket, lastModified }): Promise<SitemapBucketContext> => {
+        const entries = (
+          await source.buildBucketEntries(catalog, origin, bucket)
+        ).map(toSitemapEntry);
+        const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
+        const built: SitemapBucketContext = {
+          bucket,
+          entries,
+          chunks: chunks.length > 0 ? chunks : [[]],
+        };
+        return lastModified ? { ...built, lastModified } : built;
+      },
+    ),
   );
 
   return { buckets: built };
@@ -235,15 +263,16 @@ export function loadSitemapContext(
   return entry.value;
 }
 
-export function sitemapIndexLocations(
+/** One `<sitemap>` per chunk file, each stamped with its bucket's freshness. */
+export function sitemapIndexEntries(
   origin: string,
   context: SitemapContext,
-): string[] {
-  return context.buckets.flatMap(({ bucket, chunks }) =>
-    chunks.map(
-      (_entries, chunkIndex) =>
-        `${origin}/sitemap/${bucketFilename(bucket, chunkIndex)}`,
-    ),
+): SitemapIndexEntry[] {
+  return context.buckets.flatMap(({ bucket, lastModified, chunks }) =>
+    chunks.map((_entries, chunkIndex) => {
+      const url = `${origin}/sitemap/${bucketFilename(bucket, chunkIndex)}`;
+      return lastModified ? { url, lastModified } : { url };
+    }),
   );
 }
 
@@ -251,7 +280,7 @@ export function findSitemapChunk(
   context: SitemapContext,
   bucket: SitemapBucket,
   chunkIndex: number,
-): readonly string[] | undefined {
+): readonly SitemapEntry[] | undefined {
   return context.buckets
     .find((entry) => entry.bucket === bucket)
     ?.chunks.at(chunkIndex);

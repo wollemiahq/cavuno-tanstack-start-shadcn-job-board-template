@@ -1,8 +1,8 @@
 import { BoardApiError } from '@cavuno/board';
 import {
   SITEMAP_CHUNK_SIZE,
-  buildBucketUrls,
-  listedBuckets,
+  buildBucketEntries,
+  listedBucketEntries,
   type SitemapBucket,
 } from '@cavuno/board/sitemap';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,7 +12,7 @@ import {
   findSitemapChunk,
   loadSitemapContext,
   resetSitemapContextCacheForTest,
-  sitemapIndexLocations,
+  sitemapIndexEntries,
 } from './sitemap-context';
 
 import type { BoardSdk } from '@cavuno/board';
@@ -62,10 +62,14 @@ function source(options: {
 }) {
   const buckets: SitemapBucket[] = options.buckets ?? ['marketing'];
   return {
-    listedBuckets: vi.fn(async () => buckets),
-    buildBucketUrls: vi.fn(
+    listedBucketEntries: vi.fn(async () =>
+      buckets.map((bucket) => ({ bucket })),
+    ),
+    buildBucketEntries: vi.fn(
       async (_board: BoardSdk, _origin: string, bucket: SitemapBucket) =>
-        options.build?.(bucket) ?? [`${ORIGIN}/${bucket}`],
+        ((await options.build?.(bucket)) ?? [`${ORIGIN}/${bucket}`]).map(
+          (url) => ({ url }),
+        ),
     ),
   };
 }
@@ -85,7 +89,9 @@ describe('hosted-shaped sitemap context', () => {
 
     const context = await buildSitemapContext(board, ORIGIN, deps);
 
-    expect(sitemapIndexLocations(ORIGIN, context)).toEqual([
+    expect(
+      sitemapIndexEntries(ORIGIN, context).map((entry) => entry.url),
+    ).toEqual([
       `${ORIGIN}/sitemap/marketing.xml`,
       `${ORIGIN}/sitemap/jobs-details.xml`,
       `${ORIGIN}/sitemap/jobs-details-2.xml`,
@@ -101,9 +107,9 @@ describe('hosted-shaped sitemap context', () => {
       source({ buckets: ['blog'], build: async () => [] }),
     );
 
-    expect(sitemapIndexLocations(ORIGIN, context)).toEqual([
-      `${ORIGIN}/sitemap/blog.xml`,
-    ]);
+    expect(
+      sitemapIndexEntries(ORIGIN, context).map((entry) => entry.url),
+    ).toEqual([`${ORIGIN}/sitemap/blog.xml`]);
     expect(findSitemapChunk(context, 'blog', 0)).toEqual([]);
   });
 
@@ -116,8 +122,8 @@ describe('hosted-shaped sitemap context', () => {
     ]);
 
     expect(second).toBe(first);
-    expect(deps.listedBuckets).toHaveBeenCalledOnce();
-    expect(deps.buildBucketUrls).toHaveBeenCalledTimes(2);
+    expect(deps.listedBucketEntries).toHaveBeenCalledOnce();
+    expect(deps.buildBucketEntries).toHaveBeenCalledTimes(2);
   });
 
   it('reuses the persistent Worker snapshot across isolated board clients', async () => {
@@ -153,14 +159,14 @@ describe('hosted-shaped sitemap context', () => {
     const second = await loadSitemapContext(secondBoard, ORIGIN, secondSource);
 
     expect(second).toEqual(first);
-    expect(secondSource.listedBuckets).not.toHaveBeenCalled();
+    expect(secondSource.listedBucketEntries).not.toHaveBeenCalled();
     expect(edgeCache.put).toHaveBeenCalledOnce();
     expect(edgeCache.match).toHaveBeenCalledTimes(2);
   });
 
   it('evicts a rejected build so the next request can retry', async () => {
     const deps = source({});
-    deps.listedBuckets.mockRejectedValueOnce(new Error('temporary'));
+    deps.listedBucketEntries.mockRejectedValueOnce(new Error('temporary'));
 
     await expect(loadSitemapContext(board, ORIGIN, deps)).rejects.toThrow(
       'temporary',
@@ -168,7 +174,7 @@ describe('hosted-shaped sitemap context', () => {
     await expect(
       loadSitemapContext(board, ORIGIN, deps),
     ).resolves.toBeDefined();
-    expect(deps.listedBuckets).toHaveBeenCalledTimes(2);
+    expect(deps.listedBucketEntries).toHaveBeenCalledTimes(2);
   });
 
   it('enumerates each jobs.list offset once across the three catalog buckets', async () => {
@@ -220,8 +226,8 @@ describe('hosted-shaped sitemap context', () => {
     });
 
     const context = await buildSitemapContext(catalogBoard, ORIGIN, {
-      listedBuckets,
-      buildBucketUrls,
+      listedBucketEntries,
+      buildBucketEntries,
     });
 
     const offsets = jobsList.mock.calls.map(([query]) => query?.offset ?? 0);
@@ -237,13 +243,19 @@ describe('hosted-shaped sitemap context', () => {
     const skills = context.buckets.find(
       (entry) => entry.bucket === 'jobs-skills',
     );
-    expect(details?.urls).toHaveLength(TOTAL);
-    expect(details?.urls).toContain(`${ORIGIN}/companies/acme/jobs/job-0`);
-    expect(details?.urls).toContain(
+    expect(details?.entries.map((entry) => entry.url)).toHaveLength(TOTAL);
+    expect(details?.entries.map((entry) => entry.url)).toContain(
+      `${ORIGIN}/companies/acme/jobs/job-0`,
+    );
+    expect(details?.entries.map((entry) => entry.url)).toContain(
       `${ORIGIN}/companies/acme/jobs/job-${TOTAL - 1}`,
     );
-    expect(categories?.urls).toEqual([`${ORIGIN}/jobs/engineering`]);
-    expect(skills?.urls).toEqual([`${ORIGIN}/jobs/skills/typescript`]);
+    expect(categories?.entries.map((entry) => entry.url)).toEqual([
+      `${ORIGIN}/jobs/engineering`,
+    ]);
+    expect(skills?.entries.map((entry) => entry.url)).toEqual([
+      `${ORIGIN}/jobs/skills/typescript`,
+    ]);
   });
   it('mirrors the published sitemap when the API serves it, without enumerating the catalog', async () => {
     const jobsList = vi.fn(async () => ({ data: [], count: 0 }));
@@ -253,7 +265,12 @@ describe('hosted-shaped sitemap context', () => {
           return { data: [], hasMore: false, nextCursor: null };
         return query?.cursor
           ? {
-              data: [{ path: '/companies/acme/jobs/job-2' }],
+              data: [
+                {
+                  path: '/companies/acme/jobs/job-2',
+                  lastModified: '2026-08-29T03:15:23.828Z',
+                },
+              ],
               hasMore: false,
               nextCursor: null,
             }
@@ -285,8 +302,8 @@ describe('hosted-shaped sitemap context', () => {
     });
 
     const context = await buildSitemapContext(mirrorBoard, ORIGIN, {
-      listedBuckets,
-      buildBucketUrls,
+      listedBucketEntries,
+      buildBucketEntries,
     });
 
     expect(jobsList).not.toHaveBeenCalled();
@@ -297,10 +314,15 @@ describe('hosted-shaped sitemap context', () => {
     const details = context.buckets.find(
       (entry) => entry.bucket === 'jobs-details',
     );
-    expect(details?.urls).toEqual([
+    expect(details?.entries.map((entry) => entry.url)).toEqual([
       `${ORIGIN}/companies/acme/jobs/job-1`,
       `${ORIGIN}/jobs/locations/adelaide-sa-australia/skills/a320`,
       `${ORIGIN}/companies/acme/jobs/job-2`,
     ]);
+    // The wire stamp survives to the entry that `renderUrlset` reads.
+    expect(details?.entries.at(-1)?.lastModified).toBe(
+      '2026-08-29T03:15:23.828Z',
+    );
+    expect(details?.entries[0]?.lastModified).toBeUndefined();
   });
 });
