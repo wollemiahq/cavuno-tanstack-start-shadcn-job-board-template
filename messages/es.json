@@ -1,4 +1,7 @@
 {
+  "adPreview_placeholder": "ESPACIO PUBLICITARIO",
+  "adPreview_label": "Ubicaciones de anuncios",
+  "adPreview_description": "Mostrar marcadores donde aparecerían los anuncios.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {

@@ -1,4 +1,7 @@
 {
+  "adPreview_placeholder": "MIEJSCE NA REKLAMĘ",
+  "adPreview_label": "Miejsca reklamowe",
+  "adPreview_description": "Pokaż pola zastępcze w miejscach, w których pojawią się reklamy.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {
