@@ -37,8 +37,9 @@ export function searchString<T>(value: T): string | undefined {
  * Longest free-text search the board API accepts. Its schema is
  * `z.string().max(200)`, so a longer `?q=` is rejected with 400 — which
  * escapes the loader as a 500 rather than an empty result. Measured live
- * before the fix: 200 chars rendered, 201 crashed `/jobs`, `/talent` and
- * `/blog`.
+ * before the fix: 200 chars rendered, 201 crashed `/jobs`, `/talent`,
+ * `/blog` and `/companies?query=` — every surface that forwards free text.
+ * Only `/salaries` was unaffected.
  */
 export const SEARCH_QUERY_MAX_LENGTH = 200;
 
