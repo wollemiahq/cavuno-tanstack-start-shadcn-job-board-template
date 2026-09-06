@@ -266,7 +266,7 @@ export function PreviewToolbarView({
   return (
     <div
       className="fixed bottom-4 left-4 z-(--z-preview-toolbar) print:hidden"
-      style={{ bottom: 'calc(1rem + var(--board-ad-footer-height, 0px))' }}
+      style={{ bottom: 'calc(1rem + var(--board-floating-bottom, 0px))' }}
       data-test="preview-toolbar"
     >
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>

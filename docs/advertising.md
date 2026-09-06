@@ -51,3 +51,9 @@ the shared default deliberately favors easy setup.
 - [Custom sticky requirements](https://support.google.com/adsense/answer/10734935?hl=en): size, viewport, and non-overlap requirements.
 - [Regular bottom anchors](https://support.google.com/adsense/answer/7478225?hl=en): supported loader parameter and its effect on anchor settings.
 - [Auto ads settings](https://support.google.com/adsense/answer/9305577?hl=en): format controls and page exclusions.
+
+### Floating controls and live anchors
+
+The floating widget stack measures the visible publisher-side fixed Google ad container and moves messaging and other corner controls above it. Resize, dismissal, insertion, removal and viewport changes refresh the offset. Open messaging panels also subtract that space from their maximum height. The observer never changes ad markup or reads the cross-origin creative. It stays mounted across client navigation because Google's loader can outlive the route that loaded it.
+
+AdSense does not expose a documented anchor-height callback. Detection uses the outer Google ad elements and their fixed ancestor geometry, so changes to Google's markup need ongoing live monitoring. Preview and synthetic-container checks exercise the layout behavior; they are not evidence of a real served impression.
