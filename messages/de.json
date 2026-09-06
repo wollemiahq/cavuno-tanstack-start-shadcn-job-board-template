@@ -1,4 +1,7 @@
 {
+  "adPreview_placeholder": "ANZEIGE HIER",
+  "adPreview_label": "Anzeigenplatzierungen",
+  "adPreview_description": "Platzhalter anzeigen, wo Anzeigen erscheinen würden.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {

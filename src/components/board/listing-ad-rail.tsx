@@ -3,21 +3,24 @@
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 
 import { m } from '../../paraglide/messages';
+import { useBoardAdPreview } from './board-ad-preview';
 
 import { BoardAdSlot } from '@/components/board/board-ad-slot';
+import { useCookieConsent } from '@/components/cookie-consent';
 import {
   AdRail,
   type AdRailProps,
 } from '@/components/search-results/search-results';
 import type { BoardAdsConfig } from '@/lib/board-ads';
-import { adsSlot } from '@/lib/site-ads';
+import { adsSlot, resolveAdsSlot } from '@/lib/site-ads';
 
 export type AdPlacement = {
   label: string;
   content: ReactNode;
 };
 
-const RAIL_MIN_WIDTH = '(min-width: 1600px)';
+// Reserve room for the 600px unit plus navigation, spacing and bottom anchor.
+const RAIL_MIN_WIDTH = '(min-width: 1600px) and (min-height: 900px)';
 
 function useMinWidth1600(): boolean {
   const [wide, setWide] = useState(false);
@@ -37,21 +40,21 @@ export function listingAdRail(
   side: 'start' | 'end',
   ads: BoardAdsConfig,
   wide: boolean,
+  preview = false,
 ): ReactElement<AdRailProps> | undefined {
   if (override) {
     return <AdRail label={override.label}>{override.content}</AdRail>;
   }
-  if (!ads.enabled || !ads.clientId) return undefined;
+  if (!wide) return undefined;
+  if (!preview && (!ads.enabled || !ads.clientId)) return undefined;
   const placement = side === 'start' ? 'search:rail.start' : 'search:rail.end';
-  if (!adsSlot(placement)) return undefined;
+  if (side === 'start' && !adsSlot(placement)) return undefined;
+  if (!preview && !resolveAdsSlot(placement, ads.defaultSlotId))
+    return undefined;
   return (
     <AdRail label={m.adRail_label()}>
       {wide ? (
-        <BoardAdSlot
-          placement={placement}
-          clientId={ads.clientId}
-          layout="rail"
-        />
+        <BoardAdSlot placement={placement} ads={ads} layout="rail" />
       ) : null}
     </AdRail>
   );
@@ -63,8 +66,17 @@ export function useListingAdRails(
   endOverride?: AdPlacement,
 ) {
   const wide = useMinWidth1600();
+  const { previewAds } = useBoardAdPreview();
+  const { required, choice } = useCookieConsent();
+  const allowed = previewAds || !required || choice === 'accepted';
   return {
-    startAd: listingAdRail(startOverride, 'start', ads, wide),
-    endAd: listingAdRail(endOverride, 'end', ads, wide),
+    startAd: listingAdRail(
+      startOverride,
+      'start',
+      ads,
+      wide && allowed,
+      previewAds,
+    ),
+    endAd: listingAdRail(endOverride, 'end', ads, wide && allowed, previewAds),
   };
 }

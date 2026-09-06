@@ -234,6 +234,53 @@ would otherwise silently resolve `@latest` down to an older version.
 
 ---
 
+## Advertising
+
+`board.context().ads` supplies `enabled`, `clientId`, and `defaultSlotId`.
+The starter uses the board's default unit for manual placements. Missing or
+invalid IDs render nothing, and the advertising switch and cookie-consent gate
+apply even to custom slot IDs. Older APIs without `defaultSlotId` remain usable;
+manual placements stay off until the updated API is deployed.
+
+- Job and company details: 300×250 in the existing desktop sidebar (1024px+).
+- Blog articles: 300×250 desktop sidebar (1024px+).
+- Salary pages retain their full-width content layout; no added ad sidebar.
+- Jobs, companies, and talent search: one 160×600 outer rail at 1600px+ width and 900px+ height.
+- Public browsing/reading page shell: Google's regular, non-expanding bottom anchor using
+  `data-overlays="collapsed-bottom"`. Google controls size, fill and dismissal;
+  anchors need no manual slot ID. Account, auth, messaging, posting, payment,
+  legal, and embed pages do not mount the anchor loader or its preview.
+
+See [placement decisions](docs/advertising.md) for the size and UX rationale.
+
+Manual units scroll with the page; only Google manages the bottom anchor.
+This avoids stacking multiple sticky ads or placing a sticky unit under the header.
+
+Configure the site in AdSense and disable unwanted Auto ads formats there.
+The anchor parameter overrides Google's anchor position/enablement setting.
+On initial mobile job-detail visits the shell does not request an anchor beside
+Apply. Once Google has loaded, it controls anchors across client navigation;
+use AdSense page exclusions for routes that must never show Auto ads.
+[Google's regular bottom-anchor documentation](https://support.google.com/adsense/answer/7478225?hl=en).
+
+The shared `BoardAdsProvider` supplies defaults. Customize any manual unit in
+frontend code without introducing a server-side placement map:
+
+```tsx
+<BoardAdSlot placement="custom-sidebar" layout="rectangle" />
+<BoardAdSlot placement="custom-sidebar" layout="rectangle" slotId="1234567890" />
+```
+
+`src/ads.json` remains a backward-compatible local override: an explicit entry
+wins over the default, including a disabled entry. New customizations can pass
+`slotId` directly. The second outer search rail remains opt-in via this file.
+
+In development or sandbox preview, open the preview toolbar → **Board settings**
+→ **Ad placements**. Placeholders read **AD UNIT HERE**, issue no ad requests,
+and persist for the browser tab. The bottom placeholder illustrates a compact
+bar (728×90 desktop, 320×50 mobile); Google may serve different dimensions.
+Preview does not remove third-party scripts already loaded before it was enabled.
+
 ## Analytics & conversion tracking
 
 Board analytics IDs (`gtmId`, `ga4MeasurementId`, `metaPixelId`,

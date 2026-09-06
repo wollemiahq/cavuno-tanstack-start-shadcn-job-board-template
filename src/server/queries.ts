@@ -100,7 +100,7 @@ function resolveBoardContext(
       cookieConsentRequired: false,
     },
     // Older SDKs omit `ads`; treat missing as off. Publisher id comes from
-    // Cavuno advertising settings; slot ids stay in src/ads.json.
+    // Cavuno advertising settings, including the optional default ad unit.
     ads: resolveBoardAds(context),
   };
 }

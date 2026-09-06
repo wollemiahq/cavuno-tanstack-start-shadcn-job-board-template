@@ -41,6 +41,10 @@ import { AppRouteErrorPage } from '@/components/app-route-error';
 import { BoardAnalyticsBoot } from '@/components/board-analytics-boot';
 import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import { BoardAdFooter } from '@/components/board/board-ad-footer';
+import { isBoardAdPage } from '@/components/board/board-ad-pages';
+import { BoardAdPreviewProvider } from '@/components/board/board-ad-preview';
+import { BoardAdsProvider } from '@/components/board/board-ads-provider';
 import { ShellBreadcrumb } from '@/components/board/breadcrumb';
 import { themeModeScript } from '@/components/cavuno/board-theme';
 import { ClientErrorReportingBoot } from '@/components/client-error-reporting-boot';
@@ -484,100 +488,121 @@ function RootChrome({
 
   return (
     <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
-      <BoardConversionAnalyticsProvider
-        boardSlug={board.slug}
-        analytics={conversionAnalytics}
-      >
-        {/* Consent state wraps the whole chrome: the banner (floating stack),
+      <BoardAdsProvider ads={board.ads}>
+        <BoardAdPreviewProvider
+          enabled={Boolean(
+            import.meta.env.DEV ||
+            preview.capability.canPreview ||
+            preview.demoConfigured,
+          )}
+        >
+          <BoardConversionAnalyticsProvider
+            boardSlug={board.slug}
+            analytics={conversionAnalytics}
+          >
+            {/* Consent state wraps the whole chrome: the banner (floating stack),
           the footer's "Cookie preferences" reopener, the job-alert prompt's
           yield, and the analytics gate all read the same choice. The embed
           iframe path above deliberately gets neither trackers nor banner. */}
-        {/* Analytics + footer are below-the-fold / post-consent — keep them out
+            {/* Analytics + footer are below-the-fold / post-consent — keep them out
           of the initial public JS budget (PageSpeed unused-JS on index). */}
-        <Suspense fallback={null}>
-          <LazyAnalyticsScripts analytics={board.analytics} />
-        </Suspense>
-        <BoardAnalyticsBoot publishableKey={publishableKey} />
-        <BoardAuthConversionTracker />
-        <FloatingStackProvider>
-          <NavigationProgress />
-          {fillsViewport ? (
-            <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
-              {header}
-              {routeContent}
-            </div>
-          ) : (
-            <>
-              {header}
-              {routeContent}
-            </>
-          )}
-          <Suspense fallback={null}>
-            <LazyFooter
-              breadcrumb={
-                shellBreadcrumb ? (
-                  <ShellBreadcrumb
-                    items={shellBreadcrumb.items}
-                    ariaLabel={breadcrumbAriaLabel}
+
+            <Suspense fallback={null}>
+              <LazyAnalyticsScripts analytics={board.analytics} />
+            </Suspense>
+            <BoardAnalyticsBoot publishableKey={publishableKey} />
+            <BoardAuthConversionTracker />
+            <FloatingStackProvider>
+              <NavigationProgress />
+              {fillsViewport ? (
+                <div className="md:grid md:h-[calc(100dvh-var(--board-ad-footer-height,0px))] md:grid-rows-[auto_minmax(0,1fr)]">
+                  {header}
+                  {routeContent}
+                </div>
+              ) : (
+                <>
+                  {header}
+                  {routeContent}
+                </>
+              )}
+              <Suspense fallback={null}>
+                <LazyFooter
+                  breadcrumb={
+                    shellBreadcrumb ? (
+                      <ShellBreadcrumb
+                        items={shellBreadcrumb.items}
+                        ariaLabel={breadcrumbAriaLabel}
+                      />
+                    ) : undefined
+                  }
+                  connected={shellBreadcrumb !== null}
+                  flush={fillsViewport}
+                  boardName={board.name}
+                  logoUrl={board.logoUrl}
+                  language={board.language}
+                  showCavunoBranding={board.showCavunoBranding}
+                  primaryDomain={board.primaryDomain}
+                  slug={board.slug}
+                  features={board.features}
+                  footer={board.footer}
+                  talentDirectoryVisibility={board.talentDirectoryVisibility}
+                  hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
+                  hasMembershipPage={offerGate.hasMembershipPage}
+                  cookiePreferencesAction={<CookiePreferencesFooterAction />}
+                />
+              </Suspense>
+              <CookieConsentBanner />
+              {isBoardAdPage(location.pathname) && (
+                <BoardAdFooter
+                  key={location.pathname}
+                  hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$/.test(
+                    location.pathname,
+                  )}
+                />
+              )}
+              {user &&
+              user.emailVerified &&
+              board.features.messaging &&
+              !location.pathname.startsWith('/messages') ? (
+                // Keyed by viewer: the dock holds polled inbox + open-thread state
+                // that must unmount wholesale when the signed-in identity changes
+                // (sign-out/in, persona switch) — never survive across viewers. The
+                // whole messaging surface is hidden when the board flag is off.
+                <Suspense fallback={null}>
+                  <LazyMessagesDockController
+                    key={user.id}
+                    unreadCount={messagingUnreadCount}
                   />
-                ) : undefined
-              }
-              connected={shellBreadcrumb !== null}
-              flush={fillsViewport}
-              boardName={board.name}
-              logoUrl={board.logoUrl}
-              language={board.language}
-              showCavunoBranding={board.showCavunoBranding}
-              primaryDomain={board.primaryDomain}
-              slug={board.slug}
-              features={board.features}
-              footer={board.footer}
-              talentDirectoryVisibility={board.talentDirectoryVisibility}
-              hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
-              hasMembershipPage={offerGate.hasMembershipPage}
-              cookiePreferencesAction={<CookiePreferencesFooterAction />}
-            />
-          </Suspense>
-          <CookieConsentBanner />
-          {user &&
-          user.emailVerified &&
-          board.features.messaging &&
-          !location.pathname.startsWith('/messages') ? (
-            // Keyed by viewer: the dock holds polled inbox + open-thread state
-            // that must unmount wholesale when the signed-in identity changes
-            // (sign-out/in, persona switch) — never survive across viewers. The
-            // whole messaging surface is hidden when the board flag is off.
-            <Suspense fallback={null}>
-              <LazyMessagesDockController
-                key={user.id}
-                unreadCount={messagingUnreadCount}
-              />
-            </Suspense>
-          ) : null}
-          {preview.capability.canPreview || preview.demoConfigured ? (
-            <Suspense fallback={null}>
-              <LazyPreviewToolbar
-                capability={preview.capability}
-                personas={preview.personas}
-                activePersonaId={preview.activePersonaId}
-                viewer={
-                  user
-                    ? {
-                        displayName: user.displayName,
-                        email: user.email,
-                        role: user.role,
-                      }
-                    : null
-                }
-                config={toPreviewBoardConfig(board)}
-                demoConfigured={preview.demoConfigured}
-                demoBoardPrivate={preview.demoBoardPrivate}
-                dataSource={preview.dataSource}
-              />
-            </Suspense>
-          ) : null}
-        </FloatingStackProvider>
-      </BoardConversionAnalyticsProvider>
+                </Suspense>
+              ) : null}
+              {import.meta.env.DEV ||
+              preview.capability.canPreview ||
+              preview.demoConfigured ? (
+                <Suspense fallback={null}>
+                  <LazyPreviewToolbar
+                    capability={preview.capability}
+                    personas={preview.personas}
+                    activePersonaId={preview.activePersonaId}
+                    viewer={
+                      user
+                        ? {
+                            displayName: user.displayName,
+                            email: user.email,
+                            role: user.role,
+                          }
+                        : null
+                    }
+                    config={toPreviewBoardConfig(board)}
+                    demoConfigured={preview.demoConfigured}
+                    demoBoardPrivate={preview.demoBoardPrivate}
+                    dataSource={preview.dataSource}
+                  />
+                </Suspense>
+              ) : null}
+            </FloatingStackProvider>
+          </BoardConversionAnalyticsProvider>
+        </BoardAdPreviewProvider>
+      </BoardAdsProvider>
     </CookieConsentProvider>
   );
 }

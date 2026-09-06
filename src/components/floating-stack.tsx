@@ -1,7 +1,15 @@
 'use client';
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
+
+import { observeAnchorClearance } from './board/board-anchor-clearance';
 
 import { cn } from '@/lib/utils';
 
@@ -12,7 +20,7 @@ const FloatingStackContext = createContext<HTMLElement | null>(null);
  * cookie banner is the LCP element on listing pages) paints at its FINAL
  * fixed position on first paint instead of jumping there after hydration. */
 const STACK_REGION_CLASS =
-  'pointer-events-none fixed end-4 bottom-0 z-(--z-floating-stack) flex flex-col items-end';
+  'pointer-events-none fixed end-4 bottom-[var(--board-floating-bottom,0px)] z-(--z-floating-stack) flex flex-col items-end';
 
 /**
  * Shared bottom-right stacking region for floating widgets (the job-alert
@@ -39,6 +47,15 @@ const STACK_REGION_CLASS =
  */
 export function FloatingStackProvider({ children }: { children: ReactNode }) {
   const [container, setContainer] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!window.ResizeObserver) return;
+    return observeAnchorClearance((height) => {
+      document.documentElement.style.setProperty(
+        '--board-ad-live-height',
+        `${height}px`,
+      );
+    });
+  }, []);
 
   return (
     <FloatingStackContext.Provider value={container}>

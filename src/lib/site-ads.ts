@@ -55,3 +55,18 @@ const adsFile = adsJson as AdsFile;
 export function adsSlot(placement: string): AdsSlot | null {
   return adsSlotFromFile(adsFile, placement);
 }
+
+/** Direct unit override, then legacy local config, then the board default. */
+export function resolveAdsSlot(
+  placement: string,
+  defaultSlotId?: string | null,
+  overrideSlotId?: string,
+): AdsSlot | null {
+  if (overrideSlotId !== undefined) {
+    const slotId = overrideSlotId.trim();
+    return SLOT_ID_RE.test(slotId) ? { slotId } : null;
+  }
+  if (Object.hasOwn(adsFile.slots ?? {}, placement)) return adsSlot(placement);
+  const slotId = defaultSlotId?.trim() ?? '';
+  return SLOT_ID_RE.test(slotId) ? { slotId } : null;
+}

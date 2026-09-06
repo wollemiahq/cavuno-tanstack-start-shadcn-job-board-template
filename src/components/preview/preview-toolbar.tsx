@@ -37,6 +37,7 @@ import {
 import { PreviewBoardSettingsSheetView } from './preview-board-settings';
 import { PreviewEmailsSheet } from './preview-emails';
 
+import { useBoardAdPreview } from '@/components/board/board-ad-preview';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,8 +91,8 @@ export interface PreviewToolbarProps {
 
 /**
  * The developer-preview toolbar for the sandbox preview state
- * spec. A floating, unobtrusive pill that renders ONLY when the server-side
- * capability check passes (`sandbox: true`), never on a tenant board.
+ * spec. Server capability gates persona tools. Local development can also
+ * render a limited toolbar for visual ad placement previews.
  *
  * Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, the persona
  * menu gains a top "Your board (real data)" entry that sets the data-source
@@ -139,14 +140,17 @@ export function PreviewToolbarView({
   const [stalePersona, setStalePersona] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState(false);
   const [reseedError, setReseedError] = useState(false);
+  const { available: adPreviewAvailable } = useBoardAdPreview();
 
   // Full sandbox preview (personas/emails/settings) needs canPreview. Dual-
   // source escape hatch: when the demo key is configured we still render so
   // the user can always return to "Your board" even if the preview RPC failed
   // (canPreview false, empty roster).
-  if (!capability.canPreview && !demoConfigured) return null;
+  if (!capability.canPreview && !demoConfigured && !adPreviewAvailable)
+    return null;
 
   const previewLive = capability.canPreview;
+  const localPreviewOnly = !previewLive && !demoConfigured;
 
   // Legacy sandbox-on-primary always shows mutating tools. Dual-source: only
   // while viewing demo data on a private shadow — never on "Your board"
@@ -262,6 +266,7 @@ export function PreviewToolbarView({
   return (
     <div
       className="fixed bottom-4 left-4 z-(--z-preview-toolbar) print:hidden"
+      style={{ bottom: 'calc(1rem + var(--board-floating-bottom, 0px))' }}
       data-test="preview-toolbar"
     >
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>
@@ -271,15 +276,23 @@ export function PreviewToolbarView({
               variant="outline"
               size="sm"
               className="rounded-full shadow-lg"
-              aria-label={m.previewToolbar_triggerLabel()}
+              aria-label={
+                localPreviewOnly
+                  ? 'Development preview'
+                  : m.previewToolbar_triggerLabel()
+              }
             />
           }
         >
           <Eye data-icon="inline-start" className="text-muted-foreground" />
           <span className="text-muted-foreground">
-            {m.previewToolbar_viewingAs()}
+            {localPreviewOnly
+              ? 'Development preview'
+              : m.previewToolbar_viewingAs()}
           </span>
-          <span className="font-medium">{viewerLabel}</span>
+          {!localPreviewOnly && (
+            <span className="font-medium">{viewerLabel}</span>
+          )}
           <ChevronsUpDown
             data-icon="inline-end"
             className="text-muted-foreground"
@@ -294,13 +307,21 @@ export function PreviewToolbarView({
           <div className="flex items-center justify-between gap-2 p-3">
             <div className="flex flex-col">
               <span className="text-sm font-medium">
-                {m.previewToolbar_title()}
+                {localPreviewOnly
+                  ? 'Development preview'
+                  : m.previewToolbar_title()}
               </span>
               <span className="text-muted-foreground text-xs">
-                {m.previewToolbar_subtitle()}
+                {localPreviewOnly
+                  ? 'Preview ad placements without serving ads.'
+                  : m.previewToolbar_subtitle()}
               </span>
             </div>
-            <Badge variant="secondary">{m.previewToolbar_sandboxBadge()}</Badge>
+            {!localPreviewOnly && (
+              <Badge variant="secondary">
+                {m.previewToolbar_sandboxBadge()}
+              </Badge>
+            )}
           </div>
 
           <Separator />
@@ -386,7 +407,7 @@ export function PreviewToolbarView({
             ) : null}
           </div>
 
-          {previewLive ? (
+          {previewLive || adPreviewAvailable ? (
             <>
               <Separator />
 
@@ -395,7 +416,7 @@ export function PreviewToolbarView({
                 className="grid grid-cols-2 gap-1 p-2"
                 data-test="preview-actions"
               >
-                {showBoardControls ? (
+                {showBoardControls || adPreviewAvailable ? (
                   <FooterAction
                     icon={Settings}
                     label={m.previewToolbar_boardSettings()}
@@ -403,12 +424,14 @@ export function PreviewToolbarView({
                     onClick={openBoardSettings}
                   />
                 ) : null}
-                <FooterAction
-                  icon={Mail}
-                  label={m.previewToolbar_emails()}
-                  disabled={busy}
-                  onClick={openEmails}
-                />
+                {previewLive ? (
+                  <FooterAction
+                    icon={Mail}
+                    label={m.previewToolbar_emails()}
+                    disabled={busy}
+                    onClick={openEmails}
+                  />
+                ) : null}
                 {showBoardControls ? (
                   <FooterAction
                     icon={RotateCcw}
@@ -417,12 +440,14 @@ export function PreviewToolbarView({
                     onClick={openReseed}
                   />
                 ) : null}
-                <FooterAction
-                  icon={exiting ? undefined : LogOut}
-                  label={m.previewToolbar_exit()}
-                  disabled={busy || !viewer || onYourBoard}
-                  onClick={handleExit}
-                />
+                {previewLive ? (
+                  <FooterAction
+                    icon={exiting ? undefined : LogOut}
+                    label={m.previewToolbar_exit()}
+                    disabled={busy || !viewer || onYourBoard}
+                    onClick={handleExit}
+                  />
+                ) : null}
               </div>
             </>
           ) : null}
@@ -431,8 +456,9 @@ export function PreviewToolbarView({
 
       {/* Secondary surfaces — siblings of the menu, so they persist after it
           closes and closing them returns to nothing. */}
-      {showBoardControls ? (
+      {showBoardControls || adPreviewAvailable ? (
         <PreviewBoardSettingsSheetView
+          allowRemoteSettings={showBoardControls}
           config={config}
           open={boardSettingsOpen}
           onOpenChange={setBoardSettingsOpen}

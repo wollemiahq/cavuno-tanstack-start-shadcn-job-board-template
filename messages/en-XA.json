@@ -1,5 +1,8 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "adPreview_placeholder": "⟦ÁÐ ÚÑÍŢ ĤÉŔÉ⟧",
+  "adPreview_label": "⟦Áð þĺáçéɱéñţš⟧",
+  "adPreview_description": "⟦Šĥóŵ þĺáçéĥóĺðéŕš ŵĥéŕé áðš ŵóúĺð áþþéáŕ.⟧",
   "accessOffer_everyMonths": [
     {
       "declarations": [

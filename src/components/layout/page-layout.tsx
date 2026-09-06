@@ -9,6 +9,7 @@ type PageLayoutProps = PageLayoutRailProps & {
   /** Full-bleed section rendered above the constrained content. */
   band?: React.ReactNode;
   children: React.ReactNode;
+  railSticky?: boolean;
 };
 
 /** Reusable Page-family composition with a full-bleed header and optional rail. */
@@ -16,6 +17,7 @@ export function PageLayout({
   band,
   rail,
   railLabel,
+  railSticky = true,
   children,
 }: PageLayoutProps) {
   const header = band ? <Bleed>{band}</Bleed> : undefined;
@@ -23,7 +25,12 @@ export function PageLayout({
   return (
     <Page width="wide">
       {rail ? (
-        <PageContent header={header} aside={rail} asideLabel={railLabel}>
+        <PageContent
+          header={header}
+          aside={rail}
+          asideLabel={railLabel}
+          asideSticky={railSticky}
+        >
           {children}
         </PageContent>
       ) : (
