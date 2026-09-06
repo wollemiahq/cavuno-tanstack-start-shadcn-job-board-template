@@ -242,4 +242,37 @@ describe('employer talent-access checkout', () => {
     );
     expect(screen.queryByRole('button', { name: 'Subscribe' })).toBeNull();
   });
+  /**
+   * The regression this guards: "Manage billing" used to require
+   * `hasTalentAccess`, so a company that only ever bought a job-posting
+   * subscription had NO way to update a failing card or cancel — dunning
+   * churn with no self-service exit. Both products share one Stripe customer
+   * and one portal URL, so the entry point must not be product-specific.
+   */
+  it('offers the billing portal to an employer with no talent access', async () => {
+    mocks.openBillingPortal.mockResolvedValue({
+      url: 'https://billing.example/session',
+    });
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: { href: '' },
+    });
+
+    await renderEmployers({ hasTalentAccess: false });
+    fireEvent.click(screen.getByRole('button', { name: 'Manage billing' }));
+
+    await waitFor(() => {
+      expect(mocks.openBillingPortal).toHaveBeenCalledWith({
+        data: { companySlug: 'acme-ventures', returnPath: '/employers' },
+      });
+    });
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      writable: true,
+      value: originalLocation,
+    });
+  });
 });
