@@ -67,7 +67,7 @@ export default {
         getServerEnv(),
         executionContext?.waitUntil.bind(executionContext),
       );
-      if (clientError) return withBaselineSecurityHeaders(clientError);
+      if (clientError) return withBaselineSecurityHeaders(clientError, request);
     }
 
     const cached = await readPublicHtmlCache(request);
@@ -79,7 +79,7 @@ export default {
     );
     const response = withPublicHtmlCacheHeaders(
       request,
-      withBaselineSecurityHeaders(rendered),
+      withBaselineSecurityHeaders(rendered, request),
     );
     // Always a promise now, and one that never rejects — a cache the
     // runtime refuses must not turn a rendered page into an error.
