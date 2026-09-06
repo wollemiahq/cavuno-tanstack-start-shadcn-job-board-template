@@ -233,16 +233,14 @@ function PlanGroup({
   title,
   plans,
   dependencies,
-  action,
 }: {
   title: string;
   plans: Plan[];
   dependencies: EmployersPageViewDependencies;
-  action?: ReactNode;
 }) {
   if (plans.length === 0) return null;
   return (
-    <PageSection title={title} actions={action}>
+    <PageSection title={title}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
           <PlanCard key={plan.id} plan={plan} dependencies={dependencies} />
