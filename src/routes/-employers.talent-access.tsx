@@ -320,8 +320,13 @@ export function EmployersTalentAccessView({
     );
   };
 
-  const talentSectionAction =
-    canUpgrade && companySlug ? (
+  // Any employer with a company can reach the Stripe portal: job-posting
+  // subscriptions and talent access share one Stripe customer and one portal
+  // URL. Gating this on `hasTalentAccess` left a posting-subscription
+  // customer with no way to update a failing card or cancel — dunning churn
+  // with no self-service exit.
+  const billingAction =
+    viewer.kind === 'employer' && companySlug ? (
       <Button
         type="button"
         variant="outline"
@@ -340,7 +345,7 @@ export function EmployersTalentAccessView({
       plans={plans}
       contactPlans={contactPlans}
       seo={seo}
-      talentSectionAction={talentSectionAction}
+      billingAction={billingAction}
       dependencies={{
         postingPlanLink:
           pageDependencies?.postingPlanLink ??

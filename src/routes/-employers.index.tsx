@@ -257,7 +257,7 @@ export function EmployersPageView({
   contactPlans,
   seo,
   dependencies = employersPageViewDependencies,
-  talentSectionAction,
+  billingAction,
 }: {
   plans: Plan[];
   /**
@@ -268,7 +268,13 @@ export function EmployersPageView({
   contactPlans: Plan[];
   seo: { boardName: string };
   dependencies?: EmployersPageViewDependencies;
-  talentSectionAction?: ReactNode;
+  /**
+   * Stripe billing portal entry. Product-agnostic on purpose: job-posting
+   * subscriptions and talent access share ONE Stripe customer and one portal,
+   * so this sits on the page header rather than inside the talent-access
+   * plan group, where a posting-only subscriber never saw it.
+   */
+  billingAction?: ReactNode;
 }) {
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
@@ -289,6 +295,7 @@ export function EmployersPageView({
             description={m.employerLanding_subtitle({
               boardName: seo.boardName,
             })}
+            actions={billingAction}
           />
         }
       >
@@ -312,7 +319,6 @@ export function EmployersPageView({
               title={m.employerLanding_talentAccessHeading()}
               plans={talentAccess}
               dependencies={dependencies}
-              action={talentSectionAction}
             />
             <PlanGroup
               title={m.employerLanding_enterpriseHeading()}
