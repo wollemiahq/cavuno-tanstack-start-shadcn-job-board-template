@@ -17,7 +17,7 @@ import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
   cursorPageHref,
   cursorSearchValue,
-  searchString,
+  searchQueryString,
   type UrlSearchInput,
 } from '@/lib/pagination';
 
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/blog/')({
   ),
   validateSearch: (search: UrlSearchInput): BlogSearch => ({
     cursor: cursorSearchValue(search.cursor),
-    q: searchString(search.q),
+    q: searchQueryString(search.q),
   }),
   loaderDeps: ({ search }) => search,
   loader: createBlogIndexLoader(undefined, async () => {

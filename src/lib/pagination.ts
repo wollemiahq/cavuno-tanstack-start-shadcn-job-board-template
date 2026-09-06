@@ -33,6 +33,34 @@ export function searchString<T>(value: T): string | undefined {
   return text ? text : undefined;
 }
 
+/**
+ * Longest free-text search the board API accepts. Its schema is
+ * `z.string().max(200)`, so a longer `?q=` is rejected with 400 — which
+ * escapes the loader as a 500 rather than an empty result. Measured live
+ * before the fix: 200 chars rendered, 201 crashed `/jobs`, `/talent`,
+ * `/blog` and `/companies?query=` — every surface that forwards free text.
+ * Only `/salaries` was unaffected.
+ */
+export const SEARCH_QUERY_MAX_LENGTH = 200;
+
+/**
+ * Coerce a raw `?q=` / `?query=` value to a free-text search the API will
+ * accept, truncating rather than dropping.
+ *
+ * Truncating keeps the page working AND keeps the intent: pasting a job
+ * description into search still returns results for its first 200
+ * characters. Dropping the value would silently show the unfiltered
+ * listing, which reads as "your search matched everything".
+ */
+export function searchQueryString<T>(value: T): string | undefined {
+  const text = searchString(value);
+  if (text === undefined) return undefined;
+  // Trim first: surrounding whitespace is noise the API ignores, and it must
+  // not eat into the budget or a padded query would be clamped early.
+  const clamped = text.trim().slice(0, SEARCH_QUERY_MAX_LENGTH);
+  return clamped ? clamped : undefined;
+}
+
 export function searchNumber<T>(value: T): number | undefined {
   if (valueTag(value) !== '[object Number]') return undefined;
   const number = Number(value);
