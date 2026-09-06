@@ -313,10 +313,10 @@ export function PreviewBoardSettingsSheetView({
                     htmlFor="preview-ad-placements"
                     className="text-sm font-medium"
                   >
-                    Ad placements
+                    {m.adPreview_label()}
                   </label>
                   <span className="text-muted-foreground text-xs">
-                    Show placeholders where ads would appear.
+                    {m.adPreview_description()}
                   </span>
                 </div>
                 <Switch
@@ -324,7 +324,7 @@ export function PreviewBoardSettingsSheetView({
                   className="mt-0.5"
                   checked={previewAds}
                   onCheckedChange={setPreviewAds}
-                  aria-label="Ad placements"
+                  aria-label={m.adPreview_label()}
                 />
               </li>
             ) : null}

@@ -1,4 +1,7 @@
 {
+  "adPreview_placeholder": "ESPACE PUBLICITAIRE",
+  "adPreview_label": "Emplacements publicitaires",
+  "adPreview_description": "Afficher des espaces réservés aux emplacements des annonces.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {

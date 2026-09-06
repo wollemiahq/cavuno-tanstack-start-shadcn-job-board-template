@@ -56,7 +56,7 @@ export function BoardAdSlot({
         )}
       >
         <span className="text-xs font-semibold tracking-widest">
-          AD UNIT HERE
+          {m.adPreview_placeholder()}
         </span>
       </div>
     );

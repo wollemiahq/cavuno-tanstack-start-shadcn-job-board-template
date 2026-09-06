@@ -1,4 +1,7 @@
 {
+  "adPreview_placeholder": "AD UNIT HERE",
+  "adPreview_label": "Ad placements",
+  "adPreview_description": "Show placeholders where ads would appear.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "accessOffer_everyMonths": [
     {

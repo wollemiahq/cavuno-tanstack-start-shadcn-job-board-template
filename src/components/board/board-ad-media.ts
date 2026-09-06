@@ -8,7 +8,8 @@ export function useAdMedia(query?: string): boolean {
       setMatches(true);
       return;
     }
-    const media = window.matchMedia(query);
+    const media = window.matchMedia?.(query);
+    if (!media) return;
     const update = () => setMatches(media.matches);
     update();
     media.addEventListener('change', update);
