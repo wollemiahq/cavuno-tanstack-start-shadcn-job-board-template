@@ -13,7 +13,7 @@ import {
 import {
   findSitemapChunk,
   loadSitemapContext,
-  sitemapIndexLocations,
+  sitemapIndexEntries,
   sitemapXmlResponse,
 } from '../lib/sitemap-context';
 
@@ -54,8 +54,9 @@ export function createSitemapIndexHandler(
     // cookie a signed-in operator may carry.
     const board = dependencies.getPrimaryBoard();
     const context = await dependencies.loadSitemapContext(board, origin);
-    const locs = sitemapIndexLocations(origin, context);
-    return sitemapXmlResponse(renderSitemapIndex(locs));
+    return sitemapXmlResponse(
+      renderSitemapIndex(sitemapIndexEntries(origin, context)),
+    );
   };
 }
 
