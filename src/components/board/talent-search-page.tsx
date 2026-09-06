@@ -1,5 +1,4 @@
 'use client';
-
 import {
   cloneElement,
   isValidElement,
@@ -13,6 +12,7 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
+import { ListingAdResults } from './listing-ad-results';
 
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
@@ -433,7 +433,7 @@ export function TalentSearchPage({
                   {resultsBar}
 
                   <InPlaceListingSelect onSelect={selection.onResultActivate}>
-                    <div className="space-y-3">
+                    <ListingAdResults ads={ads}>
                       {candidateVms.map((vm) => {
                         const selectionKey = talentCardSelectionKey(vm);
                         return (
@@ -452,7 +452,7 @@ export function TalentSearchPage({
                           </div>
                         );
                       })}
-                    </div>
+                    </ListingAdResults>
                   </InPlaceListingSelect>
 
                   {viewingSourced ? null : (

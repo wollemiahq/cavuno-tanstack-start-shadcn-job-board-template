@@ -934,6 +934,15 @@ Props:
 - `page?: number | undefined`
 - `pageSize?: number | undefined`
 
+### ListingAdResults — `src/components/board/listing-ad-results.tsx`
+
+An in-list rectangle when the outer skyscraper cannot fit.
+
+Props:
+
+- `ads: BoardAdsConfig`
+- `children: ReactNode`
+
 ### ListingPagination — `src/components/board/listing-pagination.tsx`
 
 Props:
