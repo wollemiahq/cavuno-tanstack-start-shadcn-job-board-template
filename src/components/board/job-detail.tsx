@@ -15,7 +15,7 @@ import { m } from '../../paraglide/messages';
  * fields. The right rail is a stack: the ACTIONS card (full-width
  * primary Apply on top, a two-up Save + Copy-link row beneath it) → the alert
  * signup card → the compact about-company card → the similar-jobs grid. On
- * mobile the actions card is a fixed bottom bar under the header.
+ * mobile the actions card floats above the bottom edge of the viewport.
  *
  * Framework seams (owned by the route, need client interactivity):
  * - `applySlot` (native/external apply), `secondaryActions` (the Save + the
@@ -196,12 +196,12 @@ export function JobDetail({
         <>
           {/* Sidebar actions card: full-width primary Apply on top, then a
               two-up row of the Save and Copy-link controls beneath it. On
-              mobile it is a fixed bottom bar; on lg it joins the sidebar. */}
+              mobile it floats above the bottom edge; on lg it joins the sidebar. */}
           <div
             data-slot="job-actions"
-            className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-40 border-t p-4 shadow-lg backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+            className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 lg:static"
           >
-            <Card size="sm" className="gap-0 py-0">
+            <Card size="sm" className="gap-0 py-0 shadow-lg lg:shadow-sm">
               <CardContent className="flex flex-col gap-3 p-4">
                 {applySlot ? (
                   <div className="flex w-full flex-col gap-2 [&_a]:w-full [&_button]:w-full [&_form]:w-full">
