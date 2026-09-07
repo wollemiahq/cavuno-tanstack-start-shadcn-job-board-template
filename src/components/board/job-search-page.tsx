@@ -1,9 +1,9 @@
 'use client';
-
 import { Link, useLocation } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
+import { ListingAdResults } from './listing-ad-results';
 
 import type { JobCardVM } from '@/board/job-view-model';
 import {
@@ -213,7 +213,7 @@ export function JobSearchPage({
                   <div className="space-y-4">{resultsBar}</div>
 
                   <InPlaceListingSelect onSelect={selection.onResultActivate}>
-                    <div className="space-y-3">
+                    <ListingAdResults ads={ads}>
                       {jobVms.map((vm) => (
                         <div
                           key={vm.id}
@@ -241,7 +241,7 @@ export function JobSearchPage({
                           />
                         </div>
                       ))}
-                    </div>
+                    </ListingAdResults>
                   </InPlaceListingSelect>
 
                   {gatedCount && gatedCount > 0 ? (
