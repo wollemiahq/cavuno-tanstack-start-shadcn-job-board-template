@@ -27,6 +27,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Label } from '@/components/ui/label';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { TalentAccessGrant } from '@/server/talent-access';
@@ -41,6 +46,23 @@ import type {
 
 export const EMPLOYERS_RETURN_PATH = '/employers';
 
+export type EmployersTalentCompanyOption = {
+  id: string;
+  name: string;
+  slug: string | null;
+};
+
+export function toEmployersTalentCompanyOptions(
+  memberships: Array<{
+    status: string;
+    company: { id: string; name: string; slug: string | null };
+  }>,
+): EmployersTalentCompanyOption[] {
+  return memberships.flatMap((membership) =>
+    membership.status === 'approved' ? [membership.company] : [],
+  );
+}
+
 export type EmployersTalentViewer =
   | { kind: 'anonymous' }
   | { kind: 'other' }
@@ -49,7 +71,59 @@ export type EmployersTalentViewer =
       hasTalentAccess: boolean;
       companyId: string | null;
       companySlug: string | null;
+      companies: EmployersTalentCompanyOption[];
     };
+
+function FreeTalentPlanAction({
+  planId,
+  className,
+  children,
+  companies,
+  busy,
+  onClaim,
+}: {
+  planId: string;
+  className: string;
+  children: ReactNode;
+  companies: EmployersTalentCompanyOption[];
+  busy: boolean;
+  onClaim: (companyId: string | undefined) => void;
+}) {
+  const [chosenCompanyId, setChosenCompanyId] = useState('');
+  const companyId =
+    companies.find((company) => company.id === chosenCompanyId)?.id ??
+    companies[0]?.id;
+  const selectId = `talent-company-${planId}`;
+
+  return (
+    <div className="w-full space-y-3">
+      {companies.length > 1 ? (
+        <div className="space-y-1.5">
+          <Label htmlFor={selectId}>{m.memberships_chooseCompanyLabel()}</Label>
+          <NativeSelect
+            id={selectId}
+            value={companyId}
+            onChange={(event) => setChosenCompanyId(event.target.value)}
+          >
+            {companies.map((company) => (
+              <NativeSelectOption key={company.id} value={company.id}>
+                {company.name}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+      ) : null}
+      <Button
+        type="button"
+        className={className}
+        disabled={busy || (companies.length > 0 && !companyId)}
+        onClick={() => onClaim(companyId)}
+      >
+        {busy ? m.employerLanding_startingLabel() : children}
+      </Button>
+    </div>
+  );
+}
 
 export function EmployersTalentAccessView({
   plans,
@@ -145,12 +219,19 @@ export function EmployersTalentAccessView({
     setPolling(true);
   }, []);
 
-  async function subscribe(planId: string, planKind: Plan['kind']) {
+  async function subscribe(
+    planId: string,
+    planKind: Plan['kind'],
+    selectedCompanyId?: string,
+  ) {
     setBusy(planId);
     try {
       if (planKind === 'free') {
         const result = await claimAction({
-          data: { planId, companyId: companyId ?? undefined },
+          data: {
+            planId,
+            companyId: selectedCompanyId ?? companyId ?? undefined,
+          },
         });
         if (result.ok) {
           setConfirmed(true);
@@ -300,6 +381,21 @@ export function EmployersTalentAccessView({
     className: string;
     children: ReactNode;
   }) => {
+    if (viewer.kind === 'employer' && planKind === 'free') {
+      return (
+        <FreeTalentPlanAction
+          planId={planId}
+          className={className}
+          companies={viewer.companies}
+          busy={busy !== null}
+          onClaim={(selectedCompanyId) =>
+            void subscribe(planId, planKind, selectedCompanyId)
+          }
+        >
+          {children}
+        </FreeTalentPlanAction>
+      );
+    }
     if (canCheckout) {
       return (
         <button

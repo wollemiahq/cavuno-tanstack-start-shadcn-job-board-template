@@ -9,7 +9,10 @@ import {
   startTalentAccessCheckout,
   upgradeTalentAccess,
 } from '../server/talent-access';
-import { EmployersTalentAccessView } from './-employers.talent-access';
+import {
+  EmployersTalentAccessView,
+  toEmployersTalentCompanyOptions,
+} from './-employers.talent-access';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { useRootSession } from '@/components/root-session';
@@ -38,16 +41,13 @@ function EmployersPage() {
   const { session_id } = Route.useSearch();
   const router = useRouter();
   const { user, talentAccess, employerCompanies, ready } = useRootSession();
-  const approved =
-    employerCompanies?.filter(
-      (membership) => membership.status === 'approved',
-    ) ?? [];
+  const companies = toEmployersTalentCompanyOptions(employerCompanies ?? []);
   const companyId =
     talentAccess.companyId ??
-    (approved.length === 1 ? approved[0]!.company.id : null);
+    (companies.length === 1 ? companies[0]!.id : null);
   const companySlug =
-    approved.find((membership) => membership.company.id === companyId)?.company
-      .slug ?? (approved.length === 1 ? approved[0]!.company.slug : null);
+    companies.find((company) => company.id === companyId)?.slug ??
+    (companies.length === 1 ? companies[0]!.slug : null);
 
   const viewer =
     !ready || user === null
@@ -58,6 +58,7 @@ function EmployersPage() {
             hasTalentAccess: talentAccess.hasTalentAccess,
             companyId,
             companySlug: companySlug ?? null,
+            companies,
           } as const)
         : ({ kind: 'other' } as const);
 

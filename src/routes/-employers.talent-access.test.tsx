@@ -12,7 +12,10 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { EmployersTalentAccessView } from './-employers.talent-access';
+import {
+  EmployersTalentAccessView,
+  toEmployersTalentCompanyOptions,
+} from './-employers.talent-access';
 
 import { m } from '@/paraglide/messages';
 import type { TalentAccessGrant } from '@/server/talent-access';
@@ -83,14 +86,27 @@ const mocks = {
   reportActionError: vi.fn(),
 };
 
+const acmeCompany = {
+  id: 'company-acme',
+  name: 'Acme Ventures',
+  slug: 'acme-ventures',
+};
+
+const globexCompany = {
+  id: 'company-globex',
+  name: 'Globex Corporation',
+  slug: 'globex',
+};
+
 async function renderEmployers(options?: {
   sessionId?: string;
   viewer?: ComponentProps<typeof EmployersTalentAccessView>['viewer'];
   hasTalentAccess?: boolean;
+  plan?: Plan;
 }) {
   return await renderRouted(
     <EmployersTalentAccessView
-      plans={[talentPlan]}
+      plans={[options?.plan ?? talentPlan]}
       contactPlans={[]}
       seo={{ boardName: 'Example Jobs' }}
       sessionId={options?.sessionId}
@@ -100,6 +116,7 @@ async function renderEmployers(options?: {
           hasTalentAccess: options?.hasTalentAccess ?? false,
           companyId: 'company-acme',
           companySlug: 'acme-ventures',
+          companies: [acmeCompany],
         }
       }
       getTalentAccessGrantAction={mocks.getTalentAccessGrant}
@@ -140,13 +157,13 @@ describe('employer talent-access checkout', () => {
     ).toBeVisible();
   });
 
-  it('claims a free plan without starting Stripe checkout', async () => {
+  it('claims a one-company free plan with its explicit id and no picker', async () => {
     mocks.claim.mockResolvedValue({
       ok: true,
       data: {
         object: 'talent_access_claim',
         assignmentId: 'assignment-free',
-        alreadyClaimed: false,
+        alreadyClaimed: true,
       },
     });
     mocks.invalidate.mockResolvedValue(undefined);
@@ -161,6 +178,7 @@ describe('employer talent-access checkout', () => {
           hasTalentAccess: false,
           companyId: 'company-acme',
           companySlug: 'acme-ventures',
+          companies: [acmeCompany],
         }}
         getTalentAccessGrantAction={mocks.getTalentAccessGrant}
         startCheckoutAction={mocks.startCheckout}
@@ -171,6 +189,7 @@ describe('employer talent-access checkout', () => {
         reportActionError={mocks.reportActionError}
       />,
     );
+    expect(screen.queryByRole('combobox', { name: 'Buy for' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
 
     await waitFor(() => {
@@ -180,6 +199,97 @@ describe('employer talent-access checkout', () => {
       expect(mocks.startCheckout).not.toHaveBeenCalled();
       expect(mocks.invalidate).toHaveBeenCalled();
     });
+  });
+
+  it('lets a multi-company employer choose the exact company for a free claim', async () => {
+    mocks.claim.mockResolvedValue({
+      ok: true,
+      data: {
+        object: 'talent_access_claim',
+        assignmentId: 'assignment-globex',
+        alreadyClaimed: false,
+      },
+    });
+    mocks.invalidate.mockResolvedValue(undefined);
+
+    await renderEmployers({
+      plan: { ...talentPlan, kind: 'free', price: null },
+      viewer: {
+        kind: 'employer',
+        hasTalentAccess: false,
+        companyId: null,
+        companySlug: null,
+        companies: [acmeCompany, globexCompany],
+      },
+    });
+
+    const picker = screen.getByRole('combobox', { name: 'Buy for' });
+    expect(picker).toHaveValue('company-acme');
+    fireEvent.change(picker, { target: { value: 'company-globex' } });
+    expect(mocks.claim).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    await waitFor(() => {
+      expect(mocks.claim).toHaveBeenCalledWith({
+        data: { planId: 'plan-talent', companyId: 'company-globex' },
+      });
+    });
+  });
+
+  it('can claim a free plan for company B when aggregated access belongs to company A', async () => {
+    mocks.claim.mockResolvedValue({
+      ok: true,
+      data: {
+        object: 'talent_access_claim',
+        assignmentId: 'assignment-globex',
+        alreadyClaimed: false,
+      },
+    });
+    mocks.invalidate.mockResolvedValue(undefined);
+
+    await renderEmployers({
+      plan: { ...talentPlan, kind: 'free', price: null },
+      viewer: {
+        kind: 'employer',
+        hasTalentAccess: true,
+        companyId: 'company-acme',
+        companySlug: 'acme-ventures',
+        companies: [acmeCompany, globexCompany],
+      },
+    });
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Buy for' }), {
+      target: { value: 'company-globex' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+
+    await waitFor(() => {
+      expect(mocks.claim).toHaveBeenCalledWith({
+        data: { planId: 'plan-talent', companyId: 'company-globex' },
+      });
+      expect(mocks.upgrade).not.toHaveBeenCalled();
+    });
+  });
+
+  it('excludes pending memberships from the rendered company picker', async () => {
+    const companies = toEmployersTalentCompanyOptions([
+      { status: 'approved', company: acmeCompany },
+      { status: 'pending', company: globexCompany },
+    ]);
+
+    await renderEmployers({
+      plan: { ...talentPlan, kind: 'free', price: null },
+      viewer: {
+        kind: 'employer',
+        hasTalentAccess: false,
+        companyId: 'company-acme',
+        companySlug: 'acme-ventures',
+        companies,
+      },
+    });
+
+    expect(screen.queryByRole('combobox', { name: 'Buy for' })).toBeNull();
+    expect(screen.queryByText('Globex Corporation')).toBeNull();
   });
 
   it('words a refusal from its code rather than the generic failure toast', async () => {
