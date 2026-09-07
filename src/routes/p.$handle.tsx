@@ -183,8 +183,13 @@ function TalentProfilePage() {
             });
             // The spend is idempotent, so an already-unlocked reply is a
             // success: re-read and show the full profile.
-            if (result.ok) await router.invalidate();
-            else toastActionError(boardErrorMessage(result));
+            if (result.ok) {
+              const [access] = await Promise.all([
+                getTalentCandidateAccess({ data: { candidateId: profile.id } }),
+                router.invalidate(),
+              ]);
+              setCandidateAccess(access);
+            } else toastActionError(boardErrorMessage(result));
           } catch {
             toastActionError();
           } finally {
