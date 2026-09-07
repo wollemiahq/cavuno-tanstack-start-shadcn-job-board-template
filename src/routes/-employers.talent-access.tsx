@@ -31,6 +31,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { TalentAccessGrant } from '@/server/talent-access';
 import type { TalentAccessResult } from '@/server/talent-access';
+import type { TalentAccessClaim } from '@/server/talent-access';
 import type {
   CompanyBillingPortalSession,
   Plan,
@@ -59,6 +60,7 @@ export function EmployersTalentAccessView({
   pageDependencies,
   getTalentAccessGrantAction,
   startCheckoutAction,
+  claimAction,
   upgradeAction,
   openBillingPortalAction,
   invalidate,
@@ -74,6 +76,9 @@ export function EmployersTalentAccessView({
   startCheckoutAction: (input: {
     data: { planId: string; returnPath: string; companyId?: string };
   }) => Promise<TalentAccessResult<TalentAccessCheckoutSession>>;
+  claimAction: (input: {
+    data: { planId: string; companyId?: string };
+  }) => Promise<TalentAccessResult<TalentAccessClaim>>;
   upgradeAction: (input: {
     data: { planId: string; companyId?: string };
   }) => Promise<TalentAccessResult<TalentAccessUpgrade>>;
@@ -140,9 +145,21 @@ export function EmployersTalentAccessView({
     setPolling(true);
   }, []);
 
-  async function subscribe(planId: string) {
+  async function subscribe(planId: string, planKind: Plan['kind']) {
     setBusy(planId);
     try {
+      if (planKind === 'free') {
+        const result = await claimAction({
+          data: { planId, companyId: companyId ?? undefined },
+        });
+        if (result.ok) {
+          setConfirmed(true);
+          await invalidate();
+        } else {
+          reportActionError(boardErrorMessage(result));
+        }
+        return;
+      }
       const result = await startCheckoutAction({
         data: {
           planId,
@@ -274,10 +291,12 @@ export function EmployersTalentAccessView({
 
   const talentPlanAction = ({
     planId,
+    planKind,
     className,
     children,
   }: {
     planId: string;
+    planKind: Plan['kind'];
     className: string;
     children: ReactNode;
   }) => {
@@ -287,7 +306,7 @@ export function EmployersTalentAccessView({
           type="button"
           className={className}
           disabled={busy !== null}
-          onClick={() => void subscribe(planId)}
+          onClick={() => void subscribe(planId, planKind)}
         >
           {busy === planId ? m.employerLanding_startingLabel() : children}
         </button>

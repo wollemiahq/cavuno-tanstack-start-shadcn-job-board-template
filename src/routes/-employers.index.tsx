@@ -43,6 +43,7 @@ export type EmployersPageViewDependencies = {
   joinLink: (input: { className: string; children: ReactNode }) => ReactElement;
   talentPlanAction?: (input: {
     planId: string;
+    planKind: Plan['kind'];
     className: string;
     children: ReactNode;
   }) => ReactElement;
@@ -84,15 +85,21 @@ const intervalSuffix = (interval: Plan['billingInterval']) =>
       : '';
 
 function planFeatures(plan: Plan) {
+  const grantsListings =
+    plan.purpose !== 'talent_access' && plan.featureSummary.maxActiveJobs > 0;
   return [
-    m.employerLanding_featureActiveJobs({
-      count: plan.featureSummary.maxActiveJobs,
-      countLabel: String(plan.featureSummary.maxActiveJobs),
-    }),
-    m.employerLanding_featureListingDuration({
-      days: plan.featureSummary.durationDays,
-    }),
-    plan.featureSummary.featuredSlots > 0
+    grantsListings
+      ? m.employerLanding_featureActiveJobs({
+          count: plan.featureSummary.maxActiveJobs,
+          countLabel: String(plan.featureSummary.maxActiveJobs),
+        })
+      : null,
+    grantsListings && plan.featureSummary.durationDays > 0
+      ? m.employerLanding_featureListingDuration({
+          days: plan.featureSummary.durationDays,
+        })
+      : null,
+    grantsListings && plan.featureSummary.featuredSlots > 0
       ? m.employerLanding_featureFeaturedSlots({
           count: plan.featureSummary.featuredSlots,
           countLabel: String(plan.featureSummary.featuredSlots),
@@ -215,6 +222,7 @@ function PlanCard({
           dependencies.talentPlanAction ? (
           dependencies.talentPlanAction({
             planId: plan.id,
+            planKind: plan.kind,
             className: actionClassName,
             children: actionLabel,
           })

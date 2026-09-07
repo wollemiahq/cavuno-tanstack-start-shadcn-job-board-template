@@ -45,6 +45,14 @@ const PARSE_STATUS_LABEL = {
 
 const PARSE_POLL_INTERVAL_MS = 4_000;
 const PARSE_POLL_TIMEOUT_MS = 3 * 60 * 1_000;
+const MAX_RESUME_BYTES = 10 * 1024 * 1024;
+const RESUME_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'odt', 'rtf', 'txt']);
+
+function resumeFileError(file: File): 'size' | 'type' | null {
+  if (file.size > MAX_RESUME_BYTES) return 'size';
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return RESUME_EXTENSIONS.has(extension) ? null : 'type';
+}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return m.resumeUpload_fileSizeB({ value: bytes });
@@ -94,7 +102,12 @@ export function ResumeUpload({
   // people expect an uploaded resume to stay available for reuse.
   const [keepOnFile, setKeepOnFile] = useState(resume.keepResumeOnFile ?? true);
   const [status, setStatus] = useState<
-    'idle' | 'uploading' | 'deleting' | 'upload-error'
+    | 'idle'
+    | 'uploading'
+    | 'deleting'
+    | 'upload-error'
+    | 'size-error'
+    | 'type-error'
   >('idle');
   const [parsePollTimedOut, setParsePollTimedOut] = useState(false);
   const storedFile = resume.hasResumeOnFile ? resume.file : null;
@@ -121,6 +134,12 @@ export function ResumeUpload({
   }, [parsing]);
 
   async function uploadFile(file: File) {
+    const fileError = resumeFileError(file);
+    if (fileError) {
+      setStatus(fileError === 'size' ? 'size-error' : 'type-error');
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
     setStatus('uploading');
     const formData = new FormData();
     formData.append('resume', file);
@@ -222,7 +241,7 @@ export function ResumeUpload({
         state={
           status === 'uploading'
             ? 'uploading'
-            : status === 'upload-error'
+            : status.endsWith('error')
               ? 'error'
               : storedFile
                 ? 'done'
@@ -321,9 +340,15 @@ export function ResumeUpload({
           </p>
         </div>
       ) : null}
-      {status === 'upload-error' ? (
+      {status === 'upload-error' ||
+      status === 'size-error' ||
+      status === 'type-error' ? (
         <p className="text-destructive text-xs" role="alert">
-          {m.resumeUpload_uploadError()}
+          {status === 'size-error'
+            ? m.resumeUpload_fileTooLargeError()
+            : status === 'type-error'
+              ? m.resumeUpload_fileTypeError()
+              : m.resumeUpload_uploadError()}
         </p>
       ) : null}
     </section>

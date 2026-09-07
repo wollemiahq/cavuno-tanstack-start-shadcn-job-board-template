@@ -1863,6 +1863,8 @@
   "resumeUpload_fileSizeB": "{value} B",
   "resumeUpload_fileSizeKb": "{value} KB",
   "resumeUpload_fileSizeMb": "{value} MB",
+  "resumeUpload_fileTooLargeError": "Ten plik jest większy niż 10 MB. Wybierz mniejszy plik.",
+  "resumeUpload_fileTypeError": "Wybierz plik PDF, DOC, DOCX, ODT, RTF lub TXT.",
   "resumeUpload_formatsText": "PDF, DOC, DOCX, ODT, RTF lub TXT, do 10 MB.",
   "resumeUpload_heading": "CV",
   "resumeUpload_keepCopyHint": "Zapisuje kopię w Twoim profilu, aby była gotowa przy następnym aplikowaniu.",

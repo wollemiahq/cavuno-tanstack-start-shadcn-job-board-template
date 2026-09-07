@@ -4,6 +4,7 @@ import { toastActionError } from '../lib/action-toast';
 import { getEmployersPage } from '../server/marketing-pages';
 import {
   getTalentAccessGrant,
+  claimFreeTalentAccess,
   openTalentBillingPortal,
   startTalentAccessCheckout,
   upgradeTalentAccess,
@@ -69,6 +70,7 @@ function EmployersPage() {
       viewer={viewer}
       getTalentAccessGrantAction={getTalentAccessGrant}
       startCheckoutAction={startTalentAccessCheckout}
+      claimAction={claimFreeTalentAccess}
       upgradeAction={upgradeTalentAccess}
       openBillingPortalAction={openTalentBillingPortal}
       invalidate={async () => {

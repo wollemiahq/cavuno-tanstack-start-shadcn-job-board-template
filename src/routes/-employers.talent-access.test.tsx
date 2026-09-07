@@ -76,6 +76,7 @@ const kit = {
 const mocks = {
   getTalentAccessGrant: vi.fn(),
   startCheckout: vi.fn(),
+  claim: vi.fn(),
   upgrade: vi.fn(),
   openBillingPortal: vi.fn(),
   invalidate: vi.fn(),
@@ -103,6 +104,7 @@ async function renderEmployers(options?: {
       }
       getTalentAccessGrantAction={mocks.getTalentAccessGrant}
       startCheckoutAction={mocks.startCheckout}
+      claimAction={mocks.claim}
       upgradeAction={mocks.upgrade}
       openBillingPortalAction={mocks.openBillingPortal}
       invalidate={mocks.invalidate}
@@ -136,6 +138,48 @@ describe('employer talent-access checkout', () => {
     expect(
       await screen.findByRole('heading', { name: 'Complete your purchase' }),
     ).toBeVisible();
+  });
+
+  it('claims a free plan without starting Stripe checkout', async () => {
+    mocks.claim.mockResolvedValue({
+      ok: true,
+      data: {
+        object: 'talent_access_claim',
+        assignmentId: 'assignment-free',
+        alreadyClaimed: false,
+      },
+    });
+    mocks.invalidate.mockResolvedValue(undefined);
+
+    await renderRouted(
+      <EmployersTalentAccessView
+        plans={[{ ...talentPlan, kind: 'free', price: null }]}
+        contactPlans={[]}
+        seo={{ boardName: 'Example Jobs' }}
+        viewer={{
+          kind: 'employer',
+          hasTalentAccess: false,
+          companyId: 'company-acme',
+          companySlug: 'acme-ventures',
+        }}
+        getTalentAccessGrantAction={mocks.getTalentAccessGrant}
+        startCheckoutAction={mocks.startCheckout}
+        claimAction={mocks.claim}
+        upgradeAction={mocks.upgrade}
+        openBillingPortalAction={mocks.openBillingPortal}
+        invalidate={mocks.invalidate}
+        reportActionError={mocks.reportActionError}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+
+    await waitFor(() => {
+      expect(mocks.claim).toHaveBeenCalledWith({
+        data: { planId: 'plan-talent', companyId: 'company-acme' },
+      });
+      expect(mocks.startCheckout).not.toHaveBeenCalled();
+      expect(mocks.invalidate).toHaveBeenCalled();
+    });
   });
 
   it('words a refusal from its code rather than the generic failure toast', async () => {

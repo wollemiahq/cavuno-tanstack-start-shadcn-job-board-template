@@ -37,6 +37,7 @@ const starterRoleTree = {
     },
     { id: '/alerts/manage', fullPath: '/alerts/manage' },
     { id: '/alerts/confirm', fullPath: '/alerts/confirm' },
+    { id: '/impressum', fullPath: '/impressum' },
     { id: '/companies/$companySlug', fullPath: '/companies/$companySlug' },
     { id: '/blog/$postSlug', fullPath: '/blog/$postSlug' },
   ],
@@ -124,5 +125,31 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(entries.map((e) => e.template)).toContain(
       '/companies/:companySlug/jobs/:jobSlug',
     );
+  });
+
+  it('omits the Impressum role when the page feature is disabled', async () => {
+    const handler = createWellKnownRouteHandler(
+      () => starterRoleTree,
+      async () => false,
+    );
+    const response = await handler(
+      new Request('https://board.example.com/.well-known/cavuno.json'),
+    );
+    const parsed = validateManifest(await response.json());
+    if (!parsed.ok) throw new Error('Expected a valid well-known manifest');
+    expect(parsed.manifest.roles.impressum).toBeUndefined();
+  });
+
+  it('publishes the Impressum role when the page feature is enabled', async () => {
+    const handler = createWellKnownRouteHandler(
+      () => starterRoleTree,
+      async () => true,
+    );
+    const response = await handler(
+      new Request('https://board.example.com/.well-known/cavuno.json'),
+    );
+    const parsed = validateManifest(await response.json());
+    if (!parsed.ok) throw new Error('Expected a valid well-known manifest');
+    expect(parsed.manifest.roles.impressum).toBe('/impressum');
   });
 });

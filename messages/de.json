@@ -1801,6 +1801,8 @@
   "resumeUpload_fileSizeB": "{value} B",
   "resumeUpload_fileSizeKb": "{value} KB",
   "resumeUpload_fileSizeMb": "{value} MB",
+  "resumeUpload_fileTooLargeError": "Diese Datei ist größer als 10 MB. Wähle eine kleinere Datei.",
+  "resumeUpload_fileTypeError": "Wähle eine PDF-, DOC-, DOCX-, ODT-, RTF- oder TXT-Datei.",
   "resumeUpload_formatsText": "PDF, DOC, DOCX, ODT, RTF oder TXT, bis zu 10 MB.",
   "resumeUpload_heading": "Lebenslauf",
   "resumeUpload_keepCopyHint": "Speichert eine Kopie in deinem Profil, damit sie bei der nächsten Bewerbung bereitliegt.",

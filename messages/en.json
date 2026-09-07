@@ -1801,6 +1801,8 @@
   "resumeUpload_fileSizeB": "{value} B",
   "resumeUpload_fileSizeKb": "{value} KB",
   "resumeUpload_fileSizeMb": "{value} MB",
+  "resumeUpload_fileTooLargeError": "This file is larger than 10MB. Choose a smaller file.",
+  "resumeUpload_fileTypeError": "Choose a PDF, DOC, DOCX, ODT, RTF or TXT file.",
   "resumeUpload_formatsText": "PDF, DOC, DOCX, ODT, RTF or TXT, up to 10MB.",
   "resumeUpload_heading": "Resume",
   "resumeUpload_keepCopyHint": "Stores a copy on your profile so it's ready the next time you apply.",

@@ -323,6 +323,11 @@ describe('employer entry surfaces', () => {
         name: 'Subscribe',
       }),
     ).toHaveAttribute('href', '/auth/join?returnTo=/employers');
+    expect(within(talentCard).queryByText('Up to 5 active jobs')).toBeNull();
+    expect(within(talentCard).queryByText('30-day listing')).toBeNull();
+    expect(
+      within(talentCard).getByText('For growing hiring teams'),
+    ).toBeVisible();
   });
 
   it('renders a quote-only tier as its price text and CTA, never as a price', () => {
