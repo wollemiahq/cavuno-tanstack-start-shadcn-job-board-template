@@ -134,6 +134,44 @@ describe('ResumeUpload', () => {
     });
   });
 
+  it('explains an oversized file without attempting an upload', async () => {
+    await renderWithRouter(
+      <ResumeUpload resume={emptyResume} dependencies={mocks} />,
+    );
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-test="resume-file-input"]',
+    );
+    if (!input) throw new Error('Expected the resume file input to render');
+    const file = new File(['cv'], 'large.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'size', { value: 10 * 1024 * 1024 + 1 });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This file is larger than 10MB',
+    );
+    expect(mocks.uploadResume).not.toHaveBeenCalled();
+  });
+
+  it('explains an unsupported file type without attempting an upload', async () => {
+    await renderWithRouter(
+      <ResumeUpload resume={emptyResume} dependencies={mocks} />,
+    );
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-test="resume-file-input"]',
+    );
+    if (!input) throw new Error('Expected the resume file input to render');
+    fireEvent.change(input, {
+      target: {
+        files: [new File(['image'], 'portrait.png', { type: 'image/png' })],
+      },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Choose a PDF, DOC, DOCX, ODT, RTF or TXT file',
+    );
+    expect(mocks.uploadResume).not.toHaveBeenCalled();
+  });
+
   describe('parse-status polling', () => {
     const parsingResume = {
       ...resume,

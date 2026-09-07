@@ -1801,6 +1801,8 @@
   "resumeUpload_fileSizeB": "⁧⟦{value} Ɓ⟧⁩",
   "resumeUpload_fileSizeKb": "⁧⟦{value} ĶƁ⟧⁩",
   "resumeUpload_fileSizeMb": "⁧⟦{value} ṀƁ⟧⁩",
+  "resumeUpload_fileTooLargeError": "⁧⟦Ţĥíš ƒíĺé íš ĺáŕğéŕ ţĥáñ 10ṀƁ. Çĥóóšé á šɱáĺĺéŕ ƒíĺé.⟧⁩",
+  "resumeUpload_fileTypeError": "⁧⟦Çĥóóšé á ÞÐƑ, ÐÓÇ, ÐÓÇẊ, ÓÐŢ, ŔŢƑ óŕ ŢẊŢ ƒíĺé.⟧⁩",
   "resumeUpload_formatsText": "⁧⟦ÞÐƑ, ÐÓÇ, ÐÓÇẊ, ÓÐŢ, ŔŢƑ óŕ ŢẊŢ, úþ ţó 10ṀƁ.⟧⁩",
   "resumeUpload_heading": "⁧⟦Ŕéšúɱé⟧⁩",
   "resumeUpload_keepCopyHint": "⁧⟦Šţóŕéš á çóþý óñ ýóúŕ þŕóƒíĺé šó íţ'š ŕéáðý ţĥé ñéẋţ ţíɱé ýóú áþþĺý.⟧⁩",

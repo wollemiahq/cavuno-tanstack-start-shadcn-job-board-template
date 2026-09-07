@@ -64,6 +64,11 @@ async function asResult<T>(
 }
 
 export type TalentAccessGrant = TalentAccess;
+export type TalentAccessClaim = {
+  object: 'talent_access_claim';
+  assignmentId: string;
+  alreadyClaimed: boolean;
+};
 
 export const EMPTY_GRANT: TalentAccessGrant = {
   object: 'talent_access',
@@ -120,6 +125,23 @@ export const startTalentAccessCheckout = createServerFn({ method: 'POST' })
           },
           { headers },
         ),
+      );
+    }),
+  );
+
+export const claimFreeTalentAccess = createServerFn({ method: 'POST' })
+  .validator((input: { planId: string; companyId?: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ context, data }) =>
+    gatedRead(context, async (h) => {
+      const headers = authed(context, h);
+      await requireVerifiedBoardUser(headers);
+      return asResult(() =>
+        getBoard().client.fetch<TalentAccessClaim>('/me/talent-access/claim', {
+          method: 'POST',
+          body: data,
+          headers,
+        }),
       );
     }),
   );

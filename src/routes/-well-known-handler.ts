@@ -6,8 +6,14 @@ import {
 
 export function createWellKnownRouteHandler(
   getRouteTree: () => TanStackRouteNode,
+  impressumEnabled: () => boolean | Promise<boolean> = () => true,
 ) {
   return createWellKnownHandler({
-    routes: async () => routeEntriesFromTanStackRouteTree(getRouteTree()),
+    routes: async () => {
+      const routes = routeEntriesFromTanStackRouteTree(getRouteTree());
+      return (await impressumEnabled())
+        ? routes
+        : routes.filter((route) => route.template !== '/impressum');
+    },
   });
 }

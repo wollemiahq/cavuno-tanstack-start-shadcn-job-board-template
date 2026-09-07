@@ -633,6 +633,7 @@
         "src/components/experience-section.tsx",
         "src/components/resume-upload.tsx",
         "src/routes/-auth.verify-email-required.tsx",
+        "src/routes/-employers.talent-access.tsx",
         "src/routes/-memberships.tsx"
       ]
     },
@@ -668,6 +669,7 @@
       "productionReferences": [
         "src/components/preview/preview-board-settings.tsx",
         "src/components/profile-form.tsx",
+        "src/routes/-employers.talent-access.tsx",
         "src/routes/-memberships.tsx"
       ]
     },
