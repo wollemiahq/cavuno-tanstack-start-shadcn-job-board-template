@@ -11,7 +11,7 @@ Google-issued slot. The SDK provides one default unit, not a placement map.
 | Company detail, existing sidebar | 300×250 after company facts | Fits the existing 320px column. No extra column and no large half-page unit displacing company facts. Scrolls normally. Mobile omits it. |
 | Blog article, author/sidebar column | 300×250 after author information | Uses the existing reading layout without interrupting paragraphs. A medium rectangle is a reasonable initial inventory choice; a half-page unit is an experiment for long articles, not the default for every post. Mobile omits the sidebar unit. |
 | Salary index/detail, blog archives, homepage, about | Bottom anchor only | Preserve full-width charts, tables and cards. Do not invent a sidebar just to hold advertising. |
-| Public bottom edge | Google-managed regular bottom anchor | Persistent visibility with Google's dismissal behavior. `collapsed-bottom` disables dynamic/expanding anchors, but Google still chooses dimensions and whether to serve. No custom sticky manual banner. |
+| Public bottom edge | Google-managed bottom anchor | Persistent visibility with Google's dismissal behavior. `data-overlays="bottom"` requests bottom-only placement; Google chooses dimensions, expansion and whether to serve. No custom sticky manual banner. |
 | Account, authentication, private messages, posting/payment, legal pages, embeds | No starter anchor or placeholder | Protect private communication and completion of important tasks; avoid ads on thin utility screens. Configure AdSense page exclusions too, because a script already loaded on a public page remains active during client navigation. |
 
 ## Policy and geometry
@@ -52,7 +52,7 @@ the shared default deliberately favors easy setup.
 - [Multiple AdSense units](https://support.google.com/adsense/answer/17958?hl=en): multiple units are permitted; evaluate overall earnings and balance with content.
 - [AdSense placement policies](https://support.google.com/adsense/answer/1346295?hl=en): avoid accidental clicks, misleading placement, and ads in private communications.
 - [Custom sticky requirements](https://support.google.com/adsense/answer/10734935?hl=en): size, viewport, and non-overlap requirements.
-- [Regular bottom anchors](https://support.google.com/adsense/answer/7478225?hl=en): supported loader parameter and its effect on anchor settings.
+- [Bottom-only anchors](https://support.google.com/adsense/answer/7478225?hl=en): supported loader parameter and its effect on anchor settings.
 - [Auto ads settings](https://support.google.com/adsense/answer/9305577?hl=en): format controls and page exclusions.
 
 ### Floating controls and live anchors
@@ -61,6 +61,6 @@ The floating widget stack measures the visible publisher-side fixed Google ad co
 
 AdSense does not expose a documented anchor-height callback. Detection uses the outer Google ad elements and their fixed ancestor geometry, so changes to Google's markup need ongoing live monitoring. Preview and synthetic-container checks exercise the layout behavior; they are not evidence of a real served impression.
 
-Top-anchor fallback: live Google delivery has been observed at the top despite the documented `collapsed-bottom` option. The observer therefore watches the whole document, including anchors inserted beside `body`. A visible top anchor reserves space and moves the sticky header below the creative and its collapse handle. Dismissal releases the space. The bottom-only request remains in place; the fallback does not reposition or hide Google ads.
+The navigation stays at the top of the viewport. The starter does not reserve space for top anchors or move the header beneath them. The loader sets Google’s documented `data-overlays="bottom"` override before insertion, so placement is requested by the starter without a dashboard change. Google controls creative size and expansion; verify actual served anchors after deployment.
 
 At widths/heights below the outer rail breakpoint, search results include one 300×250 rectangle after the third result (or after the last result on shorter pages). The unit is outside selectable result cards. It requires at least 332px viewport width to fit the 300px creative plus mobile gutters; it is absent on empty lists and when the wide rail is eligible. This preserves the master/detail widths and exposes the placement on ordinary laptops and phones.

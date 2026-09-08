@@ -47,7 +47,7 @@ export function MessagingDock({
             <Card
               role="complementary"
               aria-label={conversationLabel}
-              className="border-border h-[min(40rem,calc(100dvh-5rem-var(--board-floating-bottom,0px)-var(--board-ad-top-height,0px)))] w-[min(28rem,calc(100vw-3rem))] gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
+              className="border-border h-[min(40rem,calc(100dvh-5rem-var(--board-floating-bottom,0px)))] w-[min(28rem,calc(100vw-3rem))] gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0"
             >
               {conversationHasOwnHeader ? (
                 conversation
@@ -77,7 +77,7 @@ export function MessagingDock({
             role="complementary"
             aria-label={messagesLabel}
             className={cn(
-              'border-border h-[min(40rem,calc(100dvh-5rem-var(--board-floating-bottom,0px)-var(--board-ad-top-height,0px)))] w-80 gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0',
+              'border-border h-[min(40rem,calc(100dvh-5rem-var(--board-floating-bottom,0px)))] w-80 gap-0 rounded-t-xl rounded-b-none border border-b-0 py-0 shadow-xl ring-0',
               conversation && 'hidden lg:flex',
             )}
           >
