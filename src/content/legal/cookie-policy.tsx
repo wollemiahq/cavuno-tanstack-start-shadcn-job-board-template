@@ -147,4 +147,34 @@ export const cookiePolicyContent = {
       );
     },
   },
+  nl: {
+    title: 'Cookiebeleid',
+    description:
+      'Tijdelijk cookiebeleid. Vervang deze beschrijving en inhoud vóór de lancering.',
+    Body: function CookiePolicyBodyNl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Wat deze pagina moet behandelen</h2>
+          <p>
+            Vervang dit onderdeel na juridische beoordeling door uw
+            cookiebeleid. Laat geen tijdelijke sjabloontekst in de
+            productieomgeving staan.
+          </p>
+          <h2>Wat u moet vastleggen</h2>
+          <p>
+            Beheerders vermelden doorgaans welke cookies of vergelijkbare
+            technologieën de site gebruikt, waarvoor ze dienen en hoe bezoekers
+            hun voorkeuren kunnen wijzigen. Beschrijf deze feiten voor uw
+            configuratie — dit sjabloon bevat daarover geen verklaringen.
+          </p>
+          <h2>Contact met ons opnemen</h2>
+          <p>
+            Vervang dit onderdeel door het contactkanaal voor vragen over
+            cookies.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

@@ -146,4 +146,33 @@ export const privacyPolicyContent = {
       );
     },
   },
+  nl: {
+    title: 'Privacybeleid',
+    description:
+      'Tijdelijk privacybeleid. Vervang deze beschrijving en inhoud vóór de lancering.',
+    Body: function PrivacyPolicyBodyNl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Wat deze pagina moet behandelen</h2>
+          <p>
+            Vervang dit onderdeel na juridische beoordeling door uw
+            privacybeleid. Laat geen tijdelijke sjabloontekst in de
+            productieomgeving staan.
+          </p>
+          <h2>Wat u moet vastleggen</h2>
+          <p>
+            Beheerders vermelden doorgaans welke persoonsgegevens worden
+            verzameld, waarom ze worden gebruikt, hoelang ze worden bewaard en
+            hoe mensen contact met u kunnen opnemen. Beschrijf deze feiten voor
+            uw product — dit sjabloon bevat daarover geen verklaringen.
+          </p>
+          <h2>Contact met ons opnemen</h2>
+          <p>
+            Vervang dit onderdeel door het contactkanaal voor privacyvragen.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

@@ -136,4 +136,31 @@ export const aboutContent = {
       );
     },
   },
+  nl: {
+    title: 'Over ons',
+    description:
+      'Tijdelijke Over ons-pagina. Vervang deze beschrijving en inhoud vóór de lancering.',
+    Body: function AboutBodyNl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Wie wij zijn</h2>
+          <p>
+            Vervang dit onderdeel door een korte introductie van uw organisatie
+            of vacaturesite.
+          </p>
+          <h2>Waar deze vacaturesite voor dient</h2>
+          <p>
+            Vervang dit onderdeel door het doel van de vacaturesite en een
+            beschrijving van de doelgroep.
+          </p>
+          <h2>Contact met ons opnemen</h2>
+          <p>
+            Vervang dit onderdeel door de openbare contactgegevens die
+            kandidaten en werkgevers kunnen gebruiken.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;
