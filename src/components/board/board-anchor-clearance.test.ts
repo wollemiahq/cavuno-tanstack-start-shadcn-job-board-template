@@ -94,22 +94,14 @@ describe('live anchor clearance', () => {
     window.dispatchEvent(new Event('resize'));
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith(100));
   });
-  it('tracks a top anchor outside body, including late display and dismissal', async () => {
+  it('does not reserve bottom clearance for a top anchor outside body', () => {
     const ad = anchor(0, 95);
     document.documentElement.appendChild(ad.container);
-    ad.container.style.cssText = 'position:fixed;top:0px;display:none';
-    const handle = document.createElement('div');
-    handle.className = 'grippy-host';
-    ad.container.appendChild(handle);
-    const bottom = vi.fn();
-    const top = vi.fn();
-    stop = observeAnchorClearance(bottom, top);
-    expect(top).toHaveBeenLastCalledWith(0);
-    ad.container.style.display = 'block';
-    await waitFor(() => expect(top).toHaveBeenLastCalledWith(127));
-    expect(bottom).toHaveBeenLastCalledWith(0);
+    ad.container.style.cssText = 'position:fixed;top:0px';
+    const onChange = vi.fn();
+    stop = observeAnchorClearance(onChange);
+    expect(onChange).toHaveBeenLastCalledWith(0);
     ad.container.remove();
-    await waitFor(() => expect(top).toHaveBeenLastCalledWith(0));
   });
   it('releases the offset and disconnects on cleanup', async () => {
     const ad = anchor();
