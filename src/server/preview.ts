@@ -35,6 +35,7 @@ import {
   previewSessionSource,
   serializeSessionForSource,
 } from '../lib/data-source.server';
+import { getServerEnv } from '../lib/env';
 import {
   activePersonaIdForViewer,
   clampEmailLimit,
@@ -228,6 +229,7 @@ export const resolvePreviewStateForViewer = createServerOnlyFn(
     const demoConfigured = isDemoBoardConfigured();
     const demoBoardPrivate = isDemoBoardPrivate();
     const dataSource: DataSource = getDataSource();
+    const devToolsEnabled = getServerEnv().devTools;
     if (!capability.canPreview) {
       return {
         capability,
@@ -236,6 +238,7 @@ export const resolvePreviewStateForViewer = createServerOnlyFn(
         demoConfigured,
         demoBoardPrivate,
         dataSource,
+        devToolsEnabled,
       };
     }
     const roster = await fetchRoster();
@@ -250,6 +253,7 @@ export const resolvePreviewStateForViewer = createServerOnlyFn(
       demoConfigured,
       demoBoardPrivate,
       dataSource,
+      devToolsEnabled,
     };
   },
 );

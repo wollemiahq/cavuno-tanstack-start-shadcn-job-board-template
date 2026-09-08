@@ -91,6 +91,13 @@ export interface PreviewState {
   demoBoardPrivate: boolean;
   /** Effective data source for this request (`board` when demo is not configured). */
   dataSource: 'board' | 'demo';
+  /**
+   * `CAVUNO_DEV_TOOLS=1` — template-developer chrome with no server
+   * capability behind it (the "Development preview" ad-placement pill).
+   * Replaces the old `import.meta.env.DEV` gate, which was also true inside
+   * the AI builder's preview sandbox and leaked the pill to builder users.
+   */
+  devToolsEnabled: boolean;
 }
 
 /**

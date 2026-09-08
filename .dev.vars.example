@@ -8,3 +8,7 @@ CAVUNO_API_URL=https://api.cavuno.com
 # This is the sandbox's real, deliberately-published key (see
 # docs/preview-states.md) — data resets nightly; safe for write probes.
 CAVUNO_BOARD=pk_c2f66367a3abaa6bafd00fd3c2de3297
+# Template-developer chrome (the "Development preview" pill that previews ad
+# placements without serving ads). Opt-in so hosted previews such as the AI
+# builder, which also run the dev server, never show it to board owners.
+CAVUNO_DEV_TOOLS=1

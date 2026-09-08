@@ -79,6 +79,7 @@ function previewFallback() {
     demoConfigured: isDemoBoardConfigured(),
     demoBoardPrivate: isDemoBoardPrivate(),
     dataSource: getDataSource(),
+    devToolsEnabled: getServerEnv().devTools,
   };
 }
 
