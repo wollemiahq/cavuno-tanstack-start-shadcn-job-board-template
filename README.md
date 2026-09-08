@@ -205,9 +205,12 @@ Cross-cutting capabilities that ship on top of those routes:
   tags cap at `3 + N`, missing logos fall back to initials.
 - **i18n ready, English by default** — [Paraglide JS](https://paraglidejs.com)
   compile-time catalogs, SSR-resolved on Workers. Production ships English
-  only (no language switcher, no `/de/` or `/fr/` routes). German and French
-  catalogs are in the repo dormant; `pnpm locale:add de` enables a locale,
-  compiles Paraglide, and the footer switcher appears. Deliberately
+  only (no language switcher or locale-prefixed routes). German, French,
+  Spanish, Polish, and Dutch catalogs and legal templates ship dormant;
+  `pnpm locale:add nl` enables Dutch (or use another catalog's locale code).
+  Run `pnpm gen:messages && pnpm gen:paraglide` to compile; the footer
+  switcher then appears. See [localization](docs/localization.md) for Dutch
+  terminology and verification. Deliberately
   chrome-only: the UI localizes while board content (jobs, companies) stays
   in the board's own language, matching the platform's single-language
   board model.

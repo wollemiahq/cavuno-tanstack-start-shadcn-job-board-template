@@ -60,6 +60,13 @@ export const LEGAL_CONTENT = {
     'cookie-policy': cookiePolicyContent.pl,
     impressum: impressumContent.pl,
   },
+  nl: {
+    about: aboutContent.nl,
+    'privacy-policy': privacyPolicyContent.nl,
+    'terms-of-service': termsOfServiceContent.nl,
+    'cookie-policy': cookiePolicyContent.nl,
+    impressum: impressumContent.nl,
+  },
 } satisfies Record<LegalLocale, Record<LegalPageType, LegalPageContent>>;
 
 /**
@@ -96,6 +103,7 @@ const LEGAL_LOCALES = [
   'fr',
   'es',
   'pl',
+  'nl',
 ] as const satisfies readonly LegalLocale[];
 
 function resolveLegalLocale(locale: string): LegalLocale {

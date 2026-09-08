@@ -154,4 +154,33 @@ export const impressumContent = {
       );
     },
   },
+  nl: {
+    title: 'Juridische informatie',
+    description:
+      'Tijdelijke pagina met juridische informatie. Vervang deze beschrijving en inhoud vóór de lancering.',
+    Body: function ImpressumBodyNl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Wat deze pagina moet behandelen</h2>
+          <p>
+            Vervang dit onderdeel na juridische beoordeling door de juridische
+            informatie die in uw rechtsgebied vereist is. Laat geen tijdelijke
+            sjabloontekst in de productieomgeving staan.
+          </p>
+          <h2>Gegevens van de rechtspersoon</h2>
+          <p>
+            Vul `legalEntity` in `src/content/legal/types.ts` in (statutaire
+            naam en adres), zodat de gegevenskaart boven de inhoud kan worden
+            weergegeven. Laat dit leeg totdat deze gegevens beschikbaar zijn.
+          </p>
+          <h2>Contact met ons opnemen</h2>
+          <p>
+            Vervang dit onderdeel door de openbare contactgegevens die voor deze
+            juridische informatie vereist zijn.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;

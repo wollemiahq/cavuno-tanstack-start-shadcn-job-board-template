@@ -34,6 +34,11 @@ const CALLOUT = {
     description:
       'To jest treść przykładowa szablonu portalu. Nie publikuj jej jako prawdziwej polityki ani strony „O nas”. Zastąp poniższe sekcje własnym tekstem (a strony prawne poddaj weryfikacji prawnej) przed uruchomieniem.',
   },
+  nl: {
+    title: 'Tijdelijke tekst — vervang deze vóór de lancering',
+    description:
+      'Dit is tijdelijke inhoud voor een vacaturesitesjabloon. Publiceer deze niet als echt beleid of als echte Over ons-pagina. Vervang de onderstaande onderdelen vóór de lancering door uw eigen tekst (en laat de juridische pagina’s juridisch beoordelen).',
+  },
 } satisfies Record<LegalLocale, { title: string; description: string }>;
 
 const CALLOUT_LOCALES = [
@@ -42,6 +47,7 @@ const CALLOUT_LOCALES = [
   'fr',
   'es',
   'pl',
+  'nl',
 ] as const satisfies readonly LegalLocale[];
 
 function resolveCalloutLocale(locale: string): LegalLocale {

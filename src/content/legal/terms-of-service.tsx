@@ -144,4 +144,34 @@ export const termsOfServiceContent = {
       );
     },
   },
+  nl: {
+    title: 'Gebruiksvoorwaarden',
+    description:
+      'Tijdelijke gebruiksvoorwaarden. Vervang deze beschrijving en inhoud vóór de lancering.',
+    Body: function TermsOfServiceBodyNl() {
+      return (
+        <>
+          <LegalPlaceholderCallout />
+          <h2>Wat deze pagina moet behandelen</h2>
+          <p>
+            Vervang dit onderdeel na juridische beoordeling door uw
+            gebruiksvoorwaarden. Laat geen tijdelijke sjabloontekst in de
+            productieomgeving staan.
+          </p>
+          <h2>Wat u moet vastleggen</h2>
+          <p>
+            Beheerders beschrijven doorgaans wie de vacaturesite mag gebruiken,
+            welk gebruik is toegestaan, hoe accounts werken en welke
+            aansprakelijkheidsbeperkingen gelden. Stel die regels op voor uw
+            product — dit sjabloon bevat zulke regels niet.
+          </p>
+          <h2>Contact met ons opnemen</h2>
+          <p>
+            Vervang dit onderdeel door het contactkanaal voor vragen over de
+            gebruiksvoorwaarden.
+          </p>
+        </>
+      );
+    },
+  },
 } satisfies Record<LegalLocale, LegalPageContent>;
