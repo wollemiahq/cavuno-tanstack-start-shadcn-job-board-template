@@ -49,26 +49,16 @@ export function FloatingStackProvider({ children }: { children: ReactNode }) {
   const [container, setContainer] = useState<HTMLElement | null>(null);
   useEffect(() => {
     if (!window.ResizeObserver) return;
-    return observeAnchorClearance(
-      (height) =>
-        document.documentElement.style.setProperty(
-          '--board-ad-live-height',
-          `${height}px`,
-        ),
-      (height) =>
-        document.documentElement.style.setProperty(
-          '--board-ad-top-height',
-          `${height}px`,
-        ),
+    return observeAnchorClearance((height) =>
+      document.documentElement.style.setProperty(
+        '--board-ad-live-height',
+        `${height}px`,
+      ),
     );
   }, []);
 
   return (
     <FloatingStackContext.Provider value={container}>
-      <div
-        aria-hidden
-        className="h-[var(--board-ad-top-height,0px)] shrink-0"
-      />
       {children}
       <div
         ref={setContainer}

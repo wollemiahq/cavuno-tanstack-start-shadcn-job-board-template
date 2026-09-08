@@ -59,10 +59,10 @@ afterEach(() => {
     width: 1280,
   });
 });
-describe('regular bottom anchor', () => {
-  it('loads the supported non-expanding anchor without making a manual fixed unit', () => {
+describe('bottom-only anchor', () => {
+  it('requests a bottom-only anchor without making a manual fixed unit', () => {
     const view = setup();
-    expect(loader()).toHaveAttribute('data-overlays', 'collapsed-bottom');
+    expect(loader()).toHaveAttribute('data-overlays', 'bottom');
     expect(view.container.querySelector('ins')).toBeNull();
     expect(
       view.container.querySelector('[data-slot="board-ad-footer"]'),
