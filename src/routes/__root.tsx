@@ -491,7 +491,7 @@ function RootChrome({
       <BoardAdsProvider ads={board.ads}>
         <BoardAdPreviewProvider
           enabled={Boolean(
-            import.meta.env.DEV ||
+            preview.devToolsEnabled ||
             preview.capability.canPreview ||
             preview.demoConfigured,
           )}
@@ -575,7 +575,7 @@ function RootChrome({
                   />
                 </Suspense>
               ) : null}
-              {import.meta.env.DEV ||
+              {preview.devToolsEnabled ||
               preview.capability.canPreview ||
               preview.demoConfigured ? (
                 <Suspense fallback={null}>

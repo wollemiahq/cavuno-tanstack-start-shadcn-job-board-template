@@ -37,6 +37,7 @@ export const EMPTY_ROOT_PREVIEW: RootPreview = {
   demoConfigured: false,
   demoBoardPrivate: false,
   dataSource: 'board',
+  devToolsEnabled: false,
 };
 
 export type RootSessionValue = {

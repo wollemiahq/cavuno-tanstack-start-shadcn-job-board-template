@@ -23,7 +23,10 @@ desktop-only, maximum width 300px, and no overlap or underlap. The starter's
 manual units therefore scroll normally; Google alone controls the real anchor.
 
 The local preview uses a sample 728×90 desktop / 320×50 mobile footer. This is
-an illustrative placeholder, not a promise of Google's actual anchor size.
+an illustrative placeholder, not a promise of Google's actual anchor size. Off
+a sandbox board, the preview pill only appears when `CAVUNO_DEV_TOOLS=1` is set
+in `.dev.vars`; the Vite dev server alone does not enable it, so hosted previews
+(such as the AI builder) never show template-developer tooling.
 The preview reserves footer space and does not request ads. Real serving must
 also be checked in AdSense's preview on the approved domain.
 

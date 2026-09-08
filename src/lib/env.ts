@@ -28,6 +28,14 @@ export interface ServerEnv {
    * shared public fixture (those mutating affordances stay hidden).
    */
   demoBoardPrivate: boolean;
+  /**
+   * True when `CAVUNO_DEV_TOOLS=1` — opt-in for local template development.
+   * Lights up developer-only chrome that has no server capability behind it
+   * (today: the "Development preview" pill for ad-placement placeholders).
+   * Never set by the AI builder's preview sandbox, which also runs the Vite
+   * dev server, so builder users never see template-developer tooling.
+   */
+  devTools: boolean;
 }
 
 type WorkerEnvBindings = {
@@ -35,6 +43,7 @@ type WorkerEnvBindings = {
   CAVUNO_BOARD?: string;
   CAVUNO_DEMO_BOARD?: string;
   CAVUNO_DEMO_BOARD_PRIVATE?: string;
+  CAVUNO_DEV_TOOLS?: string;
 };
 
 export function getServerEnv(): ServerEnv {
@@ -56,5 +65,8 @@ export function getServerEnv(): ServerEnv {
   // Only the exact string "1" enables private-shadow affordances.
   const demoBoardPrivate = raw.CAVUNO_DEMO_BOARD_PRIVATE === '1';
 
-  return { apiUrl, board, demoBoard, demoBoardPrivate };
+  // Only the exact string "1" enables template-developer chrome.
+  const devTools = raw.CAVUNO_DEV_TOOLS === '1';
+
+  return { apiUrl, board, demoBoard, demoBoardPrivate, devTools };
 }
