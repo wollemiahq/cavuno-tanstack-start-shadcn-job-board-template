@@ -171,6 +171,88 @@ describe('PostJobForm', () => {
     ).toBeInTheDocument();
   });
 
+  it('sends a picked place as a resolvable provider reference, never a region code', async () => {
+    // The platform resolves the office location from `provider` +
+    // `providerPlaceId`. Dropping them stored the job with no location, and
+    // the ISO 3166-2 `regionCode` sent as `region` (a region NAME field)
+    // surfaced as "US-FL, United States" on the dashboard.
+    const onSubmit = vi.fn().mockResolvedValue({
+      ok: true,
+      result: {
+        object: 'job_posting_result',
+        status: 'published',
+        jobId: 'job-1',
+        jobSlug: 'staff-product-designer',
+      },
+    });
+    const miami = {
+      id: 'dXJuOm1ieHBsYzpESTlvN0E',
+      slug: 'miami',
+      name: 'Miami',
+      contextLabel: 'United States',
+      countryCode: 'US',
+      regionCode: 'US-FL',
+      placeType: 'city',
+    };
+
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[]}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [miami],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        plans={plans}
+        onSubmit={onSubmit}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+
+    for (const [label, value] of [
+      [m.postJob_companyNameLabel(), 'Acme Studio'],
+      [m.postJob_contactNameLabel(), 'Ada Lovelace'],
+      [m.postJob_contactEmailLabel(), 'ada@acme.example'],
+      [m.postJob_jobTitleLabel(), 'Staff Product Designer'],
+      [m.postJob_descriptionLabel(), 'Lead product design.'],
+      [m.postJob_applicationUrlLabel(), 'acme.example/careers/x'],
+    ] as const) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    const officeLocations = screen.getByLabelText(
+      m.postJob_officeLocationsLabel(),
+    );
+    fireEvent.input(officeLocations, {
+      target: { value: 'Mia' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(await screen.findByText('Miami'));
+
+    const submitButton = screen
+      .getAllByRole('button')
+      .find((button) => button.getAttribute('type') === 'submit');
+    if (!submitButton) throw new Error('The post form needs a submit button');
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    // `toStrictEqual`, not `toEqual`: an explicit `region: undefined` would
+    // pass the looser matcher while still shipping the key.
+    expect(onSubmit.mock.calls[0]?.[0].officeLocations).toStrictEqual([
+      {
+        provider: 'mapbox',
+        providerPlaceId: 'dXJuOm1ieHBsYzpESTlvN0E',
+        displayName: 'Miami',
+        countryCode: 'US',
+        city: 'Miami',
+      },
+    ]);
+  });
+
   it('explains when posting is unavailable instead of rendering an unusable form', () => {
     render(
       <PostJobForm

@@ -159,6 +159,9 @@ function AlertForm({
         contextLabel: null,
         countryCode: null,
         regionCode: null,
+        // The alert filter stores place ids; the directory option carries no
+        // finer type and nothing downstream reads it.
+        placeType: 'place',
       })),
     [places],
   );

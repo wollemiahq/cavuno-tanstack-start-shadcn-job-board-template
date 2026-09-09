@@ -23,7 +23,15 @@ describe('toLocationSuggestionVM', () => {
       contextLabel: 'United Kingdom',
       countryCode: 'GB',
       regionCode: null,
+      placeType: 'city',
     });
+  });
+
+  it('carries the place type through, so a pick can be sent as city or locality', () => {
+    expect(
+      toLocationSuggestionVM({ ...place, placeType: 'locality' }, 'en')
+        ?.placeType,
+    ).toBe('locality');
   });
 
   it('drops places that cannot form a canonical location route', () => {

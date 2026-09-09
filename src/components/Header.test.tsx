@@ -196,6 +196,7 @@ function renderHeader({
                 suggestions: locationSuggestions.map((place) => ({
                   countryCode: null,
                   regionCode: null,
+                  placeType: 'city',
                   ...place,
                 })),
                 loading: false,

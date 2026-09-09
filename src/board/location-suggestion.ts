@@ -8,6 +8,8 @@ export interface LocationSuggestionVM {
   /** ISO country code — the job-posting office-location payload carries it. */
   countryCode: string | null;
   regionCode: string | null;
+  /** `city`, `locality`, `region`, … — decides which API field a pick fills. */
+  placeType: string;
 }
 
 function contextLabel(countryCode: string | null, locale: string) {
@@ -37,5 +39,6 @@ export function toLocationSuggestionVM(
     contextLabel: contextLabel(place.countryCode, locale),
     countryCode: place.countryCode,
     regionCode: place.regionCode,
+    placeType: place.placeType,
   };
 }
