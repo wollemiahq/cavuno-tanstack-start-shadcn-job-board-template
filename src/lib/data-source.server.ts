@@ -13,10 +13,16 @@ import {
 import { createDataSourceRuntime } from './data-source-runtime';
 import { getServerEnv } from './env';
 
+// Thunks, not references: this module can evaluate while
+// `@tanstack/react-start/server` is still mid-initialisation under the Vite
+// dev SSR graph (preview hosts, live 2026-09-09: "dependencies.getRequestHeader
+// is not a function" on `/`, three sandboxes, never a built Worker). A
+// by-value capture bakes `undefined` in for the life of the module; a thunk
+// resolves the binding on every request.
 const runtime = createDataSourceRuntime({
   getServerEnv,
-  getRequestHeader,
-  setResponseHeader,
+  getRequestHeader: (name) => getRequestHeader(name),
+  setResponseHeader: (name, value) => setResponseHeader(name, value),
 });
 
 /** True when the builder (or operator) injected a demo tenant key. */
