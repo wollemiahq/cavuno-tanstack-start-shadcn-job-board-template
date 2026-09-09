@@ -575,9 +575,7 @@ function RootChrome({
                   />
                 </Suspense>
               ) : null}
-              {preview.devToolsEnabled ||
-              preview.capability.canPreview ||
-              preview.demoConfigured ? (
+              {preview.capability.canPreview || preview.demoConfigured ? (
                 <Suspense fallback={null}>
                   <LazyPreviewToolbar
                     capability={preview.capability}
