@@ -41,6 +41,7 @@ const locationSuggestions = {
       contextLabel: 'United Kingdom',
       countryCode: 'GB',
       regionCode: null,
+      placeType: 'city',
     },
   ],
   loading: false,

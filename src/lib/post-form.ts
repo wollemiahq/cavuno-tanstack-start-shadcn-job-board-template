@@ -30,11 +30,19 @@ export type JobPostingFormInput = {
   employmentType: string;
   remoteOption: string;
   seniority?: string;
-  /** Resolved office places (display name + optional geo codes). */
+  /**
+   * Resolved office places. `provider` + `providerPlaceId` are what let the
+   * platform resolve a picked place; without them a display name is all the
+   * job carries. `region` is a region NAME, never an ISO 3166-2 code.
+   */
   officeLocations: {
+    provider?: 'mapbox';
+    providerPlaceId?: string;
     displayName: string;
     countryCode?: string;
     region?: string;
+    locality?: string;
+    city?: string;
   }[];
   /** Remote geographic restriction: worldwide, or specific countries. */
   remoteWorkingPermits?: { type: string; value: string; label: string }[];
