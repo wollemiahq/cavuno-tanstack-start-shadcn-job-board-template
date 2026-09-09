@@ -13,7 +13,12 @@ import type { ConfigEnv, Plugin } from 'vite';
 
 const previewServer =
   process.env.CAVUNO_PREVIEW_PROXIED === '1'
-    ? { hmr: { protocol: 'wss' as const, clientPort: 443 } }
+    ? {
+        // The sandbox preserves the public Host on WebSocket upgrades.
+        // Vite validates that host before accepting the HMR connection.
+        allowedHosts: ['.preview.cavuno.com', '.preview-dev.cavuno.com'],
+        hmr: { protocol: 'wss' as const, clientPort: 443 },
+      }
     : undefined;
 
 const antiSlopLint = {
