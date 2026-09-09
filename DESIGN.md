@@ -307,6 +307,7 @@ a later revocation applies from the next page load.
 Props:
 
 - `analytics: BoardAnalyticsConfig`
+- `hostname?: string | undefined`
 - `reportWebVitals?: (() => Promise<void>) | undefined`
 
 ### NotFound — `src/components/app-not-found.tsx`
@@ -399,6 +400,7 @@ the public board shell (same pk_ as Board API).
 
 Props:
 
+- `hostname?: string | undefined`
 - `install?: InstallAnalytics | undefined`
 - `publishableKey: string`
 
