@@ -53,7 +53,7 @@ export function buildJobOgHtml({
             )
             .join('')}</div>
         </div>
-        <div dir="ltr" style="display:flex;border-top:1px solid ${t['--border']};padding-top:24px;font-size:20px;color:${t['--muted-foreground']};">${ogText(hostname)}</div>
+        <div style="display:flex;border-top:1px solid ${t['--border']};padding-top:24px;font-size:20px;color:${t['--muted-foreground']};"><div dir="ltr" style="display:flex;">${ogText(hostname)}</div></div>
       </div>
     </div>`;
 
