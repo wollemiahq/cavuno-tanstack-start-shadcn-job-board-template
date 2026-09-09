@@ -575,7 +575,10 @@ function RootChrome({
                   />
                 </Suspense>
               ) : null}
-              {preview.capability.canPreview || preview.demoConfigured ? (
+              {!import.meta.env.CAVUNO_HOSTED_PREVIEW &&
+              (preview.devToolsEnabled ||
+                preview.capability.canPreview ||
+                preview.demoConfigured) ? (
                 <Suspense fallback={null}>
                   <LazyPreviewToolbar
                     capability={preview.capability}

@@ -124,17 +124,24 @@ function AdPreviewState() {
 describe('ad placement preview', () => {
   afterEach(() => sessionStorage.clear());
 
-  it('does not render a development-only toolbar without sandbox tools', () => {
+  it('lets local development preview placements without enabling persona actions', async () => {
     renderToolbar({
       capability: { canPreview: false, reason: 'not-sandbox' },
       adPreviewEnabled: true,
     });
-    expect(document.querySelector('[data-test="preview-toolbar"]')).toBeNull();
-  });
-
-  it('keeps ad placement previews available in sandbox board settings', async () => {
-    renderToolbar({ adPreviewEnabled: true });
-    openBoardSettings();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Development preview' }),
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Emails' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('switch', { name: 'Ad placements' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+    expect(
+      screen.queryByRole('switch', { name: 'Blog' }),
+    ).not.toBeInTheDocument();
     const toggle = await screen.findByRole('switch', { name: 'Ad placements' });
     expect(toggle).not.toBeChecked();
     fireEvent.click(toggle);

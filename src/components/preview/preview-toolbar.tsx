@@ -91,7 +91,8 @@ export interface PreviewToolbarProps {
 
 /**
  * The developer-preview toolbar for the sandbox preview state
- * spec. Server capability gates persona tools. Ad placement previews live inside the sandbox toolbar.
+ * spec. Server capability gates persona tools. Local development can also
+ * render a limited toolbar for visual ad placement previews.
  *
  * Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is configured, the persona
  * menu gains a top "Your board (real data)" entry that sets the data-source
@@ -145,9 +146,11 @@ export function PreviewToolbarView({
   // source escape hatch: when the demo key is configured we still render so
   // the user can always return to "Your board" even if the preview RPC failed
   // (canPreview false, empty roster).
-  if (!capability.canPreview && !demoConfigured) return null;
+  if (!capability.canPreview && !demoConfigured && !adPreviewAvailable)
+    return null;
 
   const previewLive = capability.canPreview;
+  const localPreviewOnly = !previewLive && !demoConfigured;
 
   // Legacy sandbox-on-primary always shows mutating tools. Dual-source: only
   // while viewing demo data on a private shadow — never on "Your board"
@@ -273,15 +276,23 @@ export function PreviewToolbarView({
               variant="outline"
               size="sm"
               className="rounded-full shadow-lg"
-              aria-label={m.previewToolbar_triggerLabel()}
+              aria-label={
+                localPreviewOnly
+                  ? 'Development preview'
+                  : m.previewToolbar_triggerLabel()
+              }
             />
           }
         >
           <Eye data-icon="inline-start" className="text-muted-foreground" />
           <span className="text-muted-foreground">
-            {m.previewToolbar_viewingAs()}
+            {localPreviewOnly
+              ? 'Development preview'
+              : m.previewToolbar_viewingAs()}
           </span>
-          <span className="font-medium">{viewerLabel}</span>
+          {!localPreviewOnly && (
+            <span className="font-medium">{viewerLabel}</span>
+          )}
           <ChevronsUpDown
             data-icon="inline-end"
             className="text-muted-foreground"
@@ -296,15 +307,21 @@ export function PreviewToolbarView({
           <div className="flex items-center justify-between gap-2 p-3">
             <div className="flex flex-col">
               <span className="text-sm font-medium">
-                {m.previewToolbar_title()}
+                {localPreviewOnly
+                  ? 'Development preview'
+                  : m.previewToolbar_title()}
               </span>
               <span className="text-muted-foreground text-xs">
-                {m.previewToolbar_subtitle()}
+                {localPreviewOnly
+                  ? 'Preview ad placements without serving ads.'
+                  : m.previewToolbar_subtitle()}
               </span>
             </div>
-            <Badge variant="secondary">
-              {m.previewToolbar_sandboxBadge()}
-            </Badge>
+            {!localPreviewOnly && (
+              <Badge variant="secondary">
+                {m.previewToolbar_sandboxBadge()}
+              </Badge>
+            )}
           </div>
 
           <Separator />

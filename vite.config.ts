@@ -167,6 +167,11 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
 
 function viteConfig(command: ConfigEnv['command']) {
   return defineConfig({
+    define: {
+      'import.meta.env.CAVUNO_HOSTED_PREVIEW': JSON.stringify(
+        process.env.CAVUNO_PREVIEW_PROXIED === '1',
+      ),
+    },
     resolve: { tsconfigPaths: true },
     // Builder sandbox preview proxy: the page is served at
     // https://<port>-<session>-<token>.preview.cavuno.com (edge :443,
