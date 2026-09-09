@@ -202,7 +202,7 @@ export default function Footer({
   /**
    * Whether /employers has anything to sell (self-service, talent, or
    * sales-led plans) — the hosted `hasEmployerOfferPage` gate on the
-   * Pricing links. `features.publicJobSubmission` is the hosted
+   * company Pricing link. `features.publicJobSubmission` is the hosted
    * `hasEnabledPlans` gate on "Post a job" (same public-plan query).
    */
   hasEmployerOfferPage: boolean;
@@ -241,10 +241,6 @@ export default function Footer({
       companies: removedNav.has('companies')
         ? null
         : { href: '/companies', label: copy.nav.companies },
-      pricing:
-        hasEmployerOfferPage && !removedNav.has('pricing')
-          ? { href: '/employers', label: copy.nav.pricing }
-          : null,
       blog:
         features.blog && !removedNav.has('blog')
           ? { href: '/blog', label: copy.nav.blog }
