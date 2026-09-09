@@ -4,7 +4,7 @@ import { formatDate } from '@cavuno/board/format';
  * to the hosted `…/blog/:slug/og` route (a `@takumi-rs` ImageResponse). As with
  * the job-detail OG route the two renderers can't be pixel-identical, so the
  * parity bar is content + dimensions: same card, same info (board · Blog · title
- * · excerpt · author · date). Rendered in the Worker runtime via `workers-og`.
+ * · excerpt · author · date). Rendered in the Worker runtime via Takumi WebAssembly.
  *
  * The card markup lives in `lib/blog-og.ts` (unit-tested); this route only
  * fetches the data, subsets the font, and returns the image.
@@ -15,7 +15,7 @@ import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
 import { buildBlogOgHtml, truncate } from '../lib/blog-og';
 import { getBoard } from '../lib/board';
 import { readBoardContext } from '../lib/board-context-cache';
-import { loadOgFont } from '../lib/og-font';
+import { loadOgFont, ogFontStack } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
 import { ogImageSrc } from '../lib/og-image';
 import { renderOgPng } from '../lib/og-render';
@@ -45,7 +45,7 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         }
 
         // Everything after the slug resolved is renderer plumbing (SEO name,
-        // board language, font subset, satori). Any fault there is a 503 —
+        // board language, font subset, rendering). Any fault there is a 503 —
         // never an unhandled 500 — because the slug is known to exist.
         try {
           return await renderBlogOg(post);
@@ -81,7 +81,7 @@ async function renderBlogOg(post: Post): Promise<Response> {
       isLocale(language) ? { locale: language } : undefined,
     ),
     // The accent comes from the repo's canonical theme (resolved tokens,
-    // converted to sRGB for Satori), not the wire manifest — one theme source.
+    // converted to sRGB for rendering), not the wire manifest — one theme source.
     themeColor: ogThemeTokens()['--primary'],
     title: post.title,
     excerpt: post.customExcerpt,
@@ -103,13 +103,13 @@ async function renderBlogOg(post: Post): Promise<Response> {
     ],
     [OG_META_SEPARATOR, '…'],
   );
-  const font = await loadOgFont(text);
+  const font = await loadOgFont(text, undefined, language);
 
   return renderOgPng(
     buildBlogOgHtml({
       ...card,
       authorAvatarUrl: await avatarSrc,
-      fontFamily: font.name,
+      fontFamily: ogFontStack(font),
     }),
     font,
   );

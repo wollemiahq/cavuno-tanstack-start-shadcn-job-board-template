@@ -59,12 +59,10 @@ describe('buildBlogOgHtml', () => {
     expect(html).toContain('Ada Lovelace');
   });
 
-  it('strips tag characters from the title but keeps & raw for HTMLRewriter', () => {
+  it('escapes markup-like titles without removing their visible text', () => {
     const html = buildBlogOgHtml({ ...base, title: '<b>x</b> & y' });
-    expect(html).toContain('bx/b & y');
+    expect(html).toContain('&lt;b&gt;x&lt;/b&gt; &amp; y');
     expect(html).not.toContain('<b>x</b>');
-    // An entity would paint literally on the card (text nodes are not decoded).
-    expect(html).not.toContain('&amp;');
   });
 
   it('truncates an overlong title into the frame', () => {

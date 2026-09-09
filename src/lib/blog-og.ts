@@ -1,22 +1,15 @@
-/**
- * Blog OG card — the pure markup for the 1200×630 social image, split out
- * from the `workers-og` route (`blog.$postSlug.og.ts`) so it is unit-testable
- * without the Worker runtime (satori + resvg-wasm). Mirrors the hosted board's
- * blog OG card: a board-primary accent bar, the "{board} · Blog" eyebrow, the
- * title, an optional excerpt, and the author + published date footer.
- *
- * satori constraint: every `<div>` with children needs `display:flex`.
- *
- * Text goes through `ogText`, NOT an HTML entity escaper: workers-og's
- * HTMLRewriter hands text nodes over raw, so `&amp;` would paint literally.
- */
-import { OG_META_SEPARATOR, ogStyleValue, ogText, ogUrlAttr } from './og-text';
+/** Pure 1200×630 blog card markup for Takumi's HTML renderer. */
+import {
+  OG_META_SEPARATOR,
+  ogStyleValue,
+  ogText,
+  ogTextDirection,
+  ogUrlAttr,
+  truncateOgTitle,
+} from './og-text';
 
 /** Cap to `max` glyphs (ellipsis included), so text never overflows the frame. */
-export function truncate(value: string, max: number): string {
-  if (value.length <= max) return value;
-  return `${value.slice(0, max - 1).trimEnd()}…`;
-}
+export const truncate = truncateOgTitle;
 
 export interface BlogOgCard {
   boardName: string;
@@ -30,7 +23,7 @@ export interface BlogOgCard {
   authorAvatarUrl: string | null;
   /** Pre-formatted published date, or `null` to omit. */
   dateLabel: string | null;
-  /** Satori font name registered by the route. */
+  /** Font stack registered by the route. */
   fontFamily?: string;
 }
 
@@ -47,23 +40,23 @@ export function buildBlogOgHtml(card: BlogOgCard): string {
 
   const footerLines = [
     authorName
-      ? `<div style="display:flex;font-size:28px;font-weight:600;color:#111827;">${authorName}</div>`
+      ? `<div dir="${ogTextDirection(card.authorName ?? '')}" style="display:flex;font-size:28px;font-weight:600;color:#111827;">${authorName}</div>`
       : '',
     dateLabel
-      ? `<div style="display:flex;font-size:24px;color:#6b7280;">${dateLabel}</div>`
+      ? `<div dir="${ogTextDirection(card.dateLabel ?? '')}" style="display:flex;font-size:24px;color:#6b7280;">${dateLabel}</div>`
       : '',
   ].join('');
 
   return `
-    <div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#ffffff;font-family:${fontFamily};">
+    <div style="display:flex;flex-direction:column;width:1200px;height:630px;background:#ffffff;font-family:${fontFamily};font-weight:600;">
       <div style="display:flex;width:1200px;height:14px;background:${themeColor};"></div>
       <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;padding:72px 80px;">
         <div style="display:flex;flex-direction:column;gap:28px;">
           <div style="display:flex;font-size:28px;color:#6b7280;">${boardName} ${OG_META_SEPARATOR} ${blogLabel}</div>
-          <div style="display:flex;font-size:64px;font-weight:600;color:#111827;line-height:1.1;">${title}</div>
+          <div dir="${ogTextDirection(card.title)}" style="display:flex;font-size:64px;font-weight:600;color:#111827;line-height:1.1;">${title}</div>
           ${
             excerpt
-              ? `<div style="display:flex;font-size:30px;color:#374151;line-height:1.35;">${excerpt}</div>`
+              ? `<div dir="${ogTextDirection(card.excerpt ?? '')}" style="display:flex;font-size:30px;color:#374151;line-height:1.35;">${excerpt}</div>`
               : ''
           }
         </div>

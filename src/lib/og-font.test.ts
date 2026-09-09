@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { fetchGoogleFontSubset, loadOgFont, type FontFetch } from './og-font';
+import {
+  fetchGoogleFontSubset,
+  loadOgFont,
+  ogFallbackFamilies,
+  ogFontStack,
+  type FontFetch,
+} from './og-font';
 
 const CSS = `@font-face {
   font-family: 'Inter';
@@ -120,5 +126,50 @@ describe('loadOgFont', () => {
     await expect(loadOgFont('Hello', fetchImpl)).rejects.toThrow(
       /fetch failed/,
     );
+  });
+});
+
+describe('script font coverage', () => {
+  it('does not download additional families for Latin-only text', () => {
+    expect(ogFallbackFamilies('Développeur München São Paulo')).toEqual([]);
+  });
+
+  it('selects Han forms using the board language and kana', () => {
+    expect(ogFallbackFamilies('工程師', 'zh-TW')).toEqual(['Noto Sans TC']);
+    expect(ogFallbackFamilies('工程师', 'zh-CN')).toEqual(['Noto Sans SC']);
+    expect(ogFallbackFamilies('東京 エンジニア', 'en')).toEqual([
+      'Noto Sans JP',
+    ]);
+    expect(ogFallbackFamilies('東京', 'ja')).toEqual(['Noto Sans JP']);
+  });
+
+  it('loads all scripts in mixed-language text, including RTL and Indic fonts', () => {
+    expect(ogFallbackFamilies('개발자 مهندس מפתח इंजीनियर')).toEqual([
+      'Noto Sans KR',
+      'Noto Sans Arabic',
+      'Noto Sans Hebrew',
+      'Noto Sans Devanagari',
+    ]);
+  });
+
+  it('registers fallback bytes and includes them in the CSS font stack', async () => {
+    const { fetchImpl, calls } = fakeFetch({
+      'https://fonts.googleapis.com/css2': () => new Response(CSS),
+      'https://fonts.gstatic.com/': () =>
+        new Response(new Uint8Array([1, 2, 3])),
+    });
+    const font = await loadOgFont('東京', fetchImpl, 'ja');
+    expect(font.fallbacks?.[0].name).toBe('Noto Sans JP');
+    expect(font.fallbacks?.[0].data.byteLength).toBe(3);
+    expect(ogFontStack(font)).toContain(', Noto Sans JP');
+    expect(calls.some(({ url }) => url.includes('Noto+Sans+JP'))).toBe(true);
+  });
+
+  it('fails rather than silently dropping a required script font', async () => {
+    const { fetchImpl } = fakeFetch({
+      'https://fonts.googleapis.com/css2': () =>
+        new Response('unavailable', { status: 503 }),
+    });
+    await expect(loadOgFont('日本語', fetchImpl, 'ja')).rejects.toThrow(/503/);
   });
 });

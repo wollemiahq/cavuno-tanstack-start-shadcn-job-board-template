@@ -5,7 +5,7 @@ import { themeMeta } from '../theme/resolved';
  * render its colors. `ogFontFamily` is derived by gen:theme (heading
  * family when set, else body family, ' Variable' suffix stripped) —
  * every catalog font is Google-loadable, so a subset binary can be
- * fetched for Satori at render time (server-side; same posture as the
+ * fetched for Takumi at render time (server-side; same posture as the
  * previous hardcoded Inter).
  */
 export const OG_FONT_FAMILY = themeMeta.ogFontFamily ?? 'Inter';
@@ -13,6 +13,8 @@ export const OG_FONT_FAMILY = themeMeta.ogFontFamily ?? 'Inter';
 export interface OgFont {
   name: string;
   data: ArrayBuffer;
+  fallbacks?: OgFont[];
+  language?: string;
 }
 
 /** Edge TTL for the Google Fonts CSS + binary fetches (seconds). */
@@ -20,7 +22,7 @@ const FONT_EDGE_TTL = 3600;
 
 /**
  * Google serves the TTF/OTF `src:` only to legacy user agents; modern UAs
- * get woff2, which Satori cannot parse. Same UA workers-og uses.
+ * get woff2. Keep the existing subset loader on TTF/OTF for predictable font bytes.
  */
 const LEGACY_UA =
   'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; de-at) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1';
@@ -82,7 +84,7 @@ export async function fetchGoogleFontSubset(
  * fully egress-blocked runtime (working-preview sandbox) still fails
  * both fetches — the OG routes turn that into a 503, not a 500.
  */
-export async function loadOgFont(
+async function loadPrimaryOgFont(
   text: string,
   fetchImpl: FontFetch = fetch,
 ): Promise<OgFont> {
@@ -103,4 +105,70 @@ export async function loadOgFont(
       ),
     };
   }
+}
+
+/** Only download script families actually needed by this card. */
+export function ogFallbackFamilies(text: string, language = 'en'): string[] {
+  const families = new Set<string>();
+  const cjk =
+    language.startsWith('ja') ||
+    /[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(text)
+      ? 'Noto Sans JP'
+      : /^(zh-(TW|HK|Hant))/i.test(language)
+        ? 'Noto Sans TC'
+        : 'Noto Sans SC';
+  const scripts: Array<[RegExp, string]> = [
+    [/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u, cjk],
+    [/\p{Script=Hangul}/u, 'Noto Sans KR'],
+    [/[\p{Script=Greek}\p{Script=Cyrillic}]/u, 'Noto Sans'],
+    [/\p{Script=Arabic}/u, 'Noto Sans Arabic'],
+    [/\p{Script=Hebrew}/u, 'Noto Sans Hebrew'],
+    [/\p{Script=Devanagari}/u, 'Noto Sans Devanagari'],
+    [/\p{Script=Thai}/u, 'Noto Sans Thai'],
+    [/\p{Script=Bengali}/u, 'Noto Sans Bengali'],
+    [/\p{Script=Tamil}/u, 'Noto Sans Tamil'],
+    [/\p{Script=Telugu}/u, 'Noto Sans Telugu'],
+    [/\p{Script=Kannada}/u, 'Noto Sans Kannada'],
+    [/\p{Script=Malayalam}/u, 'Noto Sans Malayalam'],
+    [/\p{Script=Gujarati}/u, 'Noto Sans Gujarati'],
+    [/\p{Script=Gurmukhi}/u, 'Noto Sans Gurmukhi'],
+    [/\p{Script=Sinhala}/u, 'Noto Sans Sinhala'],
+    [/\p{Script=Khmer}/u, 'Noto Sans Khmer'],
+    [/\p{Script=Lao}/u, 'Noto Sans Lao'],
+    [/\p{Script=Myanmar}/u, 'Noto Sans Myanmar'],
+    [/\p{Script=Armenian}/u, 'Noto Sans Armenian'],
+    [/\p{Script=Georgian}/u, 'Noto Sans Georgian'],
+    [/\p{Script=Ethiopic}/u, 'Noto Sans Ethiopic'],
+  ];
+  for (const [script, family] of scripts) {
+    if (script.test(text)) families.add(family);
+  }
+  return [...families];
+}
+
+/** Theme first, with explicit script coverage instead of a Latin-only fallback. */
+export async function loadOgFont(
+  text: string,
+  fetchImpl: FontFetch = fetch,
+  language = 'en',
+): Promise<OgFont> {
+  const [primary, fallbacks] = await Promise.all([
+    loadPrimaryOgFont(text, fetchImpl),
+    Promise.all(
+      ogFallbackFamilies(text, language).map(async (name) => ({
+        name,
+        data: await fetchGoogleFontSubset(
+          { family: name, weight: 600, text },
+          fetchImpl,
+        ),
+      })),
+    ),
+  ]);
+  return { ...primary, fallbacks, language };
+}
+
+export function ogFontStack(font: OgFont): string {
+  return [font.name, ...(font.fallbacks ?? []).map(({ name }) => name)].join(
+    ', ',
+  );
 }

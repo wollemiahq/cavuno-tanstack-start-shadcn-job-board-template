@@ -1,28 +1,14 @@
-/**
- * Text and attribute sanitisers for OG card markup rendered by `workers-og`.
- *
- * workers-og turns the HTML string into a Satori tree with Cloudflare's
- * HTMLRewriter, and HTMLRewriter hands text nodes over RAW — character
- * references are NOT decoded. Classic `escapeHtml` therefore paints
- * `&amp;` literally on the card (and the `;` falls outside the font subset,
- * so it shows as a tofu box). The only characters that can break the
- * structure of a text node are `<` and `>`; strip those and leave `&` and
- * quotes alone.
- */
+/** Escape text for Takumi's HTML parser without dropping visible characters. */
 export function ogText(value: string): string {
-  return value.replaceAll(/[<>]/g, '');
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }
 
-/**
- * A URL for an attribute value (`src="…"`). Percent-encode the three
- * characters that could terminate the attribute or open a tag; `&` must stay
- * raw so query strings survive (HTMLRewriter would not decode `&amp;`).
- */
+/** Escape a URL inside a double-quoted HTML attribute. */
 export function ogUrlAttr(value: string): string {
-  return value
-    .replaceAll('"', '%22')
-    .replaceAll('<', '%3C')
-    .replaceAll('>', '%3E');
+  return ogText(value).replaceAll('"', '&quot;');
 }
 
 /** A CSS identifier-ish value inside `style="…"` (font family, colour). */
@@ -50,4 +36,65 @@ export function ogSubsetText(
   extras: readonly string[] = [OG_META_SEPARATOR],
 ): string {
   return [...parts.filter(Boolean), ...extras].join(' ');
+}
+
+/** Segment user-visible characters, keeping accents and emoji sequences intact. */
+export function ogGraphemes(value: string): string[] {
+  return Array.from(
+    new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value),
+    ({ segment }) => segment,
+  );
+}
+
+export function truncateOgText(value: string, max: number): string {
+  if (max <= 0) return '';
+  const characters = ogGraphemes(value);
+  return characters.length <= max
+    ? value
+    : `${characters
+        .slice(0, max - 1)
+        .join('')
+        .trimEnd()}…`;
+}
+
+/** Conservative line budget: full-width scripts and emoji need more room. */
+export function ogTextWidthUnits(value: string): number {
+  return ogGraphemes(value).reduce(
+    (total, character) =>
+      total +
+      (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Extended_Pictographic}\p{Regional_Indicator}]/u.test(
+        character,
+      )
+        ? 2
+        : 1),
+    0,
+  );
+}
+
+export function truncateOgTitle(value: string, max: number): string {
+  if (ogTextWidthUnits(value) <= max) return value;
+  let result = '';
+  let used = 0;
+  for (const character of ogGraphemes(value)) {
+    const width = ogTextWidthUnits(character);
+    if (used + width > max - 1) break;
+    result += character;
+    used += width;
+  }
+  return max > 0 ? `${result.trimEnd()}…` : '';
+}
+
+/** Layout follows the board language; Unicode bidi handles mixed text within it. */
+export function ogDirection(language: string): 'rtl' | 'ltr' {
+  return /^(ar|he|fa|ur|ps|dv|yi)(-|$)/i.test(language) ? 'rtl' : 'ltr';
+}
+
+/** Isolate each field's paragraph direction from the surrounding card layout. */
+export function ogTextDirection(value: string): 'rtl' | 'ltr' {
+  const firstLetter = value.match(/\p{Letter}/u)?.[0] ?? '';
+  return /[\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Syriac}\p{Script=Thaana}]/u.test(
+    firstLetter,
+  )
+    ? 'rtl'
+    : 'ltr';
 }

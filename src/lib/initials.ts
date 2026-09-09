@@ -8,7 +8,13 @@ export function initialsOf(name: string): string | undefined {
     name
       .split(/\s+/)
       .filter(Boolean)
-      .map((word) => word[0]!)
+      .map(
+        (word) =>
+          new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+            .segment(word)
+            [Symbol.iterator]()
+            .next().value?.segment ?? '',
+      )
       .slice(0, 2)
       .join('')
       .toUpperCase() || undefined
