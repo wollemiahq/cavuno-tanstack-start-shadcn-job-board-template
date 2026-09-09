@@ -25,7 +25,7 @@ export function BoardAdSlot({
   ads?: BoardAdsConfig;
   slotId?: string;
   className?: string;
-  layout?: 'responsive' | 'rail' | 'rectangle' | 'footer';
+  layout?: 'responsive' | 'rail' | 'rectangle';
   media?: string;
   onStatusChange?: (status: AdStatus) => void;
 }) {
@@ -45,13 +45,11 @@ export function BoardAdSlot({
         aria-label={`${m.adRail_label()}: ${placement}`}
         className={cn(
           'border-primary/40 bg-primary/10 text-primary flex flex-col items-center justify-center gap-1 border border-dashed text-center',
-          layout === 'footer'
-            ? 'h-[50px] w-[320px] md:h-[90px] md:w-[728px]'
-            : layout === 'rail'
-              ? 'h-[600px] w-40'
-              : layout === 'rectangle'
-                ? 'h-[250px] w-[300px] max-w-full'
-                : 'min-h-[250px] w-full',
+          layout === 'rail'
+            ? 'h-[600px] w-40'
+            : layout === 'rectangle'
+              ? 'h-[250px] w-[300px] max-w-full'
+              : 'min-h-[250px] w-full',
           className,
         )}
       >
@@ -85,7 +83,7 @@ function AdUnit({
   placement: string;
   clientId: string;
   slot: NonNullable<ReturnType<typeof resolveAdsSlot>>;
-  layout: 'responsive' | 'rail' | 'rectangle' | 'footer';
+  layout: 'responsive' | 'rail' | 'rectangle';
   className?: string;
   onStatusChange?: (status: AdStatus) => void;
 }) {
@@ -128,16 +126,11 @@ function AdUnit({
     >
       <ins
         ref={unitRef}
-        className={cn(
-          'adsbygoogle',
-          layout === 'footer' && 'h-[50px] w-[320px] md:h-[90px] md:w-[728px]',
-        )}
+        className="adsbygoogle"
         data-ad-client={clientId}
         data-ad-slot={slot.slotId}
         data-ad-format={
-          layout === 'footer'
-            ? undefined
-            : (slot.format ?? (layout === 'responsive' ? 'auto' : undefined))
+          slot.format ?? (layout === 'responsive' ? 'auto' : undefined)
         }
         data-ad-layout={slot.layout}
         data-full-width-responsive={

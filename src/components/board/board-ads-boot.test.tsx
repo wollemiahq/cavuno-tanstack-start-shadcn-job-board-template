@@ -5,8 +5,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { cleanup, render as renderUI } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { BoardAdFooter } from './board-ad-footer';
 import { BoardAdPreviewProvider } from './board-ad-preview';
+import { BoardAdsBoot } from './board-ads-boot';
 import { BoardAdsProvider } from './board-ads-provider';
 
 import { CookieConsentProvider } from '@/components/cookie-consent';
@@ -42,7 +42,7 @@ function setup(config = ads, hasMobileBottomBar = false) {
   }));
   return render(
     <BoardAdsProvider ads={config}>
-      <BoardAdFooter hasMobileBottomBar={hasMobileBottomBar} />
+      <BoardAdsBoot hasMobileBottomBar={hasMobileBottomBar} />
     </BoardAdsProvider>,
   );
 }
@@ -59,10 +59,14 @@ afterEach(() => {
     width: 1280,
   });
 });
-describe('bottom-only anchor', () => {
-  it('requests a bottom-only anchor without making a manual fixed unit', () => {
+describe('public AdSense loader', () => {
+  it('loads AdSense without forcing anchors or rendering a unit', () => {
     const view = setup();
-    expect(loader()).toHaveAttribute('data-overlays', 'bottom');
+    expect(loader()).toHaveAttribute(
+      'src',
+      expect.stringContaining(ads.clientId),
+    );
+    expect(loader()).not.toHaveAttribute('data-overlays');
     expect(view.container.querySelector('ins')).toBeNull();
     expect(
       view.container.querySelector('[data-slot="board-ad-footer"]'),
@@ -77,24 +81,11 @@ describe('bottom-only anchor', () => {
     setup();
     expect(loader()).toBeNull();
   });
-  it('previews without requests and releases the space when switched off', () => {
+  it('does not load or render a footer in placement preview', () => {
     state.previewAds = true;
     const view = setup();
-    expect(
-      view.container.querySelector('[data-ad-preview="page:footer"]'),
-    ).toBeInTheDocument();
     expect(loader()).toBeNull();
-    expect(
-      document.documentElement.style.getPropertyValue(
-        '--board-ad-footer-height',
-      ),
-    ).toContain('90px');
-    view.unmount();
-    expect(
-      document.documentElement.style.getPropertyValue(
-        '--board-ad-footer-height',
-      ),
-    ).toBe('');
+    expect(view.container).toBeEmptyDOMElement();
   });
   it('does not request or preview over the initial mobile Apply bar', () => {
     state.width = 390;

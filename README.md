@@ -249,22 +249,16 @@ manual placements stay off until the updated API is deployed.
 - Blog articles: 300×250 desktop sidebar (1024px+).
 - Salary pages retain their full-width content layout; no added ad sidebar.
 - Jobs, companies, and talent search: one 160×600 outer rail at 1600px+ width and 900px+ height.
-- Public browsing/reading page shell: Google's regular, non-expanding bottom anchor using
-  `data-overlays="collapsed-bottom"`. Google controls size, fill and dismissal;
-  anchors need no manual slot ID. Account, auth, messaging, posting, payment,
-  legal, and embed pages do not mount the anchor loader or its preview.
+- Public browsing/reading pages load AdSense after consent, without forcing any Auto ads format.
 
 See [placement decisions](docs/advertising.md) for the size and UX rationale.
 
-Manual units scroll with the page; only Google manages the bottom anchor.
-This avoids stacking multiple sticky ads or placing a sticky unit under the header.
-
-Configure the site in AdSense and disable unwanted Auto ads formats there.
-The anchor parameter overrides Google's anchor position/enablement setting.
-On initial mobile job-detail visits the shell does not request an anchor beside
-Apply. Once Google has loaded, it controls anchors across client navigation;
-use AdSense page exclusions for routes that must never show Auto ads.
-[Google's regular bottom-anchor documentation](https://support.google.com/adsense/answer/7478225?hl=en).
+Manual units scroll with the page. To enable a Google-managed bottom anchor,
+configure AdSense → Ads → your site: Auto ads on, Anchor ads on, Bottom only,
+Allow dynamic anchors off, and desktop anchors on. Disable other Auto ads formats
+unless wanted. The starter does not set `data-overlays` or render a footer placeholder.
+Use AdSense page exclusions for private/utility routes and mobile Apply conflicts:
+a script already loaded can remain active during client navigation.
 
 The shared `BoardAdsProvider` supplies defaults. Customize any manual unit in
 frontend code without introducing a server-side placement map:
@@ -280,8 +274,8 @@ wins over the default, including a disabled entry. New customizations can pass
 
 In development or sandbox preview, open the preview toolbar → **Board settings**
 → **Ad placements**. Placeholders read **AD UNIT HERE**, issue no ad requests,
-and persist for the browser tab. The bottom placeholder illustrates a compact
-bar (728×90 desktop, 320×50 mobile); Google may serve different dimensions.
+and persist for the browser tab. Only manual placements are previewed;
+Google-managed anchors must be checked on the deployed site.
 Preview does not remove third-party scripts already loaded before it was enabled.
 
 ## Analytics & conversion tracking

@@ -41,7 +41,7 @@ import { AppRouteErrorPage } from '@/components/app-route-error';
 import { BoardAnalyticsBoot } from '@/components/board-analytics-boot';
 import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
-import { BoardAdFooter } from '@/components/board/board-ad-footer';
+import { BoardAdsBoot } from '@/components/board/board-ads-boot';
 import { isBoardAdPage } from '@/components/board/board-ad-pages';
 import { BoardAdPreviewProvider } from '@/components/board/board-ad-preview';
 import { BoardAdsProvider } from '@/components/board/board-ads-provider';
@@ -515,7 +515,7 @@ function RootChrome({
             <FloatingStackProvider>
               <NavigationProgress />
               {fillsViewport ? (
-                <div className="md:grid md:h-[calc(100dvh-var(--board-ad-footer-height,0px))] md:grid-rows-[auto_minmax(0,1fr)]">
+                <div className="md:grid md:h-dvh md:grid-rows-[auto_minmax(0,1fr)]">
                   {header}
                   {routeContent}
                 </div>
@@ -553,7 +553,7 @@ function RootChrome({
               </Suspense>
               <CookieConsentBanner />
               {isBoardAdPage(location.pathname) && (
-                <BoardAdFooter
+                <BoardAdsBoot
                   key={location.pathname}
                   hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$/.test(
                     location.pathname,

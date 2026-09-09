@@ -101,10 +101,7 @@ body {
   color: var(--foreground);
 }
 
-/* Keep corner controls clear of both illustrative previews and live anchors. */
+/* Keep corner controls clear of Google-managed live anchors. */
 :root {
-  --board-floating-bottom: max(
-    var(--board-ad-footer-height, 0px),
-    var(--board-ad-live-height, 0px)
-  );
+  --board-floating-bottom: var(--board-ad-live-height, 0px);
 }

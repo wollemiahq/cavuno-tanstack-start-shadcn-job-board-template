@@ -502,15 +502,6 @@ Props:
 - `allActive?: boolean | undefined`
 - `tags: ({ id: string; name: string; slug: string; description: string | null; } & { object: "public_blog_tag"; })[]`
 
-### BoardAdFooter — `src/components/board/board-ad-footer.tsx`
-
-Google owns the real anchor. Preview dimensions illustrate a compact bar,
-not a guarantee of Google's serving size. No manual unit is made sticky here.
-
-Props:
-
-- `hasMobileBottomBar?: boolean | undefined`
-
 ### BoardAdPreviewProvider — `src/components/board/board-ad-preview.tsx`
 
 Local, nonsecret development preference; never enables real advertising.
@@ -526,11 +517,19 @@ Props:
 
 - `ads?: BoardAdsConfig | undefined`
 - `className?: string | undefined`
-- `layout?: "responsive" | "rail" | "rectangle" | "footer" | undefined`
+- `layout?: "responsive" | "rail" | "rectangle" | undefined`
 - `media?: string | undefined`
 - `onStatusChange?: ((status: AdStatus) => void) | undefined`
 - `placement?: string | undefined`
 - `slotId?: string | undefined`
+
+### BoardAdsBoot — `src/components/board/board-ads-boot.tsx`
+
+Load AdSense on public pages without requesting or simulating anchor ads.
+
+Props:
+
+- `hasMobileBottomBar?: boolean | undefined`
 
 ### BoardAdsProvider — `src/components/board/board-ads-provider.tsx`
 

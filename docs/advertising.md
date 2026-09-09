@@ -6,13 +6,13 @@ Google-issued slot. The SDK provides one default unit, not a placement map.
 
 | Surface / position | Default | Revenue and usability rationale |
 | --- | --- | --- |
-| Jobs, companies and talent search, outer right edge | 160×600, only at 1600px wide and 900px tall | A standard skyscraper uses otherwise spare space without reducing the results/detail columns. Short screens omit it so the complete unit fits beside navigation and the anchor preview. No automatic second rail. |
-| Job detail, existing sidebar | 300×250 below the actions card | A standard medium rectangle preserves room for company information and alerts. A 300×600 would push these down. The ad has its own space, separate from Apply/Save controls, and scrolls normally. Mobile omits it and the anchor preview so Apply remains the primary action. |
+| Jobs, companies and talent search, outer right edge | 160×600, only at 1600px wide and 900px tall | A standard skyscraper uses otherwise spare space without reducing the results/detail columns. Short screens omit it so the complete unit fits beside navigation. No automatic second rail. |
+| Job detail, existing sidebar | 300×250 below the actions card | A standard medium rectangle preserves room for company information and alerts. A 300×600 would push these down. The ad has its own space, separate from Apply/Save controls, and scrolls normally. Mobile omits it so Apply remains the primary action. |
 | Company detail, existing sidebar | 300×250 after company facts | Fits the existing 320px column. No extra column and no large half-page unit displacing company facts. Scrolls normally. Mobile omits it. |
 | Blog article, author/sidebar column | 300×250 after author information | Uses the existing reading layout without interrupting paragraphs. A medium rectangle is a reasonable initial inventory choice; a half-page unit is an experiment for long articles, not the default for every post. Mobile omits the sidebar unit. |
-| Salary index/detail, blog archives, homepage, about | Bottom anchor only | Preserve full-width charts, tables and cards. Do not invent a sidebar just to hold advertising. |
-| Public bottom edge | Google-managed bottom anchor | Persistent visibility with Google's dismissal behavior. `data-overlays="bottom"` requests bottom-only placement; Google chooses dimensions, expansion and whether to serve. No custom sticky manual banner. |
-| Account, authentication, private messages, posting/payment, legal pages, embeds | No starter anchor or placeholder | Protect private communication and completion of important tasks; avoid ads on thin utility screens. Configure AdSense page exclusions too, because a script already loaded on a public page remains active during client navigation. |
+| Salary index/detail, blog archives, homepage, about | No manual unit | Preserve full-width charts, tables and cards. Do not invent a sidebar just to hold advertising. |
+| Public bottom edge | Optional Google-managed anchor configured in AdSense | The starter loads the normal script but does not force anchors or simulate their size. |
+| Account, authentication, private messages, posting/payment, legal pages, embeds | No public AdSense boot | Configure AdSense page exclusions too, because a script loaded on a public page remains active during client navigation. |
 
 ## Policy and geometry
 
@@ -22,18 +22,15 @@ Google's custom sticky rules are separate: at most one sticky ad in view,
 desktop-only, maximum width 300px, and no overlap or underlap. The starter's
 manual units therefore scroll normally; Google alone controls the real anchor.
 
-The local preview uses a sample 728×90 desktop / 320×50 mobile footer. This is
-an illustrative placeholder, not a promise of Google's actual anchor size. Off
-a sandbox board, the preview pill only appears when `CAVUNO_DEV_TOOLS=1` is set
-in `.dev.vars`; the Vite dev server alone does not enable it, so hosted previews
-(such as the AI builder) never show template-developer tooling.
-The preview reserves footer space and does not request ads. Real serving must
-also be checked in AdSense's preview on the approved domain.
-
-Enable only the desired Auto ads formats in AdSense. Disable unwanted side
-rails, vignettes and in-page placements; the loader's anchor parameter does not
-disable those other formats. Use page exclusions for utility/private routes and
-mobile Apply conflicts. Do not assume a local route guard unloads Google.
+The placement preview shows manual units only and reserves no footer space.
+To match a compact bottom-anchor setup, enable Auto ads and Anchor ads in AdSense,
+select **Bottom only**, turn **Allow dynamic anchors** off, and allow desktop
+anchors. Leave intent-driven, automatic in-page, side rail and vignette formats
+off unless explicitly wanted. Verify real serving on the deployed domain.
+Use page exclusions for utility/private routes and mobile Apply conflicts.
+The shared loader intentionally has no `data-overlays`: that attribute can enable
+anchors even when disabled in the dashboard. Do not assume a local route guard
+unloads Google.
 
 ## What to measure before changing sizes
 
@@ -61,6 +58,8 @@ The floating widget stack measures the visible publisher-side fixed Google ad co
 
 AdSense does not expose a documented anchor-height callback. Detection uses the outer Google ad elements and their fixed ancestor geometry, so changes to Google's markup need ongoing live monitoring. Preview and synthetic-container checks exercise the layout behavior; they are not evidence of a real served impression.
 
-The navigation stays at the top of the viewport. The starter does not reserve space for top anchors or move the header beneath them. The loader sets Google’s documented `data-overlays="bottom"` override before insertion, so placement is requested by the starter without a dashboard change. Google controls creative size and expansion; verify actual served anchors after deployment.
+The navigation stays at the top of the viewport. The starter does not reserve
+space for top anchors or move the header beneath them. Anchor placement and
+format are configured in AdSense, and Google controls actual serving.
 
 At widths/heights below the outer rail breakpoint, search results include one 300×250 rectangle after the third result (or after the last result on shorter pages). The unit is outside selectable result cards. It requires at least 332px viewport width to fit the 300px creative plus mobile gutters; it is absent on empty lists and when the wide rail is eligible. This preserves the master/detail widths and exposes the placement on ordinary laptops and phones.
