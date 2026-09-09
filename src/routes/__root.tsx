@@ -81,6 +81,7 @@ import {
   resolveShellBreadcrumbTrail,
   type ShellBreadcrumbLabels,
 } from '@/lib/shell-breadcrumb';
+import { staleChunkReloadScript } from '@/lib/stale-chunk-reload';
 import { parseTalentSearch } from '@/lib/talent-search';
 import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
 
@@ -656,6 +657,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
           {/* System-mode resolution before first paint (no theme flash). */}
           <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
+          {/* Before any lazy import: a chunk the current deploy no longer
+            ships reloads the document once instead of crashing the page. */}
+          <script
+            dangerouslySetInnerHTML={{ __html: staleChunkReloadScript() }}
+          />
           <SkipToContentLink label={m.siteHeader_skipToContentLabel()} />
           <ClientErrorReportingBoot />
           {children}

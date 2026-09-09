@@ -65,7 +65,9 @@ if (args.includes('--check')) {
     console.error(
       `generated artifacts drifted (hand-edit or stale): ${drifted
         .map(([f]) => f)
-        .join(', ')} — run \`pnpm run gen:design\``,
+        .join(
+          ', ',
+        )} — run \`pnpm run gen:design -- --frontmatter\` (keeps the DESIGN.md body)`,
     );
     process.exit(1);
   }
