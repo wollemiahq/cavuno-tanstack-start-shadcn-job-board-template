@@ -129,6 +129,22 @@ describe('AnalyticsScripts', () => {
     ).toContain(`window.gtag('config',"G-TEST123",{cookie_domain:`);
   });
 
+  it.each([
+    '5173-workspace-token.preview.cavuno.com',
+    '5173-workspace-token.preview-dev.cavuno.com',
+  ])('loads no analytics in a WORKING preview on %s', (hostname) => {
+    render(
+      <AnalyticsScripts
+        analytics={analytics}
+        reportWebVitals={startWebVitalsReporting}
+        hostname={hostname}
+      />,
+    );
+
+    expect(injectedKeys()).toEqual([]);
+    expect(startWebVitalsReporting).not.toHaveBeenCalled();
+  });
+
   it('bootstraps each vendor runtime, not just the script tags', () => {
     // This jsdom setup does not auto-execute appended inline scripts, so
     // run the EXACT injected text by hand and assert its side effects —

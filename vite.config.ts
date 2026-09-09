@@ -13,7 +13,12 @@ import type { ConfigEnv, Plugin } from 'vite';
 
 const previewServer =
   process.env.CAVUNO_PREVIEW_PROXIED === '1'
-    ? { hmr: { protocol: 'wss' as const, clientPort: 443 } }
+    ? {
+        // The sandbox preserves the public Host on WebSocket upgrades.
+        // Vite validates that host before accepting the HMR connection.
+        allowedHosts: ['.preview.cavuno.com', '.preview-dev.cavuno.com'],
+        hmr: { protocol: 'wss' as const, clientPort: 443 },
+      }
     : undefined;
 
 const antiSlopLint = {
@@ -162,6 +167,11 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
 
 function viteConfig(command: ConfigEnv['command']) {
   return defineConfig({
+    define: {
+      'import.meta.env.CAVUNO_HOSTED_PREVIEW': JSON.stringify(
+        process.env.CAVUNO_PREVIEW_PROXIED === '1',
+      ),
+    },
     resolve: { tsconfigPaths: true },
     // Builder sandbox preview proxy: the page is served at
     // https://<port>-<session>-<token>.preview.cavuno.com (edge :443,

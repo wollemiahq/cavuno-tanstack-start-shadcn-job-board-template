@@ -23,4 +23,19 @@ describe('BoardAnalyticsBoot', () => {
     render(<BoardAnalyticsBoot publishableKey="not-a-pk" install={install} />);
     expect(install).not.toHaveBeenCalled();
   });
+
+  it.each([
+    '5173-workspace-token.preview.cavuno.com',
+    '5173-workspace-token.preview-dev.cavuno.com',
+  ])('skips install in a WORKING preview on %s', (hostname) => {
+    const install = vi.fn();
+    render(
+      <BoardAnalyticsBoot
+        publishableKey="pk_test_board"
+        install={install}
+        hostname={hostname}
+      />,
+    );
+    expect(install).not.toHaveBeenCalled();
+  });
 });

@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+import { isWorkingPreviewHostname } from './analytics-preview';
+
 import { useCookieConsent } from '@/components/cookie-consent';
 import { flushBoardPixelQueue } from '@/lib/board-pixel-conversions';
 import { startWebVitalsReporting } from '@/lib/web-vitals';
@@ -139,19 +141,23 @@ function injectVendorScripts(analytics: BoardAnalyticsConfig) {
 export function AnalyticsScripts({
   analytics,
   reportWebVitals = startWebVitalsReporting,
+  hostname,
 }: {
   analytics: BoardAnalyticsConfig;
   reportWebVitals?: () => Promise<void>;
+  /** Test seam; runtime defaults to the current document host. */
+  hostname?: string;
 }) {
   const { required, choice } = useCookieConsent();
   // Unresolved (`undefined`) and denied/undecided are not allowed yet.
   const allowed = !required || choice === 'accepted';
 
   useEffect(() => {
+    if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) return;
     if (!allowed) return;
     injectVendorScripts(analytics);
     void reportWebVitals();
-  }, [allowed, analytics, reportWebVitals]);
+  }, [allowed, analytics, hostname, reportWebVitals]);
 
   return null;
 }
