@@ -358,6 +358,11 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
     await waitFor(() =>
       expect(pushes).toContainEqual({
@@ -535,6 +540,11 @@ describe('ApplyButton native approval flow', () => {
         onApply={onApply}
       />,
     );
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     await waitFor(() => expect(order).toEqual(['prepare', 'gateway', 'apply']));
@@ -571,6 +581,11 @@ describe('ApplyButton native approval flow', () => {
         onApply={onApply}
       />,
     );
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     expect(await screen.findByRole('alertdialog')).not.toBeNull();
@@ -601,6 +616,11 @@ describe('ApplyButton native approval flow', () => {
         onApply={onApply}
       />,
     );
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
     await waitFor(() =>
@@ -636,12 +656,38 @@ describe('ApplyButton guest apply', () => {
       />,
     );
 
+    await screen.findByRole('button', { name: m.applyButton_applyLabel() });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     expect(
       await screen.findByLabelText(m.apply_guestEmailLabel()),
     ).toBeTruthy();
     expect(
       screen.getByRole('button', { name: m.apply_guestSubmitLabel() }),
     ).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(m.apply_guestEmailLabel()), {
+      target: { value: 'ada@example.com' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.common_closeLabel() }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(
+      screen.getByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    expect(
+      (
+        await screen.findByLabelText<HTMLInputElement>(
+          m.apply_guestEmailLabel(),
+        )
+      ).value,
+    ).toBe('ada@example.com');
   });
 
   it('falls back to the sign-in CTA when no guest handler is wired', async () => {
@@ -692,6 +738,11 @@ describe('ApplyButton guest apply', () => {
       />,
     );
 
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.change(await screen.findByLabelText(m.apply_guestNameLabel()), {
       target: { value: '  Ada Lovelace  ' },
     });
@@ -726,6 +777,11 @@ describe('ApplyButton guest apply', () => {
         }))}
       />,
     );
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
 
     fireEvent.change(await screen.findByLabelText(m.apply_guestEmailLabel()), {
       target: { value: 'ada@example.com' },
@@ -782,9 +838,16 @@ describe('ApplyButton native apply extras', () => {
       onUploadResume: vi.fn(async () => ({ id: 'app_1' })),
     });
 
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.change(
       await screen.findByLabelText(m.apply_guestCoverNoteLabel()),
-      { target: { value: '  I ship boards.  ' } },
+      {
+        target: { value: '  I ship boards.  ' },
+      },
     );
     fireEvent.click(screen.getByRole('button', { name: /apply/i }));
 
@@ -801,6 +864,11 @@ describe('ApplyButton native apply extras', () => {
     renderNative({ onApply, onUploadResume });
 
     const file = resumeFile();
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     fireEvent.change(
       await screen.findByLabelText(m.applyButton_resumeLabel()),
       {
@@ -821,10 +889,15 @@ describe('ApplyButton native apply extras', () => {
     ).not.toBeNull();
   });
 
-  it('keeps one-click apply: no resume chosen means no upload call', async () => {
+  it('submits without an upload when no resume is chosen', async () => {
     const onApply = vi.fn(async () => ({ id: 'app_1' }));
     const onUploadResume = vi.fn(async () => ({ id: 'app_1' }));
     renderNative({ onApply, onUploadResume });
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
 
     fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
 
@@ -841,6 +914,11 @@ describe('ApplyButton native apply extras', () => {
   it('omits the resume field when no upload handler is wired', async () => {
     renderNative({ onApply: vi.fn(async () => ({ id: 'app_1' })) });
 
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     await screen.findByLabelText(m.apply_guestCoverNoteLabel());
     expect(screen.queryByLabelText(m.applyButton_resumeLabel())).toBeNull();
   });
@@ -851,6 +929,11 @@ describe('ApplyButton native apply extras', () => {
       throw new Error('upload failed');
     });
     renderNative({ onApply, onUploadResume });
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
 
     fireEvent.change(
       await screen.findByLabelText(m.applyButton_resumeLabel()),
@@ -873,6 +956,11 @@ describe('ApplyButton native apply extras', () => {
       .mockRejectedValueOnce(new Error('upload failed'))
       .mockResolvedValueOnce({ id: 'app_1' });
     renderNative({ onApply, onUploadResume });
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
 
     fireEvent.change(
       await screen.findByLabelText(m.applyButton_resumeLabel()),
@@ -920,14 +1008,27 @@ describe('ApplyButton native apply extras', () => {
     }
     renderWithConversion(<Host />);
 
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
+
     const input = await screen.findByLabelText<HTMLInputElement>(
       m.applyButton_resumeLabel(),
     );
     fireEvent.change(input, { target: { files: [resumeFile()] } });
     expect(input.files).toHaveLength(1);
 
+    fireEvent.click(
+      screen.getByRole('button', { name: m.common_closeLabel() }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     fireEvent.click(screen.getByRole('button', { name: 'switch job' }));
 
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.applyButton_applyLabel() }),
+    );
+    await screen.findByRole('dialog');
     const fresh = await screen.findByLabelText<HTMLInputElement>(
       m.applyButton_resumeLabel(),
     );

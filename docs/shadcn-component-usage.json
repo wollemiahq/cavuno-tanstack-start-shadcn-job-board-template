@@ -419,6 +419,7 @@
       "status": "used",
       "productionReferences": [
         "src/components/alert-manager.tsx",
+        "src/components/board/apply-button.tsx",
         "src/components/board/talent-lists-picker.tsx",
         "src/components/board/talent-message-action.tsx",
         "src/components/education-section.tsx",

@@ -17,7 +17,13 @@
  * Auth/verify/applications CTAs use TanStack Link for same-origin SPA
  * navigation; external apply stays a plain `<a target="_blank">`.
  */
-import { lazy, Suspense, useState, type FormEvent } from 'react';
+import {
+  lazy,
+  Suspense,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 
 import { analytics } from '@cavuno/board/analytics';
 import { Link } from '@tanstack/react-router';
@@ -31,6 +37,13 @@ import {
 import { useBoardConversionAnalytics } from '@/components/board-conversion-analytics';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button, buttonVariants } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,6 +79,43 @@ const APPLICATION_RESUME_ACCEPT = '.pdf,.doc,.docx,.odt,.rtf,.txt';
 const applyButtonDependencies: ApplyButtonDependencies = {
   loadGatewayApply: () => import('@/lib/gateway-apply'),
 };
+
+function NativeApplyDialog({
+  title,
+  pending,
+  children,
+  onClose,
+}: {
+  title: string;
+  pending: boolean;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (pending) return;
+        setOpen(nextOpen);
+        if (!nextOpen) onClose();
+      }}
+    >
+      <DialogTrigger render={<Button size="lg" />}>
+        {m.applyButton_applyLabel()}
+      </DialogTrigger>
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
+        showCloseButton={!pending}
+      >
+        <DialogHeader className="pe-8">
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function ApplyButton({
   jobId,
@@ -222,6 +272,9 @@ export function ApplyButton({
   if (jobSlug !== trackedJob) {
     setTrackedJob(jobSlug);
     setState('idle');
+    setGuestName('');
+    setGuestEmail('');
+    setGuestCoverNote('');
     setCoverNote('');
     setResumeFile(null);
   }
@@ -365,7 +418,7 @@ export function ApplyButton({
       );
     case 'guest':
       // Wall off ⇒ the platform accepts an anonymous apply. Collect the
-      // employer's reply address inline rather than sending the candidate
+      // employer's reply address in a dialog rather than sending the candidate
       // through registration and losing the application.
       if (state === 'guest-submitted') {
         return (
@@ -378,229 +431,243 @@ export function ApplyButton({
         );
       }
       return (
-        <form
-          method="post"
-          className="flex flex-col gap-3"
-          onSubmit={async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            if (!onGuestApply) return;
-            setState('applying');
-            // Guest apply IS a native apply — track it exactly as the
-            // signed-in native path does, or the 129 wall-off boards go
-            // dark in the conversion pipeline.
-            trackApplyClick('native');
-            try {
-              const result = await onGuestApply({
-                jobSlug: action.jobSlug,
-                name: guestName.trim() || undefined,
-                email: guestEmail.trim(),
-                coverNote: guestCoverNote.trim() || undefined,
-              });
-              if (result.ok) {
-                trackApplySubmit(result.applicationId);
-              }
-              setState(
-                result.ok
-                  ? 'guest-submitted'
-                  : result.reason === 'guest_not_allowed'
-                    ? 'guest-not-allowed'
-                    : 'error',
-              );
-            } catch {
-              setState('error');
-            }
-          }}
+        <NativeApplyDialog
+          key={jobSlug}
+          title={copy.guestApplyHeading}
+          pending={state === 'applying'}
+          onClose={() => setResumeFile(null)}
         >
-          <p className="text-sm font-medium">{copy.guestApplyHeading}</p>
-          <Field>
-            <FieldLabel htmlFor="guest-apply-name">
-              {copy.guestNameLabel}
-            </FieldLabel>
-            <Input
-              id="guest-apply-name"
-              name="name"
-              autoComplete="name"
-              value={guestName}
-              onChange={(event) => setGuestName(event.target.value)}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="guest-apply-email">
-              {copy.guestEmailLabel}
-            </FieldLabel>
-            <Input
-              id="guest-apply-email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={guestEmail}
-              onChange={(event) => setGuestEmail(event.target.value)}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="guest-apply-cover-note">
-              {copy.guestCoverNoteLabel}
-            </FieldLabel>
-            <Textarea
-              id="guest-apply-cover-note"
-              name="coverNote"
-              rows={4}
-              value={guestCoverNote}
-              onChange={(event) => setGuestCoverNote(event.target.value)}
-            />
-          </Field>
-          <Button type="submit" size="lg" disabled={state === 'applying'}>
-            {state === 'applying' ? copy.applyingLabel : copy.guestSubmitLabel}
-          </Button>
-          <Link
-            to="/auth/sign-in"
-            search={candidateAuthSearch(returnTo)}
-            className="text-muted-foreground text-sm underline"
+          <form
+            method="post"
+            className="flex flex-col gap-3"
+            onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              if (!onGuestApply) return;
+              setState('applying');
+              // Guest apply IS a native apply — track it exactly as the
+              // signed-in native path does, or the 129 wall-off boards go
+              // dark in the conversion pipeline.
+              trackApplyClick('native');
+              try {
+                const result = await onGuestApply({
+                  jobSlug: action.jobSlug,
+                  name: guestName.trim() || undefined,
+                  email: guestEmail.trim(),
+                  coverNote: guestCoverNote.trim() || undefined,
+                });
+                if (result.ok) {
+                  trackApplySubmit(result.applicationId);
+                }
+                setState(
+                  result.ok
+                    ? 'guest-submitted'
+                    : result.reason === 'guest_not_allowed'
+                      ? 'guest-not-allowed'
+                      : 'error',
+                );
+              } catch {
+                setState('error');
+              }
+            }}
           >
-            {copy.guestSignInInsteadLabel}
-          </Link>
-          {state === 'guest-not-allowed' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {copy.guestNotAllowedError}
-            </p>
-          ) : null}
-          {state === 'error' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {copy.applicationSubmitError}
-            </p>
-          ) : null}
-        </form>
+            <Field>
+              <FieldLabel htmlFor="guest-apply-name">
+                {copy.guestNameLabel}
+              </FieldLabel>
+              <Input
+                id="guest-apply-name"
+                name="name"
+                autoComplete="name"
+                value={guestName}
+                onChange={(event) => setGuestName(event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="guest-apply-email">
+                {copy.guestEmailLabel}
+              </FieldLabel>
+              <Input
+                id="guest-apply-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={guestEmail}
+                onChange={(event) => setGuestEmail(event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="guest-apply-cover-note">
+                {copy.guestCoverNoteLabel}
+              </FieldLabel>
+              <Textarea
+                id="guest-apply-cover-note"
+                name="coverNote"
+                rows={4}
+                value={guestCoverNote}
+                onChange={(event) => setGuestCoverNote(event.target.value)}
+              />
+            </Field>
+            <Button type="submit" size="lg" disabled={state === 'applying'}>
+              {state === 'applying'
+                ? copy.applyingLabel
+                : copy.guestSubmitLabel}
+            </Button>
+            <Link
+              to="/auth/sign-in"
+              search={candidateAuthSearch(returnTo)}
+              className="text-muted-foreground text-sm underline"
+            >
+              {copy.guestSignInInsteadLabel}
+            </Link>
+            {state === 'guest-not-allowed' ? (
+              <p role="alert" className="text-destructive text-sm">
+                {copy.guestNotAllowedError}
+              </p>
+            ) : null}
+            {state === 'error' ? (
+              <p role="alert" className="text-destructive text-sm">
+                {copy.applicationSubmitError}
+              </p>
+            ) : null}
+          </form>
+        </NativeApplyDialog>
       );
     case 'native':
       // Hosted parity: a signed-in candidate may attach a cover note and a
-      // per-application resume. Both are optional, so the one-click path
-      // (submit straight away, profile resume attached server-side) stays
-      // exactly one click.
+      // per-application resume in the application dialog. Both are optional;
+      // the profile resume is attached server-side when no file is chosen.
       return (
-        <form
-          method="post"
-          className="flex flex-col gap-3"
-          onSubmit={async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            if (state === 'resume-error') {
-              // The application already exists; only the attachment is
-              // outstanding. Re-running apply here would re-hash an edited
-              // cover note and trip the approval replay guard.
-              setState('applying');
-              try {
-                if (onUploadResume && resumeFile) {
-                  await onUploadResume({
-                    jobSlug: action.jobSlug,
-                    file: resumeFile,
-                  });
-                }
-                setState('applied');
-              } catch {
-                setState('resume-error');
-              }
-              return;
-            }
-            setState('applying');
-            trackApplyClick('native');
-            const note = coverNote.trim();
-            try {
-              const application = await runNativeApply({
-                jobSlug: action.jobSlug,
-                prepare: onPrepareApply,
-                submit: (jobSlug, approvalReceipt) =>
-                  onApply(
-                    jobSlug,
-                    approvalReceipt,
-                    note ? { coverNote: note } : undefined,
-                  ),
-              });
-              const applicationId = application?.id;
-              if (applicationId !== undefined) {
-                trackApplySubmit(applicationId);
-              }
-              // The application exists from here on. A failed resume upload
-              // must not read as a failed application: say so, and leave the
-              // form submittable so the candidate can retry the attachment
-              // alone (see the `resume-error` branch above).
-              if (onUploadResume && resumeFile) {
+        <NativeApplyDialog
+          key={jobSlug}
+          title={m.applyButton_applyLabel()}
+          pending={state === 'applying'}
+          onClose={() => setResumeFile(null)}
+        >
+          <form
+            method="post"
+            className="flex flex-col gap-3"
+            onSubmit={async (event: FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              if (state === 'resume-error') {
+                // The application already exists; only the attachment is
+                // outstanding. Re-running apply here would re-hash an edited
+                // cover note and trip the approval replay guard.
+                setState('applying');
                 try {
-                  await onUploadResume({
-                    jobSlug: action.jobSlug,
-                    file: resumeFile,
-                  });
+                  if (onUploadResume && resumeFile) {
+                    await onUploadResume({
+                      jobSlug: action.jobSlug,
+                      file: resumeFile,
+                    });
+                  }
+                  setState('applied');
                 } catch {
                   setState('resume-error');
-                  return;
                 }
-              }
-              setState('applied');
-            } catch (error) {
-              // A stale verification state routes to the verify page;
-              // any other failure surfaces loudly (never a silent
-              // revert — "fail loud", and never an unhandled rejection).
-              if (String(error).includes('EMAIL_UNVERIFIED')) {
-                window.location.assign(candidateVerifyEmailHref(returnTo));
                 return;
               }
-              setState(
-                error instanceof NativeApplyApprovalError &&
-                  error.reason === 'denied'
-                  ? 'location-denied'
-                  : 'error',
-              );
-            }
-          }}
-        >
-          <Field>
-            <FieldLabel htmlFor="native-apply-cover-note">
-              {copy.guestCoverNoteLabel}
-            </FieldLabel>
-            <Textarea
-              id="native-apply-cover-note"
-              name="coverNote"
-              rows={4}
-              value={coverNote}
-              onChange={(event) => setCoverNote(event.target.value)}
-            />
-          </Field>
-          {onUploadResume ? (
-            <Field>
-              <FieldLabel htmlFor="native-apply-resume">
-                {m.applyButton_resumeLabel()}
-              </FieldLabel>
-              <Input
-                // Uncontrolled: re-key per job so a file picked for the
-                // previous job cannot linger in the DOM after a same-route
-                // navigation (the similar-jobs rail) while state says none.
-                key={jobSlug}
-                id="native-apply-resume"
-                name="resume"
-                type="file"
-                accept={APPLICATION_RESUME_ACCEPT}
-                onChange={(event) =>
-                  setResumeFile(event.target.files?.[0] ?? null)
+              setState('applying');
+              trackApplyClick('native');
+              const note = coverNote.trim();
+              try {
+                const application = await runNativeApply({
+                  jobSlug: action.jobSlug,
+                  prepare: onPrepareApply,
+                  submit: (jobSlug, approvalReceipt) =>
+                    onApply(
+                      jobSlug,
+                      approvalReceipt,
+                      note ? { coverNote: note } : undefined,
+                    ),
+                });
+                const applicationId = application?.id;
+                if (applicationId !== undefined) {
+                  trackApplySubmit(applicationId);
                 }
+                // The application exists from here on. A failed resume upload
+                // must not read as a failed application: say so, and leave the
+                // form submittable so the candidate can retry the attachment
+                // alone (see the `resume-error` branch above).
+                if (onUploadResume && resumeFile) {
+                  try {
+                    await onUploadResume({
+                      jobSlug: action.jobSlug,
+                      file: resumeFile,
+                    });
+                  } catch {
+                    setState('resume-error');
+                    return;
+                  }
+                }
+                setState('applied');
+              } catch (error) {
+                // A stale verification state routes to the verify page;
+                // any other failure surfaces loudly (never a silent
+                // revert — "fail loud", and never an unhandled rejection).
+                if (String(error).includes('EMAIL_UNVERIFIED')) {
+                  window.location.assign(candidateVerifyEmailHref(returnTo));
+                  return;
+                }
+                setState(
+                  error instanceof NativeApplyApprovalError &&
+                    error.reason === 'denied'
+                    ? 'location-denied'
+                    : 'error',
+                );
+              }
+            }}
+          >
+            <Field>
+              <FieldLabel htmlFor="native-apply-cover-note">
+                {copy.guestCoverNoteLabel}
+              </FieldLabel>
+              <Textarea
+                id="native-apply-cover-note"
+                name="coverNote"
+                rows={4}
+                value={coverNote}
+                onChange={(event) => setCoverNote(event.target.value)}
               />
             </Field>
-          ) : null}
-          <Button type="submit" size="lg" disabled={state === 'applying'}>
-            {state === 'applying'
-              ? copy.applyingLabel
-              : m.applyButton_applyLabel()}
-          </Button>
-          {state === 'error' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {copy.applicationSubmitError}
-            </p>
-          ) : null}
-          {state === 'resume-error' ? (
-            <p role="alert" className="text-destructive text-sm">
-              {m.applyButton_resumeUploadError()}
-            </p>
-          ) : null}
-          {locationDialog}
-        </form>
+            {onUploadResume ? (
+              <Field>
+                <FieldLabel htmlFor="native-apply-resume">
+                  {m.applyButton_resumeLabel()}
+                </FieldLabel>
+                <Input
+                  // Uncontrolled: re-key per job so a file picked for the
+                  // previous job cannot linger in the DOM after a same-route
+                  // navigation (the similar-jobs rail) while state says none.
+                  key={jobSlug}
+                  id="native-apply-resume"
+                  name="resume"
+                  type="file"
+                  accept={APPLICATION_RESUME_ACCEPT}
+                  onChange={(event) =>
+                    setResumeFile(event.target.files?.[0] ?? null)
+                  }
+                />
+              </Field>
+            ) : null}
+            <Button type="submit" size="lg" disabled={state === 'applying'}>
+              {state === 'applying'
+                ? copy.applyingLabel
+                : m.applyButton_applyLabel()}
+            </Button>
+            {state === 'error' ? (
+              <p role="alert" className="text-destructive text-sm">
+                {copy.applicationSubmitError}
+              </p>
+            ) : null}
+            {state === 'resume-error' ? (
+              <p role="alert" className="text-destructive text-sm">
+                {m.applyButton_resumeUploadError()}
+              </p>
+            ) : null}
+            {locationDialog}
+          </form>
+        </NativeApplyDialog>
       );
   }
 }

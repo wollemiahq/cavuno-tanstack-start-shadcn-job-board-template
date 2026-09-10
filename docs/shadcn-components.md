@@ -36,7 +36,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `combobox` | Used (8) | `src/components/board/talent-list-job-link.tsx`<br>`src/components/board/talent-save-to-job.tsx`<br>`src/components/company-search-combobox.tsx`<br>+5 more in the JSON ledger |
 | `command` | Available | Installed for adoption when the product needs this behavior. |
 | `context-menu` | Available | Installed for adoption when the product needs this behavior. |
-| `dialog` | Used (11) | `src/components/alert-manager.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>`src/components/board/talent-message-action.tsx`<br>+8 more in the JSON ledger |
+| `dialog` | Used (12) | `src/components/alert-manager.tsx`<br>`src/components/board/apply-button.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>+9 more in the JSON ledger |
 | `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (7) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>+4 more in the JSON ledger |
