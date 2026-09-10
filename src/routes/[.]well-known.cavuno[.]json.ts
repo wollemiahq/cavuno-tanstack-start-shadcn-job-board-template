@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { readBoardContext } from '../lib/board-context-cache';
-import { routeTree } from '../routeTree.gen';
 import { createWellKnownRouteHandler } from './-well-known-handler';
 
 /**
@@ -12,17 +11,16 @@ import { createWellKnownRouteHandler } from './-well-known-handler';
  * Routes are enumerated from the generated TanStack route tree via the
  * SDK's structural walker. No cavunoPage markers exist in this app yet.
  *
- * The static import of `routeTree.gen.ts` (which imports every route,
- * including this one) is an intentional module cycle: nothing here touches
- * the binding at evaluation time — it is only read inside the deferred
- * request handler, by which point the tree module is fully initialized.
+ * Load the generated tree only inside the request handler. Importing it at
+ * module scope creates a cycle through this route; concurrent dev-server
+ * reloads can then observe this route before its export is initialized.
  */
 import type { TanStackRouteNode } from '@cavuno/board/well-known';
 
 // SAFETY: TanStack's generated route tree satisfies the SDK's structural
 // route-node contract; the assertion bridges their independently named types.
 const wellKnownHandler = createWellKnownRouteHandler(
-  () => routeTree as TanStackRouteNode,
+  async () => (await import('../routeTree.gen')).routeTree as TanStackRouteNode,
   async () => (await readBoardContext()).features.impressum,
 );
 

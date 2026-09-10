@@ -11,12 +11,9 @@ import { describe, expect, it } from 'vitest';
  * createWellKnownHandler and routeEntriesFromTanStackRouteTree against this
  * board's canonical path structure.
  *
- * The route imports routeTree.gen statically (read only inside the deferred
- * handler); we mock that module with a tree that mirrors the starter's public
- * roles so the test stays free of the cloudflare:workers graph that the real
- * routeTree import would pull in. A separate assertion pins the real
- * routeTree's job-detail template via the file-based enumerator (no full gen
- * import).
+ * Exercise the handler with a deferred route tree, then verify the real
+ * file-based route inventory independently. The route module must not import
+ * that inventory eagerly: it is itself a member of the generated tree.
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -46,7 +43,7 @@ const starterRoleTree = {
 import { createWellKnownRouteHandler } from './-well-known-handler';
 
 async function getWellKnown(request: Request): Promise<Response> {
-  const result = await createWellKnownRouteHandler(() => starterRoleTree)(
+  const result = await createWellKnownRouteHandler(async () => starterRoleTree)(
     request,
   );
   if (!(result instanceof Response)) {
@@ -97,13 +94,13 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(source).toContain('createWellKnownRouteHandler');
     expect(handlerSource).toContain('createWellKnownHandler');
     expect(handlerSource).toContain('routeEntriesFromTanStackRouteTree');
-    expect(source).toContain("import { routeTree } from '../routeTree.gen'");
+    expect(source).not.toMatch(/import\s+\{\s*routeTree\s*\}\s+from/);
   });
 
   it('real src/routes file tree compiles jobDetail to the canonical template', () => {
-    // Independent of the mock: walk the actual route files the same way
+    // Independent of the fixture: walk the actual route files the same way
     // route-contract's TanStack file parser does, so a rename of the job
-    // detail route would fail this gate even if the mock stayed green.
+    // detail route would fail this gate even if the fixture stayed green.
     const routesDir = resolve(process.cwd(), 'src/routes');
     const paths: string[] = [];
     for (const name of readdirSync(routesDir)) {
