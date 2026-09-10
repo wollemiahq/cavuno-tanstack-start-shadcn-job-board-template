@@ -2497,6 +2497,7 @@ Props:
 
 - `candidatePaywall: boolean`
 - `children: ReactNode`
+- `dependencies?: RootSessionDependencies | undefined`
 
 ### RouterDevtools — `src/components/router-devtools.tsx`
 
