@@ -6,16 +6,7 @@ import { loadOgFont, ogFontStack } from '../src/lib/og-font';
 import { renderOgPng } from '../src/lib/og-render';
 import { ogText, ogSubsetText, truncateOgTitle } from '../src/lib/og-text';
 
-const cases: Record<
-  string,
-  {
-    language: string;
-    company: string;
-    title: string;
-    location: string;
-    logo?: string;
-  }
-> = {
+const cases = {
   logo: {
     language: 'en',
     company: 'Example Company',
@@ -98,11 +89,16 @@ const cases: Record<
   },
 };
 
+function isCaseKey(key: string): key is keyof typeof cases {
+  return Object.hasOwn(cases, key);
+}
+
 export default {
   async fetch(request: Request): Promise<Response> {
     const key = new URL(request.url).pathname.slice(1);
     const isBlog = key.startsWith('blog-');
-    const example = cases[isBlog ? key.slice(5) : key];
+    const caseKey = isBlog ? key.slice(5) : key;
+    const example = isCaseKey(caseKey) ? cases[caseKey] : undefined;
     if (!example)
       return new Response(
         `<html><head><meta charset="utf-8"><title>OG Unicode checks</title></head><body><h1>OG Unicode checks</h1><ul>${Object.entries(
@@ -117,6 +113,7 @@ export default {
       );
     const title = truncateOgTitle(example.title, 80);
     const initials = initialsOf(example.company) ?? '';
+    const logo = caseKey === 'logo' ? cases.logo.logo : null;
     const salary = '€90–120K / year';
     const hostname = 'careers.example.com';
     const font = await loadOgFont(
@@ -140,7 +137,7 @@ export default {
           title,
           excerpt: example.location,
           authorName: example.company,
-          authorAvatarUrl: example.logo ?? null,
+          authorAvatarUrl: logo,
           dateLabel: null,
           themeColor: '#27272a',
           fontFamily: ogFontStack(font),
@@ -154,7 +151,7 @@ export default {
         initials,
         salary,
         hostname,
-        logo: example.logo ?? null,
+        logo,
         fontFamily: ogFontStack(font),
       }),
       font,
