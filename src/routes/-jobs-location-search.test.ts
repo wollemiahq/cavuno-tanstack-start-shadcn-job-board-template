@@ -53,6 +53,11 @@ describe('location jobs route — combined keyword and place filtering', () => {
       relatedSearches: undefined,
       head: { meta: [], links: [] },
       jsonLd: [],
+      breadcrumbTrail: [
+        { name: 'Home', href: '/' },
+        { name: 'Jobs', href: '/jobs' },
+        { name: 'Sydney' },
+      ],
     });
   });
 

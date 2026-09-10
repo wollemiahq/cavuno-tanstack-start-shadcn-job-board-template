@@ -19,7 +19,11 @@
  * route still throw notFound / 308 with the same targets as before.
  */
 import { isNotFound } from '@cavuno/board';
-import { jobsCategoryPath, jobsSkillPath } from '@cavuno/board/paths';
+import {
+  BOARD_PATHS,
+  jobsCategoryPath,
+  jobsSkillPath,
+} from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 
@@ -31,6 +35,7 @@ import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
+import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import {
@@ -130,6 +135,15 @@ async function seoBase() {
     language: boardContext.language,
     origin,
   };
+}
+
+/** `{name, href}` trail → `listingJsonLd` `{name, path}` crumbs (localized). */
+function trailJsonLd(trail: { name: string; href?: string }[]) {
+  return trail.map((crumb) =>
+    crumb.href
+      ? { name: crumb.name, path: localizePath(crumb.href) }
+      : { name: crumb.name },
+  );
 }
 
 /** Canonical /jobs listing — list or search + head (jobSearch headingJobs). */
@@ -396,7 +410,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [place, listResult, seo] = await Promise.all([
+      const [place, listResult, seo, placeTree] = await Promise.all([
         resolveOrNull(
           board.taxonomy.places.resolve(data.locationSlug, { headers }),
         ),
@@ -426,6 +440,9 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
               ),
             ),
         seoBase(),
+        // Breadcrumb enrichment only: the place directory carries the
+        // ancestor chain; on failure the trail degrades to the place itself.
+        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
       ]);
       if (!place) return { kind: 'not_found' as const };
       if (place.redirectTo) {
@@ -436,6 +453,13 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const heading = m.locationPage_jobsHeading({ place: place.displayName });
+      // Hosted parity: Home > Jobs > country > … > current place (terminal).
+      const crumbs = breadcrumbsCopy();
+      const breadcrumbTrail = [
+        { name: crumbs.home, href: BOARD_PATHS.home },
+        { name: crumbs.jobs, href: BOARD_PATHS.jobs },
+        ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place),
+      ];
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -451,15 +475,10 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [
-            { name: crumbs.home, path: localizePath('/') },
-            { name: crumbs.jobs, path: localizePath('/jobs') },
-            { name: heading },
-          ],
+          breadcrumbs: trailJsonLd(breadcrumbTrail),
           jobs: list.data,
         }),
       );
@@ -471,6 +490,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         relatedSearches,
         head,
         jsonLd,
+        breadcrumbTrail,
       };
     }),
   );
@@ -497,7 +517,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [place, category, listResult, seo] = await Promise.all([
+      const [place, category, listResult, seo, placeTree] = await Promise.all([
         resolveOrNull(
           board.taxonomy.places.resolve(data.locationSlug, { headers }),
         ),
@@ -515,6 +535,9 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           ),
         ),
         seoBase(),
+        // Breadcrumb enrichment only: the place directory carries the
+        // ancestor chain; on failure the trail degrades to the place itself.
+        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
       ]);
       if (!place || !category) return { kind: 'not_found' as const };
       if (place.redirectTo || category.redirectTo) {
@@ -530,6 +553,16 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         category: category.displayName,
         place: place.displayName,
       });
+      // Hosted parity: Home > Jobs > country > … > place (linked) > category.
+      const crumbs = breadcrumbsCopy();
+      const breadcrumbTrail = [
+        { name: crumbs.home, href: BOARD_PATHS.home },
+        { name: crumbs.jobs, href: BOARD_PATHS.jobs },
+        ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
+          linkCurrent: true,
+        }),
+        { name: category.displayName },
+      ];
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -547,15 +580,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [
-            { name: crumbs.home, path: localizePath('/') },
-            { name: crumbs.jobs, path: localizePath('/jobs') },
-            { name: heading },
-          ],
+          breadcrumbs: trailJsonLd(breadcrumbTrail),
           jobs: list.data,
         }),
       );
@@ -568,6 +596,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         relatedSearches: list.relatedSearches,
         head,
         jsonLd,
+        breadcrumbTrail,
       };
     }),
   );
@@ -590,7 +619,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // Both resolves join the listing/SEO batch (see the sibling
       // location+category page). An alias slug still 308s — it just also
       // fetched a listing it discards, which is the rare path.
-      const [place, skill, listResult, seo] = await Promise.all([
+      const [place, skill, listResult, seo, placeTree] = await Promise.all([
         resolveOrNull(
           board.taxonomy.places.resolve(data.locationSlug, { headers }),
         ),
@@ -608,6 +637,9 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           ),
         ),
         seoBase(),
+        // Breadcrumb enrichment only: the place directory carries the
+        // ancestor chain; on failure the trail degrades to the place itself.
+        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
       ]);
       if (!place || !skill) return { kind: 'not_found' as const };
       if (place.redirectTo || skill.redirectTo) {
@@ -623,6 +655,16 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         skill: skill.displayName,
         place: place.displayName,
       });
+      // Hosted parity: Home > Jobs > country > … > place (linked) > skill.
+      const crumbs = breadcrumbsCopy();
+      const breadcrumbTrail = [
+        { name: crumbs.home, href: BOARD_PATHS.home },
+        { name: crumbs.jobs, href: BOARD_PATHS.jobs },
+        ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
+          linkCurrent: true,
+        }),
+        { name: skill.displayName },
+      ];
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
@@ -640,15 +682,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           count: list.count,
         }),
       });
-      const crumbs = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [
-            { name: crumbs.home, path: localizePath('/') },
-            { name: crumbs.jobs, path: localizePath('/jobs') },
-            { name: heading },
-          ],
+          breadcrumbs: trailJsonLd(breadcrumbTrail),
           jobs: list.data,
         }),
       );
@@ -661,6 +698,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         relatedSearches: list.relatedSearches,
         head,
         jsonLd,
+        breadcrumbTrail,
       };
     }),
   );
