@@ -31,7 +31,7 @@ export interface StaleChunkReloadWindow {
  * inside for that reason).
  */
 export function installStaleChunkReload(win: StaleChunkReloadWindow): void {
-  win.addEventListener('vite:preloadError', function (event) {
+  win.addEventListener('vite:preloadError', function () {
     var key = 'cavuno:stale-chunk-reload';
     var cooldownMs = 60000;
     var now = Date.now();
@@ -47,7 +47,9 @@ export function installStaleChunkReload(win: StaleChunkReloadWindow): void {
     } catch {
       // Same: never let a storage failure block the recovery.
     }
-    event.preventDefault();
+    // Keep the import rejected while navigation is pending. Cancelling this
+    // event makes Vite resolve the failed import as undefined; lazy route and
+    // React.lazy consumers then crash reading its exports before the reload.
     win.location.reload();
   });
 }
