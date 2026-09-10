@@ -28,12 +28,12 @@ function fakeWindow(store: Map<string, string> = new Map()) {
 }
 
 describe('stale-chunk reload', () => {
-  it('reloads once on a failed chunk import and suppresses the rethrow', () => {
+  it('reloads once without converting the failed import into a fulfilled promise', () => {
     const { win, fire, reload, store } = fakeWindow();
     installStaleChunkReload(win);
     const event = fire();
     expect(reload).toHaveBeenCalledTimes(1);
-    expect(event.defaultPrevented).toBe(true);
+    expect(event.defaultPrevented).toBe(false);
     expect(Number(store.get(STALE_CHUNK_RELOAD_KEY))).toBeGreaterThan(0);
   });
 

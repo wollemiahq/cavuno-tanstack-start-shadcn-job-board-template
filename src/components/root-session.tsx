@@ -56,6 +56,27 @@ type RootSessionContextValue = RootSessionValue & {
   clearSession: () => void;
 };
 
+export interface RootSessionDependencies {
+  getSessionShell: () => Promise<
+    Awaited<ReturnType<typeof getRootSessionShellData>>
+  >;
+  getEntitlements: () => Promise<
+    Awaited<ReturnType<typeof getRootSessionEntitlements>>
+  >;
+  getCompanies: () => Promise<Awaited<ReturnType<typeof listCompanies>>>;
+  resolveHasAccessGrant: (
+    candidatePaywall: boolean,
+    hasGrant: boolean,
+  ) => boolean;
+}
+
+const rootSessionDependencies: RootSessionDependencies = {
+  getSessionShell: getRootSessionShellData,
+  getEntitlements: getRootSessionEntitlements,
+  getCompanies: listCompanies,
+  resolveHasAccessGrant: resolveRootHasAccessGrant,
+};
+
 const RootSessionContext = createContext<RootSessionContextValue>({
   user: null,
   employerCompanies: null,
@@ -73,9 +94,11 @@ const RootSessionContext = createContext<RootSessionContextValue>({
 export function RootSessionProvider({
   candidatePaywall,
   children,
+  dependencies = rootSessionDependencies,
 }: {
   candidatePaywall: boolean;
   children: ReactNode;
+  dependencies?: RootSessionDependencies;
 }) {
   const [session, setSession] = useState<RootSessionValue>({
     user: null,
@@ -88,37 +111,50 @@ export function RootSessionProvider({
 
   useEffect(() => {
     let cancelled = false;
-    void getRootSessionShellData()
+    void dependencies
+      .getSessionShell()
       .then((data) => {
         if (cancelled) return;
+        if (!data || !('user' in data)) {
+          throw new TypeError('Invalid root session shell response');
+        }
+        const user = data.user;
         setSession((current) => ({
           ...current,
-          user: data.user,
+          user,
           ready: true,
         }));
-        if (data.user?.emailVerified) {
-          void listCompanies()
+        if (user?.emailVerified) {
+          void dependencies
+            .getCompanies()
             .then((result) => {
               if (cancelled) return;
+              if (!result || !Array.isArray(result.data)) {
+                throw new TypeError('Invalid employer companies response');
+              }
+              const employerCompanies = result.data;
               setSession((current) => ({
                 ...current,
-                employerCompanies: result.data,
+                employerCompanies,
               }));
             })
             .catch(() => undefined);
         }
-        return getRootSessionEntitlements();
+        return dependencies.getEntitlements();
       })
       .then((data) => {
         if (cancelled || !data) return;
+        const hasAccessGrant = dependencies.resolveHasAccessGrant(
+          candidatePaywall,
+          data.hasGrant,
+        );
+        const talentAccess = data.talentAccess;
+        const preview = data.preview;
         setSession((current) => ({
           ...current,
-          hasAccessGrant: resolveRootHasAccessGrant(
-            candidatePaywall,
-            data.hasGrant,
-          ),
-          talentAccess: data.talentAccess,
-          preview: data.preview,
+          hasAccessGrant,
+          talentAccess,
+          preview,
         }));
       })
       .catch(() => {
@@ -128,7 +164,7 @@ export function RootSessionProvider({
     return () => {
       cancelled = true;
     };
-  }, [candidatePaywall]);
+  }, [candidatePaywall, dependencies]);
 
   const clearSession = useCallback(() => {
     setSession((current) => ({
