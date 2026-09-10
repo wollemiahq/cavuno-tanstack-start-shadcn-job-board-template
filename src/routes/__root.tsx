@@ -192,7 +192,11 @@ export const Route = createRootRoute({
           ? [{ rel: 'stylesheet', href: themeMeta.fontsImport }]
           : []),
         ...iconLinks,
-        { rel: 'manifest', href: '/site.webmanifest' },
+        {
+          rel: 'manifest',
+          href: '/site.webmanifest',
+          crossOrigin: 'use-credentials',
+        },
       ],
     };
   },
