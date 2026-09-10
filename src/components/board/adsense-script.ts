@@ -1,6 +1,9 @@
+import { isWorkingPreviewHostname } from '@/components/analytics-preview';
+
 const SCRIPT_ID = 'cavuno-adsense-loader';
 /** Shared loader; Auto ads formats and placement are configured in AdSense. */
 export function ensureAdSenseScript(clientId: string) {
+  if (isWorkingPreviewHostname(window.location.hostname)) return;
   if (document.getElementById(SCRIPT_ID)) return;
   const script = document.createElement('script');
   script.id = SCRIPT_ID;

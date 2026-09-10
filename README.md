@@ -272,6 +272,8 @@ frontend code without introducing a server-side placement map:
 wins over the default, including a disabled entry. New customizations can pass
 `slotId` directly. The second outer search rail remains opt-in via this file.
 
+Hosted working previews automatically show manual ad placeholders and never request live ads, even when placeholders are hidden.
+
 In development or sandbox preview, open the preview toolbar → **Board settings**
 → **Ad placements**. Placeholders read **AD UNIT HERE**, issue no ad requests,
 and persist for the browser tab. Only manual placements are previewed;

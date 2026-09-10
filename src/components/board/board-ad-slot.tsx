@@ -6,6 +6,7 @@ import { useAdMedia } from './board-ad-media';
 import { useBoardAdPreview } from './board-ad-preview';
 import { useBoardAds } from './board-ads-provider';
 
+import { isWorkingPreviewHostname } from '@/components/analytics-preview';
 import { useCookieConsent } from '@/components/cookie-consent';
 import type { BoardAdsConfig } from '@/lib/board-ads';
 import { resolveAdsSlot } from '@/lib/site-ads';
@@ -59,7 +60,14 @@ export function BoardAdSlot({
       </div>
     );
   }
-  if (!allowed || !ads.enabled || !ads.clientId || !slot) return null;
+  if (
+    !allowed ||
+    !ads.enabled ||
+    !ads.clientId ||
+    !slot ||
+    isWorkingPreviewHostname(globalThis.window?.location.hostname ?? '')
+  )
+    return null;
   return (
     <AdUnit
       key={`${ads.clientId}:${slot.slotId}:${layout}`}

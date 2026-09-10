@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import { isWorkingPreviewHostname } from '@/components/analytics-preview';
+
 const STORAGE_KEY = 'cavuno:preview-ad-placements';
 
 const BoardAdPreviewContext = createContext({
@@ -23,21 +25,27 @@ export function BoardAdPreviewProvider({
   children: ReactNode;
 }) {
   const [previewAds, setPreviewAdsState] = useState(false);
+  const [workingPreview, setWorkingPreview] = useState(false);
+  const available = enabled || workingPreview;
 
   useEffect(() => {
-    if (!enabled) {
+    const hosted = isWorkingPreviewHostname(window.location.hostname);
+    setWorkingPreview(hosted);
+    if (!enabled && !hosted) {
       setPreviewAdsState(false);
       return;
     }
     try {
-      setPreviewAdsState(sessionStorage.getItem(STORAGE_KEY) === 'true');
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      setPreviewAdsState(stored === null ? hosted : stored === 'true');
     } catch {
-      // Storage can be unavailable in private or embedded browser contexts.
+      // Hosted previews still show placements when storage is unavailable.
+      setPreviewAdsState(hosted);
     }
   }, [enabled]);
 
   function setPreviewAds(value: boolean) {
-    if (!enabled) return;
+    if (!available) return;
     setPreviewAdsState(value);
     try {
       sessionStorage.setItem(STORAGE_KEY, String(value));
@@ -49,8 +57,8 @@ export function BoardAdPreviewProvider({
   return (
     <BoardAdPreviewContext.Provider
       value={{
-        previewAds: enabled && previewAds,
-        available: enabled,
+        previewAds: available && previewAds,
+        available,
         setPreviewAds,
       }}
     >
