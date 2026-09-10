@@ -23,38 +23,15 @@ export interface StaleChunkReloadWindow {
   location: Pick<Location, 'reload'>;
 }
 
-/**
- * Installs the listener. Inlined into the document as
- * `(${installStaleChunkReload.toString()})(window)` — so it must stay a
- * self-contained function: no imports, no outer references, and no syntax
- * the inline sink cannot carry verbatim (the constants above are repeated
- * inside for that reason).
- */
-export function installStaleChunkReload(win: StaleChunkReloadWindow): void {
-  win.addEventListener('vite:preloadError', function () {
-    var key = 'cavuno:stale-chunk-reload';
-    var cooldownMs = 60000;
-    var now = Date.now();
-    var last = 0;
-    try {
-      last = Number(win.sessionStorage.getItem(key)) || 0;
-    } catch {
-      // Storage disabled: still reload once — the guard is a nicety.
-    }
-    if (now - last < cooldownMs) return;
-    try {
-      win.sessionStorage.setItem(key, String(now));
-    } catch {
-      // Same: never let a storage failure block the recovery.
-    }
-    // Keep the import rejected while navigation is pending. Cancelling this
-    // event makes Vite resolve the failed import as undefined; lazy route and
-    // React.lazy consumers then crash reading its exports before the reload.
-    win.location.reload();
-  });
-}
+// Import raw source so server/client transforms cannot change the inline HTML.
+// The same source is also executable, keeping the listener and inline copy aligned.
+export { default as installStaleChunkReload } from './stale-chunk-reload-runtime.js';
+import runtimeSource from './stale-chunk-reload-runtime.js?raw';
 
-/** The inline `<script>` body for the document head. */
+/** Stable inline script: do not serialize a transformed function with toString(). */
 export function staleChunkReloadScript(): string {
-  return `(${installStaleChunkReload.toString()})(window)`;
+  const functionSource = runtimeSource
+    .slice(runtimeSource.indexOf('export default ') + 'export default '.length)
+    .trim();
+  return `(${functionSource})(window)`;
 }

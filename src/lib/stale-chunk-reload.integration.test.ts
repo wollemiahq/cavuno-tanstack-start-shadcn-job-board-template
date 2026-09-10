@@ -85,3 +85,39 @@ it('keeps a real Vite chunk failure rejected while the document reloads', async 
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+it('emits identical inline HTML in server and minified browser builds', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'stale-chunk-hydration-'));
+  try {
+    const entry = fileURLToPath(
+      new URL('./stale-chunk-reload.ts', import.meta.url),
+    );
+    const scripts: string[] = [];
+    for (const ssr of [true, false]) {
+      const outDir = join(directory, ssr ? 'server' : 'client');
+      await build({
+        configFile: false,
+        logLevel: 'silent',
+        build: {
+          ssr: ssr ? entry : false,
+          minify: !ssr,
+          outDir,
+          rolldownOptions: {
+            input: entry,
+            preserveEntrySignatures: 'strict',
+            output: { entryFileNames: 'entry.mjs' },
+          },
+        },
+      });
+      const { stdout } = await exec(process.execPath, [
+        '--input-type=module',
+        '--eval',
+        `const { staleChunkReloadScript } = await import(${JSON.stringify(pathToFileURL(join(outDir, 'entry.mjs')).href)}); console.log(JSON.stringify(staleChunkReloadScript()));`,
+      ]);
+      scripts.push(JSON.parse(stdout));
+    }
+    expect(scripts[0]).toBe(scripts[1]);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
