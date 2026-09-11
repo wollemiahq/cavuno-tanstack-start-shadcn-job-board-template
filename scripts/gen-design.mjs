@@ -3,6 +3,7 @@ import {
   generateDesignFrontmatter,
   spliceDesignFrontmatter,
 } from './gen-design-lib.mjs';
+import { writeFileIfChanged } from './write-if-changed.mjs';
 
 /**
  * Writes DESIGN.md + design/tokens.dtcg.json
@@ -74,8 +75,10 @@ if (args.includes('--check')) {
   console.log('DESIGN.md + DTCG export match their sources');
 } else {
   for (const [file, content] of targets) {
-    writeFileSync(join(root, file), content);
-    console.log(`wrote ${file}`);
+    // Unchanged bytes stay untouched: a rewrite is a reload on a live dev
+    // server (see write-if-changed.mjs).
+    const wrote = writeFileIfChanged(join(root, file), content);
+    console.log(wrote ? `wrote ${file}` : `${file} unchanged`);
   }
   try {
     execSync('git --no-pager diff --stat -- DESIGN.md design/', {
