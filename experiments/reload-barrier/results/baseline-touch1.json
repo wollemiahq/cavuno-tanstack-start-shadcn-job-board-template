@@ -1,0 +1,806 @@
+{
+  "summary": {
+    "label": "baseline-touch1",
+    "mode": "touch1",
+    "gapMs": 0,
+    "iterations": 5,
+    "at": "2026-09-11T04:01:25.861Z",
+    "failingIterations": 2,
+    "firstBatchNon200": 5,
+    "laterBatchNon200": 0,
+    "totalReloads": 5,
+    "totalHookLines": 0
+  },
+  "results": [
+    {
+      "iteration": 0,
+      "triggerAt": 1789099268658,
+      "reloads": 1,
+      "hookLines": 0,
+      "useContextLines": 0,
+      "firstBatch": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "laterBatches": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "requests": [
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099268658,
+          "ms": 1125,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099268680,
+          "ms": 1208,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099268682,
+          "ms": 1094,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099268682,
+          "ms": 1158,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099269888,
+          "ms": 203,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099269889,
+          "ms": 203,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099269889,
+          "ms": 203,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099269889,
+          "ms": 123,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099270092,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099270093,
+          "ms": 104,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099270093,
+          "ms": 146,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099270093,
+          "ms": 84,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099270239,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099270239,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099270240,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099270240,
+          "ms": 97,
+          "hookInBody": false
+        }
+      ],
+      "epochLog": []
+    },
+    {
+      "iteration": 1,
+      "triggerAt": 1789099271914,
+      "reloads": 1,
+      "hookLines": 0,
+      "useContextLines": 0,
+      "firstBatch": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "laterBatches": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "requests": [
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099271914,
+          "ms": 214,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099271915,
+          "ms": 220,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099271915,
+          "ms": 213,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099271915,
+          "ms": 97,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099272135,
+          "ms": 1487,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099272135,
+          "ms": 1468,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099272135,
+          "ms": 1488,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099272135,
+          "ms": 1486,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099273623,
+          "ms": 208,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099273624,
+          "ms": 120,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099273624,
+          "ms": 212,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099273624,
+          "ms": 206,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099273836,
+          "ms": 172,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099273836,
+          "ms": 166,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099273836,
+          "ms": 189,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099273836,
+          "ms": 166,
+          "hookInBody": false
+        }
+      ],
+      "epochLog": []
+    },
+    {
+      "iteration": 2,
+      "triggerAt": 1789099275547,
+      "reloads": 1,
+      "hookLines": 0,
+      "useContextLines": 0,
+      "firstBatch": [
+        500,
+        500,
+        200,
+        500
+      ],
+      "laterBatches": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "requests": [
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 500,
+          "startedAt": 1789099275548,
+          "ms": 263,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 500,
+          "startedAt": 1789099275548,
+          "ms": 262,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099275548,
+          "ms": 1096,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 500,
+          "startedAt": 1789099275548,
+          "ms": 263,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099276644,
+          "ms": 158,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099276645,
+          "ms": 316,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099276645,
+          "ms": 158,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099276645,
+          "ms": 279,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099276961,
+          "ms": 148,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099276962,
+          "ms": 240,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099276962,
+          "ms": 269,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099276962,
+          "ms": 110,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099277231,
+          "ms": 146,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099277231,
+          "ms": 146,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099277231,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099277231,
+          "ms": 82,
+          "hookInBody": false
+        }
+      ],
+      "epochLog": []
+    },
+    {
+      "iteration": 3,
+      "triggerAt": 1789099278905,
+      "reloads": 1,
+      "hookLines": 0,
+      "useContextLines": 0,
+      "firstBatch": [
+        200,
+        500,
+        200,
+        500
+      ],
+      "laterBatches": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "requests": [
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099278906,
+          "ms": 1269,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 500,
+          "startedAt": 1789099278906,
+          "ms": 290,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099278906,
+          "ms": 1260,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 500,
+          "startedAt": 1789099278906,
+          "ms": 290,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099280176,
+          "ms": 154,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099280176,
+          "ms": 294,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099280176,
+          "ms": 154,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099280176,
+          "ms": 249,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099280470,
+          "ms": 297,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099280470,
+          "ms": 103,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099280470,
+          "ms": 261,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099280470,
+          "ms": 298,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099280768,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099280768,
+          "ms": 146,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099280768,
+          "ms": 147,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099280768,
+          "ms": 81,
+          "hookInBody": false
+        }
+      ],
+      "epochLog": []
+    },
+    {
+      "iteration": 4,
+      "triggerAt": 1789099282439,
+      "reloads": 1,
+      "hookLines": 0,
+      "useContextLines": 0,
+      "firstBatch": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "laterBatches": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "requests": [
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099282439,
+          "ms": 236,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099282440,
+          "ms": 234,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099282440,
+          "ms": 235,
+          "hookInBody": false
+        },
+        {
+          "batch": 0,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099282440,
+          "ms": 106,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099282675,
+          "ms": 1170,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099282675,
+          "ms": 1240,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099282675,
+          "ms": 1153,
+          "hookInBody": false
+        },
+        {
+          "batch": 1,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099282675,
+          "ms": 1290,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099283966,
+          "ms": 123,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099283966,
+          "ms": 205,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099283966,
+          "ms": 211,
+          "hookInBody": false
+        },
+        {
+          "batch": 2,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099283966,
+          "ms": 204,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099284177,
+          "ms": 158,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099284177,
+          "ms": 159,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/",
+          "status": 200,
+          "startedAt": 1789099284177,
+          "ms": 159,
+          "hookInBody": false
+        },
+        {
+          "batch": 3,
+          "path": "/jobs",
+          "status": 200,
+          "startedAt": 1789099284177,
+          "ms": 96,
+          "hookInBody": false
+        }
+      ],
+      "epochLog": []
+    }
+  ]
+}

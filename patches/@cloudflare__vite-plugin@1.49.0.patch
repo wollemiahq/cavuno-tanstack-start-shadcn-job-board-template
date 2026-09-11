@@ -1,0 +1,121 @@
+diff --git a/dist/workers/runner-worker/index.js b/dist/workers/runner-worker/index.js
+index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f01a45642 100644
+--- a/dist/workers/runner-worker/index.js
++++ b/dist/workers/runner-worker/index.js
+@@ -89,6 +89,32 @@ const WORKFLOW_ENTRYPOINT_KEYS = ["run"];
+ //#region src/workers/runner-worker/module-runner.ts
+ /** Module runner instances keyed by environment name */
+ const moduleRunners = /* @__PURE__ */ new Map();
++/**
++* [EXPERIMENT: reload barrier] Request imports must not observe a module graph
++* that a `full-reload` HMR payload is clearing and repopulating.
++* `reloadBarrier` is replaced synchronously (before the HMR handler runs) with a
++* promise that settles only after every full reload received so far has been
++* handled. Top-level request imports await it inside the runner Durable Object.
++* HMR's own entrypoint re-import calls `runner.import()` directly and module
++* dynamic imports use the un-gated `runInRunnerObject()` path, so neither waits
++* on the barrier (no self-deadlock).
++*/
++let reloadEpoch = 0;
++let reloadsPending = 0;
++let reloadBarrier = Promise.resolve();
++let requestSeq = 0;
++/** Debug only: set synchronously around a request's first (synchronous) hop into the import gate. */
++let debugRequestContext;
++function debugReloadEpoch(message) {
++	console.log(`[DEBUG-reload-epoch] ${message} t=${Date.now()}`);
++}
++async function awaitReloadBarrier() {
++	let barrier;
++	do {
++		barrier = reloadBarrier;
++		await barrier;
++	} while (barrier !== reloadBarrier);
++}
+ /** The parent environment name (set explicitly via IS_PARENT_ENVIRONMENT_HEADER) */
+ let parentEnvironmentName;
+ let nextCallbackId = 0;
+@@ -136,7 +162,26 @@ var __VITE_RUNNER_OBJECT__ = class extends DurableObject {
+ 			globalThis.__VITE_ENVIRONMENT_RUNNER_IMPORT__ = async (envName, id) => {
+ 				const runner = moduleRunners.get(envName);
+ 				if (!runner) throw new Error(`Module runner not initialized for environment: "${envName}". Do you need to set \`childEnvironments: ["${envName}"]\` in the plugin config?`);
+-				return runInRunnerObject(this.env, () => runner.import(id));
++				const debugRequest = debugRequestContext;
++				return runInRunnerObject(this.env, async () => {
++					const seq = debugRequest?.seq ?? `import-${++requestSeq}`;
++					const epochAtStart = reloadEpoch;
++					const pendingAtStart = reloadsPending;
++					const waitStart = Date.now();
++					if (this.env.EXP_RELOAD_BARRIER !== "off") await awaitReloadBarrier();
++					const waitedMs = Date.now() - waitStart;
++					if (debugRequest && debugRequest.importEpoch === void 0) Object.assign(debugRequest, {
++						pendingAtImportCall: pendingAtStart,
++						importEpoch: reloadEpoch,
++						waitedMs
++					});
++					debugReloadEpoch(`import-start seq=${seq} id=${id} epochAtCall=${epochAtStart} pendingAtCall=${pendingAtStart} epoch=${reloadEpoch} pending=${reloadsPending} waitedMs=${waitedMs}`);
++					try {
++						return await runner.import(id);
++					} finally {
++						debugReloadEpoch(`import-end seq=${seq} epoch=${reloadEpoch} pending=${reloadsPending}`);
++					}
++				});
+ 			};
+ 		}
+ 		const { 0: client, 1: server } = new WebSocketPair();
+@@ -182,7 +227,28 @@ async function createModuleRunner(env, webSocket, environmentName) {
+ 		transport: {
+ 			connect({ onMessage }) {
+ 				webSocket.addEventListener("message", async ({ data }) => {
+-					onMessage(JSON.parse(data.toString()));
++					const payload = JSON.parse(data.toString());
++					if (payload?.type !== "full-reload") {
++						onMessage(payload);
++						return;
++					}
++					const epoch = ++reloadEpoch;
++					reloadsPending++;
++					let release;
++					const handled = new Promise((resolve) => {
++						release = resolve;
++					});
++					reloadBarrier = Promise.all([reloadBarrier, handled]);
++					debugReloadEpoch(`begin epoch=${epoch} env=${environmentName} pending=${reloadsPending} triggeredBy=${payload.triggeredBy ?? "-"}`);
++					try {
++						await onMessage(payload);
++					} catch (error) {
++						debugReloadEpoch(`error epoch=${epoch} ${error?.message ?? error}`);
++					} finally {
++						reloadsPending--;
++						debugReloadEpoch(`end epoch=${epoch} env=${environmentName} pending=${reloadsPending}`);
++						release();
++					}
+ 				});
+ 				onMessage({
+ 					type: "custom",
+@@ -372,6 +438,25 @@ function createWorkerEntrypointWrapper(exportName) {
+ 			} else return /* @__PURE__ */ new TypeError(`Expected "${exportName}" export of "${workerEntryPath}" to be an object or a class.`);
+ 		});
+ 	};
++	const undebuggedFetch = Wrapper.prototype.fetch;
++	Wrapper.prototype.fetch = async function(request) {
++		const path = new URL(request.url).pathname;
++		if (exportName !== "default" || path === INIT_PATH || path === GET_EXPORT_TYPES_PATH) return undebuggedFetch.call(this, request);
++		const start = Date.now();
++		const debugRequest = { seq: `req-${++requestSeq}` };
++		debugReloadEpoch(`request-start seq=${debugRequest.seq} path=${path} epoch=${reloadEpoch} pending=${reloadsPending}`);
++		let pendingResponse;
++		debugRequestContext = debugRequest;
++		try {
++			pendingResponse = undebuggedFetch.call(this, request);
++		} finally {
++			debugRequestContext = void 0;
++		}
++		const response = await pendingResponse;
++		const overlap = debugRequest.importEpoch === void 0 ? "unknown" : `${debugRequest.pendingAtImportCall > 0 ? "gated" : "idle"}${reloadEpoch > debugRequest.importEpoch ? "+in-flight" : ""}`;
++		debugReloadEpoch(`request-end seq=${debugRequest.seq} path=${path} status=${response?.status} class=${overlap} importEpoch=${debugRequest.importEpoch} waitedMs=${debugRequest.waitedMs} epoch=${reloadEpoch} pending=${reloadsPending} ms=${Date.now() - start}`);
++		return response;
++	};
+ 	return Wrapper;
+ }
+ /** Symbol key for storing the `DurableObject` instance */
