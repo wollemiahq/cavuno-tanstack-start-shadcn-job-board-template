@@ -1,28 +1,8 @@
 ---
 name: Search results
 purpose: A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
-primitives:
-  [
-    SearchResultsLayout,
-    SearchResultsList,
-    SearchResultDetail,
-    SearchResultCard,
-    AdRail,
-  ]
-usedBy:
-  [
-    src/components/search-results/search-results-layout.tsx,
-    src/components/search-results/search-results-list.tsx,
-    src/components/search-results/search-result-detail.tsx,
-    src/components/search-results/search-result-card.tsx,
-    src/components/search-results/ad-rail.tsx,
-    src/components/board/job-search-page.tsx,
-    src/components/board/company-search-page.tsx,
-    src/components/board/talent-search-page.tsx,
-    src/components/board/job-search-result.tsx,
-    src/components/board/company-search-result.tsx,
-    src/components/board/talent-search-result.tsx,
-  ]
+primitives: [SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail]
+usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/components/board/job-search-result.tsx, src/components/board/company-search-result.tsx, src/components/board/talent-search-result.tsx]
 ---
 
 ## Purpose
