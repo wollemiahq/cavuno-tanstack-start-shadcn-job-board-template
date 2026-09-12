@@ -3927,6 +3927,8 @@ Primitives: JobsResultsBar, Select
 
 A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
 
+Primitives: SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail
+
 ### Section heading — `docs/patterns/section-heading.md`
 
 A titled section row with an optional trailing "view all / see all" link.
