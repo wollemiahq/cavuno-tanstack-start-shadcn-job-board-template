@@ -112,7 +112,15 @@ export function HeaderSearchEnhanced({
         className="w-full min-w-0"
       >
         {search.scope === 'jobs' ? (
-          <Suspense fallback={<HeaderSearchFieldsFallback fields={2} />}>
+          // The scope key remounts the boundary on switch: without it the
+          // same Suspense fiber keeps the PREVIOUS scope's fields hidden at
+          // 0x0 while the fallback shows, and those ghost [data-slot]
+          // siblings still match ButtonGroup's `~` corner rules — flattening
+          // the first placeholder's start radius and start border.
+          <Suspense
+            key={search.scope}
+            fallback={<HeaderSearchFieldsFallback fields={2} />}
+          >
             <LazyHeaderSearchJobsFields
               search={search}
               value={value}
@@ -124,7 +132,10 @@ export function HeaderSearchEnhanced({
             />
           </Suspense>
         ) : search.scope === 'companies' ? (
-          <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
+          <Suspense
+            key={search.scope}
+            fallback={<HeaderSearchFieldsFallback fields={1} />}
+          >
             <LazyHeaderSearchCompanyField
               search={search}
               value={value}
@@ -134,7 +145,10 @@ export function HeaderSearchEnhanced({
             />
           </Suspense>
         ) : search.scope === 'blog' ? (
-          <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
+          <Suspense
+            key={search.scope}
+            fallback={<HeaderSearchFieldsFallback fields={1} />}
+          >
             <LazyHeaderSearchBlogField
               search={search}
               value={value}
