@@ -43,7 +43,7 @@
     "gen:messages": "node scripts/gen-paraglide-messages.mjs",
     "locale:add": "node scripts/locale-add.mjs",
     "gen:shadcn": "node scripts/check-shadcn-components.mjs --write",
-    "gen:paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --output-structure locale-modules --strategy url baseLocale",
+    "gen:paraglide": "node scripts/gen-paraglide.mjs --project ./project.inlang --outdir ./src/paraglide --output-structure locale-modules --strategy url baseLocale",
     "pretest": "pnpm run gen:paraglide && pnpm run gen:theme",
     "pretypecheck": "pnpm run gen:paraglide",
     "gen:theme": "node scripts/gen-theme-resolved.mjs",

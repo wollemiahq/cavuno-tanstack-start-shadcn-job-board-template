@@ -3,6 +3,7 @@ import {
   parseTokens,
   tokensHash,
 } from './theme-resolved-lib.mjs';
+import { writeFileIfChanged } from './write-if-changed.mjs';
 
 /**
  * `pnpm run gen:theme` — derive src/theme/resolved.ts from the canonical
@@ -15,7 +16,7 @@ import {
  * platform repo) after a theme change to keep server-rendered surfaces
  * such as emails in step with the repository theme.
  */
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 
 const css = readFileSync('src/theme.css', 'utf8');
 const parsed = parseTokens(css);
@@ -28,8 +29,8 @@ if (process.argv.includes('--payload')) {
   process.exit(0);
 }
 
-mkdirSync('src/theme', { recursive: true });
-writeFileSync(
+// Unchanged bytes stay untouched: a rewrite is a reload on a live dev server.
+const wrote = writeFileIfChanged(
   'src/theme/resolved.ts',
   `/**
  * GENERATED from src/theme.css — do not edit (npm run gen:theme).
@@ -61,5 +62,5 @@ export const themeTokens: ThemeTokens = {
 `,
 );
 console.log(
-  `src/theme/resolved.ts — ${Object.keys(parsed.light).length} light vars, hash ${hash.slice(0, 12)}…`,
+  `src/theme/resolved.ts — ${Object.keys(parsed.light).length} light vars, hash ${hash.slice(0, 12)}…${wrote ? '' : ' (unchanged)'}`,
 );
