@@ -27,6 +27,7 @@ import {
   refreshBoardContext,
   readEmployerOfferGate,
 } from '../lib/board-context-cache';
+import { readBoardSeo } from '../lib/board-seo-cache';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
@@ -201,7 +202,7 @@ export const getSeoBase = createServerFn({ method: 'GET' }).handler(
  * `board.context()` (`logoUrl` + `icons`), not this endpoint.
  */
 export const getBoardSeo = createServerFn({ method: 'GET' }).handler(async () =>
-  getBoard().seo(),
+  readBoardSeo(),
 );
 
 // ── GATED content reads (behind the board-password wall) ────────────────────

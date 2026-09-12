@@ -23,7 +23,7 @@
  * the preview email retarget in `src/server/preview.ts` are genuinely about
  * the request. Those keep `requestOrigin()`.
  */
-import { getBoard } from './board';
+import { readBoardSeo } from './board-seo-cache';
 import { getDataSource } from './data-source.server';
 import { createPublicOriginReader } from './public-origin-core';
 import { requestOrigin } from './request-origin';
@@ -35,7 +35,7 @@ const PUBLIC_ORIGIN_TTL_MS = 30_000;
 
 const reader = createPublicOriginReader(
   {
-    getBoardSeo: () => getBoard().seo(),
+    getBoardSeo: readBoardSeo,
     getRequestOrigin: () => requestOrigin(),
     getDataSource,
     now: Date.now,
