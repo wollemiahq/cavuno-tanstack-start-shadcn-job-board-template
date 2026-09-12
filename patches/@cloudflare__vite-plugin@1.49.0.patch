@@ -1,8 +1,8 @@
 diff --git a/dist/workers/runner-worker/index.js b/dist/workers/runner-worker/index.js
-index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f01a45642 100644
+index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..5f2543dc28f6ab5aac2d41e316916f1e4fe81a29 100644
 --- a/dist/workers/runner-worker/index.js
 +++ b/dist/workers/runner-worker/index.js
-@@ -89,6 +89,32 @@ const WORKFLOW_ENTRYPOINT_KEYS = ["run"];
+@@ -89,6 +89,114 @@ const WORKFLOW_ENTRYPOINT_KEYS = ["run"];
  //#region src/workers/runner-worker/module-runner.ts
  /** Module runner instances keyed by environment name */
  const moduleRunners = /* @__PURE__ */ new Map();
@@ -15,13 +15,27 @@ index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f
 +* HMR's own entrypoint re-import calls `runner.import()` directly and module
 +* dynamic imports use the un-gated `runInRunnerObject()` path, so neither waits
 +* on the barrier (no self-deadlock).
++*
++* [EXPERIMENT: drain] A request that passed the barrier holds a lease until its
++* response body stream closes, errors or is cancelled (streamed SSR keeps
++* rendering after `fetch` resolves). A `full-reload` raises the barrier first,
++* then waits for active leases to reach zero before the HMR handler clears the
++* graph, bounded by a timeout so a long stream or a render that fetches this
++* dev server (it would queue at the barrier while holding a lease) cannot block
++* reloads. A leased request's own entry import skips the barrier.
 +*/
 +let reloadEpoch = 0;
 +let reloadsPending = 0;
++let reloadClears = 0;
 +let reloadBarrier = Promise.resolve();
 +let requestSeq = 0;
-+/** Debug only: set synchronously around a request's first (synchronous) hop into the import gate. */
-+let debugRequestContext;
++/** Leases of requests that passed the barrier and whose response has not finished. */
++const activeLeases = /* @__PURE__ */ new Set();
++/** Resolvers of reloads waiting for `activeLeases` to empty. Created and resolved in the runner DO. */
++const drainWaiters = /* @__PURE__ */ new Set();
++const DEFAULT_DRAIN_TIMEOUT_MS = 5e3;
++/** Set synchronously around a request's first (synchronous) hop into the import gate. */
++let currentRequestLease;
 +function debugReloadEpoch(message) {
 +	console.log(`[DEBUG-reload-epoch] ${message} t=${Date.now()}`);
 +}
@@ -32,27 +46,100 @@ index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f
 +		await barrier;
 +	} while (barrier !== reloadBarrier);
 +}
++/** Runs in the runner DO: wakes reloads waiting for in-flight requests. */
++function notifyDrained() {
++	if (activeLeases.size !== 0) return;
++	debugReloadEpoch(`drain-notify waiters=${drainWaiters.size}`);
++	for (const resolve of drainWaiters) resolve();
++	drainWaiters.clear();
++}
++/** Runs in the runner DO, after the barrier is raised and before the graph is cleared. */
++async function drainInFlight(env, epoch) {
++	if (activeLeases.size === 0) return;
++	const timeoutMs = Number(env.EXP_RELOAD_DRAIN_TIMEOUT_MS) || DEFAULT_DRAIN_TIMEOUT_MS;
++	const start = Date.now();
++	const activeAtStart = activeLeases.size;
++	let resolveDrained;
++	let timer;
++	const drained = new Promise((resolve) => {
++		resolveDrained = resolve;
++		drainWaiters.add(resolve);
++	});
++	const timedOut = await Promise.race([drained.then(() => false), new Promise((resolve) => {
++		timer = setTimeout(() => resolve(true), timeoutMs);
++	})]);
++	clearTimeout(timer);
++	drainWaiters.delete(resolveDrained);
++	const stuck = timedOut ? [...activeLeases].map((l) => `${l.seq}:${l.path}:${Date.now() - l.start}ms`).join(",") : "";
++	debugReloadEpoch(`drain-${timedOut ? "timeout" : "end"} epoch=${epoch} activeAtStart=${activeAtStart} active=${activeLeases.size} waitedMs=${Date.now() - start}${stuck ? ` stuck=${stuck}` : ""}`);
++}
++/** Runs in the requesting worker when its response has fully finished (or failed). */
++function endLease(env, ctx, lease, status, how) {
++	if (lease.done) return;
++	lease.done = true;
++	const overlap = lease.importEpoch === void 0 ? "unknown" : `${lease.pendingAtImportCall > 0 ? "gated" : "idle"}${reloadEpoch > lease.importEpoch ? "+drained" : ""}${reloadClears > lease.importClears ? "+in-flight" : ""}`;
++	debugReloadEpoch(`request-end seq=${lease.seq} path=${lease.path} status=${status} class=${overlap} end=${how} importEpoch=${lease.importEpoch} waitedMs=${lease.waitedMs} epoch=${reloadEpoch} pending=${reloadsPending} responseMs=${lease.responseMs} ms=${Date.now() - lease.start}`);
++	if (!lease.active) return;
++	activeLeases.delete(lease);
++	if (activeLeases.size === 0 && drainWaiters.size > 0) {
++		const notified = runInRunnerObject(env, notifyDrained).catch((error) => debugReloadEpoch(`notify-error ${error?.message ?? error}`));
++		ctx.waitUntil(notified);
++	}
++}
++/** Wraps a response body so `onDone` runs once the stream closes, errors or is cancelled. */
++function trackBody(body, onDone) {
++	const reader = body.getReader();
++	let finished = false;
++	const finish = (how) => {
++		if (finished) return;
++		finished = true;
++		onDone(how);
++	};
++	return new ReadableStream({
++		async pull(controller) {
++			try {
++				const { done, value } = await reader.read();
++				if (done) {
++					finish("close");
++					controller.close();
++				} else controller.enqueue(value);
++			} catch (error) {
++				finish("error");
++				controller.error(error);
++			}
++		},
++		cancel(reason) {
++			finish("cancel");
++			return reader.cancel(reason);
++		}
++	});
++}
  /** The parent environment name (set explicitly via IS_PARENT_ENVIRONMENT_HEADER) */
  let parentEnvironmentName;
  let nextCallbackId = 0;
-@@ -136,7 +162,26 @@ var __VITE_RUNNER_OBJECT__ = class extends DurableObject {
+@@ -136,7 +244,31 @@ var __VITE_RUNNER_OBJECT__ = class extends DurableObject {
  			globalThis.__VITE_ENVIRONMENT_RUNNER_IMPORT__ = async (envName, id) => {
  				const runner = moduleRunners.get(envName);
  				if (!runner) throw new Error(`Module runner not initialized for environment: "${envName}". Do you need to set \`childEnvironments: ["${envName}"]\` in the plugin config?`);
 -				return runInRunnerObject(this.env, () => runner.import(id));
-+				const debugRequest = debugRequestContext;
++				const lease = currentRequestLease;
 +				return runInRunnerObject(this.env, async () => {
-+					const seq = debugRequest?.seq ?? `import-${++requestSeq}`;
++					const seq = lease?.seq ?? `import-${++requestSeq}`;
 +					const epochAtStart = reloadEpoch;
 +					const pendingAtStart = reloadsPending;
 +					const waitStart = Date.now();
-+					if (this.env.EXP_RELOAD_BARRIER !== "off") await awaitReloadBarrier();
++					if (this.env.EXP_RELOAD_BARRIER !== "off" && !lease?.active) await awaitReloadBarrier();
 +					const waitedMs = Date.now() - waitStart;
-+					if (debugRequest && debugRequest.importEpoch === void 0) Object.assign(debugRequest, {
-+						pendingAtImportCall: pendingAtStart,
-+						importEpoch: reloadEpoch,
-+						waitedMs
-+					});
++					if (lease && !lease.active && !lease.done) {
++						lease.active = true;
++						activeLeases.add(lease);
++						Object.assign(lease, {
++							pendingAtImportCall: pendingAtStart,
++							importEpoch: reloadEpoch,
++							importClears: reloadClears,
++							waitedMs
++						});
++					}
 +					debugReloadEpoch(`import-start seq=${seq} id=${id} epochAtCall=${epochAtStart} pendingAtCall=${pendingAtStart} epoch=${reloadEpoch} pending=${reloadsPending} waitedMs=${waitedMs}`);
 +					try {
 +						return await runner.import(id);
@@ -63,13 +150,14 @@ index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f
  			};
  		}
  		const { 0: client, 1: server } = new WebSocketPair();
-@@ -182,7 +227,28 @@ async function createModuleRunner(env, webSocket, environmentName) {
+@@ -182,7 +314,31 @@ async function createModuleRunner(env, webSocket, environmentName) {
  		transport: {
  			connect({ onMessage }) {
  				webSocket.addEventListener("message", async ({ data }) => {
 -					onMessage(JSON.parse(data.toString()));
 +					const payload = JSON.parse(data.toString());
 +					if (payload?.type !== "full-reload") {
++						debugReloadEpoch(`hmr type=${payload?.type} env=${environmentName} ${payload?.type === "update" ? payload.updates?.map((u) => `${u.type}:${u.path}`).join(",") : payload?.event ?? payload?.paths?.join(",") ?? ""} active=${activeLeases.size}`);
 +						onMessage(payload);
 +						return;
 +					}
@@ -80,8 +168,10 @@ index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f
 +						release = resolve;
 +					});
 +					reloadBarrier = Promise.all([reloadBarrier, handled]);
-+					debugReloadEpoch(`begin epoch=${epoch} env=${environmentName} pending=${reloadsPending} triggeredBy=${payload.triggeredBy ?? "-"}`);
++					debugReloadEpoch(`begin epoch=${epoch} env=${environmentName} pending=${reloadsPending} active=${activeLeases.size} triggeredBy=${payload.triggeredBy ?? "-"}`);
 +					try {
++						if (env.EXP_RELOAD_DRAIN !== "off") await drainInFlight(env, epoch);
++						reloadClears++;
 +						await onMessage(payload);
 +					} catch (error) {
 +						debugReloadEpoch(`error epoch=${epoch} ${error?.message ?? error}`);
@@ -93,7 +183,7 @@ index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f
  				});
  				onMessage({
  					type: "custom",
-@@ -372,6 +438,25 @@ function createWorkerEntrypointWrapper(exportName) {
+@@ -372,6 +528,39 @@ function createWorkerEntrypointWrapper(exportName) {
  			} else return /* @__PURE__ */ new TypeError(`Expected "${exportName}" export of "${workerEntryPath}" to be an object or a class.`);
  		});
  	};
@@ -101,20 +191,34 @@ index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..6d16e746714d7ca43978a473a32b839f
 +	Wrapper.prototype.fetch = async function(request) {
 +		const path = new URL(request.url).pathname;
 +		if (exportName !== "default" || path === INIT_PATH || path === GET_EXPORT_TYPES_PATH) return undebuggedFetch.call(this, request);
-+		const start = Date.now();
-+		const debugRequest = { seq: `req-${++requestSeq}` };
-+		debugReloadEpoch(`request-start seq=${debugRequest.seq} path=${path} epoch=${reloadEpoch} pending=${reloadsPending}`);
++		const lease = {
++			seq: `req-${++requestSeq}`,
++			path,
++			start: Date.now(),
++			active: false,
++			done: false
++		};
++		debugReloadEpoch(`request-start seq=${lease.seq} path=${path} epoch=${reloadEpoch} pending=${reloadsPending}`);
 +		let pendingResponse;
-+		debugRequestContext = debugRequest;
++		currentRequestLease = lease;
 +		try {
 +			pendingResponse = undebuggedFetch.call(this, request);
 +		} finally {
-+			debugRequestContext = void 0;
++			currentRequestLease = void 0;
 +		}
-+		const response = await pendingResponse;
-+		const overlap = debugRequest.importEpoch === void 0 ? "unknown" : `${debugRequest.pendingAtImportCall > 0 ? "gated" : "idle"}${reloadEpoch > debugRequest.importEpoch ? "+in-flight" : ""}`;
-+		debugReloadEpoch(`request-end seq=${debugRequest.seq} path=${path} status=${response?.status} class=${overlap} importEpoch=${debugRequest.importEpoch} waitedMs=${debugRequest.waitedMs} epoch=${reloadEpoch} pending=${reloadsPending} ms=${Date.now() - start}`);
-+		return response;
++		let response;
++		try {
++			response = await pendingResponse;
++		} catch (error) {
++			endLease(this.env, this.ctx, lease, "throw", "throw");
++			throw error;
++		}
++		lease.responseMs = Date.now() - lease.start;
++		if (!(response instanceof Response) || !response.body || response.webSocket) {
++			endLease(this.env, this.ctx, lease, response?.status, "nobody");
++			return response;
++		}
++		return new Response(trackBody(response.body, (how) => endLease(this.env, this.ctx, lease, response.status, how)), response);
 +	};
  	return Wrapper;
  }

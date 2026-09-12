@@ -53,8 +53,9 @@ has finished remove those 500s?
       resolved.
 
 Checked on 2026-09-12: the installed `node_modules` file matches pristine
-1.49.0 with this patch applied, and the lockfile `patch_hash` is
-`de01bade…`.
+1.49.0 with this patch applied. The lockfile `patch_hash` was `de01bade…` for
+the barrier-only cut and is `39105847…` after experiment 2 (barrier + drain,
+see below).
 
 ## Method
 
@@ -173,6 +174,117 @@ failing requests with epoch data):
   baseline. Every request that arrives once a reload is known now gets a
   consistent graph.
 
+## Experiment 2: drain before clear (2026-09-12)
+
+Branch merged with starter `origin/main` at `0e7261e` (PR 171, generators skip
+unchanged writes) first. The harness writes files directly, so it still
+triggers reloads.
+
+### What changed in the patch
+
+Same file, same patch. The barrier stays as it was. Added:
+
+- **Request lease.** The `fetch` wrapper (default export only, not the init or
+  export-types paths) creates a lease and sets it synchronously around the
+  first hop into the import gate. The gate marks the lease active right after
+  the barrier wait, in the same synchronous step as the barrier re-check, so
+  no reload can slip in between. The lease ends when the response body stream
+  closes, errors or is cancelled. Bodyless, WebSocket and thrown responses end
+  it at once. The body is re-wrapped in a pull-through `ReadableStream` for
+  this. "Finished" is body end, not `fetch` resolve. In this app `fetch`
+  resolves only a few ms before the body closes, but body end is the boundary
+  that still covers a streamed render.
+- **Drain.** A `full-reload` still raises the barrier synchronously. It then
+  waits for active leases to reach zero, and only then calls the HMR handler
+  (clear + re-import). New requests queue at the barrier as before.
+- **Leased imports skip the barrier.** Without this, a leased request that
+  reaches the gate after a reload has started would wait on a barrier that is
+  waiting on the request. In practice the entry import runs once per request,
+  so this is a guard.
+- **Timeout.** The drain gives up after `EXP_RELOAD_DRAIN_TIMEOUT_MS` (default
+  5000 ms) and logs `drain-timeout` with the stuck leases (seq, path, age).
+  This covers long streams and renders that fetch this dev server, which would
+  queue at the barrier while holding a lease.
+- **Cross-context wake-up.** The lease ends in the request's worker context.
+  The drain waits in the runner DO. The last lease to end calls
+  `notifyDrained` inside the DO through `runInRunnerObject`, wrapped in
+  `ctx.waitUntil`. The first cut (v1) left out `waitUntil`. The request context
+  could close before the wake-up RPC ran, so 2 of 17 drains in v1 slept until
+  the 5 s timeout with 0 active leases (lost wake-up). v2 adds `waitUntil`.
+  Across 91 v2 drains: 0 timeouts.
+- **Experiment switches and logs** (strip before shipping): `EXP_RELOAD_DRAIN=off`
+  gives barrier-only behaviour in the same build. New log lines:
+  `drain-end`/`drain-timeout`, `drain-notify`, `hmr type=…` for payloads that
+  are not full reloads (none seen in these runs), and `request-end` at body end
+  with `end=close|cancel|error|nobody|throw`. New classes: `+drained` (a
+  full-reload arrived while leased) and `+in-flight` (a graph clear actually
+  started while leased).
+
+`classify.mjs` now also reports last-write → last-reload-`end` latency, drain
+waits and drain timeouts.
+
+### Results
+
+Port 3102, sandbox board, `BODY_CHARS=500000` for most runs, so full bodies
+are saved for non-200s. "Barrier-only (same session)" is the same build with
+`EXP_RELOAD_DRAIN=off`, run the same day on the merged branch.
+
+| mode                     | baseline (09-11) | barrier (09-11) | barrier-only, same session | **barrier + drain** |
+| ------------------------ | ---------------: | --------------: | -------------------------: | ------------------: |
+| touch1: iterations failed |              2/5 |            9/25 |                       2/20 |           **1/100** |
+| touch1: non-200           |             5/80 |          22/400 |                      5/320 |          **1/1600** |
+| rewrite2: iterations failed |          20/20 |           16/60 |                      11/40 |            **0/30** |
+| rewrite2: non-200         |           76/320 |          42/960 |                     27/640 |           **0/480** |
+| rewrite3x (gap 25 ms)    |          not run |            0/10 |                    not run |            **0/20** |
+| later batches non-200    |           28/240 |           0/720 |                      0/720 |          **0/1800** |
+
+- `check-preview-hmr.mjs` (10 real `theme.css` edits plus generators): 80/80
+  200 (`drain-check-preview-hmr.txt`).
+- Idle p50, 3 runs (`drain-idle.txt`): `/` 83–92 ms, `/jobs` 78–85 ms. Barrier
+  only was 80–82 and 81–85, baseline 81 and 86. That is within run-to-run
+  noise. One run had a `/` p90 of 1.2 s from two slow upstream calls.
+- Aborted clients: 5 requests cut off by curl after 30 ms ended their leases
+  with `end=cancel` once the render finished. The next reload drained with
+  `active=0`.
+- Deadlocks: none. The v1 lost wake-up doubled as a test of the timeout bound.
+  The reload went ahead at 5.0 s, and the 4 requests queued at the barrier then
+  returned 200.
+
+**Reload delay.** The drain holds a full reload only while a render is in
+flight. There were 91 drains across the 150 drain iterations.
+
+| series                  | drain wait p50 / p90 / max | last write → reload end p50 / p90 / max |
+| ----------------------- | -------------------------: | --------------------------------------: |
+| drain touch1 (100 it)   |     179 / 828 / 3371 ms    |                   523 / 1625 / 4231 ms |
+| barrier-only touch1 (20) |                         — |                     440 / 580 / 692 ms |
+| drain rewrite2 (30 it)  |     169 / 662 / 1843 ms    |                   738 / 2326 / 3811 ms |
+| barrier-only rewrite2 (40) |                       — |                  1043 / 2704 / 8397 ms |
+
+The added delay is the rest of the in-flight render: about 0.2 s typical,
+0.8 s at p90, 3.4 s worst. A render that overlaps a reload is slow, because
+its lazy imports fetch freshly invalidated transforms. For a single edit this
+moves reload-end p50 by about +80 ms and p90 by about +1 s. The rewrite2
+latencies overlap and are dominated by noise.
+
+### Residual
+
+**No `+in-flight` failures in 150 drain iterations.** The getRequestHeader
+and Invalid-hook-call class is gone. In the same-session barrier-only control,
+every one of its 32 failures was `idle+drained+in-flight`, with those two
+errors.
+
+One failure remains, in `drain-touch1-a` iteration 4: `/` returned 500 with
+`(intermediate value) is not a function`, class `idle+drained`. A reload
+arrived during the render, the drain held the clear until 139 ms after the
+render ended, and no clear overlapped it. That signature does not appear in
+any control run. It happened in the first run after a restart that
+re-optimised deps (lockfile changed by `patch-commit`). That run used the
+default 2.5 KB body tail, so there is no stack. It did not recur in the next
+90 touch1 iterations (1 600 requests with full bodies saved) or in 30 rewrite2
+iterations. It may be an optimizer-settling flake, or a render reading a module
+whose server-side transform the file change had just invalidated. Neither is
+proven.
+
 ## Limits
 
 - One machine, one board (sandbox key), two routes, 4-way concurrency. Rates
@@ -194,6 +306,31 @@ failing requests with epoch data):
 
 ## Recommendation
 
+**Updated 2026-09-12, after experiment 2: ship barrier + drain as a dev-only
+pnpm patch.** It meets the bar with one caveat. rewrite2 dropped to 0/30
+(barrier-only in the same session: 11/40). touch1 dropped to 1/100
+(barrier-only: 2/20). The one touch1 failure is not the reload race: no graph
+clear overlapped it, and its signature appears in no control. No deadlocks.
+The timeout never fired in v2. The reload delay is the rest of the in-flight
+render, p50 about 0.2 s and worst 3.4 s, and only when a render is in flight.
+Idle latency is unchanged.
+
+Before shipping:
+
+1. Strip the `[DEBUG-reload-epoch]` logs (keep one warning on
+   `drain-timeout`), the `EXP_RELOAD_BARRIER` and `EXP_RELOAD_DRAIN` switches,
+   and the request classes. The lease, the body wrapper, the `waitUntil`
+   wake-up and the timeout are functional, so they stay.
+2. Decide how leases treat long-lived responses. A `text/event-stream` or
+   another never-ending body would hold a lease, so every reload would wait
+   the full 5 s timeout while it is open. The starter serves none today.
+   Exempting `text/event-stream` is a one-line guard.
+3. Watch the builder preview for the `(intermediate value) is not a function`
+   signature (see Residual). If it recurs, capture the full body and stack.
+4. Still file the upstream issue (below). This patch is a stopgap.
+
+Kept for the record, the recommendation after experiment 1:
+
 **Do not ship the barrier alone as the fix.** It is correct and cheap:
 nothing leaks past it, it adds no idle latency, and it causes no deadlock. It
 removes every failure for requests that arrive during a reload, and makes
@@ -204,21 +341,7 @@ preview case, and touch1 is 9/25 iterations failing either way.
 
 To close the remaining failures:
 
-1. **Drain before clear (next experiment, same patch).** Hold a request lease
-   for the whole request, until the response body stream closes, not just the
-   entry import. The `fetch` wrapper already sees every request. The
-   full-reload listener then waits for active leases to reach zero before it
-   calls `onMessage`. Requests that arrive in the meantime queue at the
-   existing barrier. In-flight renders finish on a consistent old graph, and
-   the client's reload fetches the new one.
-   - The drain wait needs an upper bound. A long-lived stream, or a render that
-     fetches the same dev server, would otherwise block reloads. Such a
-     self-fetch would wait at the barrier while holding a lease, which is a
-     deadlock.
-   - The prediction is touch1 and rewrite2 both at 0/N. If that holds, ship it
-     as a pnpm patch with the debug logging and the `EXP_RELOAD_BARRIER` switch
-     removed. It stays dev-only, but the builder preview runs `vite dev`, so it
-     matters for the product.
+1. **Drain before clear.** Done in experiment 2 above.
 2. **Upstream issue to cloudflare/workers-sdk (vite-plugin), file now.** Include
    the repro (harness `touch1`/`rewrite2`), the code path (requests enter
    through `runInRunnerObject` with no exclusion against the WebSocket
@@ -228,6 +351,5 @@ To close the remaining failures:
    Clearing a shared graph in place cannot give a render a consistent view.
    The barrier and drain patch are the local stopgap. 1.54.6's runner worker
    is byte-identical to 1.49.0 on this path (see the diagnosis).
-3. **Remove the product trigger regardless.** Make `gen-design` write each
-   output only when its bytes change. False invalidations are what produce the
-   two-reload burst in the builder flow.
+3. **Remove the product trigger regardless.** Done upstream in starter PR 171:
+   generators now skip unchanged writes.
