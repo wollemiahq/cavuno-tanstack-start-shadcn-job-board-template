@@ -30,3 +30,8 @@ allowBuilds:
   esbuild: false
   sharp: false
   workerd: false
+
+# Dev-only (`vite dev`) fix for SSR 500s during HMR full reloads; the WHY is in
+# the patch header. Drop it once @cloudflare/vite-plugin fixes this upstream.
+patchedDependencies:
+  '@cloudflare/vite-plugin@1.49.0': patches/@cloudflare__vite-plugin@1.49.0.patch

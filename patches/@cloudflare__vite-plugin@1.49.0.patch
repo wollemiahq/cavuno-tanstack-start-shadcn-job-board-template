@@ -1,0 +1,179 @@
+diff --git a/dist/workers/runner-worker/index.js b/dist/workers/runner-worker/index.js
+index e9e6e6e80e3f8cf6bcf421fe017ec8067c4b8323..d515c09f29c02ef5d5b83901dc297fd1cb045769 100644
+--- a/dist/workers/runner-worker/index.js
++++ b/dist/workers/runner-worker/index.js
+@@ -89,6 +89,92 @@ const WORKFLOW_ENTRYPOINT_KEYS = ["run"];
+ //#region src/workers/runner-worker/module-runner.ts
+ /** Module runner instances keyed by environment name */
+ const moduleRunners = /* @__PURE__ */ new Map();
++/**
++* [starter patch] Reload barrier + drain. Dev only (`vite dev`); a stopgap until
++* the upstream owner fixes it:
++* https://github.com/cloudflare/workers-sdk/tree/main/packages/vite-plugin-cloudflare
++* A `full-reload` HMR payload clears the shared module graph in place
++* and re-imports the entry. A request rendering at that moment mixes module
++* generations and fails with "Invalid hook call" or
++* "getRequestHeader is not a function" 500s.
++*
++* - Barrier: a full reload raises `reloadBarrier`; new request imports wait on
++*   it until the reload has cleared and re-imported the graph.
++* - Drain: each request holds a lease from passing the barrier until its
++*   response body ends. A full reload waits for leases to reach zero before it
++*   clears the graph, at most DRAIN_TIMEOUT_MS (a render that fetches this dev
++*   server would otherwise deadlock). `text/event-stream` responses hold no lease.
++*/
++let reloadBarrier = Promise.resolve();
++/** Leases of requests that passed the barrier and whose response body has not ended. */
++const activeLeases = /* @__PURE__ */ new Set();
++/** Resolvers of reloads waiting for `activeLeases` to empty (created in the runner DO). */
++const drainWaiters = /* @__PURE__ */ new Set();
++const DRAIN_TIMEOUT_MS = 5e3;
++/** Set synchronously while a request makes its first (synchronous) hop into the import gate. */
++let currentRequestLease;
++async function awaitReloadBarrier() {
++	let barrier;
++	do {
++		barrier = reloadBarrier;
++		await barrier;
++	} while (barrier !== reloadBarrier);
++}
++/** Runs in the runner DO after the barrier is raised, before the graph is cleared. */
++async function drainInFlight() {
++	if (activeLeases.size === 0) return;
++	let resolveDrained;
++	let timer;
++	const drained = new Promise((resolve) => {
++		resolveDrained = resolve;
++		drainWaiters.add(resolve);
++	});
++	const timedOut = await Promise.race([drained, new Promise((resolve) => {
++		timer = setTimeout(() => resolve(true), DRAIN_TIMEOUT_MS);
++	})]);
++	clearTimeout(timer);
++	drainWaiters.delete(resolveDrained);
++	if (!timedOut) return;
++	console.warn(`[vite-plugin-cloudflare patch] full reload waited ${DRAIN_TIMEOUT_MS} ms for ${activeLeases.size} in-flight request(s): ${[...activeLeases].map((l) => `${l.path} (${Date.now() - l.start} ms)`).join(", ")}`);
++	// Forget them: a stream whose client went away may never end, and it must not
++	// delay every later reload.
++	activeLeases.clear();
++}
++/** Runs in the request's context when its response has ended (or failed). */
++function endLease(env, ctx, lease) {
++	if (lease.done) return;
++	lease.done = true;
++	if (!activeLeases.delete(lease) || activeLeases.size > 0 || drainWaiters.size === 0) return;
++	// The waiters' promises belong to the runner DO, so resolve them there. waitUntil
++	// keeps this request's context alive until the wake-up has been delivered.
++	ctx.waitUntil(runInRunnerObject(env, () => {
++		if (activeLeases.size > 0) return;
++		for (const resolve of drainWaiters) resolve();
++		drainWaiters.clear();
++	}).catch(() => {}));
++}
++/** Re-wraps a response body so `onDone` runs once it closes, errors or is cancelled. */
++function trackBody(body, onDone) {
++	const reader = body.getReader();
++	return new ReadableStream({
++		async pull(controller) {
++			try {
++				const { done, value } = await reader.read();
++				if (done) {
++					onDone();
++					controller.close();
++				} else controller.enqueue(value);
++			} catch (error) {
++				onDone();
++				controller.error(error);
++			}
++		},
++		cancel(reason) {
++			onDone();
++			return reader.cancel(reason);
++		}
++	});
++}
+ /** The parent environment name (set explicitly via IS_PARENT_ENVIRONMENT_HEADER) */
+ let parentEnvironmentName;
+ let nextCallbackId = 0;
+@@ -136,7 +222,17 @@ var __VITE_RUNNER_OBJECT__ = class extends DurableObject {
+ 			globalThis.__VITE_ENVIRONMENT_RUNNER_IMPORT__ = async (envName, id) => {
+ 				const runner = moduleRunners.get(envName);
+ 				if (!runner) throw new Error(`Module runner not initialized for environment: "${envName}". Do you need to set \`childEnvironments: ["${envName}"]\` in the plugin config?`);
+-				return runInRunnerObject(this.env, () => runner.import(id));
++				const lease = currentRequestLease;
++				return runInRunnerObject(this.env, async () => {
++					// A leased request skips the barrier: the reload may be draining it.
++					if (!lease?.active) await awaitReloadBarrier();
++					// Same synchronous step as the barrier re-check, so no reload slips in between.
++					if (lease && !lease.active && !lease.done) {
++						lease.active = true;
++						activeLeases.add(lease);
++					}
++					return runner.import(id);
++				});
+ 			};
+ 		}
+ 		const { 0: client, 1: server } = new WebSocketPair();
+@@ -182,7 +278,23 @@ async function createModuleRunner(env, webSocket, environmentName) {
+ 		transport: {
+ 			connect({ onMessage }) {
+ 				webSocket.addEventListener("message", async ({ data }) => {
+-					onMessage(JSON.parse(data.toString()));
++					const payload = JSON.parse(data.toString());
++					if (payload?.type !== "full-reload") {
++						onMessage(payload);
++						return;
++					}
++					// Raise the barrier synchronously, before anything awaits.
++					let release;
++					const handled = new Promise((resolve) => {
++						release = resolve;
++					});
++					reloadBarrier = Promise.all([reloadBarrier, handled]);
++					try {
++						await drainInFlight();
++						await onMessage(payload);
++					} finally {
++						release();
++					}
+ 				});
+ 				onMessage({
+ 					type: "custom",
+@@ -372,6 +484,37 @@ function createWorkerEntrypointWrapper(exportName) {
+ 			} else return /* @__PURE__ */ new TypeError(`Expected "${exportName}" export of "${workerEntryPath}" to be an object or a class.`);
+ 		});
+ 	};
++	// [starter patch] Lease the default export's fetch until its response body ends.
++	const unleasedFetch = Wrapper.prototype.fetch;
++	Wrapper.prototype.fetch = async function(request) {
++		const path = new URL(request.url).pathname;
++		if (exportName !== "default" || path === INIT_PATH || path === GET_EXPORT_TYPES_PATH) return unleasedFetch.call(this, request);
++		const lease = {
++			path,
++			start: Date.now(),
++			active: false,
++			done: false
++		};
++		let pending;
++		currentRequestLease = lease;
++		try {
++			pending = unleasedFetch.call(this, request);
++		} finally {
++			currentRequestLease = void 0;
++		}
++		let response;
++		try {
++			response = await pending;
++		} catch (error) {
++			endLease(this.env, this.ctx, lease);
++			throw error;
++		}
++		if (!(response instanceof Response) || !response.body || response.webSocket || response.headers.get("content-type")?.startsWith("text/event-stream")) {
++			endLease(this.env, this.ctx, lease);
++			return response;
++		}
++		return new Response(trackBody(response.body, () => endLease(this.env, this.ctx, lease)), response);
++	};
+ 	return Wrapper;
+ }
+ /** Symbol key for storing the `DurableObject` instance */
