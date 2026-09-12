@@ -219,6 +219,8 @@ export function PageContent({
       aria-label={asideLabel}
       className={cn(
         'flex flex-col gap-6 lg:row-start-1 lg:self-start',
+        // Sticky only — no max-height/overflow. A scrollport clips card rings
+        // and corners (bottom + sides); let tall rails scroll with the page.
         asideSticky && 'lg:sticky lg:top-8',
         asideOrder === 'before' ? 'lg:col-start-1' : 'lg:col-start-2',
       )}
