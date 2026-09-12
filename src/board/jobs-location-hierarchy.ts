@@ -14,9 +14,9 @@
  * South Wales, Australia", is only the fallback when the place is absent from
  * the tree).
  */
-import { jobsLocationPath } from "@cavuno/board/paths";
+import { jobsLocationPath } from '@cavuno/board/paths';
 
-import type { PublicPlace } from "@cavuno/board";
+import type { PublicPlace } from '@cavuno/board';
 
 export interface LocationHierarchyCrumb {
   name: string;
@@ -38,7 +38,7 @@ export interface LocationHierarchyCrumb {
  * keyword-scoped leaf link would be a self-link to the page being rendered).
  */
 export function toJobsLocationHierarchyCrumbs(
-  places: readonly Pick<PublicPlace, "id" | "parentId" | "slug" | "name">[],
+  places: readonly Pick<PublicPlace, 'id' | 'parentId' | 'slug' | 'name'>[],
   current: { sourceSlug: string; canonicalSlug: string; displayName: string },
   options?: {
     linkCurrent?: boolean;
