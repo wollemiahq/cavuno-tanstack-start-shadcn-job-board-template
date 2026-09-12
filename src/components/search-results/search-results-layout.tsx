@@ -43,10 +43,12 @@ export function SearchResultsLayout({
           'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)] min-[1600px]:gap-8 min-[1600px]:px-0',
         !hasStartAd &&
           hasEndAd &&
-          'min-[1600px]:max-w-[92rem] min-[1600px]:grid-cols-[minmax(0,80rem)_10rem] min-[1600px]:gap-8 min-[1600px]:px-0',
+          'xl:max-w-[92rem] xl:grid-cols-[minmax(0,80rem)_10rem] xl:gap-8 xl:px-0',
+        // Two rails fit only at very wide viewports; below 1600px the mounted
+        // pair degrades to the single end-rail layout (the start rail hides).
         hasStartAd &&
           hasEndAd &&
-          'min-[1600px]:max-w-[104rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)_10rem] min-[1600px]:gap-8 min-[1600px]:px-0',
+          'min-[1600px]:max-w-[104rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)_10rem] xl:max-w-[92rem] xl:grid-cols-[minmax(0,80rem)_10rem] xl:gap-8 xl:px-0',
         className,
       )}
     >

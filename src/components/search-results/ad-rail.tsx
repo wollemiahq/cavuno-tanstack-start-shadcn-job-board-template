@@ -11,7 +11,7 @@ export type AdRailProps = Omit<
   side?: 'start' | 'end';
 };
 
-/** A provider-neutral 160 × 600 advertising seam for very wide viewports. */
+/** A provider-neutral 160 × 600 advertising seam for wide viewports. */
 export function AdRail({
   label,
   side,
@@ -26,7 +26,9 @@ export function AdRail({
       data-slot="ad-rail"
       data-side={side}
       className={cn(
-        'hidden min-h-[600px] w-40 min-w-40 self-start overflow-hidden min-[1600px]:block',
+        'hidden min-h-[600px] w-40 min-w-40 self-start overflow-hidden',
+        // The optional second rail waits for room beside the full 80rem core.
+        side === 'start' ? 'min-[1600px]:block' : 'xl:block',
         className,
       )}
     >

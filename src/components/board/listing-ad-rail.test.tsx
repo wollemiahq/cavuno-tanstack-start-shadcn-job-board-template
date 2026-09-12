@@ -65,7 +65,10 @@ describe('listingAdRail', () => {
       vi.stubGlobal('matchMedia', matchMedia);
       const { result } = renderHook(() => useListingAdRails(ads));
       expect(matchMedia).toHaveBeenCalledWith(
-        '(min-width: 1600px) and (min-height: 900px)',
+        '(min-width: 1280px) and (min-height: 700px)',
+      );
+      expect(matchMedia).toHaveBeenCalledWith(
+        '(min-width: 1600px) and (min-height: 700px)',
       );
       expect(Boolean(result.current.endAd)).toBe(matches);
       expect(result.current.startAd).toBeUndefined();

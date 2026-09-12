@@ -1,8 +1,28 @@
 ---
 name: Search results
 purpose: A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
-primitives: [SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail]
-usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/components/board/job-search-result.tsx, src/components/board/company-search-result.tsx, src/components/board/talent-search-result.tsx]
+primitives:
+  [
+    SearchResultsLayout,
+    SearchResultsList,
+    SearchResultDetail,
+    SearchResultCard,
+    AdRail,
+  ]
+usedBy:
+  [
+    src/components/search-results/search-results-layout.tsx,
+    src/components/search-results/search-results-list.tsx,
+    src/components/search-results/search-result-detail.tsx,
+    src/components/search-results/search-result-card.tsx,
+    src/components/search-results/ad-rail.tsx,
+    src/components/board/job-search-page.tsx,
+    src/components/board/company-search-page.tsx,
+    src/components/board/talent-search-page.tsx,
+    src/components/board/job-search-result.tsx,
+    src/components/board/company-search-result.tsx,
+    src/components/board/talent-search-result.tsx,
+  ]
 ---
 
 ## Purpose
@@ -75,14 +95,14 @@ different sticky-header stack sets `--search-results-height` on the layout.
 
 ## Do / Don't
 
-| Do                                                                  | Don't                                                                                           |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Keep every result’s primary activation as a real canonical anchor.  | Turn a result card into a JavaScript-only button or duplicate full detail in the list response. |
-| Give list and detail scope-specific `scrollRestorationId` values.   | Share one scroll position between the two independently scrolling regions.                      |
-| Supply entity-specific children and labels through the named slots. | Add a universal entity schema or a `type` switch to the shared layout.                          |
-| Let the list divider and selected result card communicate structure. | Wrap the list and detail in another rounded, bordered card.                                    |
-| Render `AdRail` only when real creative is available.               | Reserve empty ad columns or show advertising before 1600px compresses the core.                 |
-| Replace the grid with one full-width recovery state when results are empty. | Keep an empty list rail and blank detail pane on screen.                                 |
+| Do                                                                          | Don't                                                                                           |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Keep every result’s primary activation as a real canonical anchor.          | Turn a result card into a JavaScript-only button or duplicate full detail in the list response. |
+| Give list and detail scope-specific `scrollRestorationId` values.           | Share one scroll position between the two independently scrolling regions.                      |
+| Supply entity-specific children and labels through the named slots.         | Add a universal entity schema or a `type` switch to the shared layout.                          |
+| Let the list divider and selected result card communicate structure.        | Wrap the list and detail in another rounded, bordered card.                                     |
+| Render `AdRail` only when real creative is available.                       | Reserve empty ad columns or show advertising before 1280px compresses the core.                 |
+| Replace the grid with one full-width recovery state when results are empty. | Keep an empty list rail and blank detail pane on screen.                                        |
 
 ## Used by
 

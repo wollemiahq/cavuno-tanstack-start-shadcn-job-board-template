@@ -25,7 +25,7 @@ export function ListingAdResults({
               placement="search:inline"
               layout="rectangle"
               className="mx-auto w-[300px] max-w-full"
-              media="(min-width: 332px) and (max-width: 1599px), (min-width: 332px) and (max-height: 899px)"
+              media="(min-width: 332px) and (max-width: 1279px), (min-width: 332px) and (max-height: 699px)"
             />
           )}
         </Fragment>

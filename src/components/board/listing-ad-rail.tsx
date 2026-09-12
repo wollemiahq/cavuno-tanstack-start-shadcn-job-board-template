@@ -19,19 +19,22 @@ export type AdPlacement = {
   content: ReactNode;
 };
 
-// Reserve room for the 600px unit plus navigation, spacing and bottom anchor.
-const RAIL_MIN_WIDTH = '(min-width: 1600px) and (min-height: 900px)';
+// One rail fits once the core keeps ~68rem; shorter screens get the in-list
+// rectangle instead, so the 600px unit is never clipped below the header.
+const RAIL_MIN_WIDTH = '(min-width: 1280px) and (min-height: 700px)';
+// A second rail leaves the core under ~60rem until very wide viewports.
+const DUAL_RAIL_MIN_WIDTH = '(min-width: 1600px) and (min-height: 700px)';
 
-function useMinWidth1600(): boolean {
-  const [wide, setWide] = useState(false);
+function useMediaMatch(query: string): boolean {
+  const [matches, setMatches] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia(RAIL_MIN_WIDTH);
-    const sync = () => setWide(mq.matches);
+    const mq = window.matchMedia(query);
+    const sync = () => setMatches(mq.matches);
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
-  }, []);
-  return wide;
+  }, [query]);
+  return matches;
 }
 
 /** Seek-style 160×600 rail, or an explicit test override. Collapses when ads are off. */
@@ -65,7 +68,8 @@ export function useListingAdRails(
   startOverride?: AdPlacement,
   endOverride?: AdPlacement,
 ) {
-  const wide = useMinWidth1600();
+  const wide = useMediaMatch(RAIL_MIN_WIDTH);
+  const dualWide = useMediaMatch(DUAL_RAIL_MIN_WIDTH);
   const { previewAds } = useBoardAdPreview();
   const { required, choice } = useCookieConsent();
   const allowed = previewAds || !required || choice === 'accepted';
@@ -74,7 +78,7 @@ export function useListingAdRails(
       startOverride,
       'start',
       ads,
-      wide && allowed,
+      dualWide && allowed,
       previewAds,
     ),
     endAd: listingAdRail(endOverride, 'end', ads, wide && allowed, previewAds),

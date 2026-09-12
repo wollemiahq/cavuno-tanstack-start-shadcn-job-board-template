@@ -2503,7 +2503,7 @@ Props:
 
 ### AdRail — `src/components/search-results/ad-rail.tsx`
 
-A provider-neutral 160 × 600 advertising seam for very wide viewports.
+A provider-neutral 160 × 600 advertising seam for wide viewports.
 
 Props:
 
@@ -3926,8 +3926,6 @@ Primitives: JobsResultsBar, Select
 ### Search results — `docs/patterns/search-results.md`
 
 A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
-
-Primitives: SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail
 
 ### Section heading — `docs/patterns/section-heading.md`
 
