@@ -22,6 +22,8 @@ import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   jobsCategoryPath,
+  jobsLocationCategoryPath,
+  jobsLocationSkillPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
@@ -553,13 +555,17 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         category: category.displayName,
         place: place.displayName,
       });
-      // Hosted parity: Home > Jobs > country > … > place (linked) > category.
+      // Hosted parity: Home > Jobs > country > … > place (linked) > category,
+      // with facet-relaxation links — ancestors keep the category scope (same
+      // jobs, wider area) while the current place links its bare listing.
       const crumbs = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: crumbs.home, href: BOARD_PATHS.home },
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
           linkCurrent: true,
+          ancestorPath: (slug) =>
+            jobsLocationCategoryPath(slug, category.canonicalSlug),
         }),
         { name: category.displayName },
       ];
@@ -655,13 +661,17 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         skill: skill.displayName,
         place: place.displayName,
       });
-      // Hosted parity: Home > Jobs > country > … > place (linked) > skill.
+      // Hosted parity: Home > Jobs > country > … > place (linked) > skill,
+      // with the same facet-relaxation trail — ancestors keep the skill
+      // scope, the current place links its bare listing.
       const crumbs = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: crumbs.home, href: BOARD_PATHS.home },
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
           linkCurrent: true,
+          ancestorPath: (slug) =>
+            jobsLocationSkillPath(slug, skill.canonicalSlug),
         }),
         { name: skill.displayName },
       ];

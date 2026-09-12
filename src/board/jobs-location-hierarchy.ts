@@ -28,13 +28,23 @@ export interface LocationHierarchyCrumb {
  * `/skills/:skill` combos it links to its own listing (the tag is terminal).
  * The leaf links by `canonicalSlug` (the 308 target the route already emits),
  * ancestors by their directory `slug`.
+ *
+ * `ancestorPath` overrides the ancestor href builder for the combo pages:
+ * ancestors ride the caller's axis (`{ancestor}/{keyword}` — facet
+ * relaxation, "same jobs, wider area") while the leaf keeps its bare
+ * `jobsLocationPath` (dropping the keyword is the real one-level-up; a
+ * keyword-scoped leaf link would be a self-link to the page being rendered).
  */
 export function toJobsLocationHierarchyCrumbs(
   places: readonly Pick<PublicPlace, 'id' | 'parentId' | 'slug' | 'name'>[],
   current: { sourceSlug: string; canonicalSlug: string; displayName: string },
-  options?: { linkCurrent?: boolean },
+  options?: {
+    linkCurrent?: boolean;
+    ancestorPath?: (slug: string) => string;
+  },
 ): LocationHierarchyCrumb[] {
   const linkCurrent = options?.linkCurrent ?? false;
+  const ancestorPath = options?.ancestorPath ?? jobsLocationPath;
   const leafHref = () => jobsLocationPath(current.canonicalSlug);
   const byId = new Map(places.map((node) => [node.id, node]));
   const bySlug = new Map(
@@ -63,7 +73,7 @@ export function toJobsLocationHierarchyCrumbs(
         ? leafHref()
         : undefined
       : entry.slug
-        ? jobsLocationPath(entry.slug)
+        ? ancestorPath(entry.slug)
         : undefined;
     const name = isLeaf ? current.displayName : entry.name;
     return href ? { name, href } : { name };

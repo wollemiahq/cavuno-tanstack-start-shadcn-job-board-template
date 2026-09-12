@@ -54,6 +54,29 @@ describe('toJobsLocationHierarchyCrumbs', () => {
     ]);
   });
 
+  it('scopes ancestor links to the caller axis while the leaf stays bare', () => {
+    // On a location × keyword page the ancestors relax geography only — the
+    // current place keeps its bare listing (a keyword-scoped leaf would be a
+    // self-link to the page being rendered).
+    expect(
+      toJobsLocationHierarchyCrumbs(
+        [sydney, nsw, australia],
+        sydneyResolution,
+        {
+          linkCurrent: true,
+          ancestorPath: (slug) => `/jobs/locations/${slug}/engineering`,
+        },
+      ),
+    ).toEqual([
+      { name: 'Australia', href: '/jobs/locations/australia/engineering' },
+      {
+        name: 'New South Wales',
+        href: '/jobs/locations/new-south-wales/engineering',
+      },
+      { name: 'Sydney', href: '/jobs/locations/sydney' },
+    ]);
+  });
+
   it('names the leaf from the resolved displayName, not the source-language tree', () => {
     expect(
       toJobsLocationHierarchyCrumbs([sydney, nsw, australia], {
