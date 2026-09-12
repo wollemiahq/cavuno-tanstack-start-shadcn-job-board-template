@@ -79,7 +79,7 @@ export function CompanyJobsSearchBar({
           fallback={
             <span
               aria-hidden="true"
-              className="border-border bg-input/50 h-9 min-w-0 rounded-md border lg:min-w-56 lg:flex-1"
+              className="border-border bg-input/50 h-9 min-w-0 rounded-2xl border lg:min-w-56 lg:flex-1"
             />
           }
         >
