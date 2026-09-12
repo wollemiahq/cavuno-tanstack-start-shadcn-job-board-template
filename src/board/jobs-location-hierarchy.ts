@@ -9,12 +9,14 @@
  * the chain from its internal places table, so the listing pages rebuild it
  * here the same way the salary pages do (`toLocationHierarchyCrumbs` in
  * `salary-view-model.ts`, which walks the `salaries.locations.list()` tree).
- * The tree's slugs are source-language; the leaf crumb's name comes from the
- * resolved `displayName` so a board-language place name is never re-anglicised.
+ * The tree's slugs are source-language; every crumb — leaf included — takes
+ * the node's own short `name` (the qualified `displayName`, e.g. "Sydney, New
+ * South Wales, Australia", is only the fallback when the place is absent from
+ * the tree).
  */
-import { jobsLocationPath } from '@cavuno/board/paths';
+import { jobsLocationPath } from "@cavuno/board/paths";
 
-import type { PublicPlace } from '@cavuno/board';
+import type { PublicPlace } from "@cavuno/board";
 
 export interface LocationHierarchyCrumb {
   name: string;
@@ -36,7 +38,7 @@ export interface LocationHierarchyCrumb {
  * keyword-scoped leaf link would be a self-link to the page being rendered).
  */
 export function toJobsLocationHierarchyCrumbs(
-  places: readonly Pick<PublicPlace, 'id' | 'parentId' | 'slug' | 'name'>[],
+  places: readonly Pick<PublicPlace, "id" | "parentId" | "slug" | "name">[],
   current: { sourceSlug: string; canonicalSlug: string; displayName: string },
   options?: {
     linkCurrent?: boolean;
@@ -75,7 +77,6 @@ export function toJobsLocationHierarchyCrumbs(
       : entry.slug
         ? ancestorPath(entry.slug)
         : undefined;
-    const name = isLeaf ? current.displayName : entry.name;
-    return href ? { name, href } : { name };
+    return href ? { name: entry.name, href } : { name: entry.name };
   });
 }
