@@ -777,6 +777,7 @@ Props:
 - `categories?: HomeCategoryCard[] | undefined`
 - `companies: HomeCompanyCard[]`
 - `companiesCountLabel?: string | undefined`
+- `copy?: { heroTitle: string; heroDescription: string; jobsTitle: string; jobsDescription: string; jobsViewMoreText: string; c…`
 - `employersEnabled: boolean`
 - `jobs: JobCardVM[]`
 - `jobsCountLabel?: string | undefined`
