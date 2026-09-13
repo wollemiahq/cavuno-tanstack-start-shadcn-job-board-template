@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/empty';
 import { localizePath } from '@/lib/localized-path';
 import { httpsAssetUrl } from '@/lib/site-branding';
+import type { HomeCopy } from '@/server/home-copy';
 import type {
   PublicBlogPostSummary,
   TalentDirectoryEntry,
@@ -119,19 +120,24 @@ function CategoryBrowse({ categories }: { categories: HomeCategoryCard[] }) {
 }
 
 function HiringIndex({
+  copy,
   companies,
   countLabel,
 }: {
+  copy?: HomeCopy;
   companies: HomeCompanyCard[];
   countLabel?: string;
 }) {
   return (
     <PageSection
       eyebrow={countLabel}
-      title={m.home_companiesHeading()}
-      description={m.home_companiesDescription()}
+      title={copy?.companiesTitle ?? m.home_companiesHeading()}
+      description={copy?.companiesDescription ?? m.home_companiesDescription()}
       actions={
-        <ViewAllAction label={m.home_viewAllCompaniesLabel()} to="/companies" />
+        <ViewAllAction
+          label={copy?.companiesViewMoreText ?? m.home_viewAllCompaniesLabel()}
+          to="/companies"
+        />
       }
     >
       <PreferListingWorkspace>
@@ -186,6 +192,7 @@ function SignupCtaCard({
 }
 
 export function HomeLanding({
+  copy,
   jobs,
   jobsCountLabel,
   companiesCountLabel,
@@ -204,6 +211,7 @@ export function HomeLanding({
   onSaveJob,
   backgroundImageUrl,
 }: {
+  copy?: HomeCopy;
   jobs: JobCardVM[];
   /** Pre-resolved "N jobs" eyebrow for the Latest jobs section. */
   jobsCountLabel?: string;
@@ -278,8 +286,10 @@ export function HomeLanding({
                     <Grid columns={1} gap="8">
                       <PageHeader
                         size="display"
-                        title={m.home_heroHeadline()}
-                        description={m.home_heroSupporting()}
+                        title={copy?.heroTitle ?? m.home_heroHeadline()}
+                        description={
+                          copy?.heroDescription ?? m.home_heroSupporting()
+                        }
                         actions={
                           <>
                             <Link
@@ -326,10 +336,15 @@ export function HomeLanding({
         {latestJobs.length > 0 ? (
           <PageSection
             eyebrow={jobsCountLabel}
-            title={m.home_latestJobsHeading()}
-            description={m.home_latestJobsDescription()}
+            title={copy?.jobsTitle ?? m.home_latestJobsHeading()}
+            description={
+              copy?.jobsDescription ?? m.home_latestJobsDescription()
+            }
             actions={
-              <ViewAllAction label={m.home_viewAllJobsLabel()} to="/jobs" />
+              <ViewAllAction
+                label={copy?.jobsViewMoreText ?? m.home_viewAllJobsLabel()}
+                to="/jobs"
+              />
             }
           >
             <PreferListingWorkspace>
@@ -377,6 +392,7 @@ export function HomeLanding({
 
         {hiringCompanies.length > 0 ? (
           <HiringIndex
+            copy={copy}
             companies={hiringCompanies}
             countLabel={companiesCountLabel}
           />
@@ -409,10 +425,13 @@ export function HomeLanding({
         {latestPosts.length > 0 ? (
           <PageSection
             eyebrow={postsCountLabel}
-            title={m.home_blogHeading()}
-            description={m.home_blogDescription()}
+            title={copy?.blogTitle ?? m.home_blogHeading()}
+            description={copy?.blogDescription ?? m.home_blogDescription()}
             actions={
-              <ViewAllAction label={m.home_viewAllBlogLabel()} to="/blog" />
+              <ViewAllAction
+                label={copy?.blogViewMoreText ?? m.home_viewAllBlogLabel()}
+                to="/blog"
+              />
             }
           >
             <Grid as="ul" columns={{ base: 1, md: 2, lg: 3 }} gap="6">

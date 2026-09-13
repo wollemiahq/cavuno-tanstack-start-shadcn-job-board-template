@@ -86,6 +86,9 @@ That separation makes this an **agent-buildable** job board template: an agent
 can redesign the surface without breaking salary math, canonical URLs, auth
 and session ownership, or SEO.
 
+Homepage text can use [runtime copy templates](docs/home-copy.md) with the
+page's existing data, without additional API requests.
+
 ---
 
 ## Quickstart
