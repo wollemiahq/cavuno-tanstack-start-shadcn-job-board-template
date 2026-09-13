@@ -20,6 +20,7 @@ const rootApi = getRouteApi('__root__');
 export function HomePage() {
   const {
     page,
+    copy,
     companies,
     companiesCount,
     topCategories,
@@ -78,6 +79,7 @@ export function HomePage() {
   return (
     <>
       <HomeLanding
+        copy={copy}
         jobs={jobs}
         jobsCountLabel={countEyebrow(page.count, m.count_jobs, {
           singular: chromeEntityOverrides.jobSingular,

@@ -18,8 +18,8 @@ import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
-import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
+import { resolveHomeCopy } from './home-copy';
 import { readTalentDirectory } from './talent-directory-read';
 
 import { topCategoriesFromTaxonomy } from '@/board/top-categories';
@@ -123,9 +123,16 @@ export const getHomePage = createServerFn({ method: 'GET' })
         origin,
       };
 
-      // Preserve home head meta EXACTLY (title/description/canonical/og).
-      const title = headTitle(seo.boardName, m.home_heroHeadline());
-      const description = m.home_heroSupporting();
+      const talentPage = talent?.status === 'available' ? talent.page : null;
+      const copy = resolveHomeCopy({
+        boardName: boardContext.name,
+        jobsCount: page.count,
+        companiesCount: companies?.count,
+        postsCount: blog?.count,
+        talentCount: talentPage?.count,
+      });
+      const title = headTitle(seo.boardName, copy.metaTitle);
+      const description = copy.metaDescription;
       const canonical = selfUrl(seo.origin, '/');
       const head = {
         meta: [
@@ -149,8 +156,8 @@ export const getHomePage = createServerFn({ method: 'GET' })
         }),
       );
 
-      const talentPage = talent?.status === 'available' ? talent.page : null;
       return {
+        copy,
         page,
         companies: companies?.data ?? [],
         companiesCount: companies?.count ?? null,
