@@ -55,6 +55,7 @@ function renderWithConversion(ui: ReactElement) {
   });
   const stubs = [
     '/auth/sign-in',
+    '/auth/sign-up',
     '/auth/verify-email',
     '/auth/verify-email-required',
     '/account/applications',
@@ -152,7 +153,7 @@ describe('ApplyButton authentication return paths', () => {
     ).toBeNull();
   });
 
-  it('keeps the complete job destination through candidate sign-in', async () => {
+  it('keeps the complete job destination through candidate sign-up', async () => {
     const returnTo =
       '/companies/acme/jobs/platform-engineer?source=search#apply';
     renderWithConversion(
@@ -170,9 +171,9 @@ describe('ApplyButton authentication return paths', () => {
     });
     const href = link.getAttribute('href');
     expect(href).not.toBeNull();
-    const signInUrl = new URL(href!, 'https://board.example');
-    expect(signInUrl.pathname).toBe('/auth/sign-in');
-    expect(signInUrl.searchParams.get('returnTo')).toBe(returnTo);
+    const signUpUrl = new URL(href!, 'https://board.example');
+    expect(signUpUrl.pathname).toBe('/auth/sign-up');
+    expect(signUpUrl.searchParams.get('returnTo')).toBe(returnTo);
   });
 
   it('keeps the complete job destination through email verification', async () => {

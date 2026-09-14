@@ -3,6 +3,8 @@
  * Field names match hosted boards so operator GTM containers port unchanged.
  */
 
+import { localizePath, stripLocalePrefix } from './localized-path';
+
 export const CAVUNO_AUTH_PARAM = 'cavuno_auth';
 export const CAVUNO_AUTH_METHOD_PARAM = 'cavuno_auth_method';
 /** Staged on returnTo during OAuth/magic-link for rollout compatibility only. */
@@ -206,6 +208,14 @@ export function incomingAuthSearch(
   return location.searchStr ?? location.href;
 }
 
+function isEmployerReturnPath(pathname: string) {
+  const canonical = stripLocalePrefix(pathname);
+  return (
+    canonical.startsWith('/employers') ||
+    canonical.startsWith('/account/connect')
+  );
+}
+
 /** Resolve OAuth/magic-link completion into a destination with conversion params. */
 export function resolvePostAuthConversionRedirect(
   returnTo: string,
@@ -227,8 +237,18 @@ export function resolvePostAuthConversionRedirect(
         : provider === 'google'
           ? 'google'
           : input.fallbackMethod;
-  const base = `${url.pathname}${url.search}${url.hash}`;
-  return appendAuthConversionQuery(base, event, method);
+  const destination = `${url.pathname}${url.search}${url.hash}`;
+  if (event === 'sign_up' && !isEmployerReturnPath(url.pathname)) {
+    const search = new URLSearchParams({
+      returnTo: localizePath(destination),
+    });
+    return appendAuthConversionQuery(
+      `${localizePath('/auth/verify-email-required')}?${search}`,
+      'sign_up',
+      method,
+    );
+  }
+  return appendAuthConversionQuery(destination, event, method);
 }
 
 export function stripAuthConversionSearchParams(

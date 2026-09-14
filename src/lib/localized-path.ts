@@ -85,6 +85,17 @@ function prefixHref(path: string, locale: string | undefined): string {
   return prefixUncompiled(path, locale);
 }
 
+export function stripLocalePrefix(pathname: string): string {
+  const { pathname: path } = splitPath(pathname);
+  const segments = path.split('/').filter(Boolean);
+  const first = segments[0];
+  if (!first) return path;
+  if (isLocale(first) || first in SECTION_TRANSLATIONS) {
+    return `/${segments.slice(1).join('/')}`;
+  }
+  return path;
+}
+
 /** Locale-prefixed AND slug-localized href for a canonical path. */
 export function localizePath(
   path: string,

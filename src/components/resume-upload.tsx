@@ -46,7 +46,24 @@ const PARSE_STATUS_LABEL = {
 const PARSE_POLL_INTERVAL_MS = 4_000;
 const PARSE_POLL_TIMEOUT_MS = 3 * 60 * 1_000;
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
-const RESUME_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'odt', 'rtf', 'txt']);
+const RESUME_EXTENSIONS = new Set([
+  'pdf',
+  'doc',
+  'docx',
+  'odt',
+  'rtf',
+  'txt',
+  'png',
+  'jpg',
+  'jpeg',
+  'webp',
+  'pptx',
+  'xlsx',
+  'odp',
+  'ods',
+]);
+const RESUME_ACCEPT =
+  '.pdf,.doc,.docx,.odt,.rtf,.txt,.png,.jpg,.jpeg,.webp,.pptx,.xlsx,.odp,.ods,application/pdf,image/png,image/jpeg,image/webp';
 
 function resumeFileError(file: File): 'size' | 'type' | null {
   if (file.size > MAX_RESUME_BYTES) return 'size';
@@ -85,6 +102,7 @@ export function ResumeUpload({
   variant = 'section',
   dependencies = resumeUploadDependencies,
   showKeepOnFile = true,
+  onStored,
 }: {
   resume: Resume;
   /** `embedded` drops the section heading — the host surface provides it. */
@@ -95,6 +113,7 @@ export function ResumeUpload({
    * matching hosted. The file is still kept (`keepResumeOnFile: true`).
    */
   showKeepOnFile?: boolean;
+  onStored?: () => void;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -155,6 +174,7 @@ export function ResumeUpload({
       return;
     }
     setStatus('idle');
+    onStored?.();
     await reconcileCommittedAction(
       () => router.invalidate(),
       dependencies.toastActionReconciliationError,
@@ -228,7 +248,7 @@ export function ResumeUpload({
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf"
+        accept={RESUME_ACCEPT}
         tabIndex={-1}
         className="sr-only"
         data-test="resume-file-input"

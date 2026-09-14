@@ -3,12 +3,18 @@
  * The emailed link carries this deployment's origin when its publishable
  * key has a registered origin. Consumes ?token= on load.
  */
-import { Link, createFileRoute } from '@tanstack/react-router';
+import {
+  Link,
+  createFileRoute,
+  isRedirect,
+  redirect,
+} from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
 import {
-  candidateReturnTo,
   candidateAuthSearch,
+  candidateReturnTo,
+  candidateVerifyEmailHref,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { getSessionUserStrict } from '../server/account';
@@ -34,7 +40,8 @@ export const Route = createFileRoute('/auth/verify-email')({
   loader: async ({ deps }) => {
     try {
       return await loadVerifyEmail(deps);
-    } catch {
+    } catch (error) {
+      if (isRedirect(error)) throw error;
       return {
         status: 'invalid' as const,
         returnTo: deps.returnTo,
@@ -73,7 +80,7 @@ export async function loadVerifyEmail(
 ) {
   // Started before the token branch so it overlaps the verify call.
   // A throwing SEO/context read must not become the root error boundary on
-  // this landing — the user still needs the missing/invalid/verified card.
+  // this landing — the user still needs the missing/invalid card.
   const seoPromise = actions.getSeoBase().catch(() => ({
     boardName: '',
     language: 'en',
@@ -103,8 +110,12 @@ export async function loadVerifyEmail(
       actions.verifyEmail({ data: { token: deps.token } }),
       seoPromise,
     ]);
-    if (!result.ok)
+    if (!result.ok) {
+      if (sessionBefore?.emailVerified && sessionBefore.role !== 'employer') {
+        throw postEmailLinkRedirect(sessionBefore, deps.returnTo);
+      }
       return { status: 'invalid' as const, returnTo: deps.returnTo, seo };
+    }
     const sessionAfter =
       sessionBefore && !sessionBefore.emailVerified
         ? await actions.getSessionUserStrict().catch(() => null)
@@ -113,21 +124,33 @@ export async function loadVerifyEmail(
       sessionAfter !== null &&
       sessionAfter.id === sessionBefore?.id &&
       sessionAfter.emailVerified;
-    return {
-      status: 'verified' as const,
-      returnTo:
-        verifiedSameSession && sessionAfter.role === 'employer'
-          ? '/employers/dashboard'
-          : candidateReturnTo(deps.returnTo),
-      seo,
-    };
-  } catch {
+    throw postEmailLinkRedirect(
+      verifiedSameSession ? sessionAfter : null,
+      deps.returnTo,
+    );
+  } catch (error) {
+    if (isRedirect(error)) throw error;
+    if (sessionBefore?.emailVerified && sessionBefore.role !== 'employer') {
+      throw postEmailLinkRedirect(sessionBefore, deps.returnTo);
+    }
     return {
       status: 'invalid' as const,
       returnTo: deps.returnTo,
       seo: await seoPromise,
     };
   }
+}
+
+function postEmailLinkRedirect(
+  session: { role?: string } | null,
+  returnTo: string,
+) {
+  return redirect({
+    href:
+      session?.role === 'employer'
+        ? '/employers/dashboard'
+        : candidateVerifyEmailHref(returnTo),
+  });
 }
 
 function VerifyEmailPage() {
@@ -141,25 +164,9 @@ export function VerifyEmailView({
   status,
   returnTo,
 }: {
-  status: 'verified' | 'missing-token' | 'invalid';
+  status: 'missing-token' | 'invalid';
   returnTo: string;
 }) {
-  if (status === 'verified') {
-    return (
-      <AuthCard
-        title={m.authVerifyEmail_verifiedTitle()}
-        supportingText={m.authVerifyEmail_verifiedBody()}
-      >
-        <Link
-          to={returnTo}
-          className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
-        >
-          {m.authVerifyEmail_goToAccountLabel()}
-        </Link>
-      </AuthCard>
-    );
-  }
-
   return (
     <AuthCard
       title={m.authVerifyEmail_invalidTitle()}

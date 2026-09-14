@@ -152,7 +152,8 @@ describe('ResumeUpload', () => {
     expect(mocks.uploadResume).not.toHaveBeenCalled();
   });
 
-  it('explains an unsupported file type without attempting an upload', async () => {
+  it('uploads a PNG resume the hosted pipeline accepts', async () => {
+    mocks.uploadResume.mockResolvedValue(undefined);
     await renderWithRouter(
       <ResumeUpload resume={emptyResume} dependencies={mocks} />,
     );
@@ -166,8 +167,27 @@ describe('ResumeUpload', () => {
       },
     });
 
+    await waitFor(() => {
+      expect(mocks.uploadResume).toHaveBeenCalled();
+    });
+  });
+
+  it('explains an unsupported file type without attempting an upload', async () => {
+    await renderWithRouter(
+      <ResumeUpload resume={emptyResume} dependencies={mocks} />,
+    );
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-test="resume-file-input"]',
+    );
+    if (!input) throw new Error('Expected the resume file input to render');
+    fireEvent.change(input, {
+      target: {
+        files: [new File(['archive'], 'cv.zip', { type: 'application/zip' })],
+      },
+    });
+
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Choose a PDF, DOC, DOCX, ODT, RTF or TXT file',
+      'Choose a PDF, DOCX, JPG or PNG file.',
     );
     expect(mocks.uploadResume).not.toHaveBeenCalled();
   });

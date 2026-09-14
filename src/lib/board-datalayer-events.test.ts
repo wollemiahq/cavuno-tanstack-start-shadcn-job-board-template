@@ -74,7 +74,9 @@ describe('board-datalayer-events', () => {
         isNewUser: true,
         fallbackMethod: 'google',
       }),
-    ).toBe('/jobs?q=design&cavuno_auth=sign_up&cavuno_auth_method=linkedin');
+    ).toBe(
+      '/auth/verify-email-required?returnTo=%2Fjobs%3Fq%3Ddesign&cavuno_auth=sign_up&cavuno_auth_method=linkedin',
+    );
   });
 
   it('defaults OAuth completion to login for returning users without sign_up intent', () => {
@@ -95,7 +97,34 @@ describe('board-datalayer-events', () => {
         ),
         { isNewUser: true, fallbackMethod: 'google' },
       ),
-    ).toBe('/account?cavuno_auth=sign_up&cavuno_auth_method=google');
+    ).toBe(
+      '/auth/verify-email-required?returnTo=%2Faccount&cavuno_auth=sign_up&cavuno_auth_method=google',
+    );
+  });
+
+  it('does not send a new employer through the candidate resume offer', () => {
+    expect(
+      resolvePostAuthConversionRedirect('/employers/dashboard', {
+        isNewUser: true,
+        fallbackMethod: 'google',
+      }),
+    ).toBe(
+      '/employers/dashboard?cavuno_auth=sign_up&cavuno_auth_method=google',
+    );
+    expect(
+      resolvePostAuthConversionRedirect('/de/employers/dashboard', {
+        isNewUser: true,
+        fallbackMethod: 'google',
+      }),
+    ).toBe(
+      '/de/employers/dashboard?cavuno_auth=sign_up&cavuno_auth_method=google',
+    );
+    expect(
+      resolvePostAuthConversionRedirect('/de/account/connect', {
+        isNewUser: true,
+        fallbackMethod: 'google',
+      }),
+    ).toBe('/de/account/connect?cavuno_auth=sign_up&cavuno_auth_method=google');
   });
 
   it('strips auth conversion params from search', () => {

@@ -79,7 +79,7 @@ export function SaveJobButton({
   if (!viewer) {
     return (
       <Link
-        to="/auth/sign-in"
+        to="/auth/sign-up"
         search={candidateAuthSearch(returnTo)}
         data-presentation={presentation}
         className={cn(
