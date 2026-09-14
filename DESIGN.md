@@ -2476,6 +2476,7 @@ Props:
 Props:
 
 - `dependencies?: ResumeUploadDependencies | undefined`
+- `onStored?: (() => void) | undefined`
 - `resume: { object: "resume"; parseStatus: "parsing" | "parsed" | "failed" | null; parseFailureReason: string | null; parsedAt:…`
 - `showKeepOnFile?: boolean | undefined`
 - `variant?: "section" | "embedded" | undefined`
