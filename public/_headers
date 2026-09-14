@@ -1,0 +1,6 @@
+# /assets/ is reserved for Vite's generated, content-fingerprinted files.
+# Changed bytes get a new URL, so browsers can reuse each version without
+# revalidation. Keep mutable uploads outside this directory.
+# HTML, API responses, and public files such as favicons keep their own policy.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
