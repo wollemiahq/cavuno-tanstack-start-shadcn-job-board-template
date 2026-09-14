@@ -1,5 +1,17 @@
+import type { Resume } from '@cavuno/board';
+
 /** Browser-local completion for the starter-owned optional resume offer. */
 export const RESUME_ONBOARDING_COOKIE = 'cavuno_resume_onboarding_completed';
+
+export const EMPTY_RESUME: Resume = {
+  object: 'resume',
+  parseStatus: null,
+  parseFailureReason: null,
+  parsedAt: null,
+  keepResumeOnFile: false,
+  hasResumeOnFile: false,
+  file: null,
+};
 
 const RESUME_ONBOARDING_MAX_AGE = 365 * 24 * 60 * 60;
 

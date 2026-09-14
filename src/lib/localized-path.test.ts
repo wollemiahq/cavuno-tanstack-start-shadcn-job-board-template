@@ -4,6 +4,7 @@ import {
   delocalizeSegments,
   localizePath,
   localizeSegments,
+  stripLocalePrefix,
 } from './localized-path';
 
 describe('localized route slugs', () => {
@@ -53,6 +54,16 @@ describe('localizeSegments (router output rewrite)', () => {
 });
 
 describe('edge shapes', () => {
+  it('strips compiled and dormant locale prefixes', () => {
+    expect(stripLocalePrefix('/de/employers/dashboard')).toBe(
+      '/employers/dashboard',
+    );
+    expect(stripLocalePrefix('/fr/account/connect')).toBe('/account/connect');
+    expect(stripLocalePrefix('/employers/dashboard')).toBe(
+      '/employers/dashboard',
+    );
+  });
+
   it('preserves query and hash through both directions', () => {
     expect(localizePath('/jobs?q=react&page=2#results', { locale: 'fr' })).toBe(
       '/fr/emplois?q=react&page=2#results',

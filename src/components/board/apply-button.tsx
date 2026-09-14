@@ -74,7 +74,8 @@ export type ApplyButtonDependencies = {
 };
 
 /** File types Cavuno accepts for a per-application resume (hosted parity). */
-const APPLICATION_RESUME_ACCEPT = '.pdf,.doc,.docx,.odt,.rtf,.txt';
+const APPLICATION_RESUME_ACCEPT =
+  '.pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf';
 
 const applyButtonDependencies: ApplyButtonDependencies = {
   loadGatewayApply: () => import('@/lib/gateway-apply'),
@@ -390,7 +391,7 @@ export function ApplyButton({
     case 'sign-in':
       return (
         <Link
-          to="/auth/sign-in"
+          to="/auth/sign-up"
           search={candidateAuthSearch(returnTo)}
           className={buttonVariants({ size: 'lg' })}
         >

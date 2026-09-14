@@ -252,6 +252,8 @@ function renderLanding(props: LandingProps) {
       stub('/blog/tag/$tagSlug'),
       stub('/talent'),
       stub('/p/$handle'),
+      stub('/auth/sign-in'),
+      stub('/auth/sign-up'),
     ]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
@@ -376,13 +378,11 @@ describe('HomeLanding — latest jobs reuse the shared card with canonical hrefs
     expect(saveButtons).toHaveLength(baseProps.jobs.length);
   });
 
-  it('shows an anonymous visitor a sign-in redirect affordance for saving, not a live save button', async () => {
+  it('shows an anonymous visitor a sign-up redirect affordance for saving, not a live save button', async () => {
     renderLanding({ ...baseProps, viewer: null });
     const jobsSection = await screen.findByRole('region', {
       name: m.home_latestJobsHeading(),
     });
-    // Anonymous: the save control is a link into the candidate sign-in flow
-    // (with a returnTo), mirroring the /jobs list — never a live save button.
     expect(
       within(jobsSection).queryByRole('button', {
         name: m.companyJobDetail_saveJobLabel(),
@@ -393,7 +393,7 @@ describe('HomeLanding — latest jobs reuse the shared card with canonical hrefs
     });
     expect(saveLinks.length).toBe(baseProps.jobs.length);
     expect(saveLinks[0].getAttribute('href')).toMatch(
-      /^\/auth\/sign-in\?returnTo=/,
+      /^\/auth\/sign-up\?returnTo=/,
     );
   });
 

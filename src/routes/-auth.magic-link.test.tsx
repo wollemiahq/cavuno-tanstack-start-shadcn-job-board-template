@@ -61,7 +61,7 @@ describe('/auth/magic-link loader', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/account?cavuno_auth=sign_up&cavuno_auth_method=magic_link',
+      '/auth/verify-email-required?returnTo=%2Faccount&cavuno_auth=sign_up&cavuno_auth_method=magic_link',
     );
   });
 });

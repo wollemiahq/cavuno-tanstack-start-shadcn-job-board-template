@@ -58,7 +58,7 @@ describe('/auth/oauth-complete loader', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/jobs?q=design&cavuno_auth=sign_up&cavuno_auth_method=linkedin',
+      '/auth/verify-email-required?returnTo=%2Fjobs%3Fq%3Ddesign&cavuno_auth=sign_up&cavuno_auth_method=linkedin',
     );
   });
 });

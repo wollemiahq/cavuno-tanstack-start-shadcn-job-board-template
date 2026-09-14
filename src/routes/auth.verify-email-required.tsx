@@ -108,11 +108,12 @@ function VerifyEmailRequiredPage() {
       }}
       reportActionError={toastActionError}
       reportReconciliationError={toastActionReconciliationError}
-      renderResumeUpload={(currentResume) => (
+      renderResumeUpload={(currentResume, onStored) => (
         <ResumeUpload
           resume={currentResume}
           variant="embedded"
           showKeepOnFile={false}
+          onStored={onStored}
         />
       )}
     />

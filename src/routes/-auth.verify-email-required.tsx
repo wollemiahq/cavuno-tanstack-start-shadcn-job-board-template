@@ -12,7 +12,10 @@ import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { AuthCard, FormError } from '../components/auth-form';
 import { candidateReturnTo } from '../lib/candidate-return-to';
-import { serializeResumeOnboardingDismissal } from '../lib/resume-onboarding';
+import {
+  EMPTY_RESUME,
+  serializeResumeOnboardingDismissal,
+} from '../lib/resume-onboarding';
 import { m } from '../paraglide/messages';
 import {
   getResume,
@@ -147,7 +150,7 @@ export function VerifyEmailRequiredView({
   navigate: (href: string) => Promise<void>;
   reportActionError: () => void;
   reportReconciliationError: () => void;
-  renderResumeUpload: (resume: Resume) => React.ReactNode;
+  renderResumeUpload: (resume: Resume, onStored: () => void) => React.ReactNode;
 }) {
   const [step, setStep] = useState<'code' | 'resume'>(() =>
     emailVerified && role === 'candidate' ? 'resume' : 'code',
@@ -333,16 +336,15 @@ function ResumeOfferStep({
   }) => Promise<void>;
   navigate: (href: string) => Promise<void>;
   reportActionError: () => void;
-  renderResumeUpload: (resume: Resume) => React.ReactNode;
+  renderResumeUpload: (resume: Resume, onStored: () => void) => React.ReactNode;
 }) {
   const [recommendationEmails, setRecommendationEmails] = useState(false);
   const [recommendationPending, setRecommendationPending] = useState(false);
-  // Decided once on entry: the offer is only for the empty first-run state.
-  // A candidate whose resume is already on file (or whose resume state failed
-  // to load) continues straight to the destination; uploading DURING the step
-  // updates `resume` without re-triggering this.
+  const [storedDuringOffer, setStoredDuringOffer] = useState(false);
+  const offeredResume = resume ?? EMPTY_RESUME;
+  const hasFile = Boolean(resume?.hasResumeOnFile || storedDuringOffer);
   const [offerUpload] = useState(
-    () => resume !== null && !resume.hasResumeOnFile && !dismissed,
+    () => !offeredResume.hasResumeOnFile && !dismissed,
   );
 
   useEffect(() => {
@@ -356,7 +358,7 @@ function ResumeOfferStep({
       title={m.authVerifyEmailRequired_resumeTitle()}
       supportingText={m.authVerifyEmailRequired_resumeIntroText()}
     >
-      {resume ? renderResumeUpload(resume) : null}
+      {renderResumeUpload(offeredResume, () => setStoredDuringOffer(true))}
       {jobRecommendationsEnabled ? (
         <Label
           htmlFor="recommendation-email-opt-in"
@@ -394,19 +396,19 @@ function ResumeOfferStep({
       ) : null}
       <Button
         type="button"
-        variant={resume?.hasResumeOnFile ? 'default' : 'outline'}
+        variant={hasFile ? 'default' : 'outline'}
         size="lg"
         className="w-full"
         data-test="resume-step-continue"
         disabled={recommendationPending}
         onClick={() => {
-          if (!resume?.hasResumeOnFile) {
+          if (!hasFile) {
             document.cookie = serializeResumeOnboardingDismissal(userId);
           }
           void navigate(returnTo);
         }}
       >
-        {resume?.hasResumeOnFile
+        {hasFile
           ? m.authVerifyEmailRequired_resumeContinueLabel()
           : m.authVerifyEmailRequired_resumeSkipLabel()}
       </Button>

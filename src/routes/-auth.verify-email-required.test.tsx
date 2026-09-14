@@ -133,6 +133,7 @@ function renderVerifyPage({
   resumeOnboardingDismissed = false,
   userId = 'candidate-1',
   jobRecommendationsEnabled = true,
+  renderResumeUpload = () => <p>Resume dropzone</p>,
 }: {
   returnTo?: string;
   emailVerified?: boolean;
@@ -141,6 +142,10 @@ function renderVerifyPage({
   resumeOnboardingDismissed?: boolean;
   userId?: string;
   jobRecommendationsEnabled?: boolean;
+  renderResumeUpload?: (
+    resume: Resume,
+    onStored: () => void,
+  ) => React.ReactNode;
 } = {}) {
   return render(
     <VerifyEmailRequiredView
@@ -158,7 +163,7 @@ function renderVerifyPage({
       navigate={mocks.navigate}
       reportActionError={mocks.toastActionError}
       reportReconciliationError={mocks.toastActionReconciliationError}
-      renderResumeUpload={() => <div data-test="resume-upload" />}
+      renderResumeUpload={renderResumeUpload}
     />,
   );
 }
@@ -240,9 +245,7 @@ describe('/auth/verify-email-required search contract', () => {
     });
   });
 
-  it('returns a verified candidate to the validated destination', async () => {
-    // With no resume state available, the post-verify step has nothing to
-    // offer and continues straight to the destination.
+  it('offers a resume upload after verification even when resume state is missing', async () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.verifyOtpCode.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
@@ -253,14 +256,16 @@ describe('/auth/verify-email-required search contract', () => {
       target: { value: '123456' },
     });
 
-    await waitFor(() => {
-      expect(mocks.verifyOtpCode).toHaveBeenCalledWith({
-        data: { code: '123456' },
-      });
-      expect(mocks.invalidate).toHaveBeenCalledOnce();
-      expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
-      expect(mocks.toastActionReconciliationError).toHaveBeenCalledOnce();
+    expect(
+      await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Resume dropzone')).toBeInTheDocument();
+    expect(mocks.verifyOtpCode).toHaveBeenCalledWith({
+      data: { code: '123456' },
     });
+    expect(mocks.invalidate).toHaveBeenCalledOnce();
+    expect(mocks.toastActionReconciliationError).toHaveBeenCalledOnce();
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
   it('recovers when email verification rejects unexpectedly', async () => {
@@ -350,6 +355,16 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(mocks.verifyOtpCode).not.toHaveBeenCalled();
   });
 
+  it('offers the resume step when resume state failed to load', () => {
+    renderVerifyPage({ emailVerified: true, resume: null });
+
+    expect(
+      screen.getByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Resume dropzone')).toBeInTheDocument();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
   it('continues immediately on refresh when verification and resume onboarding are complete', async () => {
     const returnTo = '/jobs?q=design';
 
@@ -437,7 +452,7 @@ describe('/auth/verify-email-required resume offer step', () => {
         navigate={mocks.navigate}
         reportActionError={mocks.toastActionError}
         reportReconciliationError={mocks.toastActionReconciliationError}
-        renderResumeUpload={() => <div data-test="resume-upload" />}
+        renderResumeUpload={() => <p>Resume dropzone</p>}
       />,
     );
 
@@ -471,9 +486,7 @@ describe('/auth/verify-email-required resume offer step', () => {
     expect(
       await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
     ).toBeInTheDocument();
-    expect(
-      document.querySelector('[data-test="resume-upload"]'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Resume dropzone')).toBeInTheDocument();
     // Offering the step must not navigate away on its own.
     expect(mocks.navigate).not.toHaveBeenCalled();
 
@@ -507,6 +520,34 @@ describe('/auth/verify-email-required resume offer step', () => {
       expect(mocks.navigate).toHaveBeenCalledWith(returnTo);
     });
     expect(document.cookie).toContain(
+      'cavuno_resume_onboarding_completed_candidate-1=1',
+    );
+  });
+
+  it('does not record a skip after a file is stored during a missing-resume offer', async () => {
+    document.cookie =
+      'cavuno_resume_onboarding_completed_candidate-1=; Max-Age=0; Path=/';
+    renderVerifyPage({
+      emailVerified: true,
+      resume: null,
+      renderResumeUpload: (_resume, onStored) => (
+        <button type="button" onClick={onStored}>
+          Mark stored
+        </button>
+      ),
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark stored' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authVerifyEmailRequired_resumeContinueLabel(),
+      }),
+    );
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith('/account');
+    });
+    expect(document.cookie).not.toContain(
       'cavuno_resume_onboarding_completed_candidate-1=1',
     );
   });
