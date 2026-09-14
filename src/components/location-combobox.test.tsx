@@ -29,6 +29,7 @@ const suggestion = (
 ) => ({
   countryCode: null,
   regionCode: null,
+  placeType: 'city',
   id: over.id ?? 'p1',
   slug: over.slug === undefined ? 'london' : over.slug,
   name: over.name ?? 'London',
