@@ -1,68 +1,68 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { paraglideVitePlugin } from "@inlang/paraglide-js";
-import tailwindcss from "@tailwindcss/vite";
-import { devtools } from "@tanstack/devtools-vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import viteReact from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
+import tailwindcss from '@tailwindcss/vite';
+import { devtools } from '@tanstack/devtools-vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import viteReact from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import type { OxlintConfig } from "oxlint";
-import type { ConfigEnv, Plugin } from "vite";
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import type { OxlintConfig } from 'oxlint';
+import type { ConfigEnv, Plugin } from 'vite';
 
 const previewServer =
-  process.env.CAVUNO_PREVIEW_PROXIED === "1"
+  process.env.CAVUNO_PREVIEW_PROXIED === '1'
     ? {
         // The sandbox preserves the public Host on WebSocket upgrades.
         // Vite validates that host before accepting the HMR connection.
-        allowedHosts: [".preview.cavuno.com", ".preview-dev.cavuno.com"],
-        hmr: { protocol: "wss" as const, clientPort: 443 },
+        allowedHosts: ['.preview.cavuno.com', '.preview-dev.cavuno.com'],
+        hmr: { protocol: 'wss' as const, clientPort: 443 },
       }
     : undefined;
 
 const antiSlopLint = {
   ignorePatterns: [
-    ".agent/**",
-    ".agents/**",
-    ".claude/**",
-    ".codex/**",
-    ".continue/**",
-    ".cursor/**",
-    ".gemini/**",
-    ".opencode/**",
-    ".pi/**",
-    ".roo/**",
-    ".windsurf/**",
-    "tools/oxlint/anti-slop/**",
+    '.agent/**',
+    '.agents/**',
+    '.claude/**',
+    '.codex/**',
+    '.continue/**',
+    '.cursor/**',
+    '.gemini/**',
+    '.opencode/**',
+    '.pi/**',
+    '.roo/**',
+    '.windsurf/**',
+    'tools/oxlint/anti-slop/**',
   ],
   jsPlugins: [
     {
-      name: "anti-slop",
-      specifier: "./tools/oxlint/anti-slop/index.ts",
+      name: 'anti-slop',
+      specifier: './tools/oxlint/anti-slop/index.ts',
     },
   ],
   rules: {
-    "anti-slop/no-chained-type-assertions": "error",
-    "anti-slop/no-conditional-empty-object-spread": "error",
-    "anti-slop/no-known-value-widening": "error",
-    "anti-slop/no-module-mocking": "error",
-    "anti-slop/no-object-parameters": "error",
-    "anti-slop/no-reflect-apply": "error",
-    "anti-slop/no-reflect-get": "error",
-    "anti-slop/no-runtime-typeof": "error",
-    "anti-slop/no-shape-in-symbol-names": "error",
-    "anti-slop/no-unknown-parameters": "error",
-    "anti-slop/no-unknown-returns": "error",
-    "anti-slop/no-unknown-type-aliases": "error",
-    "anti-slop/no-unsafe-dictionary-type": "error",
-    "anti-slop/no-widen-then-assert": "error",
-    "anti-slop/require-safety-comment-for-type-assertion": "error",
+    'anti-slop/no-chained-type-assertions': 'error',
+    'anti-slop/no-conditional-empty-object-spread': 'error',
+    'anti-slop/no-known-value-widening': 'error',
+    'anti-slop/no-module-mocking': 'error',
+    'anti-slop/no-object-parameters': 'error',
+    'anti-slop/no-reflect-apply': 'error',
+    'anti-slop/no-reflect-get': 'error',
+    'anti-slop/no-runtime-typeof': 'error',
+    'anti-slop/no-shape-in-symbol-names': 'error',
+    'anti-slop/no-unknown-parameters': 'error',
+    'anti-slop/no-unknown-returns': 'error',
+    'anti-slop/no-unknown-type-aliases': 'error',
+    'anti-slop/no-unsafe-dictionary-type': 'error',
+    'anti-slop/no-widen-then-assert': 'error',
+    'anti-slop/require-safety-comment-for-type-assertion': 'error',
   },
 } satisfies OxlintConfig;
 
-const INLANG_PROJECT = "./project.inlang";
-const PARAGLIDE_OUTDIR = "./src/paraglide";
+const INLANG_PROJECT = './project.inlang';
+const PARAGLIDE_OUTDIR = './src/paraglide';
 
 /**
  * Restrict the paraglide plugin's dev watch to catalogs it actually
@@ -95,18 +95,22 @@ const PARAGLIDE_OUTDIR = "./src/paraglide";
 type ParaglidePlugin = ReturnType<typeof paraglideVitePlugin>;
 
 function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
-  const settingsPath = resolve(import.meta.dirname, INLANG_PROJECT, "settings.json");
+  const settingsPath = resolve(
+    import.meta.dirname,
+    INLANG_PROJECT,
+    'settings.json',
+  );
   const settings: {
     locales?: string[];
-    "plugin.inlang.messageFormat"?: { pathPattern?: string };
-  } = JSON.parse(readFileSync(settingsPath, "utf8"));
+    'plugin.inlang.messageFormat'?: { pathPattern?: string };
+  } = JSON.parse(readFileSync(settingsPath, 'utf8'));
   const enabled = new Set(settings.locales ?? []);
-  const pathPattern = settings["plugin.inlang.messageFormat"]?.pathPattern;
+  const pathPattern = settings['plugin.inlang.messageFormat']?.pathPattern;
 
   // Turn "./messages/{locale}.json" into a matcher over absolute paths.
   // Bail out (filter nothing) on a pattern shape we cannot reason about
   // rather than silently dropping events.
-  const segments = pathPattern?.split("{locale}");
+  const segments = pathPattern?.split('{locale}');
   if (segments === undefined || segments.length !== 2) {
     return plugin;
   }
@@ -116,10 +120,13 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
     return plugin;
   }
   // `resolve` drops a trailing separator, so resolve a dummy leaf and cut it.
-  const absolutePrefix = resolve(import.meta.dirname, `${prefix}x`).slice(0, -1);
+  const absolutePrefix = resolve(import.meta.dirname, `${prefix}x`).slice(
+    0,
+    -1,
+  );
 
   function normalize(id: string): string {
-    return id.replaceAll("\\", "/");
+    return id.replaceAll('\\', '/');
   }
 
   function localeOf(id: string): string | undefined {
@@ -127,8 +134,11 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
     if (!path.startsWith(absolutePrefix) || !path.endsWith(suffix)) {
       return undefined;
     }
-    const locale = path.slice(absolutePrefix.length, path.length - suffix.length);
-    return locale.length > 0 && !locale.includes("/") ? locale : undefined;
+    const locale = path.slice(
+      absolutePrefix.length,
+      path.length - suffix.length,
+    );
+    return locale.length > 0 && !locale.includes('/') ? locale : undefined;
   }
 
   function wrap(one: Plugin): Plugin {
@@ -139,7 +149,10 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
     const handler = changed instanceof Function ? changed : changed.handler;
     return {
       ...one,
-      watchChange(this: ThisParameterType<typeof handler>, ...args: Parameters<typeof handler>) {
+      watchChange(
+        this: ThisParameterType<typeof handler>,
+        ...args: Parameters<typeof handler>
+      ) {
         const locale = localeOf(args[0]);
         if (locale !== undefined && !enabled.has(locale)) {
           return;
@@ -152,11 +165,11 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
   return Array.isArray(plugin) ? plugin.map(wrap) : wrap(plugin);
 }
 
-function viteConfig(command: ConfigEnv["command"]) {
+function viteConfig(command: ConfigEnv['command']) {
   return defineConfig({
     define: {
-      "import.meta.env.CAVUNO_HOSTED_PREVIEW": JSON.stringify(
-        process.env.CAVUNO_PREVIEW_PROXIED === "1",
+      'import.meta.env.CAVUNO_HOSTED_PREVIEW': JSON.stringify(
+        process.env.CAVUNO_PREVIEW_PROXIED === '1',
       ),
     },
     resolve: { tsconfigPaths: true },
@@ -210,17 +223,18 @@ function viteConfig(command: ConfigEnv["command"]) {
           // per locale makes that a handful of requests — the split
           // paraglide itself recommends (compiler-options: "locale-modules
           // for development and message-modules for production").
-          outputStructure: command === "serve" ? "locale-modules" : "message-modules",
+          outputStructure:
+            command === 'serve' ? 'locale-modules' : 'message-modules',
           // URL only: documents carry the locale as a path prefix; server-fn
           // RPCs (unprefixed) get the viewer's locale from a per-request header
           // (src/lib/locale-middleware.ts) that the server entry turns into a
           // detection-only URL prefix. No cookie — a cookie is browser-global
           // while locale is per-tab.
-          strategy: ["url", "baseLocale"],
+          strategy: ['url', 'baseLocale'],
         }),
       ),
       devtools(),
-      cloudflare({ viteEnvironment: { name: "ssr" } }),
+      cloudflare({ viteEnvironment: { name: 'ssr' } }),
       tailwindcss(),
       tanstackStart({
         router: {
@@ -232,7 +246,7 @@ function viteConfig(command: ConfigEnv["command"]) {
               /^\/(?:account(?:_|\/|$)|alerts(?:\/|$)|auth(?:\/|$)|employers(?:\/|$)|me(?:\/|$)|messages(?:\/|$)|post(?:\/|$)|settings(?:\/|$))/.test(
                 routeId,
               )
-                ? [["loader", "component"]]
+                ? [['loader', 'component']]
                 : undefined,
           },
         },
