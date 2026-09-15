@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { KeywordCombobox } from './keyword-combobox';
@@ -122,5 +128,55 @@ describe('KeywordCombobox', () => {
     expect(screen.getByRole('option', { name: /Releases/ }).textContent).toBe(
       `Releases${m.searchSuggestion_tagBadge()}`,
     );
+  });
+
+  describe('Enter', () => {
+    function renderTyped() {
+      const onSelect = vi.fn();
+      render(
+        <KeywordCombobox
+          value="rob"
+          placeholder="Search jobs…"
+          suggestions={suggestions}
+          loading={false}
+          onQueryChange={() => {}}
+          onValueChange={() => {}}
+          onSelect={onSelect}
+          onClear={() => {}}
+        />,
+      );
+      const input = screen.getByRole('combobox', { name: /keyword/i });
+      // Typing opens the suggestion list, as it does for a visitor.
+      fireEvent.input(input, {
+        target: { value: 'robo' },
+        inputType: 'insertText',
+      });
+      expect(screen.getByRole('option', { name: /Robotics/ })).toBeTruthy();
+      return { input, onSelect };
+    }
+
+    function pressEnter(input: HTMLElement) {
+      const event = createEvent.keyDown(input, { key: 'Enter' });
+      fireEvent(input, event);
+      return event;
+    }
+
+    it('leaves Enter to the form while no suggestion is highlighted', () => {
+      const { input, onSelect } = renderTyped();
+
+      // Not cancelled, so the surrounding form submits the typed text.
+      expect(pressEnter(input).defaultPrevented).toBe(false);
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it('selects the suggestion the visitor highlighted', () => {
+      const { input, onSelect } = renderTyped();
+
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+
+      // Cancelled, so the form does not also submit.
+      expect(pressEnter(input).defaultPrevented).toBe(true);
+      expect(onSelect).toHaveBeenCalledWith(suggestions[0]);
+    });
   });
 });

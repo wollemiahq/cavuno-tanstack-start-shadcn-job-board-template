@@ -68,7 +68,10 @@ export function CompanySearchCombobox({
       filteredItems={suggestions}
       filter={null}
       autoComplete="none"
-      autoHighlight
+      // No autoHighlight: the typed text is a valid search on its own, so
+      // Enter must submit it. Auto-highlighting the first suggestion made
+      // Enter pick that suggestion instead. Arrow keys or hover still
+      // highlight one, and Enter then selects it.
       open={open}
       onOpenChange={setOpen}
       inputValue={value}
