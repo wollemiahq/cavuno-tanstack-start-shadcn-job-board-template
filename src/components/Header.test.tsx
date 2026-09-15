@@ -21,6 +21,7 @@ import {
 } from '@tanstack/react-router';
 import {
   cleanup,
+  createEvent,
   fireEvent,
   render,
   screen,
@@ -253,6 +254,17 @@ function submitContainingForm(control: HTMLElement) {
   const form = control.closest('form');
   if (!form) throw new Error('Expected the search control to belong to a form');
   fireEvent.submit(form);
+}
+
+/**
+ * Press Enter in a field the way a browser does: unless a handler cancels the
+ * key (a combobox committing a highlighted suggestion), Enter submits the
+ * field's form. jsdom has no implicit submission, so it is emulated here.
+ */
+function pressEnter(control: HTMLElement) {
+  const event = createEvent.keyDown(control, { key: 'Enter' });
+  fireEvent(control, event);
+  if (!event.defaultPrevented) submitContainingForm(control);
 }
 
 describe('Header — feature-gated public collections', () => {
@@ -1000,6 +1012,91 @@ describe('Header — pathname-scoped submit-only search', () => {
       );
     },
   );
+
+  it('submits the typed keyword on Enter while suggestions are open', async () => {
+    const router = renderHeader({
+      initialEntry: '/',
+      keywordSuggestions: [
+        {
+          id: 'category:nursing',
+          type: 'category',
+          slug: 'nursing',
+          name: 'Nursing',
+        },
+      ],
+    });
+    const keyword = await screen.findByRole('combobox', { name: /keyword/i });
+    fireEvent.input(keyword, {
+      target: { value: 'nurse' },
+      inputType: 'insertText',
+    });
+    expect(screen.getByRole('option', { name: /Nursing/ })).toBeTruthy();
+
+    pressEnter(keyword);
+
+    // The typed text, not the first suggestion, and the same destination the
+    // Search button reaches.
+    await waitFor(() =>
+      expect(router.state.location.href).toBe('/jobs?q=nurse'),
+    );
+  });
+
+  it('commits a highlighted suggestion on Enter instead of searching', async () => {
+    const router = renderHeader({
+      initialEntry: '/',
+      keywordSuggestions: [
+        {
+          id: 'category:nursing',
+          type: 'category',
+          slug: 'nursing',
+          name: 'Nursing',
+        },
+      ],
+    });
+    const keyword = await screen.findByRole<HTMLInputElement>('combobox', {
+      name: /keyword/i,
+    });
+    fireEvent.input(keyword, {
+      target: { value: 'nurse' },
+      inputType: 'insertText',
+    });
+    fireEvent.keyDown(keyword, { key: 'ArrowDown' });
+
+    pressEnter(keyword);
+
+    // Jobs staging: the pick fills the field and waits for Search.
+    expect(keyword.value).toBe('Nursing');
+    expect(router.state.location.href).toBe('/');
+    submitContainingForm(keyword);
+    await waitFor(() =>
+      expect(router.state.location.href).toBe('/jobs/nursing'),
+    );
+  });
+
+  it('submits the typed Companies query on Enter while market suggestions are open', async () => {
+    const router = renderHeader({
+      initialEntry: '/companies',
+      companyMarketSuggestions: [
+        { slug: 'industrial-automation', name: 'Industrial Automation' },
+      ],
+    });
+    const searchbox = await screen.findByRole('combobox', {
+      name: /keyword/i,
+    });
+    fireEvent.input(searchbox, {
+      target: { value: 'industrial' },
+      inputType: 'insertText',
+    });
+    expect(
+      screen.getByRole('option', { name: /Industrial Automation/ }),
+    ).toBeTruthy();
+
+    pressEnter(searchbox);
+
+    await waitFor(() =>
+      expect(router.state.location.href).toBe('/companies?query=industrial'),
+    );
+  });
 
   it('uses Jobs search from the landing page and hands the query to /jobs', async () => {
     const router = renderHeader({ initialEntry: '/' });
