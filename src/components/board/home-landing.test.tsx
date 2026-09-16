@@ -32,7 +32,13 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomeLanding } from './home-landing';
@@ -327,6 +333,46 @@ describe('HomeLanding — pure landing hero', () => {
     expect(
       document.querySelector('[data-hero-background="dither"]'),
     ).toBeNull();
+  });
+
+  it('falls back to the dither canvas when the hero photo fails to load', async () => {
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'https://assets.cavuno.com/missing.png',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    const image = document.querySelector(
+      'img[src="https://assets.cavuno.com/missing.png"]',
+    );
+    expect(image).not.toBeNull();
+    fireEvent.error(image!);
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector(
+        'img[src="https://assets.cavuno.com/missing.png"]',
+      ),
+    ).toBeNull();
+  });
+
+  it('falls back when the hero photo already failed before hydration', async () => {
+    // An SSR'd image can error before React attaches onError; the mount
+    // check reads the settled element instead.
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(
+      true,
+    );
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(
+      0,
+    );
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'https://assets.cavuno.com/missing.png',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
   });
 
   it('treats http and javascript URLs as missing and keeps the dither canvas', async () => {

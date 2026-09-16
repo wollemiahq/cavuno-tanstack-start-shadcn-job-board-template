@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react';
+
 import { Link, useLocation } from '@tanstack/react-router';
 import { ArrowRight, Search } from 'lucide-react';
 
@@ -243,7 +245,21 @@ export function HomeLanding({
   /** HTTPS hero photo from `src/branding.json`; anything else keeps the dither. */
   backgroundImageUrl?: string | null;
 }) {
-  const heroPhotoUrl = httpsAssetUrl(backgroundImageUrl);
+  // A photo URL that fails to load falls back to the dither, the same
+  // surface a board with no photo gets, instead of a broken-image icon.
+  // Keyed by URL so a replaced photo gets a fresh attempt.
+  const [failedHeroUrl, setFailedHeroUrl] = useState<string | null>(null);
+  const configuredHeroUrl = httpsAssetUrl(backgroundImageUrl);
+  const heroPhotoUrl =
+    configuredHeroUrl === failedHeroUrl ? null : configuredHeroUrl;
+  const heroImageRef = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    // An SSR'd image can fail before hydration attaches onError.
+    const image = heroImageRef.current;
+    if (image?.complete && image.naturalWidth === 0) {
+      setFailedHeroUrl(image.getAttribute('src'));
+    }
+  }, [heroPhotoUrl]);
   // Return here after the save flow's sign-in / verify-email detour (mirrors
   // the `/jobs` list, which reads the current href the same way).
   // The EXTERNAL localized URL — post-auth redirects must land back on
@@ -272,7 +288,9 @@ export function HomeLanding({
               >
                 {heroPhotoUrl ? (
                   <img
+                    ref={heroImageRef}
                     src={heroPhotoUrl}
+                    onError={() => setFailedHeroUrl(heroPhotoUrl)}
                     alt=""
                     className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
                   />
