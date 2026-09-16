@@ -32,7 +32,13 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomeLanding } from './home-landing';
@@ -326,6 +332,27 @@ describe('HomeLanding — pure landing hero', () => {
     ).not.toBeNull();
     expect(
       document.querySelector('[data-hero-background="dither"]'),
+    ).toBeNull();
+  });
+
+  it('falls back to the dither canvas when the hero photo fails to load', async () => {
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'https://assets.cavuno.com/missing.png',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    const image = document.querySelector(
+      'img[src="https://assets.cavuno.com/missing.png"]',
+    );
+    expect(image).not.toBeNull();
+    fireEvent.error(image!);
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector(
+        'img[src="https://assets.cavuno.com/missing.png"]',
+      ),
     ).toBeNull();
   });
 
