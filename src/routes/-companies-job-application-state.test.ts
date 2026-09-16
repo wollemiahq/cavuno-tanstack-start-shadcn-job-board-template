@@ -50,6 +50,12 @@ beforeEach(() => {
     },
     head: { meta: [], links: [] },
     jsonLd: [],
+    breadcrumbTrail: [
+      { name: 'Home', href: '/' },
+      { name: 'Jobs', href: '/jobs' },
+      { name: 'Acme', href: '/companies/acme' },
+      { name: 'Platform Engineer' },
+    ],
   });
   getSessionUser.mockResolvedValue({
     id: 'user-1',
@@ -72,6 +78,17 @@ beforeEach(() => {
 });
 
 describe('full job application state', () => {
+  it('forwards the page breadcrumbTrail so the shell can override the URL trail', async () => {
+    const data = await loadJobDetail(jobDetailLoaderInput());
+
+    expect(data.breadcrumbTrail).toEqual([
+      { name: 'Home', href: '/' },
+      { name: 'Jobs', href: '/jobs' },
+      { name: 'Acme', href: '/companies/acme' },
+      { name: 'Platform Engineer' },
+    ]);
+  });
+
   it('loads prior application state for a verified returning candidate', async () => {
     const data = await loadJobDetail(jobDetailLoaderInput());
 

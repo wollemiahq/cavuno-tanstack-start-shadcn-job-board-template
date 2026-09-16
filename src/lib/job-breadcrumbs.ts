@@ -1,18 +1,13 @@
-import { buildJobBreadcrumbs as sdkBuildJobBreadcrumbs } from '@cavuno/board/seo';
+import {
+  BOARD_PATHS,
+  companyPath,
+  jobsLocationPath,
+} from '@cavuno/board/paths';
 
-import { m } from '../paraglide/messages';
+import { breadcrumbsCopy } from '../copy-groups/breadcrumbs';
 import { localizePath } from './localized-path';
 
 import type { PublicJob } from '@cavuno/board';
-/**
- * Map SDK `buildJobBreadcrumbs` structural crumbs to display names.
- *
- * Chrome crumbs (`home`, `jobs`) became `kind` discriminants in SDK 4.0 —
- * the application names those. Record-derived crumbs keep `name` (that
- * name is data off the job). Against older SDKs that still return
- * `name` for every crumb, we pass names through unchanged.
- */
-import type { JobBreadcrumb } from '@cavuno/board/format';
 
 export interface JobBreadcrumbItem {
   name: string;
@@ -20,23 +15,35 @@ export interface JobBreadcrumbItem {
 }
 
 /**
- * 4.0.0 crumb contract: `home`/`jobs` are kind-only chrome crumbs (the app
- * owns their words); place/category/job crumbs carry the record's `name`.
+ * Job-detail trail: Home › Jobs › placeHierarchy › Company › title.
+ *
+ * Owned here because SDK `buildJobBreadcrumbs` inserts the primary category
+ * and omits the company. Place crumbs link to `/jobs/locations/:slug`; the
+ * company links to its profile; the title is the current page (no href).
+ * The job URL itself stays `/companies/:company/jobs/:slug`.
  */
-function crumbName(crumb: JobBreadcrumb): string {
-  if (!('name' in crumb)) {
-    return crumb.kind === 'home' ? m.breadcrumbs_home() : m.breadcrumbs_jobs();
-  }
-  return crumb.name;
-}
-
-/** Resolved breadcrumb trail for job-detail presentation. */
 export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
-  const crumbs = sdkBuildJobBreadcrumbs(job);
-  return crumbs.map((crumb) => {
-    const name = crumbName(crumb);
-    return crumb.path === undefined ? { name } : { name, href: crumb.path };
-  });
+  const crumbs = breadcrumbsCopy();
+  const items: JobBreadcrumbItem[] = [
+    { name: crumbs.home, href: BOARD_PATHS.home },
+    { name: crumbs.jobs, href: BOARD_PATHS.jobs },
+  ];
+
+  for (const place of job.placeHierarchy) {
+    const name = place.name.trim();
+    const slug = place.slug.trim();
+    if (!name || !slug) continue;
+    items.push({ name, href: jobsLocationPath(slug) });
+  }
+
+  const companyName = job.company?.name?.trim();
+  const companySlug = job.company?.slug?.trim();
+  if (companyName && companySlug) {
+    items.push({ name: companyName, href: companyPath(companySlug) });
+  }
+
+  items.push({ name: job.title });
+  return items;
 }
 
 /** Shape expected by `listingJsonLd` breadcrumbs (name + optional path).
@@ -45,11 +52,9 @@ export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
 export function jobBreadcrumbJsonLd(
   job: PublicJob,
 ): Array<{ name: string; path?: string }> {
-  const crumbs = sdkBuildJobBreadcrumbs(job);
-  return crumbs.map((crumb) => {
-    const name = crumbName(crumb);
-    return crumb.path === undefined
-      ? { name }
-      : { name, path: localizePath(crumb.path) };
-  });
+  return jobBreadcrumbItems(job).map((crumb) =>
+    crumb.href
+      ? { name: crumb.name, path: localizePath(crumb.href) }
+      : { name: crumb.name },
+  );
 }
