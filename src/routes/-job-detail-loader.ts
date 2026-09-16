@@ -67,6 +67,7 @@ export function createJobDetailLoader(
         seo: page.seo,
         head: page.head,
         jsonLd: page.jsonLd,
+        breadcrumbTrail: page.breadcrumbTrail,
         applicationState,
       };
     } catch (error) {

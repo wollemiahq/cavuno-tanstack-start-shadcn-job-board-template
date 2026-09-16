@@ -23,7 +23,7 @@ import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
-import { jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
+import { jobBreadcrumbItems, jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -122,6 +122,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         links: canonical ? [{ rel: 'canonical', href: canonical }] : [],
       };
 
+      const breadcrumbTrail = jobBreadcrumbItems(job);
       const jsonLd = asJsonObjects(
         [
           // links.public is null when the job lacks a company slug — then
@@ -145,6 +146,6 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         ].filter((entry) => entry !== null),
       );
 
-      return { job, seo, head, jsonLd };
+      return { job, seo, head, jsonLd, breadcrumbTrail };
     }),
   );
