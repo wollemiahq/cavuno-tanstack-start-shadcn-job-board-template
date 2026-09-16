@@ -356,6 +356,25 @@ describe('HomeLanding — pure landing hero', () => {
     ).toBeNull();
   });
 
+  it('falls back when the hero photo already failed before hydration', async () => {
+    // An SSR'd image can error before React attaches onError; the mount
+    // check reads the settled element instead.
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(
+      true,
+    );
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(
+      0,
+    );
+    renderLanding({
+      ...baseProps,
+      backgroundImageUrl: 'https://assets.cavuno.com/missing.png',
+    });
+    await screen.findByRole('heading', { name: m.home_heroHeadline() });
+    expect(
+      document.querySelector('[data-hero-background="dither"]'),
+    ).not.toBeNull();
+  });
+
   it('treats http and javascript URLs as missing and keeps the dither canvas', async () => {
     renderLanding({
       ...baseProps,
