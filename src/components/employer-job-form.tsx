@@ -599,6 +599,7 @@ export function EmployerJobForm({
         contextLabel: null,
         countryCode: null,
         regionCode: null,
+        placeType: permit.type,
       }));
     const countries = countryChoices.map((country) => ({
       id: `country:${country.code}`,
@@ -607,6 +608,7 @@ export function EmployerJobForm({
       contextLabel: null,
       countryCode: country.code,
       regionCode: null,
+      placeType: 'country',
     }));
     return [...groups, ...countries];
   }, [remotePermits, countryChoices]);

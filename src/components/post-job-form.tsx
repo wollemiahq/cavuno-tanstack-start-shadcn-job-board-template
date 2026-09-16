@@ -151,11 +151,38 @@ type LogoStatus =
   | { kind: 'error'; message: string };
 
 type OfficeLocationDraft = {
+  /** Local de-duplication handle only — stripped before submit. */
   key: string;
+  provider?: 'mapbox';
+  providerPlaceId?: string;
   displayName: string;
   countryCode?: string;
+  /** A region NAME. The picker's `regionCode` (`US-FL`) never belongs here. */
   region?: string;
+  locality?: string;
+  city?: string;
 };
+
+/**
+ * A picked place has to reach the platform as a resolvable provider
+ * reference: with `provider`/`providerPlaceId` dropped the job is stored
+ * with no location at all. Keys the place cannot answer are omitted rather
+ * than sent as explicit `undefined`.
+ */
+function officeLocationFromPlace(
+  place: LocationSuggestionVM,
+): OfficeLocationDraft {
+  const draft: OfficeLocationDraft = {
+    key: place.id,
+    provider: 'mapbox',
+    providerPlaceId: place.id,
+    displayName: place.name,
+  };
+  if (place.countryCode) draft.countryCode = place.countryCode;
+  if (place.placeType === 'city') draft.city = place.name;
+  if (place.placeType === 'locality') draft.locality = place.name;
+  return draft;
+}
 
 type PostJobFormState = {
   status: Status;
@@ -409,6 +436,7 @@ export function PostJobForm({
         contextLabel: null,
         countryCode: null,
         regionCode: null,
+        placeType: permit.type,
       }));
     const countries = countryChoices.map((country) => ({
       id: `country:${country.code}`,
@@ -417,6 +445,7 @@ export function PostJobForm({
       contextLabel: null,
       countryCode: country.code,
       regionCode: null,
+      placeType: 'country',
     }));
     return [...groups, ...countries];
   }, [remotePermits, countryChoices]);
@@ -893,12 +922,7 @@ export function PostJobForm({
                   label: location.displayName,
                 }))}
                 onAddSuggestion={(place: LocationSuggestionVM) =>
-                  addOfficeLocation({
-                    key: place.id,
-                    displayName: place.name,
-                    countryCode: place.countryCode ?? undefined,
-                    region: place.regionCode ?? undefined,
-                  })
+                  addOfficeLocation(officeLocationFromPlace(place))
                 }
                 onAddFreeText={(text) =>
                   addOfficeLocation({ key: `text:${text}`, displayName: text })
