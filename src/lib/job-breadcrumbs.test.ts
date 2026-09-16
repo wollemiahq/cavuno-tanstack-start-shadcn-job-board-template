@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import { publicJobFixture } from '../routes/-route-test-fixtures';
 import { jobBreadcrumbItems, jobBreadcrumbJsonLd } from './job-breadcrumbs';
 
 import type { PublicJob } from '@cavuno/board';
 
 function job(overrides: Partial<PublicJob> = {}): PublicJob {
   return {
+    ...publicJobFixture('senior-engineer'),
     title: 'Senior Engineer',
-    placeHierarchy: [],
     categories: [{ slug: 'engineering', name: 'Engineering' }],
     company: {
       id: 'company_1',
@@ -17,7 +18,7 @@ function job(overrides: Partial<PublicJob> = {}): PublicJob {
       website: null,
     },
     ...overrides,
-  } as PublicJob;
+  };
 }
 
 describe('jobBreadcrumbItems', () => {
