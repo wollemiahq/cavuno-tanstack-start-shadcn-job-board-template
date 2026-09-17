@@ -44,6 +44,7 @@ import {
 } from '@/components/employer/employer-stats-chart';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,7 @@ import {
 } from '@/components/ui/table';
 import { navCopy } from '@/copy-groups/nav';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import type { CompanyJobsSearch } from '@/lib/company-jobs-search';
 import type { UrlSearchInput } from '@/lib/pagination';
 import type {
   EmployerJobStat,
@@ -204,9 +206,11 @@ function activeJobsSubtitle(count: number) {
 export function CompanyJobsPageView({
   data,
   actions,
+  search = {},
 }: {
   data: CompanyJobsViewData;
   actions: CompanyJobsViewActions;
+  search?: CompanyJobsSearch;
 }) {
   const { slug, membership, jobs, statsIndex, timeseries } = data;
   const copy = {
@@ -230,6 +234,8 @@ export function CompanyJobsPageView({
     </Link>
   );
 
+  const outcome = postingOutcome(search, jobs.data);
+
   return (
     <Page width="content">
       <PageContent>
@@ -247,6 +253,13 @@ export function CompanyJobsPageView({
             </div>
             {jobs.data.length > 0 ? postJobLink : null}
           </header>
+
+          {outcome ? (
+            <Alert>
+              <AlertTitle>{outcome.title}</AlertTitle>
+              <AlertDescription>{outcome.body}</AlertDescription>
+            </Alert>
+          ) : null}
 
           {jobs.data.length === 0 ? (
             <Empty className="min-h-96 border-0">
@@ -307,6 +320,7 @@ export function CompanyJobsPageView({
                         language={getLocale()}
                         statsIndex={statsIndex}
                         actions={actions}
+                        highlighted={search.job_id === job.id}
                       />
                     ))}
                   </TableBody>
@@ -379,18 +393,42 @@ function StatCellsPending() {
   );
 }
 
+function postingOutcome(
+  search: CompanyJobsSearch,
+  jobs: EmployerJobSummary[],
+): { title: string; body: string } | null {
+  if (!search.checkout_success && !search.posted) return null;
+  const listed = !search.job_id || jobs.some((job) => job.id === search.job_id);
+  if (search.checkout_success) {
+    return {
+      title: m.employerJobs_checkoutSuccessTitle(),
+      body: listed
+        ? m.employerJobs_checkoutSuccessBody()
+        : m.employerJobs_postedMissingBody(),
+    };
+  }
+  return {
+    title: m.employerJobs_postedTitle(),
+    body: listed
+      ? m.employerJobs_postedBody()
+      : m.employerJobs_postedMissingBody(),
+  };
+}
+
 function JobRow({
   slug,
   job,
   language,
   statsIndex,
   actions,
+  highlighted,
 }: {
   slug: string;
   job: EmployerJobSummary;
   language: string;
   statsIndex: Promise<Map<string, EmployerJobStat>>;
   actions: CompanyJobsViewActions;
+  highlighted: boolean;
 }) {
   const expired = isEmployerJobExpired(job);
   const displayStatus = expired ? 'expired' : job.status;
@@ -502,7 +540,7 @@ function JobRow({
       : null;
 
   return (
-    <TableRow>
+    <TableRow data-state={highlighted ? 'selected' : undefined}>
       <TableCell>
         <div className="min-w-48">
           <Link

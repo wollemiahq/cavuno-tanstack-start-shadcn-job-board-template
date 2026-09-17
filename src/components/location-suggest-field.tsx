@@ -54,8 +54,23 @@ export function LocationSuggestField({
       filteredItems={suggestions}
       filter={null}
       autoComplete="none"
-      open={open && suggestions.length > 0}
-      onOpenChange={setOpen}
+      open={
+        open &&
+        (loading || suggestions.length > 0 || value.trim().length >= 2)
+      }
+      onOpenChange={(next, details) => {
+        if (
+          !next &&
+          (loading ||
+            (value.trim().length >= 2 && suggestions.length === 0)) &&
+          (details.reason === 'none' ||
+            details.reason === 'cancel-open' ||
+            details.reason === 'input-change')
+        ) {
+          return;
+        }
+        setOpen(next);
+      }}
       inputValue={value}
       itemToStringLabel={(place: LocationSuggestionVM) => place.name}
       itemToStringValue={(place: LocationSuggestionVM) => place.slug}

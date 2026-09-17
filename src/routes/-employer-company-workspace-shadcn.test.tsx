@@ -58,6 +58,7 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
+import type { CompanyJobsSearch } from '../lib/company-jobs-search';
 
 const pipelineActions = {
   moveApplicant: vi.fn<PipelineActions['moveApplicant']>(),
@@ -245,6 +246,7 @@ async function renderJobs(
   deferred: {
     stats?: EmployerJobStat[];
     timeseries?: EmployerJobStatsPoint[];
+    search?: CompanyJobsSearch;
   } = {},
 ) {
   const statsIndex = Promise.resolve(
@@ -260,7 +262,11 @@ async function renderJobs(
   } satisfies CompanyJobsViewData;
   await act(async () => {
     await renderWithRouter(
-      <CompanyJobsPageView data={data} actions={jobsActions} />,
+      <CompanyJobsPageView
+        data={data}
+        search={deferred.search}
+        actions={jobsActions}
+      />,
     );
   });
 }
@@ -435,6 +441,30 @@ describe('employer company workspace', () => {
       screen.getByRole('heading', { level: 1, name: 'Northstar Labs Jobs' }),
     ).toBeInTheDocument();
     expect(screen.getByText('You have 2 active jobs.')).toBeInTheDocument();
+  });
+
+  it('explains a Stripe return and highlights the posted job', async () => {
+    await renderJobs([draftJob], {
+      search: { checkout_success: '1', job_id: draftJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Payment received');
+    expect(
+      screen.getByRole('row', { name: /Senior Product Designer/ }),
+    ).toHaveAttribute('data-state', 'selected');
+  });
+
+  it('explains a same-origin save and says so if the new row is not listed yet', async () => {
+    await renderJobs([draftJob], {
+      search: { posted: '1', job_id: 'job-missing' },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_postedTitle(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_postedMissingBody(),
+    );
   });
 
   it('links every role name to its edit page and hides applicants for drafts', async () => {

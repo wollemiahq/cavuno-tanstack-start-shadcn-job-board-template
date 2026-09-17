@@ -112,8 +112,27 @@ export function PlaceTagsField({
         filter={null}
         autoComplete="none"
         autoHighlight
-        open={open && available.length > 0}
-        onOpenChange={setOpen}
+        open={
+          open &&
+          (loading || available.length > 0 || text.trim().length >= 2)
+        }
+        onOpenChange={(next, details) => {
+          // Base UI closes an empty list (`none` / `cancel-open` /
+          // `input-change`). Two characters already queued a places
+          // request, so treating that close as final hid the spinner and
+          // the results that arrived a moment later.
+          if (
+            !next &&
+            (loading ||
+              (text.trim().length >= 2 && available.length === 0)) &&
+            (details.reason === 'none' ||
+              details.reason === 'cancel-open' ||
+              details.reason === 'input-change')
+          ) {
+            return;
+          }
+          setOpen(next);
+        }}
         inputValue={text}
         itemToStringLabel={(place: LocationSuggestionVM) => place.name}
         itemToStringValue={(place: LocationSuggestionVM) => place.slug}

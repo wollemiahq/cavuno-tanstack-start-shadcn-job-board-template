@@ -23,6 +23,13 @@ interface EditorOptions {
   content: string;
   editorProps: {
     attributes: Record<string, string>;
+    handlePaste?: (
+      view: unknown,
+      event: {
+        clipboardData: { getData: (type: string) => string } | null;
+        preventDefault: () => void;
+      },
+    ) => boolean;
   };
   immediatelyRender: boolean;
   onUpdate: (context: { editor: typeof editorHarness.editor }) => void;
@@ -46,7 +53,9 @@ const editorHarness = vi.hoisted(() => {
     getMarkRange: vi.fn(),
     posToDOMRect: vi.fn(),
     focus: vi.fn(),
+    insertContent: vi.fn(),
     run: vi.fn(),
+    setContent: vi.fn(),
     setLink: vi.fn(),
     setTextAlign: vi.fn(),
     setTextSelection: vi.fn(),
@@ -64,6 +73,10 @@ const editorHarness = vi.hoisted(() => {
     },
     focus() {
       calls.focus();
+      return chain;
+    },
+    insertContent(value: string) {
+      calls.insertContent(value);
       return chain;
     },
     run() {
@@ -109,6 +122,12 @@ const editorHarness = vi.hoisted(() => {
   const resolvedFrom = { pos: 3 };
   const editor = {
     chain: vi.fn(() => chain),
+    commands: {
+      setContent(html: string) {
+        calls.setContent(html);
+        return true;
+      },
+    },
     getAttributes: vi.fn(() => ({ href: 'https://existing.example' })),
     getHTML: vi.fn(() => '<p>Updated description</p>'),
     isActive: vi.fn((query: string | Record<string, string>) => {
@@ -361,5 +380,50 @@ describe('RichTextEditor', () => {
     expect(editorHarness.calls.setLink).not.toHaveBeenCalled();
     expect(editorHarness.calls.unsetLink).not.toHaveBeenCalled();
     expect(editorHarness.calls.run).not.toHaveBeenCalled();
+  });
+
+  it('inserts Word clipboard HTML as plain-text paragraphs', () => {
+    renderEditor();
+
+    const preventDefault = vi.fn();
+    const handled = editorHarness.options?.editorProps.handlePaste?.(
+      editorHarness.editor.view,
+      {
+        clipboardData: {
+          getData: (type: string) =>
+            type === 'text/html'
+              ? '<html xmlns:o="urn:schemas-microsoft-com:office:office"><body>Role</body></html>'
+              : 'Role overview',
+        },
+        preventDefault,
+      },
+    );
+
+    expect(handled).toBe(true);
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(editorHarness.calls.insertContent).toHaveBeenCalledWith(
+      '<p>Role overview</p>',
+    );
+  });
+
+  it('imports a text file into the editor', async () => {
+    const onChange = renderEditor();
+    const file = new File(['Hello\n\nWorld'], 'role.txt', {
+      type: 'text/plain',
+    });
+    const input =
+      document.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(input).toBeTruthy();
+
+    fireEvent.change(input!, {
+      target: { files: [file] },
+    });
+
+    await waitFor(() =>
+      expect(editorHarness.calls.setContent).toHaveBeenCalledWith(
+        '<p>Hello</p><p>World</p>',
+      ),
+    );
+    expect(onChange).toHaveBeenCalledWith('<p>Updated description</p>');
   });
 });

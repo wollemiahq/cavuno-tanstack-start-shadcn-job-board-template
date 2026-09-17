@@ -29,6 +29,11 @@ import {
 } from 'lucide-react';
 
 import { sanitizeLinkUrl } from '../lib/post-form';
+import {
+  importedFileToHtml,
+  plainTextToHtml,
+  shouldPastePlainText,
+} from '../lib/rich-text-clipboard';
 import { m } from '../paraglide/messages';
 
 import { Button } from '@/components/ui/button';
@@ -61,6 +66,7 @@ export interface RichTextEditorProps {
 interface RichTextEditorChain {
   extendMarkRange: (mark: string) => RichTextEditorChain;
   focus: () => RichTextEditorChain;
+  insertContent: (value: string) => RichTextEditorChain;
   run: () => boolean;
   setLink: (attributes: { href: string }) => RichTextEditorChain;
   setTextAlign: (alignment: string) => RichTextEditorChain;
@@ -74,6 +80,7 @@ interface RichTextEditorChain {
 
 export interface RichTextEditorModel {
   chain: () => RichTextEditorChain;
+  commands: { setContent: (html: string) => boolean };
   getAttributes: (mark: string) => { href?: string };
   getHTML: () => string;
   isActive: (query: string | Record<string, string>) => boolean;
@@ -81,9 +88,17 @@ export interface RichTextEditorModel {
   storage: { characterCount: { characters: () => number } };
 }
 
+interface EditorPasteEvent {
+  clipboardData: { getData: (type: string) => string } | null;
+  preventDefault: () => void;
+}
+
 interface EditorSetup<TEditor extends RichTextEditorModel> {
   content: string;
-  editorProps: { attributes: Record<string, string> };
+  editorProps: {
+    attributes: Record<string, string>;
+    handlePaste?: (view: unknown, event: EditorPasteEvent) => boolean;
+  };
   immediatelyRender: false;
   onUpdate: (context: { editor: TEditor }) => void;
 }
@@ -113,7 +128,11 @@ export interface RichTextEditorDependencies<
   selectionAnchor: (editor: TEditor, range: EditorRange) => SelectionAnchor;
 }
 
-const DEFAULT_MAX_CHARACTERS = 10_000;
+/** Hosted-board job descriptions cap at 25,000 characters. */
+const DEFAULT_MAX_CHARACTERS = 25_000;
+
+const IMPORT_ACCEPT =
+  '.txt,.html,.htm,.md,.markdown,text/plain,text/html,text/markdown';
 
 /** Brand link styling so link marks flow through `getHTML()` and render live. */
 const LINK_CLASS = 'text-primary underline';
@@ -208,6 +227,9 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
   }: RichTextEditorProps) => {
     const [linkOpen, setLinkOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
+    const [importError, setImportError] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const editorRef = useRef<TEditor | null>(null);
     // Captured when the popover opens so it hangs off the text being linked, not
     // off the toolbar button. `undefined` falls back to the trigger.
     const [linkAnchor, setLinkAnchor] = useState<SelectionAnchor | undefined>(
@@ -229,13 +251,42 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
             class:
               'min-h-40 w-full px-3 py-2.5 text-sm text-foreground outline-hidden [&_ul]:list-disc [&_ol]:list-decimal [&_ul,&_ol]:ps-6',
           },
+          handlePaste: (_view, event) => {
+            const clipboard = event.clipboardData;
+            if (!clipboard) return false;
+            const html = clipboard.getData('text/html');
+            const text = clipboard.getData('text/plain');
+            if (!shouldPastePlainText(html, text)) return false;
+            event.preventDefault();
+            editorRef.current
+              ?.chain()
+              .focus()
+              .insertContent(plainTextToHtml(text))
+              .run();
+            return true;
+          },
         },
         onUpdate: ({ editor }) => onChange(editor.getHTML()),
       },
       maxCharacters,
     );
+    editorRef.current = editor;
 
     const state = dependencies.useToolbarState(editor);
+
+    const importFile = (file: File | undefined) => {
+      if (!file || !editor) return;
+      void file.text().then((contents) => {
+        const html = importedFileToHtml(file.name, contents);
+        if (!html) {
+          setImportError(true);
+          return;
+        }
+        setImportError(false);
+        editor.commands.setContent(html);
+        onChange(editor.getHTML());
+      });
+    };
 
     if (!editor) return null;
 
@@ -375,9 +426,49 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
 
         <div className="bg-input/50 focus-within:border-ring focus-within:ring-ring/30 overflow-hidden rounded-2xl border border-transparent transition-[color,box-shadow] duration-200 focus-within:ring-3">
           {dependencies.renderEditorContent(editor)}
-          <p className="border-border text-muted-foreground border-t px-3 py-2 text-xs">
-            {m.richText_charactersLeft({ count: charactersLeft })}
-          </p>
+          <div className="border-border flex flex-wrap items-center justify-between gap-2 border-t px-3 py-2">
+            <p
+              className={
+                charactersLeft < 0
+                  ? 'text-destructive text-xs'
+                  : 'text-muted-foreground text-xs'
+              }
+            >
+              {charactersLeft < 0
+                ? m.richText_charactersOver({ count: Math.abs(charactersLeft) })
+                : m.richText_charactersLeft({ count: charactersLeft })}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={IMPORT_ACCEPT}
+                className="sr-only"
+                tabIndex={-1}
+                onChange={(event) => {
+                  importFile(event.currentTarget.files?.[0]);
+                  event.currentTarget.value = '';
+                }}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {m.richText_importFileLabel()}
+              </Button>
+            </div>
+          </div>
+          {importError ? (
+            <p className="text-destructive px-3 pb-2 text-xs">
+              {m.richText_importFileError()}
+            </p>
+          ) : (
+            <p className="text-muted-foreground px-3 pb-2 text-xs">
+              {m.richText_importFileHint()}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -387,7 +478,7 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
 }
 
 export const RichTextEditor = createRichTextEditor<Editor>({
-  useEditor: (setup, maxCharacters) =>
+  useEditor: (setup) =>
     useEditor({
       ...setup,
       extensions: [
@@ -402,7 +493,11 @@ export const RichTextEditor = createRichTextEditor<Editor>({
           },
         }),
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
-        CharacterCount.configure({ limit: maxCharacters }),
+        // Count only — a `limit` silently rejects paste/input that would
+        // exceed it (a typical pasted job description blows past 10k). The
+        // footer warns when the hosted 25k cap is crossed; the API is the
+        // authority if the operator still submits.
+        CharacterCount.configure({}),
       ],
     }),
   useToolbarState: (editor) =>

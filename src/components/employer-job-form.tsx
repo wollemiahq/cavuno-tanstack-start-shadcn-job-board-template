@@ -294,6 +294,7 @@ export interface EmployerJobFormDependencies {
   navigate: (options: {
     to: '/employers/companies/$slug';
     params: { slug: string };
+    search?: { posted?: '1'; job_id?: string };
     reloadDocument?: boolean;
   }) => Promise<void>;
 }
@@ -732,10 +733,10 @@ export function EmployerJobForm({
       return;
     }
     setCommittedCheckoutJobId(null);
-    await goToList();
+    await goToList(jobId);
   }
 
-  async function goToList() {
+  async function goToList(jobId?: string) {
     setStatus('committed');
     try {
       // Soft client nav reused the list loader, so the URL changed
@@ -745,6 +746,10 @@ export function EmployerJobForm({
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
+        search: {
+          posted: '1',
+          ...(jobId ? { job_id: jobId } : {}),
+        },
         reloadDocument: true,
       });
     } catch {
@@ -823,7 +828,7 @@ export function EmployerJobForm({
         return;
       }
       if (!selectedBilling) {
-        await goToList();
+        await goToList(result.data.id);
         return;
       }
       setCommittedCheckoutJobId(result.data.id);
@@ -861,7 +866,7 @@ export function EmployerJobForm({
       await runCheckout(mode.jobId);
       return;
     }
-    await goToList();
+    await goToList(mode.jobId);
   }
 
   const submitLabel =

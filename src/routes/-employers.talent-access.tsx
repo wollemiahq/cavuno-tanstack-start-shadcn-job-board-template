@@ -464,11 +464,24 @@ export function EmployersTalentAccessView({
       dependencies={{
         postingPlanLink:
           pageDependencies?.postingPlanLink ??
-          (({ planId, className, children }) => (
-            <Link to="/post" search={{ plan: planId }} className={className}>
-              {children}
-            </Link>
-          )),
+          (({ planId, className, children }) =>
+            viewer.kind === 'employer' && viewer.companySlug ? (
+              <Link
+                to="/employers/companies/$slug/jobs/new"
+                params={{ slug: viewer.companySlug }}
+                className={className}
+              >
+                {children}
+              </Link>
+            ) : viewer.kind === 'employer' ? (
+              <Link to="/employers/dashboard" className={className}>
+                {children}
+              </Link>
+            ) : (
+              <Link to="/post" search={{ plan: planId }} className={className}>
+                {children}
+              </Link>
+            )),
         joinLink:
           pageDependencies?.joinLink ??
           (({ className, children }) => (
