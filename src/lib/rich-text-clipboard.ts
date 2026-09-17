@@ -37,10 +37,7 @@ export function plainTextToHtml(text: string): string {
     .join('');
 }
 
-export function clipToCharacterBudget(
-  text: string,
-  remaining: number,
-): string {
+export function clipToCharacterBudget(text: string, remaining: number): string {
   if (remaining <= 0) return '';
   return text.length <= remaining ? text : text.slice(0, remaining);
 }
