@@ -45,7 +45,10 @@ import {
 } from '@/components/invoice-billing-fields';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { PlaceTagsField } from '@/components/place-tags-field';
-import { RichTextEditor } from '@/components/rich-text-editor';
+import {
+  RichTextEditor,
+  RICH_TEXT_MAX_CHARACTERS,
+} from '@/components/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1164,6 +1167,7 @@ export function EmployerJobForm({
               value={form.description}
               onChange={(value) => set('description', value)}
               ariaLabel={m.postJob_descriptionLabel()}
+              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
             />
             {fieldErrors.description ? (
               <FieldError>{m.postJob_descriptionRequiredError()}</FieldError>

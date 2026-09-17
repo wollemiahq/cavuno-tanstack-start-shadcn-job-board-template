@@ -63,6 +63,13 @@ export interface RichTextEditorProps {
   maxCharacters?: number;
 }
 
+/**
+ * Hosted-board HTML bodies — job descriptions and company about — cap at
+ * 25,000 characters. Every authoring surface passes this so a long paste
+ * clips to the remaining budget instead of being rejected.
+ */
+export const RICH_TEXT_MAX_CHARACTERS = 25_000;
+
 interface RichTextEditorChain {
   extendMarkRange: (mark: string) => RichTextEditorChain;
   focus: () => RichTextEditorChain;
@@ -133,8 +140,7 @@ export interface RichTextEditorDependencies<
   selectionAnchor: (editor: TEditor, range: EditorRange) => SelectionAnchor;
 }
 
-/** Hosted-board job descriptions cap at 25,000 characters. */
-const DEFAULT_MAX_CHARACTERS = 25_000;
+const DEFAULT_MAX_CHARACTERS = RICH_TEXT_MAX_CHARACTERS;
 
 const IMPORT_ACCEPT =
   '.txt,.html,.htm,.md,.markdown,text/plain,text/html,text/markdown';

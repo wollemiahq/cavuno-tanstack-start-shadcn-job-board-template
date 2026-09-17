@@ -50,7 +50,10 @@ import {
 } from '@/components/employer/employer-profile-views-stat';
 import { Page, PageContent } from '@/components/layout/page';
 import { LogoUpload } from '@/components/logo-upload';
-import { RichTextEditor } from '@/components/rich-text-editor';
+import {
+  RichTextEditor,
+  RICH_TEXT_MAX_CHARACTERS,
+} from '@/components/rich-text-editor';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -526,6 +529,7 @@ function ProfileEditorCard({
                 setForm((prev) => ({ ...prev, description }))
               }
               ariaLabel={m.employerProfile_aboutHeading()}
+              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
             />
           </Field>
           {/* In-page form: primary action left-aligned, in reading flow. */}
