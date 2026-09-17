@@ -114,14 +114,12 @@ export function LocationCombobox({
       autoComplete="none"
       autoHighlight
       open={
-        open &&
-        (loading || suggestions.length > 0 || text.trim().length >= 2)
+        open && (loading || suggestions.length > 0 || text.trim().length >= 2)
       }
       onOpenChange={(next, details) => {
         if (
           !next &&
-          (loading ||
-            (text.trim().length >= 2 && suggestions.length === 0)) &&
+          (loading || (text.trim().length >= 2 && suggestions.length === 0)) &&
           (details.reason === 'none' ||
             details.reason === 'cancel-open' ||
             details.reason === 'input-change')

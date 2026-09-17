@@ -55,14 +55,12 @@ export function LocationSuggestField({
       filter={null}
       autoComplete="none"
       open={
-        open &&
-        (loading || suggestions.length > 0 || value.trim().length >= 2)
+        open && (loading || suggestions.length > 0 || value.trim().length >= 2)
       }
       onOpenChange={(next, details) => {
         if (
           !next &&
-          (loading ||
-            (value.trim().length >= 2 && suggestions.length === 0)) &&
+          (loading || (value.trim().length >= 2 && suggestions.length === 0)) &&
           (details.reason === 'none' ||
             details.reason === 'cancel-open' ||
             details.reason === 'input-change')

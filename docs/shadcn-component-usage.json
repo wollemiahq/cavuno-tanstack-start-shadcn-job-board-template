@@ -69,6 +69,7 @@
         "src/routes/-alerts.manage.tsx",
         "src/routes/-auth.sign-in.tsx",
         "src/routes/-auth.verify-email-required.tsx",
+        "src/routes/-employers.company-jobs.tsx",
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.onboarding.tsx",
         "src/routes/-messages-runtime.tsx"
@@ -818,7 +819,8 @@
         "src/routes/-employers.onboarding.tsx",
         "src/routes/-employers.talent-access.tsx",
         "src/routes/-memberships.tsx",
-        "src/routes/-talent-unlock-gate.tsx"
+        "src/routes/-talent-unlock-gate.tsx",
+        "src/routes/post.tsx"
       ]
     },
     {

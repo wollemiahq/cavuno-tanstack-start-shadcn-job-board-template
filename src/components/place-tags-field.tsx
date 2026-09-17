@@ -113,8 +113,7 @@ export function PlaceTagsField({
         autoComplete="none"
         autoHighlight
         open={
-          open &&
-          (loading || available.length > 0 || text.trim().length >= 2)
+          open && (loading || available.length > 0 || text.trim().length >= 2)
         }
         onOpenChange={(next, details) => {
           // Base UI closes an empty list (`none` / `cancel-open` /
@@ -123,8 +122,7 @@ export function PlaceTagsField({
           // the results that arrived a moment later.
           if (
             !next &&
-            (loading ||
-              (text.trim().length >= 2 && available.length === 0)) &&
+            (loading || (text.trim().length >= 2 && available.length === 0)) &&
             (details.reason === 'none' ||
               details.reason === 'cancel-open' ||
               details.reason === 'input-change')

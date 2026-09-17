@@ -30,6 +30,7 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
+import { employerPostDestination } from '@/lib/employer-post-destination';
 import type {
   HeaderSearchLocation,
   HeaderSearchMarket,
@@ -37,7 +38,6 @@ import type {
   HeaderSearchSubmission,
   HeaderSearchTerm,
 } from '@/lib/header-search';
-import { employerPostDestination } from '@/lib/employer-post-destination';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import {
   chromeFooter,

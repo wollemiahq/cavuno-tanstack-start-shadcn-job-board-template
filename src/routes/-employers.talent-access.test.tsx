@@ -451,10 +451,7 @@ describe('employer landing — job posting CTAs', () => {
 
     expect(
       screen.getByRole('link', { name: m.siteHeader_postJobLabel() }),
-    ).toHaveAttribute(
-      'href',
-      '/employers/companies/acme-ventures/jobs/new',
-    );
+    ).toHaveAttribute('href', '/employers/companies/acme-ventures/jobs/new');
   });
 
   it('keeps anonymous posting-plan CTAs on the public /post wizard', async () => {
