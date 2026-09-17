@@ -30,9 +30,9 @@ import {
 
 import { sanitizeLinkUrl } from '../lib/post-form';
 import {
-  importedFileToHtml,
-  plainTextToHtml,
-  shouldPastePlainText,
+  importedFileToClippedHtml,
+  remainingCharacterBudget,
+  resolvePastedHtml,
 } from '../lib/rich-text-clipboard';
 import { m } from '../paraglide/messages';
 
@@ -59,7 +59,7 @@ export interface RichTextEditorProps {
   onChange: (html: string) => void;
   /** Accessible name for the editing surface. */
   ariaLabel: string;
-  /** Character ceiling; the count line shows how many remain. */
+  /** Character ceiling; paste and import fill up to this instead of rejecting. */
   maxCharacters?: number;
 }
 
@@ -259,15 +259,23 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
           handlePaste: (_view, event) => {
             const clipboard = event.clipboardData;
             if (!clipboard) return false;
-            const html = clipboard.getData('text/html');
-            const text = clipboard.getData('text/plain');
-            if (!shouldPastePlainText(html, text)) return false;
+            const current = editorRef.current;
+            const selection = current?.state.selection;
+            const remaining = remainingCharacterBudget(
+              current?.storage.characterCount.characters() ?? 0,
+              maxCharacters,
+              selection ? Math.max(0, selection.to - selection.from) : 0,
+            );
+            const pasted = resolvePastedHtml(
+              clipboard.getData('text/html'),
+              clipboard.getData('text/plain'),
+              remaining,
+            );
+            if (pasted.kind === 'default') return false;
             event.preventDefault();
-            editorRef.current
-              ?.chain()
-              .focus()
-              .insertContent(plainTextToHtml(text))
-              .run();
+            if (pasted.kind === 'insert') {
+              current?.chain().focus().insertContent(pasted.html).run();
+            }
             return true;
           },
         },
@@ -282,7 +290,11 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
     const importFile = (file: File | undefined) => {
       if (!file || !editor) return;
       void file.text().then((contents) => {
-        const html = importedFileToHtml(file.name, contents);
+        const html = importedFileToClippedHtml(
+          file.name,
+          contents,
+          maxCharacters,
+        );
         if (!html) {
           setImportError(true);
           return;
@@ -483,7 +495,7 @@ export function createRichTextEditor<TEditor extends RichTextEditorModel>(
 }
 
 export const RichTextEditor = createRichTextEditor<Editor>({
-  useEditor: (setup) =>
+  useEditor: (setup, maxCharacters) =>
     useEditor({
       ...setup,
       extensions: [
@@ -498,11 +510,10 @@ export const RichTextEditor = createRichTextEditor<Editor>({
           },
         }),
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
-        // Count only — a `limit` silently rejects paste/input that would
-        // exceed it (a typical pasted job description blows past 10k). The
-        // footer warns when the hosted 25k cap is crossed; the API is the
-        // authority if the operator still submits.
-        CharacterCount.configure({}),
+        // Typing stops at the cap. Paste/import are clipped in handlePaste /
+        // importedFileToClippedHtml so a long job description still lands,
+        // instead of CharacterCount rejecting the whole transaction.
+        CharacterCount.configure({ limit: maxCharacters }),
       ],
     }),
   useToolbarState: (editor) =>

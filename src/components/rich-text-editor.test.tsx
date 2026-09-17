@@ -235,13 +235,13 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('RichTextEditor', () => {
-  const renderEditor = (onChange = vi.fn()) => {
+  const renderEditor = (onChange = vi.fn(), maxCharacters = 12) => {
     render(
       <RichTextEditor
         value="<p>Initial description</p>"
         onChange={onChange}
         ariaLabel="Job description"
-        maxCharacters={12}
+        maxCharacters={maxCharacters}
       />,
     );
     return onChange;
@@ -383,7 +383,7 @@ describe('RichTextEditor', () => {
   });
 
   it('inserts Word clipboard HTML as plain-text paragraphs', () => {
-    renderEditor();
+    renderEditor(vi.fn(), 25_000);
 
     const preventDefault = vi.fn();
     const handled = editorHarness.options?.editorProps.handlePaste?.(
@@ -403,6 +403,33 @@ describe('RichTextEditor', () => {
     expect(preventDefault).toHaveBeenCalledOnce();
     expect(editorHarness.calls.insertContent).toHaveBeenCalledWith(
       '<p>Role overview</p>',
+    );
+  });
+
+  it('clips a paste that would exceed the character limit', () => {
+    editorHarness.editor.state.selection = {
+      from: 3,
+      to: 3,
+      $from: editorHarness.resolvedFrom,
+    };
+    renderEditor();
+
+    const preventDefault = vi.fn();
+    const handled = editorHarness.options?.editorProps.handlePaste?.(
+      editorHarness.editor.view,
+      {
+        clipboardData: {
+          getData: (type: string) =>
+            type === 'text/html' ? '<p>abcdefghij</p>' : 'abcdefghij',
+        },
+        preventDefault,
+      },
+    );
+
+    expect(handled).toBe(true);
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(editorHarness.calls.insertContent).toHaveBeenCalledWith(
+      '<p>abcde</p>',
     );
   });
 
