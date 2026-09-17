@@ -720,6 +720,58 @@ describe('EmployerJobForm', () => {
     expect(mocks.createJob).not.toHaveBeenCalled();
   });
 
+  it('creates a draft without checkout when the employer saves a draft', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    expect(mocks.checkoutJob).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '/employers/companies/$slug',
+          reloadDocument: true,
+        }),
+      ),
+    );
+  });
+
+  it('does not offer Post job when there is nothing to publish with', async () => {
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Post job' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Create draft' }),
+    ).toBeInTheDocument();
+  });
+
   it('surfaces a hybrid office miss instead of a silent no-op submit', async () => {
     const { container } = await renderWithRouter(
       <EmployerJobForm

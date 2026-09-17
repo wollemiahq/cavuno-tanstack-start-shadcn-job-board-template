@@ -4,9 +4,11 @@
  * The shared employer job form — used by both "Post a job" (create) and the
  * per-job "Edit job" page. It owns the role field set plus, when the job can be
  * published (any job that is not live, with credits/plans available), the
- * billing picker and checkout step. The route decides the mode and passes the
- * workspace data; the form owns the create/update + checkout orchestration so
- * the two surfaces never drift.
+ * billing picker and checkout step. Create is two explicit actions: save a
+ * draft, or post (checkout/publish). Submitting without a plan never pretends
+ * the job went live. The route decides the mode and passes the workspace
+ * data; the form owns the create/update + checkout orchestration so the two
+ * surfaces never drift.
  */
 import { useMemo, useState, type ReactNode } from 'react';
 
@@ -458,7 +460,6 @@ export function EmployerJobForm({
   const needsPublishing = mode.kind === 'edit' && mode.status !== 'published';
   const showBilling = mode.kind === 'create' || needsPublishing;
   const canPublish = billingOptions.length > 0 || plans.length > 0;
-  const billingRequired = mode.kind === 'create' && canPublish;
 
   const [form, setForm] = useState(() =>
     initialForm(job, countryName, {
@@ -752,11 +753,12 @@ export function EmployerJobForm({
     }
   }
 
-  async function submit() {
+  async function submit(intent: 'publish' | 'draft' = 'publish') {
     if (status === 'saving' || status === 'committed') return;
     const applyExternal =
       form.applyMethod === 'external' &&
       normalizeApplicationTarget(form.applicationTarget) === undefined;
+    const publishing = intent === 'publish';
     const errors = {
       description: isRichTextEmpty(form.description),
       officeLocations:
@@ -764,9 +766,15 @@ export function EmployerJobForm({
         form.remoteOption !== 'remote' &&
         form.officeLocations.length === 0,
       applicationTarget: applyExternal,
-      billing: billingRequired && selectedBilling === null,
+      billing:
+        publishing &&
+        mode.kind === 'create' &&
+        canPublish &&
+        selectedBilling === null,
       invoiceBilling:
-        invoiceBillingRequired && invoiceBillingIncomplete(invoiceBilling),
+        publishing &&
+        invoiceBillingRequired &&
+        invoiceBillingIncomplete(invoiceBilling),
     };
     setFieldErrors(errors);
     const fieldMessage = clientFieldErrorMessage(errors);
@@ -775,6 +783,12 @@ export function EmployerJobForm({
       // miss looks like a dead Post job button (live CJJ hybrid no-op).
       setStatus('error');
       setMessage(fieldMessage);
+      return;
+    }
+
+    if (mode.kind === 'create' && publishing && !selectedBilling) {
+      setStatus('error');
+      setMessage(m.employerCompany_noPlansText());
       return;
     }
 
@@ -822,8 +836,13 @@ export function EmployerJobForm({
         setMessage(boardErrorMessage(result));
         return;
       }
-      if (!selectedBilling) {
+      if (intent === 'draft') {
         await goToList();
+        return;
+      }
+      if (!selectedBilling) {
+        setStatus('error');
+        setMessage(m.employerCompany_noPlansText());
         return;
       }
       setCommittedCheckoutJobId(result.data.id);
@@ -870,12 +889,15 @@ export function EmployerJobForm({
         ? m.postJob_submittingLabel()
         : m.employerEditJob_savingLabel()
       : mode.kind === 'create'
-        ? canPublish
-          ? m.postJob_submitButtonLabel()
-          : m.employerCompany_createDraftLabel()
+        ? m.postJob_submitButtonLabel()
         : needsPublishing && selectedBilling
           ? m.employerEditJob_publishSaveLabel()
           : m.employerEditJob_saveLabel();
+  const draftLabel =
+    status === 'saving'
+      ? m.postJob_submittingLabel()
+      : m.employerCompany_createDraftLabel();
+  const actionsBusy = status === 'saving' || status === 'committed';
 
   if (membershipRequired && membershipGate) return membershipGate;
 
@@ -884,7 +906,9 @@ export function EmployerJobForm({
       className="space-y-6"
       onSubmit={(event) => {
         event.preventDefault();
-        void submit();
+        void submit(
+          mode.kind === 'create' && !canPublish ? 'draft' : 'publish',
+        );
       }}
     >
       <Card>
@@ -1465,15 +1489,29 @@ export function EmployerJobForm({
       {/* In-page form: primary action left-aligned, Cancel a ghost beside it —
           a single inline row, not a stacked pair. */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="submit"
-          disabled={status === 'saving' || status === 'committed'}
-        >
-          {submitLabel}
-        </Button>
+        {mode.kind === 'create' && canPublish ? (
+          <Button type="submit" disabled={actionsBusy}>
+            {submitLabel}
+          </Button>
+        ) : null}
+        {mode.kind === 'create' ? (
+          <Button
+            type="button"
+            variant={canPublish ? 'outline' : 'default'}
+            disabled={actionsBusy}
+            onClick={() => void submit('draft')}
+          >
+            {draftLabel}
+          </Button>
+        ) : (
+          <Button type="submit" disabled={actionsBusy}>
+            {submitLabel}
+          </Button>
+        )}
         <Button
           type="button"
           variant="ghost"
+          disabled={actionsBusy}
           onClick={() =>
             void router.navigate({
               to: '/employers/companies/$slug',
