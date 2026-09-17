@@ -19,11 +19,9 @@ export function parseCompanyJobsSearch(
   search: UrlSearchInput,
 ): CompanyJobsSearch {
   const jobId = searchString(search.job_id);
-  return {
-    ...(flagEnabled(search.checkout_success)
-      ? { checkout_success: '1' as const }
-      : {}),
-    ...(flagEnabled(search.posted) ? { posted: '1' as const } : {}),
-    ...(jobId ? { job_id: jobId } : {}),
-  };
+  const result: CompanyJobsSearch = {};
+  if (flagEnabled(search.checkout_success)) result.checkout_success = '1';
+  if (flagEnabled(search.posted)) result.posted = '1';
+  if (jobId) result.job_id = jobId;
+  return result;
 }

@@ -93,11 +93,16 @@ interface EditorPasteEvent {
   preventDefault: () => void;
 }
 
+/** ProseMirror editor view; unused by our clipboard fallback. */
+interface EditorPasteView {
+  readonly dispatch?: never;
+}
+
 interface EditorSetup<TEditor extends RichTextEditorModel> {
   content: string;
   editorProps: {
     attributes: Record<string, string>;
-    handlePaste?: (view: unknown, event: EditorPasteEvent) => boolean;
+    handlePaste?: (view: EditorPasteView, event: EditorPasteEvent) => boolean;
   };
   immediatelyRender: false;
   onUpdate: (context: { editor: TEditor }) => void;

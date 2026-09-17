@@ -743,13 +743,12 @@ export function EmployerJobForm({
       // while the post/edit form stayed on screen. A document reload
       // re-runs the list; invalidate is not required and would skip
       // this navigate if it rejected.
+      const search: { posted: '1'; job_id?: string } = { posted: '1' };
+      if (jobId) search.job_id = jobId;
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
-        search: {
-          posted: '1',
-          ...(jobId ? { job_id: jobId } : {}),
-        },
+        search,
         reloadDocument: true,
       });
     } catch {

@@ -24,7 +24,7 @@ interface EditorOptions {
   editorProps: {
     attributes: Record<string, string>;
     handlePaste?: (
-      view: unknown,
+      view: { readonly dispatch?: never },
       event: {
         clipboardData: { getData: (type: string) => string } | null;
         preventDefault: () => void;
