@@ -94,9 +94,9 @@ interface EditorPasteEvent {
 }
 
 /** ProseMirror editor view; unused by our clipboard fallback. */
-interface EditorPasteView {
-  readonly dispatch?: never;
-}
+type EditorPasteView = {
+  readonly dom?: Element;
+};
 
 interface EditorSetup<TEditor extends RichTextEditorModel> {
   content: string;
