@@ -53,7 +53,7 @@ async function renderGate(props: GateProps) {
 
 describe('MembershipPostGate', () => {
   it('offers a signed-out visitor both roads, returning to the gated surface', async () => {
-    await renderGate({ boardName: 'Example Jobs' });
+    await renderGate({ boardName: 'Example Jobs', hasMembershipPage: true });
 
     expect(
       screen.getByRole('link', { name: 'Become a member' }),
@@ -64,13 +64,37 @@ describe('MembershipPostGate', () => {
     );
   });
 
+  it('makes sign in the only road when the board publishes no membership plan', async () => {
+    await renderGate({ boardName: 'Example Jobs' });
+
+    expect(screen.queryByRole('link', { name: 'Become a member' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      '/auth/sign-in?returnTo=%2Fpost',
+    );
+  });
+
   it('sends a signed-in viewer to their company dashboard, keeping the membership road', async () => {
-    await renderGate({ boardName: 'Example Jobs', signedIn: true });
+    await renderGate({
+      boardName: 'Example Jobs',
+      signedIn: true,
+      hasMembershipPage: true,
+    });
 
     expect(
       screen.getByRole('link', { name: 'Post from your company dashboard' }),
     ).toHaveAttribute('href', '/employers');
     expect(screen.getByRole('link', { name: 'Become a member' })).toBeVisible();
+    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+  });
+
+  it('hides become-a-member for a signed-in viewer when /memberships would 404', async () => {
+    await renderGate({ boardName: 'Example Jobs', signedIn: true });
+
+    expect(
+      screen.getByRole('link', { name: 'Post from your company dashboard' }),
+    ).toHaveAttribute('href', '/employers');
+    expect(screen.queryByRole('link', { name: 'Become a member' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
   });
 

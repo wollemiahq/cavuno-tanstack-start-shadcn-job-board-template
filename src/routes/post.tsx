@@ -28,7 +28,7 @@ export const Route = createFileRoute('/post')({
 function PostJobPage() {
   const { plans, remotePermits } = Route.useLoaderData();
   const search = Route.useSearch();
-  const { board } = rootApi.useLoaderData();
+  const { board, offerGate } = rootApi.useLoaderData();
   const { user, ready } = useRootSession();
   const officeLocationSuggestions = useLocationSuggestions(getLocale());
   // Safe anonymously: the board says up front whether posting is members-only,
@@ -39,6 +39,7 @@ function PostJobPage() {
       boardName={board.name}
       contactEmail={board.footer.contactEmail}
       signedIn={ready && user !== null}
+      hasMembershipPage={offerGate.hasMembershipPage}
     />
   ) : undefined;
 

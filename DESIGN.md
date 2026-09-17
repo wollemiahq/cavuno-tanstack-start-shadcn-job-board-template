@@ -1010,17 +1010,20 @@ both the anonymous `/post` route (`context.posting.requiresMembership`) and
 the signed-in employer flow, where the board refuses the write with
 `membership_required`.
 
-Signed out, the visitor gets both roads: become a member, or sign in (a
-member's account already carries the company's membership). Signed in, the
-anonymous form is the wrong surface either way: a member posts from their
-company dashboard, where the employer flow knows the membership, and a
-non-member can still become one. When the board publishes a
-contact address, a line invites the visitor to ask for access.
+Signed out on a board that publishes a membership plan, the visitor gets
+both roads: become a member, or sign in (a member's account already carries
+the company's membership). Without a published plan, `/memberships` 404s, so
+the only road is sign in. Signed in, the anonymous form is the wrong surface
+either way: a member posts from their company dashboard, where the employer
+flow knows the membership, and a non-member can still become one — but only
+when the memberships page exists. When the board publishes a contact
+address, a line invites the visitor to ask for access.
 
 Props:
 
 - `boardName: string`
 - `contactEmail?: string | null | undefined`
+- `hasMembershipPage?: boolean | undefined`
 - `returnTo?: string | undefined`
 - `signedIn?: boolean | undefined`
 
