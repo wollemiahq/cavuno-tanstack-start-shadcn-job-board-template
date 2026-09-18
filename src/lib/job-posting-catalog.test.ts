@@ -9,7 +9,10 @@ describe('hasJobPostingProduct', () => {
 
   it('is true when a job-posting plan is for sale', () => {
     expect(
-      hasJobPostingProduct({ plans: [{ id: 'plan-free' }], billingOptions: [] }),
+      hasJobPostingProduct({
+        plans: [{ id: 'plan-free' }],
+        billingOptions: [],
+      }),
     ).toBe(true);
   });
 

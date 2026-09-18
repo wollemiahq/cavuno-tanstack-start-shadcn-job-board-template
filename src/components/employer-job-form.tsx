@@ -77,8 +77,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
-import { hasJobPostingProduct } from '@/lib/job-posting-catalog';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
+import { hasJobPostingProduct } from '@/lib/job-posting-catalog';
 import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
   CreateEmployerJobBody,

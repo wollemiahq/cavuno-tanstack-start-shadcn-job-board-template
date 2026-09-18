@@ -273,9 +273,7 @@ export function CompanyJobsPageView({
                     : m.postJob_noPlansBody()}
                 </EmptyDescription>
               </EmptyHeader>
-              {postJobLink ? (
-                <EmptyContent>{postJobLink}</EmptyContent>
-              ) : null}
+              {postJobLink ? <EmptyContent>{postJobLink}</EmptyContent> : null}
             </Empty>
           ) : (
             <>

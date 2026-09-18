@@ -441,7 +441,14 @@ describe('employer company workspace', () => {
 
   it('hides Post a job when the board has no posting SKU', async () => {
     await renderJobs(
-      [{ ...draftJob, id: 'a', status: 'published', publishedAt: '2026-07-01' }],
+      [
+        {
+          ...draftJob,
+          id: 'a',
+          status: 'published',
+          publishedAt: '2026-07-01',
+        },
+      ],
       {},
       false,
     );
@@ -452,7 +459,9 @@ describe('employer company workspace', () => {
 
   it('does not offer a post CTA on an empty jobs list without a posting SKU', async () => {
     await renderJobs([], {}, false);
-    expect(screen.getByText(m.employerCompany_noJobsText())).toBeInTheDocument();
+    expect(
+      screen.getByText(m.employerCompany_noJobsText()),
+    ).toBeInTheDocument();
     expect(screen.getByText(m.postJob_noPlansBody())).toBeInTheDocument();
     expect(
       screen.queryByRole('link', { name: m.nav_post() }),
