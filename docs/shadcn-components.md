@@ -40,7 +40,7 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
 | `dropdown-menu` | Used (7) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>+4 more in the JSON ledger |
-| `empty` | Used (44) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+41 more in the JSON ledger |
+| `empty` | Used (45) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+42 more in the JSON ledger |
 | `field` | Used (30) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+27 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
 | `input` | Used (24) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+21 more in the JSON ledger |

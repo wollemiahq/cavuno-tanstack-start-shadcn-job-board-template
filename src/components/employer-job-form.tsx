@@ -5,8 +5,8 @@
  * per-job "Edit job" page. It owns the role field set plus, when the job can be
  * published (any job that is not live, with credits/plans available), the
  * billing picker and checkout step. Create is two explicit actions: save a
- * draft, or post (checkout/publish). Submitting without a plan never pretends
- * the job went live. The route decides the mode and passes the workspace
+ * draft, or post (checkout/publish). An empty catalog is posting-off — not a
+ * draft-only mode. The route decides the mode and passes the workspace
  * data; the form owns the create/update + checkout orchestration so the two
  * surfaces never drift.
  */
@@ -53,6 +53,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
   Field,
   FieldContent,
   FieldDescription,
@@ -71,6 +77,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import { hasJobPostingProduct } from '@/lib/job-posting-catalog';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
@@ -459,7 +466,7 @@ export function EmployerJobForm({
   // only.
   const needsPublishing = mode.kind === 'edit' && mode.status !== 'published';
   const showBilling = mode.kind === 'create' || needsPublishing;
-  const canPublish = billingOptions.length > 0 || plans.length > 0;
+  const canPublish = hasJobPostingProduct({ plans, billingOptions });
 
   const [form, setForm] = useState(() =>
     initialForm(job, countryName, {
@@ -901,14 +908,23 @@ export function EmployerJobForm({
 
   if (membershipRequired && membershipGate) return membershipGate;
 
+  if (mode.kind === 'create' && !canPublish) {
+    return (
+      <Empty className="border-border min-h-64 border">
+        <EmptyHeader>
+          <EmptyTitle>{m.postJob_noPlansTitle()}</EmptyTitle>
+          <EmptyDescription>{m.postJob_noPlansBody()}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
   return (
     <form
       className="space-y-6"
       onSubmit={(event) => {
         event.preventDefault();
-        void submit(
-          mode.kind === 'create' && !canPublish ? 'draft' : 'publish',
-        );
+        void submit('publish');
       }}
     >
       <Card>
@@ -1489,7 +1505,7 @@ export function EmployerJobForm({
       {/* In-page form: primary action left-aligned, Cancel a ghost beside it —
           a single inline row, not a stacked pair. */}
       <div className="flex flex-wrap items-center gap-3">
-        {mode.kind === 'create' && canPublish ? (
+        {mode.kind === 'create' ? (
           <Button type="submit" disabled={actionsBusy}>
             {submitLabel}
           </Button>
@@ -1497,7 +1513,7 @@ export function EmployerJobForm({
         {mode.kind === 'create' ? (
           <Button
             type="button"
-            variant={canPublish ? 'outline' : 'default'}
+            variant="outline"
             disabled={actionsBusy}
             onClick={() => void submit('draft')}
           >

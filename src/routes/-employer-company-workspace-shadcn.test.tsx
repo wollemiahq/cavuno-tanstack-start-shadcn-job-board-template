@@ -246,6 +246,7 @@ async function renderJobs(
     stats?: EmployerJobStat[];
     timeseries?: EmployerJobStatsPoint[];
   } = {},
+  canPost = true,
 ) {
   const statsIndex = Promise.resolve(
     new Map((deferred.stats ?? []).map((stat) => [stat.jobId, stat])),
@@ -257,6 +258,7 @@ async function renderJobs(
     jobs: { data: jobs },
     statsIndex,
     timeseries,
+    canPost,
   } satisfies CompanyJobsViewData;
   await act(async () => {
     await renderWithRouter(
@@ -437,6 +439,26 @@ describe('employer company workspace', () => {
     expect(screen.getByText('You have 2 active jobs.')).toBeInTheDocument();
   });
 
+  it('hides Post a job when the board has no posting SKU', async () => {
+    await renderJobs(
+      [{ ...draftJob, id: 'a', status: 'published', publishedAt: '2026-07-01' }],
+      {},
+      false,
+    );
+    expect(
+      screen.queryByRole('link', { name: m.nav_post() }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not offer a post CTA on an empty jobs list without a posting SKU', async () => {
+    await renderJobs([], {}, false);
+    expect(screen.getByText(m.employerCompany_noJobsText())).toBeInTheDocument();
+    expect(screen.getByText(m.postJob_noPlansBody())).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: m.nav_post() }),
+    ).not.toBeInTheDocument();
+  });
+
   it('links every role name to its edit page and hides applicants for drafts', async () => {
     await renderJobs([draftJob]);
 
@@ -594,6 +616,7 @@ describe('employer company workspace', () => {
       },
       statsIndex: Promise.resolve(new Map()),
       timeseries: Promise.resolve([]),
+      canPost: true,
     } satisfies CompanyJobsViewData;
     await act(async () => {
       await renderWithRouter(

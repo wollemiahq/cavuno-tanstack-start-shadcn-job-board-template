@@ -479,6 +479,7 @@
         "src/components/board/talent-search-page.tsx",
         "src/components/candidate-route-state.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/employer/employer-stats-chart.tsx",
         "src/components/empty-state.tsx",
         "src/components/experience-section.tsx",
