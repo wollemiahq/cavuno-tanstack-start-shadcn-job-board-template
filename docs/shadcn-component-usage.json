@@ -69,6 +69,7 @@
         "src/routes/-alerts.manage.tsx",
         "src/routes/-auth.sign-in.tsx",
         "src/routes/-auth.verify-email-required.tsx",
+        "src/routes/-employers.company-jobs.tsx",
         "src/routes/-employers.dashboard.tsx",
         "src/routes/-employers.onboarding.tsx",
         "src/routes/-messages-runtime.tsx"
@@ -479,6 +480,7 @@
         "src/components/board/talent-search-page.tsx",
         "src/components/candidate-route-state.tsx",
         "src/components/education-section.tsx",
+        "src/components/employer-job-form.tsx",
         "src/components/employer/employer-stats-chart.tsx",
         "src/components/empty-state.tsx",
         "src/components/experience-section.tsx",
@@ -818,7 +820,8 @@
         "src/routes/-employers.onboarding.tsx",
         "src/routes/-employers.talent-access.tsx",
         "src/routes/-memberships.tsx",
-        "src/routes/-talent-unlock-gate.tsx"
+        "src/routes/-talent-unlock-gate.tsx",
+        "src/routes/post.tsx"
       ]
     },
     {

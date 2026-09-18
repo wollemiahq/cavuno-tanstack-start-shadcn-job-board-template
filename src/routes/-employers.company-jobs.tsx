@@ -44,6 +44,7 @@ import {
 } from '@/components/employer/employer-stats-chart';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,8 @@ import {
 } from '@/components/ui/table';
 import { navCopy } from '@/copy-groups/nav';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import type { CompanyJobsSearch } from '@/lib/company-jobs-search';
+import { hasJobPostingProduct } from '@/lib/job-posting-catalog';
 import type { UrlSearchInput } from '@/lib/pagination';
 import type {
   EmployerJobStat,
@@ -144,7 +147,16 @@ export function createCompanyJobsLoader(
         loaderDependencies.getCompanyWorkspace({ data: { slug: params.slug } }),
         loaderDependencies.getSeoBase(),
       ]);
-      return { ...workspace, seo, statsIndex, timeseries };
+      return {
+        ...workspace,
+        seo,
+        statsIndex,
+        timeseries,
+        canPost: hasJobPostingProduct({
+          plans: workspace.plans,
+          billingOptions: workspace.billingOptions.data,
+        }),
+      };
     } catch (error) {
       return await loaderDependencies.handleEmployerLoaderError(
         error,
@@ -190,6 +202,8 @@ export type CompanyJobsViewData = {
   jobs: { data: EmployerJobSummary[] };
   statsIndex: Promise<Map<string, EmployerJobStat>>;
   timeseries: Promise<EmployerJobStatsPoint[]>;
+  /** False when the board has no job-posting SKU and no leftover credits. */
+  canPost: boolean;
 };
 
 function activeJobsSubtitle(count: number) {
@@ -204,11 +218,13 @@ function activeJobsSubtitle(count: number) {
 export function CompanyJobsPageView({
   data,
   actions,
+  search = {},
 }: {
   data: CompanyJobsViewData;
   actions: CompanyJobsViewActions;
+  search?: CompanyJobsSearch;
 }) {
-  const { slug, membership, jobs, statsIndex, timeseries } = data;
+  const { slug, membership, jobs, statsIndex, timeseries, canPost } = data;
   const copy = {
     nav: navCopy(),
   };
@@ -219,7 +235,7 @@ export function CompanyJobsPageView({
     (job) => job.status === 'published' && !isEmployerJobExpired(job),
   ).length;
 
-  const postJobLink = (
+  const postJobLink = canPost ? (
     <Link
       to="/employers/companies/$slug/jobs/new"
       params={{ slug }}
@@ -228,7 +244,9 @@ export function CompanyJobsPageView({
       <PlusIcon data-icon="inline-start" aria-hidden />
       {copy.nav.post}
     </Link>
-  );
+  ) : null;
+
+  const outcome = postingOutcome(search, jobs.data);
 
   return (
     <Page width="content">
@@ -248,6 +266,13 @@ export function CompanyJobsPageView({
             {jobs.data.length > 0 ? postJobLink : null}
           </header>
 
+          {outcome ? (
+            <Alert>
+              <AlertTitle>{outcome.title}</AlertTitle>
+              <AlertDescription>{outcome.body}</AlertDescription>
+            </Alert>
+          ) : null}
+
           {jobs.data.length === 0 ? (
             <Empty className="min-h-96 border-0">
               <EmptyHeader>
@@ -256,10 +281,12 @@ export function CompanyJobsPageView({
                 </EmptyMedia>
                 <EmptyTitle>{m.employerCompany_noJobsText()}</EmptyTitle>
                 <EmptyDescription>
-                  {m.employerCompany_jobsEmptyText()}
+                  {canPost
+                    ? m.employerCompany_jobsEmptyText()
+                    : m.postJob_noPlansBody()}
                 </EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>{postJobLink}</EmptyContent>
+              {postJobLink ? <EmptyContent>{postJobLink}</EmptyContent> : null}
             </Empty>
           ) : (
             <>
@@ -307,6 +334,7 @@ export function CompanyJobsPageView({
                         language={getLocale()}
                         statsIndex={statsIndex}
                         actions={actions}
+                        highlighted={search.job_id === job.id}
                       />
                     ))}
                   </TableBody>
@@ -379,18 +407,42 @@ function StatCellsPending() {
   );
 }
 
+function postingOutcome(
+  search: CompanyJobsSearch,
+  jobs: EmployerJobSummary[],
+): { title: string; body: string } | null {
+  if (!search.checkout_success && !search.posted) return null;
+  const listed = !search.job_id || jobs.some((job) => job.id === search.job_id);
+  if (search.checkout_success) {
+    return {
+      title: m.employerJobs_checkoutSuccessTitle(),
+      body: listed
+        ? m.employerJobs_checkoutSuccessBody()
+        : m.employerJobs_postedMissingBody(),
+    };
+  }
+  return {
+    title: m.employerJobs_postedTitle(),
+    body: listed
+      ? m.employerJobs_postedBody()
+      : m.employerJobs_postedMissingBody(),
+  };
+}
+
 function JobRow({
   slug,
   job,
   language,
   statsIndex,
   actions,
+  highlighted,
 }: {
   slug: string;
   job: EmployerJobSummary;
   language: string;
   statsIndex: Promise<Map<string, EmployerJobStat>>;
   actions: CompanyJobsViewActions;
+  highlighted: boolean;
 }) {
   const expired = isEmployerJobExpired(job);
   const displayStatus = expired ? 'expired' : job.status;
@@ -502,7 +554,7 @@ function JobRow({
       : null;
 
   return (
-    <TableRow>
+    <TableRow data-state={highlighted ? 'selected' : undefined}>
       <TableCell>
         <div className="min-w-48">
           <Link

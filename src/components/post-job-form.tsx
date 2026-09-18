@@ -28,7 +28,11 @@ import {
   type InvoiceBillingDraft,
 } from './invoice-billing-fields';
 import { PageSection } from './layout/page';
-import { RichTextEditor, type RichTextEditorProps } from './rich-text-editor';
+import {
+  RichTextEditor,
+  RICH_TEXT_MAX_CHARACTERS,
+  type RichTextEditorProps,
+} from './rich-text-editor';
 import { Alert, AlertDescription } from './ui/alert';
 import {
   Attachment,
@@ -991,6 +995,7 @@ export function PostJobForm({
               value={description}
               onChange={(value) => updateFormState({ description: value })}
               ariaLabel={m.postJob_descriptionLabel()}
+              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
             />
           </Field>
           {jobForm.salary.visible ? (

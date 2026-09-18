@@ -63,6 +63,25 @@ const suggestions = {
   onQueryChange: () => {},
 };
 
+function leftoverCredit(
+  overrides: Partial<EmployerBillingOption> = {},
+): EmployerBillingOption {
+  return {
+    id: 'credit-1',
+    object: 'employer_billing_option',
+    type: 'order',
+    planId: 'plan-growth',
+    planName: 'Single post',
+    planKind: 'one_time',
+    jobsRemaining: 1,
+    jobsTotal: 1,
+    featuredRemaining: 0,
+    featuredTotal: 0,
+    renewsAt: null,
+    ...overrides,
+  };
+}
+
 const plan: JobPostingPlan = {
   object: 'job_posting_plan',
   id: 'plan-growth',
@@ -663,6 +682,7 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
+          search: { posted: '1', job_id: 'job-1' },
         }),
       ),
     );
@@ -718,6 +738,148 @@ describe('EmployerJobForm', () => {
       expect(screen.getByText(/Choose a credit or plan/)).toBeInTheDocument(),
     );
     expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+
+  it('creates a draft without checkout when the employer saves a draft', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    expect(mocks.checkoutJob).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '/employers/companies/$slug',
+          reloadDocument: true,
+        }),
+      ),
+    );
+  });
+
+  it('does not offer posting when the board has nothing to publish with', async () => {
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Post job' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Create draft' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(m.postJob_noPlansTitle())).toBeInTheDocument();
+  });
+
+  it('still offers Post job when leftover credits remain and no plan is for sale', async () => {
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[leftoverCredit()]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Post job' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Create draft' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Single post/ })).toBeChecked();
+  });
+
+  it('publishes with the auto-selected leftover credit without an extra click', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[leftoverCredit()]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+    expect(mocks.checkoutJob.mock.calls[0]![0].data.body).toEqual({
+      billing: {
+        type: 'order',
+        planId: 'plan-growth',
+        id: 'credit-1',
+      },
+    });
+  });
+
+  it('lets the employer drop the auto-selected credit and pick a plan instead', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[leftoverCredit()]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: /Single post/ })).toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    expect(
+      screen.getByRole('radio', { name: /Single post/ }),
+    ).not.toBeChecked();
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.checkoutJob).toHaveBeenCalledTimes(1));
+    expect(mocks.checkoutJob.mock.calls[0]![0].data.body).toEqual({
+      billing: { type: 'new', planId: plan.id },
+    });
   });
 
   it('surfaces a hybrid office miss instead of a silent no-op submit', async () => {

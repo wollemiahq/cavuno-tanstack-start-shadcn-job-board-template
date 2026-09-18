@@ -30,6 +30,7 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
+import { employerPostDestination } from '@/lib/employer-post-destination';
 import type {
   HeaderSearchLocation,
   HeaderSearchMarket,
@@ -243,17 +244,26 @@ export default function Header({
   const signUpLabel = m.siteHeader_signUpLabel();
   const authEnabled = features.candidates || features.employers;
   const signUpHref = resolveSignupDestination(features);
+  const employerPost = employerPostDestination(user, employerCompanies);
+  const postJobClassName = cn(
+    buttonVariants({ variant: 'outline', size: 'sm' }),
+    'hidden xl:inline-flex',
+  );
   const postJob =
     features.publicJobSubmission && !postRemoved ? (
-      <Link
-        to="/post"
-        className={cn(
-          buttonVariants({ variant: 'outline', size: 'sm' }),
-          'hidden xl:inline-flex',
-        )}
-      >
-        {copy.nav.post}
-      </Link>
+      employerPost.kind === 'company' ? (
+        <Link
+          to="/employers/companies/$slug/jobs/new"
+          params={{ slug: employerPost.slug }}
+          className={postJobClassName}
+        >
+          {copy.nav.post}
+        </Link>
+      ) : (
+        <Link to="/post" className={postJobClassName}>
+          {copy.nav.post}
+        </Link>
+      )
     ) : null;
   const headerLeft = (
     <div
@@ -331,6 +341,7 @@ export default function Header({
           nativeApplications={features.nativeApplications}
           jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}
           employerCompanies={employerCompanies}
+          canPostJobs={features.publicJobSubmission}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}
           signOutAction={signOutAction}

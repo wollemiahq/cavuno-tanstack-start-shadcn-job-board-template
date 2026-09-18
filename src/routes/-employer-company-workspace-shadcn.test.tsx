@@ -58,6 +58,7 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
+import type { CompanyJobsSearch } from '../lib/company-jobs-search';
 
 const pipelineActions = {
   moveApplicant: vi.fn<PipelineActions['moveApplicant']>(),
@@ -245,7 +246,9 @@ async function renderJobs(
   deferred: {
     stats?: EmployerJobStat[];
     timeseries?: EmployerJobStatsPoint[];
+    search?: CompanyJobsSearch;
   } = {},
+  canPost = true,
 ) {
   const statsIndex = Promise.resolve(
     new Map((deferred.stats ?? []).map((stat) => [stat.jobId, stat])),
@@ -257,10 +260,15 @@ async function renderJobs(
     jobs: { data: jobs },
     statsIndex,
     timeseries,
+    canPost,
   } satisfies CompanyJobsViewData;
   await act(async () => {
     await renderWithRouter(
-      <CompanyJobsPageView data={data} actions={jobsActions} />,
+      <CompanyJobsPageView
+        data={data}
+        search={deferred.search}
+        actions={jobsActions}
+      />,
     );
   });
 }
@@ -437,6 +445,59 @@ describe('employer company workspace', () => {
     expect(screen.getByText('You have 2 active jobs.')).toBeInTheDocument();
   });
 
+  it('explains a Stripe return and highlights the posted job', async () => {
+    await renderJobs([draftJob], {
+      search: { checkout_success: '1', job_id: draftJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Payment received');
+    expect(
+      screen.getByRole('row', { name: /Senior Product Designer/ }),
+    ).toHaveAttribute('data-state', 'selected');
+  });
+
+  it('explains a same-origin save and says so if the new row is not listed yet', async () => {
+    await renderJobs([draftJob], {
+      search: { posted: '1', job_id: 'job-missing' },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_postedTitle(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_postedMissingBody(),
+    );
+  });
+
+  it('hides Post a job when the board has no posting SKU', async () => {
+    await renderJobs(
+      [
+        {
+          ...draftJob,
+          id: 'a',
+          status: 'published',
+          publishedAt: '2026-07-01',
+        },
+      ],
+      {},
+      false,
+    );
+    expect(
+      screen.queryByRole('link', { name: m.nav_post() }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not offer a post CTA on an empty jobs list without a posting SKU', async () => {
+    await renderJobs([], {}, false);
+    expect(
+      screen.getByText(m.employerCompany_noJobsText()),
+    ).toBeInTheDocument();
+    expect(screen.getByText(m.postJob_noPlansBody())).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: m.nav_post() }),
+    ).not.toBeInTheDocument();
+  });
+
   it('links every role name to its edit page and hides applicants for drafts', async () => {
     await renderJobs([draftJob]);
 
@@ -594,6 +655,7 @@ describe('employer company workspace', () => {
       },
       statsIndex: Promise.resolve(new Map()),
       timeseries: Promise.resolve([]),
+      canPost: true,
     } satisfies CompanyJobsViewData;
     await act(async () => {
       await renderWithRouter(
