@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
  * Signed out, the visitor gets both roads: become a member, or sign in (a
  * member's account already carries the company's membership). Signed in, the
  * anonymous form is the wrong surface either way: a member posts from their
- * company dashboard, where the employer flow knows the membership, and a
+ * company workspace, where the employer flow knows the membership, and a
  * non-member can still become one. When the board publishes a
  * contact address, a line invites the visitor to ask for access.
  */
@@ -30,12 +30,18 @@ export function MembershipPostGate({
   contactEmail = null,
   signedIn = false,
   returnTo = '/post',
+  showCompanyWorkspaceLink = true,
 }: {
   boardName: string;
   contactEmail?: string | null;
   signedIn?: boolean;
   /** Where sign-in returns the visitor — the surface that showed the gate. */
   returnTo?: string;
+  /**
+   * Signed-in CTA onto the employer workspace. Hide it on the employer
+   * posting form itself — that visitor is already there.
+   */
+  showCompanyWorkspaceLink?: boolean;
 }) {
   return (
     <Card data-slot="membership-post-gate">
@@ -53,8 +59,8 @@ export function MembershipPostGate({
         ) : null}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-3">
-        {signedIn ? (
-          <Link to="/employers" className={cn(buttonVariants())}>
+        {signedIn && showCompanyWorkspaceLink ? (
+          <Link to="/employers/dashboard" className={cn(buttonVariants())}>
             {m.postGate_postAsCompanyLabel()}
           </Link>
         ) : null}

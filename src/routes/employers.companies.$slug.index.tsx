@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
+import { parseCompanyJobsSearch } from '../lib/company-jobs-search';
 import { m } from '../paraglide/messages';
 import { deleteJob, publishJob, unpublishJob } from '../server/employers';
 import {
@@ -9,8 +10,10 @@ import {
 } from './-employers.company-jobs';
 
 import { headTitle } from '@/lib/page-title';
+import type { UrlSearchInput } from '@/lib/pagination';
 
 export const Route = createFileRoute('/employers/companies/$slug/')({
+  validateSearch: (search: UrlSearchInput) => parseCompanyJobsSearch(search),
   loader: createCompanyJobsLoader(),
   head: ({ loaderData }) => ({
     meta: [
@@ -28,10 +31,12 @@ export const Route = createFileRoute('/employers/companies/$slug/')({
 
 function CompanyJobsPage() {
   const data = Route.useLoaderData();
+  const search = Route.useSearch();
   const router = useRouter();
   return (
     <CompanyJobsPageView
       data={data}
+      search={search}
       actions={{
         deleteJob,
         publishJob,

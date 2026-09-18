@@ -430,3 +430,38 @@ describe('employer talent-access checkout', () => {
     });
   });
 });
+
+describe('employer landing — job posting CTAs', () => {
+  const postingPlan = {
+    ...talentPlan,
+    id: 'plan-free-post',
+    name: 'Free',
+    purpose: 'job_posting',
+    kind: 'free',
+    price: null,
+    featureSummary: {
+      ...talentPlan.featureSummary,
+      maxActiveJobs: 1,
+      durationDays: 30,
+    },
+  } satisfies Plan;
+
+  it('sends a signed-in employer to their company posting form, not public /post', async () => {
+    await renderEmployers({ plan: postingPlan });
+
+    expect(
+      screen.getByRole('link', { name: m.siteHeader_postJobLabel() }),
+    ).toHaveAttribute('href', '/employers/companies/acme-ventures/jobs/new');
+  });
+
+  it('keeps anonymous posting-plan CTAs on the public /post wizard', async () => {
+    await renderEmployers({
+      plan: postingPlan,
+      viewer: { kind: 'anonymous' },
+    });
+
+    expect(
+      screen.getByRole('link', { name: m.siteHeader_postJobLabel() }),
+    ).toHaveAttribute('href', '/post?plan=plan-free-post');
+  });
+});

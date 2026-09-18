@@ -663,6 +663,7 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
+          search: { posted: '1', job_id: 'job-1' },
         }),
       ),
     );

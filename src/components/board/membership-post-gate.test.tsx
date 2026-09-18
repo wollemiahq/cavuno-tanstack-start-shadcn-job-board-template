@@ -41,6 +41,11 @@ async function renderGate(props: GateProps) {
       path: '/employers',
       component: () => <h1>Employers</h1>,
     }),
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/employers/dashboard',
+      component: () => <h1>Dashboard</h1>,
+    }),
   ];
   const router = createRouter({
     routeTree: rootRoute.addChildren(children),
@@ -69,9 +74,22 @@ describe('MembershipPostGate', () => {
 
     expect(
       screen.getByRole('link', { name: 'Post from your company dashboard' }),
-    ).toHaveAttribute('href', '/employers');
+    ).toHaveAttribute('href', '/employers/dashboard');
     expect(screen.getByRole('link', { name: 'Become a member' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+  });
+
+  it('hides the company-workspace road when the visitor is already there', async () => {
+    await renderGate({
+      boardName: 'Example Jobs',
+      signedIn: true,
+      showCompanyWorkspaceLink: false,
+    });
+
+    expect(
+      screen.queryByRole('link', { name: 'Post from your company dashboard' }),
+    ).toBeNull();
+    expect(screen.getByRole('link', { name: 'Become a member' })).toBeVisible();
   });
 
   it('invites the visitor to email for access when the board publishes an address', async () => {

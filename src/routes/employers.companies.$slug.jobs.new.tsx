@@ -99,6 +99,7 @@ function NewJobPage() {
                 boardName={board.name}
                 contactEmail={board.footer.contactEmail}
                 signedIn
+                showCompanyWorkspaceLink={false}
                 returnTo={`/employers/companies/${workspace.slug}/jobs/new`}
               />
             }

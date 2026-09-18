@@ -113,8 +113,21 @@ export function LocationCombobox({
       filter={null}
       autoComplete="none"
       autoHighlight
-      open={open}
-      onOpenChange={setOpen}
+      open={
+        open && (loading || suggestions.length > 0 || text.trim().length >= 2)
+      }
+      onOpenChange={(next, details) => {
+        if (
+          !next &&
+          (loading || (text.trim().length >= 2 && suggestions.length === 0)) &&
+          (details.reason === 'none' ||
+            details.reason === 'cancel-open' ||
+            details.reason === 'input-change')
+        ) {
+          return;
+        }
+        setOpen(next);
+      }}
       inputValue={text}
       itemToStringLabel={(place: LocationSuggestionVM) => place.name}
       itemToStringValue={(place: LocationSuggestionVM) => place.slug}
