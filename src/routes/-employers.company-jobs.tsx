@@ -85,6 +85,7 @@ import {
 import { navCopy } from '@/copy-groups/nav';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { CompanyJobsSearch } from '@/lib/company-jobs-search';
+import { hasJobPostingProduct } from '@/lib/job-posting-catalog';
 import type { UrlSearchInput } from '@/lib/pagination';
 import type {
   EmployerJobStat,
@@ -146,7 +147,16 @@ export function createCompanyJobsLoader(
         loaderDependencies.getCompanyWorkspace({ data: { slug: params.slug } }),
         loaderDependencies.getSeoBase(),
       ]);
-      return { ...workspace, seo, statsIndex, timeseries };
+      return {
+        ...workspace,
+        seo,
+        statsIndex,
+        timeseries,
+        canPost: hasJobPostingProduct({
+          plans: workspace.plans,
+          billingOptions: workspace.billingOptions.data,
+        }),
+      };
     } catch (error) {
       return await loaderDependencies.handleEmployerLoaderError(
         error,
@@ -192,6 +202,8 @@ export type CompanyJobsViewData = {
   jobs: { data: EmployerJobSummary[] };
   statsIndex: Promise<Map<string, EmployerJobStat>>;
   timeseries: Promise<EmployerJobStatsPoint[]>;
+  /** False when the board has no job-posting SKU and no leftover credits. */
+  canPost: boolean;
 };
 
 function activeJobsSubtitle(count: number) {
@@ -212,7 +224,7 @@ export function CompanyJobsPageView({
   actions: CompanyJobsViewActions;
   search?: CompanyJobsSearch;
 }) {
-  const { slug, membership, jobs, statsIndex, timeseries } = data;
+  const { slug, membership, jobs, statsIndex, timeseries, canPost } = data;
   const copy = {
     nav: navCopy(),
   };
@@ -223,7 +235,7 @@ export function CompanyJobsPageView({
     (job) => job.status === 'published' && !isEmployerJobExpired(job),
   ).length;
 
-  const postJobLink = (
+  const postJobLink = canPost ? (
     <Link
       to="/employers/companies/$slug/jobs/new"
       params={{ slug }}
@@ -232,7 +244,7 @@ export function CompanyJobsPageView({
       <PlusIcon data-icon="inline-start" aria-hidden />
       {copy.nav.post}
     </Link>
-  );
+  ) : null;
 
   const outcome = postingOutcome(search, jobs.data);
 
@@ -269,10 +281,12 @@ export function CompanyJobsPageView({
                 </EmptyMedia>
                 <EmptyTitle>{m.employerCompany_noJobsText()}</EmptyTitle>
                 <EmptyDescription>
-                  {m.employerCompany_jobsEmptyText()}
+                  {canPost
+                    ? m.employerCompany_jobsEmptyText()
+                    : m.postJob_noPlansBody()}
                 </EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>{postJobLink}</EmptyContent>
+              {postJobLink ? <EmptyContent>{postJobLink}</EmptyContent> : null}
             </Empty>
           ) : (
             <>

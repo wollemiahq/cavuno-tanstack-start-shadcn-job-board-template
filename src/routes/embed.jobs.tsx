@@ -257,9 +257,9 @@ export function EmbedJobsView({
         })}
       </Suspense>
       {jobs.length > 0 ? (
-        <div className="space-y-3" data-test="embed-jobs-list">
+        <div className="flex flex-col gap-4" data-test="embed-jobs-list">
           {jobs.map((job) => (
-            <div key={job.id} className="contents">
+            <div key={job.id}>
               {dependencies.renderJobCard({
                 job,
                 locale,

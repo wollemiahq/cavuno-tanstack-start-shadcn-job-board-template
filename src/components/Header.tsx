@@ -341,6 +341,7 @@ export default function Header({
           nativeApplications={features.nativeApplications}
           jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}
           employerCompanies={employerCompanies}
+          canPostJobs={features.publicJobSubmission}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}
           signOutAction={signOutAction}

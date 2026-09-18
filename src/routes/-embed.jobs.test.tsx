@@ -80,6 +80,11 @@ describe('embed jobs view', () => {
     expect(
       document.querySelector('[data-open-in-new-tab="true"]'),
     ).not.toBeNull();
+    // `display: contents` wrappers made `space-y-*` sibling margins a no-op
+    // so the iframe cards sat flush. Gap on real children is the spacing.
+    const list = document.querySelector('[data-test="embed-jobs-list"]');
+    expect(list?.className).toMatch(/gap-4/);
+    expect(list?.querySelector('.contents')).toBeNull();
   });
 
   it('renders the header above the empty state', async () => {

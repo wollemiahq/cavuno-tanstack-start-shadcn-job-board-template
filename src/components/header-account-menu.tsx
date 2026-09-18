@@ -32,6 +32,7 @@ export function HeaderAccountMenu({
   nativeApplications,
   jobRecommendationsEnabled,
   employerCompanies,
+  canPostJobs = true,
   onSignOut,
   onSignOutPendingChange,
   signOutAction = signOut,
@@ -41,6 +42,8 @@ export function HeaderAccountMenu({
   nativeApplications: boolean;
   jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
+  /** Public job-posting SKUs exist — hide Post job when the board sells none. */
+  canPostJobs?: boolean;
   onSignOut: () => void;
   onSignOutPendingChange: (pending: boolean) => void;
   signOutAction?: SignOutAction;
@@ -147,17 +150,19 @@ export function HeaderAccountMenu({
                 >
                   {m.accountShell_companyProfileNav()}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug/jobs/new"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.siteHeader_postJobLabel()}
-                </DropdownMenuItem>
+                {canPostJobs ? (
+                  <DropdownMenuItem
+                    nativeButton={false}
+                    render={
+                      <Link
+                        to="/employers/companies/$slug/jobs/new"
+                        params={{ slug: membership.company.slug! }}
+                      />
+                    }
+                  >
+                    {m.siteHeader_postJobLabel()}
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem
                   nativeButton={false}
                   render={
