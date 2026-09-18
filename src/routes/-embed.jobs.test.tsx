@@ -128,4 +128,26 @@ describe('embed jobs view', () => {
       remoteOption: 'remote',
     });
   });
+
+  it('centers the view-all-jobs CTA under the job list', async () => {
+    render(
+      <EmbedJobsView
+        page={{ data: [job], count: 40 }}
+        showCavunoBranding={false}
+        boardName="Acme Board"
+        logoUrl={null}
+        search={{}}
+        dependencies={dependencies}
+      />,
+    );
+
+    expect(
+      await screen.findByRole('link', { name: m.embedJobs_viewAllJobsLabel() }),
+    ).toBeTruthy();
+    // `justify-between` plus an empty branding slot pinned the CTA to the
+    // right of the iframe even when Cavuno branding was off.
+    const footer = document.querySelector('[data-test="embed-jobs-footer"]');
+    expect(footer?.className).toMatch(/justify-center/);
+    expect(footer?.className).not.toMatch(/justify-between/);
+  });
 });

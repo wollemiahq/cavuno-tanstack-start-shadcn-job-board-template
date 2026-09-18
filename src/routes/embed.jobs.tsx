@@ -281,7 +281,10 @@ export function EmbedJobsView({
       )}
 
       {showCavunoBranding || cta ? (
-        <div className="flex min-h-8 items-center justify-between gap-2">
+        <div
+          className="flex min-h-8 items-center justify-center gap-2"
+          data-test="embed-jobs-footer"
+        >
           {showCavunoBranding ? (
             <Badge
               render={
@@ -295,9 +298,7 @@ export function EmbedJobsView({
             >
               {m.embedJobs_poweredByCavunoLabel()}
             </Badge>
-          ) : (
-            <span />
-          )}
+          ) : null}
 
           {cta ? dependencies.renderCtaLink(cta) : null}
         </div>
