@@ -1717,6 +1717,7 @@ Authenticated-only header UI, split out of the anonymous public shell.
 
 Props:
 
+- `canPostJobs?: boolean | undefined`
 - `employerCompanies: { id: string; object: "company_membership"; status: "approved" | "pending_work_email" | "awaiting_admin" | "rejected"…`
 - `hasAccessGrant: boolean`
 - `jobRecommendationsEnabled: boolean`
