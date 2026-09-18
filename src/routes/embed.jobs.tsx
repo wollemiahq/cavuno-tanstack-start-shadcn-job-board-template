@@ -282,25 +282,27 @@ export function EmbedJobsView({
 
       {showCavunoBranding || cta ? (
         <div
-          className="flex min-h-8 items-center justify-center gap-2"
+          className="grid min-h-8 grid-cols-[1fr_auto_1fr] items-center gap-2"
           data-test="embed-jobs-footer"
         >
-          {showCavunoBranding ? (
-            <Badge
-              render={
-                <a
-                  href="https://cavuno.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              variant="secondary"
-            >
-              {m.embedJobs_poweredByCavunoLabel()}
-            </Badge>
-          ) : null}
-
-          {cta ? dependencies.renderCtaLink(cta) : null}
+          <div className="justify-self-start">
+            {showCavunoBranding ? (
+              <Badge
+                render={
+                  <a
+                    href="https://cavuno.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
+                variant="secondary"
+              >
+                {m.embedJobs_poweredByCavunoLabel()}
+              </Badge>
+            ) : null}
+          </div>
+          {cta ? dependencies.renderCtaLink(cta) : <span />}
+          <span />
         </div>
       ) : null}
     </section>
