@@ -68,7 +68,7 @@ const rootApi = getRouteApi('__root__');
 
 function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
+  const { board, offerGate } = rootApi.useLoaderData();
   const locale = getLocale();
   const officeLocationSuggestions = useLocationSuggestions(locale);
 
@@ -100,6 +100,7 @@ function NewJobPage() {
                 contactEmail={board.footer.contactEmail}
                 signedIn
                 showCompanyWorkspaceLink={false}
+                hasMembershipPage={offerGate.hasMembershipPage}
                 returnTo={`/employers/companies/${workspace.slug}/jobs/new`}
               />
             }

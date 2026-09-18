@@ -30,7 +30,7 @@ export const Route = createFileRoute('/post')({
 function PostJobPage() {
   const { plans, remotePermits } = Route.useLoaderData();
   const search = Route.useSearch();
-  const { board } = rootApi.useLoaderData();
+  const { board, offerGate } = rootApi.useLoaderData();
   const { user, ready, employerCompanies } = useRootSession();
   const officeLocationSuggestions = useLocationSuggestions(getLocale());
   const signedIn = ready && user !== null;
@@ -64,6 +64,7 @@ function PostJobPage() {
         boardName={board.name}
         contactEmail={board.footer.contactEmail}
         signedIn={signedIn}
+        hasMembershipPage={offerGate.hasMembershipPage}
       />
     ) : undefined;
 
