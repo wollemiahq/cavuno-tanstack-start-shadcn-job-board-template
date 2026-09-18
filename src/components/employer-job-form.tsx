@@ -78,7 +78,10 @@ import {
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
-import { hasJobPostingProduct } from '@/lib/job-posting-catalog';
+import {
+  defaultBillingSelection,
+  hasJobPostingProduct,
+} from '@/lib/job-posting-catalog';
 import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
   CreateEmployerJobBody,
@@ -479,7 +482,9 @@ export function EmployerJobForm({
     }),
   );
   /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
-  const [selectedBilling, setSelectedBilling] = useState<string | null>(null);
+  const [selectedBilling, setSelectedBilling] = useState<string | null>(() =>
+    defaultBillingSelection(billingOptions),
+  );
   const [invoiceBilling, setInvoiceBilling] = useState<InvoiceBillingDraft>(
     () => emptyInvoiceBillingDraft(),
   );
@@ -487,7 +492,19 @@ export function EmployerJobForm({
   // platform only features a post when the checkout body says `isFeatured`
   // (unless the board auto-features). Until this choice existed a buyer on a
   // manual-selection board paid the featured price and got a standard listing.
-  const [featureListing, setFeatureListing] = useState(false);
+  const [featureListing, setFeatureListing] = useState(() => {
+    const selected = defaultBillingSelection(billingOptions);
+    if (!selected) return false;
+    const option = billingOptions.find(
+      (candidate) => `option:${candidate.id}` === selected,
+    );
+    if (!option || option.featuredUnlimited) return false;
+    return (
+      option.featuredRemaining > 0 &&
+      option.planKind === 'one_time' &&
+      option.featuredRemaining >= option.jobsRemaining
+    );
+  });
 
   /**
    * The featured choice the current billing selection offers, or `null`
