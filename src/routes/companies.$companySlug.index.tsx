@@ -247,11 +247,12 @@ function CompanyPage() {
           ) : null}
         </div>
 
-        {/* Key-facts sidebar — right column on desktop, scrolling with the
-            profile. Last in the DOM so it stacks BELOW the content on narrow
-            screens (reading and tab order follow the visual order); the
-            explicit lg column placement lifts it back alongside. */}
-        <aside className="flex flex-col gap-8 lg:col-start-2 lg:row-start-1 lg:self-start">
+        {/* Key-facts sidebar — sticky right column on desktop so similar
+            companies travel with the user while the profile scrolls. Last in
+            the DOM so it stacks BELOW the content on narrow screens (reading
+            and tab order follow the visual order); the explicit lg column
+            placement lifts it back alongside. */}
+        <aside className="flex flex-col gap-8 lg:col-start-2 lg:row-start-1 lg:sticky lg:top-8 lg:self-start">
           <Card>
             <CardContent className="flex flex-col gap-4">
               {website ? (
