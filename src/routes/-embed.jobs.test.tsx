@@ -128,4 +128,47 @@ describe('embed jobs view', () => {
       remoteOption: 'remote',
     });
   });
+
+  it('centers the view-all-jobs CTA under the job list', async () => {
+    const { rerender } = render(
+      <EmbedJobsView
+        page={{ data: [job], count: 40 }}
+        showCavunoBranding={false}
+        boardName="Acme Board"
+        logoUrl={null}
+        search={{}}
+        dependencies={dependencies}
+      />,
+    );
+
+    expect(
+      await screen.findByRole('link', { name: m.embedJobs_viewAllJobsLabel() }),
+    ).toBeTruthy();
+    // A 3-column 1fr/auto/1fr row keeps the CTA in the middle even when the
+    // Cavuno badge occupies the left cell. `justify-between` used to pin it
+    // to the right (and an empty left slot did the same with branding off).
+    const footer = document.querySelector('[data-test="embed-jobs-footer"]');
+    expect(footer?.className).toMatch(/grid-cols-\[1fr_auto_1fr\]/);
+    expect(footer?.children[1]?.textContent).toBe(
+      m.embedJobs_viewAllJobsLabel(),
+    );
+
+    rerender(
+      <EmbedJobsView
+        page={{ data: [job], count: 40 }}
+        showCavunoBranding
+        boardName="Acme Board"
+        logoUrl={null}
+        search={{}}
+        dependencies={dependencies}
+      />,
+    );
+
+    expect(footer?.children[0]?.textContent).toBe(
+      m.embedJobs_poweredByCavunoLabel(),
+    );
+    expect(footer?.children[1]?.textContent).toBe(
+      m.embedJobs_viewAllJobsLabel(),
+    );
+  });
 });
