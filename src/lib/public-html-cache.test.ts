@@ -25,6 +25,8 @@ describe('public HTML cache policy', () => {
     expect(isPublicDocumentPath('/de/jobs/engineering')).toBe(true);
     expect(isPublicDocumentPath('/companies/acme')).toBe(true);
     expect(isPublicDocumentPath('/employers')).toBe(true);
+    expect(isPublicDocumentPath('/job-seekers')).toBe(true);
+    expect(isPublicDocumentPath('/pricing')).toBe(true);
     expect(isPublicDocumentPath('/employers/dashboard')).toBe(false);
     expect(isPublicDocumentPath('/account')).toBe(false);
   });

@@ -7,7 +7,10 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
 import { candidatePlanBenefits } from '@/board/candidate-plan-benefits';
-import { planBenefitLines } from '@/board/plan-benefits';
+import {
+  configuredMembershipCapacitySentence,
+  planBenefitLines,
+} from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
 import {
   Page,
@@ -42,6 +45,14 @@ export type EmployersPageViewDependencies = {
     children: ReactNode;
   }) => ReactElement;
   joinLink: (input: { className: string; children: ReactNode }) => ReactElement;
+  membershipLink?: (input: {
+    className: string;
+    children: ReactNode;
+  }) => ReactElement;
+  talentPlanLink?: (input: {
+    className: string;
+    children: ReactNode;
+  }) => ReactElement;
   talentPlanAction?: (input: {
     planId: string;
     planKind: Plan['kind'];
@@ -62,6 +73,16 @@ const employersPageViewDependencies: EmployersPageViewDependencies = {
       search={{ returnTo: '/employers' }}
       className={className}
     >
+      {children}
+    </Link>
+  ),
+  membershipLink: ({ className, children }) => (
+    <Link to="/memberships" className={className}>
+      {children}
+    </Link>
+  ),
+  talentPlanLink: ({ className, children }) => (
+    <Link to="/employers" className={className}>
       {children}
     </Link>
   ),
@@ -87,6 +108,7 @@ const intervalSuffix = (interval: Plan['billingInterval']) =>
 
 function planFeatures(plan: Plan) {
   if (plan.purpose === 'job_seeker') return candidatePlanBenefits(plan);
+  if (plan.purpose === 'membership') return planBenefitLines(plan);
   const grantsListings =
     plan.purpose !== 'talent_access' && plan.featureSummary.maxActiveJobs > 0;
   return [
@@ -173,6 +195,10 @@ function PlanCard({
   dependencies: EmployersPageViewDependencies;
 }) {
   const contact = plan.pricingMode === 'contact';
+  const membershipCapacity =
+    plan.purpose === 'membership'
+      ? configuredMembershipCapacitySentence(plan)
+      : null;
   const actionLabel = plan.invoiceOnly
     ? m.employerLanding_requestInvoiceLabel()
     : plan.purpose === 'job_posting'
@@ -204,6 +230,9 @@ function PlanCard({
         <FeatureList
           features={contact ? planBenefitLines(plan) : planFeatures(plan)}
         />
+        {membershipCapacity ? (
+          <p className="text-foreground text-sm">{membershipCapacity}</p>
+        ) : null}
       </CardContent>
       <CardFooter>
         {contact ? (
@@ -219,8 +248,13 @@ function PlanCard({
           ) : null
         ) : plan.purpose === 'job_seeker' ? (
           <Link to="/account/access" className={actionClassName}>
-            {m.accountAccess_chooseLabel()}
+            {m.employerLanding_subscribeLabel()}
           </Link>
+        ) : plan.purpose === 'membership' ? (
+          (dependencies.membershipLink?.({
+            className: actionClassName,
+            children: m.memberships_joinLabel(),
+          }) ?? null)
         ) : plan.purpose === 'job_posting' ? (
           dependencies.postingPlanLink({
             planId: plan.id,
@@ -235,6 +269,11 @@ function PlanCard({
             className: actionClassName,
             children: actionLabel,
           })
+        ) : plan.purpose === 'talent_access' ? (
+          (dependencies.talentPlanLink?.({
+            className: actionClassName,
+            children: actionLabel,
+          }) ?? null)
         ) : (
           dependencies.joinLink({
             className: actionClassName,
@@ -267,12 +306,59 @@ function PlanGroup({
   );
 }
 
+function CandidateBenefits({ plans }: { plans: Plan[] }) {
+  const enabled = new Set(
+    plans.flatMap((plan) =>
+      Object.entries(plan.features ?? {}).flatMap(([key, feature]) =>
+        feature.value === 'true' ? [key] : [],
+      ),
+    ),
+  );
+  const cards = [
+    enabled.has('job_seeker.matches')
+      ? {
+          title: m.candidateLanding_matchesTitle(),
+          description: m.candidateLanding_matchesDescription(),
+        }
+      : null,
+    enabled.has('job_seeker.job_alerts')
+      ? {
+          title: m.candidateLanding_alertsTitle(),
+          description: m.candidateLanding_alertsDescription(),
+        }
+      : null,
+  ].filter((card) => card !== null);
+
+  if (cards.length === 0) return null;
+
+  return (
+    <PageSection title={m.candidateLanding_benefitsTitle()}>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {cards.map((card) => (
+          <Card key={card.title}>
+            <CardHeader>
+              <CardTitle>{card.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground text-sm">
+              {card.description}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </PageSection>
+  );
+}
+
 export function EmployersPageView({
   plans,
   contactPlans,
   seo,
   dependencies = employersPageViewDependencies,
   billingAction,
+  audience = 'employers',
+  title,
+  description,
+  candidateIntro = false,
 }: {
   plans: Plan[];
   /**
@@ -290,79 +376,97 @@ export function EmployersPageView({
    * plan group, where a posting-only subscriber never saw it.
    */
   billingAction?: ReactNode;
+  audience?: 'employers' | 'candidates' | 'all';
+  title?: string;
+  description?: string;
+  candidateIntro?: boolean;
 }) {
   const candidatePlans = plans.filter((plan) => plan.purpose === 'job_seeker');
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
-  // Membership tiers get their own page (roster included); this surface only
-  // points at it, and only when the board actually publishes one.
-  const hasMemberships = plans.some((plan) => plan.purpose === 'membership');
+  const memberships = plans.filter((plan) => plan.purpose === 'membership');
+  const showCandidates = audience !== 'employers';
+  const showEmployers = audience !== 'candidates';
   const empty =
-    candidatePlans.length === 0 &&
-    jobPosting.length === 0 &&
-    talentAccess.length === 0 &&
-    contactPlans.length === 0;
+    (!showCandidates || candidatePlans.length === 0) &&
+    (!showEmployers ||
+      (jobPosting.length === 0 &&
+        talentAccess.length === 0 &&
+        contactPlans.length === 0 &&
+        memberships.length === 0));
+  const pageDescription =
+    description ?? m.employerLanding_subtitle({ boardName: seo.boardName });
 
   return (
     <Page width="wide">
       <PageContent
         header={
           <PageHeader
-            title={m.employerLanding_title()}
-            description={m.employerLanding_subtitle({
-              boardName: seo.boardName,
-            })}
-            actions={billingAction}
+            title={title ?? m.employerLanding_title()}
+            description={pageDescription}
+            actions={
+              candidateIntro ? (
+                <div className="flex flex-wrap gap-3">
+                  <Link to="/jobs" className={buttonVariants()}>
+                    {m.candidateLanding_browseAction()}
+                  </Link>
+                  <Link
+                    to="/auth/sign-up"
+                    search={{ returnTo: '/account' }}
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    {m.candidateLanding_signUpAction()}
+                  </Link>
+                </div>
+              ) : (
+                billingAction
+              )
+            }
           />
         }
       >
+        {candidateIntro ? <CandidateBenefits plans={candidatePlans} /> : null}
         {empty ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{m.employerLanding_noPlansText()}</EmptyTitle>
-              <EmptyDescription>
-                {m.employerLanding_subtitle({ boardName: seo.boardName })}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          candidateIntro ? null : (
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>{m.employerLanding_noPlansText()}</EmptyTitle>
+                <EmptyDescription>{pageDescription}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )
         ) : (
           <>
-            <PlanGroup
-              title={m.employerLanding_jobPostingHeading()}
-              plans={jobPosting}
-              dependencies={dependencies}
-            />
-            <PlanGroup
-              title={m.employerLanding_talentAccessHeading()}
-              plans={talentAccess}
-              dependencies={dependencies}
-            />
-            <PlanGroup
-              title={m.employerLanding_enterpriseHeading()}
-              plans={contactPlans}
-              dependencies={dependencies}
-            />
-            <PlanGroup
-              title={m.footer_forCandidatesHeading()}
-              plans={candidatePlans}
-              dependencies={dependencies}
-            />
-            {hasMemberships ? (
-              <PageSection
-                title={m.memberships_title()}
-                description={m.memberships_subtitle({
-                  boardName: seo.boardName,
-                })}
-              >
-                <div>
-                  <Link
-                    to="/memberships"
-                    className={buttonVariants({ variant: 'outline' })}
-                  >
-                    {m.nav_memberships()}
-                  </Link>
-                </div>
-              </PageSection>
+            {showCandidates ? (
+              <PlanGroup
+                title={m.candidateLanding_plansHeading()}
+                plans={candidatePlans}
+                dependencies={dependencies}
+              />
+            ) : null}
+            {showEmployers ? (
+              <>
+                <PlanGroup
+                  title={m.employerLanding_jobPostingHeading()}
+                  plans={jobPosting}
+                  dependencies={dependencies}
+                />
+                <PlanGroup
+                  title={m.employerLanding_talentAccessHeading()}
+                  plans={talentAccess}
+                  dependencies={dependencies}
+                />
+                <PlanGroup
+                  title={m.employerLanding_enterpriseHeading()}
+                  plans={contactPlans}
+                  dependencies={dependencies}
+                />
+                <PlanGroup
+                  title={m.memberships_title()}
+                  plans={memberships}
+                  dependencies={dependencies}
+                />
+              </>
             ) : null}
           </>
         )}

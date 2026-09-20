@@ -37,6 +37,45 @@ async function seoBase() {
   };
 }
 
+async function plansPagePayload(
+  headers: HeadersInit,
+  path: '/employers' | '/job-seekers' | '/pricing',
+  title: string,
+  description: string,
+  breadcrumbLabel: string,
+) {
+  const board = getBoard();
+  const [plans, employerServicePlans, seo] = await Promise.all([
+    board.plans.list({}, { headers }),
+    board.plans.list({ purpose: 'employer_service' }, { headers }),
+    seoBase(),
+  ]);
+  const head = {
+    meta: [
+      { title: headTitle(seo.boardName, title) },
+      { name: 'description', content: description },
+    ],
+    links: [{ rel: 'canonical', href: selfUrl(seo.origin, path) }],
+  };
+  const c = breadcrumbsCopy();
+  const jsonLd = asJsonObjects([
+    createBreadcrumbJsonLd([
+      { label: c.home, href: selfUrl(seo.origin, '/') },
+      { label: breadcrumbLabel },
+    ]),
+  ]);
+  return {
+    plans: plans.data,
+    contactPlans: employerServicePlans.data.filter(
+      (plan) => plan.pricingMode === 'contact',
+    ),
+    seo,
+    head,
+    jsonLd,
+    breadcrumbTrail: [{ name: c.home, href: '/' }, { name: breadcrumbLabel }],
+  };
+}
+
 export const getEmployersPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
@@ -83,6 +122,34 @@ export const getEmployersPage = createServerFn({ method: 'GET' })
         jsonLd,
       };
     }),
+  );
+
+export const getJobSeekersPage = createServerFn({ method: 'GET' })
+  .middleware([boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, (headers) =>
+      plansPagePayload(
+        headers,
+        '/job-seekers',
+        m.candidateLanding_title(),
+        m.candidateLanding_description(),
+        m.candidateLanding_title(),
+      ),
+    ),
+  );
+
+export const getPricingPage = createServerFn({ method: 'GET' })
+  .middleware([boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, (headers) =>
+      plansPagePayload(
+        headers,
+        '/pricing',
+        m.pricing_title(),
+        m.pricing_description(),
+        m.pricing_title(),
+      ),
+    ),
   );
 
 /**

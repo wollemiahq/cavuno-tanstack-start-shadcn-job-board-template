@@ -84,6 +84,24 @@ export function membershipCapacitySentence(
   return posts ? `${posts}. ${featured}` : featured;
 }
 
+const MEMBERSHIP_CAPACITY_KEYS = [
+  'jobs.included_posts',
+  'jobs.max_active',
+  'jobs.included_featured',
+  'jobs.featured_slots',
+] as const;
+
+/** Omits the capacity line when the plan did not configure capacity at all. */
+export function configuredMembershipCapacitySentence(
+  plan: Pick<Plan, 'features'>,
+): string | null {
+  return MEMBERSHIP_CAPACITY_KEYS.some(
+    (key) => plan.features?.[key] !== undefined,
+  )
+    ? membershipCapacitySentence(plan)
+    : null;
+}
+
 function allowanceLine(
   allowance: MembershipAllowance | null,
   unlimited: () => string,

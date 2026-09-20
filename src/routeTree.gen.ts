@@ -16,11 +16,13 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PostRouteImport } from './routes/post'
 import { Route as PasswordRouteImport } from './routes/password'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MembershipsRouteImport } from './routes/memberships'
 import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as JobSeekersRouteImport } from './routes/job-seekers'
 import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
 import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -142,6 +144,11 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PostRoute = PostRouteImport.update({
   id: '/post',
   path: '/post',
@@ -165,6 +172,11 @@ const MembershipsRoute = MembershipsRouteImport.update({
 const MatchesRoute = MatchesRouteImport.update({
   id: '/matches',
   path: '/matches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobSeekersRoute = JobSeekersRouteImport.update({
+  id: '/job-seekers',
+  path: '/job-seekers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexnowKeyDottxtRoute = IndexnowKeyDottxtRouteImport.update({
@@ -627,11 +639,13 @@ export interface FileRoutesByFullPath {
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
+  '/job-seekers': typeof JobSeekersRoute
   '/matches': typeof MatchesRoute
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
+  '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -726,11 +740,13 @@ export interface FileRoutesByTo {
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
+  '/job-seekers': typeof JobSeekersRoute
   '/matches': typeof MatchesRoute
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
+  '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -826,11 +842,13 @@ export interface FileRoutesById {
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
+  '/job-seekers': typeof JobSeekersRoute
   '/matches': typeof MatchesRoute
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
   '/password': typeof PasswordRoute
   '/post': typeof PostRoute
+  '/pricing': typeof PricingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved-jobs': typeof SavedJobsRoute
@@ -927,11 +945,13 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/impressum'
     | '/indexnow-key.txt'
+    | '/job-seekers'
     | '/matches'
     | '/memberships'
     | '/messages'
     | '/password'
     | '/post'
+    | '/pricing'
     | '/privacy-policy'
     | '/robots.txt'
     | '/saved-jobs'
@@ -1026,11 +1046,13 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/impressum'
     | '/indexnow-key.txt'
+    | '/job-seekers'
     | '/matches'
     | '/memberships'
     | '/messages'
     | '/password'
     | '/post'
+    | '/pricing'
     | '/privacy-policy'
     | '/robots.txt'
     | '/saved-jobs'
@@ -1125,11 +1147,13 @@ export interface FileRouteTypes {
     | '/cookie-policy'
     | '/impressum'
     | '/indexnow-key.txt'
+    | '/job-seekers'
     | '/matches'
     | '/memberships'
     | '/messages'
     | '/password'
     | '/post'
+    | '/pricing'
     | '/privacy-policy'
     | '/robots.txt'
     | '/saved-jobs'
@@ -1225,11 +1249,13 @@ export interface RootRouteChildren {
   CookiePolicyRoute: typeof CookiePolicyRoute
   ImpressumRoute: typeof ImpressumRoute
   IndexnowKeyDottxtRoute: typeof IndexnowKeyDottxtRoute
+  JobSeekersRoute: typeof JobSeekersRoute
   MatchesRoute: typeof MatchesRoute
   MembershipsRoute: typeof MembershipsRoute
   MessagesRoute: typeof MessagesRouteWithChildren
   PasswordRoute: typeof PasswordRoute
   PostRoute: typeof PostRoute
+  PricingRoute: typeof PricingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SavedJobsRoute: typeof SavedJobsRoute
@@ -1363,6 +1389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/post': {
       id: '/post'
       path: '/post'
@@ -1396,6 +1429,13 @@ declare module '@tanstack/react-router' {
       path: '/matches'
       fullPath: '/matches'
       preLoaderRoute: typeof MatchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/job-seekers': {
+      id: '/job-seekers'
+      path: '/job-seekers'
+      fullPath: '/job-seekers'
+      preLoaderRoute: typeof JobSeekersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/indexnow-key.txt': {
@@ -2045,11 +2085,13 @@ const rootRouteChildren: RootRouteChildren = {
   CookiePolicyRoute: CookiePolicyRoute,
   ImpressumRoute: ImpressumRoute,
   IndexnowKeyDottxtRoute: IndexnowKeyDottxtRoute,
+  JobSeekersRoute: JobSeekersRoute,
   MatchesRoute: MatchesRoute,
   MembershipsRoute: MembershipsRoute,
   MessagesRoute: MessagesRouteWithChildren,
   PasswordRoute: PasswordRoute,
   PostRoute: PostRoute,
+  PricingRoute: PricingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SavedJobsRoute: SavedJobsRoute,

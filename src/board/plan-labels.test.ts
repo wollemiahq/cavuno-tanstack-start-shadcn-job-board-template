@@ -104,3 +104,23 @@ describe('unlimited featured plans', () => {
     ).toBe('A 30 day featured listing — Up to 3 active jobs');
   });
 });
+
+describe('audience plan descriptions', () => {
+  it.each(['job_seeker', 'membership'])(
+    'does not invent a listing description for %s plans',
+    (purpose) => {
+      expect(
+        planDescription({
+          name: 'Community',
+          description: 'Benefits configured by the board',
+          purpose,
+          featureSummary: {
+            durationDays: 30,
+            maxActiveJobs: 5,
+            featuredSlots: 1,
+          },
+        }),
+      ).toBe('Benefits configured by the board');
+    },
+  );
+});

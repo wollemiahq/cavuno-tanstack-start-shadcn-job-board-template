@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { membershipCapacitySentence, planBenefitLines } from './plan-benefits';
+import {
+  configuredMembershipCapacitySentence,
+  membershipCapacitySentence,
+  planBenefitLines,
+} from './plan-benefits';
 
 import type { Plan } from '@cavuno/board';
 
@@ -58,6 +62,7 @@ describe('membership capacity sentence', () => {
 
   it('stands alone as "No featured jobs" when there is no posting capacity', () => {
     expect(membershipCapacitySentence(plan({}))).toBe('No featured jobs');
+    expect(configuredMembershipCapacitySentence(plan({}))).toBeNull();
   });
 });
 

@@ -78,6 +78,7 @@ export function planDescription(
   if (
     plan.purpose === 'talent_access' ||
     plan.purpose === 'job_seeker' ||
+    plan.purpose === 'membership' ||
     (facts && facts.maxActiveJobs === 0)
   ) {
     return plan.description ?? null;

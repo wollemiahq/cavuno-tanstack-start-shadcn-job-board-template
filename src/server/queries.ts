@@ -28,6 +28,7 @@ import {
   readEmployerOfferGate,
 } from '../lib/board-context-cache';
 import { readBoardSeo } from '../lib/board-seo-cache';
+import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { getLocale } from '../paraglide/runtime';
@@ -151,7 +152,9 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
         ]);
         return {
           hasEmployerOfferPage:
-            plans.data.length > 0 || employerServicePlans.data.length > 0,
+            plans.data.some((plan) => plan.purpose !== 'job_seeker') ||
+            employerServicePlans.data.length > 0,
+          hasCandidatePricingPage: hasPaidCandidatePlans(plans.data),
           // The Memberships link is loader-driven off the same read, so it
           // never flashes in on a board that publishes no membership plan.
           hasMembershipPage: plans.data.some(
@@ -163,7 +166,11 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       // Fail closed: this gate runs on the root loader for every route, so a
       // transient plan-read failure (or a password-gated board) must only
       // hide the footer/nav Pricing links, never fault the whole page.
-      return { hasEmployerOfferPage: false, hasMembershipPage: false };
+      return {
+        hasEmployerOfferPage: false,
+        hasMembershipPage: false,
+        hasCandidatePricingPage: false,
+      };
     }
   },
 );

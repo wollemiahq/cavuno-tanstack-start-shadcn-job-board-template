@@ -103,6 +103,16 @@ const employersPageViewDependencies = {
       {children}
     </a>
   ),
+  membershipLink: ({ className, children }) => (
+    <a href="/memberships" className={className}>
+      {children}
+    </a>
+  ),
+  talentPlanLink: ({ className, children }) => (
+    <a href="/employers" className={className}>
+      {children}
+    </a>
+  ),
 } satisfies EmployersPageViewDependencies;
 
 const plan = {
@@ -323,12 +333,55 @@ describe('employer entry surfaces', () => {
       within(talentCard).getByRole('link', {
         name: 'Subscribe',
       }),
-    ).toHaveAttribute('href', '/auth/join?returnTo=/employers');
+    ).toHaveAttribute('href', '/employers');
     expect(within(talentCard).queryByText('Up to 5 active jobs')).toBeNull();
     expect(within(talentCard).queryByText('30-day listing')).toBeNull();
     expect(
       within(talentCard).getByText('For growing hiring teams'),
     ).toBeVisible();
+  });
+
+  it('shows membership pricing and benefits before handing purchase to the membership page', () => {
+    render(
+      <EmployersPageView
+        plans={[
+          {
+            ...plan,
+            id: 'plan-member',
+            name: 'Community member',
+            purpose: 'membership',
+            price: {
+              currency: 'usd',
+              amountCents: 1250,
+              stripePriceId: 'price_member',
+            },
+            features: {
+              'membership.max_members': {
+                name: 'Team members',
+                value: '5',
+                dataType: 'integer',
+                displayOrder: 1,
+              },
+            },
+          },
+        ]}
+        contactPlans={[]}
+        seo={{ boardName: 'Example Jobs' }}
+        dependencies={employersPageViewDependencies}
+      />,
+    );
+
+    const card = screen
+      .getByText('Community member')
+      .closest('[data-slot="card"]');
+    if (!(card instanceof HTMLElement)) {
+      throw new Error('The membership plan must render in a card');
+    }
+    expect(within(card).getByText('$12.50')).toBeVisible();
+    expect(within(card).getByRole('link', { name: 'Join' })).toHaveAttribute(
+      'href',
+      '/memberships',
+    );
   });
 
   it('renders a quote-only tier as its price text and CTA, never as a price', () => {
@@ -705,6 +758,7 @@ it('shows unlimited featuring instead of dropping the benefit', () => {
 it('lists candidate benefits at the exact monthly price and links to candidate checkout', async () => {
   await renderRouted(
     <EmployersPageView
+      audience="candidates"
       plans={[
         {
           ...plan,
@@ -732,7 +786,7 @@ it('lists candidate benefits at the exact monthly price and links to candidate c
   );
   expect(screen.getByText('Job matching')).toBeVisible();
   expect(screen.queryByText('Job alerts')).not.toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Choose' })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: 'Subscribe' })).toHaveAttribute(
     'href',
     '/account/access',
   );

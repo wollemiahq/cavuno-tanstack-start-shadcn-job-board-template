@@ -166,6 +166,7 @@ export default function Footer({
   talentDirectoryVisibility,
   hasEmployerOfferPage,
   hasMembershipPage = false,
+  hasCandidatePricingPage = false,
   flush = false,
   breadcrumb,
   cookiePreferencesAction,
@@ -185,6 +186,7 @@ export default function Footer({
   primaryDomain: string | null;
   slug: string;
   features: {
+    candidates?: boolean;
     blog: boolean;
     talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     publicJobSubmission: boolean;
@@ -206,6 +208,7 @@ export default function Footer({
    * `hasEnabledPlans` gate on "Post a job" (same public-plan query).
    */
   hasEmployerOfferPage: boolean;
+  hasCandidatePricingPage?: boolean;
   /**
    * Whether the board publishes a membership plan. Loader-driven like
    * `hasEmployerOfferPage`, so the link never appears on a board where
@@ -241,6 +244,10 @@ export default function Footer({
       companies: removedNav.has('companies')
         ? null
         : { href: '/companies', label: copy.nav.companies },
+      jobSeekers:
+        hasCandidatePricingPage && !removedNav.has('pricing')
+          ? { href: '/job-seekers', label: copy.nav.pricing }
+          : null,
       blog:
         features.blog && !removedNav.has('blog')
           ? { href: '/blog', label: copy.nav.blog }
@@ -314,7 +321,10 @@ export default function Footer({
     presentation.description || copy.footer.defaultDescription,
     boardName,
   );
-  const copyright = `${resolveTemplate(copy.footer.copyrightPrefix, boardName)} ${copy.footer.allRightsReservedText}`;
+  const copyright = `${resolveTemplate(
+    copy.footer.copyrightPrefix,
+    boardName,
+  )} ${copy.footer.allRightsReservedText}`;
 
   const legalLinks: FooterLink[] = [
     { href: '/terms-of-service', label: copy.footer.termsOfServiceLabel },
@@ -334,7 +344,9 @@ export default function Footer({
   ];
 
   // Hosted referral attribution: ?ref= the board's public host.
-  const marketingHref = `https://cavuno.com/?ref=${encodeURIComponent(primaryDomain ?? slug)}`;
+  const marketingHref = `https://cavuno.com/?ref=${encodeURIComponent(
+    primaryDomain ?? slug,
+  )}`;
 
   return (
     <footer
