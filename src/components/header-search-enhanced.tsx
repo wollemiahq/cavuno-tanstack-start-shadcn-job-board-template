@@ -17,12 +17,10 @@ import {
 } from '@/components/ui/input-group';
 import type { HeaderSearchScope } from '@/lib/header-search';
 
-const LazyHeaderSearchJobsFields = lazy(() =>
-  import('@/components/header-search-jobs-fields').then(
-    ({ HeaderSearchJobsFields }) => ({
-      default: HeaderSearchJobsFields,
-    }),
-  ),
+const LazyJobsSearchFields = lazy(() =>
+  import('@/components/jobs-search-fields').then(({ JobsSearchFields }) => ({
+    default: JobsSearchFields,
+  })),
 );
 
 const LazyHeaderSearchBlogField = lazy(() =>
@@ -121,11 +119,13 @@ export function HeaderSearchEnhanced({
             key={search.scope}
             fallback={<HeaderSearchFieldsFallback fields={2} />}
           >
-            <LazyHeaderSearchJobsFields
-              search={search}
+            <LazyJobsSearchFields
+              keywordSuggestions={search.keywordSuggestions}
+              locationSuggestions={search.locationSuggestions}
               value={value}
               location={location}
               placeholder={scopePlaceholders.jobs}
+              locationClassName="border-border bg-input/50 h-9 min-w-0 flex-1"
               onValueChange={setValue}
               onLocationChange={setLocation}
               onTermChange={setTerm}
