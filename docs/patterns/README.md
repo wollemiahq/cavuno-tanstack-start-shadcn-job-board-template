@@ -4,24 +4,14 @@ The **pattern** layer for this template. A _pattern_ is a named, documented
 page-or-section composition — the level above a single component. Where `DESIGN.md` inventories the primitives (tokens + components),
 this folder documents how they assemble into the recurring surfaces of the app.
 
-**Select a pattern from the table below before composing a route.** Don't
-hand-roll a listing, detail, form, or empty surface — reach for the pattern that
-already owns it. Each page documents current reality, including where routes
-still drift (the "Don't" column of each Do / Don't table).
+These are examples of the current board, not required layouts. Reuse or adapt a
+composition when it fits; create a different composition when the requested
+experience needs one. Shared primitives and theme tokens keep new designs
+consistent without requiring the same page structure.
 
-Every new route starts with the canonical page-level composition family:
-`Page` → `PageContent`, with `PageHeader` and named `PageSection`s as needed.
-`Bleed` is the sanctioned full-width band. P18 Search results is the deliberate
-exception: its explicit `Page` → `main` shell keeps the full-width header and
-independently scrolling master-detail frame outside `PageContent`'s ordinary
-body grid.
-
-Every page follows [`_template.md`](_template.md): the section order (Purpose /
-When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the
-frontmatter keys (`name`, `purpose`, `primitives`, `usedBy`) are enforced by
-[`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts). The
-generated `## Patterns` section of `DESIGN.md` is derived from this frontmatter,
-so docs and the design library stay in sync.
+The generated ## Patterns section of DESIGN.md uses each page's
+name, purpose, and primitives frontmatter. The remaining prose and metadata
+are there to help people customize the board and can evolve with the product.
 
 ## Taxonomy
 
@@ -48,11 +38,9 @@ so docs and the design library stay in sync.
 | P19 | [Site header](site-header.md)           | Header, HeaderSearch, LocationCombobox, Link, Input, Button                                         | Contextual public search, centered discovery navigation, and account actions.       |
 | P20 | [Messaging](messaging.md)               | MessagingLayout, MessagingDock, Message, Bubble, Marker, MessageScroller, Attachment, Avatar, Textarea, Button | Dedicated and floating board-user conversations with one responsive interaction model. |
 
-## Enforcement
+## Using these patterns
 
-- **Doc structure** — [`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts)
-  asserts every pattern page has the template's sections in order, parses the
-  required frontmatter keys, and appears in this index.
-- **One design system** — structural tests keep app code composing the owned
-  shadcn components under `src/components/ui/` and the semantic tokens from
-  `src/theme.css`; no parallel component or token system can creep in.
+Start with the shared components and semantic tokens that fit the requested
+experience. Adapt a pattern, combine patterns, or create a different
+composition when that produces a better board; the examples do not define a
+required route shape.

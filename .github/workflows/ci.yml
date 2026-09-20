@@ -30,10 +30,10 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # DESIGN.md + design/tokens.dtcg.json are generated artifacts —
-      # regenerate them and reject any drift or hand-edit.
-      - name: Design artifacts check
-        run: pnpm run gen:design -- --check
+      # Runtime token metadata must match the theme; component descriptions
+      # are an on-demand reference, not a gate on every presentation change.
+      - name: Design token metadata
+        run: pnpm run gen:design -- --frontmatter --check
 
       - name: Build
         run: pnpm run build

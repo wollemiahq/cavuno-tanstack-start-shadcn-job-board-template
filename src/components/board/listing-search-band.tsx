@@ -14,23 +14,10 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group';
 /**
- * The shared search band: a keyword input with a leading search icon, an
- * inline clear action, a primary Search button, and optional slots for
- * surface-specific controls.
- * inside every listing header: a keyword input with a leading search icon, an
- * inline clear (the X inside the field), and a primary Search button, with
- * optional slots for the extra controls a surface needs (the jobs location
- * field, or the facet-pill row). Companies, blog, jobs, and the not-found
- * headers all consume THIS markup — there is no duplicate search-band markup
- * anywhere.
- *
- * The keyword is controlled local state owned by the
- * parent; `onChange` mutates only that state (never the URL), and the URL is
- * committed ONLY on form submit (Enter in the field or the Search button) via
- * `onSubmit`. The inline X clears the field locally (`onChange("")`) and
- * refocuses it — submit-only still applies, so clearing then requires a submit
- * to move the URL. This shell is shared by the local-state surfaces (companies,
- * blog, not-found) and the URL-seeded surface (jobs).
+ * Controlled keyword search with optional controls before the submit button
+ * and below the search row. The parent owns routing: typing and clearing
+ * update local state; only form submission invokes onSubmit. Clearing also
+ * returns focus to the input.
  */
 export function ListingSearchBand({
   value,

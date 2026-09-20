@@ -1,34 +1,46 @@
 'use client';
 
-import type { HeaderSearchProps } from '@/components/Header';
-import { KeywordCombobox } from '@/components/keyword-combobox';
-import { LocationCombobox } from '@/components/location-combobox';
+import {
+  KeywordCombobox,
+  type KeywordSuggestionState,
+} from '@/components/keyword-combobox';
+import {
+  LocationCombobox,
+  type LocationSuggestionState,
+} from '@/components/location-combobox';
 import type {
   HeaderSearchLocation,
   HeaderSearchTerm,
 } from '@/lib/header-search';
 
-export function HeaderSearchJobsFields({
-  search,
-  value,
-  location,
-  placeholder,
-  onValueChange,
-  onLocationChange,
-  onTermChange,
-}: {
-  search: HeaderSearchProps['search'];
+export interface JobsSearchFieldsProps {
+  keywordSuggestions: KeywordSuggestionState;
+  locationSuggestions: LocationSuggestionState;
   value: string;
   location: HeaderSearchLocation | null;
   placeholder: string;
+  locationClassName?: string;
   onValueChange: (value: string) => void;
   onLocationChange: (location: HeaderSearchLocation | null) => void;
   onTermChange: (term: HeaderSearchTerm | null) => void;
-}) {
+}
+
+/** Compose the keyword and location controls used to search jobs. */
+export function JobsSearchFields({
+  keywordSuggestions,
+  locationSuggestions,
+  value,
+  location,
+  placeholder,
+  locationClassName,
+  onValueChange,
+  onLocationChange,
+  onTermChange,
+}: JobsSearchFieldsProps) {
   return (
     <>
       <KeywordCombobox
-        {...search.keywordSuggestions}
+        {...keywordSuggestions}
         value={value}
         placeholder={placeholder}
         onValueChange={(nextValue) => {
@@ -42,12 +54,12 @@ export function HeaderSearchJobsFields({
         onClear={() => onTermChange(null)}
       />
       <LocationCombobox
-        {...search.locationSuggestions}
+        {...locationSuggestions}
         value={location?.slug}
         valueLabel={location?.name}
         onSelect={onLocationChange}
         onClear={() => onLocationChange(null)}
-        className="border-border bg-input/50 h-9 min-w-0 flex-1"
+        className={locationClassName}
       />
     </>
   );

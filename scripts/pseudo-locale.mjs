@@ -95,6 +95,32 @@ export function pseudoLocalize(value) {
   return `⟦${out}⟧`;
 }
 
+/**
+ * Derive a pseudo catalog without changing the message-format machinery.
+ *
+ * Complex messages store user-visible patterns under `match`; declarations
+ * and selector names must remain verbatim so the Paraglide compiler can still
+ * resolve the variants.
+ */
+export function pseudoCatalog(catalog, derive) {
+  const output = { $schema: catalog.$schema };
+  for (const [key, value] of Object.entries(catalog)) {
+    if (key.startsWith('$')) continue;
+    output[key] = Array.isArray(value)
+      ? value.map((variant) => ({
+          ...variant,
+          match: Object.fromEntries(
+            Object.entries(variant.match ?? {}).map(([arm, pattern]) => [
+              arm,
+              derive(pattern),
+            ]),
+          ),
+        }))
+      : derive(value);
+  }
+  return output;
+}
+
 /** U+2067 RIGHT-TO-LEFT ISOLATE … U+2069 POP DIRECTIONAL ISOLATE. */
 export const RLI = '⁧';
 export const PDI = '⁩';

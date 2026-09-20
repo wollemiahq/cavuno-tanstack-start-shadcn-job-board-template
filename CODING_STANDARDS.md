@@ -1,48 +1,22 @@
 # Coding standards
 
-`/code-review` reads this file on the Standards axis. Rules tooling already
-enforces (lint, format, typecheck) stay out of this file.
+/code-review reads this file on the Standards axis. Rules already enforced by
+formatting, lint, or typecheck do not belong here.
 
-## Tautological tests considered harmful
+Tests should protect behavior that users or downstream code rely on. Use
+accessible roles and localized names to exercise interactions, then assert the
+resulting state, navigation, data, permissions, or error. Exact copy is a
+contract only when an external requirement fixes the wording; otherwise keep
+tests independent of translations and presentation.
 
-```
-echo "Tautological tests considered harmful"
-```
+Expected values need an independent source of truth. Do not calculate an
+expected result with the same logic as production or assert a value against
+itself. SDK goldens own exact money, date, and location formatting. Mapper and
+component tests pin raw wire values and field presence instead of repeating
+those formatted strings.
 
-A test is tautological when its expected value restates the implementation, so
-it passes by construction and can never disagree with the code.
-
-Expected values come from an independent source of truth: a known-good literal,
-a worked example, or the spec. Do not recompute the result the way the
-production code does, assert a value equal to itself, or derive a snapshot by
-running the same logic.
-
-```ts
-// Harmful: expected value is the implementation, replayed
-test("calculateTotal sums line items", () => {
-  const items = [{ price: 10 }, { price: 5 }];
-  const expected = items.reduce((sum, i) => sum + i.price, 0);
-  expect(calculateTotal(items)).toBe(expected);
-});
-
-// Required: independent, known result
-test("calculateTotal sums line items", () => {
-  expect(calculateTotal([{ price: 10 }, { price: 5 }])).toBe(15);
-});
-```
-
-Same shape, same rejection:
-
-- `expect(add(a, b)).toBe(a + b)`
-- a fixture asserted equal to `JSON.parse(JSON.stringify(fixture))`
-- a mock asserted to have been called with the arguments the test itself passed
-- a snapshot produced by copying the function under test
-
-If the assertion would still pass after the behaviour broke, the test is
-tautological. Rewrite it or delete it.
-
-SDK-formatted money, dates, and location strings are pinned **once**, in the
-SDK goldens. Mapper and component tests do not replay those helpers and do
-not re-pin the pretty string. They pin the wire (`salaryMin`, currency) and
-whether a field is present. App-owned copy and limits with no SDK golden
-(nav labels, `50` emails) pin the literal.
+Keep recurring UI in typed shared components and recurring visual decisions in
+semantic theme tokens. Keep interface copy in Paraglide message keys, including
+accessible names, with interpolation and plural handling intact. Tests may
+protect a shared component's public behavior and accessibility, but should not
+freeze incidental classes, JSX order, layout, or documentation prose.

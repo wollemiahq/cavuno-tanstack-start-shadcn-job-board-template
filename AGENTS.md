@@ -1,187 +1,61 @@
 # Agent rules — Cavuno board frontend
 
-Rules for any coding agent working in this repo. Keep this file concise and
-self-contained: it is the shared contract for automated customization.
+This is a running TanStack Start/Vite app on Cloudflare Workers. Customize it
+to achieve the requested board outcome. A redesign, new composition, or
+different presentation is valid; existing pages, patterns, and templates are
+references rather than mandatory layouts. Keep user-visible capabilities and
+public contracts that the request does not change, while adapting loaders,
+mappers, server functions, and components as needed.
 
-## Never greenfield
+## Where work belongs
 
-This repo is a customization template. Every change — restyle, new
-page, copy edit — customizes THIS codebase in place. Never rebuild the
-app from scratch, never replace the chassis wholesale, never fork the
-data layer. If a request seems to require starting over, it doesn't:
-find the smallest edit to the existing surface.
+- src/routes/ composes pages and owns route behavior.
+- src/components/ owns presentation; src/theme.css owns semantic visual
+  tokens.
+- src/board/ maps Board data for the UI and may change when the needed view
+  model changes.
+- src/server/ and server-only helpers in src/lib/ own Board API access,
+  authentication, sessions, paths, SEO, and other correctness helpers.
 
-## Repo orientation
+Use typed shared components when an interaction or visual treatment recurs.
+Keep ordinary page composition local. Use the Base UI-backed shadcn components
+under src/components/ui/ and semantic tokens for repeated colors, type, and
+radii. DESIGN.md and docs/patterns/ are examples and references; they do
+not prescribe a page structure or require an inventory update for ordinary UI
+work.
 
-Where things live — content search (grep) confirms anything not listed:
+## Security, data, and accessibility contracts
 
-- `src/routes/` — page composition (markup, layout, copy); keep loaders
-  intact. Co-located `-*.test.tsx` files pin route behavior.
-- `src/board/` — view-model mappers (locked layer, see below).
-- `src/components/board/` + `src/components/search-results/` — board and
-  search presentation; restructure freely. `src/components/ui/` — owned
-  shadcn components (inventory in DESIGN.md); other subdirs (layout,
-  marketing, employer, …) — shared presentation.
-- `src/server/` — the only place the Board API is called. `src/lib/` —
-  env, SDK client, session, correctness invariants. `src/hooks/` —
-  shared presentation hooks.
-- `src/theme.css` — canonical tokens: site-wide colors/fonts live HERE.
-  `src/theme/`, `src/paraglide/`, `DESIGN.md`, `design/tokens.dtcg.json`
-  are GENERATED — never edit; run `gen:theme` / `gen:messages` /
-  `gen:design`.
-- `messages/` — UI copy catalogs; edit then `pnpm run gen:messages`.
-- Tests sit next to their sources (`foo.test.tsx` beside `foo.tsx`).
+- CAVUNO_API_URL, CAVUNO_BOARD, and any demo-board binding select the
+  tenant. Operators set them in .dev.vars or wrangler.jsonc; do not
+  hardcode, move, or duplicate those bindings.
+- Read Worker configuration through getServerEnv() in request-owned code;
+  never read process.env at module scope. Keep Board API calls and
+  auth/session refresh on the server. Private session credentials stay in the
+  host-owned httpOnly cookie, never browser storage or module state.
+- API HTML fields such as job and company descriptions are pre-sanitized.
+  Render only those known fields as HTML; do not interpolate other strings into
+  dangerouslySetInnerHTML.
+- Use @cavuno/board/paths for Board paths and TanStack typed route links.
+  Preserve canonical URLs, head() metadata, public links, feeds, sitemaps,
+  robots rules, and job-detail JobPosting JSON-LD unless the request changes
+  that contract.
+- Use semantic controls, labels, keyboard behavior, and accessible state. Keep
+  UI copy in Paraglide message keys, including accessible names, with
+  interpolation and plural handling intact.
 
-## Working style
+## Generated inputs and validation
 
-- Search first: find copy, markup, and identifiers with content search
-  rather than reading whole directories — catalogs and routes are large.
-- Batch independent reads/searches; speculative multi-file reads in one go.
-- One coherent change across files lands as ONE batched multi-file edit.
-- After editing generator inputs, run the matching generator; never
-  hand-edit generated output.
-- Before final verification, run ONLY the co-located tests of changed
-  files — never the whole suite.
+Edit source inputs, not generated files such as src/paraglide/**,
+src/theme/resolved.ts, DESIGN.md, or design/tokens.dtcg.json. Real locale
+catalogs are source files and are never rewritten by gen:messages; QA
+pseudo-locale catalogs are generated when QA locales are enabled. gen:paraglide compiles
+the locale runtime, and gen:theme still generates runtime token data. Shadcn
+inventory and design descriptions are references rather than ordinary gates.
 
-## Grounding config is not an agent edit
-
-`CAVUNO_API_URL` and `CAVUNO_BOARD` (the `pk_…` publishable key) bind
-this frontend to one specific board. They are set at deploy time by a
-human operator (or the platform):
-`wrangler.jsonc` vars in production, `.dev.vars` in dev/sandbox. That is
-how a board goes live — an operator swaps `CAVUNO_BOARD` for their own
-`pk_…` (README "Deploy"). You, the agent, never touch grounding: never
-edit, hardcode, duplicate, or move these values in code. A change
-request that appears to need different grounding is an operator/deploy
-operation, not a code edit for you to make.
-
-## The customization surface
-
-- `src/components/**` — presentational, dumb, typed-props components.
-  Data arrives from loaders; components never fetch.
-- `src/theme.css` — the canonical, shadcn CLI-owned theme. Edit it
-  directly or with `shadcn apply`, then run `pnpm run gen:theme`; never edit
-  `src/theme/resolved.ts` (generated). **Fonts are part of this surface**
-  (docs/theming.md §Fonts): the 20-font catalog is pre-installed, so a font
-  change edits ONLY this file — banner `fontSans`/`fontHeading` keys, the
-  fontsource import block (active families only), and `--font-sans`/
-  `--font-heading` tokens — then `pnpm run gen:theme && pnpm run gen:design`.
-  Never set `font-family` on components (use the `font-sans`/`font-heading`
-  utilities); never add font packages — an AGENT rule, not a ban (operators
-  may, via `--only theme,font`); token, import, and package must agree.
-- `src/styles.css` — global resets, app-shell defaults, and shared layout
-  utilities. Theme tokens and radii live in `src/theme.css`.
-- `src/routes/*.tsx` — page composition (markup, layout, copy). Keep
-  loaders/server-function calls intact.
-- `messages/**` — UI copy catalogs (Paraglide). Run
-  `pnpm run gen:messages` after edits. Default compile is English only;
-  `pnpm locale:add de` enables a dormant catalog (never `en-XA`/`ar-XB`).
-
-## Outside the surface — change only with explicit reason
-
-- `src/board/**` — the **view-model layer** (Layer 1b): pure mappers
-  (`toJobCardVM`, `toJobDetailVM`, `toApplyButtonVM`, `toOverallSalaryVM`,
-  …) that call the `@cavuno/board` SDK's correctness functions
-  (formatters, breadcrumbs, path helpers, copy) and hand components plain,
-  resolved data. Consume these mappers and the SDK (Layer 1a);
-  **never rewrite them** — that is what stops a redesign mis-calling a
-  correctness function. Presentation (`src/components/**`, Layer 2) is
-  yours to restructure freely; if a new section needs a resolved datum (a
-  formatted value, a label, a breadcrumb), add it to the mapper rather
-  than re-deriving it inside a component.
-- `src/lib/**` — env access, SDK client, session cookie + middleware,
-  theme mapper, JSON-LD builder. These encode security and correctness
-  invariants.
-- `src/server/**` — the only place the Board API is called. Auth is
-  enforced per server function here.
-- `vite.config.ts`, `wrangler.jsonc`, `tsconfig.json` — build config
-  is locked.
-
-## Hard rules
-
-1. **Never read `process.env` at module scope** — it is `undefined` on
-   Workers. Use `getServerEnv()` from `src/lib/env.ts` inside handlers.
-2. **Never call the Board API from the browser** — add data needs as
-   server functions in `src/server/`.
-3. **Never persist private Cavuno auth/session credentials in browser storage or
-   module state** — the user session belongs only in the host-owned httpOnly cookie.
-4. **HTML from the API** (`job.description`, `post.html`,
-   `company.description`) **is pre-sanitized** — render as-is; never
-   interpolate other strings into `dangerouslySetInnerHTML`.
-5. Keep `head()` meta + the JobPosting JSON-LD on the job-detail route
-   intact — they are the board's SEO contract.
-6. New components compose owned **shadcn/ui components on Base UI** under
-   `src/components/ui/`; merge classes with `cn` from `@/lib/utils`.
-   App code consumes their canonical public APIs, never Base UI internals or
-   data attributes, so adopters may swap in their own Base UI-backed shadcn
-   source. Radix is an explicit migration, not a drop-in swap. There is one
-   design system: never add a parallel component tree, icon set, CSS utility
-   layer, or token system alongside `src/components/ui/` + `src/theme.css`.
-7. **Board URL paths come from `@cavuno/board/paths`** (`jobDetailPath`,
-   `jobsCategoryPath`, `jobsSkillPath`, `companyPath`, `companySalaryPath`,
-   …) — never string-build a `/companies/…/jobs/…` or `/jobs/…` path.
-   The canonical URL structure is a locked cross-surface contract (it must
-   match the hosted board, sitemap, and emails); the absolute canonical URL
-   for a job/company still comes from the API's `links.public`. Route
-   `<Link to>` uses TanStack's typed route ids as usual.
-
-## Operator overrides win; tests protect behavior
-
-Hosted-board parity is the DEFAULT, not a ceiling. When the operator
-asks for a different presentation of a resolved value (salary/date
-style, icons, labels), produce it: add a mapper field or transform the
-VM's RAW wire values (`salaryMin`, `publishedAt`, …) with e.g.
-`Intl.NumberFormat`. "Golden-tested" pins only the SDK's DEFAULT
-rendering; never parse its locale-shaped formatted strings.
-
-Tests protect stable behavior, not incidental markup, classes, implementation
-details, or prose. Prefer roles/states, navigation, permissions, data flow,
-and errors. Never test only sentence/heading presence; derive catalog
-expectations from messages or fixtures. Component tests use neutral VM
-fixtures; SDK goldens own exact salary/date/location formatting. Mapper tests
-pin wire values and presence/absence — not SDK formatter re-pins (see
-`CODING_STANDARDS.md`). Update tests with behavior; loosen brittle
-copy/visual failures. A green structural gate proves little.
-
-## Dependencies
-
-Package manager is **pnpm 11**, pinned in `package.json`. Installs in
-CI and sandboxes run with a frozen lockfile. Supply-chain posture
-(`pnpm-workspace.yaml`): dependency lifecycle scripts are blocked —
-`allowBuilds` is an empty allowlist — and `minimumReleaseAge` keeps a
-1-day cooldown (1440) on newly published versions. Add a dependency only
-when the change genuinely needs it and the reviewed packages cannot solve
-the problem; packages outside the platform allowlist fail deploy closed.
-
-## Verify every change
-
-```sh
-pnpm run typecheck && pnpm test && pnpm run build
-```
-
-Hosted agent environments provide a `verify` tool covering this whole
-gate plus live page checks — there, call it once instead.
-
-## Design system
-
-Visual identity, design tokens, the component inventory, and design
-do's-and-don'ts live in **`DESIGN.md`** (generated from `src/theme.css`
-
-- component source + the registry snapshot — regenerate with
-  `pnpm run gen:design`, never hand-edit; CI rejects drift). The
-  machine-interchange token export is `design/tokens.dtcg.json`. Select
-  from the DESIGN.md component inventory before writing new components.
-  Page-level compositions follow the patterns in **`docs/patterns/`** —
-  select a pattern before composing a route; never hand-roll a
-  listing/detail/form/empty surface.
-
-Primitives, in order: use or add current shadcn components under
-`src/components/ui/`, backed by Base UI and styled from `src/theme.css`.
-Route and pattern code depends only on canonical shadcn component props.
-There is no parallel component or token system — structural tests reject
-second component trees. New dependencies cannot be added at build time, so
-compose from what is installed.
-
-## Framework skills
-
-TanStack skill mappings for this stack: `docs/tanstack-skills.md`.
+Run focused tests with `pnpm test path/to/file.test.tsx` (without `--`).
+Choose checks that establish the requested behavior: interactions,
+navigation, data, permissions, accessibility, and relevant failure states.
+Use a browser for responsive or visual changes. Test behavior rather than incidental classes, DOM shape, layout, or copy; exact wording is appropriate
+when an external requirement fixes it. Use relevant subsystem guidance when a
+change touches that area.

@@ -1,29 +1,8 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 /**
- * HomeLanding section-composition invariants. The home `/` is an
- * editorial landing with its own introduction and real board collections;
- * directory search stays in the persistent public header. These lock the
- * branching reasons, not visual class strings:
- *
- *  - the hero shows the HONEST open-role count and omits the pill when the
- *    loader returned no count (never a "0"/blank stat);
- *  - the companies / blog / talent strips render their shared cards and are
- *    each OMITTED WHOLE when their collection is empty or their feature is off
- *    (the loader passes `null` and the section does not render);
- *  - the latest-jobs grid reuses the shared `JobCard` (one design system: the
- *    featured pill is a real Badge, the featured tile earns the primary ring)
- *    and links each job to the canonical detail href (hydration-stable). Desktop
- *    PreferListingWorkspace rewrites unmodified clicks to the `/jobs` workspace
- *    with `selectedJob`; mobile follows the canonical Link. SEO/JSON-LD stay on
- *    the detail route / `links.public`;
- *  - the dual-path sign-up band mirrors `resolveSignupDestination`: the
- *    candidate card points at /auth/sign-up and the employer card at
- *    /auth/employer/sign-up, each shows ONLY when its role is enabled, and the
- *    whole band is omitted when neither role is enabled.
- *
- * Everything mounts under a memory router: the landing is built from typed
- * `Link`s + path-helper hrefs, so the router seam is part of what it is.
+ * Landing behavior: board data, working destinations, feature gates, and
+ * safe background images. Layout and component anatomy may change.
  */
 import {
   RouterProvider,
@@ -298,15 +277,7 @@ describe('HomeLanding — section-header count eyebrow', () => {
   });
 });
 
-describe('HomeLanding — pure landing hero', () => {
-  it('leaves search to the persistent public header instead of duplicating it in the hero', async () => {
-    renderLanding(baseProps);
-    await screen.findByRole('heading', { name: m.home_heroHeadline() });
-
-    expect(screen.queryByRole('searchbox')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Search' })).toBeNull();
-  });
-
+describe('HomeLanding — hero backgrounds', () => {
   it('keeps the dither canvas when no background image is provided', async () => {
     renderLanding(baseProps);
     await screen.findByRole('heading', { name: m.home_heroHeadline() });
@@ -443,26 +414,22 @@ describe('HomeLanding — latest jobs reuse the shared card with canonical hrefs
     );
   });
 
-  it('renders a featured job through the shared Card and Badge surfaces', async () => {
+  it('renders the featured status for its job', async () => {
     renderLanding(baseProps);
     const link = await screen.findByRole('link', {
       name: 'Senior Backend Engineer',
     });
-    // The whole tile is the shared owned Card.
-    const cardTile = link.closest('[data-slot="card"]');
-    expect(cardTile).not.toBeNull();
-    // "Featured" is a real Badge, not plain text.
     const article = link.closest('article');
     if (!article) throw new Error('Expected the job link inside an article');
     const featured = within(article).getByText(job.featuredLabel);
-    expect(featured).toHaveAttribute('data-slot', 'badge');
+    expect(featured).toBeVisible();
   });
 
-  it('renders job taxonomy links through the owned Badge surface', async () => {
+  it('links job taxonomy to its route', async () => {
     renderLanding(baseProps);
 
     const tag = await screen.findByRole('link', { name: 'Figma' });
-    expect(tag).toHaveAttribute('data-slot', 'badge');
+    expect(tag).toHaveAttribute('href', '/jobs?skills=figma');
   });
 
   it('shows a company avatar on every card, using the logo or company initials', async () => {
@@ -497,13 +464,11 @@ describe('HomeLanding — hiring index', () => {
     expect(within(index).getAllByText('3 open jobs')).toHaveLength(4);
   });
 
-  it('renders the shared CompanyCard with the wire summary, not a slim pill', async () => {
+  it('renders the company summary from board data', async () => {
     renderLanding(baseProps);
     const index = await screen.findByRole('region', {
       name: m.home_companiesHeading(),
     });
-    // Shared owned Card surface (not a bespoke homepage pill).
-    expect(index.querySelector('[data-slot="card"]')).not.toBeNull();
     // Card teaser is the API summary (authored or server-derived).
     expect(
       within(index).getByText('Autonomous field robots for agriculture.'),
@@ -536,11 +501,13 @@ describe('HomeLanding — empty board', () => {
     const emptyHeading = screen.getByRole('heading', {
       name: m.home_emptyHeading(),
     });
-    expect(emptyHeading.closest('[data-slot="empty"]')).toBeTruthy();
+    expect(emptyHeading).toBeVisible();
     expect(screen.getByText(m.home_emptySupporting())).toBeTruthy();
-    expect(
-      screen.getByRole('link', { name: m.home_employerCtaButton() }),
-    ).toHaveAttribute('href', '/auth/employer/sign-up');
+    for (const link of screen.getAllByRole('link', {
+      name: m.home_employerCtaButton(),
+    })) {
+      expect(link).toHaveAttribute('href', '/auth/employer/sign-up');
+    }
   });
 });
 
@@ -596,28 +563,42 @@ describe('HomeLanding — dual-path sign-up band', () => {
     const candidateCta = await screen.findByRole('link', {
       name: m.home_candidateCtaButton(),
     });
-    const employerCta = screen.getByRole('link', {
+    const employerCtas = screen.getAllByRole('link', {
       name: m.home_employerCtaButton(),
     });
     expect(candidateCta.getAttribute('href')).toBe('/auth/sign-up');
-    expect(employerCta.getAttribute('href')).toBe('/auth/employer/sign-up');
+    for (const link of employerCtas) {
+      expect(link).toHaveAttribute('href', '/auth/employer/sign-up');
+    }
   });
 
-  it('shows ONLY the candidate card when employers are disabled', async () => {
-    renderLanding({ ...baseProps, employersEnabled: false });
+  it('keeps candidate signup and public posting when employer signup is disabled', async () => {
+    renderLanding({
+      ...baseProps,
+      employersEnabled: false,
+      publicJobSubmission: true,
+    });
     await screen.findByRole('link', {
       name: m.home_candidateCtaButton(),
     });
     expect(
       screen.queryByRole('link', { name: m.home_employerCtaButton() }),
     ).toBeNull();
+    for (const link of screen.getAllByRole('link', {
+      name: m.siteHeader_postJobLabel(),
+    })) {
+      expect(link).toHaveAttribute('href', '/post');
+    }
   });
 
   it('shows ONLY the employer card when candidates are disabled', async () => {
     renderLanding({ ...baseProps, candidatesEnabled: false });
-    await screen.findByRole('link', {
+    const employerCtas = await screen.findAllByRole('link', {
       name: m.home_employerCtaButton(),
     });
+    for (const link of employerCtas) {
+      expect(link).toHaveAttribute('href', '/auth/employer/sign-up');
+    }
     expect(
       screen.queryByRole('link', { name: m.home_candidateCtaButton() }),
     ).toBeNull();

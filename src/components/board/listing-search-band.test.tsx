@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { ListingSearchBand } from './listing-search-band';
 
 afterEach(cleanup);
@@ -34,7 +35,9 @@ describe('ListingSearchBand', () => {
     render(<SearchHarness onSubmit={onSubmit} />);
 
     const input = screen.getByRole('searchbox', { name: 'Job keywords' });
-    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.searchBar_clearAriaLabel() }),
+    );
 
     expect(input).toHaveValue('');
     expect(input).toHaveFocus();

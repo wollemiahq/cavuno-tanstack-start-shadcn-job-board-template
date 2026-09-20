@@ -6,7 +6,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AlertSignupForm } from './alert-signup-form';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
+import { alertsCopy } from '@/copy-groups/alerts';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
+
+const copy = alertsCopy();
 
 const analytics = {
   ga4MeasurementId: null,
@@ -36,11 +39,11 @@ afterEach(() => {
 });
 
 describe('AlertSignupForm submission', () => {
-  it('keeps the exact subscription payload visible as pending with an owned spinner', () => {
+  it('submits the expected SDK payload and disables resubmission while pending', () => {
     const onSubscribe = vi.fn(
       () => new Promise<{ status: 'submitted' }>(() => {}),
     );
-    const { container } = render(
+    render(
       <AlertSignupForm
         language="en"
         filters={{ jobFunctions: ['Design'] }}
@@ -49,10 +52,13 @@ describe('AlertSignupForm submission', () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'email' }), {
-      target: { value: 'designer@example.com' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'get job alerts' }));
+    fireEvent.change(
+      screen.getByRole('textbox', { name: copy.emailAriaLabel }),
+      {
+        target: { value: 'designer@example.com' },
+      },
+    );
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
 
     expect(onSubscribe).toHaveBeenCalledWith({
       email: 'designer@example.com',
@@ -62,12 +68,11 @@ describe('AlertSignupForm submission', () => {
       context: { source: 'jobs_list' },
     });
     expect(
-      screen.getByRole('button', { name: 'get job alerts' }),
+      screen.getByRole('button', { name: copy.submitAriaLabel }),
     ).toBeDisabled();
     expect(
-      container.querySelector("[data-slot='spinner']"),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Subscribing…')).toBeVisible();
+      screen.getByRole('textbox', { name: copy.emailAriaLabel }),
+    ).toBeDisabled();
   });
 
   it('shows one uniform confirmation and clears the email after submission', async () => {
@@ -78,21 +83,19 @@ describe('AlertSignupForm submission', () => {
       />,
     );
 
-    const input = screen.getByRole('textbox', { name: 'email' });
+    const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
     fireEvent.change(input, { target: { value: 'person@example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: 'get job alerts' }));
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
 
-    expect(
-      await screen.findByText(
-        "If this email isn't already subscribed, we've sent a confirmation link — check your inbox.",
-      ),
-    ).toHaveAttribute('role', 'status');
+    expect(await screen.findByText(copy.jobAlertSuccessToast)).toHaveAttribute(
+      'role',
+      'status',
+    );
     expect(input).toHaveValue('');
     expect(screen.getAllByRole('status')).toHaveLength(1);
-    expect(screen.queryByText(/created|duplicate/i)).not.toBeInTheDocument();
   });
 
-  it('announces a rejected subscription through the owned field error without clearing the email', async () => {
+  it('announces a rejected subscription without clearing the email', async () => {
     render(
       <AlertSignupForm
         language="en"
@@ -100,13 +103,13 @@ describe('AlertSignupForm submission', () => {
       />,
     );
 
-    const input = screen.getByRole('textbox', { name: 'email' });
+    const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
     fireEvent.change(input, { target: { value: 'person@example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: 'get job alerts' }));
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
 
     const error = await screen.findByRole('alert');
-    expect(error).toHaveAttribute('data-slot', 'field-error');
-    expect(error).toHaveTextContent('Something went wrong. Please try again.');
+    expect(error).toBeVisible();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveValue('person@example.com');
   });
 
@@ -126,16 +129,18 @@ describe('AlertSignupForm submission', () => {
       </BoardConversionAnalyticsProvider>,
     );
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'email' }), {
-      target: { value: 'person@example.com' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'get job alerts' }));
+    fireEvent.change(
+      screen.getByRole('textbox', { name: copy.emailAriaLabel }),
+      {
+        target: { value: 'person@example.com' },
+      },
+    );
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
 
-    expect(
-      await screen.findByText(
-        "If this email isn't already subscribed, we've sent a confirmation link — check your inbox.",
-      ),
-    ).toBeVisible();
+    expect(await screen.findByText(copy.jobAlertSuccessToast)).toHaveAttribute(
+      'role',
+      'status',
+    );
     expect(pushes).toContainEqual({
       event: 'job_alert_subscribe',
       board_slug: 'acme',

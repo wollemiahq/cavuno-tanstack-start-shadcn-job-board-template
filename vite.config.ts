@@ -68,10 +68,9 @@ const PARAGLIDE_OUTDIR = './src/paraglide';
  * Restrict the paraglide plugin's dev watch to catalogs it actually
  * compiles.
  *
- * `messages/` holds en, de, fr and the two pseudo-locales, but
- * `project.inlang/settings.json` enables only `locales` (today: `en`).
- * The dormant catalogs stay on disk so `pnpm locale:add` can flip one on
- * without starting from a blank file — see scripts/gen-paraglide-messages.mjs.
+ * `messages/` holds the human-authored real catalogs and ignored QA
+ * pseudo-locales. `project.inlang/settings.json` enables only `locales`
+ * (today: `en`), while `pnpm locale:add` opts a real catalog in.
  *
  * The plugin derives its watch set from the files the inlang SDK read
  * during the last compile, then widens it to those files' *directories*
@@ -188,8 +187,9 @@ function viteConfig(command: ConfigEnv['command']) {
     server: previewServer,
     plugins: [
       // Compile-time i18n: messages/{locale}.json → tree-shakeable
-      // functions in src/paraglide (generated; gitignored). Messages are
-      // generated from the SDK uiCopy catalog — `pnpm run gen:messages`.
+      // functions in src/paraglide (generated; gitignored). Real catalogs
+      // are authored in messages/; `gen:messages` only prepares ignored QA
+      // pseudo-locales when the runtime gate needs them.
       //
       // This plugin generating `src/paraglide` is NOT enough on its own for
       // `dev`, which is why package.json carries a `predev`. `src/paraglide`

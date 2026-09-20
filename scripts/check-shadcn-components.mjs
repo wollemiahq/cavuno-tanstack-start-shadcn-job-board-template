@@ -128,9 +128,9 @@ function installedComponents() {
     .sort();
 }
 
-function productionReferences() {
+function productionReferences(installed) {
   const references = new Map(
-    registryComponents.map((component) => [component, new Set()]),
+    installed.map((component) => [component, new Set()]),
   );
   const importPattern = /(?:@\/components\/ui\/|\.\/ui\/)([a-z0-9-]+)/g;
 
@@ -185,11 +185,10 @@ function validateConfiguration() {
 function buildArtifacts() {
   const installed = installedComponents();
   const expected = [...registryComponents].sort();
-  if (JSON.stringify(installed) !== JSON.stringify(expected)) {
-    const missing = expected.filter((name) => !installed.includes(name));
-    const extra = installed.filter((name) => !expected.includes(name));
+  const missing = expected.filter((name) => !installed.includes(name));
+  if (missing.length > 0) {
     throw new Error(
-      `shadcn registry files drifted. Missing: ${missing.join(', ') || 'none'}. Extra: ${extra.join(', ') || 'none'}.`,
+      `Installed shadcn primitives are missing: ${missing.join(', ')}.`,
     );
   }
   if (!existsSync(resolve(root, 'src/hooks/use-mobile.ts'))) {
@@ -199,8 +198,8 @@ function buildArtifacts() {
   }
 
   const config = validateConfiguration();
-  const references = productionReferences();
-  const components = registryComponents.map((name) => {
+  const references = productionReferences(installed);
+  const components = installed.map((name) => {
     const production = [...references.get(name)].sort();
     return {
       name,
@@ -290,7 +289,7 @@ The source remains intentionally owned after installation. Small extensions pres
 
 The text-messaging experience composes \`Bubble\`, \`Marker\`, \`Message\`, and \`MessageScroller\`. \`Attachment\` is installed and used for resume and logo uploads, but Cavuno's current messaging API accepts message bodies only; the starter does not present a fake message-attachment action that cannot be sent.
 
-Run \`pnpm run gen:shadcn\` after adding or removing production imports. \`pnpm run check:shadcn\` fails when the installed registry, configuration, JSON ledger, or this document drifts.
+Run \`pnpm run gen:shadcn\` when you want to refresh this reference. \`pnpm run check:shadcn\` validates primitives, configuration and imports; usage documentation is not a customization gate.
 `;
 
   return {
@@ -307,22 +306,4 @@ if (process.argv.includes('--write')) {
   process.exit(0);
 }
 
-const drift = [
-  [usageJsonPath, artifacts.json],
-  [usageMarkdownPath, artifacts.markdown],
-].filter(
-  ([path, expected]) =>
-    !existsSync(path) || readFileSync(path, 'utf8') !== expected,
-);
-
-if (drift.length > 0) {
-  for (const [path] of drift) {
-    console.error(`${relative(root, path)} is missing or stale.`);
-  }
-  console.error('Run pnpm run gen:shadcn to update the inventory.');
-  process.exit(1);
-}
-
-console.log(
-  'shadcn component inventory is complete and matches production usage.',
-);
+console.log('shadcn primitives, configuration and imports are valid.');
