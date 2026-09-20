@@ -113,3 +113,14 @@ describe('planOffersFeaturedChoice', () => {
     ).toBe(false);
   });
 });
+
+it('shows unlimited featuring in manual mode', () => {
+  expect(
+    planFeatureLines(
+      plan([
+        { key: 'jobs.featured_slots', value: 'unlimited' },
+        { key: 'jobs.feature_selection_mode', value: 'manual' },
+      ]),
+    ),
+  ).toHaveLength(1);
+});
