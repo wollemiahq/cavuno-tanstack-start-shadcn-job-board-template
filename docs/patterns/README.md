@@ -4,17 +4,10 @@ The **pattern** layer for this template. A _pattern_ is a named, documented
 page-or-section composition — the level above a single component. Where `DESIGN.md` inventories the primitives (tokens + components),
 this folder documents how they assemble into the recurring surfaces of the app.
 
-**Select a pattern from the table below before composing a route.** Don't
-hand-roll a listing, detail, form, or empty surface — reach for the pattern that
-already owns it. Each page documents current reality, including where routes
-still drift (the "Don't" column of each Do / Don't table).
-
-Every new route starts with the canonical page-level composition family:
-`Page` → `PageContent`, with `PageHeader` and named `PageSection`s as needed.
-`Bleed` is the sanctioned full-width band. P18 Search results is the deliberate
-exception: its explicit `Page` → `main` shell keeps the full-width header and
-independently scrolling master-detail frame outside `PageContent`'s ordinary
-body grid.
+These are examples of the current board, not required layouts. Reuse or adapt a
+composition when it fits; create a different composition when the requested
+experience needs one. Shared primitives and theme tokens keep new designs
+consistent without requiring the same page structure.
 
 Every page follows [`_template.md`](_template.md): the section order (Purpose /
 When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the

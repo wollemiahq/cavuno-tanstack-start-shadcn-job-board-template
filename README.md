@@ -319,17 +319,15 @@ Auth methods: `password`, `google`, `linkedin`, `magic_link`.
 
 ## Customize it
 
-This is a **customization template**, not a scaffold to rebuild. The contract
-that keeps customizations safe:
+Make this board your own: change its layout, visual identity, navigation, and
+features while keeping the integrations and behavior your users rely on.
 
-- **[`AGENTS.md`](AGENTS.md)** — the rules any contributor (human or agent)
-  follows: the customization surface, the layering, and the hard rules.
+- **[`AGENTS.md`](AGENTS.md)** — concise guidance for contributors and agents.
 - **[`DESIGN.md`](DESIGN.md)** — the visual identity, design tokens, and the
   full component inventory (generated from `src/theme.css` + component source;
   never hand-edited).
-- **[`docs/patterns/`](docs/patterns/README.md)** — page-level compositions.
-  Select a pattern before composing a route; never hand-roll a
-  listing/detail/form/empty surface.
+- **[`docs/patterns/`](docs/patterns/README.md)** — examples of existing page compositions
+  to adapt or replace when a different design serves the request.
 
 It's standard [shadcn/ui](https://ui.shadcn.com) on Base UI: the primitives
 under `src/components/ui/` are token-pure and the theme lives in the
@@ -361,7 +359,8 @@ these values.
 
 ## Verify
 
-Every change runs the verify triad before it lands (CI enforces the same):
+CI runs the complete release checks. During development, use the checks
+relevant to the change; run the full sequence when validating a release locally:
 
 ```sh
 pnpm run typecheck && pnpm test && pnpm run build
@@ -402,7 +401,7 @@ numbers are only worth what you can reproduce.
 
 ## Contributing & license
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to run, the verify triad, the
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to run, validation, and the
   `AGENTS.md` contract, and PR expectations.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — Contributor Covenant.
 - **License:** [MIT](LICENSE).

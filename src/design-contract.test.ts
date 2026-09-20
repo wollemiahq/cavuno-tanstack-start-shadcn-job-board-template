@@ -4,8 +4,8 @@ import { parseTokens } from '../scripts/theme-resolved-lib.mjs';
 
 /**
  * The template must carry:
- *  - AGENTS.md — the workflow rule source (agents.md convention). The
- *    contract anchors below are load-bearing, not style.
+ *  - AGENTS.md — the contributor guidance source (agents.md convention).
+ *    Runtime and behavior checks, not prose matching, protect correctness.
  *  - DESIGN.md + design/tokens.dtcg.json — GENERATED artifacts (Google
  *    Labs design.md spec pinned at `alpha`; DTCG 2025.10 interchange).
  *    Hand-editing either fails the explicit `gen:design -- --check` CI step.
@@ -35,41 +35,6 @@ describe('AGENTS.md workflow rules', () => {
     // workspace-map injection, so net prompt size fell. The budget
     // stays tight on purpose — additions must trim elsewhere.
     expect(agents.split('\n').length).toBeLessThanOrEqual(220);
-  });
-
-  it('carries the five required rule anchors', () => {
-    // Never-greenfield: generation customizes this template, never
-    // rebuilds from scratch.
-    expect(agents).toMatch(/never.{0,40}(greenfield|from scratch)/i);
-    // Grounding config is not editable by agents.
-    expect(agents).toContain('CAVUNO_BOARD');
-    expect(agents).toContain('CAVUNO_API_URL');
-    // Dependency policy is stated where agents read rules.
-    expect(agents).toMatch(/minimumReleaseAge/);
-    expect(agents).toMatch(/allowBuilds/);
-    // Verify commands.
-    expect(agents).toMatch(/pnpm (run )?typecheck/);
-    expect(agents).toMatch(/pnpm (run )?test|pnpm test/);
-    // Pointer to DESIGN.md for visual/component rules (three-layer split).
-    expect(agents).toContain('DESIGN.md');
-    // Agents must select a documented page-level pattern before composing a
-    // route.
-    expect(agents).toContain('docs/patterns/');
-    expect(agents).toMatch(/select a pattern before composing a route/i);
-  });
-
-  it('names the view-model seam layer boundary', () => {
-    // Agents must be told which layer they may restructure. Layer 1b
-    // (`src/board` view-models)
-    // and the SDK (Layer 1a) are CONSUMED, never rewritten — that is what
-    // keeps a redesign from mis-calling the correctness functions. Layer 2
-    // (`src/components`) is the redesign surface, free to restructure.
-    expect(agents).toContain('src/board');
-    expect(agents).toMatch(/Layer 1b|view-model/i);
-    // `[\s\S]` not `.` — the invariant must survive a prose reflow that
-    // wraps "never rewrite" across a line break.
-    expect(agents).toMatch(/never[\s\S]{0,40}rewrit/i);
-    expect(agents).toMatch(/Layer 2|restructure/i);
   });
 
   it('is the single rule source — CLAUDE.md defers to it', () => {

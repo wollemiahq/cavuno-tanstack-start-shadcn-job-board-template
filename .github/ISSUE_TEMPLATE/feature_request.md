@@ -12,9 +12,8 @@ What are you trying to do that the template makes hard or impossible today?
 
 ## Proposed change
 
-What you'd like to see. Remember this is a **customization template** — the
-best proposals are the smallest edit to the existing surface, not a rebuild
-(see [`AGENTS.md`](../../AGENTS.md)).
+Describe the experience or capability you want, including what should change
+and what should keep working.
 
 ## Which surface does this touch?
 
@@ -31,5 +30,4 @@ Anything you've already tried or ruled out.
 
 ## Additional context
 
-Mockups, references, or links. Reference images are intent, not spec — the
-design system decides *how* (see [`DESIGN.md`](../../DESIGN.md)).
+Mockups, references, or links that explain the intended experience.
