@@ -35,6 +35,7 @@ import {
 } from './employers.dashboard';
 import { Route as OnboardingRoute } from './employers.onboarding.$slug';
 
+import { renderRouted } from '@/test/render-routed';
 import type { CompanyMembership, Plan } from '@cavuno/board';
 
 const listCompanies =
@@ -672,4 +673,68 @@ describe('employer entry surfaces', () => {
     expect(invalidate).not.toHaveBeenCalled();
     expect(navigateToDashboard).not.toHaveBeenCalled();
   });
+});
+
+it('shows unlimited featuring instead of dropping the benefit', () => {
+  render(
+    <EmployersPageView
+      plans={[
+        {
+          ...plan,
+          featureSummary: { ...plan.featureSummary, featuredSlots: 0 },
+          features: {
+            'jobs.featured_slots': {
+              value: 'unlimited',
+              name: 'Featured slots',
+              dataType: 'integer',
+              displayOrder: 0,
+            },
+          },
+        },
+      ]}
+      contactPlans={[]}
+      seo={{ boardName: 'Example Jobs' }}
+      dependencies={employersPageViewDependencies}
+    />,
+  );
+  expect(
+    screen.getByText('Unlimited featured listings on this plan'),
+  ).toBeVisible();
+});
+
+it('lists candidate benefits at the exact monthly price and links to candidate checkout', async () => {
+  await renderRouted(
+    <EmployersPageView
+      plans={[
+        {
+          ...plan,
+          purpose: 'job_seeker',
+          price: { ...plan.price, amountCents: 999 },
+          features: {
+            'job_seeker.matches': {
+              value: 'true',
+              name: 'Job matching',
+              dataType: 'boolean',
+              displayOrder: 0,
+            },
+            'job_seeker.job_alerts': {
+              value: 'false',
+              name: 'Job alerts',
+              dataType: 'boolean',
+              displayOrder: 1,
+            },
+          },
+        },
+      ]}
+      contactPlans={[]}
+      seo={{ boardName: 'Example Jobs' }}
+    />,
+  );
+  expect(screen.getByText('Job matching')).toBeVisible();
+  expect(screen.queryByText('Job alerts')).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Choose' })).toHaveAttribute(
+    'href',
+    '/account/access',
+  );
+  expect(screen.queryByText('30-day listing')).not.toBeInTheDocument();
 });

@@ -52,6 +52,9 @@ interface PlanFacts {
   description?: string | null;
   kind?: string;
   purpose?: string | null;
+  features?:
+    | Record<string, { value?: string | null }>
+    | { key: string | null; value: string | null }[];
   featureSummary?: {
     durationDays: number;
     maxActiveJobs: number;
@@ -74,6 +77,7 @@ export function planDescription(
   const facts = plan.featureSummary;
   if (
     plan.purpose === 'talent_access' ||
+    plan.purpose === 'job_seeker' ||
     (facts && facts.maxActiveJobs === 0)
   ) {
     return plan.description ?? null;
@@ -83,6 +87,8 @@ export function planDescription(
   if (facts && facts.maxActiveJobs > 0 && facts.durationDays > 0) {
     const locale = localeOpt(language);
     const listing =
+      (!Array.isArray(plan.features) &&
+        plan.features?.['jobs.featured_slots']?.value === 'unlimited') ||
       facts.featuredSlots > 0
         ? m.planComposed_featuredListing({ days: facts.durationDays }, locale)
         : m.planComposed_standardListing({ days: facts.durationDays }, locale);

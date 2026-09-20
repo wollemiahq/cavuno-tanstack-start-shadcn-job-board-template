@@ -17,7 +17,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { safeRedirectPath } from '@cavuno/board/server';
 import { Link, getRouteApi, useRouter } from '@tanstack/react-router';
-import { Clock, Lock, ShieldCheck, Sparkles } from 'lucide-react';
+import { Check, Clock, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
 import { m } from '../paraglide/messages';
@@ -148,7 +148,7 @@ function PlanCard({
   busy,
   onChoose,
 }: {
-  offer: PaywallOffer;
+  offer: PaywallOffer & { benefits?: string[] };
   busy: string | null;
   onChoose: (offer: PaywallOffer) => void;
 }) {
@@ -169,6 +169,16 @@ function PlanCard({
           </span>
           <span className="text-muted-foreground text-sm">{billing}</span>
         </p>
+        {offer.benefits?.length ? (
+          <ul className="mt-5 space-y-2 text-sm">
+            {offer.benefits.map((benefit) => (
+              <li key={benefit} className="flex items-start gap-2">
+                <Check className="text-primary size-4 shrink-0" aria-hidden />
+                <span>{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </CardContent>
       <CardFooter>
         <Button
@@ -225,7 +235,7 @@ export function AccessPageView({
   reportActionError,
 }: {
   grant: AccessGrant;
-  offers: PaywallOffer[];
+  offers: (PaywallOffer & { benefits?: string[] })[];
   sessionId?: string;
   returnToRaw?: string;
   getAccessGrantAction: () => Promise<AccessGrant>;

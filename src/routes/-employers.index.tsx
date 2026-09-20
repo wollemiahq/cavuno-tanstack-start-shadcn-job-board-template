@@ -6,6 +6,7 @@ import { Check } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
+import { candidatePlanBenefits } from '@/board/candidate-plan-benefits';
 import { planBenefitLines } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
 import {
@@ -73,7 +74,7 @@ function formatPrice(price: Plan['price']): string {
   return new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency: price.currency.toUpperCase(),
-    maximumFractionDigits: 0,
+    minimumFractionDigits: price.amountCents % 100 === 0 ? 0 : 2,
   }).format(price.amountCents / 100);
 }
 
@@ -85,6 +86,7 @@ const intervalSuffix = (interval: Plan['billingInterval']) =>
       : '';
 
 function planFeatures(plan: Plan) {
+  if (plan.purpose === 'job_seeker') return candidatePlanBenefits(plan);
   const grantsListings =
     plan.purpose !== 'talent_access' && plan.featureSummary.maxActiveJobs > 0;
   return [
@@ -99,12 +101,15 @@ function planFeatures(plan: Plan) {
           days: plan.featureSummary.durationDays,
         })
       : null,
-    grantsListings && plan.featureSummary.featuredSlots > 0
-      ? m.employerLanding_featureFeaturedSlots({
-          count: plan.featureSummary.featuredSlots,
-          countLabel: String(plan.featureSummary.featuredSlots),
-        })
-      : null,
+    grantsListings &&
+    plan.features?.['jobs.featured_slots']?.value === 'unlimited'
+      ? m.employerCompany_featuredUnlimitedText()
+      : grantsListings && plan.featureSummary.featuredSlots > 0
+        ? m.employerLanding_featureFeaturedSlots({
+            count: plan.featureSummary.featuredSlots,
+            countLabel: String(plan.featureSummary.featuredSlots),
+          })
+        : null,
     plan.talent
       ? m.employerLanding_featureProfileUnlocks({
           count: plan.talent.unlocksPerPeriod,
@@ -212,6 +217,10 @@ function PlanCard({
               {plan.ctaText?.trim() || m.memberships_contactCtaFallback()}
             </a>
           ) : null
+        ) : plan.purpose === 'job_seeker' ? (
+          <Link to="/account/access" className={actionClassName}>
+            {m.accountAccess_chooseLabel()}
+          </Link>
         ) : plan.purpose === 'job_posting' ? (
           dependencies.postingPlanLink({
             planId: plan.id,
@@ -282,12 +291,14 @@ export function EmployersPageView({
    */
   billingAction?: ReactNode;
 }) {
+  const candidatePlans = plans.filter((plan) => plan.purpose === 'job_seeker');
   const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
   const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
   // Membership tiers get their own page (roster included); this surface only
   // points at it, and only when the board actually publishes one.
   const hasMemberships = plans.some((plan) => plan.purpose === 'membership');
   const empty =
+    candidatePlans.length === 0 &&
     jobPosting.length === 0 &&
     talentAccess.length === 0 &&
     contactPlans.length === 0;
@@ -329,6 +340,11 @@ export function EmployersPageView({
             <PlanGroup
               title={m.employerLanding_enterpriseHeading()}
               plans={contactPlans}
+              dependencies={dependencies}
+            />
+            <PlanGroup
+              title={m.footer_forCandidatesHeading()}
+              plans={candidatePlans}
               dependencies={dependencies}
             />
             {hasMemberships ? (

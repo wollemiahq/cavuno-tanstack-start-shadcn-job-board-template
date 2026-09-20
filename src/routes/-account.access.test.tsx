@@ -14,7 +14,7 @@ import type { AccessGrant, PaywallOffer } from '@cavuno/board';
 
 interface AccessLoaderData {
   grant: AccessGrant;
-  offers: PaywallOffer[];
+  offers: (PaywallOffer & { benefits?: string[] })[];
 }
 
 interface AccessSearch {
@@ -399,4 +399,16 @@ describe('accessReturnPath', () => {
   ])('refuses %s as a captured destination', (value) => {
     expect(accessReturnPath(safeReturnTo(value))).toBe('/account/access');
   });
+});
+
+it('shows each offer’s configured benefits beside its checkout action', async () => {
+  mocks.useLoaderData.mockReturnValue({
+    grant,
+    offers: [{ ...offer, benefits: ['Job matching', 'Job alerts'] }],
+  });
+  mocks.useSearch.mockReturnValue({});
+  await renderAccessPage();
+  expect(screen.getByRole('list')).toHaveTextContent('Job matching');
+  expect(screen.getByRole('list')).toHaveTextContent('Job alerts');
+  expect(screen.getByRole('button', { name: 'Choose' })).toBeEnabled();
 });

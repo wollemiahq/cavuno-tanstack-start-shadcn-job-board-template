@@ -7,6 +7,7 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 
+import { candidatePlanBenefits } from '../board/candidate-plan-benefits';
 import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
@@ -19,7 +20,7 @@ import {
 import { gatedRead } from './board-access';
 import { requireVerifiedBoardUser } from './me-verification';
 
-import type { AccessCheckoutBody } from '@cavuno/board';
+import type { AccessCheckoutBody, PaywallOffer } from '@cavuno/board';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authed(
@@ -45,7 +46,25 @@ function assertRelative(path: string): string {
 export const getPaywallOffers = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, (h) => getBoard().paywall.offers({ headers: h })),
+    gatedRead(context, async (h) => {
+      const board = getBoard();
+      const [offers, plans] = await Promise.all([
+        board.paywall.offers({ headers: h }),
+        board.plans.list({ purpose: 'job_seeker' }, { headers: h }),
+      ]);
+      return {
+        ...offers,
+        data: offers.data.map(
+          (offer): PaywallOffer & { benefits?: string[] } => {
+            const plan = plans.data.find((plan) => plan.id === offer.offerKey);
+            return {
+              ...offer,
+              benefits: plan ? candidatePlanBenefits(plan) : [],
+            };
+          },
+        ),
+      };
+    }),
   );
 
 /** The viewer's access entitlement — always resolves (no-access is normal). */
