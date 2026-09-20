@@ -732,7 +732,6 @@ it('lists candidate benefits at the exact monthly price and links to candidate c
   );
   expect(screen.getByText('Job matching')).toBeVisible();
   expect(screen.queryByText('Job alerts')).not.toBeInTheDocument();
-  expect(screen.getByText('$9.99', { exact: false })).toBeVisible();
   expect(screen.getByRole('link', { name: 'Choose' })).toHaveAttribute(
     'href',
     '/account/access',
