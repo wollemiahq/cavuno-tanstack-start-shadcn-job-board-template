@@ -1,7 +1,9 @@
 # Localization
 
-The starter contains English only. Builder provisions the board's language
-plus English when a different language is selected.
+The source starter carries the available translations and enables English by
+default. Builder selects the board's language plus English during initial
+creation and removes unused catalogs from that new workspace. Languages added
+after creation belong to the board and are retained.
 
 For a manually managed board, `pnpm locale:add nl` creates an English seed
 when the Dutch catalog is absent, without enabling it. Translate that catalog,
@@ -35,7 +37,7 @@ applicant management also describe different actions and audiences.
 
 Keep interpolation inputs and plural declarations intact. Dutch count
 messages use `one` for 1 and the wildcard arm for other counts. Run the
-catalog-contract and plural tests, compile Dutch, and exercise the translated
+catalog parity and plural tests, compile Dutch, and exercise the translated
 UI. Structural checks cannot establish translation quality.
 
 Board-authored job descriptions, company names, and other content retain the

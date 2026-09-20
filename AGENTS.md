@@ -75,7 +75,7 @@ operation, not a code edit for you to make.
   loaders/server-function calls intact.
 - `messages/**` — UI copy catalogs (Paraglide). Run
   `pnpm run gen:messages` after edits. Default compile is English only;
-  `pnpm locale:add de` seeds a missing catalog for translation (never `en-XA`/`ar-XB`).
+  `pnpm locale:add de` enables an existing catalog or seeds a missing one for translation (never `en-XA`/`ar-XB`).
 
 ## Outside the surface — change only with explicit reason
 
