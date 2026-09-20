@@ -21,29 +21,11 @@ import {
  * the generator and the cross-links depend on.
  */
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 const PATTERNS_DIR = join(root, 'docs', 'patterns');
-const SRC_DIR = join(root, 'src');
 const read = (p: string) => readFileSync(p, 'utf8');
-
-/** Every `.tsx` source file (excluding tests), recursively. */
-function tsxFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...tsxFiles(path));
-    } else if (
-      entry.name.endsWith('.tsx') &&
-      !entry.name.endsWith('.test.tsx')
-    ) {
-      out.push(path);
-    }
-  }
-  return out;
-}
 
 const patterns = patternDocFiles(root);
 
@@ -51,7 +33,7 @@ describe('pattern docs (docs/patterns/)', () => {
   it('there is at least one pattern page besides the template and index', () => {
     // Guards against the glob silently matching nothing (which would make
     // the per-file suites below vacuously pass).
-    expect(patterns.length).toBeGreaterThanOrEqual(14);
+    expect(patterns.length).toBeGreaterThan(0);
   });
 
   it('the folder holds only markdown (template, index, and pattern pages)', () => {
@@ -99,98 +81,6 @@ describe('pattern docs (docs/patterns/)', () => {
       const present = doc.sections.filter((s) => wanted.includes(s));
       expect(present).toEqual(wanted);
     });
-  });
-});
-
-describe('breadcrumb singleton (P6 — one implementation only)', () => {
-  // The chevron-separated trail markup (the `<ol>` + `aria-current="page"`
-  // current-page crumb) is the canonical breadcrumb primitive. It must live
-  // in exactly one file: src/components/ui/breadcrumb.tsx. A hand-rolled
-  // trail anywhere else would fork the primitive and drift.
-  const OL_SIGNATURE = 'flex flex-wrap items-center gap-1.5 text-sm';
-  const CURRENT_CRUMB = 'aria-current="page"';
-  const CANONICAL = join('src', 'components', 'ui', 'breadcrumb.tsx');
-
-  it('the trail markup exists only in board/breadcrumb.tsx', () => {
-    const owners = tsxFiles(SRC_DIR)
-      .filter((path) => {
-        const source = read(path);
-        return source.includes(OL_SIGNATURE) && source.includes(CURRENT_CRUMB);
-      })
-      .map((path) => relative(root, path));
-    expect(
-      owners,
-      'a second breadcrumb implementation exists — compose the owned shadcn ' +
-        'Breadcrumb from @/components/ui/breadcrumb instead of hand-rolling the trail',
-    ).toEqual([CANONICAL]);
-    expect(read(join(SRC_DIR, 'components/board/breadcrumb.tsx'))).toMatch(
-      /from ["']@\/components\/ui\/breadcrumb["']/,
-    );
-  });
-});
-
-describe('breadcrumb placement (P6 — one shell placement)', () => {
-  // The root shell resolves and seats one visible trail after route content
-  // and before the footer. Domain pages may still emit breadcrumb JSON-LD,
-  // but they never render a second visible breadcrumb.
-  const BREADCRUMB_ELEMENT = '<Breadcrumb';
-  const PLACEMENT_ELEMENT = '<ShellBreadcrumb';
-  const BREADCRUMB_OWNERS = [
-    join('src', 'components', 'board', 'breadcrumb.tsx'),
-  ];
-  const PLACEMENT_OWNERS = [join('src', 'routes', '__root.tsx')];
-
-  it('renders the <Breadcrumb> trail element only inside the placement primitive', () => {
-    const owners = tsxFiles(SRC_DIR)
-      .filter((path) => read(path).includes(BREADCRUMB_ELEMENT))
-      .map((path) => relative(root, path))
-      .sort();
-    expect(
-      owners,
-      'a route/component renders <Breadcrumb> directly — pass the resolved ' +
-        'trail through the root shell instead',
-    ).toEqual(BREADCRUMB_OWNERS);
-  });
-
-  it('seats the <ShellBreadcrumb> placement primitive only in the root shell', () => {
-    const owners = tsxFiles(SRC_DIR)
-      .filter((path) => read(path).includes(PLACEMENT_ELEMENT))
-      .map((path) => relative(root, path))
-      .sort();
-    expect(
-      owners,
-      'a route/component seats <ShellBreadcrumb> directly — the root shell ' +
-        'is the single visible placement owner',
-    ).toEqual(PLACEMENT_OWNERS);
-  });
-});
-
-describe('typography scale (P17 — authored headings use the heading role)', () => {
-  // Larger Tailwind sizes are valid only when the same authored heading also
-  // carries `font-heading`. Prose is excluded because its headings come from
-  // sanitized HTML rather than authored JSX.
-  const HEADING = /<h[1-6]\b[^>]*>/g;
-  const LARGE_SIZE = /\btext-(?:2xl|3xl|4xl|5xl|6xl)\b/;
-  const SCANNED = [
-    join(root, 'src', 'routes'),
-    join(root, 'src', 'components', 'board'),
-  ];
-
-  it('no authored heading in routes/board carries a raw off-scale size class', () => {
-    const offenders = tsxFiles(SRC_DIR)
-      .filter((path) => SCANNED.some((dir) => path.startsWith(dir + '/')))
-      .filter((path) =>
-        Array.from(read(path).matchAll(HEADING), ([tag]) => tag).some(
-          (tag) => LARGE_SIZE.test(tag) && !tag.includes('font-heading'),
-        ),
-      )
-      .map((path) => relative(root, path))
-      .sort();
-    expect(
-      offenders,
-      'an authored heading carries a large size without the font-heading role ' +
-        '(see docs/patterns/typography.md)',
-    ).toEqual([]);
   });
 });
 

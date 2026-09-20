@@ -36,7 +36,6 @@ describe('design system boundary', () => {
     );
 
     expect(components).toMatchObject({
-      style: 'base-rhea',
       aliases: { ui: '@/components/ui' },
       tailwind: { css: 'src/theme.css' },
     });

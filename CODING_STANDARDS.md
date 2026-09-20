@@ -44,5 +44,7 @@ tautological. Rewrite it or delete it.
 SDK-formatted money, dates, and location strings are pinned **once**, in the
 SDK goldens. Mapper and component tests do not replay those helpers and do
 not re-pin the pretty string. They pin the wire (`salaryMin`, currency) and
-whether a field is present. App-owned copy and limits with no SDK golden
-(nav labels, `50` emails) pin the literal.
+whether a field is present. Product limits with no SDK golden (such as `50`
+emails) pin the literal.
+Use localized accessible names to find controls, then assert their behavior;
+pin exact wording only when the wording itself is the requirement.

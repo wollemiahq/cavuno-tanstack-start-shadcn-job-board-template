@@ -85,9 +85,9 @@ via its publishable key. Theme source of truth is `src/theme.css`
 (mode: system); this file carries the
 derived tokens and the component inventory for agents.
 
-Workspace design intent (operator direction picks, brand decisions,
-confirmed assumptions) is reflected below by the builder as normal
-commits — structural constraints stay enforced in code.
+This is a reference inventory of the current system, not a required
+page design. Search the relevant component or token when useful;
+adapt the shared system when the requested experience calls for it.
 
 ## Colors
 
@@ -136,20 +136,10 @@ values in components.
 - Sans: `'Geist Variable', sans-serif`
 - Headings: `var(--font-sans)`
 
-Page titles resolve their size from a primitive variant, never a raw
-`text-*` class at the call site. ONE standard page-title size and ONE
-larger hero exception:
-
-- Standard page title (every workspace, form, and content page):
-  `text-3xl` via `PageHeader` (default) or `Text variant="heading1"`.
-- Hero band (marketing / home top-of-page only): `text-4xl md:text-5xl`
-  via `PageHeader size="display"` or `Text variant="display"`.
-
-Smaller `h1` roles are deliberate and not page titles: the detail
-identity band (`Text variant="heading2"`, `text-2xl md:text-3xl`), the
-results-count listing heading (`text-lg`), the auth shell, and empty /
-error state cards. Never drop a workspace or form page to `text-2xl`.
-See `docs/patterns/typography.md`.
+Current shared title variants include `PageHeader` and
+`Text variant="heading1"` for page titles, and `PageHeader size="display"`
+or `Text variant="display"` for heroes. Extend these shared roles when
+a new visual direction needs a different type scale.
 
 ## Layout
 
@@ -157,11 +147,8 @@ Radius scale rides `--radius` in `src/theme.css` (cards use
 `--radius-xl`, controls `--radius-md`). Spacing is Tailwind default
 scale; no custom spacing tokens.
 
-Interactive links and cards share ONE focus ring:
-`focus-visible:ring-ring/50 focus-visible:ring-2` (use `focus-within` in
-its place only for the stretched-overlay-link card, matching
-`SearchResultCard`). Form-control primitives keep the shadcn default
-ring; do not invent a third focus idiom.
+Shared interactive components provide keyboard focus treatments.
+Preserve visible focus when adapting their visual design.
 
 Stacking order is the named z-index scale in `src/styles.css`
 (`--z-card-overlay` 1 → `--z-floating-stack` 40 → `--z-overlay` 50 →
@@ -3744,7 +3731,7 @@ Props:
 
 ## Layout compositions
 
-Page, PageHeader, PageContent, and PageSection are the sole canonical page-level composition family for new work. Compose these contracts instead of hand-rolling containers, headings, or rails; use Bleed for full-width bands.
+Existing page compositions to reuse or adapt when they fit the requested experience.
 
 ### Page — `src/components/layout/page.tsx`
 
@@ -3962,15 +3949,5 @@ Primitives: PageHeader, PageSection, CardTitle, Prose
 
 ## Do's and Don'ts
 
-- Do style with the token custom properties; don't hardcode colors.
-- Do compose Base UI primitives (`render` prop); never Radix
-  `asChild`.
-- Do keep components presentational (typed props, no fetching);
-  data arrives from route loaders and `src/server/` functions.
-- Do compose every new page with `Page`, `PageHeader`, `PageContent`,
-  and `PageSection`.
-- Do reuse the inventory above; don't duplicate an existing
-  component to change its style — extend via props/variants.
-- Do edit `src/theme.css` directly or with the shadcn CLI and regenerate
-  (`pnpm run gen:theme`); don't edit generated files.
-- Don't remove or alter the job-detail JSON-LD or `head()` meta.
+Contributor guidance lives in `AGENTS.md`. This inventory describes
+available components and tokens; it does not prescribe page structure.

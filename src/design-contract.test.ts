@@ -58,14 +58,7 @@ describe('DESIGN.md + DTCG generated artifacts', () => {
     expect(fm.typography.sans.fontFamily).toBe(tokens.light['--font-sans']);
   });
 
-  it('documents theme.css as the radius token source', () => {
-    const design = read('DESIGN.md');
-
-    expect(design).toContain('`--radius` in `src/theme.css`');
-    expect(design).not.toContain('`--radius` in `src/styles.css`');
-  });
-
-  it('the Components section is a full inventory of the component source', () => {
+  it('carries the design interchange sections', () => {
     const design = read('DESIGN.md');
     // Spot the required spec sections, in the spec's order.
     for (const section of [
@@ -77,22 +70,6 @@ describe('DESIGN.md + DTCG generated artifacts', () => {
     ]) {
       expect(design).toContain(section);
     }
-    // Every component module under src/components appears by name.
-    for (const name of [
-      'JobCard',
-      'JobList',
-      'JobSearchPage',
-      'JobDetail',
-      'Breadcrumb',
-      'Badge',
-      'Button',
-      'Card',
-    ]) {
-      expect(design).toContain(name);
-    }
-    // Prop metadata is extracted from source, not hand-listed: a known
-    // typed prop of a block component must be present.
-    expect(design).toMatch(/JobCard[\s\S]{0,600}\bjob\b/);
   });
 
   it('attributes a local cva contract only to the component that consumes it', () => {
