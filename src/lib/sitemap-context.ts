@@ -201,6 +201,24 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
   return lastModified ? { url: entry.url, lastModified } : { url: entry.url };
 }
 
+const LOCAL_MARKETING_PATHS = ['/job-seekers', '/pricing'] as const;
+
+function withLocalMarketingPages(
+  origin: string,
+  bucket: SitemapBucket,
+  entries: SitemapEntry[],
+): SitemapEntry[] {
+  if (bucket !== 'marketing') return entries;
+  const urls = new Set(entries.map((entry) => entry.url));
+  return [
+    ...entries,
+    ...LOCAL_MARKETING_PATHS.flatMap((path) => {
+      const url = `${origin}${path}`;
+      return urls.has(url) ? [] : [{ url }];
+    }),
+  ];
+}
+
 export async function buildSitemapContext(
   board: BoardSdk,
   origin: string,
@@ -211,9 +229,16 @@ export async function buildSitemapContext(
   const built = await Promise.all(
     listed.map(
       async ({ bucket, lastModified }): Promise<SitemapBucketContext> => {
-        const entries = (
-          await source.buildBucketEntries(catalog, origin, bucket)
-        ).map(toSitemapEntry);
+        const sdkEntries = await source.buildBucketEntries(
+          catalog,
+          origin,
+          bucket,
+        );
+        const entries = withLocalMarketingPages(
+          origin,
+          bucket,
+          sdkEntries.map(toSitemapEntry),
+        );
         const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
         const built: SitemapBucketContext = {
           bucket,

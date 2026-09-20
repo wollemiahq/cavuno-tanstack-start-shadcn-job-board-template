@@ -64,10 +64,12 @@ const compactShellPrefixes = [
   '/alerts',
   '/auth',
   '/employers',
+  '/job-seekers',
   '/me',
   '/messages',
   '/password',
   '/post',
+  '/pricing',
   '/settings',
 ] as const;
 

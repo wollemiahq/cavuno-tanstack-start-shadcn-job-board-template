@@ -553,6 +553,7 @@ function RootChrome({
                   talentDirectoryVisibility={board.talentDirectoryVisibility}
                   hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
                   hasMembershipPage={offerGate.hasMembershipPage}
+                  hasCandidatePricingPage={offerGate.hasCandidatePricingPage}
                   cookiePreferencesAction={<CookiePreferencesFooterAction />}
                 />
               </Suspense>

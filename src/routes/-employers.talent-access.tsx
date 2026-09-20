@@ -493,6 +493,11 @@ export function EmployersTalentAccessView({
               {children}
             </Link>
           )),
+        membershipLink: ({ className, children }) => (
+          <Link to="/memberships" className={className}>
+            {children}
+          </Link>
+        ),
         talentPlanAction,
       }}
     />

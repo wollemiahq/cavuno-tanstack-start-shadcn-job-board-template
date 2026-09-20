@@ -98,6 +98,26 @@ describe('hosted-shaped sitemap context', () => {
       `${ORIGIN}/sitemap/jobs-details-3.xml`,
     ]);
     expect(findSitemapChunk(context, 'jobs-details', 2)).toHaveLength(1);
+    expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
+      { url: `${ORIGIN}/marketing` },
+      { url: `${ORIGIN}/job-seekers` },
+      { url: `${ORIGIN}/pricing` },
+    ]);
+  });
+
+  it('does not duplicate local marketing pages already supplied by the SDK', async () => {
+    const context = await buildSitemapContext(
+      board,
+      ORIGIN,
+      source({
+        build: async () => [`${ORIGIN}/pricing`, `${ORIGIN}/job-seekers`],
+      }),
+    );
+
+    expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
+      { url: `${ORIGIN}/pricing` },
+      { url: `${ORIGIN}/job-seekers` },
+    ]);
   });
 
   it('drops a stamp that is not a real date instead of persisting it', async () => {
@@ -121,6 +141,8 @@ describe('hosted-shaped sitemap context', () => {
     expect(bucket?.chunks.flat()).toEqual([
       { url: `${ORIGIN}/` },
       { url: `${ORIGIN}/about`, lastModified: '2026-09-01T00:00:00.000Z' },
+      { url: `${ORIGIN}/job-seekers` },
+      { url: `${ORIGIN}/pricing` },
     ]);
   });
 

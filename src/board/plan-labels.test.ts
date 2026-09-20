@@ -85,3 +85,42 @@ describe('name-mapped plans respect listing entitlements', () => {
     ).toBe('Member access');
   });
 });
+
+describe('unlimited featured plans', () => {
+  it('does not describe unlimited featured slots as a standard listing', () => {
+    expect(
+      planDescription(
+        {
+          name: 'Bull Shark',
+          featureSummary: {
+            durationDays: 30,
+            maxActiveJobs: 3,
+            featuredSlots: 0,
+          },
+          features: { 'jobs.featured_slots': { value: 'unlimited' } },
+        },
+        'en',
+      ),
+    ).toBe('A 30 day featured listing — Up to 3 active jobs');
+  });
+});
+
+describe('audience plan descriptions', () => {
+  it.each(['job_seeker', 'membership'])(
+    'does not invent a listing description for %s plans',
+    (purpose) => {
+      expect(
+        planDescription({
+          name: 'Community',
+          description: 'Benefits configured by the board',
+          purpose,
+          featureSummary: {
+            durationDays: 30,
+            maxActiveJobs: 5,
+            featuredSlots: 1,
+          },
+        }),
+      ).toBe('Benefits configured by the board');
+    },
+  );
+});

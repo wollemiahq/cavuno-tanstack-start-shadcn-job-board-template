@@ -23,6 +23,8 @@ const PUBLIC_DOCUMENT_PATHS = new Set([
   '/about',
   '/cookie-policy',
   '/employers',
+  '/job-seekers',
+  '/pricing',
   '/impressum',
   '/privacy-policy',
   '/terms-of-service',

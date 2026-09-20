@@ -19,6 +19,7 @@ export interface BoardContextCacheDependencies<Context> {
 export type EmployerOfferGate = {
   hasEmployerOfferPage: boolean;
   hasMembershipPage: boolean;
+  hasCandidatePricingPage: boolean;
 };
 
 /** Per-source memo provider shared by board context and employer gates. */

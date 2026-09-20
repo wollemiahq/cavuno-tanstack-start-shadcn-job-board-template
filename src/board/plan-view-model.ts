@@ -71,7 +71,9 @@ export function planFeatureLines(
     }
   }
 
-  if (byKey.get('jobs.feature_selection_mode') === 'auto') {
+  if (byKey.get('jobs.featured_slots') === 'unlimited') {
+    lines.push(m.employerCompany_featuredUnlimitedText());
+  } else if (byKey.get('jobs.feature_selection_mode') === 'auto') {
     lines.push(m.planFeature_featuredAuto());
   } else {
     const slots = Number(byKey.get('jobs.featured_slots'));

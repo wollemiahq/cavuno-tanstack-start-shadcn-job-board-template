@@ -18,7 +18,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
 import {
-  membershipCapacitySentence,
+  configuredMembershipCapacitySentence,
   planBenefitLines,
 } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
@@ -265,6 +265,7 @@ function MembershipPlanCard({
   onJoin: (companySlug: string) => void;
 }) {
   const description = planDescription(plan);
+  const capacity = configuredMembershipCapacitySentence(plan);
   return (
     <Card className={cn('h-full', plan.isRecommended && 'ring-primary ring-2')}>
       <CardHeader>
@@ -285,9 +286,9 @@ function MembershipPlanCard({
             </span>
           ) : null}
         </p>
-        <p className="text-foreground text-sm">
-          {membershipCapacitySentence(plan)}
-        </p>
+        {capacity ? (
+          <p className="text-foreground text-sm">{capacity}</p>
+        ) : null}
         <BenefitList lines={planBenefitLines(plan)} />
       </CardContent>
       <CardFooter>
