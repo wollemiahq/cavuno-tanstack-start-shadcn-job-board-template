@@ -4,46 +4,22 @@ import {
   PDI,
   RLI,
   pseudoBidi,
+  pseudoCatalog,
   pseudoLocalize,
 } from '../scripts/pseudo-locale.mjs';
 import { localeDirection } from './lib/locale-direction';
 
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
-type PluralVariant = { match?: Record<string, string> };
-type CatalogEntry = string | PluralVariant[];
-
-/**
- * Flatten a catalog to the user-visible patterns keyed by message.
- *
- * A simple message is one string. A COMPLEX message (pluralization) is an
- * array of variants whose `match` maps a selector arm to its pattern; each arm
- * is separately user-visible, so each is checked under `<key>#<arm>`. The
- * declarations and selector names are machinery, not copy, and are skipped.
- */
-function readStringCatalog(path: string): Map<string, string> {
-  // SAFETY: the catalogs are committed to this repo and validated by the
-  // Paraglide compiler on every build, so their shape is a repo invariant
-  // rather than an external payload.
-  const parsed = JSON.parse(readFileSync(path, 'utf8')) as Record<
-    string,
-    CatalogEntry
-  >;
-  const catalog = new Map<string, string>();
-  for (const [key, value] of Object.entries(parsed)) {
-    if (Array.isArray(value)) {
-      for (const variant of value) {
-        for (const [arm, pattern] of Object.entries(variant.match ?? {})) {
-          catalog.set(`${key}#${arm}`, pattern);
-        }
-      }
-      continue;
-    }
-    catalog.set(key, value);
-  }
-  return catalog;
-}
 
 /**
  * en-XA pseudo-locale. Derived mechanically from
@@ -66,21 +42,6 @@ describe('pseudoLocalize', () => {
     const tokens = pseudoLocalize('© {{year}} {{board_name}}. All rights.');
     expect(tokens).toContain('{{year}}');
     expect(tokens).toContain('{{board_name}}');
-  });
-
-  it('the committed messages/en-XA.json covers every en key, bracketed', () => {
-    const root = join(import.meta.dirname, '..');
-    const en = readStringCatalog(join(root, 'messages/en.json'));
-    const xa = readStringCatalog(join(root, 'messages/en-XA.json'));
-    for (const [key, english] of en) {
-      if (key.startsWith('$')) continue;
-      const pseudo = xa.get(key);
-      expect(pseudo, `missing en-XA for ${key}`).toBeDefined();
-      expect(pseudo?.includes('⟦'), `${key} not pseudo-localized`).toBe(true);
-      // Stale-derivation guard: regenerating from the current en must
-      // reproduce the committed value (npm run gen:messages).
-      expect(pseudo).toBe(pseudoLocalize(english));
-    }
   });
 });
 
@@ -106,15 +67,64 @@ describe('pseudoBidi', () => {
     expect(tokens).toContain('{{year}}');
     expect(tokens).toContain('{{board_name}}');
   });
+});
 
-  it('the committed messages/ar-XB.json covers every en key', () => {
-    const root = join(import.meta.dirname, '..');
-    const en = readStringCatalog(join(root, 'messages/en.json'));
-    const xb = readStringCatalog(join(root, 'messages/ar-XB.json'));
-    for (const [key, english] of en) {
-      if (key.startsWith('$')) continue;
-      expect(xb.get(key), `missing ar-XB for ${key}`).toBeDefined();
-      expect(xb.get(key)).toBe(pseudoBidi(english));
+describe('QA catalog generation', () => {
+  it('preserves plural selectors and interpolation while translating only copy', () => {
+    const catalog = {
+      $schema: 'schema.json',
+      greeting: 'A {name}',
+      count: [
+        {
+          declarations: ['input count'],
+          selectors: ['count'],
+          match: { 'count=1': 'A', 'count=*': '{count} A' },
+        },
+      ],
+    };
+    expect(pseudoCatalog(catalog, pseudoLocalize)).toEqual({
+      $schema: 'schema.json',
+      greeting: '⟦Á {name}⟧',
+      count: [
+        {
+          declarations: ['input count'],
+          selectors: ['count'],
+          match: { 'count=1': '⟦Á⟧', 'count=*': '⟦{count} Á⟧' },
+        },
+      ],
+    });
+    expect(catalog.greeting).toBe('A {name}');
+    expect(catalog.count[0].match['count=1']).toBe('A');
+  });
+
+  it('leaves authored catalogs byte-identical and does not rewrite unchanged QA output', () => {
+    const root = mkdtempSync(join(tmpdir(), 'qa-catalog-'));
+    try {
+      mkdirSync(join(root, 'messages'));
+      const en = '{ "$schema": "schema.json", "greeting": "A" }\n';
+      const de = '{"$schema":"schema.json","greeting":"Hallo"}\n';
+      writeFileSync(join(root, 'messages/en.json'), en);
+      writeFileSync(join(root, 'messages/de.json'), de);
+      const generate = () =>
+        execFileSync(
+          process.execPath,
+          [join(import.meta.dirname, '../scripts/gen-paraglide-messages.mjs')],
+          { cwd: root },
+        );
+      generate();
+      const qaPath = join(root, 'messages/en-XA.json');
+      const first = statSync(qaPath).mtimeMs;
+      generate();
+      expect(readFileSync(join(root, 'messages/en.json'), 'utf8')).toBe(en);
+      expect(readFileSync(join(root, 'messages/de.json'), 'utf8')).toBe(de);
+      expect(JSON.parse(readFileSync(qaPath, 'utf8')).greeting).toBe('⟦Á⟧');
+      expect(
+        JSON.parse(readFileSync(join(root, 'messages/ar-XB.json'), 'utf8'))
+          .greeting,
+      ).toBe('\u2067⟦Á⟧\u2069');
+      expect(statSync(qaPath).mtimeMs).toBe(first);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });

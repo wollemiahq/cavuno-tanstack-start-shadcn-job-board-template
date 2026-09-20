@@ -9,12 +9,9 @@ composition when it fits; create a different composition when the requested
 experience needs one. Shared primitives and theme tokens keep new designs
 consistent without requiring the same page structure.
 
-Every page follows [`_template.md`](_template.md): the section order (Purpose /
-When to use / Anatomy / Composition / Do / Don't / Used by / Related) and the
-frontmatter keys (`name`, `purpose`, `primitives`, `usedBy`) are enforced by
-[`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts). The
-generated `## Patterns` section of `DESIGN.md` is derived from this frontmatter,
-so docs and the design library stay in sync.
+The generated ## Patterns section of DESIGN.md uses each page's
+name, purpose, and primitives frontmatter. The remaining prose and metadata
+are there to help people customize the board and can evolve with the product.
 
 ## Taxonomy
 
@@ -41,11 +38,9 @@ so docs and the design library stay in sync.
 | P19 | [Site header](site-header.md)           | Header, HeaderSearch, LocationCombobox, Link, Input, Button                                         | Contextual public search, centered discovery navigation, and account actions.       |
 | P20 | [Messaging](messaging.md)               | MessagingLayout, MessagingDock, Message, Bubble, Marker, MessageScroller, Attachment, Avatar, Textarea, Button | Dedicated and floating board-user conversations with one responsive interaction model. |
 
-## Enforcement
+## Using these patterns
 
-- **Doc structure** — [`src/pattern-contract.test.ts`](../../src/pattern-contract.test.ts)
-  asserts every pattern page has the template's sections in order, parses the
-  required frontmatter keys, and appears in this index.
-- **One design system** — structural tests keep app code composing the owned
-  shadcn components under `src/components/ui/` and the semantic tokens from
-  `src/theme.css`; no parallel component or token system can creep in.
+Start with the shared components and semantic tokens that fit the requested
+experience. Adapt a pattern, combine patterns, or create a different
+composition when that produces a better board; the examples do not define a
+required route shape.

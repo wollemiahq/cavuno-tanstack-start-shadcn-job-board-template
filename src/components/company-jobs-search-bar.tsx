@@ -18,19 +18,9 @@ const LazyLocationCombobox = lazy(() =>
 );
 
 /**
- * The company-jobs subpage search is a thin wrapper of the
- * shared `ListingSearchBand`, so it is the SAME white panel the jobs,
- * companies, and blog headers use (no duplicate search-band markup). Scoped to
- * ONE company: it submits to that company's jobs subpage
- * (`/companies/$companySlug/jobs?q=&location=`), backed by the jobs SEARCH
- * endpoint with a `companyId` filter, or the BROWSE list when there is no
- * keyword. Submitting a fresh search drops `?page=`, resetting to page 1.
- *
- * Location rides the band's `leadingSlot` — the same slot and the same
- * `LocationCombobox` the site header uses. The API's location filter is a geo
- * radius keyed by PLACE SLUG, so only a resolved suggestion is submittable;
- * the display name rides alongside as `locationName` purely so a cold load
- * rehydrates the input's text.
+ * Company-scoped keyword and location search. Submitting resets pagination;
+ * location changes apply immediately. Only resolved place slugs are sent to
+ * the API, with locationName retained in the URL to restore the field label.
  */
 export function CompanyJobsSearchBar({
   companySlug,

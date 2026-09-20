@@ -6,16 +6,9 @@ usedBy: [src/routes/example.tsx]
 ---
 
 <!--
-  Pattern-doc template. Every file in docs/patterns/ (except this one and
-  README.md) copies this shape. The section order below is ENFORCED by
-  src/pattern-contract.test.ts — the `## ` headings must appear in exactly
-  this order, and the frontmatter must carry name / purpose / primitives /
-  usedBy. `primitives` and `usedBy` are flow-style arrays ([a, b, c]).
-
-  A pattern is a NAMED, documented page-or-section composition — the level
-  above a single component. Document CURRENT reality: if a route still drifts
-  from the pattern, record it in the Do / Don't table's "Don't" column rather
-  than pretending the drift is gone.
+  Optional starting point for documenting a useful composition. Adapt or omit
+  prose sections freely. The design reference generator reads name, purpose,
+  and primitives from frontmatter; usedBy is an optional navigation aid.
 -->
 
 ## Purpose
@@ -45,8 +38,7 @@ primitives assemble.
 
 ## Used by
 
-The routes/components that own this pattern. This list mirrors the `usedBy`
-frontmatter and is the contract a usage test can assert against.
+Optional links to examples that help readers adapt this composition.
 
 ## Related
 

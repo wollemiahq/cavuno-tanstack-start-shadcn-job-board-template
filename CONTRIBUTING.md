@@ -33,8 +33,14 @@ examples; they do not dictate a requested redesign.
 
 Run the checks that prove the change while iterating. For a UI change, exercise
 the affected route and its keyboard/accessibility states in a browser. For
-logic or server work, run the affected tests and typecheck. Regenerate source
-owned artifacts after changing their inputs. Add broader checks such as
+logic or server work, run affected tests (for example,
+`pnpm test src/components/board/listing-search-band.test.tsx`) and typecheck.
+Dev/test/typecheck prepare generated runtime modules. Real translation catalogs
+remain authored inputs; `node scripts/pseudo-locale-enable.mjs` prepares ignored
+QA locales for localization checks. Refresh `DESIGN.md` or the component usage
+reference with `gen:design` or `gen:shadcn` when you need current documentation;
+a presentation edit does not require rebuilding those inventories.
+Add broader checks such as
 `pnpm run check`, `pnpm run build`, or `pnpm run check:bundle` when the scope
 calls for them. CI runs the full release and Board conformance gates, so do not
 repeat the same full suite after every small edit.
