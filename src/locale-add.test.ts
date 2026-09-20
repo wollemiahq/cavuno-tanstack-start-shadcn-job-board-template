@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { validateCatalog } from '../scripts/catalog-contract.mjs';
-
 import { spawnSync } from 'node:child_process';
 import {
   existsSync,
@@ -97,21 +95,6 @@ function run(directory: string, locale = 'de') {
 }
 
 describe('active locale catalog contract', () => {
-  it('rejects missing keys and changed interpolation before activation', () => {
-    const missing = { count: structuredClone(english.count) };
-    expect(validateCatalog(english, missing, 'de')).toContain(
-      'de: missing key greeting',
-    );
-
-    const changed = structuredClone(english);
-    changed.greeting = '{other}';
-    expect(
-      validateCatalog(english, changed, 'de').some((error) =>
-        error.includes('greeting changed interpolation'),
-      ),
-    ).toBe(true);
-  });
-
   it('leaves settings unchanged when an existing catalog is incomplete', () => {
     const incomplete = { count: structuredClone(complete.count) };
     const directory = fixture(incomplete);

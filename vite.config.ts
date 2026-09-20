@@ -68,10 +68,9 @@ const PARAGLIDE_OUTDIR = './src/paraglide';
  * Restrict the paraglide plugin's dev watch to catalogs it actually
  * compiles.
  *
- * `messages/` holds en, de, fr and the two pseudo-locales, but
- * `project.inlang/settings.json` enables only `locales` (today: `en`).
- * The dormant catalogs stay on disk so `pnpm locale:add` can flip one on
- * without starting from a blank file — see scripts/gen-paraglide-messages.mjs.
+ * `project.inlang/settings.json` identifies the installed public locales.
+ * QA pseudo catalogs can temporarily appear alongside them; changing a
+ * catalog outside the compile set must not invalidate the running board.
  *
  * The plugin derives its watch set from the files the inlang SDK read
  * during the last compile, then widens it to those files' *directories*

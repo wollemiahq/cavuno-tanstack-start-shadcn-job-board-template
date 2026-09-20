@@ -1,10 +1,15 @@
 # Localization
 
-The starter compiles English by default. Dutch ships as a complete dormant
-catalog in `messages/nl.json`, with matching legal/about templates. Enable it
-with `pnpm locale:add nl`, then run `pnpm gen:messages && pnpm gen:paraglide`.
-The language switcher displays **Nederlands**. A Dutch-only board sets both
-`baseLocale` and its sole `locales` entry to `nl` in `project.inlang/settings.json`.
+The starter contains English only. Builder provisions the board's language
+plus English when a different language is selected.
+
+For a manually managed board, `pnpm locale:add nl` creates an English seed
+when the Dutch catalog is absent, without enabling it. Translate that catalog,
+then rerun `pnpm locale:add nl` and `pnpm gen:paraglide`. Keep English as the
+alternative locale when the board's default is another language.
+
+`en-XA` and `ar-XB` are generated QA artifacts, not installed public languages.
+`scripts/pseudo-locale-enable.mjs` creates them for a temporary QA build.
 
 ## Dutch terminology
 

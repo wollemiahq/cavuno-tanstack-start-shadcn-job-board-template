@@ -7,6 +7,7 @@
  *
  *   node scripts/pseudo-locale-enable.mjs
  */
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -25,6 +26,17 @@ if (!production.includes(settings.baseLocale ?? 'en')) {
   production.unshift(settings.baseLocale ?? 'en');
 }
 settings.locales = [...production, ...PSEUDO];
+
+// The pseudo catalogs are ignored QA outputs, so enabling the locales also
+// prepares the files that the Paraglide build and runtime gate consume.
+const generated = spawnSync(
+  process.execPath,
+  [resolve(process.cwd(), 'scripts/gen-paraglide-messages.mjs')],
+  { stdio: 'inherit' },
+);
+if (generated.status !== 0) {
+  process.exit(generated.status ?? 1);
+}
 
 writeFileSync(settingsPath, `${JSON.stringify(settings, null, 2)}\n`);
 console.log(

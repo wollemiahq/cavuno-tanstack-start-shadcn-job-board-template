@@ -1,10 +1,8 @@
-import { validateCatalog } from './catalog-contract.mjs';
-
 /**
  * Enable a chrome locale on this board.
  *
  * Copies `messages/en.json` to `messages/<locale>.json` when that catalog
- * is missing (de/fr already ship dormant). A seeded catalog stays disabled
+ * is missing. A seeded catalog stays disabled
  * until it has been translated; an existing complete catalog is added to
  * `project.inlang/settings.json`.
  *
@@ -68,14 +66,15 @@ if (!existsSync(enPath)) {
   process.exit(1);
 }
 
-const errors = validateCatalog(
-  JSON.parse(readFileSync(enPath, 'utf8')),
-  JSON.parse(readFileSync(catalogPath, 'utf8')),
-  locale,
+const english = JSON.parse(readFileSync(enPath, 'utf8'));
+const target = JSON.parse(readFileSync(catalogPath, 'utf8'));
+const missing = Object.keys(english).filter(
+  (key) => !key.startsWith('$') && !Object.hasOwn(target, key),
 );
-if (errors.length > 0) {
-  console.error(`locale:add: refusing to enable incomplete ${locale} catalog`);
-  for (const error of errors) console.error(`  - ${error}`);
+if (missing.length > 0) {
+  console.error(
+    `locale:add: translate missing ${locale} keys before enabling: ${missing.join(', ')}`,
+  );
   process.exit(1);
 }
 

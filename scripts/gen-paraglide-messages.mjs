@@ -1,15 +1,16 @@
-import { pseudoBidi, pseudoLocalize } from './pseudo-locale.mjs';
+import { pseudoBidi, pseudoCatalog, pseudoLocalize } from './pseudo-locale.mjs';
 
 /**
  * Paraglide messages maintenance.
  *
- * Chrome copy lives in `messages/{locale}.json` (application-owned).
- * Production compiles whatever `project.inlang/settings.json` lists
- * (default: English only). Extra catalogs (de/fr) stay on disk dormant
- * so `pnpm locale:add` can enable them without starting from a blank file.
- * This script does NOT pull from `@cavuno/board` — the SDK no longer ships
- * a `uiCopy` catalog. It regenerates the pseudo-locales (`en-XA`, `ar-XB`)
- * from the current English source so coverage gates stay honest.
+ * Chrome copy lives in `messages/{locale}.json` (application-owned). Real
+ * catalogs are validated here but never rewritten: their translations and
+ * intentional formatting stay under the owner's control. Production compiles
+ * whatever `project.inlang/settings.json` lists (default: English only).
+ *
+ * The QA pseudo-locales (`en-XA`, `ar-XB`) are derived from English into the
+ * ignored `messages/` outputs on demand. CI enables them temporarily for its
+ * runtime gate; they are never human-authored or shipped by default.
  *
  *   node scripts/gen-paraglide-messages.mjs
  */
@@ -36,77 +37,44 @@ function readMessages(locale) {
   return JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));
 }
 
-function writeMessages(locale, messages) {
+function writePseudoMessages(locale, messages) {
   mkdirSync('messages', { recursive: true });
   const path = `messages/${locale}.json`;
   const next = JSON.stringify(messages, null, 2) + '\n';
-  const count = Object.keys(messages).filter((k) => !k.startsWith('$')).length;
-  // Byte-identical → do not touch the file. Every write here bumps an
-  // mtime the paraglide Vite plugin watches; writing all five catalogs
-  // in ~100ms fires five overlapping recompiles and five back-to-back
-  // `[vite] program reload`s, which tear down the Cloudflare runner
-  // worker mid-entry-load and leave the dev server 500ing until it is
-  // restarted (builder prod 2026-08-27; reproduced 3/3 locally, never
-  // recovered in 150s). Skipping unchanged files turns that into one
-  // recompile for the file that actually changed.
+  const count = Object.keys(messages).filter(
+    (key) => !key.startsWith('$'),
+  ).length;
+  // Keep unchanged QA output untouched as well. This prevents the Paraglide
+  // Vite plugin from treating every test or CI preparation as a catalog edit.
   if (existsSync(path) && readFileSync(path, 'utf8') === next) {
     console.log(`${path} — ${count} keys (unchanged)`);
     return;
   }
   writeFileSync(path, next);
-  console.log(`${path} — ${count} keys`);
+  console.log(`${path} — ${count} QA keys`);
 }
 
-// Validate source locales parse and share a schema key.
-let enMessages;
+// Validate source locales without round-tripping them through JSON.stringify.
+// In particular, do not fill or normalize a real translation catalog from
+// English: parity remains an explicit test contract.
+const sourceCatalogs = new Map();
 for (const locale of SOURCE_LOCALES) {
   const messages = readMessages(locale);
   if (!messages.$schema) {
     throw new Error(`messages/${locale}.json missing $schema`);
   }
-  // Round-trip write keeps key order stable after hand-edits.
-  writeMessages(locale, messages);
-  if (locale === 'en') enMessages = messages;
+  sourceCatalogs.set(locale, messages);
 }
 
-/**
- * Pseudo-localize a message value.
- *
- * A simple message is a string. A COMPLEX message (pluralization, gendering)
- * is an array of variant objects whose `match` maps a selector arm to its
- * pattern — only those patterns are user-visible text, so the declarations and
- * selector names must pass through untouched or the compiler can no longer
- * resolve the variant.
- */
-function derivePseudoValue(value, derive) {
-  if (!Array.isArray(value)) return derive(value);
-  return value.map((variant) => ({
-    ...variant,
-    match: Object.fromEntries(
-      // Every arm's value is a pattern string — that is what `match` means in
-      // the message format, and the compiler rejects anything else — so it is
-      // derived unconditionally rather than probed.
-      Object.entries(variant.match ?? {}).map(([arm, pattern]) => [
-        arm,
-        derive(pattern),
-      ]),
-    ),
-  }));
-}
+const enMessages = sourceCatalogs.get('en');
 
-// Pseudo-locales — derived from the CURRENT en source so the coverage
-// gates survive catalog additions for free.
-//   en-XA — pseudo-accent: proves every string came through Paraglide.
-//   ar-XB — pseudo-bidi: same, plus it is the RTL locale the layout is
-//           verified against (dir="rtl", mirrored chrome).
+// Pseudo-locales are derived from the CURRENT en source so the coverage gates
+// survive catalog additions for free. The files are ignored QA artifacts:
+//   en-XA — pseudo-accent, proves every string came through Paraglide.
+//   ar-XB — pseudo-bidi, plus the RTL locale used by the layout gate.
 for (const [locale, derive] of [
   ['en-XA', pseudoLocalize],
   ['ar-XB', pseudoBidi],
 ]) {
-  const pseudo = { $schema: enMessages.$schema };
-  for (const [key, value] of Object.entries(enMessages)) {
-    if (key.startsWith('$')) continue;
-    pseudo[key] = derivePseudoValue(value, derive);
-  }
-  writeMessages(locale, pseudo);
+  writePseudoMessages(locale, pseudoCatalog(enMessages, derive));
 }

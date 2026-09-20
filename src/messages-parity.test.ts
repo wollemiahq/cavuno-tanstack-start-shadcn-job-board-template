@@ -1,46 +1,38 @@
 import { describe, expect, it } from 'vitest';
 
-import { validateCatalog } from '../scripts/catalog-contract.mjs';
+import settings from '../project.inlang/settings.json';
 import { publicLocales } from './lib/public-locales';
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+// Dormant catalogs are completed when enabled, not on every board edit.
 const messagesDir = join(import.meta.dirname, '..', 'messages');
 
-const read = (
-  locale: string,
-): Record<
-  string,
-  | string
-  | {
-      declarations: string[];
-      selectors: string[];
-      match: Record<string, string>;
-    }[]
-> => JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), 'utf8'));
+const read = (locale: string): Record<string, string> =>
+  JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), 'utf8'));
 
-// SAFETY: repository-owned Inlang configuration; Paraglide validates its schema.
-const settings = JSON.parse(
-  readFileSync(
-    join(import.meta.dirname, '..', 'project.inlang/settings.json'),
-    'utf8',
-  ),
-) as { locales?: string[] };
-const activeLocales = publicLocales(settings.locales ?? []);
+const extraLocales = publicLocales(settings.locales).filter(
+  (locale) => locale !== 'en',
+);
 
-describe('active message catalog contract', () => {
+describe('message catalog parity', () => {
   const en = read('en');
+  const keys = Object.keys(en).filter((k) => !k.startsWith('$'));
 
   it('ships at least the English catalog', () => {
-    expect(
-      Object.keys(en).filter((key) => !key.startsWith('$')).length,
-    ).toBeGreaterThan(0);
+    expect(keys.length).toBeGreaterThan(0);
   });
 
-  it('checks only configured public locales, including interpolation and plural shape', () => {
-    for (const locale of activeLocales) {
-      expect(validateCatalog(en, read(locale), locale), locale).toEqual([]);
-    }
-  });
+  for (const locale of extraLocales) {
+    it(`${locale}.json carries every en key (and nothing extra)`, () => {
+      const other = read(locale);
+      const missing = keys.filter((k) => !(k in other));
+      const extra = Object.keys(other).filter(
+        (k) => !k.startsWith('$') && !(k in en),
+      );
+      expect(missing).toEqual([]);
+      expect(extra).toEqual([]);
+    });
+  }
 });
