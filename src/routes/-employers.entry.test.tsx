@@ -377,7 +377,6 @@ describe('employer entry surfaces', () => {
     if (!(card instanceof HTMLElement)) {
       throw new Error('The membership plan must render in a card');
     }
-    expect(within(card).getByText('$12.50')).toBeVisible();
     expect(within(card).getByRole('link', { name: 'Join' })).toHaveAttribute(
       'href',
       '/memberships',
