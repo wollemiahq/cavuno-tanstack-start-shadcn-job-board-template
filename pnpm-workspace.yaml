@@ -21,7 +21,7 @@ minimumReleaseAgeExclude:
 # patched versions without an override.
 overrides:
   '@hono/node-server': 2.0.11
-  sharp: 0.35.3
+  sharp: 0.35.4
   ws: 8.21.1
 
 # esbuild/sharp/workerd all ship prebuilt binaries as optional
@@ -34,4 +34,5 @@ allowBuilds:
 # Dev-only (`vite dev`) fix for SSR 500s during HMR full reloads; the WHY is in
 # the patch header. Drop it once @cloudflare/vite-plugin fixes this upstream.
 patchedDependencies:
+  sharp@0.35.4: patches/sharp@0.35.4.patch
   '@cloudflare/vite-plugin@1.49.0': patches/@cloudflare__vite-plugin@1.49.0.patch
