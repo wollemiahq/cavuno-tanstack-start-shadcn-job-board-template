@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const consumers = ['miniflare'];
@@ -16,9 +16,10 @@ for (const consumer of consumers) {
   for (const mode of ['cjs', 'esm']) {
     test(`${consumer}: ${mode} rejects HEIF-family input before decoding`, () => {
       // Separate processes ensure one entrypoint cannot mask a missing policy in another.
-      const target = mode === 'esm'
-        ? pathToFileURL(join(dirname(entry), 'index.mjs')).href
-        : entry;
+      const target =
+        mode === 'esm'
+          ? pathToFileURL(join(dirname(entry), 'index.mjs')).href
+          : entry;
       const probe = `
         const assert = require('node:assert/strict');
         const { mkdtempSync, writeFileSync, rmSync } = require('node:fs');
@@ -54,8 +55,13 @@ for (const consumer of consumers) {
           await assert.rejects(stream.toBuffer(), unsupported);
           console.log(JSON.stringify({ sharp: sharp.versions.sharp, heif: sharp.versions.heif, input: 'blocked' }));
         })().catch(error => { console.error(error); process.exitCode = 1; });
-      `.replaceAll('MODE', JSON.stringify(mode)).replaceAll('TARGET', JSON.stringify(target));
-      const output = execFileSync(process.execPath, ['-e', probe], { encoding: 'utf8', timeout: 30000 });
+      `
+        .replaceAll('MODE', JSON.stringify(mode))
+        .replaceAll('TARGET', JSON.stringify(target));
+      const output = execFileSync(process.execPath, ['-e', probe], {
+        encoding: 'utf8',
+        timeout: 30000,
+      });
       assert.match(output, /"input":"blocked"/);
     });
   }
