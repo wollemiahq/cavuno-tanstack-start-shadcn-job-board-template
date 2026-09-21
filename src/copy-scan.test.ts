@@ -119,7 +119,7 @@ describe('hardcoded-copy guard (en-XA coverage companion)', () => {
     expect(
       violations,
       `Hardcoded user-visible copy — route it through Paraglide messages ` +
-        `(messages/en.json + de/fr, npm run gen:messages) or the boardCopy ` +
+        `(the authored messages/ catalogs) or the existing copy ` +
         `seam:\n${violations.join('\n')}`,
     ).toEqual([]);
   });
