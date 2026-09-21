@@ -1,0 +1,22 @@
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -22,4 +22,8 @@
+ output(Sharp);
+ utility(Sharp);
+ 
++// Disable HEIC/HEIF/AVIF input until bundled libheif includes the 1.23.4 fixes.
++// The base class also blocks file, buffer and stream loader descendants.
++Sharp.block({ operation: ['VipsForeignLoadHeif'] });
++
+ module.exports = Sharp;
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -22,4 +22,8 @@
+ output(Sharp);
+ utility(Sharp);
+ 
++// Disable HEIC/HEIF/AVIF input until bundled libheif includes the 1.23.4 fixes.
++// The base class also blocks file, buffer and stream loader descendants.
++Sharp.block({ operation: ['VipsForeignLoadHeif'] });
++
+ export default Sharp;

@@ -21,6 +21,9 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Image decoder security
+        run: node --test scripts/image-decoder-policy.test.mjs
+
       - name: Lint and formatting
         run: pnpm run check
 
