@@ -366,7 +366,7 @@ relevant to the change; run the full sequence when validating a release locally:
 pnpm run typecheck && pnpm test && pnpm run build
 ```
 
-The full local gate, including formatting, design-artifact drift, and the Board
+The release checks, including formatting and the Board
 API conformance probe (`cavuno-board doctor`), is documented in
 [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/testing.md`](docs/testing.md).
 

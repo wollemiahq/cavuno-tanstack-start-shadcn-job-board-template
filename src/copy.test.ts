@@ -1,45 +1,80 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { boardCopy, type BoardCopy } from './copy';
 import { entityCopy } from './copy-groups/entity';
 import { navCopy } from './copy-groups/nav';
-import { baseLocale, overwriteGetLocale } from './paraglide/runtime';
+import { chromeEntity, chromeNav } from './lib/site-chrome';
+import { m } from './paraglide/messages';
 
+import type { LocalizedString } from './paraglide/runtime';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-describe('boardCopy is driven by the URL locale, not the board constant', () => {
+// Exercise adapter wiring with controlled messages and overrides, independent
+// of the board owner's wording and chrome configuration.
+vi.mock('./lib/site-chrome', () => ({
+  chromeNav: vi.fn(() => ({})),
+  chromeEntity: vi.fn(() => ({})),
+  chromeFooter: vi.fn(() => ({ labels: {} })),
+}));
+
+// SAFETY: controlled test messages stand in for the compiler's branded output.
+const localized = (value: string) => value as LocalizedString;
+
+describe('localized copy adapter', () => {
   afterEach(() => {
-    overwriteGetLocale(() => baseLocale);
+    vi.restoreAllMocks();
+    vi.mocked(chromeNav).mockReturnValue({});
+    vi.mocked(chromeEntity).mockReturnValue({});
   });
 
-  it('resolves the runtime locale even when callers pass the board language', () => {
-    // Callers thread board.language (a board-level constant); the seam
-    // follows getLocale() (the URL locale), not that argument. Extra
-    // chrome locales pick this up automatically once compiled.
-    expect(boardCopy('de').jobCard.featuredLabel).toBe('Featured');
-    expect(boardCopy('fr').jobCard.featuredLabel).toBe('Featured');
+  it('uses the message resolver without passing the legacy board language', () => {
+    const label = vi
+      .spyOn(m, 'jobCard_featuredLabel')
+      .mockReturnValue(localized('Localized badge'));
+    expect(boardCopy('de').jobCard.featuredLabel).toBe('Localized badge');
+    expect(boardCopy('fr').jobCard.featuredLabel).toBe('Localized badge');
+    expect(label).toHaveBeenCalledWith();
   });
 
-  it('keeps parameterized keys callable with their positional signature', () => {
-    expect(boardCopy('en').jobDetail.experienceYears(5)).toBe('5+ years');
-    expect(boardCopy('en').jobDetail.posted('today')).toBe('Posted today');
+  it('forwards positional parameters to localized messages', () => {
+    const years = vi
+      .spyOn(m, 'jobDetail_experienceYears')
+      .mockReturnValue(localized('Experience fixture'));
+    const posted = vi
+      .spyOn(m, 'jobDetail_posted')
+      .mockReturnValue(localized('Date fixture'));
+    expect(boardCopy('en').jobDetail.experienceYears(5)).toBe(
+      'Experience fixture',
+    );
+    expect(years).toHaveBeenCalledWith({ years: 5 });
+    expect(boardCopy('en').jobDetail.posted('today')).toBe('Date fixture');
+    expect(posted).toHaveBeenCalledWith({ date: 'today' });
   });
 
-  it('keeps string-valued ICU messages as reusable catalog templates', () => {
-    expect(boardCopy('en').jobSearch).toMatchObject({
-      contextualResultsHeading: '{{count}} {{heading}}',
-      gatedCountText: '{{count}} more roles are available with full access.',
-      // Was resultsCountOne/Many. The catalog now holds one plural message
-      // whose category is chosen per locale, so the adapter exposes one
-      // template — the general form — matching the catalog key 1:1.
-      resultsCount: '{{count}} jobs',
-      resultsShowingRange: 'Showing {{from}}–{{to}} of {{count}} jobs',
-      senioritySelectedCount: '{{count}} selected',
+  it('passes reusable placeholders and the general plural selector to catalog messages', () => {
+    const results = vi
+      .spyOn(m, 'jobSearch_resultsCount')
+      .mockReturnValue(localized('Count fixture'));
+    const range = vi
+      .spyOn(m, 'jobSearch_resultsShowingRange')
+      .mockReturnValue(localized('Range fixture'));
+    const copyright = vi
+      .spyOn(m, 'footer_copyrightPrefix')
+      .mockReturnValue(localized('Copyright fixture'));
+    const copy = boardCopy('en');
+    expect(copy.jobSearch.resultsCount).toBe('Count fixture');
+    expect(results).toHaveBeenCalledWith({ count: 0, countLabel: '{{count}}' });
+    expect(copy.jobSearch.resultsShowingRange).toBe('Range fixture');
+    expect(range).toHaveBeenCalledWith({
+      from: '{{from}}',
+      to: '{{to}}',
+      count: '{{count}}',
     });
-    expect(boardCopy('en').footer).toMatchObject({
-      copyrightPrefix: '© {{year}} {{board_name}}.',
-      defaultDescription: 'Discover the latest roles from {{board_name}}.',
+    expect(copy.footer.copyrightPrefix).toBe('Copyright fixture');
+    expect(copyright).toHaveBeenCalledWith({
+      year: '{{year}}',
+      board_name: '{{board_name}}',
     });
   });
 
@@ -83,27 +118,18 @@ describe('boardCopy is driven by the URL locale, not the board constant', () => 
     expect(actual).toEqual(expected);
   });
 
-  it('overlays chrome.json nav and entity strings onto catalog defaults', () => {
-    // Stock src/chrome.json is `{}`, so every key stays the catalog
-    // string. Pin those literals — not the Paraglide calls production uses.
-    expect(navCopy()).toEqual({
-      blog: 'Blog',
-      companies: 'Companies',
-      home: 'Jobs',
-      memberships: 'Memberships',
-      post: 'Post a job',
-      pricing: 'Pricing',
-      talent: 'Talent',
-    });
-    expect(entityCopy()).toEqual({
-      companyPlural: 'companies',
-      companySingular: 'company',
-      jobPlural: 'jobs',
-      jobSingular: 'job',
-      candidateSingular: 'candidate',
-      candidatePlural: 'candidates',
-      candidatePresent: 'Present',
-    });
+  it('uses catalog defaults and lets configured nav/entity labels override them', () => {
+    vi.spyOn(m, 'nav_home').mockReturnValue(localized('Catalog navigation'));
+    vi.spyOn(m, 'entity_jobSingular').mockReturnValue(
+      localized('Catalog entity'),
+    );
+    expect(navCopy().home).toBe('Catalog navigation');
+    expect(entityCopy().jobSingular).toBe('Catalog entity');
+
+    vi.mocked(chromeNav).mockReturnValue({ home: 'Opportunities' });
+    vi.mocked(chromeEntity).mockReturnValue({ jobSingular: 'opportunity' });
+    expect(navCopy().home).toBe('Opportunities');
+    expect(entityCopy().jobSingular).toBe('opportunity');
   });
 });
 
@@ -129,8 +155,11 @@ describe('the copy seam is the only catalog call site', () => {
   function walk(dir: string): string[] {
     return readdirSync(dir).flatMap((name) => {
       const path = join(dir, name);
+      if (name === 'paraglide') return [];
       if (statSync(path).isDirectory()) return walk(path);
-      return /\.(ts|tsx)$/.test(name) ? [path] : [];
+      return /\.(ts|tsx)$/.test(name) && !/\.(test|spec)\./.test(name)
+        ? [path]
+        : [];
     });
   }
 

@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTokens } from '../scripts/theme-resolved-lib.mjs';
-
-/**
- * The template must carry:
- *  - AGENTS.md — the contributor guidance source (agents.md convention).
- *    Runtime and behavior checks, not prose matching, protect correctness.
- *  - DESIGN.md + design/tokens.dtcg.json — GENERATED artifacts (Google
- *    Labs design.md spec pinned at `alpha`; DTCG 2025.10 interchange).
- *    CI checks token metadata; the generated component inventory is optional.
- *    Unit tests cover parsing and splicing without pinning documentation prose.
- *  - The pnpm 11 supply-chain posture: dependency lifecycle
- *    scripts blocked unless allowlisted, minimumReleaseAge cooldown on.
- */
-import { readFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 // Lazy: the generator is the artifact under test — its absence should
@@ -23,49 +17,6 @@ const generatorLib = () => import('../scripts/gen-design-lib.mjs');
 
 const root = join(import.meta.dirname, '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
-
-describe('AGENTS.md workflow rules', () => {
-  it('is the single rule source — CLAUDE.md defers to it', () => {
-    expect(read('CLAUDE.md').trim()).toBe('@AGENTS.md');
-  });
-});
-
-describe('DESIGN.md + DTCG generated artifacts', () => {
-  it('frontmatter tokens are derived from theme.css', async () => {
-    const { parseDesignFrontmatter } = await generatorLib();
-    const fm = parseDesignFrontmatter(read('DESIGN.md'));
-    const tokens = parseTokens(read('src/theme.css'));
-    expect(fm.version).toBe('alpha');
-    // Every :root color custom property surfaces as a frontmatter color.
-    expect(fm.colors.background).toBe(tokens.light['--background']);
-    expect(fm.colors.primary).toBe(tokens.light['--primary']);
-    expect(fm.colors.accent).toBe(tokens.light['--accent']);
-    expect(fm.colors).not.toHaveProperty('radius');
-    // Typography derives from the font vars — assert the DERIVATION, not
-    // the family: any preset may name a different one (docs/theming.md).
-    expect(fm.typography.sans.fontFamily).toBe(tokens.light['--font-sans']);
-  });
-
-  it('the DTCG export is valid 2025.10-shaped token JSON matching theme.css', () => {
-    const dtcg = JSON.parse(read('design/tokens.dtcg.json'));
-    const tokens = parseTokens(read('src/theme.css'));
-    expect(dtcg.color.background.$type).toBe('color');
-    expect(dtcg.color.background.$value.toLowerCase()).toBe(
-      tokens.light['--background'].toLowerCase(),
-    );
-    expect(dtcg.color['background-dark'].$value.toLowerCase()).toBe(
-      tokens.dark['--background'].toLowerCase(),
-    );
-    expect(dtcg.fontFamily.sans.$type).toBe('fontFamily');
-    // Shape + derivation, not the value: `--radius` is the preset's to set.
-    const [, radiusValue, radiusUnit] =
-      tokens.light['--radius'].match(/^([\d.]+)([a-z%]+)$/) ?? [];
-    expect(dtcg.dimension.radius).toEqual({
-      $type: 'dimension',
-      $value: { value: Number(radiusValue), unit: radiusUnit },
-    });
-  });
-});
 
 describe('dependency posture', () => {
   it('pins pnpm 11 as the package manager', () => {
@@ -90,13 +41,54 @@ describe('dependency posture', () => {
 describe('gen:design --frontmatter mode', () => {
   // Frontmatter-only mode preserves a customized DESIGN.md body while
   // regenerating the token-derived metadata.
-  it('generateDesignFrontmatter reproduces the committed frontmatter and DTCG export', async () => {
-    const { generateDesignFrontmatter } = await generatorLib();
-    const partial = await generateDesignFrontmatter(root);
-    expect(read('DESIGN.md').startsWith(partial.frontmatterBlock + '\n')).toBe(
-      true,
-    );
-    expect(partial.dtcgJson).toBe(read('design/tokens.dtcg.json'));
+  it('generates token metadata from a supplied theme without requiring committed docs', async () => {
+    const { generateDesignFrontmatter, parseDesignFrontmatter } =
+      await generatorLib();
+    const fixture = mkdtempSync(join(tmpdir(), 'design-export-'));
+    try {
+      mkdirSync(join(fixture, 'src'));
+      writeFileSync(
+        join(fixture, 'src/theme.css'),
+        `:root {
+  --background: #fafafa;
+  --primary: #123456;
+  --accent: #abcdef;
+  --radius: 0.75rem;
+  --font-sans: 'Example Sans', sans-serif;
+  --font-heading: 'Example Serif', serif;
+}
+.dark {
+  --background: #121212;
+}`,
+      );
+      const result = await generateDesignFrontmatter(fixture);
+      const metadata = parseDesignFrontmatter(result.frontmatterBlock);
+      expect(metadata.version).toBe('alpha');
+      expect(metadata.colors).toMatchObject({
+        background: '#fafafa',
+        primary: '#123456',
+        accent: '#abcdef',
+      });
+      expect(metadata.colors).not.toHaveProperty('radius');
+      expect(metadata.typography.sans.fontFamily).toBe(
+        "'Example Sans', sans-serif",
+      );
+      const dtcg = JSON.parse(result.dtcgJson);
+      expect(dtcg.color.background).toMatchObject({
+        $type: 'color',
+        $value: '#fafafa',
+      });
+      expect(dtcg.color['background-dark']).toMatchObject({
+        $type: 'color',
+        $value: '#121212',
+      });
+      expect(dtcg.dimension.radius).toEqual({
+        $type: 'dimension',
+        $value: { value: 0.75, unit: 'rem' },
+      });
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
   });
 
   it('spliceDesignFrontmatter replaces only the frontmatter — an edited body survives byte-for-byte', async () => {

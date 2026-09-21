@@ -12,11 +12,10 @@ a full-bleed introduction and then a constrained results region. `Page` owns the
 width, `Bleed` creates the band, `PageHeader` owns the introduction, and
 `PageContent` owns the results and optional rail. Selectable job, company, and
 talent directories use the sibling [Search results](search-results.md) pattern.
-Jobs deliberately use its denser LinkedIn-style variant: keyword and location
-live in the global header, a filter strip follows immediately, and the
-contextual result count is the only `h1`—there is no second search or hero.
-Companies, Talent, and Blog also delegate keyword search to the global header;
-their page bodies start with collection-specific filters or content.
+In the default Jobs layout, keyword and location search live in the header,
+followed by filters and a contextual results heading. Companies, Talent, and
+Blog also use header search. These placements describe the starter layout;
+search controls and introductions can move with the requested composition.
 
 ## When to use
 
@@ -73,8 +72,6 @@ system rather than parallel route shells:
 
 | Do                                                                                     | Don't                                                                                        |
 | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Keep contextual search in the global header; Jobs pairs keyword and location.             | Add a second page search form or a large hero between filters and results.                 |
-| Promote the contextual result count to the one Jobs `h1`.                              | Repeat a generic “Jobs” page title above the working results surface.                         |
 | Delegate job listings to `JobSearchPage`; `ProgrammaticJobsView` is the route adapter. | Add another job-listing shell or fork search behavior per SEO route.                         |
 | Remove the master-detail grid when there are no Jobs results.                          | Reserve a blank detail pane beside an empty result list.                                      |
 
