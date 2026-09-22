@@ -18,6 +18,7 @@ import {
   type AdPlacement,
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
@@ -28,7 +29,6 @@ import {
   SearchResultsLayout,
   SearchResultsList,
 } from '@/components/search-results/search-results';
-import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -42,11 +42,7 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { localizePath } from '@/lib/localized-path';
-import {
-  clampPage,
-  isLastPreviewPage,
-  listingPageHref,
-} from '@/lib/pagination';
+import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
 
@@ -249,29 +245,14 @@ export function JobSearchPage({
                     </ListingAdResults>
                   </InPlaceListingSelect>
 
-                  {gatedCount &&
-                  gatedCount > 0 &&
-                  isLastPreviewPage(page, pageSize, count ?? 0) ? (
-                    <Alert
-                      aria-label={m.jobSearch_unlockMoreLabel()}
-                      className="bg-muted flex flex-col items-start gap-3 pe-4"
-                    >
-                      <AlertDescription>
-                        {m.jobSearch_gatedCountText({
-                          count: gatedCount.toLocaleString(language),
-                        })}
-                      </AlertDescription>
-                      <AlertAction className="static">
-                        <Link
-                          to="/account/access"
-                          search={{ returnTo }}
-                          className={buttonVariants({ size: 'sm' })}
-                        >
-                          {m.jobSearch_unlockMoreLabel()}
-                        </Link>
-                      </AlertAction>
-                    </Alert>
-                  ) : null}
+                  <PreviewUnlockAlert
+                    gatedCount={gatedCount}
+                    page={page}
+                    pageSize={pageSize}
+                    visibleCount={count ?? 0}
+                    returnTo={returnTo}
+                    language={language}
+                  />
 
                   <ListingPagination
                     compact

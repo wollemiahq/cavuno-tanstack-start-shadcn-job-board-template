@@ -18,7 +18,6 @@
 import {
   createFileRoute,
   getRouteApi,
-  Link,
   useLocation,
 } from '@tanstack/react-router';
 
@@ -28,7 +27,6 @@ import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
   clampPage,
-  isLastPreviewPage,
   pageSearchValue,
   parsePageParam,
   searchString,
@@ -49,9 +47,8 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { jsonLdHeadScripts } from '@/components/json-ld';
-import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
-import { buttonVariants } from '@/components/ui/button';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
@@ -140,29 +137,14 @@ function CompanyJobsPage() {
           compact
         />
 
-        {page.gatedCount &&
-        page.gatedCount > 0 &&
-        isLastPreviewPage(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount) ? (
-          <Alert
-            aria-label={m.jobSearch_unlockMoreLabel()}
-            className="bg-muted flex flex-col items-start gap-3 pe-4"
-          >
-            <AlertDescription>
-              {m.jobSearch_gatedCountText({
-                count: page.gatedCount.toLocaleString(locale),
-              })}
-            </AlertDescription>
-            <AlertAction className="static">
-              <Link
-                to="/account/access"
-                search={{ returnTo: localizePath(currentHref) }}
-                className={buttonVariants({ size: 'sm' })}
-              >
-                {m.jobSearch_unlockMoreLabel()}
-              </Link>
-            </AlertAction>
-          </Alert>
-        ) : null}
+        <PreviewUnlockAlert
+          gatedCount={page.gatedCount}
+          page={currentPage}
+          pageSize={COMPANY_JOBS_PAGE_SIZE}
+          visibleCount={visibleCount}
+          returnTo={localizePath(currentHref)}
+          language={locale}
+        />
 
         <ListingPagination
           page={currentPage}

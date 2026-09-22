@@ -21,7 +21,7 @@ import {
   pageSearchValue,
   pageToOffset,
   parsePageParam,
-  isLastPreviewPage,
+  isPreviewUnlockPage,
   shouldRenderPagination,
   totalPages,
 } from './pagination';
@@ -224,17 +224,17 @@ describe('totalPages (ceil of count / pageSize)', () => {
   });
 });
 
-describe('isLastPreviewPage', () => {
+describe('isPreviewUnlockPage', () => {
   it('is only the final page of a multi-page preview', () => {
-    expect(isLastPreviewPage(1, 20, 30)).toBe(false);
-    expect(isLastPreviewPage(2, 20, 30)).toBe(true);
-    expect(isLastPreviewPage(3, 20, 30)).toBe(false);
+    expect(isPreviewUnlockPage(1, 20, 30)).toBe(false);
+    expect(isPreviewUnlockPage(2, 20, 30)).toBe(true);
+    expect(isPreviewUnlockPage(3, 20, 30)).toBe(false);
   });
 
-  it('keeps a one-page preview, including an empty one, on page 1', () => {
-    expect(isLastPreviewPage(1, 20, 1)).toBe(true);
-    expect(isLastPreviewPage(1, 20, 0)).toBe(true);
-    expect(isLastPreviewPage(2, 20, 0)).toBe(false);
+  it('unlocks page 1 of a one-page or empty preview, and no later page', () => {
+    expect(isPreviewUnlockPage(1, 20, 1)).toBe(true);
+    expect(isPreviewUnlockPage(1, 20, 0)).toBe(true);
+    expect(isPreviewUnlockPage(2, 20, 0)).toBe(false);
   });
 });
 
