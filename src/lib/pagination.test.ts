@@ -21,6 +21,7 @@ import {
   pageSearchValue,
   pageToOffset,
   parsePageParam,
+  isLastPreviewPage,
   shouldRenderPagination,
   totalPages,
 } from './pagination';
@@ -220,6 +221,20 @@ describe('totalPages (ceil of count / pageSize)', () => {
     // but only 500 fit under the ceiling.
     expect(totalPages(12_000, 20)).toBe(500);
     expect(totalPages(12_000, 24)).toBe(416);
+  });
+});
+
+describe('isLastPreviewPage', () => {
+  it('is only the final page of a multi-page preview', () => {
+    expect(isLastPreviewPage(1, 20, 30)).toBe(false);
+    expect(isLastPreviewPage(2, 20, 30)).toBe(true);
+    expect(isLastPreviewPage(3, 20, 30)).toBe(false);
+  });
+
+  it('keeps a one-page preview, including an empty one, on page 1', () => {
+    expect(isLastPreviewPage(1, 20, 1)).toBe(true);
+    expect(isLastPreviewPage(1, 20, 0)).toBe(true);
+    expect(isLastPreviewPage(2, 20, 0)).toBe(false);
   });
 });
 
