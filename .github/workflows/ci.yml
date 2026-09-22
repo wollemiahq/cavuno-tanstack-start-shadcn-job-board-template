@@ -24,6 +24,9 @@ jobs:
       - name: Image decoder security
         run: node --test scripts/image-decoder-policy.test.mjs
 
+      - name: Generator scripts
+        run: node --test scripts/gen-paraglide-messages.test.mjs
+
       - name: Lint and formatting
         run: pnpm run check
 
