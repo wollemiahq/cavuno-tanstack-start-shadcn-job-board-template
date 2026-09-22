@@ -1285,6 +1285,7 @@
   "jobDetail_workPermitsLabel": "Permis de travail",
   "jobDetail_worldwideLabel": "Monde entier",
   "jobForm_currencyNotAllowedError": "Ce site n’accepte les salaires que dans les devises suivantes : {currencies}.",
+  "jobForm_customFieldInvalidError": "Vérifiez {field} : ce site n'accepte pas cette valeur.",
   "jobForm_customFieldRequiredError": "Renseignez {field} avant de soumettre.",
   "jobForm_officeLocationCountryNotAllowedError": "Ce site n’accepte que des lieux de travail dans les pays suivants : {countries}.",
   "jobForm_optionNotAllowedError": "Cette offre utilise une option que le site n'accepte plus. Choisissez une nouvelle valeur avant d'enregistrer.",

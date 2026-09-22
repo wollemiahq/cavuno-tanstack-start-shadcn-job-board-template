@@ -1483,6 +1483,47 @@ describe('EmployerJobForm — board custom fields', () => {
     expect(body.customFieldValues).toEqual({ visa: false });
   });
 
+  it('names the field when the board refuses a custom field the form could not check', async () => {
+    // e.g. the operator made "Perks" required after this form loaded.
+    mocks.createJob.mockResolvedValue({
+      ok: false,
+      code: 'jobs_constraint_violation',
+      message: '"Perks" is required on this board',
+      violations: [
+        {
+          code: 'custom_field_required',
+          path: ['customFieldValues', 'perks'],
+          params: { label: 'Perks' },
+        },
+      ],
+    });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Team'), {
+      target: { value: 'Platform' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Perks' }),
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('blocks a save that leaves a required custom field empty', async () => {
     mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
     await renderWithRouter(

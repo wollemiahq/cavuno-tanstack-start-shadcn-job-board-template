@@ -33,6 +33,7 @@ import {
   resolveJobFormConstraints,
   type JobFormConstraints,
   type JobFormSource,
+  type JobFormViolation,
 } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import {
@@ -222,6 +223,67 @@ function clientFieldErrorMessage(errors: {
 }
 
 type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
+
+/**
+ * Localized copy for a Job form rule the Board API refused
+ * (`jobs_constraint_violation`), from the first violation this form knows how
+ * to phrase. `null` when none is recognised, so the caller falls back to the
+ * error's code. Covers what the client checks cannot: a rule changed after
+ * the form loaded, or a stored value the board no longer accepts.
+ */
+function jobFormViolationMessage(
+  violations: readonly JobFormViolation[] | undefined,
+  definitions: readonly CustomFieldDefinition[],
+  jobForm: JobFormConstraints,
+): string | null {
+  for (const violation of violations ?? []) {
+    const params = violation.params ?? {};
+    switch (violation.code) {
+      case 'custom_field_required':
+      case 'custom_field_wrong_type':
+      case 'custom_field_option_invalid':
+      case 'custom_field_too_long':
+      case 'custom_field_out_of_range': {
+        const definition = definitions.find(
+          (candidate) => candidate.key === violation.path[1],
+        );
+        const field = definition
+          ? customFieldLabel(definition)
+          : (params.label ?? String(violation.path[1] ?? ''));
+        return violation.code === 'custom_field_required'
+          ? m.jobForm_customFieldRequiredError({ field })
+          : m.jobForm_customFieldInvalidError({ field });
+      }
+      case 'salary_required':
+        return m.jobForm_salaryRequiredError();
+      case 'seniority_required':
+        return m.jobForm_seniorityRequiredError();
+      case 'salary_below_min':
+        if (params.min === undefined) break;
+        return m.jobForm_salaryBelowMinError({ min: Number(params.min) });
+      case 'salary_above_max':
+        if (params.max === undefined) break;
+        return m.jobForm_salaryAboveMaxError({ max: Number(params.max) });
+      case 'currency_not_allowed':
+        return jobForm.salary.allowedCurrencies
+          ? m.jobForm_currencyNotAllowedError({
+              currencies: jobForm.salary.allowedCurrencies.join(', '),
+            })
+          : m.jobForm_optionNotAllowedError();
+      case 'work_arrangement_not_allowed':
+      case 'employment_type_not_allowed':
+      case 'seniority_not_allowed':
+        return m.jobForm_optionNotAllowedError();
+      case 'office_location_not_allowed':
+      case 'remote_eligibility_not_allowed':
+        if (params.countries === undefined) break;
+        return m.jobForm_officeLocationCountryNotAllowedError({
+          countries: params.countries,
+        });
+    }
+  }
+  return null;
+}
 
 /**
  * The wire bag for the board's custom fields: the stored value union plus
@@ -967,7 +1029,10 @@ export function EmployerJobForm({
           return;
         }
         setStatus('error');
-        setMessage(boardErrorMessage(result));
+        setMessage(
+          jobFormViolationMessage(result.violations, customFields, jobForm) ??
+            boardErrorMessage(result),
+        );
         return;
       }
       if (intent === 'draft') {
@@ -1006,7 +1071,10 @@ export function EmployerJobForm({
         return;
       }
       setStatus('error');
-      setMessage(boardErrorMessage(result));
+      setMessage(
+        jobFormViolationMessage(result.violations, customFields, jobForm) ??
+          boardErrorMessage(result),
+      );
       return;
     }
     if (needsPublishing && selectedBilling) {

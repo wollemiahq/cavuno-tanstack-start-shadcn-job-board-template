@@ -1285,6 +1285,7 @@
   "jobDetail_workPermitsLabel": "Work permits",
   "jobDetail_worldwideLabel": "Worldwide",
   "jobForm_currencyNotAllowedError": "This board only accepts salaries in: {currencies}.",
+  "jobForm_customFieldInvalidError": "Check {field}: this board doesn't accept that value.",
   "jobForm_customFieldRequiredError": "Fill in {field} before submitting.",
   "jobForm_officeLocationCountryNotAllowedError": "This board only accepts office locations in: {countries}.",
   "jobForm_optionNotAllowedError": "This listing uses an option the board no longer accepts. Pick a new value before saving.",

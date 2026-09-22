@@ -1,7 +1,16 @@
 import { BOARD_API_ERROR_CODES } from '@cavuno/board';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { boardErrorMessage, CODE_MESSAGES } from './board-error-message';
+
+// The board's locale, switchable per test. Only English is compiled in this
+// template, so the runtime's own `overwriteGetLocale` cannot select another.
+const locale = vi.hoisted(() => ({ current: 'en' }));
+vi.mock('../paraglide/runtime', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../paraglide/runtime')>()),
+  getLocale: () => locale.current,
+}));
 
 /** Codes this repo's own server fns invent (not on the wire contract). */
 const APP_LOCAL_CODES = ['unauthorized', 'invalid_file', 'unknown'];
@@ -74,8 +83,37 @@ describe('board error code map', () => {
     );
   });
 
-  it('unknown codes get the generic line plus the code, never the wire message', () => {
-    expect(boardErrorMessage({ code: 'space_weather', message: 'wire' })).toBe(
+  it('an unknown code shows the API sentence on an English board', () => {
+    expect(
+      boardErrorMessage({
+        code: 'space_weather',
+        message: 'Solar flare interrupted the posting.',
+      }),
+    ).toBe('Solar flare interrupted the posting.');
+  });
+
+  it('an unknown code keeps the generic line plus the code on other locales, never the English wire text', () => {
+    locale.current = 'de';
+    try {
+      expect(
+        boardErrorMessage({ code: 'space_weather', message: 'wire' }),
+      ).toBe(`${m.boardError_genericText()} (space_weather)`);
+    } finally {
+      locale.current = 'en';
+    }
+  });
+
+  it('the app-local `unknown` code never shows its message', () => {
+    expect(
+      boardErrorMessage({
+        code: 'unknown',
+        message: 'TypeError: x is undefined',
+      }),
+    ).toBe('Something went wrong. Please try again. (unknown)');
+  });
+
+  it('an unknown code with no message keeps the generic line plus the code', () => {
+    expect(boardErrorMessage({ code: 'space_weather' })).toBe(
       'Something went wrong. Please try again. (space_weather)',
     );
   });

@@ -41,22 +41,40 @@ import {
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
 
+import {
+  parseJobFormViolations,
+  type JobFormViolation,
+} from '@/board/job-form';
 import { searchString } from '@/lib/pagination';
 import type { TalentListFilters } from '@/lib/talent-search';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; code: string; message: string };
+  | {
+      ok: false;
+      code: string;
+      message: string;
+      /** The broken Job form rules of a `jobs_constraint_violation`. */
+      violations?: JobFormViolation[];
+    };
 
 async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
     return { ok: true, data: await fn() };
   } catch (error) {
     // `message` is wire English — clients resolve display copy from `code`
-    // via boardErrorMessage and must not render the message directly.
-    return isBoardApiError(error)
-      ? { ok: false, code: error.code, message: error.message }
-      : { ok: false, code: 'unknown', message: 'Something went wrong.' };
+    // (and, for a Job form rule, from `violations`) via boardErrorMessage.
+    if (!isBoardApiError(error)) {
+      return { ok: false, code: 'unknown', message: 'Something went wrong.' };
+    }
+    const failure: ActionResult<T> = {
+      ok: false,
+      code: error.code,
+      message: error.message,
+    };
+    const violations = parseJobFormViolations(error.details);
+    if (violations.length > 0) failure.violations = violations;
+    return failure;
   }
 }
 
