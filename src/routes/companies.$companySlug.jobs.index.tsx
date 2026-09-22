@@ -28,6 +28,7 @@ import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
   clampPage,
+  isLastPreviewPage,
   pageSearchValue,
   parsePageParam,
   searchString,
@@ -139,7 +140,9 @@ function CompanyJobsPage() {
           compact
         />
 
-        {page.gatedCount && page.gatedCount > 0 ? (
+        {page.gatedCount &&
+        page.gatedCount > 0 &&
+        isLastPreviewPage(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount) ? (
           <Alert
             aria-label={m.jobSearch_unlockMoreLabel()}
             className="bg-muted flex flex-col items-start gap-3 pe-4"

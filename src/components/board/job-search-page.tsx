@@ -42,7 +42,11 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { localizePath } from '@/lib/localized-path';
-import { clampPage, listingPageHref } from '@/lib/pagination';
+import {
+  clampPage,
+  isLastPreviewPage,
+  listingPageHref,
+} from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
 import type { ListingFilters } from '@cavuno/board/filters';
 
@@ -245,7 +249,9 @@ export function JobSearchPage({
                     </ListingAdResults>
                   </InPlaceListingSelect>
 
-                  {gatedCount && gatedCount > 0 ? (
+                  {gatedCount &&
+                  gatedCount > 0 &&
+                  isLastPreviewPage(page, pageSize, count ?? 0) ? (
                     <Alert
                       aria-label={m.jobSearch_unlockMoreLabel()}
                       className="bg-muted flex flex-col items-start gap-3 pe-4"

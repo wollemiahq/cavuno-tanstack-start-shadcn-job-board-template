@@ -192,3 +192,12 @@ export function shouldRenderPagination(
 ): boolean {
   return totalPages(count, pageSize) > 1;
 }
+
+/** This page is the end of the free preview, so a withheld-jobs prompt belongs here. */
+export function isLastPreviewPage(
+  page: number,
+  pageSize: number,
+  visibleCount: number,
+): boolean {
+  return page >= totalPages(visibleCount, pageSize);
+}
