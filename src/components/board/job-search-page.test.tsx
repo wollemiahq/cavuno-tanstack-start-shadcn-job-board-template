@@ -489,4 +489,39 @@ describe('JobSearchPage — search results pattern', () => {
       screen.queryByText(m.jobSearch_gatedCountText({ count: '357' })),
     ).toBeNull();
   });
+
+  it('shows the unlock prompt on an empty preview', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[]}
+          count={0}
+          gatedCount={5}
+          page={1}
+          pageSize={20}
+          filters={{}}
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByText(m.jobSearch_gatedCountText({ count: '5' })),
+    ).toBeVisible();
+  });
 });
