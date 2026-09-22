@@ -18,11 +18,13 @@
 import {
   createFileRoute,
   getRouteApi,
+  Link,
   useLocation,
 } from '@tanstack/react-router';
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import { entityCount } from '../lib/entity-count';
+import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
   clampPage,
@@ -41,11 +43,14 @@ import {
 } from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
+import { buttonVariants } from '@/components/ui/button';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // Full-bleed: the shared company-section shell owns the page container +
@@ -84,11 +89,12 @@ function CompanyJobsPage() {
   const currentHref = useLocation({ select: (loc) => loc.href });
 
   const currentPage = clampPage(search.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
-  const count = page.count ?? 0;
+  const visibleCount = page.count ?? 0;
+  const count = catalogJobCount(visibleCount, page.gatedCount) ?? visibleCount;
   const locale = getLocale();
 
   // Honest "Showing X–Y of Z" / "N jobs" count, reusing the browse copy keys.
-  const showRange = count > COMPANY_JOBS_PAGE_SIZE;
+  const showRange = visibleCount > COMPANY_JOBS_PAGE_SIZE;
   const countLabel = showRange
     ? m.jobSearch_resultsShowingRange({
         from: ((currentPage - 1) * COMPANY_JOBS_PAGE_SIZE + 1).toLocaleString(
@@ -96,7 +102,7 @@ function CompanyJobsPage() {
         ),
         to: Math.min(
           currentPage * COMPANY_JOBS_PAGE_SIZE,
-          count,
+          visibleCount,
         ).toLocaleString(locale),
         count: count.toLocaleString(locale),
       })
@@ -133,9 +139,31 @@ function CompanyJobsPage() {
           compact
         />
 
+        {page.gatedCount && page.gatedCount > 0 ? (
+          <Alert
+            aria-label={m.jobSearch_unlockMoreLabel()}
+            className="bg-muted flex flex-col items-start gap-3 pe-4"
+          >
+            <AlertDescription>
+              {m.jobSearch_gatedCountText({
+                count: page.gatedCount.toLocaleString(locale),
+              })}
+            </AlertDescription>
+            <AlertAction className="static">
+              <Link
+                to="/account/access"
+                search={{ returnTo: localizePath(currentHref) }}
+                className={buttonVariants({ size: 'sm' })}
+              >
+                {m.jobSearch_unlockMoreLabel()}
+              </Link>
+            </AlertAction>
+          </Alert>
+        ) : null}
+
         <ListingPagination
           page={currentPage}
-          count={count}
+          count={visibleCount}
           pageSize={COMPANY_JOBS_PAGE_SIZE}
           hrefForPage={(nextPage) => listingPageHref(currentHref, nextPage)}
           onPageChange={(next) =>

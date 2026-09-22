@@ -153,7 +153,8 @@ export function JobSearchPage({
   const relatedChips = relatedSearchesToChips(relatedSearches);
   const resultsBar = (
     <JobsResultsBar
-      count={count}
+      visibleCount={count}
+      gatedCount={gatedCount}
       page={page}
       pageSize={pageSize}
       heading={heading}

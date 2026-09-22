@@ -1,6 +1,7 @@
 import { jobsCategoryPath } from '@cavuno/board/paths';
 import { getRouteApi } from '@tanstack/react-router';
 
+import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { sellsTalentProfileUnlocks } from '@/board/talent-view-model';
 import { HomeLanding } from '@/components/board/home-landing';
@@ -81,10 +82,14 @@ export function HomePage() {
       <HomeLanding
         copy={copy}
         jobs={jobs}
-        jobsCountLabel={countEyebrow(page.count, m.count_jobs, {
-          singular: chromeEntityOverrides.jobSingular,
-          plural: chromeEntityOverrides.jobPlural,
-        })}
+        jobsCountLabel={countEyebrow(
+          catalogJobCount(page.count, page.gatedCount),
+          m.count_jobs,
+          {
+            singular: chromeEntityOverrides.jobSingular,
+            plural: chromeEntityOverrides.jobPlural,
+          },
+        )}
         companiesCountLabel={countEyebrow(companiesCount, m.count_companies, {
           singular: chromeEntityOverrides.companySingular,
           plural: chromeEntityOverrides.companyPlural,

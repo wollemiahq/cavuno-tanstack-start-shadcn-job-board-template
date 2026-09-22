@@ -37,6 +37,7 @@ import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
+import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
@@ -186,14 +187,14 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           heading: heading,
           boardName: seo.boardName,
           language: seo.language,
-          count: page.count,
+          count: catalogJobCount(page.count, page.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath('/jobs'),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
-          count: page.count,
+          count: catalogJobCount(page.count, page.gatedCount),
         }),
       });
       const crumbs = breadcrumbsCopy();
@@ -256,14 +257,14 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           heading: heading,
           boardName: seo.boardName,
           language: seo.language,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(jobsCategoryPath(data.categorySlug)),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const crumbs = breadcrumbsCopy();
@@ -325,14 +326,14 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           heading: heading,
           boardName: seo.boardName,
           language: seo.language,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(jobsSkillPath(data.skillSlug)),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const crumbs = breadcrumbsCopy();
@@ -467,14 +468,14 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           heading: heading,
           boardName: seo.boardName,
           language: seo.language,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(`/jobs/locations/${data.locationSlug}`),
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const jsonLd = asJsonObjects(
@@ -574,7 +575,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           heading: heading,
           boardName: seo.boardName,
           language: seo.language,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(
@@ -583,7 +584,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const jsonLd = asJsonObjects(
@@ -680,7 +681,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           heading: heading,
           boardName: seo.boardName,
           language: seo.language,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(
@@ -689,7 +690,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         description: listingMetaDescription({
           heading: heading,
           boardName: seo.boardName,
-          count: list.count,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const jsonLd = asJsonObjects(
