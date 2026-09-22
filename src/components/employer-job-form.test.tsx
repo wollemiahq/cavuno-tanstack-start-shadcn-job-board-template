@@ -1452,7 +1452,7 @@ describe('EmployerJobForm — board custom fields', () => {
     expect(body.customFieldValues).toEqual({ team: 'Platform', perks: null });
   });
 
-  it('sends an untouched Yes/No field as false, so a required one is answered', async () => {
+  it('sends an untouched required Yes/No field as false, and leaves an optional one unanswered', async () => {
     mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
     await renderWithRouter(
       <EmployerJobForm
@@ -1471,6 +1471,12 @@ describe('EmployerJobForm — board custom fields', () => {
             label: 'Visa sponsorship',
             type: 'boolean',
             required: true,
+          },
+          {
+            key: 'relocation',
+            label: 'Relocation assistance',
+            type: 'boolean',
+            required: false,
           },
         ]}
       />,

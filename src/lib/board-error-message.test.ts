@@ -112,6 +112,12 @@ describe('board error code map', () => {
     ).toBe('Something went wrong. Please try again. (unknown)');
   });
 
+  it('a non-JSON gateway response (`unknown_error`) never shows its status text', () => {
+    expect(
+      boardErrorMessage({ code: 'unknown_error', message: 'Bad Gateway' }),
+    ).toBe('Something went wrong. Please try again. (unknown_error)');
+  });
+
   it('an unknown code with no message keeps the generic line plus the code', () => {
     expect(boardErrorMessage({ code: 'space_weather' })).toBe(
       'Something went wrong. Please try again. (space_weather)',

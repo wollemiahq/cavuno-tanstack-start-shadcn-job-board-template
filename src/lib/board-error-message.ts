@@ -86,6 +86,8 @@ function codeMessage(code: string): (() => string) | undefined {
   return CODE_MESSAGES[code as keyof typeof CODE_MESSAGES];
 }
 
+const NON_SENTENCE_CODES = new Set(['unknown', 'unknown_error']);
+
 export function boardErrorMessage(result: {
   code?: string | null;
   message?: string | null;
@@ -96,11 +98,13 @@ export function boardErrorMessage(result: {
   // names the actual problem, so an English board shows it rather than a
   // generic line; any other locale keeps the generic line, because English
   // wire text must not leak into a localized form.
-  // `unknown` is this repo's own catch-all, whose message is not API text.
+  // `unknown` (this repo's catch-all) and `unknown_error` (the SDK's code for
+  // a non-JSON response, whose message is only the HTTP status text such as
+  // "Bad Gateway") carry no API sentence worth showing.
   const wire = result.message?.trim();
   if (
     result.code &&
-    result.code !== 'unknown' &&
+    !NON_SENTENCE_CODES.has(result.code) &&
     wire &&
     getLocale().startsWith('en')
   ) {

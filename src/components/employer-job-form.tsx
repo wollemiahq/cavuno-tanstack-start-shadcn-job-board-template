@@ -343,10 +343,15 @@ function customFieldValuesBody(
 ) {
   const body: CustomFieldValuesWrite = {};
   for (const definition of definitions) {
-    // A checkbox always has an answer: unticked is "No". Sending `false`
-    // keeps a required Yes/No field from being rejected as unanswered.
-    if (definition.type === 'boolean') {
-      body[definition.key] = values[definition.key] === true;
+    // A required Yes/No field left untouched means "No": sending `false`
+    // keeps it from being rejected as unanswered. An optional one stays
+    // unanswered, so an edit never writes a "No" nobody chose.
+    if (
+      definition.type === 'boolean' &&
+      definition.required &&
+      values[definition.key] === undefined
+    ) {
+      body[definition.key] = false;
       continue;
     }
     const value = values[definition.key];
