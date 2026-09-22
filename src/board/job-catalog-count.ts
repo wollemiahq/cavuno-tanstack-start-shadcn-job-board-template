@@ -11,3 +11,14 @@ export function catalogJobCount(
       : 0;
   return visibleCount + withheld;
 }
+
+export function visiblePageSpan(
+  page: number,
+  pageSize: number,
+  visibleCount: number,
+): { from: number; to: number } | null {
+  if (!(visibleCount > 0) || !(pageSize > 0) || !(page > 0)) return null;
+  const from = (page - 1) * pageSize + 1;
+  if (from > visibleCount) return null;
+  return { from, to: Math.min(page * pageSize, visibleCount) };
+}

@@ -42,7 +42,7 @@ import {
 } from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
-import { catalogJobCount } from '@/board/job-catalog-count';
+import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
@@ -90,18 +90,15 @@ function CompanyJobsPage() {
   const visibleCount = page.count ?? 0;
   const count = catalogJobCount(visibleCount, page.gatedCount) ?? visibleCount;
   const locale = getLocale();
+  const span =
+    visibleCount > COMPANY_JOBS_PAGE_SIZE
+      ? visiblePageSpan(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount)
+      : null;
 
-  // Honest "Showing X–Y of Z" / "N jobs" count, reusing the browse copy keys.
-  const showRange = visibleCount > COMPANY_JOBS_PAGE_SIZE;
-  const countLabel = showRange
+  const countLabel = span
     ? m.jobSearch_resultsShowingRange({
-        from: ((currentPage - 1) * COMPANY_JOBS_PAGE_SIZE + 1).toLocaleString(
-          locale,
-        ),
-        to: Math.min(
-          currentPage * COMPANY_JOBS_PAGE_SIZE,
-          visibleCount,
-        ).toLocaleString(locale),
+        from: span.from.toLocaleString(locale),
+        to: span.to.toLocaleString(locale),
         count: count.toLocaleString(locale),
       })
     : entityCount(count, locale, m.count_jobs, {

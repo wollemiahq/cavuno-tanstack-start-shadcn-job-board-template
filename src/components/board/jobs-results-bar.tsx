@@ -3,7 +3,7 @@
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
 
-import { catalogJobCount } from '@/board/job-catalog-count';
+import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
 import { chromeEntity } from '@/lib/site-chrome';
@@ -41,12 +41,12 @@ export function JobsResultsBar({
   const totalCount = catalogJobCount(pageableCount, gatedCount);
   const currentPage = finiteNumber(page);
   const currentPageSize = finiteNumber(pageSize);
-  const showRange =
-    totalCount !== undefined &&
+  const span =
     pageableCount !== undefined &&
     currentPage !== undefined &&
-    currentPageSize !== undefined &&
-    pageableCount > 0;
+    currentPageSize !== undefined
+      ? visiblePageSpan(currentPage, currentPageSize, pageableCount)
+      : null;
   const totalLabel =
     totalCount !== undefined
       ? heading
@@ -59,16 +59,14 @@ export function JobsResultsBar({
             plural: chromeEntity().jobPlural,
           })
       : (heading ?? jobSearchCopy().headingJobs);
-  const rangeLabel = showRange
-    ? m.jobSearch_resultsShowingRange({
-        from: ((currentPage - 1) * currentPageSize + 1).toLocaleString(locale),
-        to: Math.min(
-          currentPage * currentPageSize,
-          pageableCount,
-        ).toLocaleString(locale),
-        count: totalCount.toLocaleString(locale),
-      })
-    : null;
+  const rangeLabel =
+    span && totalCount !== undefined
+      ? m.jobSearch_resultsShowingRange({
+          from: span.from.toLocaleString(locale),
+          to: span.to.toLocaleString(locale),
+          count: totalCount.toLocaleString(locale),
+        })
+      : null;
 
   return (
     <div
