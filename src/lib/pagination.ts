@@ -198,6 +198,5 @@ export function isPreviewUnlockPage(
   pageSize: number,
   visibleCount: number,
 ): boolean {
-  const pages = totalPages(visibleCount, pageSize);
-  return page === (pages === 0 ? 1 : pages);
+  return page === (totalPages(visibleCount, pageSize) || 1);
 }
