@@ -231,9 +231,9 @@ describe('isPreviewUnlockPage', () => {
     expect(isPreviewUnlockPage(3, 20, 30)).toBe(false);
   });
 
-  it('unlocks page 1 of a one-page or empty preview, and no later page', () => {
+  it('unlocks page 1 of a one-page preview, and not an empty preview', () => {
     expect(isPreviewUnlockPage(1, 20, 1)).toBe(true);
-    expect(isPreviewUnlockPage(1, 20, 0)).toBe(true);
+    expect(isPreviewUnlockPage(1, 20, 0)).toBe(false);
     expect(isPreviewUnlockPage(2, 20, 0)).toBe(false);
   });
 });

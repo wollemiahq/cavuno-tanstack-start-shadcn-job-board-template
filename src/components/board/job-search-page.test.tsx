@@ -490,7 +490,7 @@ describe('JobSearchPage — search results pattern', () => {
     ).toBeNull();
   });
 
-  it('shows the unlock prompt on an empty preview', async () => {
+  it('keeps the unlock prompt off an empty preview', async () => {
     const rootRoute = createRootRoute();
     const indexRoute = createRoute({
       getParentRoute: () => rootRoute,
@@ -521,7 +521,13 @@ describe('JobSearchPage — search results pattern', () => {
     render(<RouterProvider router={router} />);
 
     expect(
-      await screen.findByText(m.jobSearch_gatedCountText({ count: '5' })),
+      await screen.findByText(m.jobSearch_initialEmptyText()),
     ).toBeVisible();
+    expect(
+      screen.queryByText(m.jobSearch_gatedCountText({ count: '5' })),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.jobSearch_unlockMoreLabel() }),
+    ).toBeNull();
   });
 });
