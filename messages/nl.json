@@ -1285,6 +1285,7 @@
   "jobDetail_workPermitsLabel": "Werkvergunningen",
   "jobDetail_worldwideLabel": "Wereldwijd",
   "jobForm_currencyNotAllowedError": "Dit vacatureplatform accepteert alleen salarissen in: {currencies}.",
+  "jobForm_customFieldRequiredError": "Vul {field} in voordat je verzendt.",
   "jobForm_officeLocationCountryNotAllowedError": "Dit vacatureplatform accepteert alleen kantoorlocaties in: {countries}.",
   "jobForm_optionNotAllowedError": "Deze vacature gebruikt een optie die het vacatureplatform niet meer accepteert. Kies een nieuwe waarde voordat je opslaat.",
   "jobForm_salaryAboveMaxError": "Het salaris mag maximaal {max} zijn.",

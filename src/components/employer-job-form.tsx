@@ -27,6 +27,7 @@ import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { checkoutJob, createJob, updateJob } from '../server/employers';
 
+import { customFieldLabel } from '@/board/custom-field-labels';
 import {
   narrowOptions,
   resolveJobFormConstraints,
@@ -38,6 +39,10 @@ import {
   planFeatureLines,
   planOffersFeaturedChoice,
 } from '@/board/plan-view-model';
+import {
+  CustomFieldsGroup,
+  type CustomFieldValues,
+} from '@/components/custom-fields-group';
 import {
   emptyInvoiceBillingDraft,
   InvoiceBillingFields,
@@ -92,6 +97,7 @@ import type {
   EmployerCheckoutBody,
   EmployerJob,
   JobPostingPlan,
+  PublicBoard,
   RemotePermitTaxonomyEntry,
   UpdateEmployerJobBody,
 } from '@cavuno/board';
@@ -215,6 +221,76 @@ function clientFieldErrorMessage(errors: {
   return null;
 }
 
+type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
+
+/**
+ * The wire bag for the board's custom fields: the stored value union plus
+ * `null`, the clear sentinel an edit sends for an answer the employer removed.
+ */
+type CustomFieldValuesWrite = Record<string, CustomFieldValues[string] | null>;
+
+/**
+ * The employer job surface carries the board's custom-field bag — on the
+ * job read (to prefill an edit) and on the create/update bodies — from the
+ * Board API release that opened it to employers. Widened locally so the form
+ * also compiles against the SDK pin that predates it; drop both once
+ * `@cavuno/board` is bumped past that release.
+ */
+type ReadsCustomFields = { customFieldValues?: CustomFieldValues };
+type WritesCustomFields = { customFieldValues?: CustomFieldValuesWrite };
+
+/** An unanswered custom field: nothing typed, nothing ticked, nothing picked. */
+function isCustomFieldEmpty(value: CustomFieldValues[string] | undefined) {
+  if (value === undefined || value === '') return true;
+  return Array.isArray(value) && value.length === 0;
+}
+
+/**
+ * The first required custom field the employer left empty, as the localized
+ * message the public form's native `required` inputs would show. The
+ * platform rejects the save with a 400 either way; catching it here names
+ * the field before the round trip, and covers the pickers (multi-select,
+ * checkbox) that carry no native `required`.
+ */
+function missingRequiredCustomField(
+  definitions: readonly CustomFieldDefinition[],
+  values: CustomFieldValues,
+): string | null {
+  const missing = definitions.find(
+    (definition) =>
+      definition.required &&
+      definition.type !== 'boolean' &&
+      isCustomFieldEmpty(values[definition.key]),
+  );
+  return missing
+    ? m.jobForm_customFieldRequiredError({ field: customFieldLabel(missing) })
+    : null;
+}
+
+/**
+ * The wire bag for the board's custom fields. Only defined keys travel. A
+ * create sends the answered fields (an empty answer is "unanswered", not a
+ * value — the same filter the public form applies). An edit sends EVERY
+ * defined key, with `null` where the employer cleared the answer: the update
+ * is an additive merge, so an omitted key would silently keep the old value.
+ */
+function customFieldValuesBody(
+  definitions: readonly CustomFieldDefinition[],
+  values: CustomFieldValues,
+  intent: 'create' | 'edit',
+) {
+  const body: CustomFieldValuesWrite = {};
+  for (const definition of definitions) {
+    const value = values[definition.key];
+    if (value === undefined || isCustomFieldEmpty(value)) {
+      if (intent === 'edit') body[definition.key] = null;
+      continue;
+    }
+    body[definition.key] = value;
+  }
+  return body;
+}
+
 /**
  * Keep the form's own default when the board still allows it, and only fall
  * back to the first allowed value when it does not. Taking `allowed[0]`
@@ -268,6 +344,8 @@ type EmployerJobFormState = {
   salaryMax: string;
   applyMethod: ApplyMethod;
   applicationTarget: string;
+  /** Board-defined custom fields, keyed by definition `key` (option KEYS for selects). */
+  customFieldValues: CustomFieldValues;
 };
 
 export type EmployerJobFormMode =
@@ -284,6 +362,12 @@ export type EmployerJobFormProps = {
   mode: EmployerJobFormMode;
   /** Built-in field visibility from `board.context().jobForm`. */
   jobForm?: JobFormSource | null;
+  /**
+   * Board-defined custom fields (`board.customFields.job`) — the same
+   * definitions, in the same operator-config order, the public `/post` form
+   * renders, so the two forms collect the same answers.
+   */
+  customFields?: CustomFieldDefinition[];
   /** Prefill for edit mode. */
   job?: EmployerJob;
   /**
@@ -329,7 +413,7 @@ function formatPrice(
 }
 
 function initialForm(
-  job: EmployerJob | undefined,
+  job: (EmployerJob & ReadsCustomFields) | undefined,
   countryName: (code: string) => string,
   // A board narrowed to e.g. remote-only, contract-only or EUR-only would
   // otherwise open the form pre-filled with a value it rejects, and the
@@ -355,6 +439,7 @@ function initialForm(
       salaryMax: '',
       applyMethod: 'external',
       applicationTarget: '',
+      customFieldValues: {},
     };
   }
 
@@ -413,6 +498,7 @@ function initialForm(
     salaryMax: job.salaryMax != null ? String(job.salaryMax) : '',
     applyMethod: job.applicationUrl ? 'external' : 'native',
     applicationTarget,
+    customFieldValues: { ...job.customFieldValues },
   };
 }
 
@@ -426,6 +512,7 @@ export function EmployerJobForm({
   mode,
   job,
   jobForm: jobFormSource,
+  customFields = [],
   membershipGate,
   dependencies,
 }: EmployerJobFormProps) {
@@ -656,12 +743,20 @@ export function EmployerJobForm({
       Number.isFinite(salaryMin) &&
       Number.isFinite(salaryMax);
 
-    const body: CreateEmployerJobBody = {
+    const body: CreateEmployerJobBody & WritesCustomFields = {
       title: form.title.trim(),
       description: form.description,
       employmentType: form.employmentType,
       remoteOption: form.remoteOption,
     };
+    // Only a board that defines custom fields sends the bag at all.
+    if (customFields.length > 0) {
+      body.customFieldValues = customFieldValuesBody(
+        customFields,
+        form.customFieldValues,
+        mode.kind,
+      );
+    }
     if (jobForm.seniority.visible && form.seniority)
       body.seniority = form.seniority;
     if (jobForm.location.visible && form.officeLocations.length > 0) {
@@ -827,7 +922,9 @@ export function EmployerJobForm({
     // (the API rejects it with a 400) with an English wire
     // sentence; catching them here gives the employer a localized message
     // before the round trip.
-    const constraintError = jobFormConstraintError(form, jobForm);
+    const constraintError =
+      jobFormConstraintError(form, jobForm) ||
+      missingRequiredCustomField(customFields, form.customFieldValues);
     if (constraintError) {
       // `message` only renders under `status === 'error'` — setting it alone
       // leaves the employer with a silently dead submit button.
@@ -1357,6 +1454,15 @@ export function EmployerJobForm({
               ) : null}
             </Field>
           ) : null}
+
+          {/* Board-defined custom fields — the same group the public /post
+              form renders after its built-in fields, in operator-config
+              order. Renders nothing when the board defines none. */}
+          <CustomFieldsGroup
+            definitions={customFields}
+            values={form.customFieldValues}
+            onChange={(values) => set('customFieldValues', values)}
+          />
         </CardContent>
       </Card>
 

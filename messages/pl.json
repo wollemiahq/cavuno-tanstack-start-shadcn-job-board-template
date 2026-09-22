@@ -1331,6 +1331,7 @@
   "jobDetail_workPermitsLabel": "Pozwolenia na pracę",
   "jobDetail_worldwideLabel": "Cały świat",
   "jobForm_currencyNotAllowedError": "Ta tablica ofert akceptuje wynagrodzenia tylko w: {currencies}.",
+  "jobForm_customFieldRequiredError": "Uzupełnij pole {field} przed wysłaniem.",
   "jobForm_officeLocationCountryNotAllowedError": "Ta tablica ofert akceptuje lokalizacje biur tylko w: {countries}.",
   "jobForm_optionNotAllowedError": "To ogłoszenie używa opcji, której tablica ofert już nie akceptuje. Wybierz nową wartość przed zapisaniem.",
   "jobForm_salaryAboveMaxError": "Wynagrodzenie nie może przekraczać {max}.",

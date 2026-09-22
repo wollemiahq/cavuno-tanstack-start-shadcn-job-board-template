@@ -1285,6 +1285,7 @@
   "jobDetail_workPermitsLabel": "Arbeitserlaubnisse",
   "jobDetail_worldwideLabel": "Weltweit",
   "jobForm_currencyNotAllowedError": "Diese Jobbörse akzeptiert Gehälter nur in: {currencies}.",
+  "jobForm_customFieldRequiredError": "Fülle {field} aus, bevor du absendest.",
   "jobForm_officeLocationCountryNotAllowedError": "Diese Jobbörse akzeptiert nur Bürostandorte in: {countries}.",
   "jobForm_optionNotAllowedError": "Diese Anzeige verwendet eine Option, die die Jobbörse nicht mehr akzeptiert. Wähle vor dem Speichern einen neuen Wert.",
   "jobForm_salaryAboveMaxError": "Das Gehalt darf höchstens {max} betragen.",
