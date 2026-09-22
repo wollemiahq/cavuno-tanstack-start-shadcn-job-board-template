@@ -1452,6 +1452,37 @@ describe('EmployerJobForm — board custom fields', () => {
     expect(body.customFieldValues).toEqual({ team: 'Platform', perks: null });
   });
 
+  it('sends an untouched Yes/No field as false, so a required one is answered', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={[
+          {
+            key: 'visa',
+            label: 'Visa sponsorship',
+            type: 'boolean',
+            required: true,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({ visa: false });
+  });
+
   it('blocks a save that leaves a required custom field empty', async () => {
     mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
     await renderWithRouter(
