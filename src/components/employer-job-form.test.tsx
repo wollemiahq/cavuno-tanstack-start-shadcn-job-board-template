@@ -1181,6 +1181,7 @@ describe('EmployerJobForm — office-location country lock', () => {
       contextLabel: 'France',
       countryCode: 'FR',
       regionCode: null,
+      placeType: 'city',
     };
     await renderWithRouter(
       <EmployerJobForm
