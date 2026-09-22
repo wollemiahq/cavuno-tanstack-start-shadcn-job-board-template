@@ -198,5 +198,5 @@ export function isPreviewUnlockPage(
   pageSize: number,
   visibleCount: number,
 ): boolean {
-  return page === (totalPages(visibleCount, pageSize) || 1);
+  return page === totalPages(visibleCount, pageSize);
 }

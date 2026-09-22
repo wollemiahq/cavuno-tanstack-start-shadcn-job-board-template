@@ -197,14 +197,6 @@ export function JobSearchPage({
                     filters={filters}
                     hasRouteConstraint={Boolean(heading)}
                   />
-                  <PreviewUnlockAlert
-                    gatedCount={gatedCount}
-                    page={page}
-                    pageSize={pageSize}
-                    visibleCount={count ?? 0}
-                    returnTo={returnTo}
-                    language={language}
-                  />
                 </div>
               }
               detail={null}
