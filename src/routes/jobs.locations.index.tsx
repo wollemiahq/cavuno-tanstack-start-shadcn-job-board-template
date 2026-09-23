@@ -1,18 +1,3 @@
-/**
- * Locations directory — `/jobs/locations/` (hosted parity:
- * `boards/[slug]/(main)/jobs/locations/page.tsx`). The API's `/places` returns
- * every place used by a published job with its subtree-summed `jobCount` plus
- * `id`/`parentId`; we rebuild the *same nested hierarchy* the hosted index
- * renders — roots and each node's children sorted by job count, descending
- * (identical to the hosted `buildHierarchy`).
- *
- * The owned Page family supplies the single main landmark and content width;
- * shadcn Badge and Empty compositions present the nested directory without
- * changing its route, hierarchy, or SEO data contracts.
- *
- * Head + breadcrumb JSON-LD are computed in getJobsLocationsIndexPage so
- * `@cavuno/board/seo` and breadcrumbsCopy stay out of the universal entry.
- */
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { MapPin } from 'lucide-react';
 
@@ -21,6 +6,10 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getJobsLocationsIndexPage } from '../server/jobs-listing-pages';
 
+import {
+  buildJobsLocationDirectory,
+  type LocationDirectoryNode,
+} from '@/board/jobs-location-directory';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,38 +31,7 @@ export const Route = createFileRoute('/jobs/locations/')({
   component: LocationsIndexPage,
 });
 
-interface PlaceNode {
-  place: PublicPlace;
-  children: PlaceNode[];
-}
-
-function buildHierarchy(places: PublicPlace[]): PlaceNode[] {
-  const byId = new Map(places.map((place) => [place.id, place]));
-  const childrenOf = new Map<string, PublicPlace[]>();
-
-  for (const place of places) {
-    if (place.parentId && byId.has(place.parentId)) {
-      const siblings = childrenOf.get(place.parentId) ?? [];
-      siblings.push(place);
-      childrenOf.set(place.parentId, siblings);
-    }
-  }
-
-  const buildNode = (place: PublicPlace): PlaceNode => {
-    const children = (childrenOf.get(place.id) ?? []).sort(
-      (a, b) => b.jobCount - a.jobCount,
-    );
-    return { place, children: children.map(buildNode) };
-  };
-
-  const roots = places.filter(
-    (place) => !place.parentId || !byId.has(place.parentId),
-  );
-  roots.sort((a, b) => b.jobCount - a.jobCount);
-  return roots.map(buildNode);
-}
-
-function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
+function PlaceTree({ nodes }: { nodes: LocationDirectoryNode<PublicPlace>[] }) {
   return (
     <ul className="flex flex-col gap-1">
       {nodes.map((node) => (
@@ -91,7 +49,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
               <span className="text-muted-foreground">{node.place.name}</span>
             )}
             <Badge variant="secondary">
-              {node.place.jobCount.toLocaleString(getLocale())}
+              {node.jobCount.toLocaleString(getLocale())}
             </Badge>
           </div>
           {node.children.length > 0 ? (
@@ -107,7 +65,7 @@ function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
 
 function LocationsIndexPage() {
   const { places } = Route.useLoaderData();
-  const tree = buildHierarchy(places.data);
+  const tree = buildJobsLocationDirectory(places.data, getLocale());
 
   return (
     <Page width="wide">

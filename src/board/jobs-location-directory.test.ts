@@ -13,8 +13,6 @@ function place(
 
 describe('buildJobsLocationDirectory', () => {
   it('counts each job once when the API total includes a row at every ancestor', () => {
-    // 10 Tempe jobs, 1 job filed on Arizona itself, 11 Richmond jobs.
-    // Each ancestor stores its own row plus every row below it.
     const places = [
       place('us', 'United States', 65),
       place('az', 'Arizona', 21, 'us'),
@@ -77,11 +75,23 @@ describe('buildJobsLocationDirectory', () => {
     ]);
   });
 
+  it('keeps a state at its city total when the API rollup is one row short', () => {
+    const places = [
+      place('az', 'Arizona', 11),
+      place('phx', 'Phoenix', 4, 'az'),
+      place('sct', 'Scottsdale', 2, 'az'),
+    ];
+
+    const [arizona] = buildJobsLocationDirectory(places, 'en');
+    expect(arizona?.jobCount).toBe(6);
+    expect(arizona?.children.map((child) => child.jobCount)).toEqual([4, 2]);
+  });
+
   it('orders a parent by distinct jobs rather than its rolled-up API total', () => {
     const places = [
       place('big', 'Bigland', 100),
-      place('city', 'City', 95, 'big'),
-      place('small', 'Smalland', 9),
+      place('city', 'City', 40, 'big'),
+      place('small', 'Smalland', 70),
     ];
 
     expect(
@@ -90,8 +100,8 @@ describe('buildJobsLocationDirectory', () => {
         node.jobCount,
       ]),
     ).toEqual([
-      ['Smalland', 9],
-      ['Bigland', 5],
+      ['Smalland', 70],
+      ['Bigland', 60],
     ]);
   });
 
@@ -109,7 +119,10 @@ describe('buildJobsLocationDirectory', () => {
 
   it('keeps a place whose parent is missing from the directory as a root', () => {
     expect(
-      buildJobsLocationDirectory([place('tempe', 'Tempe', 10, 'missing')], 'en'),
+      buildJobsLocationDirectory(
+        [place('tempe', 'Tempe', 10, 'missing')],
+        'en',
+      ),
     ).toEqual([
       {
         place: place('tempe', 'Tempe', 10, 'missing'),
