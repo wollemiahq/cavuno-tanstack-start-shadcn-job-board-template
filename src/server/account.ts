@@ -28,9 +28,12 @@ import type {
   AlertBody,
   CreateEducationBody,
   CreateExperienceBody,
+  ProfileChoiceQuery,
+  ReplaceProfileObjectReferencesBody,
   UpdateCandidateProfileBody,
   UpdateEducationBody,
   UpdateExperienceBody,
+  UpdateProfileFieldValuesBody,
 } from '@cavuno/board';
 
 /** Additive profile field until the starter's pinned SDK publishes it. */
@@ -95,6 +98,8 @@ export const getAccount = createServerFn({ method: 'GET' })
         languages,
         savedJobs,
         resume,
+        customFields,
+        objectReferences,
       ] = await Promise.all([
         board.me.profile.retrieve(undefined, { headers }),
         board.me.profile.listExperience({ headers }),
@@ -103,6 +108,13 @@ export const getAccount = createServerFn({ method: 'GET' })
         board.me.profile.listLanguages({ headers }),
         board.me.savedJobs.list({ limit: 50 }, { headers }),
         board.me.resume.retrieve({ headers }),
+        // Owner-editable custom fields and collection selections (including
+        // private fields the public form layout never lists). Each degrades
+        // to `null` so an API without them still renders the profile.
+        board.me.profile.retrieveCustomFields({ headers }).catch(() => null),
+        board.me.profile
+          .retrieveObjectReferences({ headers })
+          .catch(() => null),
       ]);
       return {
         me,
@@ -113,6 +125,8 @@ export const getAccount = createServerFn({ method: 'GET' })
         languages,
         savedJobs,
         resume,
+        customFields,
+        objectReferences,
       };
     }),
   );
@@ -190,6 +204,41 @@ export const updateProfile = createServerFn({ method: 'POST' })
       undefined,
       { headers },
     );
+  });
+
+/** Additive write of the candidate's editable profile custom fields. */
+export const updateProfileCustomFields = createServerFn({ method: 'POST' })
+  .validator((input: UpdateProfileFieldValuesBody) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.updateCustomFields(data, { headers });
+  });
+
+/** Replaces the candidate's complete editable collection selection set. */
+export const updateProfileObjectReferences = createServerFn({
+  method: 'POST',
+})
+  .validator((input: ReplaceProfileObjectReferencesBody) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return getBoard().me.profile.updateObjectReferences(data, { headers });
+  });
+
+/** Active choices of one editable candidate collection field. */
+export const listProfileObjectReferenceChoices = createServerFn({
+  method: 'GET',
+})
+  .validator((input: { fieldKey: string } & ProfileChoiceQuery) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) => {
+    const { fieldKey, ...query } = data;
+    return getBoard().me.profile.listObjectReferenceChoices(fieldKey, query, {
+      headers: authedHeaders(context),
+    });
   });
 
 /** Live handle-availability check for the profile form. */

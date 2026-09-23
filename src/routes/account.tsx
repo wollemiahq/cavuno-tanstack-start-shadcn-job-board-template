@@ -8,13 +8,24 @@
  * /settings. The loader's server function enforces auth; the redirect
  * here is UX, not the security boundary.
  */
-import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
+import { Fragment, type ReactNode } from 'react';
+
+import {
+  createFileRoute,
+  getRouteApi,
+  isRedirect,
+  redirect,
+} from '@tanstack/react-router';
 
 import { AvatarUpload } from '../components/avatar-upload';
 import { EducationSection } from '../components/education-section';
 import { ExperienceSection } from '../components/experience-section';
 import { LanguagesSection } from '../components/languages-section';
-import { ProfileForm } from '../components/profile-form';
+import {
+  ProfileForm,
+  resolveTalentForm,
+  type TalentSectionKey,
+} from '../components/profile-form';
 import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { SkillsSection } from '../components/skills-section';
 import { m } from '../paraglide/messages';
@@ -23,6 +34,7 @@ import { getAccount } from '../server/account';
 import { getSeoBase } from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { boardForms } from '@/board/form-layout';
 import {
   CandidateProfilePendingPage,
   CandidateRouteErrorPage,
@@ -40,13 +52,75 @@ import {
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
+const rootApi = getRouteApi('__root__');
+
+const SECTION_KEYS: readonly TalentSectionKey[] = [
+  'experience',
+  'education',
+  'skills',
+  'languages',
+];
+
 function AccountPage() {
-  const { profile, experience, education, skills, languages, resume } =
-    Route.useLoaderData();
+  const {
+    profile,
+    experience,
+    education,
+    skills,
+    languages,
+    resume,
+    customFields,
+    objectReferences,
+  } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const profileLocationSuggestions = useLocationSuggestions(getLocale());
   const experienceLocationSuggestions = useLocationSuggestions(getLocale());
 
-  const checklist: ProfileChecklistItem[] = [
+  // The operator's talent form: which fields show, which are required, and
+  // the order of the profile sections below the profile card. Without a
+  // layout (an older API) the page keeps its pre-layout order.
+  const profileFields = { customFields, objectReferences };
+  const entries = resolveTalentForm(
+    boardForms(board)?.talent ?? null,
+    profileFields,
+  );
+  const shown = new Set<string>(
+    entries.flatMap((entry) => (entry.kind === 'builtin' ? [entry.key] : [])),
+  );
+  const sectionCounts = {
+    experience: experience.data.length,
+    education: education.data.length,
+    skills: skills.data.length,
+    languages: languages.data.length,
+  } satisfies Record<TalentSectionKey, number>;
+  const sections = {
+    experience: (
+      <ExperienceSection
+        items={experience.data}
+        language={getLocale()}
+        locationSuggestions={experienceLocationSuggestions}
+      />
+    ),
+    education: (
+      <EducationSection items={education.data} language={getLocale()} />
+    ),
+    skills: <SkillsSection skills={skills.data.map((skill) => skill.name)} />,
+    languages: (
+      <LanguagesSection
+        languages={languages.data.map((language) => ({
+          name: language.name,
+          proficiency: language.proficiency,
+        }))}
+      />
+    ),
+  } satisfies Record<TalentSectionKey, ReactNode>;
+  const sectionOrder = entries.flatMap((entry) =>
+    entry.kind === 'builtin'
+      ? SECTION_KEYS.filter((key) => key === entry.key)
+      : [],
+  );
+
+  const allChecklist: ProfileChecklistItem[] = [
     {
       key: 'photo',
       label: m.profileCompleteness_itemPhotoLabel(),
@@ -101,6 +175,14 @@ function AccountPage() {
       href: '#languages',
     },
   ];
+  // A hidden field has nothing to complete. The checklist keys are the
+  // layout keys, except the photo (`avatar`) and the resume (not a layout
+  // field, so always listed).
+  const checklist = allChecklist.filter(
+    (item) =>
+      item.key === 'resume' ||
+      shown.has(item.key === 'photo' ? 'avatar' : item.key),
+  );
 
   return (
     <CandidateShell
@@ -117,34 +199,26 @@ function AccountPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <AvatarUpload
-              avatarUrl={profile.avatarUrl}
-              displayName={profile.displayName}
-            />
+            {shown.has('avatar') ? (
+              <AvatarUpload
+                avatarUrl={profile.avatarUrl}
+                displayName={profile.displayName}
+              />
+            ) : null}
             <ProfileForm
               profile={profile}
               locationSuggestions={profileLocationSuggestions}
               language={getLocale()}
+              entries={entries}
+              profileFields={profileFields}
+              sectionCounts={sectionCounts}
             />
           </CardContent>
         </Card>
 
-        <ExperienceSection
-          items={experience.data}
-          language={getLocale()}
-          locationSuggestions={experienceLocationSuggestions}
-        />
-
-        <EducationSection items={education.data} language={getLocale()} />
-
-        <SkillsSection skills={skills.data.map((skill) => skill.name)} />
-
-        <LanguagesSection
-          languages={languages.data.map((language) => ({
-            name: language.name,
-            proficiency: language.proficiency,
-          }))}
-        />
+        {sectionOrder.map((key) => (
+          <Fragment key={key}>{sections[key]}</Fragment>
+        ))}
       </div>
     </CandidateShell>
   );
