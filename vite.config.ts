@@ -6,6 +6,12 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import {
+  PARAGLIDE_VITE_IS_SERVER,
+  paraglideInputsDigest,
+  readParaglideStamp,
+} from './scripts/paraglide-dev-stamp.mjs';
+
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { OxlintConfig } from 'oxlint';
@@ -163,7 +169,125 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
   return Array.isArray(plugin) ? plugin.map(wrap) : wrap(plugin);
 }
 
+/**
+ * Skip the plugin's startup compile when `gen:paraglide` already compiled
+ * these exact inputs with these exact options (scripts/paraglide-dev-stamp.mjs).
+ *
+ * The builder runs `gen:paraglide` before every `vp dev`, and the plugin then
+ * compiled the same project again: about two seconds of every boot. A
+ * missing or stale stamp compiles as before.
+ *
+ * A skipped start has not read the inlang project, so the plugin's own
+ * `watchChange` would ignore catalog edits. The first change under the
+ * project or messages directory therefore runs the real startup compile,
+ * which compiles the edit and hands watching back to the plugin.
+ */
+type ParaglideCompileOptions = Required<
+  Pick<
+    Parameters<typeof paraglideVitePlugin>[0],
+    'outputStructure' | 'strategy' | 'isServer'
+  >
+>;
+
+function paraglideSkipCompiledStart(
+  plugin: ParaglidePlugin,
+  compile: ParaglideCompileOptions,
+): ParaglidePlugin {
+  const outdir = resolve(import.meta.dirname, PARAGLIDE_OUTDIR);
+  // Watch events arrive with forward slashes; compare like with like.
+  const project = resolve(import.meta.dirname, INLANG_PROJECT).replaceAll(
+    '\\',
+    '/',
+  );
+  const messages = resolve(import.meta.dirname, 'messages').replaceAll(
+    '\\',
+    '/',
+  );
+  function wrap(one: Plugin): Plugin {
+    const start = one.buildStart;
+    const changed = one.watchChange;
+    if (start === undefined || changed === undefined) {
+      return one;
+    }
+    const startHandler = start instanceof Function ? start : start.handler;
+    const changeHandler =
+      changed instanceof Function ? changed : changed.handler;
+    // The arguments of a skipped start, kept for the compile the first
+    // catalog edit runs instead.
+    let skippedStart: Parameters<typeof startHandler> | undefined;
+    return {
+      ...one,
+      buildStart(
+        this: ThisParameterType<typeof startHandler>,
+        ...args: Parameters<typeof startHandler>
+      ) {
+        const stamp = readParaglideStamp(outdir);
+        if (
+          stamp !== null &&
+          stamp === paraglideInputsDigest(INLANG_PROJECT, compile)
+        ) {
+          skippedStart = args;
+          return;
+        }
+        return startHandler.apply(this, args);
+      },
+      async watchChange(
+        this: ThisParameterType<typeof changeHandler>,
+        ...args: Parameters<typeof changeHandler>
+      ) {
+        const path = args[0].replaceAll('\\', '/');
+        if (
+          skippedStart !== undefined &&
+          (path.startsWith(`${project}/`) || path.startsWith(`${messages}/`))
+        ) {
+          const startArgs = skippedStart;
+          skippedStart = undefined;
+          await startHandler.apply(this, startArgs);
+          return;
+        }
+        return changeHandler.apply(this, args);
+      },
+    };
+  }
+
+  return Array.isArray(plugin) ? plugin.map(wrap) : wrap(plugin);
+}
+
 function viteConfig(command: ConfigEnv['command']) {
+  const paraglideCompile: ParaglideCompileOptions = {
+    // Production matches TanStack's Start + Paraglide reference: one
+    // module per message lets Rollup discard route-owned translations
+    // instead of retaining a whole locale catalog in the universal
+    // client entry.
+    //
+    // Dev is the opposite trade. Vite serves source unbundled, so
+    // `message-modules` costs one HTTP request per message: a cold
+    // five-locale page load measured 2,247 requests, 1,732 of them
+    // paraglide modules (2026-09-08). Through the builder's sandbox
+    // proxy that waterfall outlived the preview handshake and the pane
+    // flickered between the dev preview and last-saved. One module
+    // per locale makes that a handful of requests — the split
+    // paraglide itself recommends (compiler-options: "locale-modules
+    // for development and message-modules for production").
+    outputStructure: command === 'serve' ? 'locale-modules' : 'message-modules',
+    // URL only: documents carry the locale as a path prefix; server-fn
+    // RPCs (unprefixed) get the viewer's locale from a per-request header
+    // (src/lib/locale-middleware.ts) that the server entry turns into a
+    // detection-only URL prefix. No cookie — a cookie is browser-global
+    // while locale is per-tab.
+    strategy: ['url', 'baseLocale'],
+    // The plugin's default under Vite, pinned so `gen:paraglide` writes the
+    // same runtime (scripts/paraglide-dev-stamp.mjs).
+    isServer: PARAGLIDE_VITE_IS_SERVER,
+  };
+  const paraglide = paraglideEnabledLocalesOnly(
+    paraglideVitePlugin({
+      project: INLANG_PROJECT,
+      outdir: PARAGLIDE_OUTDIR,
+      ...paraglideCompile,
+    }),
+  );
+
   return defineConfig({
     define: {
       'import.meta.env.CAVUNO_HOSTED_PREVIEW': JSON.stringify(
@@ -184,6 +308,29 @@ function viteConfig(command: ConfigEnv['command']) {
     // Gated on the env var the builder's /serve command sets so local
     // `npm run dev` keeps vite's defaults.
     server: previewServer,
+    // Boot time. The builder's readiness probe and a preview's first view
+    // SSR `/` in workerd, whose module runner pulls the graph one import at
+    // a time; warming the SSR entry and the landing routes starts that work
+    // while Vite is still coming up. Measured on 4 CPUs (median of 3,
+    // 2026-09-23): first `/` render 18.1 s -> 17.6 s, inside the noise.
+    // `preTransformRequests` here reached 16.0 s but logs a false
+    // "Pre-transform error" for the Cloudflare plugin's compiled-wasm
+    // modules (the OG renderer) on every boot, which reads as a real error
+    // in the preview's logs. Client files are not warmed: on the same CPUs
+    // they delay the SSR render (20.2 s).
+    environments: {
+      ssr: {
+        dev: {
+          warmup: [
+            './src/server.ts',
+            './src/router.tsx',
+            './src/routes/__root.tsx',
+            './src/routes/index.tsx',
+            './src/routes/jobs.index.tsx',
+          ],
+        },
+      },
+    },
     plugins: [
       // Compile-time i18n: messages/{locale}.json → tree-shakeable
       // functions in src/paraglide (generated; gitignored). Real catalogs
@@ -204,34 +351,9 @@ function viteConfig(command: ConfigEnv['command']) {
       //
       // `build` is unaffected: the scanner is a dev-only optimization, and
       // the production build resolves through this plugin normally.
-      paraglideEnabledLocalesOnly(
-        paraglideVitePlugin({
-          project: INLANG_PROJECT,
-          outdir: PARAGLIDE_OUTDIR,
-          // Production matches TanStack's Start + Paraglide reference: one
-          // module per message lets Rollup discard route-owned translations
-          // instead of retaining a whole locale catalog in the universal
-          // client entry.
-          //
-          // Dev is the opposite trade. Vite serves source unbundled, so
-          // `message-modules` costs one HTTP request per message: a cold
-          // five-locale page load measured 2,247 requests, 1,732 of them
-          // paraglide modules (2026-09-08). Through the builder's sandbox
-          // proxy that waterfall outlived the preview handshake and the pane
-          // flickered between the dev preview and last-saved. One module
-          // per locale makes that a handful of requests — the split
-          // paraglide itself recommends (compiler-options: "locale-modules
-          // for development and message-modules for production").
-          outputStructure:
-            command === 'serve' ? 'locale-modules' : 'message-modules',
-          // URL only: documents carry the locale as a path prefix; server-fn
-          // RPCs (unprefixed) get the viewer's locale from a per-request header
-          // (src/lib/locale-middleware.ts) that the server entry turns into a
-          // detection-only URL prefix. No cookie — a cookie is browser-global
-          // while locale is per-tab.
-          strategy: ['url', 'baseLocale'],
-        }),
-      ),
+      command === 'serve'
+        ? paraglideSkipCompiledStart(paraglide, paraglideCompile)
+        : paraglide,
       devtools({
         // Console piping POSTs every browser console call to
         // /__tsd/console-pipe on the dev server. Behind the hosted preview
