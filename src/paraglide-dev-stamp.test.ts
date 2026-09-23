@@ -66,6 +66,9 @@ describe('paraglideInputsDigest', () => {
     ['output structure', { outputStructure: 'message-modules' }],
     ['strategy', { strategy: ['url'] }],
     ['isServer', { isServer: "typeof window === 'undefined'" }],
+    // An option the generator does not pass: its output lacks it, so the
+    // plugin must compile.
+    ['any other plugin', { urlPatterns: [] }],
   ])('moves with the %s option', (_, change) => {
     const project = projectCopy();
     expect(paraglideInputsDigest(project, { ...DEV, ...change })).not.toBe(

@@ -182,20 +182,21 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
  * project or messages directory therefore runs the real startup compile,
  * which compiles the edit and hands watching back to the plugin.
  */
+type ParaglideOptions = Parameters<typeof paraglideVitePlugin>[0];
 type ParaglideCompileOptions = Required<
-  Pick<
-    Parameters<typeof paraglideVitePlugin>[0],
-    'outputStructure' | 'strategy' | 'isServer'
-  >
+  Pick<ParaglideOptions, 'outputStructure' | 'strategy' | 'isServer'>
 >;
 
 function paraglideSkipCompiledStart(
   plugin: ParaglidePlugin,
-  compile: ParaglideCompileOptions,
+  options: ParaglideOptions,
 ): ParaglidePlugin {
-  const outdir = resolve(import.meta.dirname, PARAGLIDE_OUTDIR);
+  // The options the plugin was built with: the digest covers all but the
+  // paths, so an option `gen:paraglide` does not pass means a compile.
+  const { project: inlangProject, outdir: outdirPath, ...compile } = options;
+  const outdir = resolve(import.meta.dirname, outdirPath);
   // Watch events arrive with forward slashes; compare like with like.
-  const project = resolve(import.meta.dirname, INLANG_PROJECT).replaceAll(
+  const project = resolve(import.meta.dirname, inlangProject).replaceAll(
     '\\',
     '/',
   );
@@ -224,7 +225,7 @@ function paraglideSkipCompiledStart(
         const stamp = readParaglideStamp(outdir);
         if (
           stamp !== null &&
-          stamp === paraglideInputsDigest(INLANG_PROJECT, compile)
+          stamp === paraglideInputsDigest(inlangProject, compile)
         ) {
           skippedStart = args;
           return;
@@ -280,12 +281,13 @@ function viteConfig(command: ConfigEnv['command']) {
     // same runtime (scripts/paraglide-dev-stamp.mjs).
     isServer: PARAGLIDE_VITE_IS_SERVER,
   };
+  const paraglideOptions: ParaglideOptions = {
+    project: INLANG_PROJECT,
+    outdir: PARAGLIDE_OUTDIR,
+    ...paraglideCompile,
+  };
   const paraglide = paraglideEnabledLocalesOnly(
-    paraglideVitePlugin({
-      project: INLANG_PROJECT,
-      outdir: PARAGLIDE_OUTDIR,
-      ...paraglideCompile,
-    }),
+    paraglideVitePlugin(paraglideOptions),
   );
 
   return defineConfig({
@@ -352,7 +354,7 @@ function viteConfig(command: ConfigEnv['command']) {
       // `build` is unaffected: the scanner is a dev-only optimization, and
       // the production build resolves through this plugin normally.
       command === 'serve'
-        ? paraglideSkipCompiledStart(paraglide, paraglideCompile)
+        ? paraglideSkipCompiledStart(paraglide, paraglideOptions)
         : paraglide,
       devtools({
         // Console piping POSTs every browser console call to

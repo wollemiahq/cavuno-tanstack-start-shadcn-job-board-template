@@ -44,7 +44,8 @@ function filesUnder(dir) {
 }
 
 /**
- * Digest of a compile of `project` with `options` (outputStructure,
+ * Digest of a compile of `project` with `options`: the compiler options
+ * other than project and outdir (the generator's are outputStructure,
  * strategy, isServer). Returns null when the project cannot be read, which
  * never matches a stamp.
  */
@@ -73,13 +74,10 @@ export function paraglideInputsDigest(project, options) {
   );
 
   const hash = createHash('sha256');
-  hash.update(
-    JSON.stringify({
-      outputStructure: options.outputStructure,
-      strategy: options.strategy,
-      isServer: options.isServer,
-    }),
-  );
+  // Every option, not a known few: one the generator does not pass (say
+  // `urlPatterns` in vite.config.ts) changes the plugin's output, so it
+  // must move the digest.
+  hash.update(JSON.stringify(options));
   const inputs = [
     join(projectDir, 'settings.json'),
     ...(messagesDir === null ? [] : filesUnder(messagesDir)),
