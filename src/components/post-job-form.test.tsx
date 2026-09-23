@@ -171,6 +171,78 @@ describe('PostJobForm', () => {
     ).toBeInTheDocument();
   });
 
+  it('sends an untouched required Yes/No field as No, and leaves an optional one unanswered', async () => {
+    const onSubmit = vi.fn().mockResolvedValue({
+      ok: true,
+      result: {
+        object: 'job_posting_result',
+        status: 'published',
+        jobId: 'job-1',
+        jobSlug: 'staff-product-designer',
+      },
+    });
+
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[
+          {
+            key: 'visa',
+            label: 'Visa sponsorship',
+            type: 'boolean',
+            required: true,
+          },
+          {
+            key: 'relocation',
+            label: 'Relocation assistance',
+            type: 'boolean',
+            required: false,
+          },
+        ]}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        plans={plans}
+        onSubmit={onSubmit}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+
+    for (const [label, value] of [
+      [m.postJob_companyNameLabel(), 'Acme Studio'],
+      [m.postJob_companyWebsiteLabel(), 'acme.example'],
+      [m.postJob_contactNameLabel(), 'Ada Lovelace'],
+      [m.postJob_contactEmailLabel(), 'ada@acme.example'],
+      [m.postJob_jobTitleLabel(), 'Staff Product Designer'],
+      [m.postJob_descriptionLabel(), 'Lead product design.'],
+      [m.postJob_applicationUrlLabel(), 'acme.example/careers'],
+    ]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    const officeLocations = screen.getByLabelText(
+      m.postJob_officeLocationsLabel(),
+    );
+    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
+    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+
+    const submitButton = screen
+      .getAllByRole('button')
+      .find((button) => button.getAttribute('type') === 'submit');
+    if (!submitButton) throw new Error('The post form needs a submit button');
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ customFieldValues: { visa: false } }),
+    );
+  });
+
   it('explains when posting is unavailable instead of rendering an unusable form', () => {
     render(
       <PostJobForm

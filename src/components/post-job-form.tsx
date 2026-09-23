@@ -608,6 +608,18 @@ export function PostJobForm({
         Array.isArray(value) ? value.length > 0 : value !== '',
       ),
     );
+    // A required Yes/No field left untouched means "No". Without it the
+    // board rejects the posting as unanswered, and the poster cannot tell
+    // which field. Optional ones stay unanswered.
+    for (const definition of customFields) {
+      if (
+        definition.type === 'boolean' &&
+        definition.required &&
+        submittableCustomFieldValues[definition.key] === undefined
+      ) {
+        submittableCustomFieldValues[definition.key] = false;
+      }
+    }
 
     try {
       const input: SubmitJobInput = {
