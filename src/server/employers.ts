@@ -8,10 +8,13 @@ import {
   type CreateTalentListBody,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
+  type ProfileChoiceQuery,
+  type ReplaceProfileObjectReferencesBody,
   type SendWorkEmailBody,
   type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
+  type UpdateProfileFieldValuesBody,
   type UpdateTalentListBody,
 } from '@cavuno/board';
 /**
@@ -187,6 +190,80 @@ export const updateCompany = createServerFn({ method: 'POST' })
       }),
     ),
   );
+
+/**
+ * The company's owner-editable custom fields and collection selections
+ * (`retrieveCustomFields` / `retrieveObjectReferences`), including private
+ * fields the public form layout never lists. Each read degrades to `null`
+ * on its own, so an API without them still renders the built-in form.
+ */
+export const getCompanyProfileFields = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async () => {
+      const headers = authedHeaders(context);
+      const companies = getBoard().me.companies;
+      const [customFields, objectReferences] = await Promise.all([
+        companies
+          .retrieveCustomFields(data.slug, { headers })
+          .catch(() => null),
+        companies
+          .retrieveObjectReferences(data.slug, { headers })
+          .catch(() => null),
+      ]);
+      return { customFields, objectReferences };
+    }),
+  );
+
+/** Additive write of the company's editable custom fields. */
+export const updateCompanyCustomFields = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; body: UpdateProfileFieldValuesBody }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.updateCustomFields(data.slug, data.body, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+/** Replaces the company's complete editable collection selection set. */
+export const updateCompanyObjectReferences = createServerFn({
+  method: 'POST',
+})
+  .validator(
+    (input: { slug: string; body: ReplaceProfileObjectReferencesBody }) =>
+      input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.updateObjectReferences(data.slug, data.body, {
+        headers: authedHeaders(context),
+      }),
+    ),
+  );
+
+/** Active choices of one editable company collection field. */
+export const listCompanyObjectReferenceChoices = createServerFn({
+  method: 'GET',
+})
+  .validator(
+    (input: { slug: string; fieldKey: string } & ProfileChoiceQuery) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) => {
+    const { slug, fieldKey, ...query } = data;
+    return getBoard().me.companies.listObjectReferenceChoices(
+      slug,
+      fieldKey,
+      query,
+      { headers: authedHeaders(context) },
+    );
+  });
 
 export const deleteCompany = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)
