@@ -20,7 +20,11 @@ import {
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getCompanyWorkspace, getJob } from '../server/employers';
-import { getRemotePermits, getSeoBase } from '../server/queries';
+import {
+  getJobCollectionNames,
+  getRemotePermits,
+  getSeoBase,
+} from '../server/queries';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { EmployerJobForm } from '@/components/employer-job-form';
@@ -40,9 +44,21 @@ export const Route = createFileRoute(
         getRemotePermits().catch(() => null),
         getSeoBase(),
       ]);
+      // The employer job read carries collection record ids only; name them
+      // for the picker's tags. Garnish: an unnamed entry still renders.
+      const collectionFields = Object.entries(job.collectionValues ?? {})
+        .filter(([, ids]) => ids.length > 0)
+        .map(([key, ids]) => ({ key, ids }));
+      const collectionNames =
+        collectionFields.length > 0
+          ? await getJobCollectionNames({
+              data: { fields: collectionFields },
+            }).catch(() => ({}))
+          : {};
       return {
         workspace,
         job,
+        collectionNames,
         remotePermits,
         seo,
         status: isEmployerJobExpired(job) ? ('expired' as const) : job.status,
@@ -75,7 +91,8 @@ export const Route = createFileRoute(
 const rootApi = getRouteApi('__root__');
 
 function EditJobPage() {
-  const { workspace, job, remotePermits, status } = Route.useLoaderData();
+  const { workspace, job, collectionNames, remotePermits, status } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const locale = getLocale();
   const officeLocationSuggestions = useLocationSuggestions(locale);
@@ -107,6 +124,7 @@ function EditJobPage() {
             customFields={board.customFields.job}
             mode={{ kind: 'edit', jobId: job.id, status }}
             job={job}
+            collectionNames={collectionNames}
           />
         </div>
       </PageContent>

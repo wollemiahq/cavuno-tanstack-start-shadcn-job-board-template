@@ -37,6 +37,7 @@ import {
   type EmployerJobFormDependencies,
 } from './employer-job-form';
 
+import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
 
@@ -1558,5 +1559,130 @@ describe('EmployerJobForm — board custom fields', () => {
       ),
     ).toBeInTheDocument();
     expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+});
+
+describe('EmployerJobForm — operator form layout', () => {
+  const clearance = {
+    key: 'clearance',
+    label: 'Security clearance',
+    type: 'short_text' as const,
+    required: false,
+  };
+  const benefits = {
+    key: 'benefits',
+    label: 'Benefits',
+    typeId: 'type-benefits',
+    multiple: true,
+    required: true,
+    maxSelections: 3,
+  };
+  function builtin(
+    key: string,
+    overrides: { visible?: boolean; locked?: boolean } = {},
+  ) {
+    return {
+      kind: 'builtin' as const,
+      key,
+      visible: overrides.visible ?? true,
+      required: overrides.locked ?? false,
+      locked: overrides.locked ?? false,
+      lockReason: overrides.locked ? ('google_required' as const) : null,
+    };
+  }
+  const layout: JobFormLayoutSource = {
+    forms: {
+      job: [
+        builtin('description', { locked: true }),
+        builtin('title', { locked: true }),
+        builtin('seniority', { visible: false }),
+        {
+          kind: 'custom',
+          key: 'clearance',
+          visible: false,
+          required: false,
+          definition: clearance,
+        },
+        builtin('workArrangement', { locked: true }),
+        builtin('applyMethod', { locked: true }),
+        {
+          kind: 'collection',
+          key: 'benefits',
+          visible: true,
+          required: true,
+          definition: benefits,
+        },
+      ],
+    },
+  };
+
+  async function renderCreate(
+    loadCollectionChoices = vi
+      .fn()
+      .mockResolvedValue([{ id: 'rec-pto', name: 'Paid time off' }]),
+  ) {
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={{ ...dependencies, loadCollectionChoices }}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        jobForm={layout}
+        customFields={[clearance]}
+      />,
+    );
+    return loadCollectionChoices;
+  }
+
+  it('renders the fields in layout order and leaves hidden ones out', async () => {
+    await renderCreate();
+
+    const description = screen.getByRole('toolbar', {
+      name: m.postJob_descriptionLabel(),
+    });
+    const title = screen.getByLabelText(m.postJob_jobTitleLabel());
+    expect(
+      description.compareDocumentPosition(title) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByLabelText('Benefits')).toBeInTheDocument();
+    expect(screen.queryByLabelText(m.postJob_seniorityLabel())).toBeNull();
+    expect(screen.queryByLabelText('Security clearance')).toBeNull();
+    // Not in the layout, so not on the form.
+    expect(screen.queryByLabelText(m.postJob_salaryMinLabel())).toBeNull();
+  });
+
+  it('blocks a create until a required collection field has an entry, then sends its record ids', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const loadCollectionChoices = await renderCreate();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findAllByText(
+        m.jobForm_customFieldRequiredError({ field: 'Benefits' }),
+      ),
+    ).not.toHaveLength(0);
+    expect(mocks.createJob).not.toHaveBeenCalled();
+
+    fireEvent.input(screen.getByLabelText('Benefits'), {
+      target: { value: 'Paid' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(await screen.findByText('Paid time off'));
+    expect(loadCollectionChoices).toHaveBeenCalledWith('benefits', '');
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]?.[0]?.data.body;
+    expect(body.collectionValues).toEqual({ benefits: ['rec-pto'] });
+    // The hidden custom field is not collected, so it is not sent.
+    expect(body.customFieldValues).toBeUndefined();
+    expect(body.seniority).toBeUndefined();
   });
 });

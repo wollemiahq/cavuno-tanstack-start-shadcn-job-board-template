@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
 import { Check, ImagePlus } from 'lucide-react';
@@ -85,15 +85,22 @@ import type {
   SubmitJobResult,
 } from '../server/post';
 import {
-  narrowOptions,
-  resolveJobFormConstraints,
-  type JobFormSource,
-} from '@/board/job-form';
+  formEntryKey,
+  jobFormConstraintsForLayout,
+  jobLayoutCustomFields,
+  layoutRows,
+  resolveJobFormLayout,
+  showsBuiltin,
+  type JobFormEntry,
+  type JobFormLayoutSource,
+} from '@/board/form-layout';
+import { narrowOptions } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
 import {
-  CustomFieldsGroup,
+  CustomFieldInput,
+  missingRequiredCustomField,
   type CustomFieldValues,
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
@@ -195,8 +202,13 @@ export type PostJobFormProps = {
   officeLocationSuggestions: LocationSuggestionState;
   /** Board-defined custom field definitions, in operator-config order. */
   customFields: PublicBoard['customFields']['job'];
-  /** Built-in field visibility from `board.context().jobForm`. */
-  jobForm?: JobFormSource | null;
+  /**
+   * The board context as far as the job form: `jobForm` (allow-lists,
+   * bounds) and `forms.job`, the operator's field order with visibility and
+   * required flags. Without `forms` (an older API) the form keeps its
+   * pre-layout order.
+   */
+  jobForm?: JobFormLayoutSource | null;
   /**
    * The remote-permit taxonomy (regions / country groups) for the
    * geographic-restriction scope; `null` degrades to worldwide/countries.
@@ -245,7 +257,13 @@ export function PostJobForm({
   onCheckout,
   DescriptionEditor = RichTextEditor,
 }: PostJobFormProps) {
-  const jobForm = resolveJobFormConstraints(jobFormSource);
+  // The operator's field order (or the pre-layout order on an older API).
+  // Visibility and required state for salary, seniority and location come
+  // from it; allow-lists and bounds still come from `jobForm`.
+  const layout = resolveJobFormLayout(jobFormSource, customFields);
+  const jobForm = jobFormConstraintsForLayout(jobFormSource, layout);
+  const layoutCustomFields = jobLayoutCustomFields(layout);
+  const shows = (key: JobFormEntry['key']) => showsBuiltin(layout, key);
   // A board narrowed to e.g. remote-only or EUR-only would otherwise open
   // the form pre-filled with a value it rejects, and the employer would
   // never think to change it.
@@ -509,7 +527,7 @@ export function PostJobForm({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isRichTextEmpty(description)) {
+    if (shows('description') && isRichTextEmpty(description)) {
       updateFormState({
         status: {
           kind: 'error',
@@ -530,6 +548,15 @@ export function PostJobForm({
           message: m.jobForm_seniorityRequiredError(),
         },
       });
+      return;
+    }
+
+    const customFieldError = missingRequiredCustomField(
+      layoutCustomFields,
+      customFieldValues,
+    );
+    if (customFieldError) {
+      updateFormState({ status: { kind: 'error', message: customFieldError } });
       return;
     }
 
@@ -611,7 +638,7 @@ export function PostJobForm({
     // A required Yes/No field left untouched means "No". Without it the
     // board rejects the posting as unanswered, and the poster cannot tell
     // which field. Optional ones stay unanswered.
-    for (const definition of customFields) {
+    for (const definition of layoutCustomFields) {
       if (
         definition.type === 'boolean' &&
         definition.required &&
@@ -629,13 +656,18 @@ export function PostJobForm({
         contactEmail: String(form.get('contactEmail')),
         title: String(form.get('title')),
         description,
-        employmentType: String(form.get('employmentType')),
+        // A hidden employment type keeps the form's default, like the
+        // dashboard form: the posting body always carries one.
+        employmentType:
+          readString(form, 'employmentType') ?? allowedEmploymentTypes[0],
         remoteOption: String(form.get('remoteOption')),
         officeLocations: jobForm.location.visible
           ? officeLocations.map(({ key: _key, ...location }) => location)
           : [],
-        applicationUrl:
-          normalizeApplicationTarget(readString(form, 'applicationUrl')) ?? '',
+        applicationUrl: shows('applyMethod')
+          ? (normalizeApplicationTarget(readString(form, 'applicationUrl')) ??
+            '')
+          : '',
         selectedPlan: selectedPlanId,
         logoUrl: logoUrl ?? undefined,
       };
@@ -650,7 +682,7 @@ export function PostJobForm({
         input.salaryTimeframe = salaryTimeframe;
       }
       if (jobForm.seniority.visible && seniority) input.seniority = seniority;
-      if (remoteOption === 'remote') {
+      if (remoteOption === 'remote' && shows('remoteEligibility')) {
         Object.assign(
           input,
           remotePermitsSubmission(
@@ -709,6 +741,282 @@ export function PostJobForm({
     }
   }
 
+  function renderBuiltin(key: JobFormEntry['key']): ReactNode {
+    switch (key) {
+      case 'employmentType':
+        return (
+          <SelectField
+            label={m.postJob_employmentTypeLabel()}
+            name="employmentType"
+            items={employmentItems}
+          />
+        );
+      case 'seniority':
+        return (
+          <Field>
+            <FieldLabel htmlFor="seniority">
+              {m.postJob_seniorityLabel()}
+            </FieldLabel>
+            <Select
+              items={seniorityItems}
+              name="seniority"
+              value={seniority}
+              onValueChange={(value: string | null) =>
+                updateFormState({
+                  seniority: value ?? null,
+                })
+              }
+            >
+              <SelectTrigger id="seniority" className="w-full">
+                <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
+              </SelectTrigger>
+              <SelectContent>
+                {seniorityItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        );
+      case 'title':
+        return (
+          <LabeledInput
+            label={m.postJob_jobTitleLabel()}
+            name="title"
+            required
+          />
+        );
+      case 'workArrangement':
+        return (
+          <SelectField
+            label={m.postJob_remoteOptionLabel()}
+            name="remoteOption"
+            items={remoteItems}
+            value={remoteOption}
+            onValueChange={(value) =>
+              updateFormState({
+                remoteOption:
+                  remoteOptionChoice(searchString(value)) ??
+                  defaultRemoteOption,
+                officeLocationsError: false,
+              })
+            }
+          />
+        );
+      case 'location':
+        return (
+          <Field data-invalid={officeLocationsError || undefined}>
+            <FieldLabel htmlFor="officeLocations">
+              {m.postJob_officeLocationsLabel()}
+            </FieldLabel>
+            <PlaceTagsField
+              id="officeLocations"
+              tags={officeLocations.map((location) => ({
+                key: location.key,
+                label: location.displayName,
+              }))}
+              onAddSuggestion={(place: LocationSuggestionVM) =>
+                addOfficeLocation({
+                  key: place.id,
+                  displayName: place.name,
+                  countryCode: place.countryCode ?? undefined,
+                  region: place.regionCode ?? undefined,
+                })
+              }
+              onAddFreeText={(text) =>
+                addOfficeLocation({ key: `text:${text}`, displayName: text })
+              }
+              onRemove={(key) =>
+                updateFormState({
+                  officeLocations: officeLocations.filter(
+                    (location) => location.key !== key,
+                  ),
+                })
+              }
+              placeholder={m.postJob_officeLocationsPlaceholder()}
+              searchingText={m.locationCombobox_searchingText()}
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+              {...officeLocationSuggestions}
+            />
+            {remoteOption === 'remote' ? (
+              <FieldDescription>
+                {m.postJob_officeLocationsRemoteHelperText()}
+              </FieldDescription>
+            ) : null}
+            {officeLocationsError ? (
+              <FieldError>
+                {m.postJob_officeLocationsRequiredError()}
+              </FieldError>
+            ) : null}
+          </Field>
+        );
+      case 'remoteEligibility':
+        return remoteOption === 'remote' ? (
+          <Field>
+            <FieldLabel htmlFor="remotePermits">
+              {m.postJob_remoteRestrictionLabel()}
+            </FieldLabel>
+            <PlaceTagsField
+              id="remotePermits"
+              tags={remotePermitSelections.map((selection) => ({
+                key: `${selection.type}:${selection.value}`,
+                label: selection.label,
+              }))}
+              onAddSuggestion={(choice: LocationSuggestionVM) => {
+                const separator = choice.id.indexOf(':');
+                const selection = {
+                  type: choice.id.slice(0, separator),
+                  value: choice.id.slice(separator + 1),
+                  label: choice.name,
+                };
+                setFormState((current) =>
+                  current.remotePermitSelections.some(
+                    (entry) =>
+                      entry.type === selection.type &&
+                      entry.value === selection.value,
+                  )
+                    ? current
+                    : {
+                        ...current,
+                        remotePermitSelections: [
+                          ...current.remotePermitSelections,
+                          selection,
+                        ],
+                      },
+                );
+              }}
+              onRemove={(key) =>
+                updateFormState({
+                  remotePermitSelections: remotePermitSelections.filter(
+                    (selection) =>
+                      `${selection.type}:${selection.value}` !== key,
+                  ),
+                })
+              }
+              suggestions={permitSuggestions}
+              loading={false}
+              onQueryChange={setPermitQuery}
+              placeholder={m.postJob_remoteRestrictionPlaceholder()}
+              searchingText={m.locationCombobox_searchingText()}
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+            />
+            <FieldDescription>
+              {m.postJob_remoteRestrictionHelperText()}
+            </FieldDescription>
+          </Field>
+        ) : null;
+      case 'description':
+        return (
+          <Field>
+            <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
+            <DescriptionEditor
+              value={description}
+              onChange={(value) => updateFormState({ description: value })}
+              ariaLabel={m.postJob_descriptionLabel()}
+              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
+            />
+          </Field>
+        );
+      case 'salary':
+        return (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <SelectField
+              label={m.postJob_currencyLabel()}
+              name="salaryCurrency"
+              items={currencyItems}
+              value={currency}
+              onValueChange={(value) =>
+                updateFormState({ currency: value ?? defaultCurrency })
+              }
+            />
+            <LabeledInput
+              label={m.postJob_salaryMinLabel()}
+              name="salaryMin"
+              type="number"
+              min={0}
+            />
+            <LabeledInput
+              label={m.postJob_salaryMaxLabel()}
+              name="salaryMax"
+              type="number"
+              min={0}
+            />
+            <SelectField
+              label={m.postJob_salaryTimeframeLabel()}
+              name="salaryTimeframe"
+              items={timeframeItems}
+              value={salaryTimeframe}
+              onValueChange={(value) =>
+                updateFormState({
+                  salaryTimeframe:
+                    salaryTimeframeChoice(searchString(value)) ??
+                    DEFAULT_SALARY_TIMEFRAME,
+                })
+              }
+            />
+          </div>
+        );
+      case 'applyMethod':
+        return (
+          <Field>
+            <FieldLabel htmlFor="applicationUrl">
+              {m.postJob_applicationUrlLabel()}
+            </FieldLabel>
+            <Input
+              id="applicationUrl"
+              name="applicationUrl"
+              required
+              placeholder={m.postJob_applicationUrlPlaceholder()}
+            />
+          </Field>
+        );
+      default:
+        // `company` renders in the company section above.
+        return null;
+    }
+  }
+
+  function renderEntry(entry: JobFormEntry): ReactNode {
+    if (entry.kind === 'builtin') return renderBuiltin(entry.key);
+    // The anonymous posting body takes no collection values: collection
+    // fields belong to the signed-in employer job form.
+    if (entry.kind === 'collection') return null;
+    return (
+      <CustomFieldInput
+        definition={entry.definition}
+        required={entry.required}
+        value={customFieldValues[entry.key]}
+        onChange={(value) =>
+          setFormState((current) => ({
+            ...current,
+            customFieldValues: {
+              ...current.customFieldValues,
+              [entry.key]: value,
+            },
+          }))
+        }
+      />
+    );
+  }
+
+  // The role section: every entry but the company block and the collection
+  // fields, with employment type and seniority side by side wherever the
+  // layout places them next to each other.
+  const rows = layoutRows(
+    layout.filter(
+      (entry) =>
+        entry.kind !== 'collection' &&
+        !(entry.kind === 'builtin' && entry.key === 'company'),
+    ),
+    (entry) =>
+      entry.kind === 'builtin' &&
+      (entry.key === 'employmentType' || entry.key === 'seniority')
+        ? 'roleType'
+        : null,
+  );
+
   if (status.kind === 'done') {
     return (
       <Card className="mx-auto max-w-xl text-center">
@@ -745,86 +1053,95 @@ export function PostJobForm({
       onSubmit={handleSubmit}
     >
       <PageSection title={m.postJob_companyHeading()}>
-        <Field data-invalid={logoStatus.kind === 'error'}>
-          <input
-            ref={logoInputRef}
-            id="companyLogo"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            tabIndex={-1}
-            aria-hidden="true"
-            className="sr-only"
-            disabled={logoStatus.kind === 'working'}
-            onChange={onLogoChange}
-          />
-          <Attachment
-            data-testid="company-logo-dropzone"
-            className="w-full"
-            state={
-              logoStatus.kind === 'working'
-                ? 'uploading'
-                : logoStatus.kind === 'error'
-                  ? 'error'
-                  : logoUrl
-                    ? 'done'
-                    : 'idle'
-            }
-            onDragOver={onLogoDragOver}
-            onDrop={onLogoDrop}
-          >
-            <AttachmentMedia variant={logoUrl ? 'image' : 'icon'}>
-              {logoStatus.kind === 'working' ? (
-                <Spinner />
-              ) : logoUrl ? (
-                <img src={logoUrl} alt={m.postJob_logoPreviewAlt()} />
-              ) : (
-                <ImagePlus aria-hidden="true" />
+        {/* The layout's `company` field is the poster's company block
+            (logo, name, website). Contact details are not layout fields:
+            the posting always collects them. */}
+        {shows('company') ? (
+          <Field data-invalid={logoStatus.kind === 'error'}>
+            <input
+              ref={logoInputRef}
+              id="companyLogo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="sr-only"
+              disabled={logoStatus.kind === 'working'}
+              onChange={onLogoChange}
+            />
+            <Attachment
+              data-testid="company-logo-dropzone"
+              className="w-full"
+              state={
+                logoStatus.kind === 'working'
+                  ? 'uploading'
+                  : logoStatus.kind === 'error'
+                    ? 'error'
+                    : logoUrl
+                      ? 'done'
+                      : 'idle'
+              }
+              onDragOver={onLogoDragOver}
+              onDrop={onLogoDrop}
+            >
+              <AttachmentMedia variant={logoUrl ? 'image' : 'icon'}>
+                {logoStatus.kind === 'working' ? (
+                  <Spinner />
+                ) : logoUrl ? (
+                  <img src={logoUrl} alt={m.postJob_logoPreviewAlt()} />
+                ) : (
+                  <ImagePlus aria-hidden="true" />
+                )}
+              </AttachmentMedia>
+              <AttachmentContent>
+                <AttachmentTitle>
+                  {logoStatus.kind === 'working'
+                    ? m.postJob_workingLabel()
+                    : logoUrl
+                      ? m.logoUpload_changeLogoLabel()
+                      : m.postJob_logoLabel()}
+                </AttachmentTitle>
+                <AttachmentDescription>
+                  {m.postJob_logoDropHint()}
+                </AttachmentDescription>
+              </AttachmentContent>
+              {logoStatus.kind === 'working' ? null : (
+                <AttachmentTrigger
+                  aria-label={
+                    logoUrl
+                      ? m.logoUpload_changeLogoLabel()
+                      : m.postJob_logoLabel()
+                  }
+                  onDragOver={onLogoDragOver}
+                  onDrop={onLogoDrop}
+                  onClick={() => logoInputRef.current?.click()}
+                />
               )}
-            </AttachmentMedia>
-            <AttachmentContent>
-              <AttachmentTitle>
-                {logoStatus.kind === 'working'
-                  ? m.postJob_workingLabel()
-                  : logoUrl
-                    ? m.logoUpload_changeLogoLabel()
-                    : m.postJob_logoLabel()}
-              </AttachmentTitle>
-              <AttachmentDescription>
-                {m.postJob_logoDropHint()}
-              </AttachmentDescription>
-            </AttachmentContent>
-            {logoStatus.kind === 'working' ? null : (
-              <AttachmentTrigger
-                aria-label={
-                  logoUrl
-                    ? m.logoUpload_changeLogoLabel()
-                    : m.postJob_logoLabel()
-                }
-                onDragOver={onLogoDragOver}
-                onDrop={onLogoDrop}
-                onClick={() => logoInputRef.current?.click()}
-              />
-            )}
-          </Attachment>
-          {logoStatus.kind === 'error' ? (
-            <FieldError>{logoStatus.message}</FieldError>
-          ) : null}
-        </Field>
+            </Attachment>
+            {logoStatus.kind === 'error' ? (
+              <FieldError>{logoStatus.message}</FieldError>
+            ) : null}
+          </Field>
+        ) : null}
         <div className="grid gap-5 sm:grid-cols-2">
-          <LabeledInput
-            label={m.postJob_companyNameLabel()}
-            name="companyName"
-            required
-            value={companyName}
-            onChange={(event) =>
-              updateFormState({ companyName: event.target.value })
-            }
-          />
-          <LabeledUrlInput
-            label={m.postJob_companyWebsiteLabel()}
-            name="companyWebsite"
-            onBlur={onWebsiteBlur}
-          />
+          {shows('company') ? (
+            <>
+              <LabeledInput
+                label={m.postJob_companyNameLabel()}
+                name="companyName"
+                required
+                value={companyName}
+                onChange={(event) =>
+                  updateFormState({ companyName: event.target.value })
+                }
+              />
+              <LabeledUrlInput
+                label={m.postJob_companyWebsiteLabel()}
+                name="companyWebsite"
+                onBlur={onWebsiteBlur}
+              />
+            </>
+          ) : null}
           <LabeledInput
             label={m.postJob_contactNameLabel()}
             name="contactName"
@@ -841,233 +1158,28 @@ export function PostJobForm({
 
       <PageSection title={m.postJob_roleHeading()}>
         <div className="grid gap-5">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <SelectField
-              label={m.postJob_employmentTypeLabel()}
-              name="employmentType"
-              items={employmentItems}
-            />
-            {jobForm.seniority.visible ? (
-              <Field>
-                <FieldLabel htmlFor="seniority">
-                  {m.postJob_seniorityLabel()}
-                </FieldLabel>
-                <Select
-                  items={seniorityItems}
-                  name="seniority"
-                  value={seniority}
-                  onValueChange={(value: string | null) =>
-                    updateFormState({
-                      seniority: value ?? null,
-                    })
-                  }
-                >
-                  <SelectTrigger id="seniority" className="w-full">
-                    <SelectValue
-                      placeholder={m.postJob_seniorityPlaceholder()}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seniorityItems.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            ) : null}
-          </div>
-          <LabeledInput
-            label={m.postJob_jobTitleLabel()}
-            name="title"
-            required
-          />
-          <SelectField
-            label={m.postJob_remoteOptionLabel()}
-            name="remoteOption"
-            items={remoteItems}
-            value={remoteOption}
-            onValueChange={(value) =>
-              updateFormState({
-                remoteOption:
-                  remoteOptionChoice(searchString(value)) ??
-                  defaultRemoteOption,
-                officeLocationsError: false,
-              })
-            }
-          />
-          {jobForm.location.visible ? (
-            <Field data-invalid={officeLocationsError || undefined}>
-              <FieldLabel htmlFor="officeLocations">
-                {m.postJob_officeLocationsLabel()}
-              </FieldLabel>
-              <PlaceTagsField
-                id="officeLocations"
-                tags={officeLocations.map((location) => ({
-                  key: location.key,
-                  label: location.displayName,
-                }))}
-                onAddSuggestion={(place: LocationSuggestionVM) =>
-                  addOfficeLocation({
-                    key: place.id,
-                    displayName: place.name,
-                    countryCode: place.countryCode ?? undefined,
-                    region: place.regionCode ?? undefined,
-                  })
-                }
-                onAddFreeText={(text) =>
-                  addOfficeLocation({ key: `text:${text}`, displayName: text })
-                }
-                onRemove={(key) =>
-                  updateFormState({
-                    officeLocations: officeLocations.filter(
-                      (location) => location.key !== key,
-                    ),
-                  })
-                }
-                placeholder={m.postJob_officeLocationsPlaceholder()}
-                searchingText={m.locationCombobox_searchingText()}
-                removeAriaLabel={(name) =>
-                  m.placeTags_removeAriaLabel({ name })
-                }
-                {...officeLocationSuggestions}
-              />
-              {remoteOption === 'remote' ? (
-                <FieldDescription>
-                  {m.postJob_officeLocationsRemoteHelperText()}
-                </FieldDescription>
-              ) : null}
-              {officeLocationsError ? (
-                <FieldError>
-                  {m.postJob_officeLocationsRequiredError()}
-                </FieldError>
-              ) : null}
-            </Field>
-          ) : null}
-          {remoteOption === 'remote' ? (
-            <Field>
-              <FieldLabel htmlFor="remotePermits">
-                {m.postJob_remoteRestrictionLabel()}
-              </FieldLabel>
-              <PlaceTagsField
-                id="remotePermits"
-                tags={remotePermitSelections.map((selection) => ({
-                  key: `${selection.type}:${selection.value}`,
-                  label: selection.label,
-                }))}
-                onAddSuggestion={(choice: LocationSuggestionVM) => {
-                  const separator = choice.id.indexOf(':');
-                  const selection = {
-                    type: choice.id.slice(0, separator),
-                    value: choice.id.slice(separator + 1),
-                    label: choice.name,
-                  };
-                  setFormState((current) =>
-                    current.remotePermitSelections.some(
-                      (entry) =>
-                        entry.type === selection.type &&
-                        entry.value === selection.value,
-                    )
-                      ? current
-                      : {
-                          ...current,
-                          remotePermitSelections: [
-                            ...current.remotePermitSelections,
-                            selection,
-                          ],
-                        },
-                  );
-                }}
-                onRemove={(key) =>
-                  updateFormState({
-                    remotePermitSelections: remotePermitSelections.filter(
-                      (selection) =>
-                        `${selection.type}:${selection.value}` !== key,
-                    ),
-                  })
-                }
-                suggestions={permitSuggestions}
-                loading={false}
-                onQueryChange={setPermitQuery}
-                placeholder={m.postJob_remoteRestrictionPlaceholder()}
-                searchingText={m.locationCombobox_searchingText()}
-                removeAriaLabel={(name) =>
-                  m.placeTags_removeAriaLabel({ name })
-                }
-              />
-              <FieldDescription>
-                {m.postJob_remoteRestrictionHelperText()}
-              </FieldDescription>
-            </Field>
-          ) : null}
-          <Field>
-            <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
-            <DescriptionEditor
-              value={description}
-              onChange={(value) => updateFormState({ description: value })}
-              ariaLabel={m.postJob_descriptionLabel()}
-              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
-            />
-          </Field>
-          {jobForm.salary.visible ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <SelectField
-                label={m.postJob_currencyLabel()}
-                name="salaryCurrency"
-                items={currencyItems}
-                value={currency}
-                onValueChange={(value) =>
-                  updateFormState({ currency: value ?? defaultCurrency })
-                }
-              />
-              <LabeledInput
-                label={m.postJob_salaryMinLabel()}
-                name="salaryMin"
-                type="number"
-                min={0}
-              />
-              <LabeledInput
-                label={m.postJob_salaryMaxLabel()}
-                name="salaryMax"
-                type="number"
-                min={0}
-              />
-              <SelectField
-                label={m.postJob_salaryTimeframeLabel()}
-                name="salaryTimeframe"
-                items={timeframeItems}
-                value={salaryTimeframe}
-                onValueChange={(value) =>
-                  updateFormState({
-                    salaryTimeframe:
-                      salaryTimeframeChoice(searchString(value)) ??
-                      DEFAULT_SALARY_TIMEFRAME,
-                  })
-                }
-              />
-            </div>
-          ) : null}
-          <Field>
-            <FieldLabel htmlFor="applicationUrl">
-              {m.postJob_applicationUrlLabel()}
-            </FieldLabel>
-            <Input
-              id="applicationUrl"
-              name="applicationUrl"
-              required
-              placeholder={m.postJob_applicationUrlPlaceholder()}
-            />
-          </Field>
-          {/* Board-defined custom fields render as their own group
-              after the built-in fields, in operator-config order. */}
-          <CustomFieldsGroup
-            definitions={customFields}
-            values={customFieldValues}
-            onChange={(values) =>
-              updateFormState({ customFieldValues: values })
-            }
-          />
+          {/* The operator's field order: built-ins and custom fields each
+              at their own position. Hidden fields are not rendered. */}
+          {rows.map((row) =>
+            row.entries.length > 1 ? (
+              <div
+                key={row.entries.map(formEntryKey).join('|')}
+                className="grid gap-5 sm:grid-cols-2"
+              >
+                {row.entries.map((entry) => (
+                  <Fragment key={formEntryKey(entry)}>
+                    {renderEntry(entry)}
+                  </Fragment>
+                ))}
+              </div>
+            ) : (
+              row.entries.map((entry) => (
+                <Fragment key={formEntryKey(entry)}>
+                  {renderEntry(entry)}
+                </Fragment>
+              ))
+            ),
+          )}
         </div>
       </PageSection>
 
