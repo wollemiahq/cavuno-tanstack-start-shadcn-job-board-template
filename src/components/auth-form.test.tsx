@@ -180,7 +180,7 @@ describe('RegistrationPage', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('alex@example.com');
   });
 
-  it('surfaces an unmapped failure code instead of a bare generic line', async () => {
+  it('surfaces the API sentence for an unmapped failure code on an English board', async () => {
     await render(
       <RegistrationPage
         title="Create your account"
@@ -207,9 +207,6 @@ describe('RegistrationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again. (preview_mode_write_forbidden)',
-    );
-    expect(await screen.findByRole('alert')).not.toHaveTextContent(
       'Preview writes are disabled',
     );
   });

@@ -2,10 +2,12 @@
  * Board API errors → viewer-locale copy. Server functions return
  * `{ code, message }` where `message` is the API's ENGLISH sentence — wire
  * text, never display copy. Resolve the display string from the stable
- * `code` here; unknown codes get the generic line rather than leaking the
- * English wire message into a localized form.
+ * `code` here. An unknown code shows the API's English sentence on an
+ * English board, and the generic line (plus the code) on any other locale
+ * rather than leaking English wire text into a localized form.
  */
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 
 /**
  * Keys are REAL BoardApiErrorCode values (BOARD_API_ERROR_CODES) plus the
@@ -84,14 +86,31 @@ function codeMessage(code: string): (() => string) | undefined {
   return CODE_MESSAGES[code as keyof typeof CODE_MESSAGES];
 }
 
+const NON_SENTENCE_CODES = new Set(['unknown', 'unknown_error']);
+
 export function boardErrorMessage(result: {
   code?: string | null;
   message?: string | null;
 }): string {
   const resolve = result.code ? codeMessage(result.code) : undefined;
   if (resolve) return resolve();
+  // An unmapped Board API code. Its `message` is an English sentence that
+  // names the actual problem, so an English board shows it rather than a
+  // generic line; any other locale keeps the generic line, because English
+  // wire text must not leak into a localized form.
+  // `unknown` (this repo's catch-all) and `unknown_error` (the SDK's code for
+  // a non-JSON response, whose message is only the HTTP status text such as
+  // "Bad Gateway") carry no API sentence worth showing.
+  const wire = result.message?.trim();
+  if (
+    result.code &&
+    !NON_SENTENCE_CODES.has(result.code) &&
+    wire &&
+    getLocale().startsWith('en')
+  ) {
+    return wire;
+  }
   const generic = m.boardError_genericText();
-  // Keep the stable code so a preview/register miss is diagnosable. Never
-  // interpolate `message` — that is English wire text.
+  // Keep the stable code so a preview/register miss is diagnosable.
   return result.code ? `${generic} (${result.code})` : generic;
 }

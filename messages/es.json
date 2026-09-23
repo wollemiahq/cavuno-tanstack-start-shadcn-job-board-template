@@ -1285,6 +1285,8 @@
   "jobDetail_workPermitsLabel": "Permisos de trabajo",
   "jobDetail_worldwideLabel": "Todo el mundo",
   "jobForm_currencyNotAllowedError": "Este portal solo acepta salarios en: {currencies}.",
+  "jobForm_customFieldInvalidError": "Revisa {field}: este portal no acepta ese valor.",
+  "jobForm_customFieldRequiredError": "Rellena {field} antes de enviar.",
   "jobForm_officeLocationCountryNotAllowedError": "Este portal solo acepta ubicaciones de oficina en: {countries}.",
   "jobForm_optionNotAllowedError": "Esta oferta usa una opción que el portal ya no acepta. Elige un nuevo valor antes de guardar.",
   "jobForm_salaryAboveMaxError": "El salario no puede superar {max}.",

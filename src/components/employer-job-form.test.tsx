@@ -1329,3 +1329,231 @@ describe('EmployerJobForm — members-only board', () => {
     expect(screen.queryByTestId('membership-gate')).toBeNull();
   });
 });
+
+/**
+ * Board-defined custom fields (Settings → Job form) are one configuration
+ * for every posting surface: the employer form renders the same definitions
+ * the public /post form does, sends the answers, prefills them on edit and
+ * blocks a save that leaves a required one empty — before the platform's
+ * own 400 would.
+ */
+describe('EmployerJobForm — board custom fields', () => {
+  const customFields = [
+    {
+      key: 'team',
+      label: 'Team',
+      type: 'short_text' as const,
+      required: true,
+    },
+    {
+      key: 'perks',
+      label: 'Perks',
+      type: 'multi_select' as const,
+      required: false,
+      options: [
+        { key: 'gym', label: 'Gym' },
+        { key: 'remote', label: 'Remote stipend' },
+      ],
+    },
+  ];
+
+  // `customFieldValues` reaches `EmployerJob` with the Board API release that
+  // opened the employer job surface to custom fields; widened here so the
+  // fixture also compiles against the SDK pin that predates it.
+  const publishedWithAnswers: EmployerJob & {
+    customFieldValues?: Record<string, string | string[] | boolean | number>;
+  } = {
+    ...draftJob,
+    status: 'published',
+    customFieldValues: { team: 'Platform', perks: ['gym'] },
+  };
+
+  it('renders the definitions and sends the answers on a draft create', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Team'), {
+      target: { value: 'Platform' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Gym' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({
+      team: 'Platform',
+      perks: ['gym'],
+    });
+  });
+
+  it('sends no bag at all when the board defines no custom fields', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect('customFieldValues' in body).toBe(false);
+  });
+
+  it('prefills the stored answers on edit and clears a removed one with null', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={publishedWithAnswers}
+        customFields={customFields}
+      />,
+    );
+
+    expect(screen.getByLabelText('Team')).toHaveValue('Platform');
+    expect(screen.getByRole('checkbox', { name: 'Gym' })).toBeChecked();
+
+    // Untick the only perk: the edit must send an explicit clear, because
+    // the update is an additive merge and an omitted key keeps the old value.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Gym' }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({ team: 'Platform', perks: null });
+  });
+
+  it('sends an untouched required Yes/No field as false, and leaves an optional one unanswered', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={[
+          {
+            key: 'visa',
+            label: 'Visa sponsorship',
+            type: 'boolean',
+            required: true,
+          },
+          {
+            key: 'relocation',
+            label: 'Relocation assistance',
+            type: 'boolean',
+            required: false,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({ visa: false });
+  });
+
+  it('names the field when the board refuses a custom field the form could not check', async () => {
+    // e.g. the operator made "Perks" required after this form loaded.
+    mocks.createJob.mockResolvedValue({
+      ok: false,
+      code: 'jobs_constraint_violation',
+      message: '"Perks" is required on this board',
+      violations: [
+        {
+          code: 'custom_field_required',
+          path: ['customFieldValues', 'perks'],
+          params: { label: 'Perks' },
+        },
+      ],
+    });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Team'), {
+      target: { value: 'Platform' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Perks' }),
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('blocks a save that leaves a required custom field empty', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Team' }),
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+});

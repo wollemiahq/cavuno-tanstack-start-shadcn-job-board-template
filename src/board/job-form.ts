@@ -17,6 +17,8 @@
  * permissive for that reason.
  */
 
+import { searchString } from '@/lib/pagination';
+
 export type JobFormVisibility = {
   salary: { visible: boolean };
   seniority: { visible: boolean };
@@ -174,4 +176,65 @@ export function narrowOptions<T extends string>(
   if (!allowed) return [...all];
   const permitted = all.filter((value) => allowed.includes(value));
   return permitted.length > 0 ? permitted : [...all];
+}
+
+/**
+ * One broken Job form rule, as a `jobs_constraint_violation` error lists it
+ * in `details.violations`. `code` is the platform's stable rule code (e.g.
+ * `custom_field_required`, `salary_required`); `path` names the field
+ * (`["customFieldValues", "<key>"]` for a custom field); `params` carries the
+ * values the message interpolates.
+ */
+export type JobFormViolation = {
+  code: string;
+  path: string[];
+  params?: {
+    label?: string;
+    min?: string;
+    max?: string;
+    countries?: string;
+  };
+};
+
+/** The documented `details` of a `jobs_constraint_violation`, before checks. */
+type ViolationDetails = {
+  violations?: ReadonlyArray<{
+    code?: string;
+    path?: ReadonlyArray<string | number>;
+    params?: JobFormViolation['params'];
+  } | null>;
+};
+
+/**
+ * Read the violations off a Board API error's `details`. Anything that does
+ * not match the documented shape is dropped: an unreadable detail falls back
+ * to the error's code, never to a crash.
+ */
+export function parseJobFormViolations<T>(details: T): JobFormViolation[] {
+  if (details === null || details === undefined || Object(details) !== details)
+    return [];
+  // SAFETY: Board API error details are object records; a
+  // `jobs_constraint_violation` documents `violations` as `{ code, path,
+  // params }` entries, and every field read below is re-checked before use.
+  const { violations } = details as ViolationDetails;
+  if (!Array.isArray(violations)) return [];
+  return violations.flatMap((entry): JobFormViolation[] => {
+    const code = searchString(entry?.code);
+    const path = entry?.path;
+    if (!code || !Array.isArray(path)) return [];
+    const violation: JobFormViolation = {
+      code,
+      path: path.map((segment) => String(segment)),
+    };
+    const params = entry?.params;
+    if (params) {
+      violation.params = {
+        label: searchString(params.label),
+        min: searchString(params.min),
+        max: searchString(params.max),
+        countries: searchString(params.countries),
+      };
+    }
+    return [violation];
+  });
 }

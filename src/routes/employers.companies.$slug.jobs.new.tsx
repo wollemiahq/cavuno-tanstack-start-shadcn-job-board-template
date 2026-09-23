@@ -93,6 +93,7 @@ function NewJobPage() {
             billingOptions={workspace.billingOptions.data}
             officeLocationSuggestions={officeLocationSuggestions}
             jobForm={board}
+            customFields={board.customFields.job}
             mode={{ kind: 'create' }}
             membershipGate={
               <MembershipPostGate
