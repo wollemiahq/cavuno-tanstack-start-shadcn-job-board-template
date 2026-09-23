@@ -250,33 +250,3 @@ export function missingRequiredCustomField(
     ? m.jobForm_customFieldRequiredError({ field: customFieldLabel(missing) })
     : null;
 }
-
-/**
- * Board-defined custom fields as one group, in the order given. Forms that
- * follow the operator's layout render `CustomFieldInput` at each field's own
- * position instead.
- */
-export function CustomFieldsGroup({
-  definitions,
-  values,
-  onChange,
-}: {
-  definitions: CustomFieldDefinition[];
-  values: CustomFieldValues;
-  onChange: (values: CustomFieldValues) => void;
-}) {
-  if (definitions.length === 0) return null;
-
-  return (
-    <>
-      {definitions.map((definition) => (
-        <CustomFieldInput
-          key={definition.key}
-          definition={definition}
-          value={values[definition.key]}
-          onChange={(value) => onChange({ ...values, [definition.key]: value })}
-        />
-      ))}
-    </>
-  );
-}
