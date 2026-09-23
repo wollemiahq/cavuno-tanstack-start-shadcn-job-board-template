@@ -6,13 +6,12 @@ import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { checkHandle, updateProfile } from '../server/account';
 import {
-  checkHandle,
   listProfileObjectReferenceChoices,
-  updateProfile,
   updateProfileCustomFields,
   updateProfileObjectReferences,
-} from '../server/account';
+} from '../server/form-fields';
 
 import { customFieldLabel } from '@/board/custom-field-labels';
 import {

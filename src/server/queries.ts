@@ -48,7 +48,6 @@ import type {
   JobAlertManageTokenInput,
   JobAlertSubscribeInput,
   JobAlertUpdatePreferenceInput,
-  JobCollectionChoiceQuery,
   JobsListQuery,
   JobsSearchBody,
   PlacesListQuery,
@@ -280,22 +279,6 @@ export const getRemotePermits = createServerFn({ method: 'GET' })
     gatedRead(context, (h) =>
       getBoard().taxonomy.remotePermits.list({ headers: h }),
     ),
-  );
-
-/**
- * Active choices of one job collection field (benefits, tech stack, …) for
- * the employer job form's picker. A public read, gated like the others.
- */
-export const getJobCollectionChoices = createServerFn({ method: 'GET' })
-  .validator((input: { fieldKey: string } & JobCollectionChoiceQuery) => input)
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, (h) => {
-      const { fieldKey, ...query } = data;
-      return getBoard().jobs.collectionChoices(fieldKey, query, {
-        headers: h,
-      });
-    }),
   );
 
 /** Pages read per field when naming a job's stored collection entries. */

@@ -39,12 +39,14 @@ import {
   getEmployerProfileStats,
   getEmployerProfileStatsTimeseries,
   listCompanyMembers,
-  listCompanyObjectReferenceChoices,
   updateCompany,
-  updateCompanyCustomFields,
-  updateCompanyObjectReferences,
   uploadCompanyLogo,
 } from '../server/employers';
+import {
+  listCompanyObjectReferenceChoices,
+  updateCompanyCustomFields,
+  updateCompanyObjectReferences,
+} from '../server/form-fields';
 import { getSeoBase, getCompany } from '../server/queries';
 
 import { customFieldLabel } from '@/board/custom-field-labels';

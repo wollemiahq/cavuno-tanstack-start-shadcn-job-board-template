@@ -8,13 +8,10 @@ import {
   type CreateTalentListBody,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
-  type ProfileChoiceQuery,
-  type ReplaceProfileObjectReferencesBody,
   type SendWorkEmailBody,
   type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
-  type UpdateProfileFieldValuesBody,
   type UpdateTalentListBody,
 } from '@cavuno/board';
 /**
@@ -61,7 +58,7 @@ export type ActionResult<T> =
       violations?: JobFormViolation[];
     };
 
-async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
+export async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
     return { ok: true, data: await fn() };
   } catch (error) {
@@ -97,7 +94,9 @@ function authedHeaders(context: SessionContext & BoardAccessContext) {
 }
 
 /** Primary-email gate for every authenticated employer workspace operation. */
-const verifiedBoardUserMiddleware = createMiddleware({ type: 'function' })
+export const verifiedBoardUserMiddleware = createMiddleware({
+  type: 'function',
+})
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .server(async ({ next, context }) => {
     const me = await getBoard().me.retrieve(undefined, {
@@ -215,55 +214,6 @@ export const getCompanyProfileFields = createServerFn({ method: 'GET' })
       return { customFields, objectReferences };
     }),
   );
-
-/** Additive write of the company's editable custom fields. */
-export const updateCompanyCustomFields = createServerFn({ method: 'POST' })
-  .validator(
-    (input: { slug: string; body: UpdateProfileFieldValuesBody }) => input,
-  )
-  .middleware([verifiedBoardUserMiddleware])
-  .handler(({ data, context }) =>
-    run(() =>
-      getBoard().me.companies.updateCustomFields(data.slug, data.body, {
-        headers: authedHeaders(context),
-      }),
-    ),
-  );
-
-/** Replaces the company's complete editable collection selection set. */
-export const updateCompanyObjectReferences = createServerFn({
-  method: 'POST',
-})
-  .validator(
-    (input: { slug: string; body: ReplaceProfileObjectReferencesBody }) =>
-      input,
-  )
-  .middleware([verifiedBoardUserMiddleware])
-  .handler(({ data, context }) =>
-    run(() =>
-      getBoard().me.companies.updateObjectReferences(data.slug, data.body, {
-        headers: authedHeaders(context),
-      }),
-    ),
-  );
-
-/** Active choices of one editable company collection field. */
-export const listCompanyObjectReferenceChoices = createServerFn({
-  method: 'GET',
-})
-  .validator(
-    (input: { slug: string; fieldKey: string } & ProfileChoiceQuery) => input,
-  )
-  .middleware([verifiedBoardUserMiddleware])
-  .handler(({ data, context }) => {
-    const { slug, fieldKey, ...query } = data;
-    return getBoard().me.companies.listObjectReferenceChoices(
-      slug,
-      fieldKey,
-      query,
-      { headers: authedHeaders(context) },
-    );
-  });
 
 export const deleteCompany = createServerFn({ method: 'POST' })
   .validator((input: { slug: string }) => input)

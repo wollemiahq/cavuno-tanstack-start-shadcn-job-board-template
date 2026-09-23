@@ -26,7 +26,7 @@ import {
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { checkoutJob, createJob, updateJob } from '../server/employers';
-import { getJobCollectionChoices } from '../server/queries';
+import { getJobCollectionChoices } from '../server/form-fields';
 
 import { customFieldLabel } from '@/board/custom-field-labels';
 import {
