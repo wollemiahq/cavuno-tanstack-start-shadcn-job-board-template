@@ -9,8 +9,9 @@
  *
  *   - an entry with `visible: false` is not rendered and never required;
  *   - a locked built-in is always shown and always required;
- *   - a built-in key this starter does not know is skipped (the API may add
- *     built-ins before the starter learns to draw them);
+ *   - a built-in key or an entry kind this starter does not know is
+ *     skipped (the API may add them before the starter learns to draw
+ *     them);
  *   - an API deployment that predates `forms` falls back to the order these
  *     forms rendered before layouts existed, so an older board keeps working.
  *
@@ -110,21 +111,23 @@ function visibleEntries<TBuiltin extends string, TCustom, TCollection>(
       continue;
     }
     if (!field.visible) continue;
-    entries.push(
-      field.kind === 'custom'
-        ? {
-            kind: 'custom',
-            key: field.key,
-            required: field.required,
-            definition: field.definition,
-          }
-        : {
-            kind: 'collection',
-            key: field.key,
-            required: field.required,
-            definition: field.definition,
-          },
-    );
+    if (field.kind === 'custom') {
+      entries.push({
+        kind: 'custom',
+        key: field.key,
+        required: field.required,
+        definition: field.definition,
+      });
+    } else if (field.kind === 'collection') {
+      entries.push({
+        kind: 'collection',
+        key: field.key,
+        required: field.required,
+        definition: field.definition,
+      });
+    }
+    // Any other kind (one the API adds before the starter learns to draw
+    // it) is skipped, like an unknown built-in key.
   }
   return entries;
 }

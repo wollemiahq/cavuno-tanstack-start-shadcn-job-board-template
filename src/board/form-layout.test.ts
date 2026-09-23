@@ -151,6 +151,32 @@ describe('resolveJobFormLayout', () => {
     expect(keys(entries)).toEqual(['builtin:title']);
   });
 
+  it('skips an entry kind the starter does not know, on every form', () => {
+    // A kind a newer API may send before the starter learns to draw it,
+    // parsed from the wire as the SDK would hand it over.
+    const section: BoardJobFormField & BoardProfileFormField = JSON.parse(
+      '{"kind":"section","key":"intro","visible":true,"required":false}',
+    );
+
+    expect(
+      keys(
+        resolveJobFormLayout(
+          { forms: { job: [section, builtin('title')] } },
+          [],
+        ),
+      ),
+    ).toEqual(['builtin:title']);
+    expect(
+      keys(
+        resolveProfileFormLayout(
+          [section, builtin('name')],
+          COMPANY_FORM_BUILTINS,
+          { customFields: [], collectionFields: [] },
+        ),
+      ),
+    ).toEqual(['builtin:name']);
+  });
+
   it('falls back to the pre-layout order, legacy visibility and the custom fields when forms is absent', () => {
     const entries = resolveJobFormLayout(
       {
