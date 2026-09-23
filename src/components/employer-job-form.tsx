@@ -15,6 +15,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 
+import { awaitingReview } from '../lib/employer-checkout-outcome';
 import {
   DEFAULT_SALARY_TIMEFRAME,
   isRichTextEmpty,
@@ -929,11 +930,16 @@ export function EmployerJobForm({
       return;
     }
     setCommittedCheckoutJobId(null);
-    await goToList(jobId);
+    // A board that requires job approval holds the post as a draft for the
+    // operator to publish, so the list must say "awaiting review", not
+    // "posted". HTTP 200 does not mean the job is live.
+    await goToList(jobId, { review: awaitingReview(outcome.status) });
   }
 
-  async function goToList(jobId?: string) {
+  async function goToList(jobId?: string, options?: { review?: boolean }) {
     setStatus('committed');
+    const posted = { posted: '1' as const };
+    const review = options?.review ? { review: '1' as const } : {};
     try {
       // Soft client nav reused the list loader, so the URL changed
       // while the post/edit form stayed on screen. A document reload
@@ -943,8 +949,8 @@ export function EmployerJobForm({
         to: '/employers/companies/$slug',
         params: { slug },
         search: jobId
-          ? { posted: '1' as const, job_id: jobId }
-          : { posted: '1' as const },
+          ? { ...posted, ...review, job_id: jobId }
+          : { ...posted, ...review },
         reloadDocument: true,
       });
     } catch {

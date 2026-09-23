@@ -456,6 +456,19 @@ describe('employer company workspace', () => {
     ).toHaveAttribute('data-state', 'selected');
   });
 
+  it('says a held post is awaiting review instead of calling it saved', async () => {
+    await renderJobs([draftJob], {
+      search: { posted: '1', review: '1', job_id: draftJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_pendingReviewTitle(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_pendingReviewBody(),
+    );
+  });
+
   it('explains a same-origin save and says so if the new row is not listed yet', async () => {
     await renderJobs([draftJob], {
       search: { posted: '1', job_id: 'job-missing' },

@@ -228,6 +228,41 @@ describe('EmployerJobForm', () => {
     );
   });
 
+  it('sends the employer to an awaiting-review list when the board holds the post', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'pending_approval', checkoutUrl: null },
+    });
+
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '/employers/companies/$slug',
+          reloadDocument: true,
+          search: { posted: '1', review: '1', job_id: 'job-1' },
+        }),
+      ),
+    );
+  });
+
   it('retries checkout for the committed job without saving it again', async () => {
     mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
     mocks.checkoutJob

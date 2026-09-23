@@ -952,6 +952,8 @@
   "employerJobs_deletingLabel": "Eliminando…",
   "employerJobs_editLabel": "Editar",
   "employerJobs_expiredOn": "Caducó el {date}",
+  "employerJobs_pendingReviewBody": "Tu oferta aparece abajo como borrador. Saldrá al tablero público cuando el equipo del portal la apruebe.",
+  "employerJobs_pendingReviewTitle": "Enviada para revisión",
   "employerJobs_postedBody": "Tu oferta aparece abajo. Los borradores no salen al tablero público hasta que se publican.",
   "employerJobs_postedMissingBody": "La oferta se envió, pero aún no está en esta lista. Actualiza la página para comprobarlo.",
   "employerJobs_postedTitle": "Oferta guardada",

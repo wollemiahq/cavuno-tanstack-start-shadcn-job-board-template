@@ -952,6 +952,8 @@
   "employerJobs_deletingLabel": "Suppression…",
   "employerJobs_editLabel": "Modifier",
   "employerJobs_expiredOn": "Expirée le {date}",
+  "employerJobs_pendingReviewBody": "Votre offre apparaît ci-dessous en brouillon. Elle sera publiée sur le tableau public après validation par l'équipe.",
+  "employerJobs_pendingReviewTitle": "Soumise pour validation",
   "employerJobs_postedBody": "Votre offre apparaît ci-dessous. Les brouillons restent hors du tableau public jusqu'à leur publication.",
   "employerJobs_postedMissingBody": "L'offre a été envoyée, mais elle n'est pas encore dans cette liste. Actualisez la page pour vérifier.",
   "employerJobs_postedTitle": "Offre enregistrée",
