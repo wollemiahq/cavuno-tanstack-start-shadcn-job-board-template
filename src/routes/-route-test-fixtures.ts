@@ -23,6 +23,8 @@ export function publicCompanyFixture(
     salarySampleCount: 0,
     membership: null,
     markets: [],
+    customFieldValues: {},
+    objectReferences: [],
     links: { public: `https://jobs.example/companies/${slug}` },
   };
 }
@@ -62,6 +64,7 @@ export function publicJobFixture(slug: string): PublicJob {
     inOfficePeriod: null,
     inOfficeFrequency: null,
     customFieldValues: {},
+    resolvedCollectionFields: [],
     salaryMin: null,
     salaryMax: null,
     salaryCurrency: null,

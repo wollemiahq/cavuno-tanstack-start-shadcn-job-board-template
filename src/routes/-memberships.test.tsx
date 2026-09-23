@@ -102,6 +102,8 @@ function company(slug: string): PublicCompany {
     publishedJobCount: 0,
     salarySampleCount: 0,
     membership: { planId: plan.id, planName: 'Founding member' },
+    customFieldValues: {},
+    objectReferences: [],
     links: { public: `https://jobs.example/companies/${slug}` },
   };
 }

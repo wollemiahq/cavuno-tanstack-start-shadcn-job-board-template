@@ -190,6 +190,8 @@ const candidate: TalentDirectoryEntry = {
   skills: [],
   experiences: [],
   education: [],
+  customFieldValues: {},
+  objectReferences: [],
 };
 
 const baseProps: LandingProps = {

@@ -69,6 +69,7 @@ function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
     categories: [{ slug: 'engineering', name: 'Engineering' }],
     skills: [{ slug: 'react', name: 'React' }],
     customFieldValues: { visa: true, team: 'Platform' },
+    resolvedCollectionFields: [],
     company: {
       id: 'company_1',
       slug: 'acme-co',
@@ -95,6 +96,7 @@ const customFields = {
     },
     { key: 'team', label: 'Team', type: 'short_text', required: false },
   ],
+  jobCollections: [],
 } satisfies PublicBoard['customFields'];
 
 const similar: PublicJobCard[] = [
@@ -315,6 +317,7 @@ describe('template-side custom-field localization', () => {
         ],
       },
     ],
+    jobCollections: [],
   } satisfies PublicBoard['customFields'];
   const job = createJob({
     customFieldValues: { visa_sponsorship: 'case_by_case' },
@@ -337,6 +340,7 @@ describe('template-side custom-field localization', () => {
           options: [{ key: 'dragons', label: 'Dragons' }],
         },
       ],
+      jobCollections: [],
     } satisfies PublicBoard['customFields'];
     const j = createJob({
       customFieldValues: { quest_preference: 'dragons' },

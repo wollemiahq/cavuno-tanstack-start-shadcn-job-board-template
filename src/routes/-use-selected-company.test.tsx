@@ -37,6 +37,8 @@ function company(slug: string): PublicCompanyDetail {
     salarySampleCount: 1,
     membership: null,
     markets: [],
+    customFieldValues: {},
+    objectReferences: [],
     links: { public: `https://jobs.example/companies/${slug}` },
   };
 }

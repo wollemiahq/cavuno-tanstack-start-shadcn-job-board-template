@@ -40,6 +40,8 @@ const candidate = {
   skills: ['Mathematics'],
   experiences: [],
   education: [],
+  customFieldValues: {},
+  objectReferences: [],
 } satisfies TalentDirectoryEntry;
 
 // The page now takes resolved `TalentCardVM[]`; the test maps the wire
@@ -221,6 +223,8 @@ const candidate2 = {
   skills: ['COBOL'],
   experiences: [],
   education: [],
+  customFieldValues: {},
+  objectReferences: [],
 } satisfies TalentDirectoryEntry;
 const candidateVm2 = toTalentCardVM(candidate2, getTalentSearchLabels());
 

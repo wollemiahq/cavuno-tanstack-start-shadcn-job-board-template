@@ -146,6 +146,9 @@ const draftJob: EmployerJob = {
       postalCode: null,
     },
   ],
+  customFieldValues: {},
+  collectionValues: {},
+  resolvedCollectionFields: [],
 };
 
 afterEach(() => {
