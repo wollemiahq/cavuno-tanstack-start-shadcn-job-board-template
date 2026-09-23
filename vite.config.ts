@@ -232,7 +232,15 @@ function viteConfig(command: ConfigEnv['command']) {
           strategy: ['url', 'baseLocale'],
         }),
       ),
-      devtools(),
+      devtools({
+        // Console piping POSTs every browser console call to
+        // /__tsd/console-pipe on the dev server. Behind the hosted preview
+        // proxy nobody reads that terminal, and a failing pipe request looks
+        // like a page error. Local `pnpm dev` keeps it.
+        consolePiping: {
+          enabled: process.env.CAVUNO_PREVIEW_PROXIED !== '1',
+        },
+      }),
       cloudflare({ viteEnvironment: { name: 'ssr' } }),
       tailwindcss(),
       tanstackStart({
