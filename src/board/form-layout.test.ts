@@ -289,6 +289,34 @@ describe('resolveProfileFormLayout', () => {
     expect(keys(entries)).toEqual([]);
   });
 
+  it('leaves custom and collection fields out when the owner reads did not answer', () => {
+    const memberships = {
+      key: 'memberships',
+      label: 'Memberships',
+      typeId: 'type-memberships',
+      multiple: true,
+      visibility: 'public' as const,
+      editableByOwner: true,
+      allowOverrides: false,
+    };
+    const entries = resolveProfileFormLayout(
+      [
+        ...layout,
+        {
+          kind: 'collection',
+          key: 'memberships',
+          visible: true,
+          required: false,
+          definition: memberships,
+        },
+      ],
+      COMPANY_FORM_BUILTINS,
+      null,
+    );
+
+    expect(keys(entries)).toEqual(['builtin:name', 'builtin:website']);
+  });
+
   it('falls back to the pre-layout built-ins, then the editable fields, when forms is absent', () => {
     const entries = resolveProfileFormLayout(
       null,

@@ -403,8 +403,8 @@ export type OwnerProfileDefinitions = {
 
 /**
  * The owner definitions from the two owner reads, or `null` when neither
- * answered (an older API, or a failed read): the public layout's own
- * definitions then stand in.
+ * answered (an older API, or a failed read). A read that did not answer
+ * contributes no definitions, so its fields are left out of the form.
  */
 export function ownerProfileDefinitions(
   fields:
@@ -512,15 +512,16 @@ export function resolveProfileFormLayout<TBuiltin extends string>(
     ProfileCollectionDefinition
   >(layout, builtins).flatMap((entry): ProfileFormEntry<TBuiltin>[] => {
     if (entry.kind === 'builtin') return [entry];
-    // Prefer the owner's definition: it is what the write endpoints
-    // validate against. Without the owner reads, the public one stands in.
+    // Only the owner's definition makes an input: it is what the write
+    // endpoints validate against, and the owner read carries the stored
+    // answers. Without it the field is left out rather than drawn empty,
+    // since saving an empty collection picker would replace the stored
+    // selections.
     if (entry.kind === 'custom') {
-      const definition =
-        ownerCustom.get(entry.key) ?? (owner ? undefined : entry.definition);
+      const definition = ownerCustom.get(entry.key);
       return definition?.editableByOwner ? [{ ...entry, definition }] : [];
     }
-    const definition =
-      ownerCollections.get(entry.key) ?? (owner ? undefined : entry.definition);
+    const definition = ownerCollections.get(entry.key);
     return definition?.editableByOwner ? [{ ...entry, definition }] : [];
   });
   return [...entries, ...unlisted(listed)];
