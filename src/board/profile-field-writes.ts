@@ -4,13 +4,19 @@
  *
  *   - custom field values are an additive merge: send only the keys the
  *     person changed, `null` for an answer they cleared;
- *   - collection selections are a full replace of the editable set: keep
- *     every stored selection of a field the form does not render (a hidden
- *     field keeps its value), keep each surviving selection's own details
- *     and wording, and send nothing at all when no rendered field changed.
+ *   - collection selections are a full replace of the owner-editable set:
+ *     keep every stored selection of an editable field the form does not
+ *     render (a hidden field keeps its value), keep each surviving
+ *     selection's own details and wording, and send nothing at all when no
+ *     rendered field changed. Selections of fields the owner may not edit
+ *     are never sent: the API keeps those itself and rejects a resent one
+ *     that differs from storage in any detail.
  */
 
-import type { CollectionChoice } from './form-layout';
+import type {
+  CollectionChoice,
+  ProfileCollectionDefinition,
+} from './form-layout';
 import type {
   ProfileFieldValues,
   ProfileObjectReferences,
@@ -94,15 +100,23 @@ function toWrite(selection: Selection): SelectionWrite {
 
 /**
  * The full replacement selection set, or `null` when no rendered field
- * changed. Fields the form does not render keep their stored selections;
- * a kept entry keeps its details and wording; a new entry is sent bare.
+ * changed. Editable fields the form does not render keep their stored
+ * selections; a kept entry keeps its details and wording; a new entry is
+ * sent bare. `definitions` are the owner read's, which say which fields the
+ * owner may edit.
  */
 export function profileObjectReferencesBody(
   renderedKeys: readonly string[],
   current: ProfileSelections,
   stored: readonly Selection[],
+  definitions: readonly ProfileCollectionDefinition[],
 ): ReplaceProfileObjectReferencesBody | null {
   const rendered = new Set(renderedKeys);
+  const editable = new Set(
+    definitions
+      .filter((definition) => definition.editableByOwner)
+      .map((definition) => definition.key),
+  );
   const storedIds = (key: string) =>
     stored
       .filter((selection) => selection.fieldKey === key)
@@ -117,7 +131,10 @@ export function profileObjectReferencesBody(
   if (!changed) return null;
 
   const selections: SelectionWrite[] = stored
-    .filter((selection) => !rendered.has(selection.fieldKey))
+    .filter(
+      (selection) =>
+        editable.has(selection.fieldKey) && !rendered.has(selection.fieldKey),
+    )
     .map(toWrite);
   for (const key of renderedKeys) {
     for (const choice of current[key] ?? []) {

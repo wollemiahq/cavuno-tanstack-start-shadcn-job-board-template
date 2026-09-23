@@ -583,6 +583,7 @@ function ProfileEditorCard({
       ),
       selections,
       storedSelections,
+      profileFields?.objectReferences?.definitions ?? [],
     );
     if (references) {
       const written = await (

@@ -427,6 +427,7 @@ export function ProfileForm({
         ),
         selections,
         storedSelections,
+        profileFields?.objectReferences?.definitions ?? [],
       );
       if (references) {
         await (

@@ -8,6 +8,19 @@ import {
 import type { ProfileObjectReferences } from '@cavuno/board';
 
 type Selection = ProfileObjectReferences['selections'][number];
+type Definition = ProfileObjectReferences['definitions'][number];
+
+function definition(key: string, editableByOwner = true): Definition {
+  return {
+    key,
+    label: key,
+    typeId: `type-${key}`,
+    multiple: true,
+    visibility: 'public',
+    editableByOwner,
+    allowOverrides: true,
+  };
+}
 
 function selection(
   fieldKey: string,
@@ -58,6 +71,7 @@ describe('profileObjectReferencesBody', () => {
         ['benefits'],
         { benefits: [{ id: 'pto', name: 'PTO' }] },
         [selection('benefits', 'pto')],
+        [definition('benefits')],
       ),
     ).toBeNull();
   });
@@ -82,6 +96,7 @@ describe('profileObjectReferencesBody', () => {
           ],
         },
         stored,
+        [definition('certifications'), definition('benefits')],
       ),
     ).toEqual({
       selections: [
@@ -101,5 +116,22 @@ describe('profileObjectReferencesBody', () => {
         { fieldKey: 'benefits', recordId: 'pension' },
       ],
     });
+  });
+
+  it('never resends a selection of a field the owner may not edit', () => {
+    const stored = [
+      selection('accreditations', 'acc-1'),
+      selection('retired', 'old-1'),
+      selection('benefits', 'pto'),
+    ];
+
+    expect(
+      profileObjectReferencesBody(
+        ['benefits'],
+        { benefits: [{ id: 'gym', name: 'Gym' }] },
+        stored,
+        [definition('accreditations', false), definition('benefits')],
+      ),
+    ).toEqual({ selections: [{ fieldKey: 'benefits', recordId: 'gym' }] });
   });
 });
