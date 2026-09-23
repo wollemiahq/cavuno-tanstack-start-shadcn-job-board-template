@@ -1693,6 +1693,25 @@ describe('EmployerJobForm — operator form layout', () => {
     ).toBeInTheDocument();
   });
 
+  it('saves an edit whose hidden employment type the board no longer allows, without sending it', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    // The layout does not show the employment type, and the board now only
+    // allows `contract`; the job is stored as `full_time`.
+    const container = await renderEdit(
+      { ...draftJob, ...benefitsOnJob, employmentType: 'full_time' },
+      {
+        ...layout,
+        jobForm: { employmentType: { allowedOptions: ['contract'] } },
+      },
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect('employmentType' in body).toBe(false);
+  });
+
   it('renders the fields in layout order and leaves hidden ones out', async () => {
     await renderCreate();
 
@@ -1738,5 +1757,7 @@ describe('EmployerJobForm — operator form layout', () => {
     // The hidden custom field is not collected, so it is not sent.
     expect(body.customFieldValues).toBeUndefined();
     expect(body.seniority).toBeUndefined();
+    // A create still sends the employment type the body requires, hidden.
+    expect(body.employmentType).toBe('full_time');
   });
 });

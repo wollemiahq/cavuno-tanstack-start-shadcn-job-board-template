@@ -156,16 +156,21 @@ function jobFormConstraintError(
     currency: string;
   },
   jobForm: JobFormConstraints,
+  showsEmploymentType: boolean,
 ): string {
   // An EDIT opens with the job's stored values, which predate any narrowing
   // the operator has since applied — so a job saved as full_time / hybrid /
   // USD can sit in a form whose pickers now offer none of those. Nothing
   // downstream catches it: the employer job route runs no server-side
   // constraint check (only public submission does), so an unchecked save
-  // silently stores a value the board disallows.
+  // silently stores a value the board disallows. A hidden employment type
+  // has no picker to fix it with, and an edit does not send it.
   const disallowed = (
     [
-      [jobForm.employmentType.allowedOptions, form.employmentType],
+      [
+        showsEmploymentType ? jobForm.employmentType.allowedOptions : null,
+        form.employmentType,
+      ],
       [jobForm.workArrangement.allowedOptions, form.remoteOption],
     ] as const
   ).some(([allowed, value]) => allowed && !allowed.includes(value));
@@ -1124,7 +1129,7 @@ export function EmployerJobForm({
     );
     setFieldErrors((prev) => ({ ...prev, collection: missingCollection }));
     const constraintError =
-      jobFormConstraintError(form, jobForm) ||
+      jobFormConstraintError(form, jobForm, shows('employmentType')) ||
       missingRequiredCustomField(layoutCustomFields, form.customFieldValues) ||
       missingCollection?.message;
     if (constraintError) {
@@ -1187,12 +1192,15 @@ export function EmployerJobForm({
       return;
     }
 
-    // Edit.
-    const body = {
-      ...buildBody(),
+    // Edit. A hidden employment type is left out so the job keeps its
+    // stored one; create still sends the default the body requires.
+    const { employmentType, ...built } = buildBody();
+    const body: UpdateEmployerJobBody = {
+      ...built,
       ...salaryClear(),
       applicationUrl: applicationUrl ?? null,
-    } satisfies UpdateEmployerJobBody;
+    };
+    if (shows('employmentType')) body.employmentType = employmentType;
     let result: Awaited<ReturnType<typeof actions.updateJob>>;
     try {
       result = await actions.updateJob({
