@@ -23,6 +23,7 @@ import {
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import { entityCount } from '../lib/entity-count';
+import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
   clampPage,
@@ -41,10 +42,12 @@ import {
 } from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
+import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 
 export const Route = createFileRoute('/companies/$companySlug/jobs/')({
@@ -84,20 +87,18 @@ function CompanyJobsPage() {
   const currentHref = useLocation({ select: (loc) => loc.href });
 
   const currentPage = clampPage(search.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
-  const count = page.count ?? 0;
+  const visibleCount = page.count ?? 0;
+  const count = catalogJobCount(visibleCount, page.gatedCount) ?? visibleCount;
   const locale = getLocale();
+  const span =
+    visibleCount > COMPANY_JOBS_PAGE_SIZE
+      ? visiblePageSpan(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount)
+      : null;
 
-  // Honest "Showing X–Y of Z" / "N jobs" count, reusing the browse copy keys.
-  const showRange = count > COMPANY_JOBS_PAGE_SIZE;
-  const countLabel = showRange
+  const countLabel = span
     ? m.jobSearch_resultsShowingRange({
-        from: ((currentPage - 1) * COMPANY_JOBS_PAGE_SIZE + 1).toLocaleString(
-          locale,
-        ),
-        to: Math.min(
-          currentPage * COMPANY_JOBS_PAGE_SIZE,
-          count,
-        ).toLocaleString(locale),
+        from: span.from.toLocaleString(locale),
+        to: span.to.toLocaleString(locale),
         count: count.toLocaleString(locale),
       })
     : entityCount(count, locale, m.count_jobs, {
@@ -133,9 +134,18 @@ function CompanyJobsPage() {
           compact
         />
 
+        <PreviewUnlockAlert
+          gatedCount={page.gatedCount}
+          page={currentPage}
+          pageSize={COMPANY_JOBS_PAGE_SIZE}
+          visibleCount={visibleCount}
+          returnTo={localizePath(currentHref)}
+          language={locale}
+        />
+
         <ListingPagination
           page={currentPage}
-          count={count}
+          count={visibleCount}
           pageSize={COMPANY_JOBS_PAGE_SIZE}
           hrefForPage={(nextPage) => listingPageHref(currentHref, nextPage)}
           onPageChange={(next) =>

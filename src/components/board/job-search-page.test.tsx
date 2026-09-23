@@ -349,4 +349,185 @@ describe('JobSearchPage — search results pattern', () => {
       }),
     ).toHaveAttribute('href', '/account/access?returnTo=%2F');
   });
+
+  it('counts withheld jobs in the total and pages only the visible slice', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[jobVm]}
+          count={30}
+          gatedCount={357}
+          page={1}
+          pageSize={20}
+          filters={{}}
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: m.jobSearch_resultsCount({ count: 387, countLabel: '387' }),
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        m.jobSearch_resultsShowingRange({
+          from: '1',
+          to: '20',
+          count: '387',
+        }),
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByText(m.jobSearch_gatedCountText({ count: '357' })),
+    ).toBeNull();
+    const nav = screen.getByRole('navigation', {
+      name: m.pagination_ariaLabel(),
+    });
+    expect(within(nav).getByText('2')).toBeVisible();
+    expect(within(nav).queryByText('3')).toBeNull();
+  });
+
+  it('shows the unlock prompt on the last preview page', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[jobVm]}
+          count={30}
+          gatedCount={357}
+          page={2}
+          pageSize={20}
+          filters={{}}
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByText(m.jobSearch_gatedCountText({ count: '357' })),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        m.jobSearch_resultsShowingRange({
+          from: '21',
+          to: '30',
+          count: '387',
+        }),
+      ),
+    ).toBeVisible();
+  });
+
+  it('hides the unlock prompt on a page past the preview', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[jobVm]}
+          count={30}
+          gatedCount={357}
+          page={3}
+          pageSize={20}
+          filters={{}}
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: m.jobSearch_resultsCount({ count: 387, countLabel: '387' }),
+      }),
+    ).toBeVisible();
+    expect(
+      screen.queryByText(m.jobSearch_gatedCountText({ count: '357' })),
+    ).toBeNull();
+  });
+
+  it('keeps the unlock prompt off an empty preview', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[]}
+          count={0}
+          gatedCount={5}
+          page={1}
+          pageSize={20}
+          filters={{}}
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+
+    expect(
+      await screen.findByText(m.jobSearch_initialEmptyText()),
+    ).toBeVisible();
+    expect(
+      screen.queryByText(m.jobSearch_gatedCountText({ count: '5' })),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.jobSearch_unlockMoreLabel() }),
+    ).toBeNull();
+  });
 });

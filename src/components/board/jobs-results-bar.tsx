@@ -3,6 +3,7 @@
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
 
+import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
 import { chromeEntity } from '@/lib/site-chrome';
@@ -15,15 +16,16 @@ function finiteNumber(value: number | undefined): number | undefined {
 
 /** The honest result count and current page range directly above the cards. */
 export function JobsResultsBar({
-  count,
+  visibleCount,
+  gatedCount,
   page,
   pageSize,
   heading,
   language,
   className,
 }: {
-  /** Total result count when the API returned one. */
-  count?: number;
+  visibleCount?: number;
+  gatedCount?: number;
   /** Current 1-based page + page size — renders the honest "Showing X–Y of Z" range. */
   page?: number;
   pageSize?: number;
@@ -35,14 +37,16 @@ export function JobsResultsBar({
   // Viewer chrome locale for number/plural formatting (prop kept for call-site
   // compatibility; prefer getLocale() so a stale prop cannot drift).
   const locale = language || getLocale();
-  const totalCount = finiteNumber(count);
+  const pageableCount = finiteNumber(visibleCount);
+  const totalCount = catalogJobCount(pageableCount, gatedCount);
   const currentPage = finiteNumber(page);
   const currentPageSize = finiteNumber(pageSize);
-  const showRange =
-    totalCount !== undefined &&
+  const span =
+    pageableCount !== undefined &&
     currentPage !== undefined &&
-    currentPageSize !== undefined &&
-    totalCount > 0;
+    currentPageSize !== undefined
+      ? visiblePageSpan(currentPage, currentPageSize, pageableCount)
+      : null;
   const totalLabel =
     totalCount !== undefined
       ? heading
@@ -55,15 +59,14 @@ export function JobsResultsBar({
             plural: chromeEntity().jobPlural,
           })
       : (heading ?? jobSearchCopy().headingJobs);
-  const rangeLabel = showRange
-    ? m.jobSearch_resultsShowingRange({
-        from: ((currentPage - 1) * currentPageSize + 1).toLocaleString(locale),
-        to: Math.min(currentPage * currentPageSize, totalCount).toLocaleString(
-          locale,
-        ),
-        count: totalCount.toLocaleString(locale),
-      })
-    : null;
+  const rangeLabel =
+    span && totalCount !== undefined
+      ? m.jobSearch_resultsShowingRange({
+          from: span.from.toLocaleString(locale),
+          to: span.to.toLocaleString(locale),
+          count: totalCount.toLocaleString(locale),
+        })
+      : null;
 
   return (
     <div

@@ -21,6 +21,7 @@ import {
   pageSearchValue,
   pageToOffset,
   parsePageParam,
+  isPreviewUnlockPage,
   shouldRenderPagination,
   totalPages,
 } from './pagination';
@@ -220,6 +221,20 @@ describe('totalPages (ceil of count / pageSize)', () => {
     // but only 500 fit under the ceiling.
     expect(totalPages(12_000, 20)).toBe(500);
     expect(totalPages(12_000, 24)).toBe(416);
+  });
+});
+
+describe('isPreviewUnlockPage', () => {
+  it('is only the final page of a multi-page preview', () => {
+    expect(isPreviewUnlockPage(1, 20, 30)).toBe(false);
+    expect(isPreviewUnlockPage(2, 20, 30)).toBe(true);
+    expect(isPreviewUnlockPage(3, 20, 30)).toBe(false);
+  });
+
+  it('unlocks page 1 of a one-page preview, and not an empty preview', () => {
+    expect(isPreviewUnlockPage(1, 20, 1)).toBe(true);
+    expect(isPreviewUnlockPage(1, 20, 0)).toBe(false);
+    expect(isPreviewUnlockPage(2, 20, 0)).toBe(false);
   });
 });
 
