@@ -109,11 +109,11 @@ import {
 import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
   CreateEmployerJobBody,
+  CustomFieldDefinition,
   EmployerBillingOption,
   EmployerCheckoutBody,
   EmployerJob,
   JobPostingPlan,
-  PublicBoard,
   RemotePermitTaxonomyEntry,
   UpdateEmployerJobBody,
 } from '@cavuno/board';
@@ -242,8 +242,6 @@ function clientFieldErrorMessage(errors: {
   return null;
 }
 
-type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
-
 /**
  * Localized copy for a Job form rule the Board API refused
  * (`jobs_constraint_violation`), from the first violation this form knows how
@@ -322,22 +320,6 @@ function jobFormViolationMessage(
 }
 
 /**
- * The wire bag for the board's custom fields: the stored value union plus
- * `null`, the clear sentinel an edit sends for an answer the employer removed.
- */
-type CustomFieldValuesWrite = Record<string, CustomFieldValues[string] | null>;
-
-/**
- * The employer job surface carries the board's custom-field bag — on the
- * job read (to prefill an edit) and on the create/update bodies — from the
- * Board API release that opened it to employers. Widened locally so the form
- * also compiles against the SDK pin that predates it; drop both once
- * `@cavuno/board` is bumped past that release.
- */
-type ReadsCustomFields = { customFieldValues?: CustomFieldValues };
-type WritesCustomFields = { customFieldValues?: CustomFieldValuesWrite };
-
-/**
  * The wire bag for the board's custom fields. Only defined keys travel. A
  * create sends the answered fields (an empty answer is "unanswered", not a
  * value — the same filter the public form applies). An edit sends EVERY
@@ -349,7 +331,7 @@ function customFieldValuesBody(
   values: CustomFieldValues,
   intent: 'create' | 'edit',
 ) {
-  const body: CustomFieldValuesWrite = {};
+  const body: NonNullable<UpdateEmployerJobBody['customFieldValues']> = {};
   for (const definition of definitions) {
     // A required Yes/No field left untouched means "No": sending `false`
     // keeps it from being rejected as unanswered. An optional one stays
@@ -591,7 +573,7 @@ function initialCollections(job: EmployerJob | undefined) {
 }
 
 function initialForm(
-  job: (EmployerJob & ReadsCustomFields) | undefined,
+  job: EmployerJob | undefined,
   countryName: (code: string) => string,
   // A board narrowed to e.g. remote-only, contract-only or EUR-only would
   // otherwise open the form pre-filled with a value it rejects, and the
@@ -935,7 +917,7 @@ export function EmployerJobForm({
       Number.isFinite(salaryMin) &&
       Number.isFinite(salaryMax);
 
-    const body: CreateEmployerJobBody & WritesCustomFields = {
+    const body: CreateEmployerJobBody = {
       title: form.title.trim(),
       description: form.description,
       employmentType: form.employmentType,

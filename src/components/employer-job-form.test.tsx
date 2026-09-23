@@ -1712,6 +1712,22 @@ describe('EmployerJobForm — operator form layout', () => {
     expect('employmentType' in body).toBe(false);
   });
 
+  it('keeps a hidden custom field and an unchanged collection out of an edit', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const container = await renderEdit({
+      ...draftJob,
+      ...benefitsOnJob,
+      customFieldValues: { clearance: 'TS/SCI' },
+    });
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect('customFieldValues' in body).toBe(false);
+    expect('collectionValues' in body).toBe(false);
+  });
+
   it('renders the fields in layout order and leaves hidden ones out', async () => {
     await renderCreate();
 
