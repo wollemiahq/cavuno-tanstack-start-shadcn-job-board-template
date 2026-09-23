@@ -281,49 +281,6 @@ export const getRemotePermits = createServerFn({ method: 'GET' })
     ),
   );
 
-/** Pages read per field when naming a job's stored collection entries. */
-const COLLECTION_NAME_PAGES = 3;
-
-/**
- * Names for a job's stored collection record ids: the employer job read
- * carries ids only. Pages each field's active choices (at most three pages
- * of 100) until every id is named. An id that is not among the active
- * choices (an archived entry) comes back unnamed.
- */
-export const getJobCollectionNames = createServerFn({ method: 'GET' })
-  .validator((input: { fields: { key: string; ids: string[] }[] }) => input)
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, async (h) => {
-      const board = getBoard();
-      const named = await Promise.all(
-        data.fields.map(async (field) => {
-          const wanted = new Set(field.ids);
-          const names: Record<string, string> = {};
-          let cursor: string | undefined;
-          for (
-            let page = 0;
-            page < COLLECTION_NAME_PAGES && wanted.size > 0;
-            page++
-          ) {
-            const result = await board.jobs.collectionChoices(
-              field.key,
-              { limit: 100, cursor },
-              { headers: h },
-            );
-            for (const choice of result.data) {
-              if (wanted.delete(choice.id)) names[choice.id] = choice.name;
-            }
-            if (!result.nextCursor) break;
-            cursor = result.nextCursor;
-          }
-          return [field.key, names] as const;
-        }),
-      );
-      return Object.fromEntries(named);
-    }),
-  );
-
 /** Category/skill autocomplete for the shared Jobs keyword field. */
 export const searchTaxonomySuggestions = createServerFn({ method: 'GET' })
   .validator((input: { q?: string; limit?: number }) => input)

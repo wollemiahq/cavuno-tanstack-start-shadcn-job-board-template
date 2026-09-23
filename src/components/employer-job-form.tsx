@@ -506,12 +506,6 @@ export type EmployerJobFormProps = {
   /** Prefill for edit mode. */
   job?: EmployerJob;
   /**
-   * Names for the job's stored collection entries, by field key then record
-   * id (the employer job read carries ids only). An id without a name shows
-   * as an unavailable entry the employer can remove.
-   */
-  collectionNames?: Readonly<Record<string, Readonly<Record<string, string>>>>;
-  /**
    * Stands in for the whole form once the board answers `membership_required`
    * — the company cannot post here until it holds a membership, so there is
    * nothing useful left to fill in.
@@ -568,10 +562,15 @@ function formatPrice(
   }).format(amountCents / 100);
 }
 
-function initialCollections(
-  job: EmployerJob | undefined,
-  names: Readonly<Record<string, Readonly<Record<string, string>>>>,
-) {
+function initialCollections(job: EmployerJob | undefined) {
+  // Names come from the job's resolved entries; an id without one (an
+  // entry the read no longer resolves) shows as unavailable.
+  const names = Object.fromEntries(
+    (job?.resolvedCollectionFields ?? []).map((field) => [
+      field.key,
+      Object.fromEntries(field.entries.map((entry) => [entry.id, entry.name])),
+    ]),
+  );
   // An API that predates collection fields omits the bag.
   return Object.fromEntries(
     Object.entries(job?.collectionValues ?? {}).map(([key, ids]) => [
@@ -689,7 +688,6 @@ export function EmployerJobForm({
   job,
   jobForm: jobFormSource,
   customFields = [],
-  collectionNames = {},
   membershipGate,
   dependencies,
 }: EmployerJobFormProps) {
@@ -755,7 +753,7 @@ export function EmployerJobForm({
         currencyOptions.map(({ value }) => value),
       ),
     }),
-    collectionValues: initialCollections(job, collectionNames),
+    collectionValues: initialCollections(job),
   }));
   const loadCollectionChoices =
     actions.loadCollectionChoices ?? loadJobCollectionChoices;

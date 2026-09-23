@@ -1639,6 +1639,60 @@ describe('EmployerJobForm — operator form layout', () => {
     return loadCollectionChoices;
   }
 
+  async function renderEdit(job: EmployerJob, jobForm = layout) {
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={{
+          ...dependencies,
+          loadCollectionChoices: vi.fn().mockResolvedValue([]),
+        }}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={job}
+        jobForm={jobForm}
+        customFields={[clearance]}
+      />,
+    );
+    return container;
+  }
+
+  const benefitsOnJob = {
+    collectionValues: { benefits: ['rec-pto'] },
+    resolvedCollectionFields: [
+      {
+        key: 'benefits',
+        label: 'Benefits',
+        entries: [
+          {
+            id: 'rec-pto',
+            name: 'Paid time off',
+            title: 'Generous paid leave',
+            description: null,
+            titleOverride: 'Generous paid leave',
+            descriptionOverride: null,
+            fields: [],
+            values: {},
+          },
+        ],
+      },
+    ],
+  } satisfies Partial<EmployerJob>;
+
+  it('names a stored collection entry from the job read', async () => {
+    await renderEdit({ ...draftJob, ...benefitsOnJob });
+
+    expect(
+      screen.getByRole('button', {
+        name: m.placeTags_removeAriaLabel({ name: 'Paid time off' }),
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('renders the fields in layout order and leaves hidden ones out', async () => {
     await renderCreate();
 
