@@ -952,8 +952,6 @@
   "employerJobs_deletingLabel": "Deleting…",
   "employerJobs_editLabel": "Edit",
   "employerJobs_expiredOn": "Expired on {date}",
-  "employerJobs_pendingReviewBody": "Your job is listed below as a draft. It goes live on the public board once the board team approves it.",
-  "employerJobs_pendingReviewTitle": "Submitted for review",
   "employerJobs_postedBody": "Your job is listed below. Drafts stay off the public board until they are published.",
   "employerJobs_postedMissingBody": "The job was submitted, but it is not in this list yet. Refresh the page to check again.",
   "employerJobs_postedTitle": "Job saved",

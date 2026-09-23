@@ -988,8 +988,6 @@
   "employerJobs_deletingLabel": "Usuwanie…",
   "employerJobs_editLabel": "Edytuj",
   "employerJobs_expiredOn": "Wygasła {date}",
-  "employerJobs_pendingReviewBody": "Twoja oferta jest na liście poniżej jako szkic. Pojawi się na publicznej tablicy po zatwierdzeniu przez zespół portalu.",
-  "employerJobs_pendingReviewTitle": "Wysłano do weryfikacji",
   "employerJobs_postedBody": "Twoja oferta jest na liście poniżej. Szkice nie pojawiają się na publicznej tablicy, dopóki nie zostaną opublikowane.",
   "employerJobs_postedMissingBody": "Oferta została wysłana, ale nie ma jej jeszcze na tej liście. Odśwież stronę, aby sprawdzić ponownie.",
   "employerJobs_postedTitle": "Oferta zapisana",

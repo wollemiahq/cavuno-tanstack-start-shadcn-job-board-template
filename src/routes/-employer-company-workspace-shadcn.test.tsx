@@ -462,10 +462,10 @@ describe('employer company workspace', () => {
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      m.employerJobs_pendingReviewTitle(),
+      m.postJob_pendingTitle(),
     );
     expect(screen.getByRole('alert')).toHaveTextContent(
-      m.employerJobs_pendingReviewBody(),
+      m.postJob_pendingBody(),
     );
   });
 

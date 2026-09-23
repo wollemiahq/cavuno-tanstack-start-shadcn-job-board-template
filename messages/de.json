@@ -952,8 +952,6 @@
   "employerJobs_deletingLabel": "Wird gelöscht …",
   "employerJobs_editLabel": "Bearbeiten",
   "employerJobs_expiredOn": "Abgelaufen am {date}",
-  "employerJobs_pendingReviewBody": "Deine Stelle steht unten als Entwurf. Sie erscheint öffentlich, sobald das Jobboard-Team sie freigibt.",
-  "employerJobs_pendingReviewTitle": "Zur Prüfung eingereicht",
   "employerJobs_postedBody": "Deine Stelle steht unten in der Liste. Entwürfe erscheinen nicht öffentlich, bis sie veröffentlicht werden.",
   "employerJobs_postedMissingBody": "Die Stelle wurde übermittelt, steht aber noch nicht in dieser Liste. Bitte die Seite neu laden.",
   "employerJobs_postedTitle": "Stelle gespeichert",

@@ -952,8 +952,6 @@
   "employerJobs_deletingLabel": "Verwijderen…",
   "employerJobs_editLabel": "Bewerken",
   "employerJobs_expiredOn": "Verlopen op {date}",
-  "employerJobs_pendingReviewBody": "Je vacature staat hieronder als concept. Ze komt op het openbare bord zodra het team van het vacatureplatform ze goedkeurt.",
-  "employerJobs_pendingReviewTitle": "Ingediend ter beoordeling",
   "employerJobs_postedBody": "Je vacature staat hieronder. Concepten staan niet op het openbare bord tot ze worden gepubliceerd.",
   "employerJobs_postedMissingBody": "De vacature is verzonden, maar staat nog niet in deze lijst. Ververs de pagina om het opnieuw te controleren.",
   "employerJobs_postedTitle": "Vacature opgeslagen",
