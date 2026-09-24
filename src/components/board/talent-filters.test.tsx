@@ -14,16 +14,33 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { TalentFilters } from './talent-filters';
 
+import type { CustomFilterField } from '@/lib/custom-field-filters';
 import { parseTalentSearch } from '@/lib/talent-search';
 
 afterEach(cleanup);
 
-function renderFilters(search = '') {
+const mentoring: CustomFilterField = {
+  kind: 'flag',
+  key: 'open_to_mentoring',
+  label: 'Open to mentoring',
+};
+const availability: CustomFilterField = {
+  kind: 'choice',
+  key: 'availability',
+  label: 'Availability',
+  options: [
+    { value: 'now', label: 'Immediately' },
+    { value: 'month', label: 'Within a month' },
+  ],
+};
+
+function renderFilters(search = '', customFilterFields?: CustomFilterField[]) {
   const rootRoute = createRootRoute();
   const talentRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -31,7 +48,12 @@ function renderFilters(search = '') {
     validateSearch: parseTalentSearch,
     component: () => {
       const current = talentRoute.useSearch();
-      return <TalentFilters search={current} />;
+      return (
+        <TalentFilters
+          search={current}
+          customFilterFields={customFilterFields}
+        />
+      );
     },
   });
   const router = createRouter({
@@ -130,5 +152,59 @@ describe('TalentFilters', () => {
     await waitFor(() =>
       expect(router.state.location.search).toMatchObject({ sort: 'newest' }),
     );
+  });
+
+  it('has no All filters button without filterable profile fields', async () => {
+    renderFilters();
+
+    await screen.findByRole('combobox', { name: 'Job search status' });
+    expect(screen.queryByRole('button', { name: /All filters/ })).toBeNull();
+  });
+
+  it('adds candidate profile fields to the sheet and writes cf.* on Apply', async () => {
+    const { router } = renderFilters('?jobSearchStatus=actively_looking', [
+      mentoring,
+      availability,
+    ]);
+
+    fireEvent.click(await screen.findByRole('button', { name: /All filters/ }));
+    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    fireEvent.click(
+      within(sheet).getByRole('checkbox', { name: 'Open to mentoring' }),
+    );
+    fireEvent.click(
+      within(sheet).getByRole('checkbox', { name: 'Within a month' }),
+    );
+    fireEvent.click(
+      within(sheet).getByRole('button', { name: 'Apply filters' }),
+    );
+
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        jobSearchStatus: 'actively_looking',
+        'cf.open_to_mentoring': true,
+        'cf.availability': 'month',
+      }),
+    );
+  });
+
+  it('counts active profile-field filters and clears them on Reset', async () => {
+    const { router } = renderFilters(
+      '?cf.open_to_mentoring=true&cf.availability=now,retired',
+      [mentoring, availability],
+    );
+
+    const trigger = await screen.findByRole('button', { name: /All filters/ });
+    // The stale `retired` option is ignored.
+    expect(trigger).toHaveTextContent('2');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+    await waitFor(() =>
+      expect(router.state.location.search).not.toHaveProperty(
+        'cf.open_to_mentoring',
+      ),
+    );
+    expect(router.state.location.search).not.toHaveProperty('cf.availability');
   });
 });

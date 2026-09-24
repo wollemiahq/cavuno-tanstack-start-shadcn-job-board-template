@@ -35,12 +35,24 @@ import { readBoardContext } from '../lib/board-context-cache';
 import { localizePath } from '../lib/localized-path';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
+import {
+  customFieldLabel,
+  customFieldOptionLabel,
+} from '@/board/custom-field-labels';
 import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
+import {
+  customFieldFiltersOrUndefined,
+  hasCustomFieldSearch,
+  resolveCustomFieldFilters,
+  toCustomFilterFields,
+  type CustomFieldSearch,
+} from '@/lib/custom-field-filters';
 import {
   listingMetaDescription,
   listingPageTitle,
@@ -149,16 +161,42 @@ function trailJsonLd(trail: { name: string; href?: string }[]) {
   );
 }
 
+/** The board's job custom fields as "All filters" controls. */
+async function jobCustomFilterFields() {
+  const boardContext = await readBoardContext();
+  const language = getLocale();
+  return toCustomFilterFields(boardContext.customFields?.job, {
+    field: (definition) => customFieldLabel(definition, language),
+    option: (definition, option) =>
+      customFieldOptionLabel(definition.key, option, language),
+  });
+}
+
 /** Canonical /jobs listing — list or search + head (jobSearch headingJobs). */
 export const getJobsIndexPage = createServerFn({ method: 'GET' })
-  .validator((input: JobsListingFiltersInput) => input)
+  .validator(
+    (input: JobsListingFiltersInput & { customFields?: CustomFieldSearch }) =>
+      input,
+  )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const [rawList, seo] = await Promise.all([
-        data.q
+      // Custom-field parameters are checked against the live definitions
+      // before they reach the API, so a stale URL never 400s. Only a URL
+      // that carries them waits for the definitions; the context read is
+      // memoized per isolate and shared with the SEO base.
+      const fieldsRead = jobCustomFilterFields();
+      const customFields = hasCustomFieldSearch(data.customFields)
+        ? customFieldFiltersOrUndefined(
+            resolveCustomFieldFilters(await fieldsRead, data.customFields),
+          )
+        : undefined;
+      const [rawList, seo, customFilterFields] = await Promise.all([
+        // `jobs.list` has no custom-field filter; search without a query
+        // lists the same catalog with the clauses applied.
+        data.q || customFields
           ? board.jobs.search(
               {
                 query: data.q,
@@ -166,6 +204,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
                   remoteOption: filters.remoteOption,
                   employmentType: filters.employmentType,
                   seniority: filters.seniority,
+                  customFields,
                 },
                 sort: filters.sort,
                 offset: filters.offset,
@@ -177,6 +216,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           : // Card teaser is on `summary` — do not pull full HTML descriptions.
             board.jobs.list(filters, { headers }),
         seoBase(),
+        fieldsRead,
       ]);
       const page = rawList;
       const relatedSearches =
@@ -208,7 +248,14 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           jobs: page.data,
         }),
       );
-      return { page, seo, relatedSearches, head, jsonLd };
+      return {
+        page,
+        seo,
+        relatedSearches,
+        head,
+        jsonLd,
+        customFilterFields,
+      };
     }),
   );
 

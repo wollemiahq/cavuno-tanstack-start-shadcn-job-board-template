@@ -7,6 +7,7 @@ import { ArrowUpDown, XIcon } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
+import { CustomFieldFilterFields } from '@/components/board/custom-field-filter-fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -27,8 +28,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  countCustomFieldFilters,
+  pickCustomFieldSearch,
+  resolveCustomFieldFilters,
+  withCustomFieldFilters,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
 import type { UrlSearchInput } from '@/lib/pagination';
 import { parseTalentSearch, type TalentSearch } from '@/lib/talent-search';
+import type { CustomFieldFilter } from '@cavuno/board';
 
 const ANY = '__any__';
 const DEFAULT_SORT = 'relevance' as const;
@@ -67,20 +76,36 @@ function sortLabel(value: string): string {
 type TalentToolbarFacets = {
   jobSearchStatus?: string;
   openToRelocate?: string;
+  /** Public candidate profile-field clauses, sheet-only. */
+  customFields?: CustomFieldFilter[];
 };
 
-function facetsFromSearch(search: TalentSearch): TalentToolbarFacets {
+const NO_CUSTOM_FIELDS: CustomFilterField[] = [];
+
+function facetsFromSearch(
+  search: TalentSearch,
+  customFilterFields: readonly CustomFilterField[],
+): TalentToolbarFacets {
   return {
     jobSearchStatus: search.jobSearchStatus,
     openToRelocate: search.openToRelocate,
+    customFields: resolveCustomFieldFilters(
+      customFilterFields,
+      pickCustomFieldSearch(search),
+    ),
   };
 }
 
 function facetCount(facets: TalentToolbarFacets) {
   return (
     Number(Boolean(facets.jobSearchStatus)) +
-    Number(Boolean(facets.openToRelocate))
+    Number(Boolean(facets.openToRelocate)) +
+    countCustomFieldFilters(facets.customFields ?? [])
   );
+}
+
+function customFieldSearchKey(search: TalentSearch) {
+  return JSON.stringify(pickCustomFieldSearch(search));
 }
 
 function FilterSelect({
@@ -142,6 +167,8 @@ function FilterSelect({
 
 type TalentFiltersProps = {
   search: TalentSearch;
+  /** Public candidate profile fields for the sheet; omit for none. */
+  customFilterFields?: CustomFilterField[];
   lists?: ReactNode;
   linkJob?: ReactNode;
 };
@@ -158,6 +185,8 @@ function talentFiltersAreEqual(
     prev.search.openToRelocate === next.search.openToRelocate &&
     prev.search.sort === next.search.sort &&
     prev.search.list === next.search.list &&
+    customFieldSearchKey(prev.search) === customFieldSearchKey(next.search) &&
+    prev.customFilterFields === next.customFilterFields &&
     prev.lists === next.lists &&
     prev.linkJob === next.linkJob
   );
@@ -165,42 +194,60 @@ function talentFiltersAreEqual(
 
 export const TalentFilters = memo(function TalentFilters({
   search,
+  customFilterFields = NO_CUSTOM_FIELDS,
   lists,
   linkJob,
 }: TalentFiltersProps) {
   const navigate = useNavigate({ from: '/talent/' });
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** Retained while the sheet animates out so its title does not swap mid-exit. */
+  const [sheetMode, setSheetMode] = useState<'desktop' | 'mobile'>('mobile');
   const [draft, setDraft] = useState<TalentToolbarFacets>({});
-  const facets = facetsFromSearch(search);
+  const facets = facetsFromSearch(search, customFilterFields);
   const activeCount = facetCount(facets);
+  const hasCustomFields = customFilterFields.length > 0;
 
-  const commit = (patch: UrlSearchInput) => {
+  const commit = (
+    patch: UrlSearchInput,
+    customFields?: CustomFieldFilter[],
+  ) => {
     void navigate({
-      search: (previous) =>
-        parseTalentSearch({
+      search: (previous) => {
+        const next = {
           ...previous,
           ...patch,
           page: undefined,
           sourced: undefined,
-        }),
+        };
+        return parseTalentSearch(
+          customFields ? withCustomFieldFilters(next, customFields) : next,
+        );
+      },
     });
   };
 
   const commitFacets = (next: TalentToolbarFacets) => {
-    commit({
-      jobSearchStatus: next.jobSearchStatus,
-      openToRelocate: next.openToRelocate,
-    });
+    commit(
+      {
+        jobSearchStatus: next.jobSearchStatus,
+        openToRelocate: next.openToRelocate,
+      },
+      next.customFields ?? [],
+    );
   };
 
   const resetFacets = () =>
-    commit({
-      jobSearchStatus: undefined,
-      openToRelocate: undefined,
-    });
+    commit(
+      {
+        jobSearchStatus: undefined,
+        openToRelocate: undefined,
+      },
+      [],
+    );
 
-  const openSheet = () => {
+  const openSheet = (mode: 'desktop' | 'mobile') => {
     setDraft({ ...facets });
+    setSheetMode(mode);
     setSheetOpen(true);
   };
 
@@ -210,6 +257,7 @@ export const TalentFilters = memo(function TalentFilters({
     commitFacets({
       jobSearchStatus: draft.jobSearchStatus,
       openToRelocate: draft.openToRelocate,
+      customFields: draft.customFields,
     });
     closeSheet();
   };
@@ -235,7 +283,11 @@ export const TalentFilters = memo(function TalentFilters({
           <span className="sr-only">{m.employerCompany_closeLabel()}</span>
         </SheetClose>
         <SheetHeader>
-          <SheetTitle>{m.jobSearch_filtersLabel()}</SheetTitle>
+          <SheetTitle>
+            {sheetMode === 'desktop'
+              ? m.jobSearch_allFiltersLabel()
+              : m.jobSearch_filtersLabel()}
+          </SheetTitle>
           <SheetDescription>
             {m.talentFilters_filterSheetDescription()}
           </SheetDescription>
@@ -261,6 +313,11 @@ export const TalentFilters = memo(function TalentFilters({
               setDraft({ ...draft, openToRelocate })
             }
             showLabel
+          />
+          <CustomFieldFilterFields
+            fields={customFilterFields}
+            value={draft.customFields ?? []}
+            onChange={(customFields) => setDraft({ ...draft, customFields })}
           />
         </FieldGroup>
 
@@ -298,6 +355,20 @@ export const TalentFilters = memo(function TalentFilters({
             commitFacets({ ...facets, openToRelocate })
           }
         />
+        {hasCustomFields && (
+          <Button
+            type="button"
+            variant="outline"
+            aria-haspopup="dialog"
+            aria-expanded={sheetOpen && sheetMode === 'desktop'}
+            onClick={() => openSheet('desktop')}
+          >
+            {m.jobSearch_allFiltersLabel()}
+            {activeCount > 0 && (
+              <Badge variant="secondary">{activeCount}</Badge>
+            )}
+          </Button>
+        )}
         {activeCount > 0 && (
           <Button type="button" variant="ghost" onClick={resetFacets}>
             {m.jobSearch_resetLabel()}
@@ -310,8 +381,8 @@ export const TalentFilters = memo(function TalentFilters({
         variant="outline"
         className="md:hidden"
         aria-haspopup="dialog"
-        aria-expanded={sheetOpen}
-        onClick={openSheet}
+        aria-expanded={sheetOpen && sheetMode === 'mobile'}
+        onClick={() => openSheet('mobile')}
       >
         {m.jobSearch_filtersLabel()}
         {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}

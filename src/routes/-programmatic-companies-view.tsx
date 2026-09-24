@@ -9,6 +9,12 @@ import {
   includeSelectedCompanyMarket,
   type CompaniesSearch,
 } from '@/lib/companies-search';
+import {
+  resolveCustomFieldFilters,
+  withCustomFieldFilters,
+  type CustomFieldSearch,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
 import { pageSearchValue, type UrlSearchInput } from '@/lib/pagination';
 import { getLocale } from '@/paraglide/runtime';
 import { SelectedCompanyDetail } from '@/routes/-selected-company-detail';
@@ -38,6 +44,7 @@ export function ProgrammaticCompaniesView({
   market,
   search,
   searchUnavailable,
+  customFilters,
 }: {
   heading: string;
   page: CompaniesPageData;
@@ -46,6 +53,8 @@ export function ProgrammaticCompaniesView({
   market?: { slug: string; name: string };
   search: CompaniesSearch;
   searchUnavailable?: boolean;
+  /** Public company profile fields for the sheet, and the URL's `cf.*`. */
+  customFilters?: { fields: CustomFilterField[]; search: CustomFieldSearch };
 }) {
   const { board } = rootApi.useLoaderData();
   const routeNavigate = useNavigate();
@@ -89,6 +98,29 @@ export function ProgrammaticCompaniesView({
       query={search.query}
       searchUnavailable={searchUnavailable}
       markets={marketOptions}
+      customFilters={
+        customFilters
+          ? {
+              fields: customFilters.fields,
+              active: resolveCustomFieldFilters(
+                customFilters.fields,
+                customFilters.search,
+              ),
+              onChange: (clauses) =>
+                navigate({
+                  search: (previous) =>
+                    withCustomFieldFilters(
+                      {
+                        ...previous,
+                        page: undefined,
+                        selectedCompany: undefined,
+                      },
+                      clauses,
+                    ),
+                }),
+            }
+          : undefined
+      }
       onPageChange={(nextPage) =>
         navigate({
           search: (previous) => ({

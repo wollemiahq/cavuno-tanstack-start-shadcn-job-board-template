@@ -72,6 +72,25 @@ geometry and interaction chrome:
 The default independent-scroll height is `calc(100dvh - 12rem)`. A route with a
 different sticky-header stack sets `--search-results-height` on the layout.
 
+## Custom-field filters
+
+The "All filters" sheet on Jobs, Companies and Talent picks up the operator's
+custom fields on its own, so a new field needs no code change:
+
+- Jobs use the job custom fields from `board.context().customFields.job`;
+  Companies and Talent use the public company and candidate profile fields
+  from `board.profileFields.retrieve()`.
+- `single_select` and `multi_select` fields become a list of checkboxes, one
+  per option; ticking several matches any of them. A `boolean` field becomes
+  one checkbox labelled with the field name, which filters to "yes" only.
+- Number, text, date, link, file and collection-reference fields, and
+  private profile fields, are left out. A board without eligible fields gets
+  no custom section (and Companies no "All filters" button).
+- Selections live in the URL as `cf.<field key>=<option keys>` (or `=true`).
+  `src/lib/custom-field-filters.ts` owns that mapping and drops unknown keys
+  and retired options before a request, so shared links never break. Different
+  fields combine with AND, options within a field with OR, up to 10 fields.
+
 ## Do / Don't
 
 | Do                                                                          | Don't                                                                                           |

@@ -4,6 +4,10 @@ import {
 } from '@cavuno/board/filters';
 
 import {
+  parseCustomFieldSearch,
+  type CustomFieldSearch,
+} from '@/lib/custom-field-filters';
+import {
   pageSearchValue,
   parsePageParam,
   searchQueryString,
@@ -32,9 +36,17 @@ export function parseJobsSearch(search: UrlSearchInput): JobsSearch {
   };
 }
 
+/** `/jobs` also filters by the board's job custom fields (`cf.<key>`). */
+export type JobsIndexSearch = JobsSearch & CustomFieldSearch;
+
+export function parseJobsIndexSearch(search: UrlSearchInput): JobsIndexSearch {
+  return { ...parseJobsSearch(search), ...parseCustomFieldSearch(search) };
+}
+
 /** A pane selection changes history, but never the listing request. */
-export function jobsListingLoaderDeps(search: JobsSearch) {
-  const listing = { ...search };
-  delete listing.selectedJob;
+export function jobsListingLoaderDeps<T extends JobsSearch>(
+  search: T,
+): Omit<T, 'selectedJob'> {
+  const { selectedJob: _selectedJob, ...listing } = search;
   return listing;
 }
