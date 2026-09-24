@@ -5,6 +5,7 @@
  * headers the session middleware resolved, plus the board-access grant the
  * board-access middleware resolved (so a password-protected board answers).
  */
+import { isBoardApiError } from '@cavuno/board';
 import { isRedirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequestHeader } from '@tanstack/react-start/server';
@@ -37,6 +38,9 @@ import type {
 type UpdateCandidateProfileWithCountryBody = UpdateCandidateProfileBody & {
   countryCode?: string | null;
 };
+
+/** `PATCH /me/profile` refusal: another candidate on the board has the handle. */
+const CANDIDATE_HANDLE_TAKEN = 'candidate_handle_taken';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authedHeaders(context: SessionContext & BoardAccessContext) {
@@ -191,16 +195,27 @@ export const updateProfile = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    // The field is already part of Cavuno's additive HTTP contract. The
-    // current starter SDK predates its generated type, so keep the one narrow
-    // compatibility cast at the server boundary rather than dropping it.
-    // SAFETY: `data` was accepted as UpdateCandidateProfileWithCountryBody,
-    // which is UpdateCandidateProfileBody plus an additive countryCode field.
-    return getBoard().me.profile.update(
-      data as UpdateCandidateProfileBody,
-      undefined,
-      { headers },
-    );
+    try {
+      // The field is already part of Cavuno's additive HTTP contract. The
+      // current starter SDK predates its generated type, so keep the one
+      // narrow compatibility cast at the server boundary rather than
+      // dropping it.
+      // SAFETY: `data` was accepted as UpdateCandidateProfileWithCountryBody,
+      // which is UpdateCandidateProfileBody plus an additive countryCode field.
+      await getBoard().me.profile.update(
+        data as UpdateCandidateProfileBody,
+        undefined,
+        { headers },
+      );
+    } catch (error) {
+      // The BoardApiError does not survive the server-fn RPC boundary, so a
+      // taken handle comes back as a result the form can show on the field.
+      if (isBoardApiError(error) && error.code === CANDIDATE_HANDLE_TAKEN) {
+        return { ok: false as const, code: CANDIDATE_HANDLE_TAKEN };
+      }
+      throw error;
+    }
+    return { ok: true as const };
   });
 
 /** Live handle-availability check for the profile form. */
