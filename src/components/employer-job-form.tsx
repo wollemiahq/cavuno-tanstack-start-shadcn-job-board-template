@@ -102,6 +102,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import type { CompanyJobsSearch } from '@/lib/company-jobs-search';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import {
   defaultBillingSelection,
@@ -548,7 +549,7 @@ export interface EmployerJobFormDependencies {
   navigate: (options: {
     to: '/employers/companies/$slug';
     params: { slug: string };
-    search?: { posted?: '1'; job_id?: string };
+    search?: CompanyJobsSearch;
     reloadDocument?: boolean;
   }) => Promise<void>;
   /** Active choices of a job collection field; the public choices read by default. */
@@ -1108,10 +1109,18 @@ export function EmployerJobForm({
     await goToList(jobId, { review: awaitingReview(outcome.status) });
   }
 
-  async function goToList(jobId?: string, options?: { review?: boolean }) {
+  async function goToList(
+    jobId?: string,
+    options?: { review?: boolean; edited?: boolean },
+  ) {
     setStatus('committed');
-    const posted = { posted: '1' as const };
-    const review = options?.review ? { review: '1' as const } : {};
+    // An edit saved in place is not a new post: the list says the changes
+    // were saved rather than describing a freshly posted draft.
+    const outcome: CompanyJobsSearch = options?.edited
+      ? { edited: 1 }
+      : options?.review
+        ? { posted: 1, review: 1 }
+        : { posted: 1 };
     try {
       // Soft client nav reused the list loader, so the URL changed
       // while the post/edit form stayed on screen. A document reload
@@ -1120,9 +1129,7 @@ export function EmployerJobForm({
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
-        search: jobId
-          ? { ...posted, ...review, job_id: jobId }
-          : { ...posted, ...review },
+        search: jobId ? { ...outcome, job_id: jobId } : outcome,
         reloadDocument: true,
       });
     } catch {
@@ -1267,7 +1274,7 @@ export function EmployerJobForm({
       await runCheckout(mode.jobId);
       return;
     }
-    await goToList(mode.jobId);
+    await goToList(mode.jobId, { edited: true });
   }
 
   function renderBuiltin(key: JobFormEntry['key']): ReactNode {

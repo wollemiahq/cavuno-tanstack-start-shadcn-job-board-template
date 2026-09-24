@@ -449,7 +449,7 @@ describe('employer company workspace', () => {
 
   it('explains a Stripe return and highlights the posted job', async () => {
     await renderJobs([draftJob], {
-      search: { checkout_success: '1', job_id: draftJob.id },
+      search: { checkout_success: 1, job_id: draftJob.id },
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent('Payment received');
@@ -460,7 +460,7 @@ describe('employer company workspace', () => {
 
   it('says a held post is awaiting review instead of calling it saved', async () => {
     await renderJobs([draftJob], {
-      search: { posted: '1', review: '1', job_id: draftJob.id },
+      search: { posted: 1, review: 1, job_id: draftJob.id },
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -473,7 +473,7 @@ describe('employer company workspace', () => {
 
   it('explains a same-origin save and says so if the new row is not listed yet', async () => {
     await renderJobs([draftJob], {
-      search: { posted: '1', job_id: 'job-missing' },
+      search: { posted: 1, job_id: 'job-missing' },
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -481,6 +481,19 @@ describe('employer company workspace', () => {
     );
     expect(screen.getByRole('alert')).toHaveTextContent(
       m.employerJobs_postedMissingBody(),
+    );
+  });
+
+  it('confirms a saved edit without describing a new draft', async () => {
+    await renderJobs([draftJob], {
+      search: { edited: 1, job_id: draftJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerEditJob_savedText(),
+    );
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      m.employerJobs_postedBody(),
     );
   });
 

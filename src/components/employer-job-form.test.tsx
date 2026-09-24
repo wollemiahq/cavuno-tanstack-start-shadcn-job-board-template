@@ -262,7 +262,7 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
-          search: { posted: '1', review: '1', job_id: 'job-1' },
+          search: { posted: 1, review: 1, job_id: 'job-1' },
         }),
       ),
     );
@@ -722,7 +722,7 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
-          search: { posted: '1', job_id: 'job-1' },
+          search: { edited: 1, job_id: 'job-1' },
         }),
       ),
     );
