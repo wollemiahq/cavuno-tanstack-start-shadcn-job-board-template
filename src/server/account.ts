@@ -21,8 +21,10 @@ import {
   sessionMiddleware,
   type SessionContext,
 } from '../lib/session-middleware';
+import { readAccount } from './account-read';
 import { gatedRead } from './board-access';
 import { requireVerifiedBoardUser } from './me-verification';
+import { readRecommendedJobs } from './recommended-jobs-read';
 
 import { parseResumeOnboardingDismissal } from '@/lib/resume-onboarding';
 import type {
@@ -83,53 +85,13 @@ export const getResumeOnboardingDismissal = createServerFn({
   parseResumeOnboardingDismissal(getRequestHeader('cookie') ?? null),
 );
 
-/** Everything the `/account` page renders, fetched in parallel. */
+export type { AccountBoard, AccountData } from './account-read';
+
+/** The `/account` read with the session's bearer and board-access grant. */
 export const getAccount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, async () => {
-      const board = getBoard();
-      const headers = authedHeaders(context);
-      const me = await requireVerifiedBoardUser(headers);
-      const [
-        profile,
-        experience,
-        education,
-        skills,
-        languages,
-        savedJobs,
-        resume,
-        customFields,
-        objectReferences,
-      ] = await Promise.all([
-        board.me.profile.retrieve(undefined, { headers }),
-        board.me.profile.listExperience({ headers }),
-        board.me.profile.listEducation({ headers }),
-        board.me.profile.listSkills({ headers }),
-        board.me.profile.listLanguages({ headers }),
-        board.me.savedJobs.list({ limit: 50 }, { headers }),
-        board.me.resume.retrieve({ headers }),
-        // Owner-editable custom fields and collection selections (including
-        // private fields the public form layout never lists). Each degrades
-        // to `null` so an API without them still renders the profile.
-        board.me.profile.retrieveCustomFields({ headers }).catch(() => null),
-        board.me.profile
-          .retrieveObjectReferences({ headers })
-          .catch(() => null),
-      ]);
-      return {
-        me,
-        profile,
-        experience,
-        education,
-        skills,
-        languages,
-        savedJobs,
-        resume,
-        customFields,
-        objectReferences,
-      };
-    }),
+    gatedRead(context, () => readAccount(getBoard(), authedHeaders(context))),
   );
 
 /**
@@ -165,28 +127,9 @@ export const getSavedJobs = createServerFn({ method: 'GET' })
 export const getRecommendedJobs = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, async () => {
-      const headers = authedHeaders(context);
-      await requireVerifiedBoardUser(headers);
-      const board = getBoard();
-      // Job-seeker plan entitlements are per plan and are NOT on the wire, so
-      // there is nothing to pre-gate on: make the call, and translate the
-      // board's 403 into a signal that survives this function's boundary.
-      const [recommended, skills, resume] = await Promise.all([
-        board.me.recommendedJobs
-          .list({ limit: 20 }, { headers })
-          .catch(throwCandidatePaywallSignal),
-        board.me.profile.listSkills({ headers }),
-        board.me.resume.retrieve({ headers }),
-      ]);
-      return {
-        ...recommended,
-        data: recommended.data.filter((item) => item.job != null),
-        skillCount: skills.data.length,
-        parseStatus: resume.parseStatus,
-        resume,
-      };
-    }),
+    gatedRead(context, () =>
+      readRecommendedJobs(getBoard(), authedHeaders(context)),
+    ),
   );
 
 export const updateProfile = createServerFn({ method: 'POST' })
@@ -205,7 +148,9 @@ export const updateProfile = createServerFn({ method: 'POST' })
       await getBoard().me.profile.update(
         data as UpdateCandidateProfileBody,
         undefined,
-        { headers },
+        {
+          headers,
+        },
       );
     } catch (error) {
       // The BoardApiError does not survive the server-fn RPC boundary, so a

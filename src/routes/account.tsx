@@ -5,8 +5,11 @@
  * profile-completeness rail (progress + checklist) on the right and the
  * resume import dialog as the page-header action. Saved jobs live at
  * /saved-jobs; notification settings and account deletion live at
- * /settings. The loader's server function enforces auth; the redirect
- * here is UX, not the security boundary.
+ * /settings. An employer-only account has no candidate profile, so (hosted
+ * parity) it gets the employer profile view instead: avatar, display name and
+ * a link to the employer dashboard. The loader's server function enforces
+ * auth and picks the role; the redirects here are UX, not the security
+ * boundary.
  */
 import { Fragment, type ReactNode } from 'react';
 
@@ -30,8 +33,9 @@ import { ResumeImportDialog } from '../components/resume-import-dialog';
 import { SkillsSection } from '../components/skills-section';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getAccount } from '../server/account';
+import { getAccount, type AccountData } from '../server/account';
 import { getSeoBase } from '../server/queries';
+import { EmployerAccountPageView } from './-account-employer-page';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { boardForms } from '@/board/form-layout';
@@ -62,6 +66,20 @@ const SECTION_KEYS: readonly TalentSectionKey[] = [
 ];
 
 function AccountPage() {
+  const account = Route.useLoaderData();
+  if (account.role === 'employer') {
+    return (
+      <EmployerAccountPageView me={account.me} profile={account.profile} />
+    );
+  }
+  return <CandidateAccountPage account={account} />;
+}
+
+function CandidateAccountPage({
+  account,
+}: {
+  account: Extract<AccountData, { role: 'candidate' }>;
+}) {
   const {
     profile,
     experience,
@@ -71,7 +89,7 @@ function AccountPage() {
     resume,
     customFields,
     objectReferences,
-  } = Route.useLoaderData();
+  } = account;
   const { board } = rootApi.useLoaderData();
   const profileLocationSuggestions = useLocationSuggestions(getLocale());
   const experienceLocationSuggestions = useLocationSuggestions(getLocale());

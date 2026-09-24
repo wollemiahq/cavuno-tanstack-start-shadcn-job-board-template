@@ -63,6 +63,10 @@
   "accountAccess_title": "Acceso a las ofertas",
   "accountAccess_unlockSubtitle": "Elige un plan para ver el portal completo.",
   "accountAccess_unlockTitle": "Desbloquea todas las ofertas",
+  "accountEmployer_dashboardLink": "Ir al panel de empleador",
+  "accountEmployer_description": "Actualiza cómo te ven los candidatos.",
+  "accountEmployer_heading": "Perfil de empleador de {firstName}",
+  "accountEmployer_headingFallback": "Tu perfil de empleador",
   "accountHome_applicationsLink": "Candidaturas",
   "accountHome_jobAlertsLink": "Alertas de empleo",
   "accountHome_profileHeading": "Perfil",
@@ -87,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Ir a tu perfil",
+  "accountRecommended_employerText": "Tu cuenta de empresa no tiene un perfil de candidato con el que comparar empleos.",
+  "accountRecommended_employerTitle": "Las coincidencias de empleo son para cuentas de candidatos",
   "accountRecommended_heading": "Coincidencias de {name}",
   "accountRecommended_headingFallback": "Tus coincidencias",
   "accountRecommended_needsProfileTitle": "Sube tu CV",

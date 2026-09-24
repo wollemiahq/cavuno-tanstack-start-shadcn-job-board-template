@@ -63,6 +63,10 @@
   "accountAccess_title": "Accès aux offres",
   "accountAccess_unlockSubtitle": "Choisissez une formule pour voir tout le site.",
   "accountAccess_unlockTitle": "Débloquez toutes les offres",
+  "accountEmployer_dashboardLink": "Accéder au tableau de bord employeur",
+  "accountEmployer_description": "Modifiez la façon dont les candidats vous voient.",
+  "accountEmployer_heading": "Profil employeur de {firstName}",
+  "accountEmployer_headingFallback": "Votre profil employeur",
   "accountHome_applicationsLink": "Candidatures",
   "accountHome_jobAlertsLink": "Alertes emploi",
   "accountHome_profileHeading": "Profil",
@@ -87,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Aller à votre profil",
+  "accountRecommended_employerText": "Votre compte employeur n’a pas de profil candidat auquel comparer les offres.",
+  "accountRecommended_employerTitle": "Les offres recommandées sont réservées aux comptes candidats",
   "accountRecommended_heading": "Offres pour {name}",
   "accountRecommended_headingFallback": "Vos offres recommandées",
   "accountRecommended_needsProfileTitle": "Téléversez votre CV",

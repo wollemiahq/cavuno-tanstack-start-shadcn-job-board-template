@@ -63,6 +63,10 @@
   "accountAccess_title": "Job-Zugang",
   "accountAccess_unlockSubtitle": "Wähle ein Paket, um das ganze Jobboard zu sehen.",
   "accountAccess_unlockTitle": "Schalte alle Jobs frei",
+  "accountEmployer_dashboardLink": "Zum Arbeitgeber-Dashboard",
+  "accountEmployer_description": "Lege fest, wie Kandidaten dich sehen.",
+  "accountEmployer_heading": "Arbeitgeberprofil von {firstName}",
+  "accountEmployer_headingFallback": "Dein Arbeitgeberprofil",
   "accountHome_applicationsLink": "Bewerbungen",
   "accountHome_jobAlertsLink": "Job-Benachrichtigungen",
   "accountHome_profileHeading": "Profil",
@@ -87,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Zu deinem Profil",
+  "accountRecommended_employerText": "Dein Arbeitgeberkonto hat kein Jobsuchenden-Profil, mit dem Jobs abgeglichen werden können.",
+  "accountRecommended_employerTitle": "Passende Jobs gibt es für Jobsuchende-Konten",
   "accountRecommended_heading": "Jobvorschläge für {name}",
   "accountRecommended_headingFallback": "Deine Jobvorschläge",
   "accountRecommended_needsProfileTitle": "Lade deinen Lebenslauf hoch",
