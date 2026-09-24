@@ -68,7 +68,7 @@ afterEach(() => {
 
 describe('ProfileForm country', () => {
   it('submits only the explicitly selected ISO country code, independently of free-text location', async () => {
-    mocks.updateProfile.mockResolvedValue(undefined);
+    mocks.updateProfile.mockResolvedValue({ ok: true });
     await renderWithRouter(
       <ProfileForm
         profile={profile}
@@ -119,7 +119,7 @@ describe('ProfileForm — operator form layout', () => {
   };
 
   it('renders the layout order, leaves hidden fields out and does not send them', async () => {
-    mocks.updateProfile.mockResolvedValue(undefined);
+    mocks.updateProfile.mockResolvedValue({ ok: true });
     await renderWithRouter(
       <ProfileForm
         profile={profile}
@@ -183,5 +183,160 @@ describe('ProfileForm — operator form layout', () => {
       ),
     ).toBeInTheDocument();
     expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+});
+
+describe('ProfileForm — handle', () => {
+  const suggestions = {
+    suggestions: [],
+    loading: false,
+    onQueryChange: vi.fn(),
+  };
+
+  async function renderForm(overrides: Partial<CandidateProfile> = {}) {
+    await renderWithRouter(
+      <ProfileForm
+        profile={{ ...profile, ...overrides }}
+        language="en"
+        dependencies={mocks}
+        locationSuggestions={suggestions}
+      />,
+    );
+  }
+
+  const handleInput = () =>
+    screen.getByRole('textbox', { name: m.profileForm_handleLabel() });
+  const nameInput = () =>
+    screen.getByRole('textbox', { name: m.profileForm_displayNameLabel() });
+  const typeHandle = (value: string) =>
+    fireEvent.change(handleInput(), { target: { value } });
+  const submit = () =>
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+
+  async function expectHandleError(message: string) {
+    await waitFor(() =>
+      expect(handleInput()).toHaveAccessibleDescription(
+        expect.stringContaining(message),
+      ),
+    );
+    expect(handleInput()).toHaveAttribute('aria-invalid', 'true');
+  }
+
+  it('blocks the save with an inline error when the handle is blank', async () => {
+    await renderForm();
+
+    typeHandle('');
+    submit();
+
+    await expectHandleError(m.profileForm_handleRequiredError());
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+    expect(mocks.toastActionSuccess).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['too short', 'ab', m.profileForm_handleLengthError()],
+    ['too long', 'a'.repeat(51), m.profileForm_handleLengthError()],
+    ['a leading hyphen', '-ada', m.profileForm_handleFormatError()],
+    ['a trailing hyphen', 'ada-', m.profileForm_handleFormatError()],
+    ['other characters', 'ada_l', m.profileForm_handleFormatError()],
+  ])('rejects a handle with %s', async (_case, value, message) => {
+    await renderForm();
+
+    typeHandle(value);
+    submit();
+
+    await expectHandleError(message);
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('lower-cases the handle and turns spaces into hyphens as it is typed', async () => {
+    await renderForm();
+
+    typeHandle('Ada Byron');
+
+    expect(handleInput()).toHaveValue('ada-byron');
+  });
+
+  it('suggests a handle from the name until the candidate edits it', async () => {
+    await renderForm({ handle: null, displayName: 'Ada Lovelace' });
+    expect(handleInput()).toHaveValue('ada-lovelace');
+
+    fireEvent.change(nameInput(), { target: { value: 'Grace M. Hopper!' } });
+    expect(handleInput()).toHaveValue('grace-m-hopper');
+
+    typeHandle('amazing-grace');
+    fireEvent.change(nameInput(), { target: { value: 'Grace Brewster' } });
+    expect(handleInput()).toHaveValue('amazing-grace');
+  });
+
+  it('leaves a short name without a suggestion, so the save stays blocked', async () => {
+    await renderForm({ handle: null, displayName: 'Al' });
+    expect(handleInput()).toHaveValue('');
+
+    submit();
+
+    await expectHandleError(m.profileForm_handleRequiredError());
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('keeps a stored handle when the name changes', async () => {
+    await renderForm();
+
+    fireEvent.change(nameInput(), { target: { value: 'Grace Hopper' } });
+
+    expect(handleInput()).toHaveValue('ada');
+  });
+
+  it('shows a handle the probe reports taken and blocks the save', async () => {
+    mocks.checkHandle.mockResolvedValue({ available: false });
+    await renderForm();
+
+    typeHandle('grace');
+
+    await expectHandleError(m.profileForm_handleTakenText());
+    expect(mocks.checkHandle).toHaveBeenCalledWith({
+      data: { handle: 'grace' },
+    });
+    submit();
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('shows the taken error when the save is refused for the handle', async () => {
+    mocks.checkHandle.mockResolvedValue({ available: true });
+    mocks.updateProfile.mockResolvedValue({
+      ok: false,
+      code: 'candidate_handle_taken',
+    });
+    await renderForm();
+
+    typeHandle('grace');
+    submit();
+
+    await expectHandleError(m.profileForm_handleTakenText());
+    expect(mocks.toastActionSuccess).not.toHaveBeenCalled();
+    expect(mocks.toastActionError).not.toHaveBeenCalled();
+  });
+
+  it('sends a valid handle in the patch', async () => {
+    mocks.checkHandle.mockResolvedValue({ available: true });
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    await renderForm();
+
+    typeHandle('grace-hopper');
+    expect(
+      await screen.findByText(
+        m.profileForm_handleAvailableText(),
+        {},
+        { timeout: 2000 },
+      ),
+    ).toBeInTheDocument();
+    submit();
+
+    await waitFor(() =>
+      expect(mocks.updateProfile).toHaveBeenCalledWith({
+        data: expect.objectContaining({ handle: 'grace-hopper' }),
+      }),
+    );
+    expect(mocks.toastActionSuccess).toHaveBeenCalled();
   });
 });

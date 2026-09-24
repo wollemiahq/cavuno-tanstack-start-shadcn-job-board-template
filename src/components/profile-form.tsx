@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
@@ -68,6 +68,12 @@ import {
   toastActionReconciliationError,
   toastActionSuccess,
 } from '@/lib/action-toast';
+import {
+  handleFromName,
+  handleProblem,
+  normalizeHandleInput,
+  suggestedHandle,
+} from '@/lib/candidate-handle';
 import { searchString } from '@/lib/pagination';
 import type {
   CandidateProfile,
@@ -96,7 +102,8 @@ type CandidateProfileWithCountry = CandidateProfile & {
 function toForm(profile: CandidateProfileWithCountry): FormState {
   return {
     displayName: profile.displayName ?? '',
-    handle: profile.handle ?? '',
+    // A profile without a handle starts from one suggested by the name.
+    handle: profile.handle ?? suggestedHandle(profile.displayName ?? ''),
     headline: profile.headline ?? '',
     location: profile.location ?? '',
     countryCode: profile.countryCode ?? null,
@@ -109,7 +116,14 @@ function toForm(profile: CandidateProfileWithCountry): FormState {
 }
 
 type Status = 'idle' | 'saving';
-type HandleState = { checking: boolean; available: boolean | null };
+/** The availability answer for one handle, from the live probe or a save. */
+type HandleCheck = {
+  handle: string;
+  status: 'checking' | 'available' | 'taken';
+};
+
+/** How long typing pauses before the handle's availability is probed. */
+const HANDLE_CHECK_DELAY_MS = 500;
 type VisibilityLabels = Record<CandidateProfile['profileVisibility'], string>;
 type SearchStatusLabels = Record<CandidateProfile['jobSearchStatus'], string>;
 type VisibleToLabels = Record<
@@ -228,9 +242,11 @@ const profileFormDependencies: ProfileFormDependencies = {
 
 /**
  * Profile edit form — recreates the hosted `/account` profile editor. One
- * merge-patch via `board.me.profile.update`; handle availability is probed
- * live on blur (`board.me.profile.handleAvailable`). The display-name field
- * is part of the same patch (the SDK hides the two-mutation split).
+ * merge-patch via `board.me.profile.update`. The handle is required: it
+ * follows the name until the candidate edits it (when none is stored), is
+ * checked for format before a save, and its availability is probed while
+ * typing (`board.me.profile.handleAvailable`). The display-name field is
+ * part of the same patch (the SDK hides the two-mutation split).
  */
 export function ProfileForm({
   profile,
@@ -271,17 +287,54 @@ export function ProfileForm({
   const [form, setForm] = useState<FormState>(() => toForm(profile));
   const countries = countryOptions(language);
   const [status, setStatus] = useState<Status>('idle');
-  const [handleState, setHandleState] = useState<HandleState>({
-    checking: false,
-    available: null,
-  });
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setStatus('idle');
   };
 
-  const handleChanged = form.handle.trim() !== (profile.handle ?? '');
+  const storedHandle = profile.handle ?? '';
+  const handleInput = useRef<HTMLInputElement>(null);
+  // The handle follows the display name until the candidate types one.
+  const [handleFollowsName, setHandleFollowsName] = useState(!profile.handle);
+  // Format problems show once the candidate edits the handle or saves.
+  const [handleShowsProblem, setHandleShowsProblem] = useState(false);
+  const [handleCheck, setHandleCheck] = useState<HandleCheck | null>(null);
+  const probeHandle = dependencies.checkHandle;
+
+  useEffect(() => {
+    const handle = form.handle;
+    if (handle === storedHandle || handleProblem(handle)) return;
+    let current = true;
+    const timer = setTimeout(async () => {
+      setHandleCheck({ handle, status: 'checking' });
+      try {
+        const result = await probeHandle({ data: { handle } });
+        if (current) {
+          setHandleCheck({
+            handle,
+            status: result.available ? 'available' : 'taken',
+          });
+        }
+      } catch {
+        if (current) setHandleCheck(null);
+      }
+    }, HANDLE_CHECK_DELAY_MS);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [form.handle, storedHandle, probeHandle]);
+
+  const handleAvailability =
+    handleCheck?.handle === form.handle && form.handle !== storedHandle
+      ? handleCheck.status
+      : null;
+  const handleIssue =
+    handleProblem(form.handle) ??
+    (handleAvailability === 'taken' ? 'taken' : null);
+  const shownHandleIssue =
+    handleIssue === 'taken' || handleShowsProblem ? handleIssue : null;
 
   const shows = (key: TalentFormBuiltinKey) => showsBuiltin(entries, key);
   const requires = (key: TalentFormBuiltinKey) => requiresBuiltin(entries, key);
@@ -385,9 +438,14 @@ export function ProfileForm({
   async function save() {
     const missing = missingRequired();
     setInvalid(missing);
+    setHandleShowsProblem(true);
+    if (handleIssue) {
+      handleInput.current?.focus();
+      return;
+    }
     if (missing) return;
     setStatus('saving');
-    const handle = form.handle.trim();
+    const handle = form.handle;
     try {
       // A merge-patch: a built-in the layout hides is not sent, so the value
       // already stored on the profile is kept.
@@ -400,7 +458,7 @@ export function ProfileForm({
         openToRelocate: form.openToRelocate,
       };
       if (shows('name')) data.displayName = form.displayName.trim();
-      if (handle) data.handle = handle;
+      data.handle = handle;
       if (shows('headline')) data.headline = form.headline.trim();
       if (shows('location')) data.location = form.location.trim();
       if (shows('bio')) data.bio = form.bio.trim();
@@ -408,7 +466,14 @@ export function ProfileForm({
         data.jobSearchStatus = form.jobSearchStatus;
         data.jobSearchStatusVisibleTo = form.jobSearchStatusVisibleTo;
       }
-      await dependencies.updateProfile({ data });
+      const result = await dependencies.updateProfile({ data });
+      if (!result.ok) {
+        // Another candidate took the handle since the last probe.
+        setStatus('idle');
+        setHandleCheck({ handle, status: 'taken' });
+        handleInput.current?.focus();
+        return;
+      }
       const values = profileCustomFieldsBody(
         inlineEntries.flatMap((entry) =>
           entry.kind === 'custom' ? [entry.key] : [],
@@ -440,7 +505,6 @@ export function ProfileForm({
       return;
     }
     setStatus('idle');
-    setHandleState({ checking: false, available: null });
     void dependencies.toastActionSuccess();
     await reconcileCommittedAction(
       () => router.invalidate(),
@@ -501,10 +565,66 @@ export function ProfileForm({
     </Field>
   );
 
+  const handleStatusText =
+    shownHandleIssue === 'required'
+      ? m.profileForm_handleRequiredError()
+      : shownHandleIssue === 'length'
+        ? m.profileForm_handleLengthError()
+        : shownHandleIssue === 'format'
+          ? m.profileForm_handleFormatError()
+          : shownHandleIssue === 'taken'
+            ? m.profileForm_handleTakenText()
+            : handleAvailability === 'checking'
+              ? m.profileForm_handleCheckingText()
+              : handleAvailability === 'available'
+                ? m.profileForm_handleAvailableText()
+                : null;
+  // The handle is not a layout field: it sits beside the name, or on its own
+  // when the layout hides the name.
+  const handleField = (
+    <Field
+      className="gap-1.5"
+      data-invalid={shownHandleIssue ? true : undefined}
+    >
+      <FieldLabel htmlFor="profile-handle">
+        {m.profileForm_handleLabel()}
+      </FieldLabel>
+      <Input
+        ref={handleInput}
+        id="profile-handle"
+        value={form.handle}
+        autoComplete="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        aria-required="true"
+        aria-invalid={shownHandleIssue ? true : undefined}
+        aria-describedby={
+          handleStatusText
+            ? 'profile-handle-description profile-handle-status'
+            : 'profile-handle-description'
+        }
+        onChange={(event) => {
+          set('handle', normalizeHandleInput(event.target.value));
+          setHandleFollowsName(false);
+          setHandleShowsProblem(true);
+        }}
+      />
+      <FieldDescription id="profile-handle-description">
+        {m.profileForm_handleDescription()}
+      </FieldDescription>
+      {shownHandleIssue ? (
+        <FieldError id="profile-handle-status">{handleStatusText}</FieldError>
+      ) : handleStatusText ? (
+        <FieldDescription id="profile-handle-status" role="status">
+          {handleStatusText}
+        </FieldDescription>
+      ) : null}
+    </Field>
+  );
+
   function renderBuiltin(key: TalentFormBuiltinKey): ReactNode {
     switch (key) {
       case 'name':
-        // The handle is not a layout field; it sits beside the name.
         return (
           <>
             <Field className="gap-1.5">
@@ -515,53 +635,20 @@ export function ProfileForm({
                 id="profile-display-name"
                 value={form.displayName}
                 required={requires('name')}
-                onChange={(event) => set('displayName', event.target.value)}
-              />
-            </Field>
-            <Field
-              className="gap-1.5"
-              data-invalid={handleState.available === false || undefined}
-            >
-              <FieldLabel htmlFor="profile-handle">
-                {m.profileForm_handleLabel()}
-              </FieldLabel>
-              <Input
-                id="profile-handle"
-                value={form.handle}
-                aria-invalid={handleState.available === false || undefined}
                 onChange={(event) => {
-                  set('handle', event.target.value);
-                  setHandleState({ checking: false, available: null });
-                }}
-                onBlur={async () => {
-                  const handle = form.handle.trim();
-                  if (!handle || !handleChanged) return;
-                  setHandleState({ checking: true, available: null });
-                  try {
-                    const result = await dependencies.checkHandle({
-                      data: { handle },
-                    });
-                    setHandleState({
-                      checking: false,
-                      available: result.available,
-                    });
-                  } catch {
-                    setHandleState({ checking: false, available: null });
-                  }
+                  const displayName = event.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    displayName,
+                    handle: handleFollowsName
+                      ? handleFromName(displayName)
+                      : prev.handle,
+                  }));
+                  setStatus('idle');
                 }}
               />
-              {handleState.checking ? (
-                <FieldDescription>
-                  {m.profileForm_handleCheckingText()}
-                </FieldDescription>
-              ) : handleState.available === false ? (
-                <FieldError>{m.profileForm_handleTakenText()}</FieldError>
-              ) : handleState.available === true ? (
-                <FieldDescription>
-                  {m.profileForm_handleAvailableText()}
-                </FieldDescription>
-              ) : null}
             </Field>
+            {handleField}
           </>
         );
       case 'headline':
@@ -747,6 +834,9 @@ export function ProfileForm({
           ),
         )}
 
+        {shows('name') ? null : (
+          <div className="grid gap-4 sm:grid-cols-2">{handleField}</div>
+        )}
         {shows('location') ? null : (
           <div className="grid gap-4 sm:grid-cols-2">{countryField}</div>
         )}
