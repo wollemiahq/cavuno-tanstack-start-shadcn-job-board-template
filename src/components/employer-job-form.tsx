@@ -1582,29 +1582,6 @@ export function EmployerJobForm({
               </Select>
             </Field>
             <Field>
-              <FieldLabel htmlFor="job-salary-timeframe">
-                {m.postJob_salaryTimeframeLabel()}
-              </FieldLabel>
-              <Select
-                items={timeframeItems}
-                value={form.salaryTimeframe}
-                onValueChange={(value: SalaryTimeframe | null) =>
-                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
-                }
-              >
-                <SelectTrigger id="job-salary-timeframe" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeframeItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
               <FieldLabel htmlFor="job-salary-min">
                 {m.postJob_salaryMinLabel()}
               </FieldLabel>
@@ -1629,6 +1606,29 @@ export function EmployerJobForm({
                 value={form.salaryMax}
                 onChange={(event) => set('salaryMax', event.target.value)}
               />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="job-salary-timeframe">
+                {m.postJob_salaryTimeframeLabel()}
+              </FieldLabel>
+              <Select
+                items={timeframeItems}
+                value={form.salaryTimeframe}
+                onValueChange={(value: SalaryTimeframe | null) =>
+                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
+                }
+              >
+                <SelectTrigger id="job-salary-timeframe" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeframeItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
         );
