@@ -1707,6 +1707,7 @@
   "postJob_salaryTimeframeLabel": "Periodo salarial",
   "postJob_seniorityLabel": "Nivel de experiencia",
   "postJob_seniorityPlaceholder": "Opcional",
+  "postJob_senioritySelectPlaceholder": "Selecciona el nivel de experiencia",
   "postJob_submitButtonLabel": "Publicar oferta",
   "postJob_submittingLabel": "Enviando…",
   "postJob_subtitle": "Llega a candidatos de este portal. Elige un plan y envía tu oferta.",

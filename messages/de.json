@@ -1707,6 +1707,7 @@
   "postJob_salaryTimeframeLabel": "Gehaltszeitraum",
   "postJob_seniorityLabel": "Karrierestufe",
   "postJob_seniorityPlaceholder": "Optional",
+  "postJob_senioritySelectPlaceholder": "Karrierestufe wählen",
   "postJob_submitButtonLabel": "Stelle veröffentlichen",
   "postJob_submittingLabel": "Wird gesendet …",
   "postJob_subtitle": "Erreiche Kandidaten auf diesem Jobboard. Wähle ein Paket und sende deine Anzeige unten ab.",

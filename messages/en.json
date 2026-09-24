@@ -1707,6 +1707,7 @@
   "postJob_salaryTimeframeLabel": "Salary period",
   "postJob_seniorityLabel": "Seniority",
   "postJob_seniorityPlaceholder": "Optional",
+  "postJob_senioritySelectPlaceholder": "Select seniority",
   "postJob_submitButtonLabel": "Post job",
   "postJob_submittingLabel": "Submitting…",
   "postJob_subtitle": "Reach candidates on this board. Choose a plan and submit below.",

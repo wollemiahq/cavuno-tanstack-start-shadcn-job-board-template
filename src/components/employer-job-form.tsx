@@ -1265,7 +1265,14 @@ export function EmployerJobForm({
               }
             >
               <SelectTrigger id="job-seniority" className="w-full">
-                <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
+                <SelectValue
+                  placeholder={
+                    // "Optional" would contradict a required field.
+                    jobForm.seniority.required
+                      ? m.postJob_senioritySelectPlaceholder()
+                      : m.postJob_seniorityPlaceholder()
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {seniorityItems.map((item) => (

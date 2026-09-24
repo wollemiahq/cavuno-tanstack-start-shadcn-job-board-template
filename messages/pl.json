@@ -1769,6 +1769,7 @@
   "postJob_salaryTimeframeLabel": "Okres wynagrodzenia",
   "postJob_seniorityLabel": "Poziom stanowiska",
   "postJob_seniorityPlaceholder": "Opcjonalnie",
+  "postJob_senioritySelectPlaceholder": "Wybierz poziom stanowiska",
   "postJob_submitButtonLabel": "Opublikuj ofertę",
   "postJob_submittingLabel": "Wysyłanie…",
   "postJob_subtitle": "Dotrzyj do kandydatów na tym portalu. Wybierz plan i wyślij ofertę poniżej.",

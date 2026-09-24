@@ -1707,6 +1707,7 @@
   "postJob_salaryTimeframeLabel": "Période de salaire",
   "postJob_seniorityLabel": "Niveau d'expérience",
   "postJob_seniorityPlaceholder": "Facultatif",
+  "postJob_senioritySelectPlaceholder": "Sélectionnez le niveau d’expérience",
   "postJob_submitButtonLabel": "Publier l'offre",
   "postJob_submittingLabel": "Envoi en cours…",
   "postJob_subtitle": "Touchez des candidats sur ce site. Choisissez une formule et soumettez votre offre ci-dessous.",

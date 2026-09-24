@@ -621,6 +621,20 @@ describe('PostJobForm — board job-form constraints', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('does not call a required seniority optional', () => {
+    renderConstrained({ seniority: { required: true } });
+    expect(triggerText(m.postJob_seniorityLabel())).toBe(
+      m.postJob_senioritySelectPlaceholder(),
+    );
+  });
+
+  it('keeps the optional seniority placeholder when seniority is optional', () => {
+    renderConstrained({});
+    expect(triggerText(m.postJob_seniorityLabel())).toBe(
+      m.postJob_seniorityPlaceholder(),
+    );
+  });
+
   it('blocks submit when the board requires a seniority level', async () => {
     const onSubmit = renderConstrained({ seniority: { required: true } });
     fillRequiredFields();

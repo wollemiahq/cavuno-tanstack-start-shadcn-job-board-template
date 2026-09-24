@@ -1167,6 +1167,45 @@ describe('EmployerJobForm — narrowing applied AFTER a job was posted', () => {
   });
 });
 
+describe('EmployerJobForm — seniority placeholder', () => {
+  function renderCreate(jobForm?: JobFormSource) {
+    return renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        jobForm={jobForm}
+      />,
+    );
+  }
+
+  function seniorityTrigger() {
+    return screen.getByLabelText(m.postJob_seniorityLabel());
+  }
+
+  it('does not call a required seniority optional', async () => {
+    await renderCreate({
+      object: 'public_board',
+      jobForm: { seniority: { required: true } },
+    });
+    expect(seniorityTrigger()).toHaveTextContent(
+      m.postJob_senioritySelectPlaceholder(),
+    );
+  });
+
+  it('keeps the optional placeholder when seniority is optional', async () => {
+    await renderCreate();
+    expect(seniorityTrigger()).toHaveTextContent(
+      m.postJob_seniorityPlaceholder(),
+    );
+  });
+});
+
 describe('EmployerJobForm — office-location country lock', () => {
   const germany = {
     object: 'public_board' as const,
