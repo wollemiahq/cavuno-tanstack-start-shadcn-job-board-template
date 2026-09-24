@@ -7,6 +7,7 @@ import {
   talentListDisplayName,
   talentListFiltersEqual,
   talentListingLoaderDeps,
+  talentSearchFromHeader,
   talentSearchToListFilters,
 } from './talent-search';
 
@@ -55,6 +56,32 @@ describe('parseTalentSearch', () => {
       page: undefined,
       selectedTalent: undefined,
     });
+  });
+});
+
+describe('talentSearchFromHeader', () => {
+  it('keeps the active filters, profile-field filters included, for a new keyword', () => {
+    const next = talentSearchFromHeader(
+      {
+        q: 'designer',
+        jobSearchStatus: 'actively_looking',
+        'cf.open_to_mentoring': true,
+        'cf.availability': 'now,month',
+        page: '3',
+        sourced: 'job_1',
+      },
+      { query: 'researcher', place: 'berlin' },
+    );
+
+    expect(next).toMatchObject({
+      q: 'researcher',
+      place: 'berlin',
+      jobSearchStatus: 'actively_looking',
+      'cf.open_to_mentoring': true,
+      'cf.availability': 'now,month',
+    });
+    expect(next.page).toBeUndefined();
+    expect(next.sourced).toBeUndefined();
   });
 });
 

@@ -101,6 +101,24 @@ export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
   };
 }
 
+/**
+ * The `/talent` search a header keyword/place submission opens. The active
+ * directory filters, `cf.*` profile-field filters included, carry over; the
+ * page and a sourced-job view reset.
+ */
+export function talentSearchFromHeader(
+  current: UrlSearchInput,
+  submission: { query: string | undefined; place: string | undefined },
+): TalentSearch {
+  return parseTalentSearch({
+    ...parseTalentSearch(current),
+    q: submission.query,
+    place: submission.place,
+    page: undefined,
+    sourced: undefined,
+  });
+}
+
 /** Listing request inputs. `list` and `sourced` are chrome, not GET /talent. */
 export function talentListingLoaderDeps(
   search: TalentSearch,
