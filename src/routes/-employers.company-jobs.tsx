@@ -269,7 +269,9 @@ export function CompanyJobsPageView({
           {outcome ? (
             <Alert>
               <AlertTitle>{outcome.title}</AlertTitle>
-              <AlertDescription>{outcome.body}</AlertDescription>
+              {outcome.body ? (
+                <AlertDescription>{outcome.body}</AlertDescription>
+              ) : null}
             </Alert>
           ) : null}
 
@@ -410,7 +412,8 @@ function StatCellsPending() {
 function postingOutcome(
   search: CompanyJobsSearch,
   jobs: EmployerJobSummary[],
-): { title: string; body: string } | null {
+): { title: string; body?: string } | null {
+  if (search.edited) return { title: m.employerEditJob_savedText() };
   if (!search.checkout_success && !search.posted) return null;
   const listed = !search.job_id || jobs.some((job) => job.id === search.job_id);
   if (search.checkout_success) {

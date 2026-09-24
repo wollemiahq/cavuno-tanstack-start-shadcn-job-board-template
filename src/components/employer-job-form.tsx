@@ -102,6 +102,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import type { CompanyJobsSearch } from '@/lib/company-jobs-search';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import {
   defaultBillingSelection,
@@ -243,19 +244,26 @@ function clientFieldErrorMessage(errors: {
   return null;
 }
 
+/** A custom or collection field the form renders, named by a violation. */
+type ViolationField = { kind: 'custom' | 'collection'; key: string };
+
 /**
  * Localized copy for a Job form rule the Board API refused
  * (`jobs_constraint_violation`), from the first violation this form knows how
- * to phrase. `null` when none is recognised, so the caller falls back to the
- * error's code. Covers what the client checks cannot: a rule changed after
- * the form loaded, or a stored value the board no longer accepts.
+ * to phrase, plus the rendered field it names (so the message can sit under
+ * that field). `field` is `null` for a rule about the form as a whole or a
+ * field this form does not render. `null` when no violation is recognised,
+ * so the caller falls back to the error's code. Covers what the client
+ * checks cannot: a rule changed after the form loaded, or a stored value the
+ * board no longer accepts.
  */
 function jobFormViolationMessage(
   violations: readonly JobFormViolation[] | undefined,
   definitions: readonly CustomFieldDefinition[],
   jobForm: JobFormConstraints,
   collectionDefinitions: readonly JobCollectionDefinition[] = [],
-): string | null {
+): { message: string; field: ViolationField | null } | null {
+  const formLevel = (message: string) => ({ message, field: null });
   for (const violation of violations ?? []) {
     const params = violation.params ?? {};
     switch (violation.code) {
@@ -264,15 +272,28 @@ function jobFormViolationMessage(
         // `custom_field_too_many` names a collection field past its maximum
         // (or a multi-select custom field); both carry the key at `path[1]`.
         const key = violation.path[1];
-        const definition =
-          collectionDefinitions.find((candidate) => candidate.key === key) ??
-          definitions.find((candidate) => candidate.key === key);
+        const collection = collectionDefinitions.find(
+          (candidate) => candidate.key === key,
+        );
+        const custom = collection
+          ? undefined
+          : definitions.find((candidate) => candidate.key === key);
+        const definition = collection ?? custom;
         const field = definition
           ? customFieldLabel(definition)
           : (params.label ?? String(key ?? ''));
-        return violation.code === 'collection_field_required'
-          ? m.jobForm_customFieldRequiredError({ field })
-          : m.jobForm_customFieldInvalidError({ field });
+        return {
+          message:
+            violation.code === 'collection_field_required'
+              ? m.jobForm_customFieldRequiredError({ field })
+              : m.jobForm_customFieldInvalidError({ field }),
+          field: definition
+            ? {
+                kind: collection ? 'collection' : 'custom',
+                key: definition.key,
+              }
+            : null,
+        };
       }
       case 'custom_field_required':
       case 'custom_field_wrong_type':
@@ -285,36 +306,48 @@ function jobFormViolationMessage(
         const field = definition
           ? customFieldLabel(definition)
           : (params.label ?? String(violation.path[1] ?? ''));
-        return violation.code === 'custom_field_required'
-          ? m.jobForm_customFieldRequiredError({ field })
-          : m.jobForm_customFieldInvalidError({ field });
+        return {
+          message:
+            violation.code === 'custom_field_required'
+              ? m.jobForm_customFieldRequiredError({ field })
+              : m.jobForm_customFieldInvalidError({ field }),
+          field: definition ? { kind: 'custom', key: definition.key } : null,
+        };
       }
       case 'salary_required':
-        return m.jobForm_salaryRequiredError();
+        return formLevel(m.jobForm_salaryRequiredError());
       case 'seniority_required':
-        return m.jobForm_seniorityRequiredError();
+        return formLevel(m.jobForm_seniorityRequiredError());
       case 'salary_below_min':
         if (params.min === undefined) break;
-        return m.jobForm_salaryBelowMinError({ min: Number(params.min) });
+        return formLevel(
+          m.jobForm_salaryBelowMinError({ min: Number(params.min) }),
+        );
       case 'salary_above_max':
         if (params.max === undefined) break;
-        return m.jobForm_salaryAboveMaxError({ max: Number(params.max) });
+        return formLevel(
+          m.jobForm_salaryAboveMaxError({ max: Number(params.max) }),
+        );
       case 'currency_not_allowed':
-        return jobForm.salary.allowedCurrencies
-          ? m.jobForm_currencyNotAllowedError({
-              currencies: jobForm.salary.allowedCurrencies.join(', '),
-            })
-          : m.jobForm_optionNotAllowedError();
+        return formLevel(
+          jobForm.salary.allowedCurrencies
+            ? m.jobForm_currencyNotAllowedError({
+                currencies: jobForm.salary.allowedCurrencies.join(', '),
+              })
+            : m.jobForm_optionNotAllowedError(),
+        );
       case 'work_arrangement_not_allowed':
       case 'employment_type_not_allowed':
       case 'seniority_not_allowed':
-        return m.jobForm_optionNotAllowedError();
+        return formLevel(m.jobForm_optionNotAllowedError());
       case 'office_location_not_allowed':
       case 'remote_eligibility_not_allowed':
         if (params.countries === undefined) break;
-        return m.jobForm_officeLocationCountryNotAllowedError({
-          countries: params.countries,
-        });
+        return formLevel(
+          m.jobForm_officeLocationCountryNotAllowedError({
+            countries: params.countries,
+          }),
+        );
     }
   }
   return null;
@@ -516,7 +549,7 @@ export interface EmployerJobFormDependencies {
   navigate: (options: {
     to: '/employers/companies/$slug';
     params: { slug: string };
-    search?: { posted?: '1'; job_id?: string };
+    search?: CompanyJobsSearch;
     reloadDocument?: boolean;
   }) => Promise<void>;
   /** Active choices of a job collection field; the public choices read by default. */
@@ -847,8 +880,11 @@ export function EmployerJobForm({
     applicationTarget?: boolean;
     billing?: boolean;
     invoiceBilling?: boolean;
-    /** The collection field whose required selection is missing. */
+    /** The collection field whose required selection is missing, or a
+     *  collection field the Board API refused. */
     collection?: { key: string; message: string } | null;
+    /** A custom field the Board API refused. */
+    custom?: { key: string; message: string } | null;
   }>({});
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -969,6 +1005,34 @@ export function EmployerJobForm({
    * merge-patch. Lives outside `buildBody` so the CREATE body type never
    * carries the null variant.
    */
+  /**
+   * Report a refused create or update. A rule about a custom or collection
+   * field the form renders also shows under that field; the form-level
+   * message stays by the submit button either way, so the refusal is never
+   * off-screen.
+   */
+  function reportRefusal(result: {
+    code?: string | null;
+    message?: string | null;
+    violations?: JobFormViolation[];
+  }) {
+    const violation = jobFormViolationMessage(
+      result.violations,
+      layoutCustomFields,
+      jobForm,
+      layoutCollectionFields,
+    );
+    if (violation?.field) {
+      const { kind, key } = violation.field;
+      setFieldErrors((prev) => ({
+        ...prev,
+        [kind]: { key, message: violation.message },
+      }));
+    }
+    setStatus('error');
+    setMessage(violation?.message ?? boardErrorMessage(result));
+  }
+
   function salaryClear() {
     if (!jobForm.salary.visible) return {};
     if (mode.kind !== 'edit') return {};
@@ -1045,10 +1109,18 @@ export function EmployerJobForm({
     await goToList(jobId, { review: awaitingReview(outcome.status) });
   }
 
-  async function goToList(jobId?: string, options?: { review?: boolean }) {
+  async function goToList(
+    jobId?: string,
+    options?: { review?: boolean; edited?: boolean },
+  ) {
     setStatus('committed');
-    const posted = { posted: '1' as const };
-    const review = options?.review ? { review: '1' as const } : {};
+    // An edit saved in place is not a new post: the list says the changes
+    // were saved rather than describing a freshly posted draft.
+    const outcome: CompanyJobsSearch = options?.edited
+      ? { edited: 1 }
+      : options?.review
+        ? { posted: 1, review: 1 }
+        : { posted: 1 };
     try {
       // Soft client nav reused the list loader, so the URL changed
       // while the post/edit form stayed on screen. A document reload
@@ -1057,9 +1129,7 @@ export function EmployerJobForm({
       await actions.navigate({
         to: '/employers/companies/$slug',
         params: { slug },
-        search: jobId
-          ? { ...posted, ...review, job_id: jobId }
-          : { ...posted, ...review },
+        search: jobId ? { ...outcome, job_id: jobId } : outcome,
         reloadDocument: true,
       });
     } catch {
@@ -1155,15 +1225,7 @@ export function EmployerJobForm({
           setMembershipRequired(true);
           return;
         }
-        setStatus('error');
-        setMessage(
-          jobFormViolationMessage(
-            result.violations,
-            layoutCustomFields,
-            jobForm,
-            layoutCollectionFields,
-          ) ?? boardErrorMessage(result),
-        );
+        reportRefusal(result);
         return;
       }
       if (intent === 'draft') {
@@ -1204,15 +1266,7 @@ export function EmployerJobForm({
         setMembershipRequired(true);
         return;
       }
-      setStatus('error');
-      setMessage(
-        jobFormViolationMessage(
-          result.violations,
-          layoutCustomFields,
-          jobForm,
-          layoutCollectionFields,
-        ) ?? boardErrorMessage(result),
-      );
+      reportRefusal(result);
       return;
     }
     if (needsPublishing && selectedBilling) {
@@ -1220,7 +1274,7 @@ export function EmployerJobForm({
       await runCheckout(mode.jobId);
       return;
     }
-    await goToList(mode.jobId);
+    await goToList(mode.jobId, { edited: true });
   }
 
   function renderBuiltin(key: JobFormEntry['key']): ReactNode {
@@ -1265,7 +1319,14 @@ export function EmployerJobForm({
               }
             >
               <SelectTrigger id="job-seniority" className="w-full">
-                <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
+                <SelectValue
+                  placeholder={
+                    // "Optional" would contradict a required field.
+                    jobForm.seniority.required
+                      ? m.postJob_senioritySelectPlaceholder()
+                      : m.postJob_seniorityPlaceholder()
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {seniorityItems.map((item) => (
@@ -1528,29 +1589,6 @@ export function EmployerJobForm({
               </Select>
             </Field>
             <Field>
-              <FieldLabel htmlFor="job-salary-timeframe">
-                {m.postJob_salaryTimeframeLabel()}
-              </FieldLabel>
-              <Select
-                items={timeframeItems}
-                value={form.salaryTimeframe}
-                onValueChange={(value: SalaryTimeframe | null) =>
-                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
-                }
-              >
-                <SelectTrigger id="job-salary-timeframe" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeframeItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
               <FieldLabel htmlFor="job-salary-min">
                 {m.postJob_salaryMinLabel()}
               </FieldLabel>
@@ -1575,6 +1613,29 @@ export function EmployerJobForm({
                 value={form.salaryMax}
                 onChange={(event) => set('salaryMax', event.target.value)}
               />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="job-salary-timeframe">
+                {m.postJob_salaryTimeframeLabel()}
+              </FieldLabel>
+              <Select
+                items={timeframeItems}
+                value={form.salaryTimeframe}
+                onValueChange={(value: SalaryTimeframe | null) =>
+                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
+                }
+              >
+                <SelectTrigger id="job-salary-timeframe" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeframeItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
         );
@@ -1646,14 +1707,22 @@ export function EmployerJobForm({
           definition={entry.definition}
           required={entry.required}
           value={form.customFieldValues[entry.key]}
-          onChange={(value) =>
+          onChange={(value) => {
             setForm((prev) => ({
               ...prev,
               customFieldValues: {
                 ...prev.customFieldValues,
                 [entry.key]: value,
               },
-            }))
+            }));
+            if (fieldErrors.custom?.key === entry.key) {
+              setFieldErrors((prev) => ({ ...prev, custom: null }));
+            }
+          }}
+          error={
+            fieldErrors.custom?.key === entry.key
+              ? fieldErrors.custom.message
+              : null
           }
         />
       );

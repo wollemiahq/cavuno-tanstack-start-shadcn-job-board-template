@@ -148,7 +148,9 @@ export function CollectionFieldPicker({
         searchingText={m.locationCombobox_searchingText()}
         removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
       />
-      {cap > 1 ? (
+      {/* Only an operator-set maximum is worth announcing; the system
+          ceiling applied when there is none is not a rule to choose by. */}
+      {cap > 1 && definition.maxSelections != null ? (
         <FieldDescription>
           {m.collectionField_maxSelectionsText({ count: cap })}
         </FieldDescription>

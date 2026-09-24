@@ -596,6 +596,9 @@ function ProfileEditorCard({
       }
     }
     setStatus('committed');
+    // Every write landed: confirm it now, so a failed refresh below reports
+    // only the stale page, not a failed save.
+    actions.toastSuccess(m.employerCompany_savedText());
     try {
       await actions.invalidate();
       setStatus('idle');
@@ -783,6 +786,10 @@ function ProfileEditorCard({
     if (entry.key === 'name' || entry.key === 'website') return 'identity';
     return SOCIAL_KEYS.has(entry.key) ? 'social' : null;
   });
+  // A layout that splits the social links (another field between them)
+  // yields several social rows; only the first carries the group heading,
+  // so the form never repeats it.
+  const firstSocialRow = rows.findIndex((row) => row.group === 'social');
 
   return (
     <Card>
@@ -794,13 +801,20 @@ function ProfileEditorCard({
             void save();
           }}
         >
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const key = row.entries.map(formEntryKey).join('|');
             const cells = row.entries.map((entry) => (
               <Fragment key={formEntryKey(entry)}>
                 {renderEntry(entry)}
               </Fragment>
             ));
+            if (row.group === 'social' && index !== firstSocialRow) {
+              return (
+                <div key={key} className="grid gap-4 sm:grid-cols-3">
+                  {cells}
+                </div>
+              );
+            }
             if (row.group === 'social') {
               return (
                 <fieldset key={key} className="space-y-3">
