@@ -69,7 +69,9 @@ export function JobsFilterControls({
           seniority: m.jobSearch_seniorityPlaceholder(),
           allFilters: m.jobSearch_allFiltersLabel(),
           filters: m.jobSearch_filtersLabel(),
-          sheetDescription: m.jobSearch_filterSheetDescription(),
+          sheetDescription: customFilters?.fields.length
+            ? m.jobSearch_filterSheetDescriptionWithCustomFields()
+            : m.jobSearch_filterSheetDescription(),
           reset: m.jobSearch_resetLabel(),
           apply: m.jobSearch_applyFiltersLabel(),
           close: m.employerCompany_closeLabel(),

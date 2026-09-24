@@ -22,6 +22,7 @@ import { TalentFilters } from './talent-filters';
 
 import type { CustomFilterField } from '@/lib/custom-field-filters';
 import { parseTalentSearch } from '@/lib/talent-search';
+import { m } from '@/paraglide/messages';
 
 afterEach(cleanup);
 
@@ -169,6 +170,9 @@ describe('TalentFilters', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /All filters/ }));
     const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    expect(sheet).toHaveAccessibleDescription(
+      m.talentFilters_filterSheetDescriptionWithCustomFields(),
+    );
     fireEvent.click(
       within(sheet).getByRole('checkbox', { name: 'Open to mentoring' }),
     );

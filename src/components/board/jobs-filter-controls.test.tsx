@@ -14,6 +14,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { JobsFilterControls } from './jobs-filter-controls';
 
 import type { CustomFilterField } from '@/lib/custom-field-filters';
+import { m } from '@/paraglide/messages';
 
 afterEach(cleanup);
 
@@ -79,6 +80,9 @@ describe('JobsFilterControls', () => {
     expect(trigger).toHaveTextContent('1');
     fireEvent.click(trigger);
     const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    expect(sheet).toHaveAccessibleDescription(
+      m.jobSearch_filterSheetDescriptionWithCustomFields(),
+    );
     const workStyle = within(sheet).getByRole('group', { name: 'Work style' });
     expect(
       within(workStyle).getByRole('checkbox', { name: 'Office hours' }),
@@ -141,6 +145,9 @@ describe('JobsFilterControls', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /All filters/ }));
     const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    expect(sheet).toHaveAccessibleDescription(
+      m.jobSearch_filterSheetDescription(),
+    );
     // Only the built-in seniority checkboxes remain.
     expect(within(sheet).getAllByRole('checkbox')).toHaveLength(
       SENIORITIES.length,

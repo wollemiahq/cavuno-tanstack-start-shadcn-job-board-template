@@ -289,7 +289,9 @@ export const TalentFilters = memo(function TalentFilters({
               : m.jobSearch_filtersLabel()}
           </SheetTitle>
           <SheetDescription>
-            {m.talentFilters_filterSheetDescription()}
+            {hasCustomFields
+              ? m.talentFilters_filterSheetDescriptionWithCustomFields()
+              : m.talentFilters_filterSheetDescription()}
           </SheetDescription>
         </SheetHeader>
 
