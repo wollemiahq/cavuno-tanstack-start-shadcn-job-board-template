@@ -65,6 +65,8 @@ const directoryEntry = {
       endDate: '2021-06',
     },
   ],
+  customFieldValues: {},
+  objectReferences: [],
 } satisfies TalentDirectoryEntry;
 
 const profile = {
@@ -112,6 +114,8 @@ const profile = {
     { name: 'Mathematics', jobSkillId: null },
   ],
   languages: [{ name: 'English', proficiency: 'fluent' }],
+  customFieldValues: {},
+  objectReferences: [],
 } satisfies TalentProfile;
 
 describe('talent view models', () => {

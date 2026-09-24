@@ -59,6 +59,7 @@ function job(slug: string): PublicJob {
     inOfficePeriod: null,
     inOfficeFrequency: null,
     customFieldValues: {},
+    resolvedCollectionFields: [],
     salaryMin: null,
     salaryMax: null,
     salaryCurrency: null,
@@ -91,6 +92,8 @@ function company(summary: string): PublicCompanyDetail {
     salarySampleCount: 0,
     membership: null,
     markets: [],
+    customFieldValues: {},
+    objectReferences: [],
     links: { public: 'https://jobs.example/companies/acme' },
   };
 }

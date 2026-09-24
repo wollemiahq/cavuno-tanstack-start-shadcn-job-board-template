@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { MapPin, X } from 'lucide-react';
 
@@ -43,6 +43,8 @@ export function PlaceTagsField({
   searchingText,
   removeAriaLabel,
   className,
+  icon = <MapPin aria-hidden="true" />,
+  disabled = false,
 }: LocationSuggestionState & {
   id: string;
   tags: PlaceTag[];
@@ -55,6 +57,10 @@ export function PlaceTagsField({
   /** Accessible label for a tag's remove control; `{label}` interpolated by caller. */
   removeAriaLabel: (label: string) => string;
   className?: string;
+  /** Leading input icon; a map pin by default (the field began as a place picker). */
+  icon?: ReactNode;
+  /** Disables adding (a capped picker at its limit); tags stay removable. */
+  disabled?: boolean;
 }) {
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
@@ -152,6 +158,7 @@ export function PlaceTagsField({
           type="text"
           placeholder={placeholder}
           showTrigger={false}
+          disabled={disabled}
           onKeyDown={(event) => {
             if (event.key !== 'Enter') return;
             // Enter inside this field must never submit the host form; with
@@ -169,9 +176,7 @@ export function PlaceTagsField({
           }}
           className="w-full"
         >
-          <InputGroupAddon>
-            <MapPin aria-hidden="true" />
-          </InputGroupAddon>
+          {icon ? <InputGroupAddon>{icon}</InputGroupAddon> : null}
         </ComboboxInput>
         <ComboboxContent anchor={anchorRef} aria-busy={loading}>
           {loading && available.length === 0 ? (

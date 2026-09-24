@@ -10,7 +10,7 @@
  * data; the form owns the create/update + checkout orchestration so the two
  * surfaces never drift.
  */
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
@@ -26,13 +26,25 @@ import {
 import { salaryCurrencyOptions } from '../lib/salary-currencies';
 import { m } from '../paraglide/messages';
 import { checkoutJob, createJob, updateJob } from '../server/employers';
+import { getJobCollectionChoices } from '../server/form-fields';
 
 import { customFieldLabel } from '@/board/custom-field-labels';
 import {
+  formEntryKey,
+  jobFormConstraintsForLayout,
+  jobLayoutCollectionFields,
+  jobLayoutCustomFields,
+  layoutRows,
+  resolveJobFormLayout,
+  showsBuiltin,
+  type CollectionChoice,
+  type JobCollectionDefinition,
+  type JobFormEntry,
+  type JobFormLayoutSource,
+} from '@/board/form-layout';
+import {
   narrowOptions,
-  resolveJobFormConstraints,
   type JobFormConstraints,
-  type JobFormSource,
   type JobFormViolation,
 } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
@@ -40,8 +52,11 @@ import {
   planFeatureLines,
   planOffersFeaturedChoice,
 } from '@/board/plan-view-model';
+import { CollectionFieldPicker } from '@/components/collection-field-picker';
 import {
-  CustomFieldsGroup,
+  CustomFieldInput,
+  isCustomFieldEmpty,
+  missingRequiredCustomField,
   type CustomFieldValues,
 } from '@/components/custom-fields-group';
 import {
@@ -94,11 +109,11 @@ import {
 import { isMembershipRequiredCode } from '@/lib/membership-required';
 import type {
   CreateEmployerJobBody,
+  CustomFieldDefinition,
   EmployerBillingOption,
   EmployerCheckoutBody,
   EmployerJob,
   JobPostingPlan,
-  PublicBoard,
   RemotePermitTaxonomyEntry,
   UpdateEmployerJobBody,
 } from '@cavuno/board';
@@ -141,16 +156,21 @@ function jobFormConstraintError(
     currency: string;
   },
   jobForm: JobFormConstraints,
+  showsEmploymentType: boolean,
 ): string {
   // An EDIT opens with the job's stored values, which predate any narrowing
   // the operator has since applied — so a job saved as full_time / hybrid /
   // USD can sit in a form whose pickers now offer none of those. Nothing
   // downstream catches it: the employer job route runs no server-side
   // constraint check (only public submission does), so an unchecked save
-  // silently stores a value the board disallows.
+  // silently stores a value the board disallows. A hidden employment type
+  // has no picker to fix it with, and an edit does not send it.
   const disallowed = (
     [
-      [jobForm.employmentType.allowedOptions, form.employmentType],
+      [
+        showsEmploymentType ? jobForm.employmentType.allowedOptions : null,
+        form.employmentType,
+      ],
       [jobForm.workArrangement.allowedOptions, form.remoteOption],
     ] as const
   ).some(([allowed, value]) => allowed && !allowed.includes(value));
@@ -222,8 +242,6 @@ function clientFieldErrorMessage(errors: {
   return null;
 }
 
-type CustomFieldDefinition = PublicBoard['customFields']['job'][number];
-
 /**
  * Localized copy for a Job form rule the Board API refused
  * (`jobs_constraint_violation`), from the first violation this form knows how
@@ -235,10 +253,26 @@ function jobFormViolationMessage(
   violations: readonly JobFormViolation[] | undefined,
   definitions: readonly CustomFieldDefinition[],
   jobForm: JobFormConstraints,
+  collectionDefinitions: readonly JobCollectionDefinition[] = [],
 ): string | null {
   for (const violation of violations ?? []) {
     const params = violation.params ?? {};
     switch (violation.code) {
+      case 'collection_field_required':
+      case 'custom_field_too_many': {
+        // `custom_field_too_many` names a collection field past its maximum
+        // (or a multi-select custom field); both carry the key at `path[1]`.
+        const key = violation.path[1];
+        const definition =
+          collectionDefinitions.find((candidate) => candidate.key === key) ??
+          definitions.find((candidate) => candidate.key === key);
+        const field = definition
+          ? customFieldLabel(definition)
+          : (params.label ?? String(key ?? ''));
+        return violation.code === 'collection_field_required'
+          ? m.jobForm_customFieldRequiredError({ field })
+          : m.jobForm_customFieldInvalidError({ field });
+      }
       case 'custom_field_required':
       case 'custom_field_wrong_type':
       case 'custom_field_option_invalid':
@@ -286,50 +320,6 @@ function jobFormViolationMessage(
 }
 
 /**
- * The wire bag for the board's custom fields: the stored value union plus
- * `null`, the clear sentinel an edit sends for an answer the employer removed.
- */
-type CustomFieldValuesWrite = Record<string, CustomFieldValues[string] | null>;
-
-/**
- * The employer job surface carries the board's custom-field bag — on the
- * job read (to prefill an edit) and on the create/update bodies — from the
- * Board API release that opened it to employers. Widened locally so the form
- * also compiles against the SDK pin that predates it; drop both once
- * `@cavuno/board` is bumped past that release.
- */
-type ReadsCustomFields = { customFieldValues?: CustomFieldValues };
-type WritesCustomFields = { customFieldValues?: CustomFieldValuesWrite };
-
-/** An unanswered custom field: nothing typed, nothing ticked, nothing picked. */
-function isCustomFieldEmpty(value: CustomFieldValues[string] | undefined) {
-  if (value === undefined || value === '') return true;
-  return Array.isArray(value) && value.length === 0;
-}
-
-/**
- * The first required custom field the employer left empty, as the localized
- * message the public form's native `required` inputs would show. The
- * platform rejects the save with a 400 either way; catching it here names
- * the field before the round trip, and covers the pickers (multi-select,
- * checkbox) that carry no native `required`.
- */
-function missingRequiredCustomField(
-  definitions: readonly CustomFieldDefinition[],
-  values: CustomFieldValues,
-): string | null {
-  const missing = definitions.find(
-    (definition) =>
-      definition.required &&
-      definition.type !== 'boolean' &&
-      isCustomFieldEmpty(values[definition.key]),
-  );
-  return missing
-    ? m.jobForm_customFieldRequiredError({ field: customFieldLabel(missing) })
-    : null;
-}
-
-/**
  * The wire bag for the board's custom fields. Only defined keys travel. A
  * create sends the answered fields (an empty answer is "unanswered", not a
  * value — the same filter the public form applies). An edit sends EVERY
@@ -341,7 +331,7 @@ function customFieldValuesBody(
   values: CustomFieldValues,
   intent: 'create' | 'edit',
 ) {
-  const body: CustomFieldValuesWrite = {};
+  const body: NonNullable<UpdateEmployerJobBody['customFieldValues']> = {};
   for (const definition of definitions) {
     // A required Yes/No field left untouched means "No": sending `false`
     // keeps it from being rejected as unanswered. An optional one stays
@@ -362,6 +352,58 @@ function customFieldValuesBody(
     body[definition.key] = value;
   }
   return body;
+}
+
+/** The chosen entries per collection field key, in selection order. */
+type CollectionSelections = Record<string, CollectionChoice[]>;
+
+/**
+ * The first required collection field with nothing selected, as the
+ * localized message the other required fields use. The platform rejects the
+ * save with `collection_field_required` either way; catching it here names
+ * the field before the round trip.
+ */
+function missingRequiredCollection(
+  definitions: readonly JobCollectionDefinition[],
+  values: CollectionSelections,
+): { key: string; message: string } | null {
+  const missing = definitions.find(
+    (definition) =>
+      definition.required && (values[definition.key]?.length ?? 0) === 0,
+  );
+  return missing
+    ? {
+        key: missing.key,
+        message: m.jobForm_customFieldRequiredError({
+          field: customFieldLabel(missing),
+        }),
+      }
+    : null;
+}
+
+/**
+ * The `collectionValues` bag. A create sends every field the form shows
+ * (`[]` for none), so the board's required check runs on it. An edit sends
+ * only the fields the employer changed: an omitted key keeps what is
+ * stored, so an untouched field (or an entry archived since) is left alone.
+ * `undefined` when there is nothing to send.
+ */
+function collectionValuesBody(
+  definitions: readonly JobCollectionDefinition[],
+  values: CollectionSelections,
+  stored: Readonly<Record<string, readonly string[]>>,
+  intent: 'create' | 'edit',
+): Record<string, string[]> | undefined {
+  const body: Record<string, string[]> = {};
+  for (const definition of definitions) {
+    const ids = (values[definition.key] ?? []).map((choice) => choice.id);
+    const before = stored[definition.key] ?? [];
+    const changed =
+      ids.length !== before.length ||
+      ids.some((id, index) => id !== before[index]);
+    if (intent === 'create' || changed) body[definition.key] = ids;
+  }
+  return Object.keys(body).length > 0 ? body : undefined;
 }
 
 /**
@@ -419,6 +461,8 @@ type EmployerJobFormState = {
   applicationTarget: string;
   /** Board-defined custom fields, keyed by definition `key` (option KEYS for selects). */
   customFieldValues: CustomFieldValues;
+  /** Collection field selections, keyed by field `key`. */
+  collectionValues: CollectionSelections;
 };
 
 export type EmployerJobFormMode =
@@ -433,8 +477,13 @@ export type EmployerJobFormProps = {
   billingOptions: EmployerBillingOption[];
   officeLocationSuggestions: LocationSuggestionState;
   mode: EmployerJobFormMode;
-  /** Built-in field visibility from `board.context().jobForm`. */
-  jobForm?: JobFormSource | null;
+  /**
+   * The board context as far as the job form: `jobForm` (allow-lists,
+   * bounds) and `forms.job`, the operator's field order with visibility and
+   * required flags. Without `forms` (an older API) the form keeps its
+   * pre-layout order.
+   */
+  jobForm?: JobFormLayoutSource | null;
   /**
    * Board-defined custom fields (`board.customFields.job`) — the same
    * definitions, in the same operator-config order, the public `/post` form
@@ -469,6 +518,21 @@ export interface EmployerJobFormDependencies {
     search?: { posted?: '1'; job_id?: string };
     reloadDocument?: boolean;
   }) => Promise<void>;
+  /** Active choices of a job collection field; the public choices read by default. */
+  loadCollectionChoices?: (
+    fieldKey: string,
+    search: string,
+  ) => Promise<CollectionChoice[]>;
+}
+
+async function loadJobCollectionChoices(
+  fieldKey: string,
+  search: string,
+): Promise<CollectionChoice[]> {
+  const result = await getJobCollectionChoices({
+    data: { fieldKey, search: search || undefined, limit: 25 },
+  });
+  return result.data.map(({ id, name }) => ({ id, name }));
 }
 
 function formatPrice(
@@ -485,8 +549,31 @@ function formatPrice(
   }).format(amountCents / 100);
 }
 
+function initialCollections(job: EmployerJob | undefined) {
+  // Names come from the job's resolved entries; an id without one (an
+  // entry the read no longer resolves) shows as unavailable.
+  const names = Object.fromEntries(
+    (job?.resolvedCollectionFields ?? []).map((field) => [
+      field.key,
+      Object.fromEntries(field.entries.map((entry) => [entry.id, entry.name])),
+    ]),
+  );
+  // An API that predates collection fields omits the bag.
+  return Object.fromEntries(
+    Object.entries(job?.collectionValues ?? {}).map(([key, ids]) => [
+      key,
+      ids.map(
+        (id): CollectionChoice => ({
+          id,
+          name: names[key]?.[id] ?? m.collectionField_unavailableEntryLabel(),
+        }),
+      ),
+    ]),
+  );
+}
+
 function initialForm(
-  job: (EmployerJob & ReadsCustomFields) | undefined,
+  job: EmployerJob | undefined,
   countryName: (code: string) => string,
   // A board narrowed to e.g. remote-only, contract-only or EUR-only would
   // otherwise open the form pre-filled with a value it rejects, and the
@@ -513,6 +600,7 @@ function initialForm(
       applyMethod: 'external',
       applicationTarget: '',
       customFieldValues: {},
+      collectionValues: {},
     };
   }
 
@@ -572,6 +660,7 @@ function initialForm(
     applyMethod: job.applicationUrl ? 'external' : 'native',
     applicationTarget,
     customFieldValues: { ...job.customFieldValues },
+    collectionValues: {},
   };
 }
 
@@ -589,7 +678,14 @@ export function EmployerJobForm({
   membershipGate,
   dependencies,
 }: EmployerJobFormProps) {
-  const jobForm = resolveJobFormConstraints(jobFormSource);
+  // The operator's field order (or the pre-layout order on an older API).
+  // Visibility and required state for salary, seniority and location come
+  // from it; allow-lists and bounds still come from `jobForm`.
+  const layout = resolveJobFormLayout(jobFormSource, customFields);
+  const jobForm = jobFormConstraintsForLayout(jobFormSource, layout);
+  const layoutCustomFields = jobLayoutCustomFields(layout);
+  const layoutCollectionFields = jobLayoutCollectionFields(layout);
+  const shows = (key: JobFormEntry['key']) => showsBuiltin(layout, key);
   // Narrow every picker to what the board accepts. The platform 400s a job
   // carrying a disallowed value (`JOBS_CONSTRAINT_VIOLATION`), so an
   // un-narrowed picker offers options the save will reject.
@@ -635,8 +731,8 @@ export function EmployerJobForm({
   const showBilling = mode.kind === 'create' || needsPublishing;
   const canPublish = hasJobPostingProduct({ plans, billingOptions });
 
-  const [form, setForm] = useState(() =>
-    initialForm(job, countryName, {
+  const [form, setForm] = useState(() => ({
+    ...initialForm(job, countryName, {
       employmentType: preferredDefault('full_time', allowedEmploymentTypes),
       remoteOption: preferredDefault('hybrid', allowedRemoteOptions),
       currency: preferredDefault(
@@ -644,7 +740,10 @@ export function EmployerJobForm({
         currencyOptions.map(({ value }) => value),
       ),
     }),
-  );
+    collectionValues: initialCollections(job),
+  }));
+  const loadCollectionChoices =
+    actions.loadCollectionChoices ?? loadJobCollectionChoices;
   /** `option:{id}` (existing credit) or `plan:{planId}` (new purchase). */
   const [selectedBilling, setSelectedBilling] = useState<string | null>(() =>
     defaultBillingSelection(billingOptions),
@@ -747,6 +846,8 @@ export function EmployerJobForm({
     applicationTarget?: boolean;
     billing?: boolean;
     invoiceBilling?: boolean;
+    /** The collection field whose required selection is missing. */
+    collection?: { key: string; message: string } | null;
   }>({});
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -816,20 +917,28 @@ export function EmployerJobForm({
       Number.isFinite(salaryMin) &&
       Number.isFinite(salaryMax);
 
-    const body: CreateEmployerJobBody & WritesCustomFields = {
+    const body: CreateEmployerJobBody = {
       title: form.title.trim(),
       description: form.description,
       employmentType: form.employmentType,
       remoteOption: form.remoteOption,
     };
-    // Only a board that defines custom fields sends the bag at all.
-    if (customFields.length > 0) {
+    // Only a board that shows custom fields sends the bag at all. A field
+    // the layout hides is not sent, so an edit keeps its stored answer.
+    if (layoutCustomFields.length > 0) {
       body.customFieldValues = customFieldValuesBody(
-        customFields,
+        layoutCustomFields,
         form.customFieldValues,
         mode.kind,
       );
     }
+    const collectionValues = collectionValuesBody(
+      layoutCollectionFields,
+      form.collectionValues,
+      job?.collectionValues ?? {},
+      mode.kind,
+    );
+    if (collectionValues) body.collectionValues = collectionValues;
     if (jobForm.seniority.visible && form.seniority)
       body.seniority = form.seniority;
     if (jobForm.location.visible && form.officeLocations.length > 0) {
@@ -837,7 +946,7 @@ export function EmployerJobForm({
         query: location.displayName,
       }));
     }
-    if (form.remoteOption === 'remote') {
+    if (form.remoteOption === 'remote' && shows('remoteEligibility')) {
       body.remotePermits =
         form.permitSelections.length > 0
           ? form.permitSelections.map(({ type, value }) => ({ type, value }))
@@ -955,11 +1064,12 @@ export function EmployerJobForm({
   async function submit(intent: 'publish' | 'draft' = 'publish') {
     if (status === 'saving' || status === 'committed') return;
     const applyExternal =
+      shows('applyMethod') &&
       form.applyMethod === 'external' &&
       normalizeApplicationTarget(form.applicationTarget) === undefined;
     const publishing = intent === 'publish';
     const errors = {
-      description: isRichTextEmpty(form.description),
+      description: shows('description') && isRichTextEmpty(form.description),
       officeLocations:
         jobForm.location.visible &&
         form.remoteOption !== 'remote' &&
@@ -995,9 +1105,15 @@ export function EmployerJobForm({
     // (the API rejects it with a 400) with an English wire
     // sentence; catching them here gives the employer a localized message
     // before the round trip.
+    const missingCollection = missingRequiredCollection(
+      layoutCollectionFields,
+      form.collectionValues,
+    );
+    setFieldErrors((prev) => ({ ...prev, collection: missingCollection }));
     const constraintError =
-      jobFormConstraintError(form, jobForm) ||
-      missingRequiredCustomField(customFields, form.customFieldValues);
+      jobFormConstraintError(form, jobForm, shows('employmentType')) ||
+      missingRequiredCustomField(layoutCustomFields, form.customFieldValues) ||
+      missingCollection?.message;
     if (constraintError) {
       // `message` only renders under `status === 'error'` — setting it alone
       // leaves the employer with a silently dead submit button.
@@ -1009,7 +1125,7 @@ export function EmployerJobForm({
     // Native apply clears the stored URL (create omits it; edit must send null
     // to switch a previously-external job back to on-board applications).
     const applicationUrl =
-      form.applyMethod === 'external'
+      shows('applyMethod') && form.applyMethod === 'external'
         ? normalizeApplicationTarget(form.applicationTarget)
         : undefined;
 
@@ -1035,8 +1151,12 @@ export function EmployerJobForm({
         }
         setStatus('error');
         setMessage(
-          jobFormViolationMessage(result.violations, customFields, jobForm) ??
-            boardErrorMessage(result),
+          jobFormViolationMessage(
+            result.violations,
+            layoutCustomFields,
+            jobForm,
+            layoutCollectionFields,
+          ) ?? boardErrorMessage(result),
         );
         return;
       }
@@ -1054,12 +1174,15 @@ export function EmployerJobForm({
       return;
     }
 
-    // Edit.
-    const body = {
-      ...buildBody(),
+    // Edit. A hidden employment type is left out so the job keeps its
+    // stored one; create still sends the default the body requires.
+    const { employmentType, ...built } = buildBody();
+    const body: UpdateEmployerJobBody = {
+      ...built,
       ...salaryClear(),
       applicationUrl: applicationUrl ?? null,
-    } satisfies UpdateEmployerJobBody;
+    };
+    if (shows('employmentType')) body.employmentType = employmentType;
     let result: Awaited<ReturnType<typeof actions.updateJob>>;
     try {
       result = await actions.updateJob({
@@ -1077,8 +1200,12 @@ export function EmployerJobForm({
       }
       setStatus('error');
       setMessage(
-        jobFormViolationMessage(result.violations, customFields, jobForm) ??
-          boardErrorMessage(result),
+        jobFormViolationMessage(
+          result.violations,
+          layoutCustomFields,
+          jobForm,
+          layoutCollectionFields,
+        ) ?? boardErrorMessage(result),
       );
       return;
     }
@@ -1089,6 +1216,473 @@ export function EmployerJobForm({
     }
     await goToList(mode.jobId);
   }
+
+  function renderBuiltin(key: JobFormEntry['key']): ReactNode {
+    switch (key) {
+      case 'employmentType':
+        return (
+          <Field>
+            <FieldLabel htmlFor="job-employment-type">
+              {m.postJob_employmentTypeLabel()}
+            </FieldLabel>
+            <Select
+              items={employmentItems}
+              value={form.employmentType}
+              onValueChange={(value: EmploymentTypeOption | null) =>
+                set('employmentType', value ?? 'full_time')
+              }
+            >
+              <SelectTrigger id="job-employment-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {employmentItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        );
+      case 'seniority':
+        return (
+          <Field>
+            <FieldLabel htmlFor="job-seniority">
+              {m.postJob_seniorityLabel()}
+            </FieldLabel>
+            <Select
+              items={seniorityItems}
+              value={form.seniority}
+              onValueChange={(value: SeniorityOption | null) =>
+                set('seniority', value ?? null)
+              }
+            >
+              <SelectTrigger id="job-seniority" className="w-full">
+                <SelectValue placeholder={m.postJob_seniorityPlaceholder()} />
+              </SelectTrigger>
+              <SelectContent>
+                {seniorityItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        );
+      case 'title':
+        return (
+          <Field>
+            <FieldLabel htmlFor="job-title">
+              {m.postJob_jobTitleLabel()}
+            </FieldLabel>
+            <Input
+              id="job-title"
+              required
+              value={form.title}
+              onChange={(event) => set('title', event.target.value)}
+            />
+          </Field>
+        );
+      case 'workArrangement':
+        return (
+          <Field>
+            <FieldLabel htmlFor="job-remote-option">
+              {m.postJob_remoteOptionLabel()}
+            </FieldLabel>
+            <Select
+              items={remoteItems}
+              value={form.remoteOption}
+              onValueChange={(value: RemoteOptionChoice | null) =>
+                setForm((prev) => ({
+                  ...prev,
+                  remoteOption: value ?? 'hybrid',
+                }))
+              }
+            >
+              <SelectTrigger id="job-remote-option" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {remoteItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        );
+      case 'location':
+        return (
+          <Field data-invalid={fieldErrors.officeLocations || undefined}>
+            <FieldLabel htmlFor="job-office-locations">
+              {m.postJob_officeLocationsLabel()}
+            </FieldLabel>
+            <PlaceTagsField
+              id="job-office-locations"
+              tags={form.officeLocations.map((location) => ({
+                key: location.key,
+                label: location.displayName,
+              }))}
+              onAddSuggestion={(place: LocationSuggestionVM) => {
+                // Mirror the platform collector exactly: reject only a
+                // location that HAS a country code outside the board's
+                // list. The picker already resolves one — the form simply
+                // threw it away, so the board's country lock could never
+                // fire on an employer-posted job.
+                const allowed = jobForm.location.allowedCountries;
+                if (
+                  allowed &&
+                  place.countryCode &&
+                  !allowed.includes(place.countryCode)
+                ) {
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    officeLocationCountry: true,
+                  }));
+                  return;
+                }
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  officeLocationCountry: false,
+                }));
+                setForm((prev) =>
+                  prev.officeLocations.some(
+                    (location) => location.key === place.id,
+                  )
+                    ? prev
+                    : {
+                        ...prev,
+                        officeLocations: [
+                          ...prev.officeLocations,
+                          {
+                            key: place.id,
+                            displayName: place.name,
+                            countryCode: place.countryCode,
+                          },
+                        ],
+                      },
+                );
+              }}
+              onAddFreeText={(text) => {
+                // Free text carries no country code. On the PUBLIC form
+                // that is fine — the server resolves it and rejects a
+                // disallowed country. This route has no such check, so
+                // accepting unverifiable text here would be a hole in the
+                // very lock this form is enforcing.
+                if (jobForm.location.allowedCountries) {
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    officeLocationCountry: true,
+                  }));
+                  return;
+                }
+                setForm((prev) => ({
+                  ...prev,
+                  officeLocations: [
+                    ...prev.officeLocations,
+                    {
+                      key: `text:${text}`,
+                      displayName: text,
+                      countryCode: null,
+                    },
+                  ],
+                }));
+              }}
+              onRemove={(key) =>
+                setForm((prev) => ({
+                  ...prev,
+                  officeLocations: prev.officeLocations.filter(
+                    (location) => location.key !== key,
+                  ),
+                }))
+              }
+              placeholder={m.postJob_officeLocationsPlaceholder()}
+              searchingText={m.locationCombobox_searchingText()}
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+              {...officeLocationSuggestions}
+            />
+            {form.remoteOption === 'remote' ? (
+              <FieldDescription>
+                {m.postJob_officeLocationsRemoteHelperText()}
+              </FieldDescription>
+            ) : null}
+            {fieldErrors.officeLocationCountry &&
+            jobForm.location.allowedCountries ? (
+              <FieldError>
+                {m.jobForm_officeLocationCountryNotAllowedError({
+                  countries: jobForm.location.allowedCountries.join(', '),
+                })}
+              </FieldError>
+            ) : null}
+            {fieldErrors.officeLocations ? (
+              <FieldError>
+                {m.postJob_officeLocationsRequiredError()}
+              </FieldError>
+            ) : null}
+          </Field>
+        );
+      case 'remoteEligibility':
+        return form.remoteOption === 'remote' ? (
+          <Field>
+            <FieldLabel htmlFor="job-remote-permits">
+              {m.postJob_remoteRestrictionLabel()}
+            </FieldLabel>
+            <PlaceTagsField
+              id="job-remote-permits"
+              tags={form.permitSelections.map((selection) => ({
+                key: `${selection.type}:${selection.value}`,
+                label: selection.label,
+              }))}
+              onAddSuggestion={(choice: LocationSuggestionVM) => {
+                const separator = choice.id.indexOf(':');
+                if (separator < 0) return;
+                const type = choice.id.slice(0, separator);
+                if (!isPermitType(type)) return;
+                const selection: JobPermitSelection = {
+                  type,
+                  value: choice.id.slice(separator + 1),
+                  label: choice.name,
+                };
+                setForm((prev) =>
+                  prev.permitSelections.some(
+                    (entry) =>
+                      entry.type === selection.type &&
+                      entry.value === selection.value,
+                  )
+                    ? prev
+                    : {
+                        ...prev,
+                        permitSelections: [...prev.permitSelections, selection],
+                      },
+                );
+              }}
+              onRemove={(key) =>
+                setForm((prev) => ({
+                  ...prev,
+                  permitSelections: prev.permitSelections.filter(
+                    (selection) =>
+                      `${selection.type}:${selection.value}` !== key,
+                  ),
+                }))
+              }
+              suggestions={permitSuggestions}
+              loading={false}
+              onQueryChange={setPermitQuery}
+              placeholder={m.postJob_remoteRestrictionPlaceholder()}
+              searchingText={m.locationCombobox_searchingText()}
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+            />
+            <FieldDescription>
+              {m.postJob_remoteRestrictionHelperText()}
+            </FieldDescription>
+          </Field>
+        ) : null;
+      case 'description':
+        return (
+          <Field data-invalid={fieldErrors.description || undefined}>
+            <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
+            <RichTextEditor
+              value={form.description}
+              onChange={(value) => set('description', value)}
+              ariaLabel={m.postJob_descriptionLabel()}
+              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
+            />
+            {fieldErrors.description ? (
+              <FieldError>{m.postJob_descriptionRequiredError()}</FieldError>
+            ) : null}
+          </Field>
+        );
+      case 'salary':
+        return (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <Field>
+              <FieldLabel htmlFor="job-currency">
+                {m.postJob_currencyLabel()}
+              </FieldLabel>
+              <Select
+                items={currencyItems}
+                value={form.currency}
+                onValueChange={(value: string | null) =>
+                  set('currency', value ?? 'USD')
+                }
+              >
+                <SelectTrigger id="job-currency" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="job-salary-timeframe">
+                {m.postJob_salaryTimeframeLabel()}
+              </FieldLabel>
+              <Select
+                items={timeframeItems}
+                value={form.salaryTimeframe}
+                onValueChange={(value: SalaryTimeframe | null) =>
+                  set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
+                }
+              >
+                <SelectTrigger id="job-salary-timeframe" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeframeItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="job-salary-min">
+                {m.postJob_salaryMinLabel()}
+              </FieldLabel>
+              <Input
+                id="job-salary-min"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={form.salaryMin}
+                onChange={(event) => set('salaryMin', event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="job-salary-max">
+                {m.postJob_salaryMaxLabel()}
+              </FieldLabel>
+              <Input
+                id="job-salary-max"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={form.salaryMax}
+                onChange={(event) => set('salaryMax', event.target.value)}
+              />
+            </Field>
+          </div>
+        );
+      case 'applyMethod':
+        return (
+          <>
+            <Field>
+              <FieldLabel>{m.employerPostJob_applyMethodLabel()}</FieldLabel>
+              <RadioGroup
+                value={form.applyMethod}
+                onValueChange={(value) =>
+                  set('applyMethod', value === 'native' ? 'native' : 'external')
+                }
+                className="gap-2"
+              >
+                <Label className="flex items-start gap-2 font-normal">
+                  <RadioGroupItem value="native" className="mt-0.5" />
+                  <span className="grid gap-0.5">
+                    <span className="font-medium">
+                      {m.employerPostJob_applyNativeLabel()}
+                    </span>
+                    <span className="text-muted-foreground text-sm">
+                      {m.employerPostJob_applyNativeHint()}
+                    </span>
+                  </span>
+                </Label>
+                <Label className="flex items-start gap-2 font-normal">
+                  <RadioGroupItem value="external" className="mt-0.5" />
+                  <span className="font-medium">
+                    {m.employerPostJob_applyExternalLabel()}
+                  </span>
+                </Label>
+              </RadioGroup>
+            </Field>
+            {form.applyMethod === 'external' ? (
+              <Field data-invalid={fieldErrors.applicationTarget || undefined}>
+                <FieldLabel htmlFor="job-application-target">
+                  {m.employerCompany_applyUrlLabel()}
+                </FieldLabel>
+                <Input
+                  id="job-application-target"
+                  value={form.applicationTarget}
+                  placeholder={m.employerCompany_applyUrlPlaceholder()}
+                  onChange={(event) =>
+                    set('applicationTarget', event.target.value)
+                  }
+                />
+                {fieldErrors.applicationTarget ? (
+                  <FieldError>
+                    {m.employerPostJob_applyTargetRequiredError()}
+                  </FieldError>
+                ) : null}
+              </Field>
+            ) : null}
+          </>
+        );
+      default:
+        // `company`: the employer posts for its own company, so the form has
+        // no company input.
+        return null;
+    }
+  }
+
+  function renderEntry(entry: JobFormEntry): ReactNode {
+    if (entry.kind === 'builtin') return renderBuiltin(entry.key);
+    if (entry.kind === 'custom') {
+      return (
+        <CustomFieldInput
+          definition={entry.definition}
+          required={entry.required}
+          value={form.customFieldValues[entry.key]}
+          onChange={(value) =>
+            setForm((prev) => ({
+              ...prev,
+              customFieldValues: {
+                ...prev.customFieldValues,
+                [entry.key]: value,
+              },
+            }))
+          }
+        />
+      );
+    }
+    return (
+      <CollectionFieldPicker
+        definition={entry.definition}
+        value={form.collectionValues[entry.key] ?? []}
+        onChange={(value) => {
+          setForm((prev) => ({
+            ...prev,
+            collectionValues: { ...prev.collectionValues, [entry.key]: value },
+          }));
+          if (fieldErrors.collection?.key === entry.key) {
+            setFieldErrors((prev) => ({ ...prev, collection: null }));
+          }
+        }}
+        loadChoices={(search) => loadCollectionChoices(entry.key, search)}
+        error={
+          fieldErrors.collection?.key === entry.key
+            ? fieldErrors.collection.message
+            : null
+        }
+      />
+    );
+  }
+
+  // Employment type and seniority keep sitting side by side wherever the
+  // layout places them next to each other.
+  const rows = layoutRows(layout, (entry) =>
+    entry.kind === 'builtin' &&
+    (entry.key === 'employmentType' || entry.key === 'seniority')
+      ? 'roleType'
+      : null,
+  );
 
   const submitLabel =
     status === 'saving'
@@ -1129,419 +1723,29 @@ export function EmployerJobForm({
     >
       <Card>
         <CardContent className="grid gap-5">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="job-employment-type">
-                {m.postJob_employmentTypeLabel()}
-              </FieldLabel>
-              <Select
-                items={employmentItems}
-                value={form.employmentType}
-                onValueChange={(value: EmploymentTypeOption | null) =>
-                  set('employmentType', value ?? 'full_time')
-                }
+          {/* The operator's field order: built-ins, custom fields and
+              collection fields each at their own position. Hidden fields are
+              not rendered. */}
+          {rows.map((row) =>
+            row.entries.length > 1 ? (
+              <div
+                key={row.entries.map(formEntryKey).join('|')}
+                className="grid gap-5 sm:grid-cols-2"
               >
-                <SelectTrigger id="job-employment-type" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {employmentItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            {jobForm.seniority.visible ? (
-              <Field>
-                <FieldLabel htmlFor="job-seniority">
-                  {m.postJob_seniorityLabel()}
-                </FieldLabel>
-                <Select
-                  items={seniorityItems}
-                  value={form.seniority}
-                  onValueChange={(value: SeniorityOption | null) =>
-                    set('seniority', value ?? null)
-                  }
-                >
-                  <SelectTrigger id="job-seniority" className="w-full">
-                    <SelectValue
-                      placeholder={m.postJob_seniorityPlaceholder()}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seniorityItems.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            ) : null}
-          </div>
-
-          <Field>
-            <FieldLabel htmlFor="job-title">
-              {m.postJob_jobTitleLabel()}
-            </FieldLabel>
-            <Input
-              id="job-title"
-              required
-              value={form.title}
-              onChange={(event) => set('title', event.target.value)}
-            />
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="job-remote-option">
-              {m.postJob_remoteOptionLabel()}
-            </FieldLabel>
-            <Select
-              items={remoteItems}
-              value={form.remoteOption}
-              onValueChange={(value: RemoteOptionChoice | null) =>
-                setForm((prev) => ({
-                  ...prev,
-                  remoteOption: value ?? 'hybrid',
-                }))
-              }
-            >
-              <SelectTrigger id="job-remote-option" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {remoteItems.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
+                {row.entries.map((entry) => (
+                  <Fragment key={formEntryKey(entry)}>
+                    {renderEntry(entry)}
+                  </Fragment>
                 ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          {jobForm.location.visible ? (
-            <Field data-invalid={fieldErrors.officeLocations || undefined}>
-              <FieldLabel htmlFor="job-office-locations">
-                {m.postJob_officeLocationsLabel()}
-              </FieldLabel>
-              <PlaceTagsField
-                id="job-office-locations"
-                tags={form.officeLocations.map((location) => ({
-                  key: location.key,
-                  label: location.displayName,
-                }))}
-                onAddSuggestion={(place: LocationSuggestionVM) => {
-                  // Mirror the platform collector exactly: reject only a
-                  // location that HAS a country code outside the board's
-                  // list. The picker already resolves one — the form simply
-                  // threw it away, so the board's country lock could never
-                  // fire on an employer-posted job.
-                  const allowed = jobForm.location.allowedCountries;
-                  if (
-                    allowed &&
-                    place.countryCode &&
-                    !allowed.includes(place.countryCode)
-                  ) {
-                    setFieldErrors((prev) => ({
-                      ...prev,
-                      officeLocationCountry: true,
-                    }));
-                    return;
-                  }
-                  setFieldErrors((prev) => ({
-                    ...prev,
-                    officeLocationCountry: false,
-                  }));
-                  setForm((prev) =>
-                    prev.officeLocations.some(
-                      (location) => location.key === place.id,
-                    )
-                      ? prev
-                      : {
-                          ...prev,
-                          officeLocations: [
-                            ...prev.officeLocations,
-                            {
-                              key: place.id,
-                              displayName: place.name,
-                              countryCode: place.countryCode,
-                            },
-                          ],
-                        },
-                  );
-                }}
-                onAddFreeText={(text) => {
-                  // Free text carries no country code. On the PUBLIC form
-                  // that is fine — the server resolves it and rejects a
-                  // disallowed country. This route has no such check, so
-                  // accepting unverifiable text here would be a hole in the
-                  // very lock this form is enforcing.
-                  if (jobForm.location.allowedCountries) {
-                    setFieldErrors((prev) => ({
-                      ...prev,
-                      officeLocationCountry: true,
-                    }));
-                    return;
-                  }
-                  setForm((prev) => ({
-                    ...prev,
-                    officeLocations: [
-                      ...prev.officeLocations,
-                      {
-                        key: `text:${text}`,
-                        displayName: text,
-                        countryCode: null,
-                      },
-                    ],
-                  }));
-                }}
-                onRemove={(key) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    officeLocations: prev.officeLocations.filter(
-                      (location) => location.key !== key,
-                    ),
-                  }))
-                }
-                placeholder={m.postJob_officeLocationsPlaceholder()}
-                searchingText={m.locationCombobox_searchingText()}
-                removeAriaLabel={(name) =>
-                  m.placeTags_removeAriaLabel({ name })
-                }
-                {...officeLocationSuggestions}
-              />
-              {form.remoteOption === 'remote' ? (
-                <FieldDescription>
-                  {m.postJob_officeLocationsRemoteHelperText()}
-                </FieldDescription>
-              ) : null}
-              {fieldErrors.officeLocationCountry &&
-              jobForm.location.allowedCountries ? (
-                <FieldError>
-                  {m.jobForm_officeLocationCountryNotAllowedError({
-                    countries: jobForm.location.allowedCountries.join(', '),
-                  })}
-                </FieldError>
-              ) : null}
-              {fieldErrors.officeLocations ? (
-                <FieldError>
-                  {m.postJob_officeLocationsRequiredError()}
-                </FieldError>
-              ) : null}
-            </Field>
-          ) : null}
-
-          {form.remoteOption === 'remote' ? (
-            <Field>
-              <FieldLabel htmlFor="job-remote-permits">
-                {m.postJob_remoteRestrictionLabel()}
-              </FieldLabel>
-              <PlaceTagsField
-                id="job-remote-permits"
-                tags={form.permitSelections.map((selection) => ({
-                  key: `${selection.type}:${selection.value}`,
-                  label: selection.label,
-                }))}
-                onAddSuggestion={(choice: LocationSuggestionVM) => {
-                  const separator = choice.id.indexOf(':');
-                  if (separator < 0) return;
-                  const type = choice.id.slice(0, separator);
-                  if (!isPermitType(type)) return;
-                  const selection: JobPermitSelection = {
-                    type,
-                    value: choice.id.slice(separator + 1),
-                    label: choice.name,
-                  };
-                  setForm((prev) =>
-                    prev.permitSelections.some(
-                      (entry) =>
-                        entry.type === selection.type &&
-                        entry.value === selection.value,
-                    )
-                      ? prev
-                      : {
-                          ...prev,
-                          permitSelections: [
-                            ...prev.permitSelections,
-                            selection,
-                          ],
-                        },
-                  );
-                }}
-                onRemove={(key) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    permitSelections: prev.permitSelections.filter(
-                      (selection) =>
-                        `${selection.type}:${selection.value}` !== key,
-                    ),
-                  }))
-                }
-                suggestions={permitSuggestions}
-                loading={false}
-                onQueryChange={setPermitQuery}
-                placeholder={m.postJob_remoteRestrictionPlaceholder()}
-                searchingText={m.locationCombobox_searchingText()}
-                removeAriaLabel={(name) =>
-                  m.placeTags_removeAriaLabel({ name })
-                }
-              />
-              <FieldDescription>
-                {m.postJob_remoteRestrictionHelperText()}
-              </FieldDescription>
-            </Field>
-          ) : null}
-
-          <Field data-invalid={fieldErrors.description || undefined}>
-            <FieldLabel>{m.postJob_descriptionLabel()}</FieldLabel>
-            <RichTextEditor
-              value={form.description}
-              onChange={(value) => set('description', value)}
-              ariaLabel={m.postJob_descriptionLabel()}
-              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
-            />
-            {fieldErrors.description ? (
-              <FieldError>{m.postJob_descriptionRequiredError()}</FieldError>
-            ) : null}
-          </Field>
-
-          {jobForm.salary.visible ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <Field>
-                <FieldLabel htmlFor="job-currency">
-                  {m.postJob_currencyLabel()}
-                </FieldLabel>
-                <Select
-                  items={currencyItems}
-                  value={form.currency}
-                  onValueChange={(value: string | null) =>
-                    set('currency', value ?? 'USD')
-                  }
-                >
-                  <SelectTrigger id="job-currency" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencyItems.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="job-salary-timeframe">
-                  {m.postJob_salaryTimeframeLabel()}
-                </FieldLabel>
-                <Select
-                  items={timeframeItems}
-                  value={form.salaryTimeframe}
-                  onValueChange={(value: SalaryTimeframe | null) =>
-                    set('salaryTimeframe', value ?? DEFAULT_SALARY_TIMEFRAME)
-                  }
-                >
-                  <SelectTrigger id="job-salary-timeframe" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeframeItems.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="job-salary-min">
-                  {m.postJob_salaryMinLabel()}
-                </FieldLabel>
-                <Input
-                  id="job-salary-min"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={form.salaryMin}
-                  onChange={(event) => set('salaryMin', event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="job-salary-max">
-                  {m.postJob_salaryMaxLabel()}
-                </FieldLabel>
-                <Input
-                  id="job-salary-max"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={form.salaryMax}
-                  onChange={(event) => set('salaryMax', event.target.value)}
-                />
-              </Field>
-            </div>
-          ) : null}
-
-          <Field>
-            <FieldLabel>{m.employerPostJob_applyMethodLabel()}</FieldLabel>
-            <RadioGroup
-              value={form.applyMethod}
-              onValueChange={(value) =>
-                set('applyMethod', value === 'native' ? 'native' : 'external')
-              }
-              className="gap-2"
-            >
-              <Label className="flex items-start gap-2 font-normal">
-                <RadioGroupItem value="native" className="mt-0.5" />
-                <span className="grid gap-0.5">
-                  <span className="font-medium">
-                    {m.employerPostJob_applyNativeLabel()}
-                  </span>
-                  <span className="text-muted-foreground text-sm">
-                    {m.employerPostJob_applyNativeHint()}
-                  </span>
-                </span>
-              </Label>
-              <Label className="flex items-start gap-2 font-normal">
-                <RadioGroupItem value="external" className="mt-0.5" />
-                <span className="font-medium">
-                  {m.employerPostJob_applyExternalLabel()}
-                </span>
-              </Label>
-            </RadioGroup>
-          </Field>
-
-          {form.applyMethod === 'external' ? (
-            <Field data-invalid={fieldErrors.applicationTarget || undefined}>
-              <FieldLabel htmlFor="job-application-target">
-                {m.employerCompany_applyUrlLabel()}
-              </FieldLabel>
-              <Input
-                id="job-application-target"
-                value={form.applicationTarget}
-                placeholder={m.employerCompany_applyUrlPlaceholder()}
-                onChange={(event) =>
-                  set('applicationTarget', event.target.value)
-                }
-              />
-              {fieldErrors.applicationTarget ? (
-                <FieldError>
-                  {m.employerPostJob_applyTargetRequiredError()}
-                </FieldError>
-              ) : null}
-            </Field>
-          ) : null}
-
-          {/* Board-defined custom fields — the same group the public /post
-              form renders after its built-in fields, in operator-config
-              order. Renders nothing when the board defines none. */}
-          <CustomFieldsGroup
-            definitions={customFields}
-            values={form.customFieldValues}
-            onChange={(values) => set('customFieldValues', values)}
-          />
+              </div>
+            ) : (
+              row.entries.map((entry) => (
+                <Fragment key={formEntryKey(entry)}>
+                  {renderEntry(entry)}
+                </Fragment>
+              ))
+            ),
+          )}
         </CardContent>
       </Card>
 

@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PostJobForm } from './post-job-form';
 
 import type { RichTextEditorProps } from './rich-text-editor';
+import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
 import type { JobPostingPlan } from '@cavuno/board';
@@ -627,6 +628,118 @@ describe('PostJobForm — board job-form constraints', () => {
 
     expect(
       await screen.findByText(m.jobForm_seniorityRequiredError()),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+describe('PostJobForm — operator form layout', () => {
+  const perks = {
+    key: 'perks',
+    label: 'Perks',
+    type: 'multi_select' as const,
+    required: true,
+    options: [{ key: 'remote_budget', label: 'Remote budget' }],
+  };
+  function builtin(key: string, visible = true) {
+    return {
+      kind: 'builtin' as const,
+      key,
+      visible,
+      required: false,
+      locked: false,
+      lockReason: null,
+    };
+  }
+  const layout: JobFormLayoutSource = {
+    forms: {
+      job: [
+        builtin('company'),
+        builtin('salary'),
+        builtin('title'),
+        builtin('seniority', false),
+        {
+          kind: 'custom',
+          key: 'perks',
+          visible: true,
+          required: true,
+          definition: perks,
+        },
+        builtin('workArrangement'),
+        builtin('description'),
+        builtin('applyMethod'),
+        {
+          kind: 'collection',
+          key: 'benefits',
+          visible: true,
+          required: false,
+          definition: {
+            key: 'benefits',
+            label: 'Benefits',
+            typeId: 'type-benefits',
+            multiple: true,
+            required: false,
+          },
+        },
+      ],
+    },
+  };
+
+  function renderLayout(onSubmit = vi.fn()) {
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[perks]}
+        jobForm={layout}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        plans={plans}
+        onSubmit={onSubmit}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+    return onSubmit;
+  }
+
+  it('renders the role fields in layout order and leaves hidden ones out', () => {
+    renderLayout();
+
+    const salary = screen.getByLabelText(m.postJob_salaryMinLabel());
+    const title = screen.getByLabelText(m.postJob_jobTitleLabel());
+    expect(
+      salary.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByLabelText(m.postJob_seniorityLabel())).toBeNull();
+    // Not in the layout: no employment type picker, no office locations.
+    expect(screen.queryByLabelText(m.postJob_employmentTypeLabel())).toBeNull();
+    expect(
+      screen.queryByLabelText(m.postJob_officeLocationsLabel()),
+    ).toBeNull();
+    // Collection fields belong to the signed-in employer form.
+    expect(screen.queryByLabelText('Benefits')).toBeNull();
+  });
+
+  it('blocks submit while a required custom field is unanswered', async () => {
+    const onSubmit = renderLayout();
+
+    fireEvent.change(screen.getByLabelText(m.postJob_descriptionLabel()), {
+      target: { value: 'Build things.' },
+    });
+    fireEvent.submit(
+      screen.getByRole('button', { name: m.postJob_checkoutButtonLabel() }),
+    );
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Perks' }),
+      ),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });

@@ -147,6 +147,8 @@ const draftJob = {
   createdAt: '2026-07-01T00:00:00.000Z',
   updatedAt: '2026-07-01T00:00:00.000Z',
   links: { public: null },
+  customFieldValues: {},
+  collectionValues: {},
 } as const;
 
 const company = {
@@ -1675,5 +1677,138 @@ describe('employer company workspace', () => {
     expect(
       screen.getByText(/Team membership could not be loaded/),
     ).toBeVisible();
+  });
+});
+
+describe('Company profile — operator form layout', () => {
+  function builtin(
+    key: string,
+    options: { visible?: boolean; required?: boolean; locked?: boolean } = {},
+  ) {
+    return {
+      kind: 'builtin' as const,
+      key,
+      visible: options.visible ?? true,
+      required: options.required ?? options.locked ?? false,
+      locked: options.locked ?? false,
+      lockReason: options.locked
+        ? ('google_hiring_organization' as const)
+        : null,
+    };
+  }
+  const motto = {
+    key: 'motto',
+    label: 'Motto',
+    type: 'short_text' as const,
+    required: false,
+    visibility: 'public' as const,
+    editableByOwner: true,
+  };
+  const profileFields = {
+    customFields: { definitions: [motto], values: { motto: 'Onward' } },
+    objectReferences: { definitions: [], selections: [] },
+  };
+
+  it('renders the layout order, leaves hidden fields out and keeps their stored values', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    renderProfile({
+      ...profileLoaderData,
+      formLayout: [
+        builtin('description'),
+        builtin('name', { locked: true }),
+        builtin('summary', { visible: false }),
+        builtin('linkedinUrl', { visible: false }),
+        builtin('website'),
+      ],
+    });
+
+    const about = screen.getByRole('toolbar', { name: 'About' });
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    expect(
+      about.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: 'Tagline' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'LinkedIn' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
+    );
+    const body = profileActions.updateCompany.mock.calls[0]?.[0]?.data.body;
+    expect(body).toMatchObject({
+      name: 'Northstar Labs',
+      website: 'https://northstar.example',
+    });
+    expect(body).not.toHaveProperty('summary');
+    expect(body).not.toHaveProperty('linkedinUrl');
+  });
+
+  it('blocks the save while a required field is empty', async () => {
+    renderProfile({
+      ...profileLoaderData,
+      formLayout: [
+        builtin('name', { locked: true }),
+        builtin('logo', { required: true }),
+      ],
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    expect(
+      await screen.findByText(
+        m.profileForm_fieldRequiredError({
+          field: m.employerProfile_logoLabel(),
+        }),
+      ),
+    ).toBeInTheDocument();
+    expect(profileActions.updateCompany).not.toHaveBeenCalled();
+  });
+
+  it('writes a changed custom field through the additive custom-field update', async () => {
+    const updateCompanyCustomFields = vi.fn().mockResolvedValue({ ok: true });
+    const updateCompanyObjectReferences = vi.fn();
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    render(
+      <CompanyProfilePageView
+        data={{
+          ...profileLoaderData,
+          profileFields,
+          formLayout: [
+            builtin('name', { locked: true }),
+            {
+              kind: 'custom',
+              key: 'motto',
+              visible: true,
+              required: false,
+              definition: motto,
+            },
+          ],
+        }}
+        actions={{
+          ...profileActions,
+          updateCompanyCustomFields,
+          updateCompanyObjectReferences,
+        }}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Motto' }), {
+      target: { value: 'Forward' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(updateCompanyCustomFields).toHaveBeenCalledWith({
+        data: {
+          slug: 'northstar-labs',
+          body: { values: { motto: 'Forward' } },
+        },
+      }),
+    );
+    // No collection field changed, so the full-replace write is skipped.
+    expect(updateCompanyObjectReferences).not.toHaveBeenCalled();
   });
 });

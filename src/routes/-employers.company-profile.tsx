@@ -10,7 +10,7 @@
  * URLs, and `logoUrl` — so every field round-trips. The public `company` read
  * still supplies the header's public-page link and the markets card.
  */
-import { useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 
 import { Await } from '@tanstack/react-router';
 import { ExternalLinkIcon } from 'lucide-react';
@@ -33,6 +33,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import {
   deleteCompany,
+  getCompanyProfileFields,
   getCompanyWorkspace,
   getEmployerCompany,
   getEmployerProfileStats,
@@ -41,9 +42,39 @@ import {
   updateCompany,
   uploadCompanyLogo,
 } from '../server/employers';
+import {
+  listCompanyObjectReferenceChoices,
+  updateCompanyCustomFields,
+  updateCompanyObjectReferences,
+} from '../server/form-fields';
 import { getSeoBase, getCompany } from '../server/queries';
 
+import { customFieldLabel } from '@/board/custom-field-labels';
 import { toEmployerProfileViewsVM } from '@/board/employer-stats-view-model';
+import {
+  COMPANY_FORM_BUILTINS,
+  formEntryKey,
+  layoutRows,
+  ownerProfileDefinitions,
+  requiresBuiltin,
+  resolveProfileFormLayout,
+  showsBuiltin,
+  type CompanyFormBuiltinKey,
+  type ProfileFormEntry,
+} from '@/board/form-layout';
+import {
+  initialProfileSelections,
+  profileCustomFieldsBody,
+  profileObjectReferencesBody,
+  type ProfileFieldValue,
+  type ProfileSelections,
+} from '@/board/profile-field-writes';
+import { CollectionFieldPicker } from '@/components/collection-field-picker';
+import {
+  CustomFieldInput,
+  hasCustomFieldInput,
+  isCustomFieldEmpty,
+} from '@/components/custom-fields-group';
 import {
   EmployerProfileViewsStat,
   EmployerProfileViewsStatPending,
@@ -73,7 +104,11 @@ import {
 } from '@/components/ui/input-group';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { UrlSearchInput } from '@/lib/pagination';
-import type { EmployerProfileViewsPoint } from '@cavuno/board';
+import type {
+  BoardProfileFormField,
+  EmployerProfileViewsPoint,
+  UpdateEmployerCompanyBody,
+} from '@cavuno/board';
 
 /**
  * A company's LinkedIn page always lives under `/company/`, so that segment is
@@ -94,6 +129,9 @@ export type CompanyProfileLoaderDependencies = {
   getEmployerCompany: (
     ...args: Parameters<typeof getEmployerCompany>
   ) => ReturnType<typeof getEmployerCompany>;
+  getCompanyProfileFields: (
+    ...args: Parameters<typeof getCompanyProfileFields>
+  ) => ReturnType<typeof getCompanyProfileFields>;
   listCompanyMembers: (
     ...args: Parameters<typeof listCompanyMembers>
   ) => ReturnType<typeof listCompanyMembers>;
@@ -113,6 +151,7 @@ const companyProfileLoaderDependencies: CompanyProfileLoaderDependencies = {
   getCompanyWorkspace,
   getCompany,
   getEmployerCompany,
+  getCompanyProfileFields,
   listCompanyMembers,
   getSeoBase,
   getEmployerProfileStats,
@@ -132,7 +171,7 @@ export function createCompanyProfileLoader(
   }) => {
     const loaderDependencies = dependencies ?? companyProfileLoaderDependencies;
     try {
-      const [workspace, company, employerCompany, members, seo] =
+      const [workspace, company, employerCompany, members, seo, profileFields] =
         await Promise.all([
           loaderDependencies.getCompanyWorkspace({
             data: { slug: params.slug },
@@ -145,6 +184,11 @@ export function createCompanyProfileLoader(
             .listCompanyMembers({ data: { slug: params.slug } })
             .catch(() => null),
           loaderDependencies.getSeoBase(),
+          // Owner-editable custom fields and collection selections; the
+          // built-in form renders without them.
+          loaderDependencies
+            .getCompanyProfileFields({ data: { slug: params.slug } })
+            .catch(() => null),
         ]);
       // Reporting is non-critical: defer both profile-views reads so a slow or
       // failing analytics backend never blocks the profile form's first paint.
@@ -170,6 +214,7 @@ export function createCompanyProfileLoader(
         employerCompany,
         members,
         seo,
+        profileFields,
         profileViews,
       };
     } catch (error) {
@@ -196,6 +241,14 @@ export type CompanyProfileViewData = {
     'name' | 'links' | 'markets'
   >;
   employerCompany: CompanyProfileLoaderData['employerCompany'];
+  /** Owner-editable custom fields and collection selections, when readable. */
+  profileFields?: CompanyProfileLoaderData['profileFields'];
+  /**
+   * The operator's company form (`board.context().forms.company`): field
+   * order, visibility and required flags. Absent on an older API, where the
+   * form keeps its pre-layout order.
+   */
+  formLayout?: readonly BoardProfileFormField[] | null;
   members?: { data: unknown[] } | null;
   profileViews?: CompanyProfileLoaderData['profileViews'];
 };
@@ -214,6 +267,16 @@ export type CompanyProfileViewActions = {
   ) => Promise<
     { ok: true; data?: null } | { ok: false; code: string; message: string }
   >;
+  /** Custom field and collection writes; the server functions by default. */
+  updateCompanyCustomFields?: (
+    ...args: Parameters<typeof updateCompanyCustomFields>
+  ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+  updateCompanyObjectReferences?: (
+    ...args: Parameters<typeof updateCompanyObjectReferences>
+  ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+  listCompanyObjectReferenceChoices?: (
+    ...args: Parameters<typeof listCompanyObjectReferenceChoices>
+  ) => Promise<{ data: { id: string; name: string }[] }>;
   invalidate: () => Promise<void>;
   navigateToDashboard: () => Promise<void>;
   toastError: (message: string) => void;
@@ -233,7 +296,15 @@ export function CompanyProfilePageView({
   data: CompanyProfileViewData;
   actions: CompanyProfileViewActions;
 }) {
-  const { workspace, company, employerCompany, members, profileViews } = data;
+  const {
+    workspace,
+    company,
+    employerCompany,
+    members,
+    profileViews,
+    profileFields,
+    formLayout,
+  } = data;
 
   return (
     <Page width="content">
@@ -282,6 +353,8 @@ export function CompanyProfilePageView({
           <ProfileEditorCard
             slug={workspace.slug}
             company={employerCompany}
+            profileFields={profileFields ?? null}
+            formLayout={formLayout ?? null}
             actions={actions}
           />
 
@@ -320,15 +393,48 @@ export function CompanyProfilePageView({
   );
 }
 
+type CompanyProfileFields = NonNullable<
+  CompanyProfileViewData['profileFields']
+>;
+type CompanyFormEntry = ProfileFormEntry<CompanyFormBuiltinKey>;
+
+const SOCIAL_KEYS: ReadonlySet<CompanyFormBuiltinKey> = new Set([
+  'linkedinUrl',
+  'xUrl',
+  'facebookUrl',
+]);
+
 function ProfileEditorCard({
   slug,
   company,
+  profileFields,
+  formLayout,
   actions,
 }: {
   slug: string;
   company: EmployerCompany;
+  profileFields: CompanyProfileFields | null;
+  formLayout: readonly BoardProfileFormField[] | null;
   actions: CompanyProfileViewActions;
 }) {
+  // The operator's company form: built-ins by key, custom and collection
+  // fields each at their own position. Only owner-editable custom and
+  // collection fields become inputs. Without a layout (an older API) the form
+  // keeps its pre-layout order.
+  const entries = resolveProfileFormLayout(
+    formLayout,
+    COMPANY_FORM_BUILTINS,
+    ownerProfileDefinitions(profileFields),
+    { fallbackRequired: ['name'], fallbackCollectionsFirst: true },
+  ).filter(
+    (entry) => entry.kind !== 'custom' || hasCustomFieldInput(entry.definition),
+  );
+  const shows = (key: CompanyFormBuiltinKey) => showsBuiltin(entries, key);
+  const requires = (key: CompanyFormBuiltinKey) =>
+    requiresBuiltin(entries, key);
+  const storedValues = profileFields?.customFields?.values ?? {};
+  const storedSelections = profileFields?.objectReferences?.selections ?? [];
+
   const [form, setForm] = useState({
     name: company.name,
     website: stripProtocol(company.website ?? ''),
@@ -346,17 +452,61 @@ function ProfileEditorCard({
       ? stripSocialHandle(company.facebookUrl, ['facebook.com'])
       : '',
   });
+  const [customValues, setCustomValues] =
+    useState<Record<string, ProfileFieldValue>>(storedValues);
+  const [selections, setSelections] = useState<ProfileSelections>(() =>
+    initialProfileSelections(storedSelections),
+  );
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'error' | 'committed'
   >('idle');
   const [message, setMessage] = useState('');
+  const [invalidField, setInvalidField] = useState<string | null>(null);
+
+  /**
+   * The first required field left empty that native validation cannot see:
+   * the rich-text description, the logo, a multi-select, a collection.
+   */
+  function missingRequired(): { id: string; message: string } | null {
+    for (const entry of entries) {
+      if (!entry.required) continue;
+      let field: string | null = null;
+      if (entry.kind === 'builtin') {
+        if (entry.key === 'description' && isRichTextEmpty(form.description)) {
+          field = m.employerProfile_aboutHeading();
+        } else if (entry.key === 'logo' && !company.logoUrl) {
+          field = m.employerProfile_logoLabel();
+        }
+      } else if (
+        entry.kind === 'custom'
+          ? entry.definition.type !== 'boolean' &&
+            isCustomFieldEmpty(customValues[entry.key])
+          : (selections[entry.key]?.length ?? 0) === 0
+      ) {
+        field = customFieldLabel(entry.definition);
+      }
+      if (field !== null) {
+        return {
+          id: formEntryKey(entry),
+          message: m.profileForm_fieldRequiredError({ field }),
+        };
+      }
+    }
+    return null;
+  }
 
   async function save() {
+    const missing = missingRequired();
+    setInvalidField(missing?.id ?? null);
+    if (missing) {
+      setStatus('error');
+      setMessage(missing.message);
+      return;
+    }
     setStatus('saving');
     setMessage('');
-    const website = form.website.trim();
     try {
-      await runSave(website);
+      await runSave();
     } catch {
       // A rejecting call (network drop, 5xx) must not strand the "Saving"
       // state without feedback.
@@ -365,40 +515,85 @@ function ProfileEditorCard({
     }
   }
 
-  async function runSave(website: string) {
+  /**
+   * The built-in fields the form shows. Each shown field round-trips
+   * (prefilled from the EmployerCompany read), so it is always sent: a blank
+   * input means "clear it". A hidden field is not sent, so the value already
+   * stored on the company is kept.
+   */
+  function companyBody(): UpdateEmployerCompanyBody {
+    const website = form.website.trim();
+    const body: UpdateEmployerCompanyBody = { name: form.name.trim() };
+    if (shows('website')) body.website = website ? `https://${website}` : '';
+    if (shows('description')) {
+      body.description = isRichTextEmpty(form.description)
+        ? ''
+        : form.description;
+    }
+    if (shows('summary')) body.summary = form.summary.trim();
+    if (shows('linkedinUrl')) {
+      body.linkedinUrl = form.linkedinUrl.trim()
+        ? toSocialUrl(
+            form.linkedinUrl,
+            LINKEDIN_COMPANY_DOMAIN,
+            LINKEDIN_COMPANY_DOMAINS,
+          )
+        : '';
+    }
+    if (shows('xUrl')) {
+      body.xUrl = form.xUrl.trim()
+        ? toSocialUrl(form.xUrl, 'x.com', ['x.com', 'twitter.com'])
+        : '';
+    }
+    if (shows('facebookUrl')) {
+      body.facebookUrl = form.facebookUrl.trim()
+        ? toSocialUrl(form.facebookUrl, 'facebook.com')
+        : '';
+    }
+    return body;
+  }
+
+  async function runSave() {
     const result = await actions.updateCompany({
-      data: {
-        slug,
-        body: {
-          name: form.name.trim(),
-          website: website ? `https://${website}` : '',
-          description: isRichTextEmpty(form.description)
-            ? ''
-            : form.description,
-          // Every field round-trips (prefilled from the EmployerCompany read),
-          // so each is always sent: a blank input now means "clear it", not
-          // "keep the stored value we couldn't read".
-          summary: form.summary.trim(),
-          linkedinUrl: form.linkedinUrl.trim()
-            ? toSocialUrl(
-                form.linkedinUrl,
-                LINKEDIN_COMPANY_DOMAIN,
-                LINKEDIN_COMPANY_DOMAINS,
-              )
-            : '',
-          xUrl: form.xUrl.trim()
-            ? toSocialUrl(form.xUrl, 'x.com', ['x.com', 'twitter.com'])
-            : '',
-          facebookUrl: form.facebookUrl.trim()
-            ? toSocialUrl(form.facebookUrl, 'facebook.com')
-            : '',
-        },
-      },
+      data: { slug, body: companyBody() },
     });
     if (!result.ok) {
       setStatus('error');
       setMessage(boardErrorMessage(result));
       return;
+    }
+    const values = profileCustomFieldsBody(
+      entries.flatMap((entry) => (entry.kind === 'custom' ? [entry.key] : [])),
+      customValues,
+      storedValues,
+    );
+    if (values) {
+      const written = await (
+        actions.updateCompanyCustomFields ?? updateCompanyCustomFields
+      )({ data: { slug, body: { values } } });
+      if (!written.ok) {
+        setStatus('error');
+        setMessage(boardErrorMessage(written));
+        return;
+      }
+    }
+    const references = profileObjectReferencesBody(
+      entries.flatMap((entry) =>
+        entry.kind === 'collection' ? [entry.key] : [],
+      ),
+      selections,
+      storedSelections,
+      profileFields?.objectReferences?.definitions ?? [],
+    );
+    if (references) {
+      const written = await (
+        actions.updateCompanyObjectReferences ?? updateCompanyObjectReferences
+      )({ data: { slug, body: references } });
+      if (!written.ok) {
+        setStatus('error');
+        setMessage(boardErrorMessage(written));
+        return;
+      }
     }
     setStatus('committed');
     try {
@@ -409,20 +604,22 @@ function ProfileEditorCard({
     }
   }
 
-  return (
-    <Card>
-      <CardContent>
-        <form
-          className="space-y-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void save();
-          }}
-        >
-          {/* Logo upload posts multipart to `uploadCompanyLogo`
-              (`board.me.companies.uploadLogo`) and invalidates so the new
-              `logoUrl` repaints — same mechanism as the candidate avatar flow. */}
-          <Field>
+  async function loadChoices(fieldKey: string, search: string) {
+    const result = await (
+      actions.listCompanyObjectReferenceChoices ??
+      listCompanyObjectReferenceChoices
+    )({ data: { slug, fieldKey, search: search || undefined, limit: 25 } });
+    return result.data.map(({ id, name }) => ({ id, name }));
+  }
+
+  function renderBuiltin(key: CompanyFormBuiltinKey): ReactNode {
+    switch (key) {
+      case 'logo':
+        // Logo upload posts multipart to `uploadCompanyLogo`
+        // (`board.me.companies.uploadLogo`) and invalidates so the new
+        // `logoUrl` repaints — same mechanism as the candidate avatar flow.
+        return (
+          <Field data-invalid={invalidField === 'builtin:logo' || undefined}>
             <FieldLabel>{m.employerProfile_logoLabel()}</FieldLabel>
             <LogoUpload
               slug={slug}
@@ -432,44 +629,52 @@ function ProfileEditorCard({
             />
             <FieldDescription>{m.employerProfile_logoHint()}</FieldDescription>
           </Field>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="company-name">
-                {m.employerCompany_nameLabel()}
-              </FieldLabel>
-              <Input
-                id="company-name"
-                value={form.name}
+        );
+      case 'name':
+        return (
+          <Field>
+            <FieldLabel htmlFor="company-name">
+              {m.employerCompany_nameLabel()}
+            </FieldLabel>
+            <Input
+              id="company-name"
+              value={form.name}
+              onChange={(event) =>
+                setForm({ ...form, name: event.target.value })
+              }
+              required
+            />
+          </Field>
+        );
+      case 'website':
+        return (
+          <Field>
+            <FieldLabel htmlFor="company-website">
+              {m.employerCompany_websiteLabel()}
+            </FieldLabel>
+            <InputGroup>
+              <InputGroupAddon>
+                <InputGroupText>
+                  {m.employerDashboard_websiteProtocolPrefix()}
+                </InputGroupText>
+              </InputGroupAddon>
+              <InputGroupInput
+                id="company-website"
+                value={form.website}
+                required={requires('website')}
+                placeholder={m.employerDashboard_websitePlaceholder()}
                 onChange={(event) =>
-                  setForm({ ...form, name: event.target.value })
+                  setForm({
+                    ...form,
+                    website: stripProtocol(event.currentTarget.value),
+                  })
                 }
-                required
               />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="company-website">
-                {m.employerCompany_websiteLabel()}
-              </FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>
-                    {m.employerDashboard_websiteProtocolPrefix()}
-                  </InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="company-website"
-                  value={form.website}
-                  placeholder={m.employerDashboard_websitePlaceholder()}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      website: stripProtocol(event.currentTarget.value),
-                    })
-                  }
-                />
-              </InputGroup>
-            </Field>
-          </div>
+            </InputGroup>
+          </Field>
+        );
+      case 'summary':
+        return (
           <Field>
             <FieldLabel htmlFor="company-tagline">
               {m.employerProfile_taglineLabel()}
@@ -477,6 +682,7 @@ function ProfileEditorCard({
             <Input
               id="company-tagline"
               value={form.summary}
+              required={requires('summary')}
               onChange={(event) =>
                 setForm({ ...form, summary: event.target.value })
               }
@@ -485,41 +691,48 @@ function ProfileEditorCard({
               {m.employerProfile_taglineHint()}
             </FieldDescription>
           </Field>
-
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium">
-              {m.employerProfile_linksHeading()}
-            </legend>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <SocialField
-                id="company-linkedin"
-                label={m.employerProfile_linkedinLabel()}
-                domain={LINKEDIN_COMPANY_DOMAIN}
-                domains={LINKEDIN_COMPANY_DOMAINS}
-                value={form.linkedinUrl}
-                onChange={(linkedinUrl) => setForm({ ...form, linkedinUrl })}
-              />
-              <SocialField
-                id="company-x"
-                label={m.employerProfile_xLabel()}
-                domain="x.com"
-                domains={['x.com', 'twitter.com']}
-                value={form.xUrl}
-                onChange={(xUrl) => setForm({ ...form, xUrl })}
-              />
-              <SocialField
-                id="company-facebook"
-                label={m.employerProfile_facebookLabel()}
-                domain="facebook.com"
-                domains={['facebook.com']}
-                value={form.facebookUrl}
-                onChange={(facebookUrl) => setForm({ ...form, facebookUrl })}
-              />
-            </div>
-            <FieldDescription>{m.employerProfile_linksHint()}</FieldDescription>
-          </fieldset>
-
-          <Field>
+        );
+      case 'linkedinUrl':
+        return (
+          <SocialField
+            id="company-linkedin"
+            label={m.employerProfile_linkedinLabel()}
+            domain={LINKEDIN_COMPANY_DOMAIN}
+            domains={LINKEDIN_COMPANY_DOMAINS}
+            value={form.linkedinUrl}
+            required={requires('linkedinUrl')}
+            onChange={(linkedinUrl) => setForm({ ...form, linkedinUrl })}
+          />
+        );
+      case 'xUrl':
+        return (
+          <SocialField
+            id="company-x"
+            label={m.employerProfile_xLabel()}
+            domain="x.com"
+            domains={['x.com', 'twitter.com']}
+            value={form.xUrl}
+            required={requires('xUrl')}
+            onChange={(xUrl) => setForm({ ...form, xUrl })}
+          />
+        );
+      case 'facebookUrl':
+        return (
+          <SocialField
+            id="company-facebook"
+            label={m.employerProfile_facebookLabel()}
+            domain="facebook.com"
+            domains={['facebook.com']}
+            value={form.facebookUrl}
+            required={requires('facebookUrl')}
+            onChange={(facebookUrl) => setForm({ ...form, facebookUrl })}
+          />
+        );
+      case 'description':
+        return (
+          <Field
+            data-invalid={invalidField === 'builtin:description' || undefined}
+          >
             <FieldLabel>{m.employerProfile_aboutHeading()}</FieldLabel>
             {/* Company descriptions are HTML on the API (rendered as-is on
                 the public page), so they author as rich text, not markup. */}
@@ -532,6 +745,83 @@ function ProfileEditorCard({
               maxCharacters={RICH_TEXT_MAX_CHARACTERS}
             />
           </Field>
+        );
+    }
+  }
+
+  function renderEntry(entry: CompanyFormEntry): ReactNode {
+    if (entry.kind === 'builtin') return renderBuiltin(entry.key);
+    if (entry.kind === 'custom') {
+      return (
+        <CustomFieldInput
+          definition={entry.definition}
+          required={entry.required}
+          value={customValues[entry.key]}
+          onChange={(value) =>
+            setCustomValues((prev) => ({ ...prev, [entry.key]: value }))
+          }
+        />
+      );
+    }
+    return (
+      <CollectionFieldPicker
+        definition={entry.definition}
+        value={selections[entry.key] ?? []}
+        onChange={(value) =>
+          setSelections((prev) => ({ ...prev, [entry.key]: value }))
+        }
+        loadChoices={(search) => loadChoices(entry.key, search)}
+        error={invalidField === formEntryKey(entry) ? message : null}
+      />
+    );
+  }
+
+  // Name beside website, and the social links as one titled group, wherever
+  // the layout places them next to each other.
+  const rows = layoutRows(entries, (entry) => {
+    if (entry.kind !== 'builtin') return null;
+    if (entry.key === 'name' || entry.key === 'website') return 'identity';
+    return SOCIAL_KEYS.has(entry.key) ? 'social' : null;
+  });
+
+  return (
+    <Card>
+      <CardContent>
+        <form
+          className="space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void save();
+          }}
+        >
+          {rows.map((row) => {
+            const key = row.entries.map(formEntryKey).join('|');
+            const cells = row.entries.map((entry) => (
+              <Fragment key={formEntryKey(entry)}>
+                {renderEntry(entry)}
+              </Fragment>
+            ));
+            if (row.group === 'social') {
+              return (
+                <fieldset key={key} className="space-y-3">
+                  <legend className="text-sm font-medium">
+                    {m.employerProfile_linksHeading()}
+                  </legend>
+                  <div className="grid gap-4 sm:grid-cols-3">{cells}</div>
+                  <FieldDescription>
+                    {m.employerProfile_linksHint()}
+                  </FieldDescription>
+                </fieldset>
+              );
+            }
+            return row.entries.length > 1 ? (
+              <div key={key} className="grid gap-5 sm:grid-cols-2">
+                {cells}
+              </div>
+            ) : (
+              cells
+            );
+          })}
           {/* In-page form: primary action left-aligned, in reading flow. */}
           <div className="flex flex-wrap items-center gap-3">
             <Button
@@ -558,6 +848,7 @@ function SocialField({
   domain,
   domains,
   value,
+  required = false,
   onChange,
 }: {
   id: string;
@@ -565,6 +856,7 @@ function SocialField({
   domain: string;
   domains: string[];
   value: string;
+  required?: boolean;
   onChange: (value: string) => void;
 }) {
   return (
@@ -577,6 +869,7 @@ function SocialField({
         <InputGroupInput
           id={id}
           value={value}
+          required={required}
           // Pasting a full URL auto-strips scheme + domain to the bare handle.
           onChange={(event) =>
             onChange(stripSocialHandle(event.currentTarget.value, domains))

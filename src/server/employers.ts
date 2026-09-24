@@ -58,7 +58,7 @@ export type ActionResult<T> =
       violations?: JobFormViolation[];
     };
 
-async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
+export async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
     return { ok: true, data: await fn() };
   } catch (error) {
@@ -94,7 +94,9 @@ function authedHeaders(context: SessionContext & BoardAccessContext) {
 }
 
 /** Primary-email gate for every authenticated employer workspace operation. */
-const verifiedBoardUserMiddleware = createMiddleware({ type: 'function' })
+export const verifiedBoardUserMiddleware = createMiddleware({
+  type: 'function',
+})
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .server(async ({ next, context }) => {
     const me = await getBoard().me.retrieve(undefined, {
@@ -186,6 +188,31 @@ export const updateCompany = createServerFn({ method: 'POST' })
         headers: authedHeaders(context),
       }),
     ),
+  );
+
+/**
+ * The company's owner-editable custom fields and collection selections
+ * (`retrieveCustomFields` / `retrieveObjectReferences`), including private
+ * fields the public form layout never lists. Each read degrades to `null`
+ * on its own, so an API without them still renders the built-in form.
+ */
+export const getCompanyProfileFields = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async () => {
+      const headers = authedHeaders(context);
+      const companies = getBoard().me.companies;
+      const [customFields, objectReferences] = await Promise.all([
+        companies
+          .retrieveCustomFields(data.slug, { headers })
+          .catch(() => null),
+        companies
+          .retrieveObjectReferences(data.slug, { headers })
+          .catch(() => null),
+      ]);
+      return { customFields, objectReferences };
+    }),
   );
 
 export const deleteCompany = createServerFn({ method: 'POST' })

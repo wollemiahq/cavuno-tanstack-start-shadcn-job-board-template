@@ -95,6 +95,8 @@ export const getAccount = createServerFn({ method: 'GET' })
         languages,
         savedJobs,
         resume,
+        customFields,
+        objectReferences,
       ] = await Promise.all([
         board.me.profile.retrieve(undefined, { headers }),
         board.me.profile.listExperience({ headers }),
@@ -103,6 +105,13 @@ export const getAccount = createServerFn({ method: 'GET' })
         board.me.profile.listLanguages({ headers }),
         board.me.savedJobs.list({ limit: 50 }, { headers }),
         board.me.resume.retrieve({ headers }),
+        // Owner-editable custom fields and collection selections (including
+        // private fields the public form layout never lists). Each degrades
+        // to `null` so an API without them still renders the profile.
+        board.me.profile.retrieveCustomFields({ headers }).catch(() => null),
+        board.me.profile
+          .retrieveObjectReferences({ headers })
+          .catch(() => null),
       ]);
       return {
         me,
@@ -113,6 +122,8 @@ export const getAccount = createServerFn({ method: 'GET' })
         languages,
         savedJobs,
         resume,
+        customFields,
+        objectReferences,
       };
     }),
   );
