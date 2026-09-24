@@ -576,6 +576,30 @@ describe('Header — native-applications account gating', () => {
     ).toBeNull();
   });
 
+  it('links an employer to their profile page', async () => {
+    renderHeader({ user: { ...signedInUser, role: 'employer' } });
+
+    fireEvent.click(await findAccountButton());
+
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_profileNav(),
+      }),
+    ).toHaveAttribute('href', '/account');
+  });
+
+  it('links a candidate to the profile editor', async () => {
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(await findAccountButton());
+
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_profileNav(),
+      }),
+    ).toHaveAttribute('href', '/account');
+  });
+
   it('hides the Applications account entry when native applications are off', async () => {
     renderHeader({
       user: signedInUser,
