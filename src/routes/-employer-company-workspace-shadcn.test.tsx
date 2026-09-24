@@ -891,6 +891,34 @@ describe('employer company workspace', () => {
     await waitFor(() => expect(profileActions.invalidate).toHaveBeenCalled());
   });
 
+  it('confirms a saved company profile with a success toast', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    renderProfile();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(profileActions.toastSuccess).toHaveBeenCalledOnce(),
+    );
+    expect(profileActions.invalidate).toHaveBeenCalledOnce();
+  });
+
+  it('does not toast success when the company write fails', async () => {
+    profileActions.updateCompany.mockResolvedValue({
+      ok: false,
+      message: 'Website is invalid.',
+    });
+    renderProfile();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    expect(
+      await screen.findByText(m.boardError_genericText()),
+    ).toBeInTheDocument();
+    expect(profileActions.toastSuccess).not.toHaveBeenCalled();
+  });
+
   it('reports profile reconciliation failure without calling the saved write failed', async () => {
     profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
     profileActions.invalidate.mockRejectedValue(new Error('refresh failed'));

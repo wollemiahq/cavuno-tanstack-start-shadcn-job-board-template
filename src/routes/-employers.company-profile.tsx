@@ -596,6 +596,9 @@ function ProfileEditorCard({
       }
     }
     setStatus('committed');
+    // Every write landed: confirm it now, so a failed refresh below reports
+    // only the stale page, not a failed save.
+    actions.toastSuccess(m.employerCompany_savedText());
     try {
       await actions.invalidate();
       setStatus('idle');
