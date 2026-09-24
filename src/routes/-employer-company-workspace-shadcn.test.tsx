@@ -1786,6 +1786,24 @@ describe('Company profile — operator form layout', () => {
     expect(body).not.toHaveProperty('linkedinUrl');
   });
 
+  it('names the social links group once when the layout splits it', () => {
+    renderProfile({
+      ...profileLoaderData,
+      formLayout: [
+        builtin('linkedinUrl'),
+        builtin('name', { locked: true }),
+        builtin('xUrl'),
+      ],
+    });
+
+    expect(
+      screen.getAllByRole('group', { name: m.employerProfile_linksHeading() }),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole('textbox', { name: m.employerProfile_xLabel() }),
+    ).toBeInTheDocument();
+  });
+
   it('blocks the save while a required field is empty', async () => {
     renderProfile({
       ...profileLoaderData,
