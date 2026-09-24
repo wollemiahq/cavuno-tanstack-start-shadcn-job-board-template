@@ -13,6 +13,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import {
   createEmployerDashboardLoader,
   EmployerDashboardView,
@@ -534,6 +535,106 @@ describe('employer entry surfaces', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Add a new company' });
     expect(dialog).toHaveAttribute('data-slot', 'dialog-content');
+  });
+
+  describe('new-company website follows the company form layout', () => {
+    function website(options: { visible?: boolean; required?: boolean }) {
+      return [
+        {
+          kind: 'builtin' as const,
+          key: 'website',
+          visible: options.visible ?? true,
+          required: options.required ?? false,
+          locked: false,
+          lockReason: null,
+        },
+      ];
+    }
+
+    async function openCreateDialog(
+      companyFormLayout?: ReturnType<typeof website> | null,
+    ) {
+      vi.useFakeTimers();
+      searchCompanies.mockResolvedValue({
+        ok: true,
+        data: {
+          object: 'list',
+          url: '/v1/me/companies/search',
+          data: [],
+          hasMore: false,
+          nextCursor: null,
+        },
+      });
+      render(
+        <EmployerDashboardView
+          companies={[]}
+          companyFormLayout={companyFormLayout}
+          dependencies={dashboardViewDependencies}
+        />,
+      );
+      fireEvent.change(screen.getByLabelText('Search companies by name...'), {
+        target: { value: 'Acme' },
+      });
+      await act(() => vi.advanceTimersByTimeAsync(250));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Add “Acme” as a new company' }),
+      );
+      vi.useRealTimers();
+      return screen.getByRole('dialog', { name: 'Add a new company' });
+    }
+
+    it('keeps the website optional without a layout', async () => {
+      const dialog = await openCreateDialog(null);
+      const input = within(dialog).getByRole('textbox', {
+        name: m.employerDashboard_websiteOptionalLabel(),
+      });
+      expect(input).not.toBeRequired();
+    });
+
+    it('requires the website when the layout does', async () => {
+      const dialog = await openCreateDialog(website({ required: true }));
+      const input = within(dialog).getByRole('textbox', {
+        name: m.employerCompany_websiteLabel(),
+      });
+      expect(input).toBeRequired();
+
+      fireEvent.change(input, { target: { value: '   ' } });
+      fireEvent.click(
+        within(dialog).getByRole('button', {
+          name: m.employerDashboard_createCompanyLabel(),
+        }),
+      );
+
+      expect(
+        await within(dialog).findByText(
+          m.profileForm_fieldRequiredError({
+            field: m.employerCompany_websiteLabel(),
+          }),
+        ),
+      ).toBeInTheDocument();
+      expect(createCompany).not.toHaveBeenCalled();
+    });
+
+    it('leaves the website out when the layout hides it', async () => {
+      // Only the request body matters here, not the outcome.
+      createCompany.mockRejectedValue(new Error('offline'));
+      const dialog = await openCreateDialog(website({ visible: false }));
+      expect(
+        within(dialog).queryByRole('textbox', { name: /website/i }),
+      ).toBeNull();
+
+      fireEvent.click(
+        within(dialog).getByRole('button', {
+          name: m.employerDashboard_createCompanyLabel(),
+        }),
+      );
+
+      await waitFor(() =>
+        expect(createCompany).toHaveBeenCalledWith({
+          data: { name: 'Acme' },
+        }),
+      );
+    });
   });
 
   it('keeps the connect-company panel open across keystrokes while results update in place', async () => {

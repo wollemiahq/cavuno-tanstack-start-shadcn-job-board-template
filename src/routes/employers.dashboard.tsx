@@ -1,6 +1,11 @@
 import { useCallback } from 'react';
 
-import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
+import {
+  Link,
+  createFileRoute,
+  getRouteApi,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
@@ -14,6 +19,7 @@ import {
   type WorkEmailVerificationOutcome,
 } from './-employers.dashboard';
 
+import { boardForms } from '@/board/form-layout';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
@@ -54,8 +60,11 @@ export const Route = createFileRoute('/employers/dashboard')({
   component: EmployerDashboard,
 });
 
+const rootApi = getRouteApi('__root__');
+
 function EmployerDashboard() {
   const companies = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const { add, verified } = Route.useSearch();
   const router = useRouter();
   const consumeVerificationOutcome = useCallback(() => {
@@ -72,6 +81,7 @@ function EmployerDashboard() {
       add={add}
       verified={verified}
       consumeVerificationOutcome={consumeVerificationOutcome}
+      companyFormLayout={boardForms(board)?.company ?? null}
       dependencies={{
         searchCompanies,
         claimCompany,
