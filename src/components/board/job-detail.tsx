@@ -11,8 +11,11 @@ import { m } from '../../paraglide/messages';
  *
  * Anatomy: page header (company avatar + name link, display title, meta
  * pills, posted date) → two-column body. The main column carries the
- * sanitized description prose, facts, taxonomy links, and operator custom
- * fields. The right rail is a stack: the ACTIONS card (full-width
+ * sanitized description, then the operator's long-form fields, media and
+ * rich collections, then the facts list (built-in facts followed by short
+ * custom fields), taxonomy links and compact collection chips. Placement of
+ * operator data comes from `vm.detailFields` (src/board/detail-fields.ts).
+ * The right rail is a stack: the ACTIONS card (full-width
  * primary Apply on top, a two-up Save + Copy-link row beneath it) → the alert
  * signup card → the compact about-company card → the similar-jobs grid. On
  * mobile the actions card floats above the bottom edge of the viewport.
@@ -24,14 +27,22 @@ import { m } from '../../paraglide/messages';
  *   form). The about-company card is composed here from `vm.company`.
  * - JSON-LD + head meta live in the route, never here.
  */
+import type { DetailCollection, DetailField } from '@/board/detail-fields';
 import type {
   JobDetailChipVM,
-  JobDetailCustomFieldVM,
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
 import { BoardAdSlot } from '@/components/board/board-ad-slot';
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import {
+  CollectionChips,
+  DetailDocumentList,
+  DetailFactList,
+  DetailMediaSections,
+  DetailProseSections,
+  DetailRichCollections,
+} from '@/components/board/detail-fields';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
@@ -62,44 +73,41 @@ function TaxonomySection({
   );
 }
 
-function DefinitionList({
-  rows,
+/** A compact collection's chips, in the same treatment as the taxonomy. */
+function CollectionChipSection({
+  collection,
 }: {
-  rows: { label: string; value: string }[];
+  collection: DetailCollection;
 }) {
   return (
-    <dl className="grid gap-x-6 gap-y-2.5 sm:grid-cols-[max-content_1fr]">
-      {rows.map((row) => (
-        <div key={row.label} className="contents">
-          <dt className="text-muted-foreground text-sm font-medium">
-            {row.label}
-          </dt>
-          <dd className="text-foreground text-sm">{row.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function JobFacts({ facts }: { facts: JobDetailFactVM[] }) {
-  if (facts.length === 0) return null;
-  return <DefinitionList rows={facts} />;
-}
-
-function CustomFields({
-  fields,
-  heading,
-}: {
-  fields: JobDetailCustomFieldVM[];
-  heading: string;
-}) {
-  if (fields.length === 0) return null;
-  return (
-    <section aria-label={heading} className="flex flex-col gap-2">
-      <h2 className="text-foreground text-sm font-semibold">{heading}</h2>
-      <DefinitionList rows={fields} />
+    <section aria-label={collection.label} className="flex flex-col gap-2">
+      <h2 className="text-foreground text-sm font-semibold">
+        {collection.label}
+      </h2>
+      <CollectionChips entries={collection.entries} />
     </section>
   );
+}
+
+/** Built-in facts first, then the operator's short custom fields. */
+function JobFacts({
+  facts,
+  customFacts,
+}: {
+  facts: JobDetailFactVM[];
+  customFacts: DetailField[];
+}) {
+  const rows: DetailField[] = [
+    ...facts.map(
+      (fact): DetailField => ({
+        key: `builtin:${fact.label}`,
+        label: fact.label,
+        value: { kind: 'text', text: fact.value },
+      }),
+    ),
+    ...customFacts.map((fact) => ({ ...fact, key: `custom:${fact.key}` })),
+  ];
+  return <DetailFactList rows={rows} />;
 }
 
 /** Compact company card inside the apply rail: avatar, name, sector, link. */
@@ -227,6 +235,10 @@ export function JobDetail({
           />
           {alertSlot}
           {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
+          <DetailDocumentList
+            heading={vm.documentsHeading}
+            documents={vm.detailFields.documents}
+          />
           {similarSlot}
         </>
       }
@@ -246,18 +258,20 @@ export function JobDetail({
           <p className="text-muted-foreground">{vm.noDescriptionText}</p>
         )}
 
-        <JobFacts facts={vm.facts} />
+        <DetailProseSections fields={vm.detailFields.prose} />
+        <DetailMediaSections media={vm.detailFields.media} />
+        <DetailRichCollections collections={vm.detailFields.richCollections} />
+
+        <JobFacts facts={vm.facts} customFacts={vm.detailFields.facts} />
 
         <TaxonomySection
           heading={vm.categoriesHeading}
           chips={vm.categoryChips}
         />
         <TaxonomySection heading={vm.skillsHeading} chips={vm.skillChips} />
-
-        <CustomFields
-          fields={vm.customFields}
-          heading={vm.additionalDetailsHeading}
-        />
+        {vm.detailFields.compactCollections.map((collection) => (
+          <CollectionChipSection key={collection.key} collection={collection} />
+        ))}
       </article>
     </PageLayout>
   );

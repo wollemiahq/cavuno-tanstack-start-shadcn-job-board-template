@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CopyLinkButton } from './copy-link-button';
 import { JobDetail } from './job-detail';
 
+import { EMPTY_DETAIL_FIELDS } from '@/board/detail-fields';
 import type { JobDetailVM } from '@/board/job-detail-view-model';
 
 const vm: JobDetailVM = {
@@ -34,6 +35,8 @@ const vm: JobDetailVM = {
   skillsHeading: 'Skills',
   customFields: [],
   additionalDetailsHeading: 'Additional details',
+  detailFields: EMPTY_DETAIL_FIELDS,
+  documentsHeading: 'Documents',
   company: null,
   similar: [],
   similarJobsHeading: 'Similar jobs',
