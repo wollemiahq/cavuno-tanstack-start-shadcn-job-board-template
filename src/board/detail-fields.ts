@@ -11,16 +11,19 @@
  *   - prose   long and rich text → its own main-column section
  *   - media   image and gallery → main column; file → the rail's documents
  *
- * A collection selection renders one of two ways, and only whether its
- * entries carry a public description decides which (see
+ * A collection selection renders one of three ways, decided only by whether
+ * its shown entries carry a public description or a logo (see
  * `collectionPresentation`):
  *
  *   - list    an entry has a description → logo, bold title and a short
  *             description per entry, in the main column
- *   - chips   no entry has one → logo and name chips, in the main column on
- *             both pages whatever the number of selections
+ *   - tiles   no description, but an entry has a logo → a grid of equal
+ *             logo + name tiles, in the main column; an entry without a
+ *             logo gets a neutral initial tile of the same size
+ *   - chips   neither → name chips, in the main column on both pages
+ *             whatever the number of selections
  *
- * Neither shows an entry's other fields (selects, numbers, references,
+ * None shows an entry's other fields (selects, numbers, references,
  * per-selection details): a detail page previews what was chosen; it is not
  * the collection's record view. The one use of those fields is grouping: the
  * expanded view of a long collection sorts entries under subheadings by the
@@ -101,8 +104,8 @@ export interface DetailCollectionEntry {
   title: string;
   logoUrl: string | null;
   /**
-   * List collections only (always `null` in chips); `null` when the entry
-   * has none. On a job, the job's own wording when it set one.
+   * List collections only (always `null` in tiles and chips); `null` when
+   * the entry has none. On a job, the job's own wording when it set one.
    */
   description: Extract<DetailValue, { kind: 'text' | 'html' }> | null;
 }
@@ -131,6 +134,7 @@ export interface DetailFieldZones {
   media: DetailMedia[];
   documents: DetailDocuments[];
   listCollections: DetailCollection[];
+  tileCollections: DetailCollection[];
   chipCollections: DetailCollection[];
 }
 
@@ -140,6 +144,7 @@ export const EMPTY_DETAIL_FIELDS: DetailFieldZones = {
   media: [],
   documents: [],
   listCollections: [],
+  tileCollections: [],
   chipCollections: [],
 };
 
@@ -208,18 +213,32 @@ export function scalarSizeClass(type: string): ScalarSizeClass | null {
   }
 }
 
-export type CollectionPresentation = 'list' | 'chips';
+export type CollectionPresentation = 'list' | 'tiles' | 'chips';
 
 /**
- * A list when an entry being rendered has a public description (the default
- * description field's value, or on a job its own wording); chips otherwise.
- * Nothing else decides it: logos, references, badges, other entry fields and
- * per-selection details never turn chips into a list.
+ * How a collection renders, from the entries being rendered only:
+ *
+ *   - list    an entry has a public description (the default description
+ *             field's value, or on a job its own wording)
+ *   - tiles   no description, and an entry has a logo (the API's `logoUrl`:
+ *             the image in the collection's logo field, or the collection's
+ *             only image field when the API sent none)
+ *   - chips   neither
+ *
+ * The API does not say which field is a collection's logo field, so "the
+ * collection has a logo" is read from the entries: one logo is enough, and
+ * the entries without one get an initial tile. Nothing else decides it:
+ * references, selects, other entry fields and per-selection details never
+ * change the presentation.
  */
 export function collectionPresentation(
-  entries: ReadonlyArray<Pick<DetailCollectionEntry, 'description'>>,
+  entries: ReadonlyArray<
+    Pick<DetailCollectionEntry, 'description' | 'logoUrl'>
+  >,
 ): CollectionPresentation {
-  return entries.some((entry) => entry.description !== null) ? 'list' : 'chips';
+  if (entries.some((entry) => entry.description !== null)) return 'list';
+  if (entries.some((entry) => entry.logoUrl !== null)) return 'tiles';
+  return 'chips';
 }
 
 // ── Values ───────────────────────────────────────────────────────────────
@@ -435,6 +454,7 @@ function emptyZones(): DetailFieldZones {
     media: [],
     documents: [],
     listCollections: [],
+    tileCollections: [],
     chipCollections: [],
   };
 }
@@ -544,11 +564,12 @@ function placeCollection(
   collection: DetailCollection,
 ) {
   if (collection.entries.length === 0) return;
-  zones[
-    collectionPresentation(collection.entries) === 'list'
-      ? 'listCollections'
-      : 'chipCollections'
-  ].push(collection);
+  const zone = {
+    list: 'listCollections',
+    tiles: 'tileCollections',
+    chips: 'chipCollections',
+  } as const;
+  zones[zone[collectionPresentation(collection.entries)]].push(collection);
 }
 
 // ── Grouping ─────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 /**
  * The company profile's Overview tab body, below the shared company shell
- * header: description, the operator's long-form fields, media, list
- * collections and chip collections, then the jobs preview and salary
+ * header: description, the operator's long-form fields, media, list, tile
+ * and chip collections, then the jobs preview and salary
  * summary in the main column; key facts (website, markets, short custom
  * fields), documents, advertising and similar companies in the rail.
  *
@@ -38,6 +38,7 @@ import {
   DetailMediaSections,
   DetailListCollections,
   DetailProseSections,
+  DetailTileCollections,
   DetailValueView,
 } from '@/components/board/detail-fields';
 import { JobCard } from '@/components/board/job-card';
@@ -111,7 +112,7 @@ function CollectionChipSection({
       <Text as="h2" variant="heading4">
         {collection.label}
       </Text>
-      <CollectionChips collection={collection} variant="secondary" />
+      <CollectionChips collection={collection} />
     </section>
   );
 }
@@ -202,6 +203,7 @@ export function CompanyOverview({
           <DetailProseSections fields={detailFields.prose} />
           <DetailMediaSections media={detailFields.media} />
           <DetailListCollections collections={detailFields.listCollections} />
+          <DetailTileCollections collections={detailFields.tileCollections} />
           {detailFields.chipCollections.map((collection) => (
             <CollectionChipSection
               key={collection.key}

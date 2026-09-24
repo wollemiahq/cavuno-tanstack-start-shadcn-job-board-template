@@ -78,9 +78,11 @@ function selection(
   };
 }
 
+// One logo makes the technologies tiles; the others get initial tiles.
 const technologies = Array.from({ length: 3 }, (_, index) =>
   selection('tech', `tech-${index}`, `Tech ${index}`),
 );
+technologies[0]!.logoUrl = 'https://cdn.test/tech-0.png';
 const markets = Array.from({ length: 13 }, (_, index) =>
   selection('regions', `region-${index}`, `Region ${index}`),
 );
@@ -156,11 +158,12 @@ describe('CompanyOverview operator fields', () => {
     expect(within(benefits).getByText('Extra leave')).toBeInTheDocument();
     expect(within(benefits).getByText('Five more days.')).toBeInTheDocument();
 
-    // Chip collections: in the main column whatever the number of
+    // Tile and chip collections: in the main column whatever the number of
     // selections, never in the rail. Past twelve, the rest wait behind a
     // disclosure.
     const tech = within(main).getByRole('region', { name: 'Technologies' });
     expect(within(tech).getAllByRole('listitem')).toHaveLength(3);
+    expect(tech.querySelectorAll('img')).toHaveLength(1);
     const regions = within(main).getByRole('region', { name: 'Regions' });
     expect(within(regions).getAllByRole('listitem')).toHaveLength(12);
     fireEvent.click(within(regions).getByRole('button', { expanded: false }));

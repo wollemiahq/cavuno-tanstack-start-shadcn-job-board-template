@@ -149,17 +149,24 @@ describe('scalarSizeClass', () => {
 });
 
 describe('collectionPresentation', () => {
-  const plain = { description: null };
+  const plain = { description: null, logoUrl: null };
+  const logo = { description: null, logoUrl: 'https://cdn.test/ts.png' };
   const described = {
     description: { kind: 'text' as const, text: 'Five more days.' },
+    logoUrl: null,
   };
 
-  it('is chips when no entry has a description', () => {
+  it('is chips when no entry has a description or a logo', () => {
     expect(collectionPresentation([plain, plain])).toBe('chips');
   });
 
-  it('is a list when an entry carries a description', () => {
+  it('is tiles when no entry has a description and one has a logo', () => {
+    expect(collectionPresentation([plain, logo])).toBe('tiles');
+  });
+
+  it('is a list when an entry carries a description, logos or not', () => {
     expect(collectionPresentation([plain, described])).toBe('list');
+    expect(collectionPresentation([logo, described])).toBe('list');
   });
 });
 
@@ -254,7 +261,7 @@ describe('jobDetailFields', () => {
     ]);
   });
 
-  it('lists described collections and chips the rest, whatever other fields entries carry', () => {
+  it('lists described collections, tiles logo collections and chips the rest, whatever other fields entries carry', () => {
     const summary: EntryField = {
       key: 'summary',
       label: 'Summary',
@@ -303,6 +310,18 @@ describe('jobDetailFields', () => {
             ],
           },
           { key: 'perks', label: 'Perks', entries: [] },
+          {
+            key: 'practices',
+            label: 'Practices',
+            entries: [
+              jobEntry({
+                id: 'async',
+                title: 'Async first',
+                fields: [days],
+                values: { days: 4 },
+              }),
+            ],
+          },
         ],
       },
       [],
@@ -312,13 +331,15 @@ describe('jobDetailFields', () => {
             jobCollection('benefits', { descriptionFieldKey: 'summary' }),
             jobCollection('stack', { allowOverrides: true }),
             jobCollection('perks'),
+            jobCollection('practices'),
           ],
         },
       },
       format,
     );
 
-    // A reference field and a logo never make an entry a list item.
+    // One logo and no description make tiles; Go keeps its tile without a
+    // logo. A reference field never makes an entry a list item.
     const typescript = {
       id: 'ts',
       title: 'TypeScript',
@@ -326,7 +347,7 @@ describe('jobDetailFields', () => {
       description: null,
     };
     const go = { id: 'go', title: 'Go', logoUrl: null, description: null };
-    expect(zones.chipCollections).toEqual([
+    expect(zones.tileCollections).toEqual([
       {
         key: 'stack',
         label: 'stack label',
@@ -336,6 +357,22 @@ describe('jobDetailFields', () => {
           { key: 'category:lang', label: 'Language', entries: [typescript] },
           { key: 'other', label: 'OTHER', entries: [go] },
         ],
+      },
+    ]);
+    // Neither a description nor a logo: chips, whatever else entries carry.
+    expect(zones.chipCollections).toEqual([
+      {
+        key: 'practices',
+        label: 'practices label',
+        entries: [
+          {
+            id: 'async',
+            title: 'Async first',
+            logoUrl: null,
+            description: null,
+          },
+        ],
+        groups: null,
       },
     ]);
     // The description renders as HTML because the default description field
@@ -465,6 +502,7 @@ describe('jobDetailFields', () => {
       format,
     );
     expect(zones.chipCollections).toEqual([]);
+    expect(zones.tileCollections).toEqual([]);
     expect(zones.listCollections).toEqual([]);
   });
 });
@@ -617,7 +655,7 @@ describe('companyDetailFields', () => {
     ]);
   });
 
-  it('lists a described collection and chips one with only badges and details', () => {
+  it('lists a described collection and tiles one with only badges and details', () => {
     const zones = companyDetailFields(
       {
         customFieldValues: {},
@@ -664,8 +702,9 @@ describe('companyDetailFields', () => {
       logoUrl: null,
       description: { kind: 'text', text: 'Audited yearly.' },
     });
-    // The only image field is the badge, so it is the chip's logo.
-    expect(zones.chipCollections).toEqual([
+    // The only image field is the badge, so it is the tile's logo.
+    expect(zones.chipCollections).toEqual([]);
+    expect(zones.tileCollections).toEqual([
       {
         key: 'certs',
         label: 'certs label',
@@ -824,6 +863,36 @@ describe('collection groups', () => {
       ['Health', ['dental', 'cover']],
       ['Time off', ['leave']],
       ['OTHER', ['bonus', 'gym']],
+    ]);
+  });
+
+  it('groups tile collections the same way', () => {
+    const zones = companyDetailFields(
+      {
+        customFieldValues: {},
+        objectReferences: [
+          selection('certs', {
+            recordId: 'soc2',
+            title: 'SOC 2',
+            fields: [kind],
+            attributes: { kind: 'money' },
+            logoUrl: 'https://cdn.test/soc2.png',
+          }),
+          selection('certs', {
+            recordId: 'iso',
+            title: 'ISO 27001',
+            fields: [kind],
+            attributes: { kind: 'health' },
+          }),
+        ],
+      },
+      [profileCollection('certs')],
+      format,
+    );
+    expect(zones.tileCollections.map((c) => c.key)).toEqual(['certs']);
+    expect(groupIds(zones.tileCollections[0]!.groups)).toEqual([
+      ['Health', ['iso']],
+      ['Money', ['soc2']],
     ]);
   });
 

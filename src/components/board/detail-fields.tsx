@@ -23,6 +23,7 @@ import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { initialsOf } from '@/lib/initials';
 import { textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
@@ -195,6 +196,7 @@ export function DetailMediaSections({ media }: { media: DetailMedia[] }) {
 
 /** How many entries a collection previews before its "Show all" control. */
 const LIST_PREVIEW_COUNT = 6;
+const TILE_PREVIEW_COUNT = 12;
 const CHIP_PREVIEW_COUNT = 12;
 
 /**
@@ -271,16 +273,15 @@ function ExpandableCollection({
 }
 
 /**
- * A chip collection: logo + name chips, wrapping. The first twelve show; a
- * disclosure reveals the rest in place, grouped when the collection has a
- * categorising field.
+ * A chip collection (no descriptions, no logos): name chips, wrapping, in
+ * the same size and treatment as the taxonomy chips on both pages. The first
+ * twelve show; a disclosure reveals the rest in place, grouped when the
+ * collection has a categorising field.
  */
 export function CollectionChips({
   collection,
-  variant = 'outline',
 }: {
   collection: DetailCollection;
-  variant?: 'outline' | 'secondary';
 }) {
   return (
     <ExpandableCollection
@@ -293,20 +294,7 @@ export function CollectionChips({
               key={entry.id}
               hidden={previewCount !== undefined && index >= previewCount}
             >
-              <Badge
-                variant={variant}
-                className={cn(
-                  variant === 'outline' ? 'h-6 px-2.5 text-sm' : undefined,
-                )}
-              >
-                {entry.logoUrl ? (
-                  <img
-                    src={entry.logoUrl}
-                    alt=""
-                    loading="lazy"
-                    className="size-4 rounded-sm object-contain"
-                  />
-                ) : null}
+              <Badge variant="outline" className="h-6 px-2.5 text-sm">
                 <span dir="auto">{entry.title}</span>
               </Badge>
             </li>
@@ -317,12 +305,31 @@ export function CollectionChips({
   );
 }
 
-/** The entry's logo, or a neutral tile with its initial. Decorative. */
-function EntryMark({ entry }: { entry: DetailCollectionEntry }) {
+const entryMarkSize = {
+  /** List rows. */
+  md: 'size-8 rounded-lg text-xs',
+  /** Logo tiles. */
+  lg: 'size-12 rounded-xl text-base',
+} as const;
+
+/**
+ * The entry's logo, contained on a neutral square (so a transparent logo
+ * still reads as a tile), or the same square with its initial. Decorative.
+ */
+function EntryMark({
+  entry,
+  size = 'md',
+}: {
+  entry: DetailCollectionEntry;
+  size?: keyof typeof entryMarkSize;
+}) {
   return (
     <span
       aria-hidden="true"
-      className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-medium"
+      className={cn(
+        'bg-muted text-muted-foreground flex shrink-0 items-center justify-center overflow-hidden font-medium',
+        entryMarkSize[size],
+      )}
     >
       {entry.logoUrl ? (
         <img
@@ -335,6 +342,50 @@ function EntryMark({ entry }: { entry: DetailCollectionEntry }) {
         initialsOf(entry.title.trim().split(/\s+/)[0] ?? '')
       )}
     </span>
+  );
+}
+
+/**
+ * A tile collection (no descriptions, at least one logo): a muted panel of
+ * equal tiles, each a large logo over the name; an entry without a logo gets
+ * the same tile with its initial. Four columns on wide screens, three on
+ * medium, two on phones. The first twelve show; a disclosure reveals the
+ * rest in place, grouped when the collection has a categorising field.
+ */
+export function CollectionTiles({
+  collection,
+}: {
+  collection: DetailCollection;
+}) {
+  return (
+    <ExpandableCollection
+      collection={collection}
+      limit={TILE_PREVIEW_COUNT}
+      renderEntries={(entries, previewCount) => (
+        <ul className="bg-muted/50 grid auto-rows-fr grid-cols-2 gap-2 rounded-2xl p-2 md:grid-cols-3 lg:grid-cols-4">
+          {entries.map((entry, index) => (
+            <li
+              key={entry.id}
+              hidden={previewCount !== undefined && index >= previewCount}
+              className="min-w-0"
+            >
+              <Card
+                size="sm"
+                className="h-full items-center gap-3 px-3 text-center"
+              >
+                <EntryMark entry={entry} size="lg" />
+                <span
+                  className="text-foreground line-clamp-2 text-sm font-medium break-words"
+                  dir="auto"
+                >
+                  {entry.title}
+                </span>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
+    />
   );
 }
 
@@ -393,11 +444,13 @@ export function CollectionList({
   );
 }
 
-/** List collections: one section per field, under the field label. */
-export function DetailListCollections({
+/** Main-column collections: one section per field, under the field label. */
+function CollectionSections({
   collections,
+  Presentation,
 }: {
   collections: DetailCollection[];
+  Presentation: typeof CollectionList;
 }) {
   return collections.map((collection) => (
     <section
@@ -408,9 +461,37 @@ export function DetailListCollections({
       <Text as="h2" variant="heading4">
         {collection.label}
       </Text>
-      <CollectionList collection={collection} />
+      <Presentation collection={collection} />
     </section>
   ));
+}
+
+/** List collections: one section per field, under the field label. */
+export function DetailListCollections({
+  collections,
+}: {
+  collections: DetailCollection[];
+}) {
+  return (
+    <CollectionSections
+      collections={collections}
+      Presentation={CollectionList}
+    />
+  );
+}
+
+/** Tile collections: one section per field, under the field label. */
+export function DetailTileCollections({
+  collections,
+}: {
+  collections: DetailCollection[];
+}) {
+  return (
+    <CollectionSections
+      collections={collections}
+      Presentation={CollectionTiles}
+    />
+  );
 }
 
 /** File fields as one "Documents" link list, grouped by field label. */

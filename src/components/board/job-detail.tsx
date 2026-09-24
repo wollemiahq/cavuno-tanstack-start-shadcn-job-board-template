@@ -11,8 +11,8 @@ import { m } from '../../paraglide/messages';
  *
  * Anatomy: page header (company avatar + name link, display title, meta
  * pills, posted date) → two-column body. The main column carries the
- * sanitized description, then the operator's long-form fields, media and
- * list collections, then the facts list (built-in facts followed by short
+ * sanitized description, then the operator's long-form fields, media, list
+ * and tile collections, then the facts list (built-in facts followed by short
  * custom fields), taxonomy links and chip collections. Placement of
  * operator data comes from `vm.detailFields` (src/board/detail-fields.ts).
  * The right rail is a stack: the ACTIONS card (full-width
@@ -42,6 +42,7 @@ import {
   DetailMediaSections,
   DetailListCollections,
   DetailProseSections,
+  DetailTileCollections,
 } from '@/components/board/detail-fields';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
@@ -261,6 +262,7 @@ export function JobDetail({
         <DetailProseSections fields={vm.detailFields.prose} />
         <DetailMediaSections media={vm.detailFields.media} />
         <DetailListCollections collections={vm.detailFields.listCollections} />
+        <DetailTileCollections collections={vm.detailFields.tileCollections} />
 
         <JobFacts facts={vm.facts} customFacts={vm.detailFields.facts} />
 
