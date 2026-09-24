@@ -421,6 +421,19 @@ function postingOutcome(
         : m.employerJobs_postedMissingBody(),
     };
   }
+  // `review=1` means the board holds new posts for approval: the row is a
+  // draft awaiting the board team, not a job the employer can treat as saved
+  // and publishable at will.
+  if (search.review) {
+    // Same wording the public posting form uses for a held job, rather than a
+    // second pair of keys saying the same thing in six locales.
+    return {
+      title: m.postJob_pendingTitle(),
+      body: listed
+        ? m.postJob_pendingBody()
+        : m.employerJobs_postedMissingBody(),
+    };
+  }
   return {
     title: m.employerJobs_postedTitle(),
     body: listed
