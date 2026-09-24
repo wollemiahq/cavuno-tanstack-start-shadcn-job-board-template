@@ -32,6 +32,37 @@ under the header.
 - Main column: sanitized HTML in the canonical `Prose` wrapper
   (`typeset typeset-content`), facts (`<dl>`), `TaxonomyTags`, custom fields,
   and related-record grids.
+- Operator custom fields and collection selections are placed by size class
+  (`src/board/detail-fields.ts`): short values join the facts, long and rich
+  text get their own section after the description, images sit in the main
+  column and files in a rail "Documents" list. Custom number fields skip
+  digit grouping below 10,000, so a year reads "2016"; larger numbers keep
+  the locale's grouping.
+- A collection renders one of three ways, decided only by its shown
+  entries (`collectionPresentation`):
+  - **List** — any entry carries a public description (the default
+    description field, or a job's own wording): logo or a neutral initial
+    tile, bold title, the description clamped to two lines; no cards,
+    borders or label/value rows.
+  - **Logo tiles** — no description, and any entry has a logo (`logoUrl`):
+    a muted rounded panel of equal-height `Card` tiles, each a large
+    contained logo on a neutral square over the name; 4 columns on `lg`, 3
+    on `md`, 2 on phones. An entry without a logo gets the same tile with
+    its initial.
+  - **Chips** — neither: name chips in the taxonomy's outline size, the
+    same on the job and company pages.
+
+  An entry's other fields — selects, numbers, rich text, references,
+  per-selection details — never show and never change the presentation.
+- Long collections preview, then expand in place: the first 6 list entries,
+  12 tiles or 12 chips, then a "Show all N" / "Show fewer" button
+  (`aria-expanded`, `aria-controls`). Hidden entries stay in the markup. The
+  expanded view groups entries under subheadings by the collection's first
+  single-valued categorising field: a single select (option label, option
+  order) or a reference no entry uses more than once (referenced entry name,
+  order of first appearance). Entries without a value close under "Other".
+  With no such field the expanded view is the same flat list, tiles or
+  chips; the collapsed preview is never grouped.
 - Rail: the apply/action card on `rounded-xl bg-primary p-5 shadow-xs ring-1 ring-secondary_alt`.
 
 ## Composition

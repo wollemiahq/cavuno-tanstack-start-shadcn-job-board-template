@@ -26,7 +26,10 @@ import {
   customFieldLabel,
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
-import { resolveJobForm, type JobFormSource } from '@/board/job-form';
+import { jobDetailFields, type DetailFieldZones } from '@/board/detail-fields';
+import type { JobFormLayoutSource } from '@/board/form-layout';
+import { resolveJobForm } from '@/board/job-form';
+import { detailFieldsCopy } from '@/copy-groups/detail-fields';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
@@ -114,8 +117,16 @@ export interface JobDetailVM {
   skillChips: JobDetailChipVM[];
   categoriesHeading: string;
   skillsHeading: string;
+  /**
+   * Custom fields as one "Additional details" list — the compact search
+   * pane's rendering. The full page places them by size class through
+   * `detailFields` instead.
+   */
   customFields: JobDetailCustomFieldVM[];
   additionalDetailsHeading: string;
+  /** Custom fields and collection selections placed by size class. */
+  detailFields: DetailFieldZones;
+  documentsHeading: string;
   company: JobDetailCompanyVM | null;
 
   // Rail
@@ -137,7 +148,7 @@ export function toJobDetailVM(
    * breaks it, which is why this is two arguments and not one.
    */
   displayLocale: string = language,
-  jobForm?: JobFormSource | null,
+  jobForm?: JobFormLayoutSource | null,
   /**
    * The company's membership plan name from the separate company read; the
    * embedded `job.company` has no membership field.
@@ -315,6 +326,14 @@ export function toJobDetailVM(
     };
   });
 
+  const detailCopy = detailFieldsCopy(displayLocale);
+  const detailFields = jobDetailFields(job, customFieldDefinitions, jobForm, {
+    ...detailCopy.format,
+    fieldLabel: (field) => customFieldLabel(field, displayLocale),
+    optionLabel: (fieldKey, option) =>
+      customFieldOptionLabel(fieldKey, option, displayLocale),
+  });
+
   const website = company?.website
     ? /^https?:\/\//i.test(company.website)
       ? company.website
@@ -417,6 +436,8 @@ export function toJobDetailVM(
     skillsHeading: copy.skillsHeading,
     customFields: customFieldVms,
     additionalDetailsHeading: copy.additionalDetailsHeading,
+    detailFields,
+    documentsHeading: detailCopy.documentsHeading,
     company: companyVm,
 
     similar: similar.map((s) => ({

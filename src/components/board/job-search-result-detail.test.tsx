@@ -20,6 +20,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { JobSearchResultDetail } from './job-search-result-detail';
 
+import { EMPTY_DETAIL_FIELDS } from '@/board/detail-fields';
 import type { JobDetailVM } from '@/board/job-detail-view-model';
 import { SearchResultDetail } from '@/components/search-results/search-results';
 
@@ -52,6 +53,8 @@ const vm: JobDetailVM = {
     { key: 'portfolio', label: 'Portfolio required', value: 'Yes' },
   ],
   additionalDetailsHeading: 'Additional details',
+  detailFields: EMPTY_DETAIL_FIELDS,
+  documentsHeading: 'Documents',
   company: {
     name: 'Acme',
     logoUrl: null,
