@@ -15,6 +15,26 @@ import { Button } from '@/components/ui/button';
 const SUPPRESS_KEY = 'cavuno:job-alert-prompt-dismissed-until';
 const SUPPRESS_MS = 30 * 24 * 60 * 60 * 1000;
 
+// `localStorage` is null in an Android WebView without DOM storage and
+// throws when site data is blocked. The dismissal is a nicety: without
+// storage the prompt shows and a dismiss lasts for this page only.
+function isSuppressed(): boolean {
+  try {
+    const until = Number(localStorage.getItem(SUPPRESS_KEY) ?? 0);
+    return Number.isFinite(until) && Date.now() <= until;
+  } catch {
+    return false;
+  }
+}
+
+function suppress() {
+  try {
+    localStorage.setItem(SUPPRESS_KEY, String(Date.now() + SUPPRESS_MS));
+  } catch {
+    // Storage unavailable: hiding it for this page is all we can do.
+  }
+}
+
 export function JobAlertFloatingPromptView({
   defaults,
   language,
@@ -28,8 +48,7 @@ export function JobAlertFloatingPromptView({
   const { bannerOpen } = useCookieConsent();
 
   useEffect(() => {
-    const until = Number(localStorage.getItem(SUPPRESS_KEY) ?? 0);
-    if (!Number.isFinite(until) || Date.now() > until) setVisible(true);
+    if (!isSuppressed()) setVisible(true);
   }, []);
 
   if (!visible || bannerOpen) return null;
@@ -46,10 +65,7 @@ export function JobAlertFloatingPromptView({
           size="icon-xs"
           aria-label={m.jobAlertFloatingPrompt_dismissAriaLabel()}
           onClick={() => {
-            localStorage.setItem(
-              SUPPRESS_KEY,
-              String(Date.now() + SUPPRESS_MS),
-            );
+            suppress();
             setVisible(false);
           }}
           className="absolute end-2 top-2"
