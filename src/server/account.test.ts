@@ -6,7 +6,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { readAccount, type AccountBoard } from './account';
+import { readAccount, type AccountBoard } from './account-read';
 
 const headers = { authorization: 'Bearer token' };
 
