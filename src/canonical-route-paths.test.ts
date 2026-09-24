@@ -8,7 +8,7 @@ function source(path: string) {
 
 describe('canonical board paths', () => {
   it('builds company salary category links through the typed router path', () => {
-    const route = source('./routes/companies.$companySlug.index.tsx');
+    const route = source('./routes/-company-overview.tsx');
 
     expect(route).toContain('interpolatePath({');
     expect(route).toContain(
