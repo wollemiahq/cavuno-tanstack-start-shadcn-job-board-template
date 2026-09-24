@@ -10,6 +10,7 @@ import type { ProfileCustomDefinition } from '@/board/form-layout';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldLegend,
@@ -62,21 +63,26 @@ function numberValue(value: CustomFieldValue | undefined): number | '' {
  * select values store option KEYS, never labels — the same contract
  * `resolveCustomFieldDisplay` reads back on the job page. `required` comes
  * from the form layout when there is one (a hidden field is never required),
- * otherwise from the definition.
+ * otherwise from the definition. `error` is a message about this field (for
+ * example a rule the Board API refused), shown under it.
  */
 export function CustomFieldInput({
   definition,
   value,
   required = definition.required,
   onChange,
+  error,
 }: {
   definition: CustomFieldDefinition;
   value: CustomFieldValue | undefined;
   required?: boolean;
   onChange: (value: CustomFieldValue) => void;
+  error?: string | null;
 }) {
   const id = `custom-field-${definition.key}`;
   const label = customFieldLabel(definition);
+  const invalid = error ? true : undefined;
+  const errorText = error ? <FieldError>{error}</FieldError> : null;
 
   switch (definition.type) {
     case 'short_text':
@@ -85,39 +91,44 @@ export function CustomFieldInput({
     case 'email':
     case 'phone':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Input
             id={id}
             type={INPUT_TYPES[definition.type]}
             required={required}
+            aria-invalid={invalid}
             value={textValue(value)}
             onChange={(event) => onChange(event.target.value)}
           />
+          {errorText}
         </Field>
       );
     case 'long_text':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Textarea
             id={id}
             rows={3}
             required={required}
+            aria-invalid={invalid}
             value={textValue(value)}
             onChange={(event) => onChange(event.target.value)}
           />
+          {errorText}
         </Field>
       );
     case 'number':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Input
             id={id}
             type="number"
             inputMode="numeric"
             required={required}
+            aria-invalid={invalid}
             min={definition.min}
             max={definition.max}
             value={numberValue(value)}
@@ -128,24 +139,31 @@ export function CustomFieldInput({
               );
             }}
           />
+          {errorText}
         </Field>
       );
     case 'boolean':
       return (
-        <Field orientation="horizontal" className="w-fit">
+        <Field
+          orientation="horizontal"
+          className="w-fit"
+          data-invalid={invalid}
+        >
           <FieldLabel className="cursor-pointer">
             <Checkbox
               id={id}
               checked={value === true}
+              aria-invalid={invalid}
               onCheckedChange={(checked) => onChange(checked === true)}
             />
             {label}
           </FieldLabel>
+          {errorText}
         </Field>
       );
     case 'single_select':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Select
             items={(definition.options ?? []).map((option) => ({
@@ -156,7 +174,7 @@ export function CustomFieldInput({
             value={textValue(value) || null}
             onValueChange={(next) => onChange(searchString(next) ?? '')}
           >
-            <SelectTrigger id={id} className="w-full">
+            <SelectTrigger id={id} className="w-full" aria-invalid={invalid}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -167,12 +185,13 @@ export function CustomFieldInput({
               ))}
             </SelectContent>
           </Select>
+          {errorText}
         </Field>
       );
     case 'multi_select': {
       const selected = Array.isArray(value) ? value : [];
       return (
-        <FieldSet>
+        <FieldSet data-invalid={invalid}>
           <FieldLegend variant="label">{label}</FieldLegend>
           <FieldGroup className="flex-row flex-wrap gap-4">
             {(definition.options ?? []).map((option) => {
@@ -201,6 +220,7 @@ export function CustomFieldInput({
               );
             })}
           </FieldGroup>
+          {errorText}
         </FieldSet>
       );
     }

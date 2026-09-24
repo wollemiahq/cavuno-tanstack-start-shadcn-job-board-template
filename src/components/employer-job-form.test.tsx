@@ -14,6 +14,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -1601,11 +1602,57 @@ describe('EmployerJobForm — board custom fields', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
 
+    // Under the Perks field and by the submit button.
     expect(
-      await screen.findByText(
+      await screen.findAllByText(
         m.jobForm_customFieldRequiredError({ field: 'Perks' }),
       ),
-    ).toBeInTheDocument();
+    ).toHaveLength(2);
+  });
+
+  it('shows a refused custom field rule under that field', async () => {
+    mocks.createJob.mockResolvedValue({
+      ok: false,
+      code: 'jobs_constraint_violation',
+      message: '"Team" is too long',
+      violations: [
+        {
+          code: 'custom_field_too_long',
+          path: ['customFieldValues', 'team'],
+          params: { label: 'Team' },
+        },
+      ],
+    });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    const team = screen.getByLabelText('Team');
+    fireEvent.change(team, { target: { value: 'Platform' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    const message = m.jobForm_customFieldInvalidError({ field: 'Team' });
+    const teamField = team.closest<HTMLElement>('[role="group"]')!;
+    expect(await within(teamField).findByRole('alert')).toHaveTextContent(
+      message,
+    );
+    expect(team).toHaveAttribute('aria-invalid', 'true');
+
+    // Editing the field clears its refusal.
+    fireEvent.change(team, { target: { value: 'Core' } });
+    expect(within(teamField).queryByRole('alert')).toBeNull();
+    expect(team).not.toHaveAttribute('aria-invalid');
   });
 
   it('blocks a save that leaves a required custom field empty', async () => {
