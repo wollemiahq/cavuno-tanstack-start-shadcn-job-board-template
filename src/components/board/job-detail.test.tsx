@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { JobDetail } from './job-detail';
@@ -28,7 +34,7 @@ const detailFields: DetailFieldZones = {
       value: { kind: 'html', html: '<p><strong>Small</strong> and calm.</p>' },
     },
   ],
-  compactCollections: [
+  chipCollections: [
     {
       key: 'stack',
       label: 'Tech stack',
@@ -38,13 +44,12 @@ const detailFields: DetailFieldZones = {
           title: 'TypeScript',
           logoUrl: 'https://cdn.test/ts.png',
           description: null,
-          details: [],
-          rows: [],
         },
       ],
+      groups: null,
     },
   ],
-  richCollections: [
+  listCollections: [
     {
       key: 'benefits',
       label: 'Benefits',
@@ -54,16 +59,18 @@ const detailFields: DetailFieldZones = {
           title: 'Extra leave',
           logoUrl: null,
           description: { kind: 'text', text: 'Five more days.' },
-          details: [
-            {
-              key: 'days',
-              label: 'Days per year',
-              value: { kind: 'text', text: '5' },
-            },
-          ],
-          rows: [],
+        },
+        {
+          id: 'remote',
+          title: 'Remote budget',
+          logoUrl: null,
+          description: {
+            kind: 'html',
+            html: '<p>For a <strong>desk</strong>.</p>',
+          },
         },
       ],
+      groups: null,
     },
   ],
   documents: [
@@ -136,17 +143,19 @@ describe('JobDetail operator fields', () => {
       .map((term) => term.textContent);
     expect(terms).toEqual(['Experience', 'Clearance required']);
 
-    // Compact collection: chips under the field label.
+    // Chip collection: chips under the field label.
     const stack = within(article).getByRole('region', { name: 'Tech stack' });
     expect(within(stack).getByText('TypeScript')).toBeInTheDocument();
 
-    // Rich collection: a card with its title, description and details.
+    // List collection: a list of titles and descriptions; sanitised HTML
+    // descriptions render as HTML.
     const benefits = within(article).getByRole('region', { name: 'Benefits' });
-    expect(
-      within(benefits).getByRole('heading', { name: 'Extra leave' }),
-    ).toBeInTheDocument();
+    expect(within(benefits).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(benefits).getByText('Extra leave')).toBeInTheDocument();
     expect(within(benefits).getByText('Five more days.')).toBeInTheDocument();
-    expect(within(benefits).getByText('Days per year')).toBeInTheDocument();
+    expect(within(benefits).getByText('desk').tagName).toBe('STRONG');
+    // Short collections have nothing to expand.
+    expect(within(benefits).queryByRole('button')).toBeNull();
 
     // Files: a Documents list in the rail, not the main column.
     const handbook = screen.getByRole('link', { name: 'handbook.pdf' });
@@ -169,6 +178,119 @@ describe('JobDetail operator fields', () => {
       screen.queryByRole('heading', { name: 'Additional details' }),
     ).toBeNull();
     expect(screen.getAllByText('Clearance required')).toHaveLength(1);
+  });
+
+  it('previews six list entries and twelve chips, and expands in place', () => {
+    const entries = (prefix: string, count: number, described: boolean) =>
+      Array.from({ length: count }, (_, index) => ({
+        id: `${prefix}-${index}`,
+        title: `${prefix} ${index}`,
+        logoUrl: null,
+        description: described
+          ? { kind: 'text' as const, text: `About ${prefix} ${index}` }
+          : null,
+      }));
+    render(
+      <JobDetail
+        vm={{
+          ...vm,
+          detailFields: {
+            ...EMPTY_DETAIL_FIELDS,
+            listCollections: [
+              {
+                key: 'perks',
+                label: 'Perks',
+                entries: entries('Perk', 8, true),
+                groups: null,
+              },
+            ],
+            chipCollections: [
+              {
+                key: 'tools',
+                label: 'Tools',
+                entries: entries('Tool', 15, false),
+                groups: null,
+              },
+            ],
+          },
+        }}
+      />,
+    );
+
+    const perks = screen.getByRole('region', { name: 'Perks' });
+    expect(within(perks).getAllByRole('listitem')).toHaveLength(6);
+    const showAll = within(perks).getByRole('button', { expanded: false });
+    expect(showAll).toHaveTextContent('8');
+    fireEvent.click(showAll);
+    expect(within(perks).getAllByRole('listitem')).toHaveLength(8);
+    expect(within(perks).getByText('About Perk 7')).toBeVisible();
+    const showFewer = within(perks).getByRole('button', { expanded: true });
+    expect(
+      document.getElementById(showFewer.getAttribute('aria-controls')!),
+    ).toContainElement(within(perks).getByRole('list'));
+    fireEvent.click(showFewer);
+    expect(within(perks).getAllByRole('listitem')).toHaveLength(6);
+
+    const tools = screen.getByRole('region', { name: 'Tools' });
+    expect(within(tools).getAllByRole('listitem')).toHaveLength(12);
+    fireEvent.click(within(tools).getByRole('button', { expanded: false }));
+    expect(within(tools).getAllByRole('listitem')).toHaveLength(15);
+  });
+
+  it('groups the expanded view under subheadings, keeping the preview flat', () => {
+    const tool = (id: string) => ({
+      id,
+      title: id,
+      logoUrl: null,
+      description: null,
+    });
+    const tools = Array.from({ length: 14 }, (_, index) =>
+      tool(`Tool ${index}`),
+    );
+    render(
+      <JobDetail
+        vm={{
+          ...vm,
+          detailFields: {
+            ...EMPTY_DETAIL_FIELDS,
+            chipCollections: [
+              {
+                key: 'stack',
+                label: 'Tech stack',
+                entries: tools,
+                groups: [
+                  {
+                    key: 'category:fe',
+                    label: 'Frontend',
+                    entries: tools.slice(0, 10),
+                  },
+                  { key: 'other', label: 'Other', entries: tools.slice(10) },
+                ],
+              },
+            ],
+          },
+        }}
+      />,
+    );
+
+    const stack = screen.getByRole('region', { name: 'Tech stack' });
+    expect(within(stack).queryByRole('heading', { level: 3 })).toBeNull();
+    expect(within(stack).getAllByRole('listitem')).toHaveLength(12);
+
+    fireEvent.click(within(stack).getByRole('button', { expanded: false }));
+    const headings = within(stack).getAllByRole('heading', { level: 3 });
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      'Frontend',
+      'Other',
+    ]);
+    const lists = within(stack).getAllByRole('list');
+    expect(
+      lists.map((list) => within(list).getAllByRole('listitem').length),
+    ).toEqual([10, 4]);
+
+    fireEvent.click(within(stack).getByRole('button', { expanded: true }));
+    expect(within(stack).queryByRole('heading', { level: 3 })).toBeNull();
+    expect(within(stack).getAllByRole('listitem')).toHaveLength(12);
   });
 
   it('renders no headings for empty zones', () => {

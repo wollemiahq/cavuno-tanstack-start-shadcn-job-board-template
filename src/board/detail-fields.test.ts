@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  collectionSizeClass,
+  collectionPresentation,
   companyDetailFields,
   jobDetailFields,
   scalarSizeClass,
@@ -21,6 +21,7 @@ const format: DetailFieldFormat = {
   yesLabel: 'YES',
   noLabel: 'NO',
   galleryImageAlt: (label, index, count) => `${label} ${index}/${count}`,
+  otherGroupLabel: 'OTHER',
 };
 
 type JobField = PublicJob['resolvedCollectionFields'][number];
@@ -147,36 +148,18 @@ describe('scalarSizeClass', () => {
   });
 });
 
-describe('collectionSizeClass', () => {
-  const base = { fields: [logoField], logoFieldKeys: new Set(['logo']) };
+describe('collectionPresentation', () => {
+  const plain = { description: null };
+  const described = {
+    description: { kind: 'text' as const, text: 'Five more days.' },
+  };
 
-  it('is compact when entries carry only a title and a logo', () => {
-    expect(collectionSizeClass(base)).toBe('compact');
+  it('is chips when no entry has a description', () => {
+    expect(collectionPresentation([plain, plain])).toBe('chips');
   });
 
-  it('is rich with a default description field', () => {
-    expect(
-      collectionSizeClass({ ...base, descriptionFieldKey: 'summary' }),
-    ).toBe('rich');
-  });
-
-  it('is rich when records may write their own wording', () => {
-    expect(collectionSizeClass({ ...base, allowOverrides: true })).toBe('rich');
-  });
-
-  it('is rich with another public field', () => {
-    expect(
-      collectionSizeClass({
-        ...base,
-        fields: [logoField, { key: 'days', label: 'Days', type: 'number' }],
-      }),
-    ).toBe('rich');
-  });
-
-  it('is rich with per-record details', () => {
-    expect(collectionSizeClass({ ...base, hasSelectionDetails: true })).toBe(
-      'rich',
-    );
+  it('is a list when an entry carries a description', () => {
+    expect(collectionPresentation([plain, described])).toBe('list');
   });
 });
 
@@ -233,6 +216,28 @@ describe('jobDetailFields', () => {
     expect(zones.prose).toEqual([]);
   });
 
+  it('does not group a year-like number, but groups a large one', () => {
+    const founded: CustomFieldDefinition = {
+      key: 'founded',
+      label: 'Founded',
+      type: 'number',
+      required: false,
+    };
+    const zones = jobDetailFields(
+      {
+        customFieldValues: { founded: 2016, headcount: 12500 },
+        resolvedCollectionFields: [],
+      },
+      [founded, headcount],
+      null,
+      format,
+    );
+    expect(zones.facts.map((fact) => fact.value)).toEqual([
+      { kind: 'text', text: '2016' },
+      { kind: 'text', text: '12,500' },
+    ]);
+  });
+
   it('falls back to definition order without a form layout', () => {
     const zones = jobDetailFields(
       {
@@ -249,13 +254,18 @@ describe('jobDetailFields', () => {
     ]);
   });
 
-  it('splits collections into compact chips and rich cards by their definition', () => {
+  it('lists described collections and chips the rest, whatever other fields entries carry', () => {
     const summary: EntryField = {
       key: 'summary',
       label: 'Summary',
       type: 'rich_text',
     };
     const days: EntryField = { key: 'days', label: 'Days', type: 'number' };
+    const category: EntryField = {
+      key: 'category',
+      label: 'Category',
+      type: 'reference',
+    };
     const zones = jobDetailFields(
       {
         customFieldValues: {},
@@ -267,8 +277,13 @@ describe('jobDetailFields', () => {
               jobEntry({
                 id: 'ts',
                 title: 'TypeScript',
-                fields: [logoField],
+                fields: [logoField, category],
                 values: { logo: media('ts.png') },
+                references: {
+                  category: [
+                    { id: 'lang', name: 'Language', fields: [], values: {} },
+                  ],
+                },
                 logoUrl: 'https://cdn.test/ts.png',
               }),
               jobEntry({ id: 'go', title: 'Go', fields: [logoField] }),
@@ -295,7 +310,7 @@ describe('jobDetailFields', () => {
         forms: {
           job: [
             jobCollection('benefits', { descriptionFieldKey: 'summary' }),
-            jobCollection('stack'),
+            jobCollection('stack', { allowOverrides: true }),
             jobCollection('perks'),
           ],
         },
@@ -303,32 +318,107 @@ describe('jobDetailFields', () => {
       format,
     );
 
-    expect(zones.compactCollections).toEqual([
+    // A reference field and a logo never make an entry a list item.
+    const typescript = {
+      id: 'ts',
+      title: 'TypeScript',
+      logoUrl: 'https://cdn.test/ts.png',
+      description: null,
+    };
+    const go = { id: 'go', title: 'Go', logoUrl: null, description: null };
+    expect(zones.chipCollections).toEqual([
       {
         key: 'stack',
         label: 'stack label',
-        entries: [
-          expect.objectContaining({
-            id: 'ts',
-            title: 'TypeScript',
-            logoUrl: 'https://cdn.test/ts.png',
-            details: [],
-          }),
-          expect.objectContaining({ id: 'go', title: 'Go', logoUrl: null }),
+        entries: [typescript, go],
+        // The single reference groups the expanded view; Go has no category.
+        groups: [
+          { key: 'category:lang', label: 'Language', entries: [typescript] },
+          { key: 'other', label: 'OTHER', entries: [go] },
         ],
       },
     ]);
-    expect(zones.richCollections).toHaveLength(1);
-    const [leave] = zones.richCollections[0]!.entries;
-    // The description field renders as the description (HTML, because the
-    // default description field is rich text), not again as a detail.
-    expect(leave).toMatchObject({
-      title: 'Extra leave',
-      description: { kind: 'html', html: '<p>Paid.</p>' },
-      details: [
-        { key: 'days', label: 'Days', value: { kind: 'text', text: '5' } },
-      ],
-    });
+    // The description renders as HTML because the default description field
+    // is rich text; the entry's other fields are not carried.
+    expect(zones.listCollections).toEqual([
+      {
+        key: 'benefits',
+        label: 'benefits label',
+        entries: [
+          {
+            id: 'leave',
+            title: 'Extra leave',
+            logoUrl: null,
+            description: { kind: 'html', html: '<p>Paid.</p>' },
+          },
+        ],
+        groups: null,
+      },
+    ]);
+  });
+
+  it('is chips when the definition names a description field but no entry has one', () => {
+    const zones = jobDetailFields(
+      {
+        customFieldValues: {},
+        resolvedCollectionFields: [
+          {
+            key: 'benefits',
+            label: 'Benefits',
+            entries: [
+              jobEntry({
+                fields: [
+                  { key: 'summary', label: 'Summary', type: 'long_text' },
+                ],
+              }),
+            ],
+          },
+        ],
+      },
+      [],
+      {
+        forms: {
+          job: [jobCollection('benefits', { descriptionFieldKey: 'summary' })],
+        },
+      },
+      format,
+    );
+    expect(zones.listCollections).toEqual([]);
+    expect(zones.chipCollections.map((c) => c.key)).toEqual(['benefits']);
+  });
+
+  it('lists a collection when a job wrote its own wording for an entry', () => {
+    const zones = jobDetailFields(
+      {
+        customFieldValues: {},
+        resolvedCollectionFields: [
+          {
+            key: 'stack',
+            label: 'Stack',
+            entries: [
+              jobEntry({
+                id: 'ts',
+                name: 'TypeScript',
+                title: 'TypeScript everywhere',
+                titleOverride: 'TypeScript everywhere',
+                description: 'Front end and back end.',
+                descriptionOverride: 'Front end and back end.',
+              }),
+            ],
+          },
+        ],
+      },
+      [],
+      { forms: { job: [jobCollection('stack', { allowOverrides: true })] } },
+      format,
+    );
+    expect(zones.chipCollections).toEqual([]);
+    expect(zones.listCollections[0]!.entries).toEqual([
+      expect.objectContaining({
+        title: 'TypeScript everywhere',
+        description: { kind: 'text', text: 'Front end and back end.' },
+      }),
+    ]);
   });
 
   it('treats a plain-text default description as text', () => {
@@ -356,7 +446,7 @@ describe('jobDetailFields', () => {
       },
       format,
     );
-    expect(zones.richCollections[0]!.entries[0]!.description).toEqual({
+    expect(zones.listCollections[0]!.entries[0]!.description).toEqual({
       kind: 'text',
       text: '<b>not html</b>',
     });
@@ -374,8 +464,8 @@ describe('jobDetailFields', () => {
       { forms: { job: [jobCollection('stack', {}, false)] } },
       format,
     );
-    expect(zones.compactCollections).toEqual([]);
-    expect(zones.richCollections).toEqual([]);
+    expect(zones.chipCollections).toEqual([]);
+    expect(zones.listCollections).toEqual([]);
   });
 });
 
@@ -527,16 +617,24 @@ describe('companyDetailFields', () => {
     ]);
   });
 
-  it('makes a collection with per-selection details rich and a bare one compact', () => {
+  it('lists a described collection and chips one with only badges and details', () => {
     const zones = companyDetailFields(
       {
         customFieldValues: {},
         objectReferences: [
-          selection('tech', { recordId: 'ts', title: 'TypeScript' }),
           selection('certs', {
             recordId: 'iso',
             title: 'ISO 27001',
-            description: 'Audited yearly.',
+            fields: [
+              { key: 'issuer', label: 'Issuer', type: 'short_text' },
+              { key: 'website', label: 'Website', type: 'url' },
+              { key: 'badge', label: 'Badge', type: 'image' },
+            ],
+            attributes: {
+              issuer: 'BSI',
+              website: 'https://bsi.test',
+              badge: media('iso.png'),
+            },
             valueDefinitions: [
               {
                 key: 'since',
@@ -549,21 +647,42 @@ describe('companyDetailFields', () => {
             ],
             values: { since: 2021 },
           }),
+          selection('benefits', {
+            recordId: 'leave',
+            title: 'Extra leave',
+            description: 'Audited yearly.',
+          }),
         ],
       },
-      [profileCollection('certs'), profileCollection('tech')],
+      [profileCollection('benefits'), profileCollection('certs')],
       format,
     );
-    expect(zones.compactCollections.map((c) => c.key)).toEqual(['tech']);
-    expect(zones.richCollections.map((c) => c.key)).toEqual(['certs']);
-    expect(zones.richCollections[0]!.entries[0]).toMatchObject({
-      title: 'ISO 27001',
+    expect(zones.listCollections.map((c) => c.key)).toEqual(['benefits']);
+    expect(zones.listCollections[0]!.entries[0]).toEqual({
+      id: 'leave',
+      title: 'Extra leave',
+      logoUrl: null,
       description: { kind: 'text', text: 'Audited yearly.' },
-      details: [{ key: 'since', label: 'Since' }],
     });
+    // The only image field is the badge, so it is the chip's logo.
+    expect(zones.chipCollections).toEqual([
+      {
+        key: 'certs',
+        label: 'certs label',
+        entries: [
+          {
+            id: 'iso',
+            title: 'ISO 27001',
+            logoUrl: 'https://cdn.test/iso.png',
+            description: null,
+          },
+        ],
+        groups: null,
+      },
+    ]);
   });
 
-  it('keeps a compact collection compact however many entries are selected', () => {
+  it('keeps chips chips however many entries are selected', () => {
     const many = Array.from({ length: 40 }, (_, index) =>
       selection('regions', { recordId: `region-${index}` }),
     );
@@ -575,16 +694,16 @@ describe('companyDetailFields', () => {
       [profileCollection('tech'), profileCollection('regions')],
       format,
     );
-    expect(zones.richCollections).toEqual([]);
-    expect(
-      zones.compactCollections.map((c) => [c.key, c.entries.length]),
-    ).toEqual([
-      ['tech', 1],
-      ['regions', 40],
-    ]);
+    expect(zones.listCollections).toEqual([]);
+    expect(zones.chipCollections.map((c) => [c.key, c.entries.length])).toEqual(
+      [
+        ['tech', 1],
+        ['regions', 40],
+      ],
+    );
   });
 
-  it('never places a private field, collection or selection detail', () => {
+  it('never places a private field or collection', () => {
     const zones = companyDetailFields(
       {
         customFieldValues: { code: 'X-1', size: 12 },
@@ -619,11 +738,8 @@ describe('companyDetailFields', () => {
       format,
     );
     expect(zones.facts.map((fact) => fact.key)).toEqual(['size']);
-    // Only public definitions decide the size class: a private per-selection
-    // detail neither shows nor turns chips into cards.
-    expect(zones.richCollections).toEqual([]);
-    expect(zones.compactCollections.map((c) => c.key)).toEqual(['tech']);
-    expect(zones.compactCollections[0]!.entries[0]!.details).toEqual([]);
+    expect(zones.listCollections).toEqual([]);
+    expect(zones.chipCollections.map((c) => c.key)).toEqual(['tech']);
   });
 
   it('without a layout keeps collections in API order and skips unlabelled scalars', () => {
@@ -641,7 +757,7 @@ describe('companyDetailFields', () => {
     );
     expect(zones.facts).toEqual([]);
     expect(
-      zones.compactCollections.map((c) => [
+      zones.chipCollections.map((c) => [
         c.key,
         c.label,
         c.entries.map((e) => e.id),
@@ -650,5 +766,168 @@ describe('companyDetailFields', () => {
       ['tech', 'tech wire label', ['a', 'c']],
       ['awards', 'awards wire label', ['b']],
     ]);
+  });
+});
+
+describe('collection groups', () => {
+  const kind: EntryField = {
+    key: 'kind',
+    label: 'Kind',
+    type: 'single_select',
+    options: [
+      { key: 'health', label: 'Health' },
+      { key: 'time_off', label: 'Time off' },
+      { key: 'money', label: 'Money' },
+    ],
+  };
+
+  function groupIds(
+    groups: { label: string; entries: { id: string }[] }[] | null,
+  ) {
+    return groups?.map((group) => [
+      group.label,
+      group.entries.map((entry) => entry.id),
+    ]);
+  }
+
+  it('groups by a single select in option order, uncategorised entries last', () => {
+    const benefit = (recordId: string, value?: string) =>
+      selection('benefits', {
+        recordId,
+        title: recordId,
+        fields: [kind],
+        attributes: value === undefined ? {} : { kind: value },
+      });
+    const zones = companyDetailFields(
+      {
+        customFieldValues: {},
+        objectReferences: [
+          benefit('leave', 'time_off'),
+          benefit('dental', 'health'),
+          benefit('bonus', 'retired_option'),
+          benefit('gym'),
+          benefit('cover', 'health'),
+        ],
+      },
+      [profileCollection('benefits')],
+      format,
+    );
+    // The flat order is untouched; Money has no entries, so no subheading.
+    expect(zones.chipCollections[0]!.entries.map((e) => e.id)).toEqual([
+      'leave',
+      'dental',
+      'bonus',
+      'gym',
+      'cover',
+    ]);
+    expect(groupIds(zones.chipCollections[0]!.groups)).toEqual([
+      ['Health', ['dental', 'cover']],
+      ['Time off', ['leave']],
+      ['OTHER', ['bonus', 'gym']],
+    ]);
+  });
+
+  it('groups by a single reference in order of first appearance', () => {
+    const category: EntryField = {
+      key: 'category',
+      label: 'Category',
+      type: 'reference',
+    };
+    const tool = (id: string, ref: { id: string; name: string }) =>
+      jobEntry({
+        id,
+        title: id,
+        fields: [category],
+        references: { category: [{ ...ref, fields: [], values: {} }] },
+      });
+    const backend = { id: 'be', name: 'Backend' };
+    const frontend = { id: 'fe', name: 'Frontend' };
+    const zones = jobDetailFields(
+      {
+        customFieldValues: {},
+        resolvedCollectionFields: [
+          {
+            key: 'stack',
+            label: 'Stack',
+            entries: [
+              tool('go', backend),
+              tool('react', frontend),
+              tool('postgres', backend),
+            ],
+          },
+        ],
+      },
+      [],
+      { forms: { job: [jobCollection('stack')] } },
+      format,
+    );
+    expect(groupIds(zones.chipCollections[0]!.groups)).toEqual([
+      ['Backend', ['go', 'postgres']],
+      ['Frontend', ['react']],
+    ]);
+  });
+
+  it('skips a reference an entry uses more than once and takes the next categorising field', () => {
+    const tags: EntryField = { key: 'tags', label: 'Tags', type: 'reference' };
+    const row = (id: string) => ({ id, name: id, fields: [], values: {} });
+    const zones = jobDetailFields(
+      {
+        customFieldValues: {},
+        resolvedCollectionFields: [
+          {
+            key: 'perks',
+            label: 'Perks',
+            entries: [
+              jobEntry({
+                id: 'a',
+                fields: [tags, kind],
+                values: { kind: 'money' },
+                references: { tags: [row('x'), row('y')] },
+              }),
+              jobEntry({
+                id: 'b',
+                fields: [tags, kind],
+                values: { kind: 'health' },
+                references: { tags: [row('x')] },
+              }),
+            ],
+          },
+        ],
+      },
+      [],
+      { forms: { job: [jobCollection('perks')] } },
+      format,
+    );
+    expect(groupIds(zones.chipCollections[0]!.groups)).toEqual([
+      ['Health', ['b']],
+      ['Money', ['a']],
+    ]);
+  });
+
+  it('has no groups without a single-valued categorising field that entries fill', () => {
+    const zones = companyDetailFields(
+      {
+        customFieldValues: {},
+        objectReferences: [
+          selection('tools', {
+            recordId: 'a',
+            fields: [
+              { key: 'notes', label: 'Notes', type: 'short_text' },
+              {
+                key: 'areas',
+                label: 'Areas',
+                type: 'multi_select',
+                options: [{ key: 'x', label: 'X' }],
+              },
+              kind,
+            ],
+            attributes: { notes: 'Fast', areas: ['x'] },
+          }),
+        ],
+      },
+      [profileCollection('tools')],
+      format,
+    );
+    expect(zones.chipCollections[0]!.groups).toBeNull();
   });
 });

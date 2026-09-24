@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { CompanyOverview } from './-company-overview';
@@ -151,18 +151,19 @@ describe('CompanyOverview operator fields', () => {
     expect(screen.queryByText('Internal code')).toBeNull();
     expect(screen.queryByText('X-1')).toBeNull();
 
-    // Rich collection: a card grid in the main column.
+    // List collection: titles and descriptions in the main column.
     const benefits = within(main).getByRole('region', { name: 'Benefits' });
-    expect(
-      within(benefits).getByRole('heading', { name: 'Extra leave' }),
-    ).toBeInTheDocument();
+    expect(within(benefits).getByText('Extra leave')).toBeInTheDocument();
     expect(within(benefits).getByText('Five more days.')).toBeInTheDocument();
 
-    // Compact collections: chips in the main column whatever the number of
-    // selections, never in the rail.
+    // Chip collections: in the main column whatever the number of
+    // selections, never in the rail. Past twelve, the rest wait behind a
+    // disclosure.
     const tech = within(main).getByRole('region', { name: 'Technologies' });
     expect(within(tech).getAllByRole('listitem')).toHaveLength(3);
     const regions = within(main).getByRole('region', { name: 'Regions' });
+    expect(within(regions).getAllByRole('listitem')).toHaveLength(12);
+    fireEvent.click(within(regions).getByRole('button', { expanded: false }));
     expect(within(regions).getAllByRole('listitem')).toHaveLength(13);
     expect(within(rail).queryByText('Tech 0')).toBeNull();
     expect(within(rail).queryByText('Region 0')).toBeNull();

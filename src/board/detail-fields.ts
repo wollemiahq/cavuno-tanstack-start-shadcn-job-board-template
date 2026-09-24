@@ -10,11 +10,21 @@
  *             → the page's facts list
  *   - prose   long and rich text → its own main-column section
  *   - media   image and gallery → main column; file → the rail's documents
- *   - compact a collection whose entries carry only a title and optionally a
- *             logo → chips, in the main column on both pages whatever the
- *             number of selections
- *   - rich    a collection whose entries can carry a description, other
- *             public fields, or per-record details → a card grid
+ *
+ * A collection selection renders one of two ways, and only whether its
+ * entries carry a public description decides which (see
+ * `collectionPresentation`):
+ *
+ *   - list    an entry has a description → logo, bold title and a short
+ *             description per entry, in the main column
+ *   - chips   no entry has one → logo and name chips, in the main column on
+ *             both pages whatever the number of selections
+ *
+ * Neither shows an entry's other fields (selects, numbers, references,
+ * per-selection details): a detail page previews what was chosen; it is not
+ * the collection's record view. The one use of those fields is grouping: the
+ * expanded view of a long collection sorts entries under subheadings by the
+ * first single-valued categorising field (see `collectionGroups`).
  *
  * Within a zone, fields follow the operator's form layout (`forms.job` /
  * `forms.company`); entries the layout hides never render. Without a layout
@@ -64,7 +74,7 @@ export type DetailValue =
   | { kind: 'images'; images: DetailImage[] }
   | { kind: 'files'; files: DetailFile[] };
 
-/** A labelled value: a fact row, a prose section, a card detail. */
+/** A labelled value: a fact row or a prose section. */
 export interface DetailField {
   key: string;
   label: string;
@@ -87,20 +97,32 @@ export interface DetailDocuments {
 
 export interface DetailCollectionEntry {
   id: string;
+  /** The title to show: on a job, the job's own wording when it set one. */
   title: string;
   logoUrl: string | null;
-  /** Rich collections only; `null` when the entry has none. */
+  /**
+   * List collections only (always `null` in chips); `null` when the entry
+   * has none. On a job, the job's own wording when it set one.
+   */
   description: Extract<DetailValue, { kind: 'text' | 'html' }> | null;
-  /** The entry's other public fields and per-record details. */
-  details: DetailField[];
-  /** Repeatable per-record rows (company selections only). */
-  rows: DetailField[][];
+}
+
+/** A subheading of a collection's expanded view and the entries under it. */
+export interface DetailCollectionGroup {
+  key: string;
+  label: string;
+  entries: DetailCollectionEntry[];
 }
 
 export interface DetailCollection {
   key: string;
   label: string;
   entries: DetailCollectionEntry[];
+  /**
+   * The entries grouped for the expanded view, or `null` when the collection
+   * has no categorising field (the expanded view is then the flat list).
+   */
+  groups: DetailCollectionGroup[] | null;
 }
 
 export interface DetailFieldZones {
@@ -108,8 +130,8 @@ export interface DetailFieldZones {
   prose: DetailField[];
   media: DetailMedia[];
   documents: DetailDocuments[];
-  compactCollections: DetailCollection[];
-  richCollections: DetailCollection[];
+  listCollections: DetailCollection[];
+  chipCollections: DetailCollection[];
 }
 
 export const EMPTY_DETAIL_FIELDS: DetailFieldZones = {
@@ -117,8 +139,8 @@ export const EMPTY_DETAIL_FIELDS: DetailFieldZones = {
   prose: [],
   media: [],
   documents: [],
-  compactCollections: [],
-  richCollections: [],
+  listCollections: [],
+  chipCollections: [],
 };
 
 /** Whether any zone has something to render. */
@@ -134,6 +156,8 @@ export interface DetailFieldFormat {
   yesLabel: string;
   noLabel: string;
   galleryImageAlt: (label: string, index: number, count: number) => string;
+  /** The group for entries without a category in a grouped collection. */
+  otherGroupLabel: string;
   /** Localized label for a field; defaults to the definition's label. */
   fieldLabel?: (field: { key: string; label: string }) => string;
   /** Localized label for a select option; defaults to the option's label. */
@@ -184,38 +208,18 @@ export function scalarSizeClass(type: string): ScalarSizeClass | null {
   }
 }
 
-/** What a collection definition and its entries' field schema say. */
-export interface CollectionSchema {
-  /** The entry field holding the default description. */
-  descriptionFieldKey?: string;
-  /** Each record may replace an entry's title and description. */
-  allowOverrides?: boolean;
-  /** The public fields entries of this collection carry. */
-  fields: readonly FieldDisplayDefinition[];
-  /** Fields that hold the entry's logo (rendered as the logo, not a detail). */
-  logoFieldKeys: ReadonlySet<string>;
-  /** Per-record details or repeatable rows are defined (company only). */
-  hasSelectionDetails?: boolean;
-}
+export type CollectionPresentation = 'list' | 'chips';
 
 /**
- * Compact when entries can carry nothing but a title and a logo; rich when
- * they can carry a description (a default description field, or per-record
- * wording the operator allows), other public fields, or per-record details.
- * Decided from the definition and field schema, never from values, so one
- * collection places the same way on every page.
+ * A list when an entry being rendered has a public description (the default
+ * description field's value, or on a job its own wording); chips otherwise.
+ * Nothing else decides it: logos, references, badges, other entry fields and
+ * per-selection details never turn chips into a list.
  */
-export function collectionSizeClass(
-  schema: CollectionSchema,
-): 'compact' | 'rich' {
-  if (schema.descriptionFieldKey || schema.allowOverrides) return 'rich';
-  if (schema.hasSelectionDetails) return 'rich';
-  const other = schema.fields.some(
-    (field) =>
-      field.key !== schema.descriptionFieldKey &&
-      !schema.logoFieldKeys.has(field.key),
-  );
-  return other ? 'rich' : 'compact';
+export function collectionPresentation(
+  entries: ReadonlyArray<Pick<DetailCollectionEntry, 'description'>>,
+): CollectionPresentation {
+  return entries.some((entry) => entry.description !== null) ? 'list' : 'chips';
 }
 
 // ── Values ───────────────────────────────────────────────────────────────
@@ -300,15 +304,14 @@ function nonBlank(value: StoredValue | undefined): string | null {
 /**
  * Resolve one stored value by its field type. Returns `null` for an empty or
  * unusable value (so the caller renders nothing). `0` and `false` are real
- * values. `references` carries the resolved rows of a reference field.
+ * values.
  */
 export function resolveDetailValue(
   field: FieldDisplayDefinition,
   raw: StoredValue | undefined,
   format: DetailFieldFormat,
-  references?: ReadonlyArray<{ name: string }>,
 ): DetailValue | null {
-  if (raw === undefined && field.type !== 'reference') return null;
+  if (raw === undefined) return null;
   const optionLabel = (key: string) => {
     const option = field.options?.find((o) => o.key === key);
     if (!option) return null;
@@ -324,7 +327,11 @@ export function resolveDetailValue(
       const number = Number(raw);
       let text: string;
       try {
-        text = new Intl.NumberFormat(format.locale).format(number);
+        // No grouping below 10,000, so a year reads "2016", not "2,016";
+        // larger numbers keep the locale's grouping.
+        text = new Intl.NumberFormat(format.locale, {
+          useGrouping: Math.abs(number) >= 10_000,
+        }).format(number);
       } catch {
         text = String(number);
       }
@@ -414,14 +421,6 @@ export function resolveDetailValue(
         })),
       };
     }
-    case 'reference': {
-      const names = (references ?? [])
-        .map((row) => nonBlank(row.name))
-        .filter((name): name is string => name !== null);
-      return names.length > 0
-        ? { kind: 'text', text: listJoin(format.locale, names) }
-        : null;
-    }
     default:
       return null;
   }
@@ -435,8 +434,8 @@ function emptyZones(): DetailFieldZones {
     prose: [],
     media: [],
     documents: [],
-    compactCollections: [],
-    richCollections: [],
+    listCollections: [],
+    chipCollections: [],
   };
 }
 
@@ -482,9 +481,9 @@ function unionFields(
 }
 
 /**
- * The image fields that hold an entry's logo: the collection's only image
- * field, or any image field whose value is the entry's `logoUrl`. The logo
- * renders once, as the logo, never again as a detail.
+ * The image fields that can hold an entry's logo: the collection's only
+ * image field, or any image field whose value is the entry's `logoUrl`.
+ * Used when an entry has no `logoUrl` of its own.
  */
 function logoFieldKeys(
   fields: readonly FieldDisplayDefinition[],
@@ -526,26 +525,6 @@ function entryLogo(
   return null;
 }
 
-function entryDetails(
-  fields: readonly FieldDisplayDefinition[],
-  schema: CollectionSchema,
-  values: StoredValues,
-  references: Record<string, ReadonlyArray<{ name: string }>> | undefined,
-  format: DetailFieldFormat,
-): DetailField[] {
-  return fields.flatMap((field) => {
-    if (field.key === schema.descriptionFieldKey) return [];
-    if (schema.logoFieldKeys.has(field.key)) return [];
-    const value = resolveDetailValue(
-      field,
-      values[field.key],
-      format,
-      references?.[field.key],
-    );
-    return value ? [{ key: field.key, label: field.label, value }] : [];
-  });
-}
-
 function entryDescription(
   description: string | null | undefined,
   isHtml: boolean,
@@ -563,22 +542,108 @@ function entryDescription(
 function placeCollection(
   zones: DetailFieldZones,
   collection: DetailCollection,
-  sizeClass: 'compact' | 'rich',
 ) {
   if (collection.entries.length === 0) return;
-  if (sizeClass === 'compact') {
-    zones.compactCollections.push({
-      ...collection,
-      entries: collection.entries.map((entry) => ({
-        ...entry,
-        description: null,
-        details: [],
-        rows: [],
-      })),
-    });
-  } else {
-    zones.richCollections.push(collection);
+  zones[
+    collectionPresentation(collection.entries) === 'list'
+      ? 'listCollections'
+      : 'chipCollections'
+  ].push(collection);
+}
+
+// ── Grouping ─────────────────────────────────────────────────────────────
+
+/** What grouping reads from one raw entry: its values and resolved references. */
+interface CollectionGroupingSource {
+  values: StoredValues;
+  references?: Readonly<
+    Partial<Record<string, ReadonlyArray<{ id: string; name: string }>>>
+  >;
+}
+
+/** The one category an entry has under `field`, or `null` for none. */
+function entryCategory(
+  field: FieldDisplayDefinition,
+  source: CollectionGroupingSource,
+): { key: string; label: string } | null {
+  if (field.type === 'single_select') {
+    const key = searchString(source.values[field.key]);
+    const option = field.options?.find((o) => o.key === key);
+    return option ? { key: option.key, label: option.label } : null;
   }
+  const rows = source.references?.[field.key] ?? [];
+  const name = rows.length === 1 ? nonBlank(rows[0]!.name) : null;
+  return name ? { key: rows[0]!.id, label: name } : null;
+}
+
+/**
+ * The field the expanded view groups by: the first public entry field that
+ * gives each entry at most one category (a single select, or a reference no
+ * entry uses for more than one record) and that at least one entry fills.
+ */
+function groupingField(
+  fields: readonly FieldDisplayDefinition[],
+  sources: readonly CollectionGroupingSource[],
+): FieldDisplayDefinition | null {
+  return (
+    fields.find((field) => {
+      if (field.type === 'reference') {
+        const counts = sources.map((s) => s.references?.[field.key]?.length);
+        if (counts.some((count) => (count ?? 0) > 1)) return false;
+      } else if (field.type !== 'single_select') {
+        return false;
+      }
+      return sources.some((source) => entryCategory(field, source) !== null);
+    }) ?? null
+  );
+}
+
+/**
+ * A collection's entries under subheadings for its expanded view, by the
+ * first single-valued categorising field (see `groupingField`): a single
+ * select groups by option label in option order, a reference by the
+ * referenced entry's name in order of first appearance. Entries without a
+ * category follow under `otherLabel`. `null` when no field categorises the
+ * entries; the expanded view is then the flat list. `sources[i]` is the raw
+ * entry behind `entries[i]`.
+ */
+function collectionGroups(
+  fields: readonly FieldDisplayDefinition[],
+  entries: readonly DetailCollectionEntry[],
+  sources: readonly CollectionGroupingSource[],
+  otherLabel: string,
+): DetailCollectionGroup[] | null {
+  const field = groupingField(fields, sources);
+  if (!field) return null;
+  const groups = new Map<string, DetailCollectionGroup>();
+  const groupFor = (category: { key: string; label: string }) => {
+    let group = groups.get(category.key);
+    if (!group) {
+      group = {
+        key: `category:${category.key}`,
+        label: category.label,
+        entries: [],
+      };
+      groups.set(category.key, group);
+    }
+    return group;
+  };
+  // A single select's groups follow its option order, empty ones dropped.
+  if (field.type === 'single_select')
+    for (const option of field.options ?? []) groupFor(option);
+  const other: DetailCollectionGroup = {
+    key: 'other',
+    label: otherLabel,
+    entries: [],
+  };
+  entries.forEach((entry, index) => {
+    const source = sources[index];
+    const category = source ? entryCategory(field, source) : null;
+    (category ? groupFor(category) : other).entries.push(entry);
+  });
+  return [...groups.values(), other].filter(
+    (group) => group.entries.length > 0,
+  );
 }
 
 /**
@@ -624,46 +689,35 @@ export function jobDetailFields(
 
   const placeJobCollection = (
     field: JobCollectionField,
-    definition: {
-      label?: string;
-      descriptionFieldKey?: string;
-      allowOverrides?: boolean;
-    } | null,
+    definition: { label?: string; descriptionFieldKey?: string } | null,
   ) => {
     const fields = unionFields(field.entries.map((entry) => entry.fields));
-    const schema: CollectionSchema = {
-      descriptionFieldKey: definition?.descriptionFieldKey,
-      allowOverrides: definition?.allowOverrides,
-      fields,
-      logoFieldKeys: logoFieldKeys(fields, field.entries),
-    };
+    const logoKeys = logoFieldKeys(fields, field.entries);
     // Per the API, `description` is HTML only when the collection's default
-    // description field is rich text.
+    // description field is rich text. `title` and `description` already
+    // carry the job's own wording when it set one.
     const descriptionIsHtml =
-      fields.find((f) => f.key === schema.descriptionFieldKey)?.type ===
+      fields.find((f) => f.key === definition?.descriptionFieldKey)?.type ===
       'rich_text';
-    placeCollection(
-      zones,
-      {
-        key: field.key,
-        label: definition?.label || field.label,
-        entries: field.entries.map((entry: JobCollectionEntry) => ({
-          id: entry.id,
-          title: entry.title,
-          logoUrl: entryLogo(entry.logoUrl, entry.values, schema.logoFieldKeys),
-          description: entryDescription(entry.description, descriptionIsHtml),
-          details: entryDetails(
-            fields,
-            schema,
-            entry.values,
-            entry.references,
-            format,
-          ),
-          rows: [],
-        })),
-      },
-      collectionSizeClass(schema),
+    const entries = field.entries.map(
+      (entry: JobCollectionEntry): DetailCollectionEntry => ({
+        id: entry.id,
+        title: entry.title,
+        logoUrl: entryLogo(entry.logoUrl, entry.values, logoKeys),
+        description: entryDescription(entry.description, descriptionIsHtml),
+      }),
     );
+    placeCollection(zones, {
+      key: field.key,
+      label: definition?.label || field.label,
+      entries,
+      groups: collectionGroups(
+        fields,
+        entries,
+        field.entries,
+        format.otherGroupLabel,
+      ),
+    });
   };
 
   const layout = source?.forms?.job;
@@ -699,12 +753,6 @@ export function jobDetailFields(
 
 type CompanySelection = PublicCompanyDetail['objectReferences'][number];
 
-/** Per-selection detail definitions the public page may show. */
-function publicDefinitions<TField extends { visibility: string }>(
-  fields: readonly TField[],
-): TField[] {
-  return fields.filter((field) => field.visibility === 'public');
-}
 type ProfileCollectionDefinition = Extract<
   BoardProfileFormField,
   { kind: 'collection' }
@@ -734,85 +782,32 @@ export function companyDetailFields(
     if (chosen.length === 0) return;
     const fields = unionFields(chosen.map((s) => s.fields));
     const first = chosen[0]!;
-    const schema: CollectionSchema = {
-      descriptionFieldKey:
-        definition?.descriptionFieldKey ?? first.descriptionFieldKey,
-      allowOverrides: definition?.allowOverrides,
+    const logoKeys = logoFieldKeys(
       fields,
-      logoFieldKeys: logoFieldKeys(
-        fields,
-        chosen.map((s) => ({ logoUrl: s.logoUrl, values: s.attributes })),
-      ),
-      hasSelectionDetails: chosen.some(
-        (s) =>
-          publicDefinitions(s.valueDefinitions).length > 0 ||
-          publicDefinitions(s.entryDefinitions).length > 0,
-      ),
-    };
-    placeCollection(
-      zones,
-      {
-        key,
-        label: definition?.label || first.fieldLabel,
-        entries: chosen.map((selection: CompanySelection) => ({
-          id: selection.recordId,
-          title: selection.title,
-          logoUrl: entryLogo(
-            selection.logoUrl,
-            selection.attributes,
-            schema.logoFieldKeys,
-          ),
-          description: entryDescription(
-            selection.description,
-            selection.descriptionType === 'rich_text',
-          ),
-          details: [
-            ...entryDetails(
-              fields,
-              schema,
-              selection.attributes,
-              selection.references,
-              format,
-            ),
-            ...publicDefinitions(selection.valueDefinitions).flatMap(
-              (field) => {
-                if (!field.type) return [];
-                const value = resolveDetailValue(
-                  { ...field, type: field.type },
-                  selection.values[field.key],
-                  format,
-                );
-                return value
-                  ? [{ key: field.key, label: field.label, value }]
-                  : [];
-              },
-            ),
-          ],
-          rows: selection.entries
-            .map((row) =>
-              publicDefinitions(selection.entryDefinitions).flatMap((field) => {
-                if (!field.type) return [];
-                const value = resolveDetailValue(
-                  { ...field, type: field.type },
-                  row.values[field.key],
-                  format,
-                );
-                return value
-                  ? [
-                      {
-                        key: `${row.key}:${field.key}`,
-                        label: field.label,
-                        value,
-                      },
-                    ]
-                  : [];
-              }),
-            )
-            .filter((row) => row.length > 0),
-        })),
-      },
-      collectionSizeClass(schema),
+      chosen.map((s) => ({ logoUrl: s.logoUrl, values: s.attributes })),
     );
+    const entries = chosen.map(
+      (selection: CompanySelection): DetailCollectionEntry => ({
+        id: selection.recordId,
+        title: selection.title,
+        logoUrl: entryLogo(selection.logoUrl, selection.attributes, logoKeys),
+        description: entryDescription(
+          selection.description,
+          selection.descriptionType === 'rich_text',
+        ),
+      }),
+    );
+    placeCollection(zones, {
+      key,
+      label: definition?.label || first.fieldLabel,
+      entries,
+      groups: collectionGroups(
+        fields,
+        entries,
+        chosen.map((s) => ({ values: s.attributes, references: s.references })),
+        format.otherGroupLabel,
+      ),
+    });
   };
 
   if (Array.isArray(layout)) {

@@ -4,6 +4,13 @@
  * arrives pre-resolved from `src/board/detail-fields.ts`; the page decides
  * where each zone sits, these components decide how one looks.
  */
+import { useId, useState, type ReactNode } from 'react';
+
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+import { m } from '../../paraglide/messages';
+import { getLocale } from '../../paraglide/runtime';
+
 import type {
   DetailCollection,
   DetailCollectionEntry,
@@ -14,9 +21,9 @@ import type {
 } from '@/board/detail-fields';
 import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { initialsOf } from '@/lib/initials';
 import { textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
 
@@ -98,7 +105,7 @@ function FileLinks({ files }: { files: DetailDocuments['files'] }) {
   );
 }
 
-/** A label/value list: the job facts and a rich card's details. */
+/** A label/value list: the job facts. */
 export function DetailFactList({ rows }: { rows: DetailField[] }) {
   if (rows.length === 0) return null;
   return (
@@ -186,81 +193,208 @@ export function DetailMediaSections({ media }: { media: DetailMedia[] }) {
   ));
 }
 
-/** A compact collection's entries as chips, with the entry logo if any. */
+/** How many entries a collection previews before its "Show all" control. */
+const LIST_PREVIEW_COUNT = 6;
+const CHIP_PREVIEW_COUNT = 12;
+
+/**
+ * Renders a run of entries. `previewCount` hides the entries past it; they
+ * stay in the markup, so the page's HTML carries the whole selection.
+ */
+type RenderEntries = (
+  entries: DetailCollectionEntry[],
+  previewCount?: number,
+) => ReactNode;
+
+/**
+ * Preview, then expand in place. Collapsed, a long collection shows its
+ * first `limit` entries, ungrouped. Expanded, it shows every entry, under the
+ * collection's group subheadings when it has any (`collection.groups`), or as
+ * the same flat run when it has none. A collection within the limit has
+ * nothing to expand.
+ */
+function ExpandableCollection({
+  collection,
+  limit,
+  renderEntries,
+}: {
+  collection: DetailCollection;
+  limit: number;
+  renderEntries: RenderEntries;
+}) {
+  const contentId = useId();
+  const [expanded, setExpanded] = useState(false);
+  const total = collection.entries.length;
+  const collapsible = total > limit;
+  const groups = collapsible && expanded ? collection.groups : null;
+  return (
+    <>
+      <div id={contentId} className="flex flex-col gap-6">
+        {groups
+          ? groups.map((group) => (
+              <div key={group.key} className="flex flex-col gap-2">
+                <Text as="h3" variant="secondary" size="sm" bold>
+                  {group.label}
+                </Text>
+                {renderEntries(group.entries)}
+              </div>
+            ))
+          : renderEntries(
+              collection.entries,
+              collapsible && !expanded ? limit : undefined,
+            )}
+      </div>
+      {collapsible ? (
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className="-ms-3 self-start"
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded
+            ? m.detailFields_showFewer()
+            : m.detailFields_showAll({
+                count: total.toLocaleString(getLocale()),
+              })}
+          {expanded ? (
+            <ChevronUp data-icon="inline-end" />
+          ) : (
+            <ChevronDown data-icon="inline-end" />
+          )}
+        </Button>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * A chip collection: logo + name chips, wrapping. The first twelve show; a
+ * disclosure reveals the rest in place, grouped when the collection has a
+ * categorising field.
+ */
 export function CollectionChips({
-  entries,
+  collection,
   variant = 'outline',
 }: {
-  entries: DetailCollectionEntry[];
+  collection: DetailCollection;
   variant?: 'outline' | 'secondary';
 }) {
   return (
-    <ul className="flex flex-wrap items-center gap-1.5">
-      {entries.map((entry) => (
-        <li key={entry.id}>
-          <Badge
-            variant={variant}
-            className={cn(
-              variant === 'outline' ? 'h-6 px-2.5 text-sm' : undefined,
-            )}
-          >
-            {entry.logoUrl ? (
-              <img
-                src={entry.logoUrl}
-                alt=""
-                loading="lazy"
-                className="size-4 rounded-sm object-contain"
-              />
-            ) : null}
-            <span dir="auto">{entry.title}</span>
-          </Badge>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function RichEntryCard({ entry }: { entry: DetailCollectionEntry }) {
-  return (
-    <Card size="sm" className="h-full">
-      <CardHeader className="flex items-center gap-3">
-        {entry.logoUrl ? (
-          <Avatar size="sm">
-            <AvatarImage src={entry.logoUrl} alt="" />
-          </Avatar>
-        ) : null}
-        <CardTitle>
-          <h3 dir="auto">{entry.title}</h3>
-        </CardTitle>
-      </CardHeader>
-      {entry.description ||
-      entry.details.length > 0 ||
-      entry.rows.length > 0 ? (
-        <CardContent className="flex flex-col gap-3">
-          {entry.description?.kind === 'html' ? (
-            <Prose html={entry.description.html} />
-          ) : entry.description ? (
-            <p
-              className="text-muted-foreground text-sm whitespace-pre-line"
-              dir="auto"
+    <ExpandableCollection
+      collection={collection}
+      limit={CHIP_PREVIEW_COUNT}
+      renderEntries={(entries, previewCount) => (
+        <ul className="flex flex-wrap items-center gap-1.5">
+          {entries.map((entry, index) => (
+            <li
+              key={entry.id}
+              hidden={previewCount !== undefined && index >= previewCount}
             >
-              {entry.description.text}
-            </p>
-          ) : null}
-          <DetailFactList rows={entry.details} />
-          {entry.rows.map((row) => (
-            <div key={row[0]!.key} className="border-border border-t pt-3">
-              <DetailFactList rows={row} />
-            </div>
+              <Badge
+                variant={variant}
+                className={cn(
+                  variant === 'outline' ? 'h-6 px-2.5 text-sm' : undefined,
+                )}
+              >
+                {entry.logoUrl ? (
+                  <img
+                    src={entry.logoUrl}
+                    alt=""
+                    loading="lazy"
+                    className="size-4 rounded-sm object-contain"
+                  />
+                ) : null}
+                <span dir="auto">{entry.title}</span>
+              </Badge>
+            </li>
           ))}
-        </CardContent>
-      ) : null}
-    </Card>
+        </ul>
+      )}
+    />
   );
 }
 
-/** Rich collections: one card grid per field, under the field label. */
-export function DetailRichCollections({
+/** The entry's logo, or a neutral tile with its initial. Decorative. */
+function EntryMark({ entry }: { entry: DetailCollectionEntry }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-xs font-medium"
+    >
+      {entry.logoUrl ? (
+        <img
+          src={entry.logoUrl}
+          alt=""
+          loading="lazy"
+          className="size-full object-contain"
+        />
+      ) : (
+        initialsOf(entry.title.trim().split(/\s+/)[0] ?? '')
+      )}
+    </span>
+  );
+}
+
+/**
+ * A list collection: logo, bold title and a description clamped to two
+ * lines, two columns on wide screens, no cards or borders. The first six
+ * show; a disclosure reveals the rest in place, grouped when the collection
+ * has a categorising field.
+ */
+export function CollectionList({
+  collection,
+}: {
+  collection: DetailCollection;
+}) {
+  return (
+    <ExpandableCollection
+      collection={collection}
+      limit={LIST_PREVIEW_COUNT}
+      renderEntries={(entries, previewCount) => (
+        <ul className="grid grid-cols-1 gap-x-8 gap-y-5 md:grid-cols-2">
+          {entries.map((entry, index) => (
+            <li
+              key={entry.id}
+              hidden={previewCount !== undefined && index >= previewCount}
+              className="flex min-w-0 items-start gap-3"
+            >
+              <EntryMark entry={entry} />
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <p
+                  className="text-foreground text-sm font-semibold break-words"
+                  dir="auto"
+                >
+                  {entry.title}
+                </p>
+                {entry.description?.kind === 'html' ? (
+                  // TRUST BOUNDARY: a rich-text collection description is
+                  // sanitised by the Board API.
+                  <Prose
+                    html={entry.description.html}
+                    className="text-muted-foreground line-clamp-2 text-sm"
+                  />
+                ) : entry.description ? (
+                  <p
+                    className="text-muted-foreground line-clamp-2 text-sm"
+                    dir="auto"
+                  >
+                    {entry.description.text}
+                  </p>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    />
+  );
+}
+
+/** List collections: one section per field, under the field label. */
+export function DetailListCollections({
   collections,
 }: {
   collections: DetailCollection[];
@@ -274,13 +408,7 @@ export function DetailRichCollections({
       <Text as="h2" variant="heading4">
         {collection.label}
       </Text>
-      <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {collection.entries.map((entry) => (
-          <li key={entry.id}>
-            <RichEntryCard entry={entry} />
-          </li>
-        ))}
-      </ul>
+      <CollectionList collection={collection} />
     </section>
   ));
 }

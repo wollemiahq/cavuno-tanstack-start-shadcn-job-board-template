@@ -11,6 +11,7 @@ export function detailFieldsCopy(locale: string) {
       locale,
       yesLabel: m.detailFields_booleanYes(),
       noLabel: m.detailFields_booleanNo(),
+      otherGroupLabel: m.detailFields_otherGroup(),
       galleryImageAlt: (label, index, total) =>
         m.detailFields_galleryImageAlt({
           label,

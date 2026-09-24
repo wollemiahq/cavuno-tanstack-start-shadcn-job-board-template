@@ -12,8 +12,8 @@ import { m } from '../../paraglide/messages';
  * Anatomy: page header (company avatar + name link, display title, meta
  * pills, posted date) → two-column body. The main column carries the
  * sanitized description, then the operator's long-form fields, media and
- * rich collections, then the facts list (built-in facts followed by short
- * custom fields), taxonomy links and compact collection chips. Placement of
+ * list collections, then the facts list (built-in facts followed by short
+ * custom fields), taxonomy links and chip collections. Placement of
  * operator data comes from `vm.detailFields` (src/board/detail-fields.ts).
  * The right rail is a stack: the ACTIONS card (full-width
  * primary Apply on top, a two-up Save + Copy-link row beneath it) → the alert
@@ -40,8 +40,8 @@ import {
   DetailDocumentList,
   DetailFactList,
   DetailMediaSections,
+  DetailListCollections,
   DetailProseSections,
-  DetailRichCollections,
 } from '@/components/board/detail-fields';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
@@ -73,7 +73,7 @@ function TaxonomySection({
   );
 }
 
-/** A compact collection's chips, in the same treatment as the taxonomy. */
+/** A chip collection, in the same treatment as the taxonomy. */
 function CollectionChipSection({
   collection,
 }: {
@@ -84,7 +84,7 @@ function CollectionChipSection({
       <h2 className="text-foreground text-sm font-semibold">
         {collection.label}
       </h2>
-      <CollectionChips entries={collection.entries} />
+      <CollectionChips collection={collection} />
     </section>
   );
 }
@@ -260,7 +260,7 @@ export function JobDetail({
 
         <DetailProseSections fields={vm.detailFields.prose} />
         <DetailMediaSections media={vm.detailFields.media} />
-        <DetailRichCollections collections={vm.detailFields.richCollections} />
+        <DetailListCollections collections={vm.detailFields.listCollections} />
 
         <JobFacts facts={vm.facts} customFacts={vm.detailFields.facts} />
 
@@ -269,7 +269,7 @@ export function JobDetail({
           chips={vm.categoryChips}
         />
         <TaxonomySection heading={vm.skillsHeading} chips={vm.skillChips} />
-        {vm.detailFields.compactCollections.map((collection) => (
+        {vm.detailFields.chipCollections.map((collection) => (
           <CollectionChipSection key={collection.key} collection={collection} />
         ))}
       </article>
