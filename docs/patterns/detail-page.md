@@ -32,6 +32,11 @@ under the header.
 - Main column: sanitized HTML in the canonical `Prose` wrapper
   (`typeset typeset-content`), facts (`<dl>`), `TaxonomyTags`, custom fields,
   and related-record grids.
+- Operator custom fields and collection selections are placed by size class
+  (`src/board/detail-fields.ts`): short values join the facts, long and rich
+  text get their own section after the description, collections render as
+  chips (title and logo only) or a card grid (descriptions or other fields),
+  images sit in the main column and files in a rail "Documents" list.
 - Rail: the apply/action card on `rounded-xl bg-primary p-5 shadow-xs ring-1 ring-secondary_alt`.
 
 ## Composition
