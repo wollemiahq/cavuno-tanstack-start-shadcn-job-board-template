@@ -26,6 +26,7 @@ beforeEach(() => {
     features: { jobRecommendationsEnabled: true },
   });
   getRecommendedJobs.mockResolvedValue({
+    employerOnly: false,
     object: 'list',
     url: '/v1/me/recommended-jobs',
     data: [],
@@ -63,6 +64,19 @@ describe('matches route — recommendations feature gate', () => {
 
     expect(data).toMatchObject({ data: [] });
     expect(getRecommendedJobs).toHaveBeenCalledOnce();
+  });
+
+  it('gives an employer account the employer state, not the resume prompt', async () => {
+    getRecommendedJobs.mockResolvedValue({ employerOnly: true });
+
+    const data = await createMatchesLoader(dependencies)();
+
+    expect(data).toEqual({
+      locked: false,
+      employerOnly: true,
+      seo: { boardName: 'Acme Board' },
+    });
+    expect(getPaywallOffers).not.toHaveBeenCalled();
   });
 
   it('falls through to the authoritative API when the fresh context read fails', async () => {

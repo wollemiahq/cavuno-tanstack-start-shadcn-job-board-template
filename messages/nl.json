@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Naar je profiel",
+  "accountRecommended_employerText": "Je werkgeversaccount heeft geen werkzoekendeprofiel om vacatures mee te matchen.",
+  "accountRecommended_employerTitle": "Jobmatches zijn voor werkzoekende-accounts",
   "accountRecommended_heading": "Matches voor {name}",
   "accountRecommended_headingFallback": "Jouw matches",
   "accountRecommended_needsProfileTitle": "Upload je cv",

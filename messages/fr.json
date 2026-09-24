@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Aller à votre profil",
+  "accountRecommended_employerText": "Votre compte employeur n’a pas de profil candidat auquel comparer les offres.",
+  "accountRecommended_employerTitle": "Les offres recommandées sont réservées aux comptes candidats",
   "accountRecommended_heading": "Offres pour {name}",
   "accountRecommended_headingFallback": "Vos offres recommandées",
   "accountRecommended_needsProfileTitle": "Téléversez votre CV",

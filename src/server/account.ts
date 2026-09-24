@@ -24,6 +24,7 @@ import {
 import { readAccount } from './account-read';
 import { gatedRead } from './board-access';
 import { requireVerifiedBoardUser } from './me-verification';
+import { readRecommendedJobs } from './recommended-jobs-read';
 
 import { parseResumeOnboardingDismissal } from '@/lib/resume-onboarding';
 import type {
@@ -126,28 +127,9 @@ export const getSavedJobs = createServerFn({ method: 'GET' })
 export const getRecommendedJobs = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, async () => {
-      const headers = authedHeaders(context);
-      await requireVerifiedBoardUser(headers);
-      const board = getBoard();
-      // Job-seeker plan entitlements are per plan and are NOT on the wire, so
-      // there is nothing to pre-gate on: make the call, and translate the
-      // board's 403 into a signal that survives this function's boundary.
-      const [recommended, skills, resume] = await Promise.all([
-        board.me.recommendedJobs
-          .list({ limit: 20 }, { headers })
-          .catch(throwCandidatePaywallSignal),
-        board.me.profile.listSkills({ headers }),
-        board.me.resume.retrieve({ headers }),
-      ]);
-      return {
-        ...recommended,
-        data: recommended.data.filter((item) => item.job != null),
-        skillCount: skills.data.length,
-        parseStatus: resume.parseStatus,
-        resume,
-      };
-    }),
+    gatedRead(context, () =>
+      readRecommendedJobs(getBoard(), authedHeaders(context)),
+    ),
   );
 
 export const updateProfile = createServerFn({ method: 'POST' })

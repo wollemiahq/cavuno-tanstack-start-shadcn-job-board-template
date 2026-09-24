@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Go to your profile",
+  "accountRecommended_employerText": "Your employer account has no job seeker profile to match jobs against.",
+  "accountRecommended_employerTitle": "Job matches are for job seeker accounts",
   "accountRecommended_heading": "{name}'s matches",
   "accountRecommended_headingFallback": "Your matches",
   "accountRecommended_needsProfileTitle": "Upload your resume",

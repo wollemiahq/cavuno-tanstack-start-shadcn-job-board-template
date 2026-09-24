@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Ir a tu perfil",
+  "accountRecommended_employerText": "Tu cuenta de empresa no tiene un perfil de candidato con el que comparar empleos.",
+  "accountRecommended_employerTitle": "Las coincidencias de empleo son para cuentas de candidatos",
   "accountRecommended_heading": "Coincidencias de {name}",
   "accountRecommended_headingFallback": "Tus coincidencias",
   "accountRecommended_needsProfileTitle": "Sube tu CV",

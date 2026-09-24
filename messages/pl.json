@@ -97,6 +97,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Przejdź do profilu",
+  "accountRecommended_employerText": "Twoje konto pracodawcy nie ma profilu kandydata, do którego można dopasować oferty.",
+  "accountRecommended_employerTitle": "Dopasowania ofert są dla kont kandydatów",
   "accountRecommended_heading": "Dopasowania: {name}",
   "accountRecommended_headingFallback": "Twoje dopasowania",
   "accountRecommended_needsProfileTitle": "Prześlij swoje CV",

@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_employerProfileLink": "Zu deinem Profil",
+  "accountRecommended_employerText": "Dein Arbeitgeberkonto hat kein Jobsuchenden-Profil, mit dem Jobs abgeglichen werden können.",
+  "accountRecommended_employerTitle": "Passende Jobs gibt es für Jobsuchende-Konten",
   "accountRecommended_heading": "Jobvorschläge für {name}",
   "accountRecommended_headingFallback": "Deine Jobvorschläge",
   "accountRecommended_needsProfileTitle": "Lade deinen Lebenslauf hoch",
