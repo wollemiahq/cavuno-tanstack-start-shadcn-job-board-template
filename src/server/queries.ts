@@ -51,6 +51,7 @@ import type {
   JobsListQuery,
   JobsSearchBody,
   LocationSearchQuery,
+  LocationResolveInput,
   PlacesListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
@@ -280,6 +281,16 @@ export const searchLocations = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
       getBoard().locations.search(data, { headers: h }),
+    ),
+  );
+
+/** Complete the location field's provider session when a suggestion is picked. */
+export const resolveLocation = createServerFn({ method: 'POST' })
+  .validator((input: LocationResolveInput) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().locations.resolve(data, { headers: h }),
     ),
   );
 

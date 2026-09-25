@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { MapPin, X } from 'lucide-react';
 
@@ -39,6 +39,8 @@ export function PlaceTagsField({
   loading,
   onQueryChange,
   onPicked,
+  resolvePick,
+  error,
   placeholder,
   searchingText,
   removeAriaLabel,
@@ -63,6 +65,13 @@ export function PlaceTagsField({
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
   const anchorRef = useComboboxAnchor();
+  const pickGeneration = useRef(0);
+  useEffect(
+    () => () => {
+      pickGeneration.current += 1;
+    },
+    [],
+  );
 
   const available = suggestions.filter(
     (place) => !tags.some((tag) => tag.key === place.id),
@@ -133,13 +142,22 @@ export function PlaceTagsField({
         isItemEqualToValue={(place, selected) => place.id === selected.id}
         onInputValueChange={(nextText, details) => {
           if (details.reason !== 'input-change') return;
+          pickGeneration.current += 1;
           setText(nextText);
           onQueryChange(nextText);
           setOpen(Boolean(nextText.trim()));
         }}
         onValueChange={(place) => {
           if (!place) return;
-          commitSuggestion(place);
+          if (!resolvePick) {
+            commitSuggestion(place);
+            return;
+          }
+          const current = ++pickGeneration.current;
+          void resolvePick(place).then((resolved) => {
+            if (resolved && current === pickGeneration.current)
+              commitSuggestion(resolved);
+          });
         }}
       >
         <ComboboxInput
@@ -149,6 +167,8 @@ export function PlaceTagsField({
           placeholder={placeholder}
           showTrigger={false}
           disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-lookup-error` : undefined}
           onKeyDown={(event) => {
             // Enter inside this field must never submit the host form. With
             // suggestions open Base UI commits the highlighted place on the
@@ -190,6 +210,15 @@ export function PlaceTagsField({
           )}
         </ComboboxContent>
       </Combobox>
+      {error ? (
+        <p
+          id={`${id}-lookup-error`}
+          role="alert"
+          className="text-destructive text-sm"
+        >
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

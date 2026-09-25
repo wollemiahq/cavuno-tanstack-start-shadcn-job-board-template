@@ -8,6 +8,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   createEvent,
   fireEvent,
@@ -24,6 +25,14 @@ import { m } from '@/paraglide/messages';
 afterEach(() => {
   cleanup();
 });
+
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+  return { promise, resolve };
+};
 
 const keywordSuggestions = {
   suggestions: [
@@ -344,6 +353,42 @@ describe('EmbedJobsHeader', () => {
     expect(opened[0]).toContain('/jobs/locations/london');
     expect(opened[0]).toContain('q=nurse');
     expect(resolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not open a stale destination after the location text changes', async () => {
+    const result = deferred<
+      (typeof locationSuggestions.suggestions)[number] | null
+    >();
+    await renderHeader(
+      { q: 'nurse' },
+      { ...locationSuggestions, resolve: () => result.promise },
+    );
+    const search = searchLink();
+    const opened = vi.fn();
+    const record = (event: MouseEvent) => {
+      if (event.target === search && !event.defaultPrevented) opened();
+      event.preventDefault();
+    };
+    document.addEventListener('click', record);
+    onTestFinished(() => document.removeEventListener('click', record));
+    const location = screen.getByRole('combobox', {
+      name: m.locationCombobox_locationAriaLabel(),
+    });
+
+    fireEvent.input(location, {
+      target: { value: 'Lond' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(search);
+    fireEvent.input(location, {
+      target: { value: 'Paris' },
+      inputType: 'insertText',
+    });
+    await act(async () => result.resolve(locationSuggestions.suggestions[0]!));
+
+    expect(location).toHaveValue('Paris');
+    expect(opened).not.toHaveBeenCalled();
+    expect(search.getAttribute('href')).not.toContain('london');
   });
 
   it('keeps unmatched location text and opens nothing', async () => {

@@ -526,6 +526,7 @@ export function PostJobForm({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (officeLocationSuggestions.resolving) return;
 
     if (shows('description') && isRichTextEmpty(description)) {
       updateFormState({
@@ -1303,7 +1304,13 @@ export function PostJobForm({
       ) : null}
 
       <div>
-        <Button type="submit" size="lg" disabled={status.kind === 'pending'}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={
+            status.kind === 'pending' || officeLocationSuggestions.resolving
+          }
+        >
           {status.kind === 'pending' ? (
             <Spinner data-icon="inline-start" />
           ) : null}

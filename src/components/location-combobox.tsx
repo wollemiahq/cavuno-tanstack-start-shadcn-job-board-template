@@ -30,7 +30,13 @@ export interface LocationSuggestionState {
   suggestions: LocationSuggestionVM[];
   loading: boolean;
   onQueryChange: (query: string) => void;
-  /** Called after the visitor picks a suggestion (ends a search session). */
+  /** Resolve a worldwide pick before committing it; null cancels the pick. */
+  resolvePick?: (
+    place: LocationSuggestionVM,
+  ) => Promise<LocationSuggestionVM | null>;
+  error?: string;
+  resolving?: boolean;
+  /** Called after the visitor picks a suggestion. */
   onPicked?: () => void;
 }
 
@@ -47,7 +53,9 @@ export type LocationPendingResolution =
   /** Typed text resolved to its top place: search with this one. */
   | { kind: 'resolved'; place: { slug: string; name: string } }
   /** Typed text matches no place: the field says so; do not search. */
-  | { kind: 'unmatched' };
+  | { kind: 'unmatched' }
+  /** A newer interaction superseded this resolution: do nothing. */
+  | { kind: 'cancelled' };
 
 export interface LocationComboboxHandle {
   /** Whether the field holds typed text that is not the current place. */
@@ -107,6 +115,7 @@ export function LocationCombobox({
   const unmatchedId = useId();
   const anchorRef = useComboboxAnchor();
   const inputRef = useRef<HTMLInputElement>(null);
+  const resolutionGenerationRef = useRef(0);
   /**
    * Set when THIS component asks the caller to drop its resolved place,
    * because the visitor edited the label. The resulting `value → undefined`
@@ -121,6 +130,7 @@ export function LocationCombobox({
   const invalidatedRef = useRef(false);
 
   useEffect(() => {
+    resolutionGenerationRef.current += 1;
     const resolved = valueLabel ?? value;
 
     if (resolved) {
@@ -140,6 +150,13 @@ export function LocationCombobox({
     setText('');
   }, [value, valueLabel]);
 
+  useEffect(
+    () => () => {
+      resolutionGenerationRef.current += 1;
+    },
+    [],
+  );
+
   const pendingText = () => {
     const typed = text.trim();
     if (!typed) return null;
@@ -150,9 +167,13 @@ export function LocationCombobox({
   useImperativeHandle(ref, () => ({
     hasPendingText: () => pendingText() !== null,
     resolvePending: async () => {
+      const generation = ++resolutionGenerationRef.current;
       const typed = pendingText();
       if (typed === null) return { kind: 'none' };
       const place = await resolve(typed);
+      if (generation !== resolutionGenerationRef.current) {
+        return { kind: 'cancelled' };
+      }
       if (!place) {
         setUnmatched(typed);
         setOpen(true);
@@ -169,6 +190,7 @@ export function LocationCombobox({
   }));
 
   const clear = () => {
+    resolutionGenerationRef.current += 1;
     setUnmatched(null);
     setText('');
     setOpen(false);
@@ -216,6 +238,7 @@ export function LocationCombobox({
         setText(nextText);
         if (details.reason !== 'input-change') return;
 
+        resolutionGenerationRef.current += 1;
         setUnmatched(null);
         onQueryChange(nextText);
         if (value && nextText !== (valueLabel ?? value)) {
@@ -226,6 +249,7 @@ export function LocationCombobox({
       }}
       onValueChange={(place) => {
         if (!place) return;
+        resolutionGenerationRef.current += 1;
         setUnmatched(null);
         setText(place.name);
         setOpen(false);

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  act,
   cleanup,
   createEvent,
   fireEvent,
@@ -161,5 +162,65 @@ describe('PlaceTagsField — async place search', () => {
 
     expect(onAddSuggestion).toHaveBeenCalledWith(london);
     expect(onPicked).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('PlaceTagsField — retrieve before commit', () => {
+  it('waits for retrieval before adding the canonical place', async () => {
+    let finish!: (place: LocationSuggestionVM | null) => void;
+    const resolvePick = vi.fn(
+      () =>
+        new Promise<LocationSuggestionVM | null>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const onAddSuggestion = vi.fn();
+    render(
+      <PlaceTagsField
+        id="office"
+        tags={[]}
+        suggestions={[london]}
+        loading={false}
+        onQueryChange={() => {}}
+        onAddSuggestion={onAddSuggestion}
+        onRemove={() => {}}
+        resolvePick={resolvePick}
+        searchingText="Searching"
+        removeAriaLabel={(name) => `Remove ${name}`}
+      />,
+    );
+    type('Lon');
+    fireEvent.click(screen.getByRole('option', { name: /London/ }));
+    expect(onAddSuggestion).not.toHaveBeenCalled();
+    await act(async () => {
+      finish({ ...london, fullName: 'London, United Kingdom' });
+    });
+    expect(onAddSuggestion).toHaveBeenCalledWith(
+      expect.objectContaining({ fullName: 'London, United Kingdom' }),
+    );
+  });
+
+  it('preserves typed text when retrieval cannot commit the selection', async () => {
+    const onAddSuggestion = vi.fn();
+    render(
+      <PlaceTagsField
+        id="office"
+        tags={[]}
+        suggestions={[london]}
+        loading={false}
+        onQueryChange={() => {}}
+        onAddSuggestion={onAddSuggestion}
+        onRemove={() => {}}
+        resolvePick={async () => null}
+        searchingText="Searching"
+        removeAriaLabel={(name) => `Remove ${name}`}
+      />,
+    );
+    type('Lon');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('option', { name: /London/ }));
+    });
+    expect(onAddSuggestion).not.toHaveBeenCalled();
+    expect(screen.getByRole('combobox')).toHaveValue('Lon');
   });
 });

@@ -841,6 +841,7 @@ export function ProfileForm({
       className="space-y-4"
       onSubmit={async (event) => {
         event.preventDefault();
+        if (locationSuggestions.resolving) return;
         await save();
       }}
     >
@@ -889,7 +890,10 @@ export function ProfileForm({
         </Field>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={status === 'saving'}>
+          <Button
+            type="submit"
+            disabled={status === 'saving' || locationSuggestions.resolving}
+          >
             {status === 'saving'
               ? m.profileForm_savingLabel()
               : m.profileForm_saveLabel()}

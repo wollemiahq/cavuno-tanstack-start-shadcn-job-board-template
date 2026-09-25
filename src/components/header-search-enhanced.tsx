@@ -112,7 +112,8 @@ export function HeaderSearchEnhanced({
         // Typed location text nobody picked: search with its top place, or
         // stay put while the field says nothing matches.
         void field.resolvePending().then((pending) => {
-          if (pending.kind === 'unmatched') return;
+          if (pending.kind === 'unmatched' || pending.kind === 'cancelled')
+            return;
           if (pending.kind === 'resolved') setLocation(pending.place);
           search.onSubmit({
             ...submission,

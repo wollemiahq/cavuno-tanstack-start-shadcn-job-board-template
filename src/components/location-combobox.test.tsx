@@ -55,6 +55,14 @@ const type = (value: string) => {
   return input;
 };
 
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+  return { promise, resolve };
+};
+
 const locationSearchProps = {
   suggestions: [suggestion({})],
   loading: false,
@@ -384,6 +392,52 @@ describe('LocationCombobox — typed text the visitor never picked', () => {
       place: { slug: 'london', name: 'London' },
     });
     expect(locationInput().value).toBe('London');
+  });
+
+  it('ignores a deferred success after the visitor types newer text', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    const result = deferred<ReturnType<typeof suggestion> | null>();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        resolve={() => result.promise}
+        ref={ref}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Lond');
+    const pending = ref.current!.resolvePending();
+    type('Paris');
+    await act(async () => result.resolve(suggestion({})));
+
+    await expect(pending).resolves.toEqual({ kind: 'cancelled' });
+    expect(locationInput().value).toBe('Paris');
+  });
+
+  it('ignores a deferred unmatched result after the visitor types newer text', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    const result = deferred<ReturnType<typeof suggestion> | null>();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        suggestions={[]}
+        resolve={() => result.promise}
+        ref={ref}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Atlantis');
+    const pending = ref.current!.resolvePending();
+    type('Paris');
+    await act(async () => result.resolve(null));
+
+    await expect(pending).resolves.toEqual({ kind: 'cancelled' });
+    expect(locationInput().value).toBe('Paris');
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('has nothing pending while the field shows the current place', async () => {

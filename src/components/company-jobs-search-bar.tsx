@@ -71,7 +71,8 @@ export function CompanyJobsSearchBar({
           return;
         }
         void field.resolvePending().then((pending) => {
-          if (pending.kind === 'unmatched') return;
+          if (pending.kind === 'unmatched' || pending.kind === 'cancelled')
+            return;
           if (pending.kind === 'resolved') {
             setPlace(pending.place);
             submit(pending.place);

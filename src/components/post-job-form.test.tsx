@@ -719,3 +719,37 @@ describe('PostJobForm — operator form layout', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+it('keeps submission disabled until a picked office finishes resolving', () => {
+  const props = {
+    DescriptionEditor,
+    customFields: [],
+    remotePermits: null,
+    locale: 'en',
+    plans,
+    onSubmit: vi.fn(),
+    onLogoFetch: vi.fn(),
+    onLogoUpload: vi.fn(),
+    onCheckout: vi.fn(),
+  };
+  const { container, rerender } = render(
+    <PostJobForm
+      {...props}
+      officeLocationSuggestions={{
+        ...officeLocationSuggestions,
+        resolving: true,
+      }}
+    />,
+  );
+  expect(container.querySelector('button[type="submit"]')).toBeDisabled();
+  rerender(
+    <PostJobForm
+      {...props}
+      officeLocationSuggestions={{
+        ...officeLocationSuggestions,
+        resolving: false,
+      }}
+    />,
+  );
+  expect(container.querySelector('button[type="submit"]')).not.toBeDisabled();
+});

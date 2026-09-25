@@ -289,7 +289,11 @@ export function EmbedJobsHeader({
               if (!field?.hasPendingText()) return;
               event.preventDefault();
               void field.resolvePending().then((pending) => {
-                if (pending.kind === 'unmatched') return;
+                if (
+                  pending.kind === 'unmatched' ||
+                  pending.kind === 'cancelled'
+                )
+                  return;
                 if (pending.kind === 'resolved') {
                   flushSync(() => setLocation(pending.place));
                 }

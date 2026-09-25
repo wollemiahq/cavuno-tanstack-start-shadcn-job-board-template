@@ -170,6 +170,7 @@ export function ExperienceSection({
         key={editing.id ?? 'new'}
         onSubmit={(event) => {
           event.preventDefault();
+          if (locationSuggestions.resolving) return;
           void submit();
         }}
       >
@@ -310,7 +311,11 @@ export function ExperienceSection({
             >
               {m.experienceSection_cancelLabel()}
             </Button>
-            <Button type="submit" size="sm" disabled={pending}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={pending || locationSuggestions.resolving}
+            >
               {pending
                 ? m.experienceSection_savingLabel()
                 : m.experienceSection_saveLabel()}

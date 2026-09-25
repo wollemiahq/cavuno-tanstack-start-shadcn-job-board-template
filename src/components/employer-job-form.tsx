@@ -1077,6 +1077,7 @@ export function EmployerJobForm({
   }
 
   async function submit(intent: 'publish' | 'draft' = 'publish') {
+    if (officeLocationSuggestions.resolving) return;
     if (status === 'saving' || status === 'committed') return;
     const applyExternal =
       shows('applyMethod') &&
@@ -1687,7 +1688,10 @@ export function EmployerJobForm({
     status === 'saving'
       ? m.postJob_submittingLabel()
       : m.employerCompany_createDraftLabel();
-  const actionsBusy = status === 'saving' || status === 'committed';
+  const actionsBusy =
+    status === 'saving' ||
+    status === 'committed' ||
+    officeLocationSuggestions.resolving;
 
   if (membershipRequired && membershipGate) return membershipGate;
 
