@@ -9,7 +9,11 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
-import type { CustomFilterField } from '@/lib/custom-field-filters';
+import {
+  MAX_CUSTOM_FIELD_CLAUSES,
+  MAX_CUSTOM_FIELD_VALUES,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
 import type { CustomFieldFilter } from '@cavuno/board';
 
 function selectedValues(
@@ -56,6 +60,10 @@ export function CustomFieldFilterFields({
   return fields.map((field) => {
     const current = selectedValues(value, field.key);
     const fieldId = `${idPrefix}-${field.key}`;
+    const fieldLimitReached =
+      current.length === 0 &&
+      value.filter((clause) => clause.values.length > 0).length >=
+        MAX_CUSTOM_FIELD_CLAUSES;
 
     if (field.kind === 'flag') {
       return (
@@ -63,6 +71,7 @@ export function CustomFieldFilterFields({
           <Checkbox
             id={fieldId}
             checked={current.includes(true)}
+            disabled={fieldLimitReached}
             onCheckedChange={(checked) =>
               onChange(
                 withFieldValues(
@@ -95,6 +104,11 @@ export function CustomFieldFilterFields({
               <Checkbox
                 id={optionId}
                 checked={current.includes(option.value)}
+                disabled={
+                  fieldLimitReached ||
+                  (!current.includes(option.value) &&
+                    current.length >= MAX_CUSTOM_FIELD_VALUES)
+                }
                 onCheckedChange={(checked) =>
                   onChange(
                     withFieldValues(
