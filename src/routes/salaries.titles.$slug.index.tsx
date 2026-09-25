@@ -24,6 +24,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 import {
   companyCategorySalaryPath,
   formatSalaryRange,
+  salaryPlaceListLabel,
   salaryTitleInLocationPath,
   salaryTitleLocationsPath,
   toOverallSalaryVM,
@@ -100,7 +101,7 @@ function TitleSalaryPage() {
   // exists inside this title's sample, so link the title×location page whose
   // loader resolves + 308s the inbound placeSlug to its canonical form.
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
-    name: x.placeName,
+    name: salaryPlaceListLabel(x),
     href: salaryTitleInLocationPath(salary.canonicalSlug, x.placeSlug),
     range:
       formatSalaryRange(

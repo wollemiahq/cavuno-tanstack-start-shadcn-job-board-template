@@ -47,6 +47,18 @@ export function formatSalaryRange(
   return formatSalaryStatRange(language, min, max, currency);
 }
 
+/**
+ * Prefer the API's disambiguated list label (for example, "New York, NY")
+ * while remaining compatible with responses from before `placeLabel` was
+ * added. Canonical links continue to use the row's `placeSlug`.
+ */
+export function salaryPlaceListLabel(place: {
+  placeName: string;
+  placeLabel?: string | null;
+}): string {
+  return place.placeLabel?.trim() || place.placeName;
+}
+
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { salaryCopy } from '@/copy-groups/salary';
 import { entityCount } from '@/lib/entity-count';

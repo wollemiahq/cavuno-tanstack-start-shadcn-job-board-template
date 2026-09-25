@@ -14,6 +14,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  salaryPlaceListLabel,
   toSalaryBreadcrumbVM,
 } from '@/board/salary-view-model';
 import { SalaryEmptyState } from '@/components/board/salary-sections';
@@ -63,7 +64,7 @@ function LocationTree({
             to={salaryLocationPath(n.placeSlug)}
             className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
           >
-            {n.placeName}
+            {salaryPlaceListLabel(n)}
           </Link>
           <span className="text-muted-foreground text-sm tabular-nums">
             {' · '}
