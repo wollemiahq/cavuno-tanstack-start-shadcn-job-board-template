@@ -161,11 +161,11 @@ function jobFormConstraintError(
 ): string {
   // An EDIT opens with the job's stored values, which predate any narrowing
   // the operator has since applied — so a job saved as full_time / hybrid /
-  // USD can sit in a form whose pickers now offer none of those. Nothing
-  // downstream catches it: the employer job route runs no server-side
-  // constraint check (only public submission does), so an unchecked save
-  // silently stores a value the board disallows. A hidden employment type
-  // has no picker to fix it with, and an edit does not send it.
+  // USD can sit in a form whose pickers now offer none of those. The API
+  // rejects such a save too (`jobs_constraint_violation`, mapped below);
+  // checking here names the field before the round trip. A hidden
+  // employment type has no picker to fix it with, and an edit does not
+  // send it.
   const disallowed = (
     [
       [

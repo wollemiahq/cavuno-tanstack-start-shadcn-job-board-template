@@ -2,13 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { searchLocations } from '../server/queries';
 
-import type { LocationSearchQuery, PublicLocation } from '@cavuno/board';
-
 import {
   toGlobalLocationSuggestionVM,
   type LocationSuggestionVM,
 } from '@/board/location-suggestion';
 import type { LocationSuggestionState } from '@/components/location-combobox';
+import type { LocationSearchQuery, PublicLocation } from '@cavuno/board';
 
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
@@ -22,12 +21,11 @@ export type GlobalLocationSuggestionDependencies = {
 };
 
 /**
- * An opaque search-session id. `randomUUID` exists only in secure contexts,
- * so a board opened over plain http on a LAN address falls back to random
- * bytes rather than crashing the field.
+ * An opaque search-session id: 128 random bits as hex. `getRandomValues`
+ * rather than `randomUUID`, which exists only in secure contexts — a board
+ * opened over plain http on a LAN address would otherwise crash the field.
  */
 function newSession(): string {
-  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   return Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) =>
     byte.toString(16).padStart(2, '0'),
   ).join('');
@@ -70,15 +68,14 @@ export function useGlobalLocationSuggestions(
     setLoading(true);
     const timer = setTimeout(() => {
       sessionRef.current ??= dependencies.newSession();
+      const data: LocationSearchQuery = {
+        q,
+        limit: LIMIT,
+        session: sessionRef.current,
+      };
+      if (country) data.country = country;
       void dependencies
-        .searchLocations({
-          data: {
-            q,
-            limit: LIMIT,
-            session: sessionRef.current,
-            ...(country ? { country } : {}),
-          },
-        })
+        .searchLocations({ data })
         .then((response) => {
           if (!cancelled) {
             setSuggestions(response.data.map(toGlobalLocationSuggestionVM));
