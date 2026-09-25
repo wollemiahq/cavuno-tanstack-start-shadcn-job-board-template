@@ -21,8 +21,9 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getCompanyWorkspace } from '../server/employers';
 import { getRemotePermits, getSeoBase } from '../server/queries';
-import { useLocationSuggestions } from './-use-location-suggestions';
+import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
+import { resolveJobFormConstraints } from '@/board/job-form';
 import { MembershipPostGate } from '@/components/board/membership-post-gate';
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
@@ -70,7 +71,9 @@ function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
   const { board, offerGate } = rootApi.useLoaderData();
   const locale = getLocale();
-  const officeLocationSuggestions = useLocationSuggestions(locale);
+  const officeLocationSuggestions = useGlobalLocationSuggestions({
+    countries: resolveJobFormConstraints(board).location.allowedCountries,
+  });
 
   return (
     <Page width="content">

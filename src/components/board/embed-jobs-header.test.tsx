@@ -8,13 +8,15 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   createEvent,
   fireEvent,
   render,
   screen,
+  waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { EmbedJobsHeader } from './embed-jobs-header';
 
@@ -23,6 +25,14 @@ import { m } from '@/paraglide/messages';
 afterEach(() => {
   cleanup();
 });
+
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+  return { promise, resolve };
+};
 
 const keywordSuggestions = {
   suggestions: [
@@ -45,10 +55,14 @@ const locationSuggestions = {
   ],
   loading: false,
   onQueryChange: () => {},
+  resolve: async () => null,
 };
 
 async function renderHeader(
   initialSearch: Parameters<typeof EmbedJobsHeader>[0]['initialSearch'] = {},
+  locations: Parameters<
+    typeof EmbedJobsHeader
+  >[0]['locationSuggestions'] = locationSuggestions,
 ) {
   const rootRoute = createRootRoute({
     component: () => (
@@ -57,7 +71,7 @@ async function renderHeader(
         logoUrl={null}
         initialSearch={initialSearch}
         keywordSuggestions={keywordSuggestions}
-        locationSuggestions={locationSuggestions}
+        locationSuggestions={locations}
       />
     ),
   });
@@ -304,5 +318,104 @@ describe('EmbedJobsHeader', () => {
     const href = searchLink().getAttribute('href') ?? '';
     expect(href).toContain('/jobs/locations/london');
     expect(href).toContain('remoteOption=remote');
+  });
+
+  it('resolves typed location text to its top place before opening Search', async () => {
+    const london = locationSuggestions.suggestions[0]!;
+    const resolve = vi.fn(async () => london);
+    await renderHeader({ q: 'nurse' }, { ...locationSuggestions, resolve });
+    // Held before typing: the open suggestions popup hides the rest of the
+    // header from the accessibility tree, as it does on a phone.
+    const search = searchLink();
+    // What the browser would open: clicks on Search that React handlers
+    // left unprevented (document listeners run after React's).
+    const opened: string[] = [];
+    const record = (event: MouseEvent) => {
+      if (event.target !== search) return;
+      if (!event.defaultPrevented) {
+        opened.push(search.getAttribute('href') ?? '');
+      }
+      // jsdom cannot open a tab; keep the test on this page.
+      event.preventDefault();
+    };
+    document.addEventListener('click', record);
+    onTestFinished(() => document.removeEventListener('click', record));
+
+    fireEvent.input(
+      screen.getByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+      { target: { value: 'Lond' }, inputType: 'insertText' },
+    );
+    fireEvent.click(search);
+
+    await waitFor(() => expect(opened).toHaveLength(1));
+    expect(opened[0]).toContain('/jobs/locations/london');
+    expect(opened[0]).toContain('q=nurse');
+    expect(resolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not open a stale destination after the location text changes', async () => {
+    const result = deferred<
+      (typeof locationSuggestions.suggestions)[number] | null
+    >();
+    await renderHeader(
+      { q: 'nurse' },
+      { ...locationSuggestions, resolve: () => result.promise },
+    );
+    const search = searchLink();
+    const opened = vi.fn();
+    const record = (event: MouseEvent) => {
+      if (event.target === search && !event.defaultPrevented) opened();
+      event.preventDefault();
+    };
+    document.addEventListener('click', record);
+    onTestFinished(() => document.removeEventListener('click', record));
+    const location = screen.getByRole('combobox', {
+      name: m.locationCombobox_locationAriaLabel(),
+    });
+
+    fireEvent.input(location, {
+      target: { value: 'Lond' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(search);
+    fireEvent.input(location, {
+      target: { value: 'Paris' },
+      inputType: 'insertText',
+    });
+    await act(async () => result.resolve(locationSuggestions.suggestions[0]!));
+
+    expect(location).toHaveValue('Paris');
+    expect(opened).not.toHaveBeenCalled();
+    expect(search.getAttribute('href')).not.toContain('london');
+  });
+
+  it('keeps unmatched location text and opens nothing', async () => {
+    await renderHeader({ q: 'nurse' });
+    const search = searchLink();
+    const clicked = vi.fn((event: MouseEvent) => event.defaultPrevented);
+    const record = (event: MouseEvent) => {
+      if (event.target === search) clicked(event);
+    };
+    document.addEventListener('click', record);
+    onTestFinished(() => document.removeEventListener('click', record));
+
+    fireEvent.input(
+      screen.getByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+      { target: { value: 'Atlantis' }, inputType: 'insertText' },
+    );
+    fireEvent.click(search);
+
+    expect(
+      await screen.findByText(
+        m.locationCombobox_noMatchText({ location: 'Atlantis' }),
+      ),
+    ).toBeTruthy();
+    // One click, held by the header: nothing opens.
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(clicked.mock.results[0]!.value).toBe(true);
   });
 });

@@ -61,6 +61,9 @@ export const CODE_MESSAGES = {
   job_posting_rejected: m.boardError_jobRejectedText,
   job_posting_logo_not_found: m.postJob_logoNotFoundError,
   job_posting_logo_lookup_unavailable: m.boardError_logoLookupUnavailableText,
+  // Office locations sent by `locationId`:
+  locations_invalid_id: m.boardError_locationInvalidText,
+  locations_unavailable: m.boardError_locationsUnavailableText,
   invalid_current_password: m.boardError_invalidCurrentPasswordText,
   same_email: m.boardError_sameEmailText,
   email_taken: m.settingsEmail_takenError,

@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PlaceTagsField } from './place-tags-field';
@@ -101,5 +108,119 @@ describe('PlaceTagsField — async place search', () => {
     expect(
       document.querySelector('[data-slot="combobox-content"]'),
     ).not.toBeNull();
+  });
+
+  it('adds nothing for typed text without a pick, and Enter never submits the form', () => {
+    const onAddSuggestion = vi.fn();
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <PlaceTagsField
+          id="job-office-locations"
+          tags={[]}
+          suggestions={[]}
+          loading={false}
+          onQueryChange={() => {}}
+          onAddSuggestion={onAddSuggestion}
+          onRemove={() => {}}
+          searchingText="Searching…"
+          removeAriaLabel={(name) => `Remove ${name}`}
+        />
+      </form>,
+    );
+
+    const input = type('Atlantis');
+    const enter = createEvent.keyDown(input, { key: 'Enter' });
+    fireEvent(input, enter);
+
+    expect(enter.defaultPrevented).toBe(true);
+    expect(onAddSuggestion).not.toHaveBeenCalled();
+    expect(screen.queryByRole('listitem')).toBeNull();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('commits a picked place and ends the search session', () => {
+    const onAddSuggestion = vi.fn();
+    const onPicked = vi.fn();
+    render(
+      <PlaceTagsField
+        id="job-office-locations"
+        tags={[]}
+        suggestions={[london]}
+        loading={false}
+        onQueryChange={() => {}}
+        onPicked={onPicked}
+        onAddSuggestion={onAddSuggestion}
+        onRemove={() => {}}
+        searchingText="Searching…"
+        removeAriaLabel={(name) => `Remove ${name}`}
+      />,
+    );
+
+    type('Lon');
+    fireEvent.click(screen.getByRole('option', { name: /London/ }));
+
+    expect(onAddSuggestion).toHaveBeenCalledWith(london);
+    expect(onPicked).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('PlaceTagsField — retrieve before commit', () => {
+  it('waits for retrieval before adding the canonical place', async () => {
+    let finish!: (place: LocationSuggestionVM | null) => void;
+    const resolvePick = vi.fn(
+      () =>
+        new Promise<LocationSuggestionVM | null>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const onAddSuggestion = vi.fn();
+    render(
+      <PlaceTagsField
+        id="office"
+        tags={[]}
+        suggestions={[london]}
+        loading={false}
+        onQueryChange={() => {}}
+        onAddSuggestion={onAddSuggestion}
+        onRemove={() => {}}
+        resolvePick={resolvePick}
+        searchingText="Searching"
+        removeAriaLabel={(name) => `Remove ${name}`}
+      />,
+    );
+    type('Lon');
+    fireEvent.click(screen.getByRole('option', { name: /London/ }));
+    expect(onAddSuggestion).not.toHaveBeenCalled();
+    await act(async () => {
+      finish({ ...london, fullName: 'London, United Kingdom' });
+    });
+    expect(onAddSuggestion).toHaveBeenCalledWith(
+      expect.objectContaining({ fullName: 'London, United Kingdom' }),
+    );
+  });
+
+  it('preserves typed text when retrieval cannot commit the selection', async () => {
+    const onAddSuggestion = vi.fn();
+    render(
+      <PlaceTagsField
+        id="office"
+        tags={[]}
+        suggestions={[london]}
+        loading={false}
+        onQueryChange={() => {}}
+        onAddSuggestion={onAddSuggestion}
+        onRemove={() => {}}
+        resolvePick={async () => null}
+        searchingText="Searching"
+        removeAriaLabel={(name) => `Remove ${name}`}
+      />,
+    );
+    type('Lon');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('option', { name: /London/ }));
+    });
+    expect(onAddSuggestion).not.toHaveBeenCalled();
+    expect(screen.getByRole('combobox')).toHaveValue('Lon');
   });
 });

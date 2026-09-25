@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import {
   EMPLOYMENT_TYPES,
@@ -20,7 +21,8 @@ import {
 } from '@/components/keyword-combobox';
 import {
   LocationCombobox,
-  type LocationSuggestionState,
+  type LocationComboboxHandle,
+  type LocationSearchState,
 } from '@/components/location-combobox';
 import { buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
@@ -80,7 +82,7 @@ export function EmbedJobsHeader({
   } & JobsSearchFilters;
   /** Route-owned suggestion controllers (`useKeywordSuggestions` / `useLocationSuggestions`). */
   keywordSuggestions: KeywordSuggestionState;
-  locationSuggestions: LocationSuggestionState;
+  locationSuggestions: LocationSearchState;
 }) {
   const [query, setQuery] = useState(initialSearch.q ?? '');
   const [term, setTerm] = useState<HeaderSearchTerm | null>(null);
@@ -108,6 +110,7 @@ export function EmbedJobsHeader({
   const copy = { jobSearch: jobSearchCopy() };
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
   const searchRef = useRef<HTMLAnchorElement>(null);
+  const locationRef = useRef<LocationComboboxHandle>(null);
 
   // Pure function of staged state, so the Search control can be a real anchor
   // with an href rather than a click handler.
@@ -213,6 +216,7 @@ export function EmbedJobsHeader({
         <div className="min-w-0 flex-1">
           <LocationCombobox
             {...locationSuggestions}
+            ref={locationRef}
             value={location?.slug}
             valueLabel={location?.name}
             onSelect={setLocation}
@@ -276,6 +280,26 @@ export function EmbedJobsHeader({
           <Link
             {...target}
             ref={searchRef}
+            onClick={(event) => {
+              // Location text typed but never picked: hold the tab until it
+              // resolves to its top place, then follow the updated href (the
+              // same anchor, so no popup-window semantics). No match keeps
+              // the visitor here with the field saying so.
+              const field = locationRef.current;
+              if (!field?.hasPendingText()) return;
+              event.preventDefault();
+              void field.resolvePending().then((pending) => {
+                if (
+                  pending.kind === 'unmatched' ||
+                  pending.kind === 'cancelled'
+                )
+                  return;
+                if (pending.kind === 'resolved') {
+                  flushSync(() => setLocation(pending.place));
+                }
+                searchRef.current?.click();
+              });
+            }}
             target="_blank"
             rel="noopener"
             aria-label={m.searchBar_searchAriaLabel()}

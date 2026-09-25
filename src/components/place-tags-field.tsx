@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { MapPin, X } from 'lucide-react';
 
@@ -24,21 +24,23 @@ export type PlaceTag = { key: string; label: string };
 
 /**
  * Multi-place picker: committed places render as removable tags over one
- * board place-suggest input (the SDK `places.list({ q })` autocomplete the
- * route owns via `useLocationSuggestions`). Suggestion picks commit resolved
- * places; when the caller passes `onAddFreeText`, pressing Enter on
- * unresolved text commits it verbatim (the job-posting payload accepts
- * display-name-only office locations). Enter never submits the host form.
+ * suggest input whose options the route owns (worldwide location search for
+ * office locations, a static list for remote permits). Only a picked
+ * suggestion becomes a tag — typed text is a query, never a value, so every
+ * tag is a real place. Enter picks the highlighted suggestion or does
+ * nothing; it never submits the host form.
  */
 export function PlaceTagsField({
   id,
   tags,
   onAddSuggestion,
-  onAddFreeText,
   onRemove,
   suggestions,
   loading,
   onQueryChange,
+  onPicked,
+  resolvePick,
+  error,
   placeholder,
   searchingText,
   removeAriaLabel,
@@ -49,8 +51,6 @@ export function PlaceTagsField({
   id: string;
   tags: PlaceTag[];
   onAddSuggestion: (place: LocationSuggestionVM) => void;
-  /** Enables committing unresolved text on Enter. */
-  onAddFreeText?: (text: string) => void;
   onRemove: (key: string) => void;
   placeholder?: string;
   searchingText: string;
@@ -65,6 +65,13 @@ export function PlaceTagsField({
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
   const anchorRef = useComboboxAnchor();
+  const pickGeneration = useRef(0);
+  useEffect(
+    () => () => {
+      pickGeneration.current += 1;
+    },
+    [],
+  );
 
   const available = suggestions.filter(
     (place) => !tags.some((tag) => tag.key === place.id),
@@ -72,15 +79,7 @@ export function PlaceTagsField({
 
   const commitSuggestion = (place: LocationSuggestionVM) => {
     onAddSuggestion(place);
-    setText('');
-    onQueryChange('');
-    setOpen(false);
-  };
-
-  const commitFreeText = () => {
-    const value = text.trim();
-    if (!value || !onAddFreeText) return;
-    onAddFreeText(value);
+    onPicked?.();
     setText('');
     onQueryChange('');
     setOpen(false);
@@ -143,13 +142,22 @@ export function PlaceTagsField({
         isItemEqualToValue={(place, selected) => place.id === selected.id}
         onInputValueChange={(nextText, details) => {
           if (details.reason !== 'input-change') return;
+          pickGeneration.current += 1;
           setText(nextText);
           onQueryChange(nextText);
           setOpen(Boolean(nextText.trim()));
         }}
         onValueChange={(place) => {
           if (!place) return;
-          commitSuggestion(place);
+          if (!resolvePick) {
+            commitSuggestion(place);
+            return;
+          }
+          const current = ++pickGeneration.current;
+          void resolvePick(place).then((resolved) => {
+            if (resolved && current === pickGeneration.current)
+              commitSuggestion(resolved);
+          });
         }}
       >
         <ComboboxInput
@@ -159,14 +167,13 @@ export function PlaceTagsField({
           placeholder={placeholder}
           showTrigger={false}
           disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-lookup-error` : undefined}
           onKeyDown={(event) => {
-            if (event.key !== 'Enter') return;
-            // Enter inside this field must never submit the host form; with
+            // Enter inside this field must never submit the host form. With
             // suggestions open Base UI commits the highlighted place on the
-            // same event, otherwise commit the raw text when allowed.
-            event.preventDefault();
-            if (open && available.length > 0) return;
-            commitFreeText();
+            // same event; with none there is nothing to add.
+            if (event.key === 'Enter') event.preventDefault();
           }}
           onFocus={() => {
             // Static option sets (the permit picker) list on refocus; async
@@ -203,6 +210,15 @@ export function PlaceTagsField({
           )}
         </ComboboxContent>
       </Combobox>
+      {error ? (
+        <p
+          id={`${id}-lookup-error`}
+          role="alert"
+          className="text-destructive text-sm"
+        >
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

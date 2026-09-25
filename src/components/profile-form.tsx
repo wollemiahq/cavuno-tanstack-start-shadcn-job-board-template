@@ -295,6 +295,11 @@ export function ProfileForm({
 
   const storedHandle = profile.handle ?? '';
   const handleInput = useRef<HTMLInputElement>(null);
+  const locationInput = useRef<HTMLInputElement>(null);
+  // Typed location text is a search until a suggestion is picked; a saved
+  // location is whatever the profile already had, so it starts settled.
+  const [locationUnpicked, setLocationUnpicked] = useState(false);
+  const [locationPickError, setLocationPickError] = useState(false);
   // The handle follows the display name until the candidate types one.
   const [handleFollowsName, setHandleFollowsName] = useState(!profile.handle);
   // Format problems show once the candidate edits the handle or saves.
@@ -441,6 +446,11 @@ export function ProfileForm({
     setHandleShowsProblem(true);
     if (handleIssue) {
       handleInput.current?.focus();
+      return;
+    }
+    if (shows('location') && locationUnpicked && form.location.trim()) {
+      setLocationPickError(true);
+      locationInput.current?.focus();
       return;
     }
     if (missing) return;
@@ -669,18 +679,40 @@ export function ProfileForm({
       case 'location':
         return (
           <>
-            <Field className="gap-1.5">
+            <Field
+              className="gap-1.5"
+              data-invalid={locationPickError || undefined}
+            >
               <FieldLabel htmlFor="profile-location">
                 {m.profileForm_locationLabel()}
               </FieldLabel>
               <LocationSuggestField
                 id="profile-location"
+                inputRef={locationInput}
                 value={form.location}
                 placeholder={m.profileForm_locationPlaceholder()}
                 searchingText={m.locationCombobox_searchingText()}
-                onValueChange={(location) => set('location', location)}
+                invalid={locationPickError}
+                describedBy={
+                  locationPickError ? 'profile-location-error' : undefined
+                }
+                onValueChange={(location) => {
+                  set('location', location);
+                  setLocationUnpicked(location.trim() !== '');
+                  setLocationPickError(false);
+                }}
+                onPick={(place) => {
+                  set('location', place.fullName ?? place.name);
+                  setLocationUnpicked(false);
+                  setLocationPickError(false);
+                }}
                 {...locationSuggestions}
               />
+              {locationPickError ? (
+                <FieldError id="profile-location-error">
+                  {m.locationField_pickRequiredError()}
+                </FieldError>
+              ) : null}
             </Field>
             {countryField}
           </>
@@ -809,6 +841,7 @@ export function ProfileForm({
       className="space-y-4"
       onSubmit={async (event) => {
         event.preventDefault();
+        if (locationSuggestions.resolving) return;
         await save();
       }}
     >
@@ -857,7 +890,10 @@ export function ProfileForm({
         </Field>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={status === 'saving'}>
+          <Button
+            type="submit"
+            disabled={status === 'saving' || locationSuggestions.resolving}
+          >
             {status === 'saving'
               ? m.profileForm_savingLabel()
               : m.profileForm_saveLabel()}

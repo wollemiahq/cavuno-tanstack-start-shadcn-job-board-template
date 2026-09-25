@@ -201,6 +201,17 @@ function renderHeader({
                 })),
                 loading: false,
                 onQueryChange: vi.fn(),
+                // Board places whose name starts with the typed text.
+                resolve: async (text: string) => {
+                  const place = locationSuggestions.find((candidate) =>
+                    candidate.name
+                      .toLowerCase()
+                      .startsWith(text.trim().toLowerCase()),
+                  );
+                  return place
+                    ? { countryCode: null, regionCode: null, ...place }
+                    : null;
+                },
               },
               keywordSuggestions: {
                 suggestions: keywordSuggestions,
@@ -1001,6 +1012,61 @@ describe('Header — pathname-scoped submit-only search', () => {
         '/jobs/locations/sydney?q=robotics',
       ),
     );
+  });
+
+  it('searches typed location text with its top place when Search is tapped without a pick', async () => {
+    const router = renderHeader({
+      initialEntry: '/jobs?q=engineer',
+      locationSuggestions: [
+        {
+          id: 'place-sydney',
+          slug: 'sydney',
+          name: 'Sydney',
+          contextLabel: 'Australia',
+        },
+      ],
+    });
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const location = screen.getByRole<HTMLInputElement>('combobox', {
+      name: /location/i,
+    });
+
+    fireEvent.input(location, {
+      target: { value: 'Syd' },
+      inputType: 'insertText',
+    });
+    // The suggestions popup is still open: Search is tapped straight away.
+    expect(screen.getByRole('option', { name: /Sydney/ })).toBeTruthy();
+    submitContainingForm(keyword);
+
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(
+        '/jobs/locations/sydney?q=engineer',
+      ),
+    );
+    expect(location.value).toBe('Sydney');
+  });
+
+  it('stays put and says so when typed location text matches no place', async () => {
+    const router = renderHeader({ initialEntry: '/jobs?q=engineer' });
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const location = screen.getByRole<HTMLInputElement>('combobox', {
+      name: /location/i,
+    });
+
+    fireEvent.input(location, {
+      target: { value: 'Atlantis' },
+      inputType: 'insertText',
+    });
+    submitContainingForm(keyword);
+
+    expect(
+      await screen.findByText(
+        m.locationCombobox_noMatchText({ location: 'Atlantis' }),
+      ),
+    ).toBeTruthy();
+    expect(router.state.location.href).toBe('/jobs?q=engineer');
+    expect(location.value).toBe('Atlantis');
   });
 
   it.each([

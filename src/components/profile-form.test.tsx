@@ -340,3 +340,92 @@ describe('ProfileForm — handle', () => {
     expect(mocks.toastActionSuccess).toHaveBeenCalled();
   });
 });
+
+describe('ProfileForm — location', () => {
+  const lyon = {
+    id: 'loc-lyon',
+    slug: 'loc-lyon',
+    name: 'Lyon',
+    fullName: 'Lyon, Auvergne-Rhône-Alpes, France',
+    contextLabel: 'Auvergne-Rhône-Alpes, France',
+    countryCode: 'FR',
+    regionCode: null,
+  };
+
+  async function renderForm() {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    await renderWithRouter(
+      <ProfileForm
+        profile={profile}
+        language="en"
+        dependencies={mocks}
+        locationSuggestions={{
+          suggestions: [lyon],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+      />,
+    );
+    return screen.getByLabelText<HTMLInputElement>(
+      m.profileForm_locationLabel(),
+    );
+  }
+
+  function typeLocation(input: HTMLElement, value: string) {
+    fireEvent.input(input, { target: { value }, inputType: 'insertText' });
+  }
+
+  function submit() {
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+  }
+
+  it('saves a picked suggestion as its full name', async () => {
+    const input = await renderForm();
+
+    typeLocation(input, 'Lyo');
+    fireEvent.click(screen.getByRole('option', { name: /Lyon/ }));
+    submit();
+
+    await waitFor(() =>
+      expect(mocks.updateProfile).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          location: 'Lyon, Auvergne-Rhône-Alpes, France',
+        }),
+      }),
+    );
+  });
+
+  it('blocks the save with an inline error while typed text is unpicked', async () => {
+    const input = await renderForm();
+
+    typeLocation(input, 'Lyo');
+    submit();
+
+    expect(
+      await screen.findByText(m.locationField_pickRequiredError()),
+    ).toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveFocus();
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('keeps a saved location that was never picked, and allows clearing it', async () => {
+    const input = await renderForm();
+    expect(input.value).toBe('London');
+
+    submit();
+    await waitFor(() =>
+      expect(mocks.updateProfile).toHaveBeenCalledWith({
+        data: expect.objectContaining({ location: 'London' }),
+      }),
+    );
+
+    mocks.updateProfile.mockClear();
+    typeLocation(input, '');
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(
+      screen.queryByText(m.locationField_pickRequiredError()),
+    ).not.toBeInTheDocument();
+  });
+});

@@ -42,6 +42,7 @@ const jobs = {
     (_, index): PublicJobCard => ({
       id: `job-${index + 1}`,
       object: 'job_card',
+      customFieldValues: {},
       slug: `role-${index + 1}`,
       title: `Role ${index + 1}`,
       description: '<p>Build useful tools.</p>',
@@ -59,7 +60,12 @@ const jobs = {
       isFeatured: false,
       isSponsored: false,
       summary: 'Build useful tools.',
-      company: { slug: 'acme', name: 'Acme', logoUrl: null },
+      company: {
+        slug: 'acme',
+        name: 'Acme',
+        logoUrl: null,
+        customFieldValues: {},
+      },
       categories: [{ slug: 'engineering', name: 'Engineering' }],
       skills: [],
       links: {

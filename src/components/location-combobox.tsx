@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from 'react';
 
 import { MapPin, X } from 'lucide-react';
 
@@ -23,9 +30,45 @@ export interface LocationSuggestionState {
   suggestions: LocationSuggestionVM[];
   loading: boolean;
   onQueryChange: (query: string) => void;
+  /** Resolve a worldwide pick before committing it; null cancels the pick. */
+  resolvePick?: (
+    place: LocationSuggestionVM,
+  ) => Promise<LocationSuggestionVM | null>;
+  error?: string;
+  resolving?: boolean;
+  /** Called after the visitor picks a suggestion. */
+  onPicked?: () => void;
 }
 
-interface LocationComboboxProps extends LocationSuggestionState {
+/** Suggestions that can also resolve typed text the visitor never picked. */
+export interface LocationSearchState extends LocationSuggestionState {
+  /** The top place for `text`, or `null` when nothing matches. */
+  resolve: (text: string) => Promise<LocationSuggestionVM | null>;
+}
+
+/** What a search submit should do about the location field. */
+export type LocationPendingResolution =
+  /** Nothing typed beyond the current place: search with it as-is. */
+  | { kind: 'none' }
+  /** Typed text resolved to its top place: search with this one. */
+  | { kind: 'resolved'; place: { slug: string; name: string } }
+  /** Typed text matches no place: the field says so; do not search. */
+  | { kind: 'unmatched' }
+  /** A newer interaction superseded this resolution: do nothing. */
+  | { kind: 'cancelled' };
+
+export interface LocationComboboxHandle {
+  /** Whether the field holds typed text that is not the current place. */
+  hasPendingText: () => boolean;
+  /**
+   * Settle typed-but-unpicked text before a search runs, so a visitor who
+   * types "Lond" and taps Search gets London rather than a dropped location.
+   */
+  resolvePending: () => Promise<LocationPendingResolution>;
+}
+
+interface LocationComboboxProps extends LocationSearchState {
+  ref?: Ref<LocationComboboxHandle>;
   /** The active location slug from the URL (cold load), if any. */
   value?: string;
   /** Display name for the active slug when known (e.g. a /jobs/locations page). */
@@ -45,7 +88,9 @@ interface LocationComboboxProps extends LocationSuggestionState {
 /**
  * Location search field — the hosted board's `board-place-search-field`: type a
  * place name, pick from resolved `places.list({ q })` autocomplete suggestions,
- * and apply its slug as the jobs location filter.
+ * and apply its slug as the jobs location filter. Text typed but never picked
+ * stays in the field; the host form calls `resolvePending()` on submit to
+ * search with its top place, or to show that no place matches.
  *
  * The route owns the debounced API request. This component composes the owned
  * shadcn Combobox and InputGroup primitives around that external async state.
@@ -58,13 +103,19 @@ export function LocationCombobox({
   suggestions,
   loading,
   onQueryChange,
+  resolve,
   className,
   inputClassName,
+  ref,
 }: LocationComboboxProps) {
   const [text, setText] = useState(valueLabel ?? value ?? '');
   const [open, setOpen] = useState(false);
+  /** Typed text a search submit could not resolve to any place. */
+  const [unmatched, setUnmatched] = useState<string | null>(null);
+  const unmatchedId = useId();
   const anchorRef = useComboboxAnchor();
   const inputRef = useRef<HTMLInputElement>(null);
+  const resolutionGenerationRef = useRef(0);
   /**
    * Set when THIS component asks the caller to drop its resolved place,
    * because the visitor edited the label. The resulting `value → undefined`
@@ -79,6 +130,7 @@ export function LocationCombobox({
   const invalidatedRef = useRef(false);
 
   useEffect(() => {
+    resolutionGenerationRef.current += 1;
     const resolved = valueLabel ?? value;
 
     if (resolved) {
@@ -98,7 +150,48 @@ export function LocationCombobox({
     setText('');
   }, [value, valueLabel]);
 
+  useEffect(
+    () => () => {
+      resolutionGenerationRef.current += 1;
+    },
+    [],
+  );
+
+  const pendingText = () => {
+    const typed = text.trim();
+    if (!typed) return null;
+    if (value && text === (valueLabel ?? value)) return null;
+    return typed;
+  };
+
+  useImperativeHandle(ref, () => ({
+    hasPendingText: () => pendingText() !== null,
+    resolvePending: async () => {
+      const generation = ++resolutionGenerationRef.current;
+      const typed = pendingText();
+      if (typed === null) return { kind: 'none' };
+      const place = await resolve(typed);
+      if (generation !== resolutionGenerationRef.current) {
+        return { kind: 'cancelled' };
+      }
+      if (!place) {
+        setUnmatched(typed);
+        setOpen(true);
+        inputRef.current?.focus();
+        return { kind: 'unmatched' };
+      }
+      setUnmatched(null);
+      setText(place.name);
+      return {
+        kind: 'resolved',
+        place: { slug: place.slug, name: place.name },
+      };
+    },
+  }));
+
   const clear = () => {
+    resolutionGenerationRef.current += 1;
+    setUnmatched(null);
     setText('');
     setOpen(false);
     onQueryChange('');
@@ -114,7 +207,11 @@ export function LocationCombobox({
       autoComplete="none"
       autoHighlight
       open={
-        open && (loading || suggestions.length > 0 || text.trim().length >= 2)
+        open &&
+        (unmatched !== null ||
+          loading ||
+          suggestions.length > 0 ||
+          text.trim().length >= 2)
       }
       onOpenChange={(next, details) => {
         if (
@@ -133,9 +230,16 @@ export function LocationCombobox({
       itemToStringValue={(place: LocationSuggestionVM) => place.slug}
       isItemEqualToValue={(place, selected) => place.id === selected.id}
       onInputValueChange={(nextText, details) => {
+        // Base UI blanks the input when the popup closes with nothing
+        // picked. That erased what the visitor typed the moment they tapped
+        // Search (or anywhere else), so the search ran without a location.
+        // Keep the text; a submit resolves it instead.
+        if (details.reason === 'input-clear') return;
         setText(nextText);
         if (details.reason !== 'input-change') return;
 
+        resolutionGenerationRef.current += 1;
+        setUnmatched(null);
         onQueryChange(nextText);
         if (value && nextText !== (valueLabel ?? value)) {
           invalidatedRef.current = true;
@@ -145,6 +249,8 @@ export function LocationCombobox({
       }}
       onValueChange={(place) => {
         if (!place) return;
+        resolutionGenerationRef.current += 1;
+        setUnmatched(null);
         setText(place.name);
         setOpen(false);
         onSelect({ slug: place.slug, name: place.name });
@@ -157,6 +263,8 @@ export function LocationCombobox({
         aria-label={m.locationCombobox_locationAriaLabel()}
         placeholder={m.locationCombobox_placeholderText()}
         showTrigger={false}
+        aria-invalid={unmatched !== null || undefined}
+        aria-describedby={unmatched !== null ? unmatchedId : undefined}
         onFocus={() => {
           if (suggestions.length > 0) setOpen(true);
         }}
@@ -184,7 +292,15 @@ export function LocationCombobox({
         ) : null}
       </ComboboxInput>
       <ComboboxContent anchor={anchorRef} aria-busy={loading}>
-        {loading && suggestions.length === 0 ? (
+        {unmatched !== null ? (
+          <p
+            id={unmatchedId}
+            role="alert"
+            className="text-destructive px-3 py-2 text-sm"
+          >
+            {m.locationCombobox_noMatchText({ location: unmatched })}
+          </p>
+        ) : loading && suggestions.length === 0 ? (
           <div
             role="status"
             className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm"

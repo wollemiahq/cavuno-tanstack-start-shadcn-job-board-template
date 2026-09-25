@@ -47,6 +47,7 @@ function jobs(slug: string) {
   const job: PublicJobCard = {
     id: `job-${slug}`,
     object: 'job_card',
+    customFieldValues: {},
     slug: `job-${slug}`,
     title: `${slug} job`,
     description: null,
@@ -64,7 +65,7 @@ function jobs(slug: string) {
     isFeatured: false,
     isSponsored: false,
     summary: null,
-    company: { slug, name: slug, logoUrl: null },
+    company: { slug, name: slug, logoUrl: null, customFieldValues: {} },
     categories: [],
     skills: [],
     links: {

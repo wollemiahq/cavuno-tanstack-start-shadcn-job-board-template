@@ -103,9 +103,15 @@ const similar: PublicJobCard[] = [
   {
     id: 'job_2',
     object: 'job_card',
+    customFieldValues: {},
     slug: 'staff-engineer',
     title: 'Staff Engineer',
-    company: { slug: 'beta-co', name: 'Beta Co', logoUrl: null },
+    company: {
+      slug: 'beta-co',
+      name: 'Beta Co',
+      logoUrl: null,
+      customFieldValues: {},
+    },
     publishedAt: null,
     employmentType: 'full_time',
     remoteOption: 'remote',
