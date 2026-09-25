@@ -24,6 +24,7 @@ async function getRss(): Promise<Response> {
 const olderJob: PublicJobCard = {
   id: 'older',
   object: 'job_card',
+  customFieldValues: {},
   slug: 'older-role',
   title: 'Design & Research',
   description: '<p>Build durable systems.</p>',
@@ -41,7 +42,12 @@ const olderJob: PublicJobCard = {
   isFeatured: false,
   isSponsored: false,
   summary: null,
-  company: { slug: 'acme', name: 'Acme & Co', logoUrl: null },
+  company: {
+    slug: 'acme',
+    name: 'Acme & Co',
+    logoUrl: null,
+    customFieldValues: {},
+  },
   categories: [{ slug: 'design', name: 'Design & UX' }],
   skills: [],
   links: {

@@ -20,6 +20,7 @@ import type { PublicJobCard } from '@cavuno/board';
 const job: PublicJobCard = {
   id: 'job-1',
   object: 'job_card',
+  customFieldValues: {},
   slug: 'product-designer',
   title: 'Product designer',
   description: '<p>Own product discovery.</p>',
@@ -37,7 +38,7 @@ const job: PublicJobCard = {
   isFeatured: false,
   isSponsored: false,
   summary: null,
-  company: { slug: 'acme', name: 'Acme', logoUrl: null },
+  company: { slug: 'acme', name: 'Acme', logoUrl: null, customFieldValues: {} },
   categories: [],
   skills: [],
   links: {
