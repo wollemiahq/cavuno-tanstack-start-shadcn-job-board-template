@@ -19,6 +19,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  salaryPlaceListLabel,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -76,7 +77,7 @@ function SalariesHub() {
     jobCount: x.jobCount,
   }));
   const locationItems: RailItem[] = locations.slice(0, PREVIEW).map((x) => ({
-    name: x.placeName,
+    name: salaryPlaceListLabel(x),
     href: salaryLocationPath(x.placeSlug),
     // Location index items carry no currency — never invent one.
     range:
