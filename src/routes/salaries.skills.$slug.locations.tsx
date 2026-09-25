@@ -14,6 +14,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  salaryPlaceListLabel,
   salarySkillInLocationPath,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
@@ -61,7 +62,7 @@ function SkillLocationsPage() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
   const items: RailItem[] = data.locations.map((l) => ({
-    name: l.placeName,
+    name: salaryPlaceListLabel(l),
     href: salarySkillInLocationPath(data.canonicalSlug, l.placeSlug),
     range:
       formatSalaryRange(

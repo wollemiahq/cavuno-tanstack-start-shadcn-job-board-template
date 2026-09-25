@@ -13,6 +13,7 @@ import {
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
   salaryPlaceTitle,
+  salaryPlaceListLabel,
   salarySkillInLocationPath,
   salarySkillLocationsPath,
   salaryTitleInLocationPath,
@@ -27,6 +28,21 @@ import {
   type SalaryLocationNode,
   type SeniorityRow,
 } from './salary-view-model';
+
+describe('salaryPlaceListLabel', () => {
+  it('prefers the disambiguated API label and falls back to the place name', () => {
+    expect(
+      salaryPlaceListLabel({
+        placeName: 'New York',
+        placeLabel: 'New York, NY',
+      }),
+    ).toBe('New York, NY');
+    expect(salaryPlaceListLabel({ placeName: 'New York' })).toBe('New York');
+    expect(
+      salaryPlaceListLabel({ placeName: 'New York', placeLabel: '   ' }),
+    ).toBe('New York');
+  });
+});
 
 /**
  * The salary mappers are Layer 1b — they own the derivations (median from
