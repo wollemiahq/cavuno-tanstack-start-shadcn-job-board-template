@@ -201,6 +201,17 @@ function renderHeader({
                 })),
                 loading: false,
                 onQueryChange: vi.fn(),
+                // Board places whose name starts with the typed text.
+                resolve: async (text: string) => {
+                  const place = locationSuggestions.find((candidate) =>
+                    candidate.name
+                      .toLowerCase()
+                      .startsWith(text.trim().toLowerCase()),
+                  );
+                  return place
+                    ? { countryCode: null, regionCode: null, ...place }
+                    : null;
+                },
               },
               keywordSuggestions: {
                 suggestions: keywordSuggestions,

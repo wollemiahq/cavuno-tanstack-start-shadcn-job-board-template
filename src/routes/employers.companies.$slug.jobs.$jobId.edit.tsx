@@ -21,8 +21,9 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getCompanyWorkspace, getJob } from '../server/employers';
 import { getRemotePermits, getSeoBase } from '../server/queries';
-import { useLocationSuggestions } from './-use-location-suggestions';
+import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
+import { resolveJobFormConstraints } from '@/board/job-form';
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
@@ -78,7 +79,9 @@ function EditJobPage() {
   const { workspace, job, remotePermits, status } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const locale = getLocale();
-  const officeLocationSuggestions = useLocationSuggestions(locale);
+  const officeLocationSuggestions = useGlobalLocationSuggestions({
+    countries: resolveJobFormConstraints(board).location.allowedCountries,
+  });
   const isDraft = job.status === 'draft';
 
   return (

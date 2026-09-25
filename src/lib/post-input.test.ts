@@ -17,7 +17,7 @@ const posting: JobPostingFormInput = {
   employmentType: 'full_time',
   remoteOption: 'remote',
   seniority: 'senior',
-  officeLocations: [{ displayName: 'Berlin', countryCode: 'DE' }],
+  officeLocations: [{ locationId: 'loc-berlin', displayName: 'Berlin, Germany' }],
   remoteWorkingPermits: [{ type: 'country', value: 'DE', label: 'Germany' }],
   remoteWorkPermitCountryCodes: ['DE'],
   customFieldValues: { visa_support: true, stack: ['react', 'ros'] },
@@ -42,7 +42,7 @@ describe('toCreateJobPostingInput', () => {
         employmentType: 'full_time',
         remoteOption: 'remote',
         seniority: 'senior',
-        officeLocations: [{ displayName: 'Berlin', countryCode: 'DE' }],
+        officeLocations: [{ locationId: 'loc-berlin', displayName: 'Berlin, Germany' }],
         remoteWorkingPermits: [
           { type: 'country', value: 'DE', label: 'Germany' },
         ],

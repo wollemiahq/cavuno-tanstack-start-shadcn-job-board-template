@@ -161,11 +161,12 @@ type LogoStatus =
   | { kind: 'working' }
   | { kind: 'error'; message: string };
 
+/** A picked worldwide location; `countryCode` only feeds the country lock. */
 type OfficeLocationDraft = {
   key: string;
+  locationId: string;
   displayName: string;
   countryCode?: string;
-  region?: string;
 };
 
 type PostJobFormState = {
@@ -317,10 +318,9 @@ export function PostJobForm({
   }
 
   function addOfficeLocation(location: OfficeLocationDraft) {
-    // Mirror the server rule exactly: a
-    // location is rejected only when it HAS a country code outside the
-    // board's list. Free text carries no country and is left alone there,
-    // so rejecting it here would be stricter than the platform.
+    // Suggestions are already narrowed to the board's allowed countries;
+    // this is the backstop the server also applies: a pick whose country is
+    // outside the list is refused here rather than on submit.
     const allowedCountries = jobForm.location.allowedCountries;
     if (
       allowedCountries &&
@@ -662,7 +662,10 @@ export function PostJobForm({
           readString(form, 'employmentType') ?? allowedEmploymentTypes[0],
         remoteOption: String(form.get('remoteOption')),
         officeLocations: jobForm.location.visible
-          ? officeLocations.map(({ key: _key, ...location }) => location)
+          ? officeLocations.map(({ locationId, displayName }) => ({
+              locationId,
+              displayName,
+            }))
           : [],
         applicationUrl: shows('applyMethod')
           ? (normalizeApplicationTarget(readString(form, 'applicationUrl')) ??
@@ -820,13 +823,10 @@ export function PostJobForm({
               onAddSuggestion={(place: LocationSuggestionVM) =>
                 addOfficeLocation({
                   key: place.id,
-                  displayName: place.name,
+                  locationId: place.id,
+                  displayName: place.fullName ?? place.name,
                   countryCode: place.countryCode ?? undefined,
-                  region: place.regionCode ?? undefined,
                 })
-              }
-              onAddFreeText={(text) =>
-                addOfficeLocation({ key: `text:${text}`, displayName: text })
               }
               onRemove={(key) =>
                 updateFormState({

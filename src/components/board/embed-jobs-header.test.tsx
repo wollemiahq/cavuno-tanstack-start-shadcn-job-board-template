@@ -45,6 +45,7 @@ const locationSuggestions = {
   ],
   loading: false,
   onQueryChange: () => {},
+  resolve: async () => null,
 };
 
 async function renderHeader(

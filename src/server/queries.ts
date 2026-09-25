@@ -50,6 +50,7 @@ import type {
   JobAlertUpdatePreferenceInput,
   JobsListQuery,
   JobsSearchBody,
+  LocationSearchQuery,
   PlacesListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
@@ -264,6 +265,21 @@ export const searchPlaces = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
       getBoard().taxonomy.places.list(data, { headers: h }),
+    ),
+  );
+
+/**
+ * Worldwide location autocomplete (countries, regions, cities, localities)
+ * for inputs that must commit a real place — job office locations and
+ * candidate locations. Unlike `searchPlaces`, results are not limited to
+ * places the board's jobs already use.
+ */
+export const searchLocations = createServerFn({ method: 'GET' })
+  .validator((input: LocationSearchQuery) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().locations.search(data, { headers: h }),
     ),
   );
 

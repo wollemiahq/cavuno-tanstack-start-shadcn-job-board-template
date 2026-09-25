@@ -7,6 +7,7 @@ import { Search, X } from 'lucide-react';
 import { m } from '../paraglide/messages';
 
 import type { HeaderSearchProps } from '@/components/Header';
+import type { LocationComboboxHandle } from '@/components/location-combobox';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import {
@@ -82,6 +83,7 @@ export function HeaderSearchEnhanced({
     setMarket,
   } = fields;
   const keywordInputRef = useRef<HTMLInputElement>(null);
+  const locationRef = useRef<LocationComboboxHandle>(null);
   const scopePlaceholders = {
     jobs: jobsPlaceholder,
     companies: companiesPlaceholder,
@@ -95,12 +97,28 @@ export function HeaderSearchEnhanced({
       data-search-scope={search.scope}
       onSubmit={(event) => {
         event.preventDefault();
-        search.onSubmit({
+        const submission = {
           scope: search.scope,
           query: value.trim() || undefined,
           location,
           term,
           market,
+        };
+        const field = locationRef.current;
+        if (!field?.hasPendingText()) {
+          search.onSubmit(submission);
+          return;
+        }
+        // Typed location text nobody picked: search with its top place, or
+        // stay put while the field says nothing matches.
+        void field.resolvePending().then((pending) => {
+          if (pending.kind === 'unmatched') return;
+          if (pending.kind === 'resolved') setLocation(pending.place);
+          search.onSubmit({
+            ...submission,
+            location:
+              pending.kind === 'resolved' ? pending.place : submission.location,
+          });
         });
       }}
       className="col-span-2 row-start-2 w-full min-w-0 py-2 xl:col-auto xl:row-auto xl:flex-1 xl:py-0"
@@ -122,6 +140,7 @@ export function HeaderSearchEnhanced({
             <LazyJobsSearchFields
               keywordSuggestions={search.keywordSuggestions}
               locationSuggestions={search.locationSuggestions}
+              locationRef={locationRef}
               value={value}
               location={location}
               placeholder={scopePlaceholders.jobs}
@@ -192,6 +211,7 @@ export function HeaderSearchEnhanced({
             <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
               <LazyLocationCombobox
                 {...search.locationSuggestions}
+                ref={locationRef}
                 value={location?.slug}
                 valueLabel={location?.name}
                 onSelect={setLocation}

@@ -1274,24 +1274,72 @@ describe('EmployerJobForm — office-location country lock', () => {
     await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
   });
 
-  it('refuses free text while a country lock is active — it carries no country to check', async () => {
-    // Nothing downstream resolves it on this route, so accepting it would be
-    // a hole in the lock this form exists to enforce.
+  it('adds nothing for typed text that was never picked, and Enter never saves', async () => {
     await renderEdit(germany);
     const field = screen.getByLabelText(m.postJob_officeLocationsLabel());
-    fireEvent.change(field, { target: { value: 'Paris' } });
+    fireEvent.input(field, {
+      target: { value: 'Paris' },
+      inputType: 'insertText',
+    });
     fireEvent.keyDown(field, { key: 'Enter' });
 
-    expect(
-      await screen.findByText(
-        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'DE' }),
-      ),
-    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', {
         name: m.placeTags_removeAriaLabel({ name: 'Paris' }),
       }),
     ).toBeNull();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
+  });
+
+  it('sends a picked location by id and keeps a stored one by its text', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const munich = {
+      id: 'loc-munich',
+      slug: 'loc-munich',
+      name: 'Munich',
+      fullName: 'Munich, Bavaria, Germany',
+      contextLabel: 'Bavaria, Germany',
+      countryCode: 'DE',
+      regionCode: null,
+    };
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={{
+          suggestions: [munich],
+          loading: false,
+          onQueryChange: () => {},
+        }}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        jobForm={germany}
+      />,
+    );
+
+    fireEvent.input(screen.getByLabelText(m.postJob_officeLocationsLabel()), {
+      target: { value: 'Muni' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(await screen.findByRole('option', { name: /Munich/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.updateJob.mock.calls[0]![0].data.body.officeLocations).toEqual(
+      [
+        { query: 'Berlin, Germany' },
+        { locationId: 'loc-munich', displayName: 'Munich, Bavaria, Germany' },
+      ],
+    );
   });
 
   it('does not block when the board sets no country restriction', async () => {

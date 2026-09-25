@@ -3,8 +3,9 @@ import { Navigate, createFileRoute, getRouteApi } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { PostJobPageView, createPostLoader } from './-post-route-support';
-import { useLocationSuggestions } from './-use-location-suggestions';
+import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
+import { resolveJobFormConstraints } from '@/board/job-form';
 import { MembershipPostGate } from '@/components/board/membership-post-gate';
 import { useRootSession } from '@/components/root-session';
 import { Spinner } from '@/components/ui/spinner';
@@ -32,7 +33,9 @@ function PostJobPage() {
   const search = Route.useSearch();
   const { board, offerGate } = rootApi.useLoaderData();
   const { user, ready, employerCompanies } = useRootSession();
-  const officeLocationSuggestions = useLocationSuggestions(getLocale());
+  const officeLocationSuggestions = useGlobalLocationSuggestions({
+    countries: resolveJobFormConstraints(board).location.allowedCountries,
+  });
   const signedIn = ready && user !== null;
   const handoff = employerPostDestination(
     signedIn ? user : null,

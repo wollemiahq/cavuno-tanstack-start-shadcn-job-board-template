@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { Briefcase, Pencil, Trash2 } from 'lucide-react';
@@ -38,7 +38,12 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Item,
@@ -98,8 +103,8 @@ function toDraft(item: CandidateExperience): Draft {
  * Work experience — list + add/edit/delete, over `board.me.profile`'s
  * `listExperience` / `createExperience` / `updateExperience` /
  * `deleteExperience`. The body is a merge-patch on edit (empty clears).
- * Dates are month-granular (stored as `YYYY-MM-01`); location offers board
- * place suggestions but stays a free string on the API.
+ * Dates are month-granular (stored as `YYYY-MM-01`); location is a string on
+ * the API, but only a picked worldwide location suggestion is saved.
  */
 export function ExperienceSection({
   items,
@@ -114,13 +119,25 @@ export function ExperienceSection({
   const [editing, setEditing] = useState<Editing>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [pending, setPending] = useState(false);
+  // Typed location text is a search until a suggestion is picked; a stored
+  // location starts settled.
+  const [locationUnpicked, setLocationUnpicked] = useState(false);
+  const [locationPickError, setLocationPickError] = useState(false);
+  const locationInput = useRef<HTMLInputElement>(null);
 
   const open = (item: CandidateExperience | null) => {
     setEditing({ id: item ? item.id : null });
     setDraft(item ? toDraft(item) : EMPTY);
+    setLocationUnpicked(false);
+    setLocationPickError(false);
   };
 
   const submit = async () => {
+    if (locationUnpicked && draft.location.trim()) {
+      setLocationPickError(true);
+      locationInput.current?.focus();
+      return;
+    }
     setPending(true);
     const body = {
       title: draft.title.trim(),
@@ -184,19 +201,42 @@ export function ExperienceSection({
                 }
               />
             </Field>
-            <Field className="gap-1.5 sm:col-span-2">
+            <Field
+              className="gap-1.5 sm:col-span-2"
+              data-invalid={locationPickError || undefined}
+            >
               <FieldLabel htmlFor="experience-location">
                 {m.experienceSection_locationLabel()}
               </FieldLabel>
               <LocationSuggestField
                 id="experience-location"
+                inputRef={locationInput}
                 value={draft.location}
-                onValueChange={(location) =>
-                  setDraft((prev) => ({ ...prev, location }))
+                invalid={locationPickError}
+                describedBy={
+                  locationPickError ? 'experience-location-error' : undefined
                 }
+                onValueChange={(location) => {
+                  setDraft((prev) => ({ ...prev, location }));
+                  setLocationUnpicked(location.trim() !== '');
+                  setLocationPickError(false);
+                }}
+                onPick={(place) => {
+                  setDraft((prev) => ({
+                    ...prev,
+                    location: place.fullName ?? place.name,
+                  }));
+                  setLocationUnpicked(false);
+                  setLocationPickError(false);
+                }}
                 searchingText={m.locationCombobox_searchingText()}
                 {...locationSuggestions}
               />
+              {locationPickError ? (
+                <FieldError id="experience-location-error">
+                  {m.locationField_pickRequiredError()}
+                </FieldError>
+              ) : null}
             </Field>
             <MonthYearField
               idPrefix="experience-start"

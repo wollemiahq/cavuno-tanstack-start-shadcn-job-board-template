@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState, type Ref } from 'react';
 
 import { MapPin } from 'lucide-react';
 
@@ -19,34 +19,46 @@ import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
 /**
- * Free-text location field with board place suggestions — the profile-form
- * variant of `LocationCombobox`. Profile locations are free strings on the
- * API, so unlike the jobs filter (which only commits a resolved place slug)
- * every keystroke IS the value; picking a suggestion just replaces it with
- * the resolved place name. The route owns the debounced suggestion request
- * and passes the `LocationSuggestionState` down.
+ * Single location field over worldwide location suggestions — the profile
+ * and experience variant of `LocationCombobox`. The API stores these
+ * locations as plain strings, but only a picked suggestion is a real place:
+ * `onValueChange` reports typing (the text is not a value yet) and `onPick`
+ * reports the place whose `fullName` becomes the value. The host form
+ * blocks a save while typed text is unpicked. The route owns the debounced
+ * suggestion request and passes the `LocationSuggestionState` down.
  */
 export function LocationSuggestField({
   id,
   value,
   onValueChange,
+  onPick,
   suggestions,
   loading,
   onQueryChange,
+  onPicked,
   placeholder,
   searchingText,
+  invalid = false,
+  describedBy,
+  inputRef,
   className,
 }: LocationSuggestionState & {
   id: string;
   value: string;
+  /** Typed text — a query until a suggestion is picked. */
   onValueChange: (text: string) => void;
+  onPick: (place: LocationSuggestionVM) => void;
   placeholder?: string;
   searchingText: string;
+  /** Marks the input invalid (typed text left unpicked). */
+  invalid?: boolean;
+  /** Id of the host's error message for the input. */
+  describedBy?: string;
+  inputRef?: Ref<HTMLInputElement>;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useComboboxAnchor();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <Combobox
@@ -81,7 +93,8 @@ export function LocationSuggestField({
       }}
       onValueChange={(place) => {
         if (!place) return;
-        onValueChange(place.name);
+        onPick(place);
+        onPicked?.();
         setOpen(false);
       }}
     >
@@ -92,6 +105,8 @@ export function LocationSuggestField({
         type="text"
         placeholder={placeholder}
         showTrigger={false}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         onFocus={() => {
           if (suggestions.length > 0 && value.trim()) setOpen(true);
         }}

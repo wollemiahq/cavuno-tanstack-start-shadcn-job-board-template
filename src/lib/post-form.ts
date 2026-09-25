@@ -31,10 +31,14 @@ export type JobPostingFormInput = {
   remoteOption: string;
   seniority?: string;
   /** Resolved office places (display name + optional geo codes). */
+  /**
+   * Picked worldwide locations: `locationId` resolves the place server-side;
+   * `displayName` (the pick's full name) keeps the entry if that lookup is
+   * briefly unavailable.
+   */
   officeLocations: {
+    locationId: string;
     displayName: string;
-    countryCode?: string;
-    region?: string;
   }[];
   /** Remote geographic restriction: worldwide, or specific countries. */
   remoteWorkingPermits?: { type: string; value: string; label: string }[];

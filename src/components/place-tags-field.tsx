@@ -24,21 +24,21 @@ export type PlaceTag = { key: string; label: string };
 
 /**
  * Multi-place picker: committed places render as removable tags over one
- * board place-suggest input (the SDK `places.list({ q })` autocomplete the
- * route owns via `useLocationSuggestions`). Suggestion picks commit resolved
- * places; when the caller passes `onAddFreeText`, pressing Enter on
- * unresolved text commits it verbatim (the job-posting payload accepts
- * display-name-only office locations). Enter never submits the host form.
+ * suggest input whose options the route owns (worldwide location search for
+ * office locations, a static list for remote permits). Only a picked
+ * suggestion becomes a tag — typed text is a query, never a value, so every
+ * tag is a real place. Enter picks the highlighted suggestion or does
+ * nothing; it never submits the host form.
  */
 export function PlaceTagsField({
   id,
   tags,
   onAddSuggestion,
-  onAddFreeText,
   onRemove,
   suggestions,
   loading,
   onQueryChange,
+  onPicked,
   placeholder,
   searchingText,
   removeAriaLabel,
@@ -49,8 +49,6 @@ export function PlaceTagsField({
   id: string;
   tags: PlaceTag[];
   onAddSuggestion: (place: LocationSuggestionVM) => void;
-  /** Enables committing unresolved text on Enter. */
-  onAddFreeText?: (text: string) => void;
   onRemove: (key: string) => void;
   placeholder?: string;
   searchingText: string;
@@ -72,15 +70,7 @@ export function PlaceTagsField({
 
   const commitSuggestion = (place: LocationSuggestionVM) => {
     onAddSuggestion(place);
-    setText('');
-    onQueryChange('');
-    setOpen(false);
-  };
-
-  const commitFreeText = () => {
-    const value = text.trim();
-    if (!value || !onAddFreeText) return;
-    onAddFreeText(value);
+    onPicked?.();
     setText('');
     onQueryChange('');
     setOpen(false);
@@ -160,13 +150,10 @@ export function PlaceTagsField({
           showTrigger={false}
           disabled={disabled}
           onKeyDown={(event) => {
-            if (event.key !== 'Enter') return;
-            // Enter inside this field must never submit the host form; with
+            // Enter inside this field must never submit the host form. With
             // suggestions open Base UI commits the highlighted place on the
-            // same event, otherwise commit the raw text when allowed.
-            event.preventDefault();
-            if (open && available.length > 0) return;
-            commitFreeText();
+            // same event; with none there is nothing to add.
+            if (event.key === 'Enter') event.preventDefault();
           }}
           onFocus={() => {
             // Static option sets (the permit picker) list on refocus; async

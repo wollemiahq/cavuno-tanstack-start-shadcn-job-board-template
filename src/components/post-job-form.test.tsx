@@ -67,6 +67,35 @@ const plans: JobPostingPlan[] = [
   },
 ];
 
+/** A worldwide location-search result, as the route's hook maps it. */
+const berlin = {
+  id: 'loc-berlin',
+  slug: 'loc-berlin',
+  name: 'Berlin',
+  fullName: 'Berlin, Germany',
+  contextLabel: 'Germany',
+  countryCode: 'DE',
+  regionCode: null,
+};
+
+const officeLocationSuggestions = {
+  suggestions: [berlin],
+  loading: false,
+  onQueryChange: () => {},
+};
+
+/** Search the office-location picker and pick the Berlin suggestion. */
+function pickBerlin() {
+  const officeLocations = screen.getByLabelText(
+    m.postJob_officeLocationsLabel(),
+  );
+  fireEvent.input(officeLocations, {
+    target: { value: 'Berl' },
+    inputType: 'insertText',
+  });
+  fireEvent.click(screen.getByRole('option', { name: /Berlin/ }));
+}
+
 afterEach(cleanup);
 
 describe('PostJobForm', () => {
@@ -87,11 +116,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={onSubmit}
         onLogoFetch={vi.fn()}
@@ -121,13 +146,9 @@ describe('PostJobForm', () => {
     fireEvent.change(screen.getByLabelText(m.postJob_applicationUrlLabel()), {
       target: { value: 'acme.example/careers/staff-designer' },
     });
-    // Hybrid (the default) requires somewhere to be on-site at — commit a
-    // free-text office location through the place picker.
-    const officeLocations = screen.getByLabelText(
-      m.postJob_officeLocationsLabel(),
-    );
-    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
-    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+    // Hybrid (the default) requires somewhere to be on-site at — pick an
+    // office location from the worldwide search.
+    pickBerlin();
     fireEvent.change(screen.getByLabelText(m.postJob_salaryMinLabel()), {
       target: { value: '140000' },
     });
@@ -153,7 +174,9 @@ describe('PostJobForm', () => {
         description: '<p>Lead product design across the company.</p>',
         employmentType: 'full_time',
         remoteOption: 'hybrid',
-        officeLocations: [{ displayName: 'Berlin' }],
+        officeLocations: [
+          { locationId: 'loc-berlin', displayName: 'Berlin, Germany' },
+        ],
         applicationUrl: 'https://acme.example/careers/staff-designer',
         salaryMin: 140000,
         salaryMax: 180000,
@@ -202,11 +225,7 @@ describe('PostJobForm', () => {
         ]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={onSubmit}
         onLogoFetch={vi.fn()}
@@ -226,11 +245,7 @@ describe('PostJobForm', () => {
     ]) {
       fireEvent.change(screen.getByLabelText(label), { target: { value } });
     }
-    const officeLocations = screen.getByLabelText(
-      m.postJob_officeLocationsLabel(),
-    );
-    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
-    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+    pickBerlin();
 
     const submitButton = screen
       .getAllByRole('button')
@@ -251,11 +266,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={[]}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -277,11 +288,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -312,11 +319,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         initialPlanId="plan-premium"
         onSubmit={vi.fn()}
@@ -342,11 +345,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -390,11 +389,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -435,11 +430,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en-AU"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={[
           {
             ...plans[0]!,
@@ -472,11 +463,7 @@ describe('PostJobForm', () => {
         }}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -516,11 +503,7 @@ describe('PostJobForm — board job-form constraints', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         jobForm={{ object: 'public_board', jobForm }}
         onSubmit={onSubmit}
@@ -543,11 +526,7 @@ describe('PostJobForm — board job-form constraints', () => {
     ] as const) {
       fireEvent.change(screen.getByLabelText(label), { target: { value } });
     }
-    const officeLocations = screen.getByLabelText(
-      m.postJob_officeLocationsLabel(),
-    );
-    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
-    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+    pickBerlin();
   }
 
   function submit() {
@@ -693,11 +672,7 @@ describe('PostJobForm — operator form layout', () => {
         jobForm={layout}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={onSubmit}
         onLogoFetch={vi.fn()}

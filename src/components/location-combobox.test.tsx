@@ -52,6 +52,7 @@ const locationSearchProps = {
   suggestions: [suggestion({})],
   loading: false,
   onQueryChange: vi.fn(),
+  resolve: vi.fn(async () => null),
 };
 
 describe('LocationCombobox — resolved suggestion presentation', () => {
@@ -289,6 +290,7 @@ describe('LocationCombobox — accessible autocomplete semantics', () => {
         suggestions={locationSearchProps.suggestions}
         loading={false}
         onQueryChange={onQueryChange}
+        resolve={locationSearchProps.resolve}
         onSelect={() => {}}
         onClear={() => {}}
       />,

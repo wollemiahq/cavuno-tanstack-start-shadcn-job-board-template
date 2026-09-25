@@ -36,7 +36,7 @@ import { getLocale } from '../paraglide/runtime';
 import { getAccount, type AccountData } from '../server/account';
 import { getSeoBase } from '../server/queries';
 import { EmployerAccountPageView } from './-account-employer-page';
-import { useLocationSuggestions } from './-use-location-suggestions';
+import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
 import { boardForms } from '@/board/form-layout';
 import {
@@ -91,8 +91,8 @@ function CandidateAccountPage({
     objectReferences,
   } = account;
   const { board } = rootApi.useLoaderData();
-  const profileLocationSuggestions = useLocationSuggestions(getLocale());
-  const experienceLocationSuggestions = useLocationSuggestions(getLocale());
+  const profileLocationSuggestions = useGlobalLocationSuggestions();
+  const experienceLocationSuggestions = useGlobalLocationSuggestions();
 
   // The operator's talent form: which fields show, which are required, and
   // the order of the profile sections below the profile card. Without a
