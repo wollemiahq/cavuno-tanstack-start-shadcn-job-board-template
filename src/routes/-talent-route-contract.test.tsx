@@ -24,6 +24,11 @@ import { TalentUnlockGate } from './-talent-unlock-gate';
 import { Route as ProfileRoute } from './p.$handle';
 import { Route as TalentRoute } from './talent.index';
 
+import {
+  parseTalentSearch,
+  talentListingLoaderDeps,
+  type TalentListingSearch,
+} from '@/lib/talent-search';
 import { renderRouted } from '@/test/render-routed';
 
 const getTalentIndexPage =
@@ -74,11 +79,7 @@ function apiError(status: number, code: string) {
 const talentLoader = createTalentDirectoryLoader({ getTalentIndexPage });
 const profileLoader = createTalentProfileLoader({ getTalentProfilePage });
 
-function talentLoaderContext(deps: {
-  q?: string;
-  skill?: string;
-  page?: number;
-}) {
+function talentLoaderContext(deps: TalentListingSearch) {
   return {
     abortController: new AbortController(),
     preload: false,
@@ -146,6 +147,7 @@ beforeEach(() => {
     restricted: false,
     head: { meta: [], links: [] },
     jsonLd: [],
+    customFilterFields: [],
   });
   getTalentProfilePage.mockReset();
   getTalentProfilePage.mockResolvedValue({
@@ -221,6 +223,23 @@ describe('talent directory route — query and capability contracts', () => {
     });
   });
 
+  it('passes URL-backed candidate profile-field filters to the directory read', async () => {
+    const deps = talentListingLoaderDeps(
+      parseTalentSearch({
+        'cf.open_to_mentoring': true,
+        selectedTalent: 'ada-lovelace',
+      }),
+    );
+
+    await talentLoader(talentLoaderContext(deps));
+
+    expect(getTalentIndexPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        customFields: { 'cf.open_to_mentoring': true },
+      }),
+    });
+  });
+
   it('renders the restricted state for the employer-only directory code', async () => {
     getTalentIndexPage.mockResolvedValue({
       seo,
@@ -228,6 +247,7 @@ describe('talent directory route — query and capability contracts', () => {
       restricted: true,
       head: { meta: [], links: [] },
       jsonLd: [],
+      customFilterFields: [],
     });
 
     await expect(talentLoader(talentLoaderContext({}))).resolves.toMatchObject({

@@ -52,6 +52,11 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import {
+  pickCustomFieldSearch,
+  resolveCustomFieldFilters,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { TalentSearch } from '@/lib/talent-search';
 import {
@@ -71,6 +76,7 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
 export function TalentSearchPage({
   candidates,
   search = {},
+  customFilterFields,
   q,
   skill,
   count,
@@ -89,6 +95,8 @@ export function TalentSearchPage({
 }: {
   candidates: TalentCardVM[];
   search?: TalentSearch;
+  /** Public candidate profile fields for the "All filters" sheet. */
+  customFilterFields?: CustomFilterField[];
   /** Header-owned candidate query that drives the empty-state copy. */
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
@@ -244,6 +252,10 @@ export function TalentSearchPage({
     search.permitCountry ||
     search.interestedRole ||
     search.sort ||
+    resolveCustomFieldFilters(
+      customFilterFields ?? [],
+      pickCustomFieldSearch(search),
+    ).length > 0 ||
     viewingSourced,
   );
   const candidateVms = viewingSourced ? (sourcedVms ?? []) : candidates;
@@ -351,6 +363,7 @@ export function TalentSearchPage({
             <div className="py-3">
               <TalentFilters
                 search={search}
+                customFilterFields={customFilterFields}
                 lists={
                   workspace ? (
                     <TalentListsPicker

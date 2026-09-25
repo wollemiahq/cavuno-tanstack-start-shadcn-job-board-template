@@ -1,4 +1,9 @@
 import {
+  parseCustomFieldSearch,
+  pickCustomFieldSearch,
+  type CustomFieldSearch,
+} from '@/lib/custom-field-filters';
+import {
   pageSearchValue,
   parsePageParam,
   searchQueryString,
@@ -21,7 +26,8 @@ export type TalentListFilters = {
   interestedRole?: string;
 };
 
-export interface TalentSearch {
+/** Public candidate profile-field filters ride along as `cf.<key>`. */
+export interface TalentSearch extends CustomFieldSearch {
   /** 1-based page used by directory pagination; page 1 drops from the URL. */
   page?: number;
   /** Candidate name or headline query. */
@@ -91,7 +97,26 @@ export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
     selectedTalent: stringSearchValue(search.selectedTalent),
     list: stringSearchValue(search.list),
     sourced: stringSearchValue(search.sourced),
+    ...parseCustomFieldSearch(search),
   };
+}
+
+/**
+ * The `/talent` search a header keyword/place submission opens. The active
+ * directory filters, `cf.*` profile-field filters included, carry over; the
+ * page and a sourced-job view reset.
+ */
+export function talentSearchFromHeader(
+  current: UrlSearchInput,
+  submission: { query: string | undefined; place: string | undefined },
+): TalentSearch {
+  return parseTalentSearch({
+    ...parseTalentSearch(current),
+    q: submission.query,
+    place: submission.place,
+    page: undefined,
+    sourced: undefined,
+  });
 }
 
 /** Listing request inputs. `list` and `sourced` are chrome, not GET /talent. */
@@ -110,6 +135,7 @@ export function talentListingLoaderDeps(
     permitCountry: search.permitCountry,
     interestedRole: search.interestedRole,
     page: search.page,
+    ...pickCustomFieldSearch(search),
   };
 }
 

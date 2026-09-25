@@ -9,12 +9,18 @@ import { ListingAdResults } from './listing-ad-results';
 
 import type { CompanyCardVM } from '@/board/company-view-model';
 import type { BreadcrumbData } from '@/components/board/breadcrumb';
+import {
+  CompanyFilters,
+  type CompanyCustomFilters,
+} from '@/components/board/company-filters';
 import { CompanySearchResult } from '@/components/board/company-search-result';
 import {
   useListingAdRails,
   type AdPlacement,
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { Box } from '@/components/layout/box';
+import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
 import {
@@ -48,6 +54,7 @@ export function CompanySearchPage({
   query,
   searchUnavailable = false,
   markets,
+  customFilters,
   onPageChange,
   selectedCompany,
   onSelectedCompanyReplace,
@@ -66,6 +73,8 @@ export function CompanySearchPage({
   query?: string;
   searchUnavailable?: boolean;
   markets: Array<{ slug: string; name: string }>;
+  /** Public company profile fields for the "All filters" sheet; omit for none. */
+  customFilters?: CompanyCustomFilters;
   onPageChange: (page: number) => void;
   selectedCompany?: string;
   onSelectedCompanyReplace: (companySlug: string) => void;
@@ -80,7 +89,8 @@ export function CompanySearchPage({
   const page = clampPage(requestedPage, pageSize);
   const rails = useListingAdRails(ads, startAd, endAd);
   const currentHref = useLocation({ select: (location) => location.href });
-  const hasActiveSearch = Boolean(query || breadcrumb);
+  const hasCustomFilters = Boolean(customFilters?.active.length);
+  const hasActiveSearch = Boolean(query || breadcrumb || hasCustomFilters);
   const companyVms = companies;
   const companySlugs = companyVms.map((company) => company.slug);
   const selection = useSearchSelection({
@@ -122,6 +132,15 @@ export function CompanySearchPage({
         data-layout="company-search-page"
         className="md:flex md:h-full md:min-h-0 md:flex-col"
       >
+        {customFilters?.fields.length ? (
+          <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
+            <Container width="wide" gutter="0">
+              <div className="py-3">
+                <CompanyFilters {...customFilters} />
+              </div>
+            </Container>
+          </Box>
+        ) : null}
         <div
           data-slot="company-search-viewport"
           className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden"
@@ -150,7 +169,9 @@ export function CompanySearchPage({
                           ? m.companySearch_unavailableDescription()
                           : query
                             ? m.companiesIndex_noMatchText({ query })
-                            : m.companiesIndex_emptyText()}
+                            : hasCustomFilters
+                              ? m.companiesIndex_filterNoMatchText()
+                              : m.companiesIndex_emptyText()}
                       </EmptyDescription>
                     </EmptyHeader>
                     {hasActiveSearch && !searchUnavailable ? (

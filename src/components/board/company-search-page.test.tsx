@@ -23,6 +23,7 @@ import { CompanySearchPage } from './company-search-page';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
+import type { CustomFilterField } from '@/lib/custom-field-filters';
 import { m } from '@/paraglide/messages';
 import type { PublicCompany } from '@cavuno/board';
 
@@ -374,5 +375,123 @@ describe('CompanySearchPage — arrival scroll', () => {
     // A post-mount selection (as from an in-page click) must not yank the list.
     fireEvent.click(screen.getByRole('button', { name: 'select-acme' }));
     expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+});
+
+describe('CompanySearchPage — company profile-field filters', () => {
+  const stage: CustomFilterField = {
+    kind: 'choice',
+    key: 'stage',
+    label: 'Company stage',
+    options: [
+      { value: 'seed', label: 'Seed' },
+      { value: 'growth', label: 'Growth' },
+    ],
+  };
+  const hiringRemote: CustomFilterField = {
+    kind: 'flag',
+    key: 'hires_remote',
+    label: 'Hires remotely',
+  };
+
+  async function renderCompanies(
+    props: Partial<React.ComponentProps<typeof CompanySearchPage>>,
+  ) {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <CompanySearchPage
+          companies={[companyVm]}
+          count={1}
+          page={1}
+          pageSize={24}
+          markets={[]}
+          onPageChange={vi.fn()}
+          onSelectedCompanyReplace={vi.fn()}
+          onSelectedCompanyPush={vi.fn()}
+          detail={<p>Selected company details</p>}
+          {...props}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    render(<RouterProvider router={router} />);
+    await screen.findByRole('main');
+  }
+
+  it('stages profile-field choices in All filters and applies them together', async () => {
+    const onChange = vi.fn();
+    await renderCompanies({
+      customFilters: {
+        fields: [stage, hiringRemote],
+        active: [{ key: 'stage', values: ['growth'] }],
+        onChange,
+      },
+    });
+
+    const trigger = screen.getByRole('button', { name: /All filters/ });
+    expect(trigger).toHaveTextContent('1');
+    fireEvent.click(trigger);
+    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    fireEvent.click(within(sheet).getByRole('checkbox', { name: 'Seed' }));
+    fireEvent.click(
+      within(sheet).getByRole('checkbox', { name: 'Hires remotely' }),
+    );
+    expect(onChange).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      within(sheet).getByRole('button', { name: 'Apply filters' }),
+    );
+
+    expect(onChange).toHaveBeenCalledWith([
+      { key: 'stage', values: ['seed', 'growth'] },
+      { key: 'hires_remote', values: [true] },
+    ]);
+  });
+
+  it('resets active profile-field filters from the bar', async () => {
+    const onChange = vi.fn();
+    await renderCompanies({
+      customFilters: {
+        fields: [stage],
+        active: [{ key: 'stage', values: ['seed'] }],
+        onChange,
+      },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(onChange).toHaveBeenCalledWith([]);
+  });
+
+  it('has no All filters button when the board has no filterable fields', async () => {
+    await renderCompanies({
+      customFilters: { fields: [], active: [], onChange: vi.fn() },
+    });
+
+    expect(screen.queryByRole('button', { name: /All filters/ })).toBeNull();
+  });
+
+  it('offers a reset when filters match no companies', async () => {
+    await renderCompanies({
+      companies: [],
+      count: 0,
+      customFilters: {
+        fields: [stage],
+        active: [{ key: 'stage', values: ['seed'] }],
+        onChange: vi.fn(),
+      },
+    });
+
+    expect(
+      screen.getByText(m.companiesIndex_filterNoMatchText()),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: m.jobSearch_resetFiltersAction() }),
+    ).toHaveAttribute('href', '/companies');
   });
 });

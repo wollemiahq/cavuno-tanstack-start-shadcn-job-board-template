@@ -11,7 +11,10 @@ import {
   relatedSearchesToChips,
 } from '@/board/related-searches';
 import { JobSearchResult } from '@/components/board/job-search-result';
-import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
+import {
+  JobsFilterControls,
+  type JobsCustomFilters,
+} from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
 import {
   useListingAdRails,
@@ -41,6 +44,7 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { localizePath } from '@/lib/localized-path';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
@@ -48,13 +52,18 @@ import type { ListingFilters } from '@cavuno/board/filters';
 
 function JobsEmpty({
   filters,
+  hasCustomFilters,
   hasRouteConstraint,
 }: {
   filters: ListingFilters;
+  hasCustomFilters: boolean;
   hasRouteConstraint: boolean;
 }) {
   const hasFilters = Boolean(
-    filters.remoteOption || filters.employmentType || filters.seniority?.length,
+    filters.remoteOption ||
+    filters.employmentType ||
+    filters.seniority?.length ||
+    hasCustomFilters,
   );
   const noMatch = hasRouteConstraint || hasFilters || Boolean(filters.q);
 
@@ -93,6 +102,7 @@ export function JobSearchPage({
   page: requestedPage,
   pageSize,
   filters,
+  customFilters,
   language,
   heading,
   relatedSearches,
@@ -115,10 +125,12 @@ export function JobSearchPage({
   page: number;
   pageSize: number;
   filters: ListingFilters;
+  /** Job custom fields for the "All filters" sheet; omit for none. */
+  customFilters?: JobsCustomFilters;
   language: string;
   heading?: string;
   relatedSearches?: RelatedSearch[];
-  onFiltersChange: (next: ListingFilters) => void;
+  onFiltersChange: (next: ListingFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;
   selectedJob?: string;
   onSelectedJobReplace: (jobSlug: string) => void;
@@ -172,6 +184,7 @@ export function JobSearchPage({
             <div className="py-3">
               <JobsFilterControls
                 filters={filters}
+                customFilters={customFilters}
                 language={language}
                 onChange={onFiltersChange}
               />
@@ -195,6 +208,7 @@ export function JobSearchPage({
                   <div className="space-y-4">{resultsBar}</div>
                   <JobsEmpty
                     filters={filters}
+                    hasCustomFilters={Boolean(customFilters?.active.length)}
                     hasRouteConstraint={Boolean(heading)}
                   />
                 </div>

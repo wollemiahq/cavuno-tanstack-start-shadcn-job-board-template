@@ -1,4 +1,5 @@
-import { companiesListingLoaderDeps } from '@/lib/companies-search';
+import { companiesIndexLoaderDeps } from '@/lib/companies-search';
+import { customFieldRequestSearch } from '@/lib/custom-field-filters';
 import { pageToOffset } from '@/lib/pagination';
 import { getCompaniesIndexPage } from '@/server/companies-pages';
 
@@ -10,11 +11,12 @@ export function createCompaniesIndexLoader(
   return async ({
     deps,
   }: {
-    deps: ReturnType<typeof companiesListingLoaderDeps>;
+    deps: ReturnType<typeof companiesIndexLoaderDeps>;
   }) =>
     loadPage({
       data: {
         query: deps.query,
+        customFields: customFieldRequestSearch(deps),
         offset: pageToOffset(deps.page ?? 1, COMPANIES_PAGE_SIZE),
         limit: COMPANIES_PAGE_SIZE,
       },

@@ -15,6 +15,8 @@ export function jobSearchCopy() {
     detailErrorTitle: m.jobSearch_detailErrorTitle(),
     detailLoadingLabel: m.jobSearch_detailLoadingLabel(),
     filterSheetDescription: m.jobSearch_filterSheetDescription(),
+    filterSheetDescriptionWithCustomFields:
+      m.jobSearch_filterSheetDescriptionWithCustomFields(),
     filteredEmptyText: m.jobSearch_filteredEmptyText(),
     filtersLabel: m.jobSearch_filtersLabel(),
     gatedCountText: m.jobSearch_gatedCountText({ count: '{{count}}' }),

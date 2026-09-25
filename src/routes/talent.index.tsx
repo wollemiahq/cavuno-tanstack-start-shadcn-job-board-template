@@ -85,7 +85,7 @@ function TalentDirectoryNotFound() {
 }
 
 function TalentDirectoryPage() {
-  const { seo, page, restricted } = Route.useLoaderData();
+  const { seo, page, restricted, customFilterFields } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const { user, talentAccess } = useRootSession();
   const search = Route.useSearch();
@@ -133,6 +133,7 @@ function TalentDirectoryPage() {
       <TalentSearchPage
         ads={board.ads}
         search={search}
+        customFilterFields={customFilterFields}
         candidates={page.data.map((candidate) =>
           toTalentCardVM(candidate, getTalentSearchLabels(), {
             profileUnlocks,

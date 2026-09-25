@@ -37,8 +37,10 @@ import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
+import { profileCustomFilters } from './profile-filter-fields';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { searchNumber } from '@/lib/pagination';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { selfUrl } from '@/lib/self-url';
@@ -99,19 +101,31 @@ async function seoBase() {
 /** /companies/ index — list/search + markets + head + breadcrumb JSON-LD. */
 export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
   .validator(
-    (input: { query?: string; offset: number; limit: number }) => input,
+    (input: {
+      query?: string;
+      customFields?: CustomFieldSearch;
+      offset: number;
+      limit: number;
+    }) => input,
   )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [pageResult, markets, seo] = await Promise.all([
+      const custom = await profileCustomFilters(
+        'company',
+        data.customFields,
+        headers,
+      );
+      const searching = Boolean(data.query || custom.clauses);
+      const [pageResult, markets, seo, customFilterFields] = await Promise.all([
         (async () => {
           try {
-            const page = data.query
+            const page = searching
               ? await board.companies.search(
                   {
                     query: data.query,
+                    customFields: custom.clauses,
                     offset: data.offset,
                     limit: data.limit,
                   },
@@ -124,7 +138,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
                 );
             return { page, searchUnavailable: false };
           } catch (error) {
-            if (data.query && isCompanySearchUnavailable(error)) {
+            if (searching && isCompanySearchUnavailable(error)) {
               return {
                 page: { data: [], count: 0 },
                 searchUnavailable: true,
@@ -135,6 +149,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
         })(),
         board.companies.markets({ limit: 24 }, { headers }).catch(() => null),
         seoBase(),
+        custom.fields,
       ]);
       const head = {
         meta: [
@@ -171,6 +186,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
         seo,
         head,
         jsonLd,
+        customFilterFields,
       };
     }),
   );

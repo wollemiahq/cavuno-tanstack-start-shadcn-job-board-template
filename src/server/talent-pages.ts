@@ -12,9 +12,11 @@ import { headTitle } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
+import { profileCustomFilters } from './profile-filter-fields';
 import { readTalentDirectory } from './talent-directory-read';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
@@ -64,11 +66,17 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       seniority?: string;
       permitCountry?: string;
       interestedRole?: string;
+      customFields?: CustomFieldSearch;
     }) => input,
   )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
+      const custom = await profileCustomFilters(
+        'candidate',
+        data.customFields,
+        headers,
+      );
       // The directory read does not depend on the SEO base, so it starts
       // first and is awaited below — these used to be two serial waves.
       const directory = readTalentDirectory(() => {
@@ -85,6 +93,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
           seniority: data.seniority,
           permitCountry: data.permitCountry,
           interestedRole: data.interestedRole,
+          customFields: custom.clauses,
         };
         // SAFETY: Published @cavuno/board 4.13.0 talent.list query omits the
         // frozen filter keys; the live /talent contract on this branch
@@ -117,9 +126,19 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       );
 
       try {
-        const result = await directory;
+        const [result, customFilterFields] = await Promise.all([
+          directory,
+          custom.fields,
+        ]);
         if (result.status === 'restricted') {
-          return { seo, page: null, restricted: true as const, head, jsonLd };
+          return {
+            seo,
+            page: null,
+            restricted: true as const,
+            head,
+            jsonLd,
+            customFilterFields: [],
+          };
         }
         return {
           seo,
@@ -127,6 +146,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
           restricted: false as const,
           head,
           jsonLd,
+          customFilterFields,
         };
       } catch (error) {
         if (isNotFound(error)) throw error;
