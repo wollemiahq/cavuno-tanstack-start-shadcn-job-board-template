@@ -26,7 +26,7 @@ type SearchResultsToolbarProps = {
 
 function frameClassName(hasStartAd: boolean, hasEndAd: boolean) {
   return cn(
-    'mx-auto grid w-full max-w-[calc(var(--layout-width)+4rem)] max-w-full min-w-0 grid-cols-1 md:px-8',
+    'mx-auto grid w-full max-w-[calc(var(--layout-width)+4rem)] min-w-0 grid-cols-1 md:px-8',
     hasStartAd &&
       !hasEndAd &&
       'min-[1600px]:max-w-[96rem] min-[1600px]:grid-cols-[10rem_minmax(0,80rem)] min-[1600px]:gap-8',
