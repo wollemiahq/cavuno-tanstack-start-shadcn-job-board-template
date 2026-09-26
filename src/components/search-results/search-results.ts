@@ -10,6 +10,7 @@ export {
 } from './search-result-detail';
 export {
   SearchResultsLayout,
+  SearchResultsToolbar,
   type SearchResultsLayoutProps,
 } from './search-results-layout';
 export {
