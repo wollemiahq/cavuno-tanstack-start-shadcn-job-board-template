@@ -19,9 +19,9 @@ export type AdPlacement = {
   content: ReactNode;
 };
 
-// One rail fits once the core keeps ~68rem; shorter screens get the in-list
-// rectangle instead, so the 600px unit is never clipped below the header.
-const RAIL_MIN_WIDTH = '(min-width: 1280px) and (min-height: 700px)';
+// One rail fits alongside the core and the page gutters; shorter screens get
+// the in-list rectangle instead, so the 600px unit is never clipped.
+const RAIL_MIN_WIDTH = '(min-width: 1440px) and (min-height: 700px)';
 // A second rail leaves the core under ~60rem until very wide viewports.
 const DUAL_RAIL_MIN_WIDTH = '(min-width: 1600px) and (min-height: 700px)';
 

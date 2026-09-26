@@ -28,7 +28,7 @@ export function AdRail({
       className={cn(
         'hidden min-h-[600px] w-40 min-w-40 self-start overflow-hidden',
         // The optional second rail waits for room beside the full 80rem core.
-        side === 'start' ? 'min-[1600px]:block' : 'xl:block',
+        side === 'start' ? 'min-[1600px]:block' : 'min-[1440px]:block',
         className,
       )}
     >
