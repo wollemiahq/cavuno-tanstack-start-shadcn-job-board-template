@@ -21,13 +21,13 @@ import { ListingPagination } from '@/components/board/listing-pagination';
 import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
-import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
 import {
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
+  SearchResultsToolbar,
 } from '@/components/search-results/search-results';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -167,16 +167,14 @@ export function JobSearchPage({
         data-layout="job-search-page"
         className="md:flex md:h-full md:min-h-0 md:flex-col"
       >
-        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
-          <Container width="wide" gutter="0">
-            <div className="py-3">
-              <JobsFilterControls
-                filters={filters}
-                language={language}
-                onChange={onFiltersChange}
-              />
-            </div>
-          </Container>
+        <Box border="bottom">
+          <SearchResultsToolbar startAd={rails.startAd} endAd={rails.endAd}>
+            <JobsFilterControls
+              filters={filters}
+              language={language}
+              onChange={onFiltersChange}
+            />
+          </SearchResultsToolbar>
         </Box>
 
         <div
