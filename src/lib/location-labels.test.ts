@@ -30,6 +30,12 @@ describe('localizedLocationLabel', () => {
       'Atlanta, GA, United States',
     );
   });
+
+  it('replaces a recognized country-code alias', () => {
+    expect(localizedLocationLabel('London, UK', 'GB', 'en')).toBe(
+      'London, United Kingdom',
+    );
+  });
 });
 
 describe('localizedOfficeLocationLabel', () => {

@@ -50,6 +50,7 @@ export function isWorldwideRemote(job: CardLocationLabelJob): boolean {
 const ISO_COUNTRY_CODES = new Set<string>(
   countryOptions('en').map((country) => country.code),
 );
+const COUNTRY_CODE_ALIASES = new Map<string, string>([['UK', 'GB']]);
 
 /** Resolve an ISO 3166-1 alpha-2 code in the viewer's locale. */
 export function localizedCountryName(
@@ -88,6 +89,9 @@ export function localizedLocationLabel(
   const suffixCountry = suffix?.[2].trim().toLocaleLowerCase();
   const matchesCountry = [
     normalizedCode,
+    ...[...COUNTRY_CODE_ALIASES.entries()]
+      .filter(([, canonical]) => canonical === normalizedCode)
+      .map(([alias]) => alias),
     localizedCountryName(normalizedCode, sourceLanguage),
     country,
     ...countryAliases,
