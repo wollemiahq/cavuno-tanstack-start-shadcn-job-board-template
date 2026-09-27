@@ -93,6 +93,7 @@ export function localizedLocationLabel(
       .filter(([, canonical]) => canonical === normalizedCode)
       .map(([alias]) => alias),
     localizedCountryName(normalizedCode, sourceLanguage),
+    localizedCountryName(normalizedCode, 'en'),
     country,
     ...countryAliases,
   ].some(

@@ -286,6 +286,26 @@ describe('toJobDetailVM', () => {
     expect(germanHierarchy.locationLabel).toBe(
       'Chicago, Illinois, Vereinigte Staaten',
     );
+
+    const germanBoardHierarchy = toJobDetailVM(
+      createJob({
+        remoteOption: 'on_site',
+        officeLocations: [],
+        placeHierarchy: [
+          { slug: 'united-states', name: 'United States' },
+          { slug: 'illinois-united-states', name: 'Illinois' },
+          { slug: 'chicago-il-united-states', name: 'Chicago' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'de',
+      'de',
+    );
+    expect(germanBoardHierarchy.locationLabel).toBe(
+      'Chicago, Illinois, Vereinigte Staaten',
+    );
   });
 
   it('does not mistake a subdivision named like a country for the country', () => {

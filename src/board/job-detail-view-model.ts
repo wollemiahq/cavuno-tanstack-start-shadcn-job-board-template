@@ -352,11 +352,16 @@ export function toJobDetailVM(
   // header no longer renders raw codes like "US, GB", and the two mappers
   // agree on the remote location.
   const regionNames = factRegionNames;
-  // Country display-name → ISO code lets the hierarchy's board-language name
-  // be re-rendered in the viewer's locale. `countryOptions` is the SDK's
-  // canonical board-language country lexicon.
+  // Country display-name → ISO code lets the hierarchy's source-language
+  // name be re-rendered in the viewer's locale. Older rows can carry the
+  // board language while the canonical place fallback is English, so accept
+  // both alongside the declared job-form source language.
   const countryNameToCode = new Map(
-    countryOptions(language).map((option) => [option.name, option.code]),
+    [...new Set([jobForm?.language, language, 'en', displayLocale])]
+      .filter((locale): locale is string => Boolean(locale))
+      .flatMap((locale) =>
+        countryOptions(locale).map((option) => [option.name, option.code]),
+      ),
   );
   // The list card resolves its location from the API's pre-computed
   // `locationLabel`, which the full job payload does NOT carry. When a job has

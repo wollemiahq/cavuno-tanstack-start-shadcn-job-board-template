@@ -36,6 +36,12 @@ describe('localizedLocationLabel', () => {
       'London, United Kingdom',
     );
   });
+
+  it('recognizes an English source label on a non-English board', () => {
+    expect(localizedLocationLabel('Berlin, Germany', 'DE', 'de', 'de')).toBe(
+      'Berlin, Deutschland',
+    );
+  });
 });
 
 describe('localizedOfficeLocationLabel', () => {
