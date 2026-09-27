@@ -100,7 +100,7 @@ custom fields on its own, so a new field needs no code change:
 | Keep every result’s primary activation as a real canonical anchor.          | Turn a result card into a JavaScript-only button or duplicate full detail in the list response. |
 | Give list and detail scope-specific `scrollRestorationId` values.           | Share one scroll position between the two independently scrolling regions.                      |
 | Supply entity-specific children and labels through the named slots.         | Add a universal entity schema or a `type` switch to the shared layout.                          |
-| Render `AdRail` only when real creative is available.                       | Reserve empty ad columns or show advertising below 1440px, where gutters compress the core.     |
+| Use inline ads below 1440px; show rails only with room and creative.       | Reserve empty ad columns or show a rail below 1440px.                                     |
 | Replace the grid with one full-width recovery state when results are empty. | Keep an empty list rail and blank detail pane on screen.                                        |
 
 ## Used by
