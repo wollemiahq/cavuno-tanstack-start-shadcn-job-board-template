@@ -168,7 +168,9 @@ export function toJobDetailVM(
   };
 
   const offices = job.officeLocations
-    .map((office) => localizedOfficeLocationLabel(office, displayLocale))
+    .map((office) =>
+      localizedOfficeLocationLabel(office, displayLocale, language),
+    )
     .filter((office): office is string => Boolean(office));
 
   // Resolve wire values to words HERE, with the board displayLocale — the facts
@@ -364,7 +366,8 @@ export function toJobDetailVM(
   // specified" on the detail page while its card shows the place.
   const placeHierarchyLabel =
     job.placeHierarchy
-      .map((place) => {
+      .map((place, index) => {
+        if (index !== 0) return place.name;
         const countryCode = countryNameToCode.get(place.name);
         return countryCode
           ? (localizedCountryName(countryCode, displayLocale) ?? place.name)

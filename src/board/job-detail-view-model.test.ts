@@ -288,6 +288,27 @@ describe('toJobDetailVM', () => {
     );
   });
 
+  it('does not mistake a subdivision named like a country for the country', () => {
+    const atlanta = toJobDetailVM(
+      createJob({
+        remoteOption: 'on_site',
+        officeLocations: [],
+        placeHierarchy: [
+          { slug: 'united-states', name: 'United States' },
+          { slug: 'georgia-united-states', name: 'Georgia' },
+          { slug: 'atlanta-ga-united-states', name: 'Atlanta' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'en',
+      'de',
+    );
+
+    expect(atlanta.locationLabel).toBe('Atlanta, Georgia, Vereinigte Staaten');
+  });
+
   it('shows Worldwide for an unconstrained remote job, never "not specified"', () => {
     // A remote job with no worldwide flag AND no permit countries is
     // unconstrained → its scope is Worldwide (the card shows "Worldwide").

@@ -40,4 +40,21 @@ describe('localizedOfficeLocationLabel', () => {
       ),
     ).toBe('Berlin, BE, Germany');
   });
+
+  it('re-localizes a full country name from the board locale', () => {
+    expect(
+      localizedOfficeLocationLabel(
+        {
+          displayName: 'Berlin, Germany',
+          city: 'Berlin',
+          locality: null,
+          region: null,
+          country: 'DE',
+          countryCode: 'DE',
+        },
+        'de',
+        'en',
+      ),
+    ).toBe('Berlin, Deutschland');
+  });
 });

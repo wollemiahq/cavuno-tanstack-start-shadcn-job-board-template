@@ -90,13 +90,37 @@ export function localizedLocationLabel(
 export function localizedOfficeLocationLabel(
   office: LocationLabelJob['officeLocations'][number],
   language?: string,
+  sourceLanguage: string | undefined = language,
 ): string | null {
+  const displayName = office.displayName?.trim();
+  const countryCode = office.countryCode?.trim().toUpperCase();
+  if (displayName && countryCode) {
+    const suffix = displayName.match(/(^|,\s*)([^,]+?)\s*$/);
+    const wireCountry = office.country?.trim();
+    const sourceCountry = localizedCountryName(countryCode, sourceLanguage);
+    const suffixCountry = suffix?.[2].trim().toLocaleLowerCase();
+    const matchesStructuredCountry = [
+      countryCode,
+      wireCountry,
+      sourceCountry,
+    ].some((candidate) => candidate?.toLocaleLowerCase() === suffixCountry);
+    const localizedCountry = localizedCountryName(countryCode, language);
+    if (
+      suffix &&
+      suffix.index !== undefined &&
+      matchesStructuredCountry &&
+      localizedCountry
+    ) {
+      return `${displayName.slice(0, suffix.index)}${suffix[1]}${localizedCountry}`;
+    }
+  }
+
   const rawLabel =
-    office.displayName?.trim() ||
+    displayName ||
     [
       office.city ?? office.locality,
       office.region,
-      office.countryCode ?? office.country,
+      countryCode ?? office.country,
     ]
       .filter(Boolean)
       .join(', ');
