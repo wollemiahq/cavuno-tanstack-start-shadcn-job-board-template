@@ -424,6 +424,22 @@ describe('CompanySearchPage — company profile-field filters', () => {
     await screen.findByRole('main');
   }
 
+  it('aligns the filter row with sponsored results', async () => {
+    await renderCompanies({
+      customFilters: { fields: [stage], active: [], onChange: vi.fn() },
+      endAd: { label: 'Sponsored end', content: <p>End creative</p> },
+    });
+
+    const toolbar = document.querySelector(
+      '[data-slot="search-results-toolbar"]',
+    );
+    const results = document.querySelector(
+      '[data-slot="search-results-layout"]',
+    );
+    expect(toolbar).toHaveAttribute('data-end-ad', 'true');
+    expect(results).toHaveAttribute('data-end-ad', 'true');
+  });
+
   it('stages profile-field choices in All filters and applies them together', async () => {
     const onChange = vi.fn();
     await renderCompanies({
