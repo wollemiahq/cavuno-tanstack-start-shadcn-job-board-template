@@ -26,6 +26,7 @@ import { enumLabel } from '@/lib/enum-labels';
 import {
   cardLocationLabel,
   isWorldwideRemote,
+  localizedLocationLabel,
   localizedRemoteRegion,
 } from '@/lib/location-labels';
 import { formatJobSalary } from '@/lib/salary-display';
@@ -123,7 +124,7 @@ export function toJobCardVM(
   const placeLabel =
     job.remoteOption === 'remote'
       ? localizedRemoteRegion(job, language)
-      : job.locationLabel;
+      : localizedLocationLabel(job.locationLabel, language);
   const locationLabel = worldwideRemote
     ? m.label_locationRemoteWorldwide({}, localeOpt)
     : [

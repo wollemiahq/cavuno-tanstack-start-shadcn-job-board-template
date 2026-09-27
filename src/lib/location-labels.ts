@@ -5,6 +5,8 @@
  * Place names arrive already localized from the wire. Workplace wrapper
  * words come from the canonical enum vocabulary.
  */
+import { countryOptions } from '@cavuno/board/format';
+
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { enumLabel } from './enum-labels';
@@ -16,7 +18,9 @@ export interface LocationLabelJob {
     displayName?: string | null;
     city?: string | null;
     locality?: string | null;
+    region?: string | null;
     country?: string | null;
+    countryCode?: string | null;
   }>;
 }
 
@@ -39,6 +43,64 @@ export interface CardLocationLabelJob {
 export function isWorldwideRemote(job: CardLocationLabelJob): boolean {
   if (job.remoteOption !== 'remote') return false;
   return job.remoteWorldwide ?? job.remoteLocationLabel === 'Worldwide';
+}
+
+const ISO_COUNTRY_CODES = new Set<string>(
+  countryOptions('en').map((country) => country.code),
+);
+
+/** Resolve an ISO 3166-1 alpha-2 code in the viewer's locale. */
+export function localizedCountryName(
+  code: string | null | undefined,
+  language?: string,
+): string | null {
+  const normalized = code?.trim().toUpperCase();
+  if (!normalized || !ISO_COUNTRY_CODES.has(normalized)) return null;
+
+  const tag = language && language.length > 0 ? language : undefined;
+  try {
+    return (
+      new Intl.DisplayNames(tag ? [tag] : undefined, { type: 'region' }).of(
+        normalized,
+      ) ?? null
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Expand the final comma-delimited country code emitted by the card API while
+ * leaving locality and region text intact.
+ */
+export function localizedLocationLabel(
+  label: string | null | undefined,
+  language?: string,
+): string | null {
+  if (!label) return null;
+  const suffix = label.match(/(^|,\s*)([A-Za-z]{2})\s*$/);
+  if (!suffix || suffix.index === undefined) return label;
+
+  const country = localizedCountryName(suffix[2], language);
+  if (!country) return label;
+
+  return `${label.slice(0, suffix.index)}${suffix[1]}${country}`;
+}
+
+export function localizedOfficeLocationLabel(
+  office: LocationLabelJob['officeLocations'][number],
+  language?: string,
+): string | null {
+  const rawLabel =
+    office.displayName?.trim() ||
+    [
+      office.city ?? office.locality,
+      office.region,
+      office.countryCode ?? office.country,
+    ]
+      .filter(Boolean)
+      .join(', ');
+  return localizedLocationLabel(rawLabel || null, language);
 }
 
 /**
@@ -82,12 +144,7 @@ export function locationLabel(
   language?: string,
 ): string {
   const office = job.officeLocations[0];
-  const place = office
-    ? (office.displayName ??
-      [office.city ?? office.locality, office.country]
-        .filter(Boolean)
-        .join(', '))
-    : null;
+  const place = office ? localizedOfficeLocationLabel(office, language) : null;
   // Callers outside a request's chrome context (the OG image renderer)
   // pass the board language explicitly; everyone else keeps the ambient
   // Paraglide locale.
@@ -124,5 +181,9 @@ export function cardLocationLabel(
       ? m.label_locationRemoteIn({ region }, locale)
       : (enumLabel('remote', language) ?? '');
   }
-  return job.locationLabel ?? enumLabel(job.remoteOption) ?? '';
+  return (
+    localizedLocationLabel(job.locationLabel, language) ??
+    enumLabel(job.remoteOption) ??
+    ''
+  );
 }

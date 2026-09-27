@@ -87,6 +87,24 @@ describe('toJobCardVM', () => {
     expect(vm.locationLabel).toBe('Remote (worldwide)');
   });
 
+  it('expands the card country code in the viewer locale', () => {
+    const onSite = {
+      ...baseJob,
+      remoteOption: 'on_site',
+      remoteWorldwide: null,
+      remoteLocationLabel: null,
+      locationLabel: 'Berlin, DE',
+    } satisfies PublicJobCard;
+
+    const english = toJobCardVM(onSite, 'en');
+    expect(english.locationLabel).toBe('Berlin, Germany (On-site)');
+    expect(english.compLine).toContain('Berlin, Germany');
+
+    const german = toJobCardVM(onSite, 'de');
+    expect(german.locationLabel).toContain('Berlin, Deutschland');
+    expect(german.compLine).toContain('Berlin, Deutschland');
+  });
+
   it('states when an on-site card is missing its physical location', () => {
     const missingLocation = toJobCardVM(
       {
