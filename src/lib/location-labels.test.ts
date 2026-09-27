@@ -6,21 +6,29 @@ import {
 } from './location-labels';
 
 describe('localizedLocationLabel', () => {
-  it('expands a trailing ISO country code without changing earlier region text', () => {
-    expect(localizedLocationLabel('Berlin, BE, DE', 'en')).toBe(
+  it('expands the structured country without changing earlier region text', () => {
+    expect(localizedLocationLabel('Berlin, BE, DE', 'DE', 'en')).toBe(
       'Berlin, BE, Germany',
     );
-    expect(localizedLocationLabel('Chicago, Illinois, US', 'en')).toBe(
+    expect(localizedLocationLabel('Chicago, Illinois, US', 'US', 'en')).toBe(
       'Chicago, Illinois, United States',
     );
   });
 
-  it('uses the viewer locale and preserves labels without a country-code suffix', () => {
-    expect(localizedLocationLabel('Barcelona, Catalonia, ES', 'es')).toBe(
+  it('uses the viewer locale and preserves ambiguous labels without a code', () => {
+    expect(localizedLocationLabel('Barcelona, Catalonia, ES', 'ES', 'es')).toBe(
       'Barcelona, Catalonia, España',
     );
-    expect(localizedLocationLabel('United States', 'de')).toBe('United States');
-    expect(localizedLocationLabel(null, 'en')).toBeNull();
+    expect(localizedLocationLabel('San Francisco, CA', null, 'en')).toBe(
+      'San Francisco, CA',
+    );
+    expect(localizedLocationLabel(null, 'US', 'en')).toBeNull();
+  });
+
+  it('appends the structured country when the label ends in a subdivision', () => {
+    expect(localizedLocationLabel('Atlanta, GA', 'US', 'en')).toBe(
+      'Atlanta, GA, United States',
+    );
   });
 });
 
@@ -56,5 +64,21 @@ describe('localizedOfficeLocationLabel', () => {
         'en',
       ),
     ).toBe('Berlin, Deutschland');
+  });
+
+  it('does not interpret a subdivision suffix as a country', () => {
+    expect(
+      localizedOfficeLocationLabel(
+        {
+          displayName: 'Atlanta, GA',
+          city: 'Atlanta',
+          locality: null,
+          region: 'GA',
+          country: 'United States',
+          countryCode: 'US',
+        },
+        'en',
+      ),
+    ).toBe('Atlanta, GA, United States');
   });
 });

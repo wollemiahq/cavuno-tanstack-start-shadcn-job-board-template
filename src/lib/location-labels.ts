@@ -32,6 +32,8 @@ export interface CardLocationLabelJob {
   /** 4.1.0 derived permit expansion (ISO 3166-1 alpha-2). */
   remoteWorkPermitCountryCodes?: string[];
   locationLabel?: string | null;
+  /** ISO alpha-2 code for the country represented by locationLabel. */
+  locationCountryCode?: string | null;
 }
 
 /**
@@ -69,22 +71,34 @@ export function localizedCountryName(
   }
 }
 
-/**
- * Expand the final comma-delimited country code emitted by the card API while
- * leaving locality and region text intact.
- */
+/** Localize the structured country represented by an otherwise opaque label. */
 export function localizedLocationLabel(
   label: string | null | undefined,
+  countryCode: string | null | undefined,
   language?: string,
+  sourceLanguage: string | undefined = language,
+  countryAliases: Array<string | null | undefined> = [],
 ): string | null {
   if (!label) return null;
-  const suffix = label.match(/(^|,\s*)([A-Za-z]{2})\s*$/);
-  if (!suffix || suffix.index === undefined) return label;
+  const normalizedCode = countryCode?.trim().toUpperCase();
+  const country = localizedCountryName(normalizedCode, language);
+  if (!normalizedCode || !country) return label;
 
-  const country = localizedCountryName(suffix[2], language);
-  if (!country) return label;
+  const suffix = label.match(/(^|,\s*)([^,]+?)\s*$/);
+  const suffixCountry = suffix?.[2].trim().toLocaleLowerCase();
+  const matchesCountry = [
+    normalizedCode,
+    localizedCountryName(normalizedCode, sourceLanguage),
+    country,
+    ...countryAliases,
+  ].some(
+    (candidate) => candidate?.trim().toLocaleLowerCase() === suffixCountry,
+  );
 
-  return `${label.slice(0, suffix.index)}${suffix[1]}${country}`;
+  if (suffix && suffix.index !== undefined && matchesCountry) {
+    return `${label.slice(0, suffix.index)}${suffix[1]}${country}`;
+  }
+  return `${label}, ${country}`;
 }
 
 export function localizedOfficeLocationLabel(
@@ -94,27 +108,6 @@ export function localizedOfficeLocationLabel(
 ): string | null {
   const displayName = office.displayName?.trim();
   const countryCode = office.countryCode?.trim().toUpperCase();
-  if (displayName && countryCode) {
-    const suffix = displayName.match(/(^|,\s*)([^,]+?)\s*$/);
-    const wireCountry = office.country?.trim();
-    const sourceCountry = localizedCountryName(countryCode, sourceLanguage);
-    const suffixCountry = suffix?.[2].trim().toLocaleLowerCase();
-    const matchesStructuredCountry = [
-      countryCode,
-      wireCountry,
-      sourceCountry,
-    ].some((candidate) => candidate?.toLocaleLowerCase() === suffixCountry);
-    const localizedCountry = localizedCountryName(countryCode, language);
-    if (
-      suffix &&
-      suffix.index !== undefined &&
-      matchesStructuredCountry &&
-      localizedCountry
-    ) {
-      return `${displayName.slice(0, suffix.index)}${suffix[1]}${localizedCountry}`;
-    }
-  }
-
   const rawLabel =
     displayName ||
     [
@@ -124,7 +117,13 @@ export function localizedOfficeLocationLabel(
     ]
       .filter(Boolean)
       .join(', ');
-  return localizedLocationLabel(rawLabel || null, language);
+  return localizedLocationLabel(
+    rawLabel || null,
+    countryCode,
+    language,
+    sourceLanguage,
+    [office.country],
+  );
 }
 
 /**
@@ -194,6 +193,7 @@ export function locationLabel(
 export function cardLocationLabel(
   job: CardLocationLabelJob,
   language?: string,
+  sourceLanguage: string | undefined = language,
 ): string {
   const locale = isLocale(language) ? { locale: language } : undefined;
   if (job.remoteOption === 'remote') {
@@ -206,7 +206,12 @@ export function cardLocationLabel(
       : (enumLabel('remote', language) ?? '');
   }
   return (
-    localizedLocationLabel(job.locationLabel, language) ??
+    localizedLocationLabel(
+      job.locationLabel,
+      job.locationCountryCode,
+      language,
+      sourceLanguage,
+    ) ??
     enumLabel(job.remoteOption) ??
     ''
   );

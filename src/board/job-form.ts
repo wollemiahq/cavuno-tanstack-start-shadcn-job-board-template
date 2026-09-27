@@ -74,6 +74,8 @@ export type JobFormConstraints = JobFormVisibility & {
  */
 export type JobFormSource = JobFormGroup & {
   object?: string;
+  /** Board source language when this is a full board context. */
+  language?: string | null;
   jobForm?: JobFormGroup | null;
 };
 
