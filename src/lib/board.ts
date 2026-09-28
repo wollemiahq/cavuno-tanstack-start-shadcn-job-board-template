@@ -19,7 +19,9 @@
  */
 import { createBoardClient, type BoardSdk } from '@cavuno/board';
 import { createSessionRefresher } from '@cavuno/board/server';
+import { getRequest, getRequestHeader } from '@tanstack/react-start/server';
 
+import { applyAudienceAttribution } from './audience-request';
 import { createBoardClientRegistry } from './board-client-registry';
 import { getDataSource } from './data-source.server';
 import { getServerEnv } from './env';
@@ -35,7 +37,21 @@ const registry = createBoardClientRegistry({
   createRefresher: createSessionRefresher,
   getDataSource,
   getServerEnv,
-  onRequest: applyReadCache,
+  onRequest: (request) =>
+    applyReadCache(
+      applyAudienceAttribution(
+        request,
+        () => getRequestHeader('cookie'),
+        () => {
+          // SAFETY: Workers supplies cf metadata on the incoming request;
+          // a local server has no cf property and leaves country unknown.
+          const incoming = getRequest() as Request & {
+            cf?: { country?: string };
+          };
+          return incoming.cf?.country;
+        },
+      ),
+    ),
 });
 
 /** Advertise the upgraded Apply contract only at its controlled seams. */
