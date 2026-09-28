@@ -99,7 +99,8 @@ function CompanyJobsPage() {
     ? m.jobSearch_resultsShowingRange({
         from: span.from.toLocaleString(locale),
         to: span.to.toLocaleString(locale),
-        count: count.toLocaleString(locale),
+        count: count,
+        countLabel: count.toLocaleString(locale),
       })
     : entityCount(count, locale, m.count_jobs, {
         singular: chromeEntity().jobSingular,

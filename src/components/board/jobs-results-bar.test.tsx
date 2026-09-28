@@ -22,6 +22,16 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('JobsResultsBar', () => {
+  it('uses a singular job noun in the heading and pagination summary', () => {
+    render(
+      <JobsResultsBar visibleCount={1} page={1} pageSize={20} language="en" />,
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      '1 job',
+    );
+    expect(screen.getByText('Showing 1–1 of 1 job')).toBeVisible();
+  });
+
   it('promotes the contextual count to the single results heading', () => {
     render(
       <JobsResultsBar
@@ -44,7 +54,8 @@ describe('JobsResultsBar', () => {
         m.jobSearch_resultsShowingRange({
           from: '1',
           to: '12',
-          count: '12',
+          count: 12,
+          countLabel: '12',
         }),
       ),
     ).toBeVisible();
@@ -74,7 +85,8 @@ describe('JobsResultsBar', () => {
         m.jobSearch_resultsShowingRange({
           from: '21',
           to: '30',
-          count: '387',
+          count: 387,
+          countLabel: '387',
         }),
       ),
     ).toBeVisible();
@@ -99,7 +111,8 @@ describe('JobsResultsBar', () => {
         m.jobSearch_resultsShowingRange({
           from: '41',
           to: '30',
-          count: '387',
+          count: 387,
+          countLabel: '387',
         }),
       ),
     ).toBeNull();

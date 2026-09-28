@@ -1,4 +1,5 @@
 import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 /**
  * Jobs-listing head copy — application-owned title and meta description for
  * `listingHead({ title, description })`. The SDK no longer composes either.
@@ -26,6 +27,29 @@ export function listingPageTitle(options: {
       ? `${new Intl.NumberFormat(options.language).format(count)} ${options.heading}`
       : options.heading;
   return pageTitle([page], options.boardName);
+}
+
+/** Plain jobs-index title uses the same plural-aware copy as its result count. */
+export function jobsIndexPageTitle(options: {
+  boardName: string;
+  language: string;
+  count?: number;
+}): string {
+  const count = finiteCount(options.count);
+  const locale = isLocale(options.language)
+    ? { locale: options.language }
+    : undefined;
+  const label =
+    count === undefined
+      ? m.jobSearch_headingJobs({}, locale)
+      : m.jobSearch_resultsCount(
+          {
+            count,
+            countLabel: new Intl.NumberFormat(options.language).format(count),
+          },
+          locale,
+        );
+  return pageTitle([label], options.boardName);
 }
 
 /** Meta description for a jobs listing page. */

@@ -652,7 +652,22 @@
     }
   ],
   "companySearch_resultsRegionLabel": "Wyniki wyszukiwania firm",
-  "companySearch_resultsShowingRange": "Wyświetlanie {from}–{to} z {count}",
+  "companySearch_resultsShowingRange": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {from}–{to} z {countLabel}",
+        "countPlural=*": "Wyświetlanie {from}–{to} z {countLabel}"
+      }
+    }
+  ],
   "companySearch_retryLabel": "Ponów",
   "companySearch_searchLabel": "Szukaj",
   "companySearch_selectedCompanyRegionLabel": "Wybrana firma",

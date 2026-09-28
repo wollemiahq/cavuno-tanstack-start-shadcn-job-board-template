@@ -54,6 +54,7 @@ import {
   type CustomFieldSearch,
 } from '@/lib/custom-field-filters';
 import {
+  jobsIndexPageTitle,
   listingMetaDescription,
   listingPageTitle,
 } from '@/lib/listing-description';
@@ -223,8 +224,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         'relatedSearches' in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy().headingJobs;
       const head = listingHead({
-        title: listingPageTitle({
-          heading: heading,
+        title: jobsIndexPageTitle({
           boardName: seo.boardName,
           language: seo.language,
           count: catalogJobCount(page.count, page.gatedCount),

@@ -17,7 +17,7 @@ import { listingHead } from '@cavuno/board/seo';
 import { describe, expect, it } from 'vitest';
 
 import { isLocale } from '../paraglide/runtime';
-import { listingPageTitle } from './listing-description';
+import { jobsIndexPageTitle, listingPageTitle } from './listing-description';
 import {
   headTitle,
   jobTitleAtCompany,
@@ -143,5 +143,23 @@ describe('jobTitleAtCompany', () => {
 
   it('returns the bare title when there is no company', () => {
     expect(jobTitleAtCompany('en', 'VP of Growth', null)).toBe('VP of Growth');
+  });
+});
+
+describe('jobs index count title', () => {
+  it.each([
+    [0, '0 jobs'],
+    [1, '1 job'],
+    [2, '2 jobs'],
+    [1225, '1,225 jobs'],
+  ] as const)('uses the correct job noun for %s results', (count, label) => {
+    expect(
+      jobsIndexPageTitle({ boardName: 'Wattle', language: 'en', count }),
+    ).toBe(`${label} | Wattle`);
+  });
+  it('does not invent a count when it is unknown', () => {
+    expect(jobsIndexPageTitle({ boardName: 'Wattle', language: 'en' })).toBe(
+      'Jobs | Wattle',
+    );
   });
 });

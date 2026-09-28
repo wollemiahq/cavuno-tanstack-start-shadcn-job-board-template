@@ -171,7 +171,8 @@ describe('JobSearchPage — search results pattern', () => {
         m.jobSearch_resultsShowingRange({
           from: '9,981',
           to: '10,000',
-          count: '12,000',
+          count: 12000,
+          countLabel: '12,000',
         }),
       ),
     ).toBeInTheDocument();
@@ -392,7 +393,8 @@ describe('JobSearchPage — search results pattern', () => {
         m.jobSearch_resultsShowingRange({
           from: '1',
           to: '20',
-          count: '387',
+          count: 387,
+          countLabel: '387',
         }),
       ),
     ).toBeVisible();
@@ -444,7 +446,8 @@ describe('JobSearchPage — search results pattern', () => {
         m.jobSearch_resultsShowingRange({
           from: '21',
           to: '30',
-          count: '387',
+          count: 387,
+          countLabel: '387',
         }),
       ),
     ).toBeVisible();

@@ -64,7 +64,8 @@ export function JobsResultsBar({
       ? m.jobSearch_resultsShowingRange({
           from: span.from.toLocaleString(locale),
           to: span.to.toLocaleString(locale),
-          count: totalCount.toLocaleString(locale),
+          count: totalCount,
+          countLabel: totalCount.toLocaleString(locale),
         })
       : null;
 

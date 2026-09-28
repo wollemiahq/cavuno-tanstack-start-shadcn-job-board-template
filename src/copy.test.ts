@@ -69,7 +69,8 @@ describe('localized copy adapter', () => {
     expect(range).toHaveBeenCalledWith({
       from: '{{from}}',
       to: '{{to}}',
-      count: '{{count}}',
+      count: 0,
+      countLabel: '{{count}}',
     });
     expect(copy.footer.copyrightPrefix).toBe('Copyright fixture');
     expect(copyright).toHaveBeenCalledWith({

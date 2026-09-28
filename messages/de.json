@@ -1353,7 +1353,22 @@
     }
   ],
   "jobSearch_resultsRegionLabel": "Jobergebnisse",
-  "jobSearch_resultsShowingRange": "Zeige {from}–{to} von {count} Jobs",
+  "jobSearch_resultsShowingRange": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {from}–{to} von {countLabel} Job",
+        "countPlural=*": "Zeige {from}–{to} von {countLabel} Jobs"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Erneut versuchen",
   "jobSearch_searchButtonLabel": "Suchen",
   "jobSearch_selectedJobRegionLabel": "Ausgewählter Job",

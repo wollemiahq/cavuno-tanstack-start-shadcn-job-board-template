@@ -1353,7 +1353,22 @@
     }
   ],
   "jobSearch_resultsRegionLabel": "Vacatureresultaten",
-  "jobSearch_resultsShowingRange": "{from}–{to} van {count} vacatures weergegeven",
+  "jobSearch_resultsShowingRange": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{from}–{to} van {countLabel} vacature weergegeven",
+        "countPlural=*": "{from}–{to} van {countLabel} vacatures weergegeven"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Opnieuw proberen",
   "jobSearch_searchButtonLabel": "Zoeken",
   "jobSearch_selectedJobRegionLabel": "Geselecteerde vacature",

@@ -48,7 +48,8 @@ export function jobSearchCopy() {
     resultsShowingRange: m.jobSearch_resultsShowingRange({
       from: '{{from}}',
       to: '{{to}}',
-      count: '{{count}}',
+      count: 0,
+      countLabel: '{{count}}',
     }),
     retryLabel: m.jobSearch_retryLabel(),
     searchButtonLabel: m.jobSearch_searchButtonLabel(),
