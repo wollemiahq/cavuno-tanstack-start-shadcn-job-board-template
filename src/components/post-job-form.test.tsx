@@ -96,7 +96,15 @@ function pickBerlin() {
   fireEvent.click(screen.getByRole('option', { name: /Berlin/ }));
 }
 
-afterEach(cleanup);
+afterEach(() => {
+  // The HTML fallback must keep personal data out of GET URLs.
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[type="email"], input[name="name"], textarea[name="coverLetter"]',
+  )) {
+    expect(input.form?.method).toBe('post');
+  }
+  cleanup();
+});
 
 describe('PostJobForm', () => {
   it('submits the complete public posting contract through the selected plan', async () => {

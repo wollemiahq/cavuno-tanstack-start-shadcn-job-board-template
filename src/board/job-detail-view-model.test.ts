@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { toJobDetailVM } from './job-detail-view-model';
 
 import { jobDetailCopy } from '@/copy-groups/job-detail';
@@ -331,8 +332,12 @@ describe('template-side custom-field localization', () => {
 
   it('re-words mapped fields and option keys from the chrome catalog', () => {
     const field = toJobDetailVM(job, defs, [], null, 'en').customFields[0]!;
-    expect(field.label).toBe('Visa sponsorship');
-    expect(field.value).toBe('Case-by-case');
+    expect(field.label).toBe(
+      m.customField_visaSponsorship_label({}, { locale: 'en' }),
+    );
+    expect(field.value).toBe(
+      m.customField_visaSponsorship_optionCaseByCase({}, { locale: 'en' }),
+    );
   });
 
   it('falls back to the wire authoring labels for unmapped fields', () => {

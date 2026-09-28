@@ -1,42 +1,72 @@
-import { describe, expect, it } from 'vitest';
-
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-/**
- * Structural pin for the Impressum feature gate (repo structural-test
- * doctrine — source-level, not RPC).
- *
- * `Footer.tsx` hides the /impressum link when `features.impressum` is off,
- * but the page itself used to render on a direct hit: the prose moved to
- * `src/content/legal/`, so no API 404 gated it any more and the route's
- * `isNotFound` catch became dead code. The gate now lives in the server fn
- * — a unit test of the loader would not fail if the handler stopped calling
- * it, so pin the call site.
- */
-const legalPagesSource = readFileSync(
-  join(import.meta.dirname, 'legal-pages.ts'),
-  'utf8',
-);
-const impressumRouteSource = readFileSync(
-  join(import.meta.dirname, '..', 'routes', 'impressum.tsx'),
-  'utf8',
-);
-
-describe('getLegalPageView gates Impressum on features.impressum', () => {
-  it('404s a disabled Impressum before building the view model', () => {
-    expect(legalPagesSource).toContain(
-      "data.type === 'impressum' && !boardContext.features.impressum",
-    );
-    expect(legalPagesSource).toContain('throw notFound()');
-    // The gate must precede the view model, or a disabled board still
-    // serves head meta + JSON-LD for a page it does not have.
-    expect(
-      legalPagesSource.indexOf('!boardContext.features.impressum'),
-    ).toBeLessThan(legalPagesSource.indexOf('const page: LegalPageViewModel'));
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+const mocks = vi.hoisted(() => ({ board: vi.fn(), origin: vi.fn() }));
+vi.mock('@tanstack/react-start', () => ({
+  createServerFn: () => {
+    const chain = {
+      validator: () => chain,
+      middleware: () => chain,
+      handler:
+        <TData, TResult>(
+          handler: (input: {
+            data: TData;
+            context: Record<string, never>;
+          }) => TResult,
+        ) =>
+        (input: { data: TData }) =>
+          handler({ ...input, context: {} }),
+    };
+    return chain;
+  },
+}));
+vi.mock('../lib/board-access-middleware', () => ({
+  boardAccessMiddleware: {},
+}));
+vi.mock('../lib/board-context-cache', () => ({
+  readBoardContext: mocks.board,
+}));
+vi.mock('../lib/public-origin', () => ({ readPublicOrigin: mocks.origin }));
+vi.mock('./board-access', () => ({
+  gatedRead: <TResult>(_context: Record<string, never>, read: () => TResult) =>
+    read(),
+}));
+import { getLegalPageView } from './legal-pages';
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.origin.mockResolvedValue('https://fixture.example');
+});
+describe('direct legal page feature gate', () => {
+  it('disabled Impressum rejects before origin and metadata construction', async () => {
+    mocks.board.mockResolvedValue({ features: { impressum: false } });
+    await expect(
+      getLegalPageView({ data: { type: 'impressum' } }),
+    ).rejects.toMatchObject({
+      isNotFound: true,
+    });
+    expect(mocks.origin).not.toHaveBeenCalled();
   });
-
-  it('leaves no dead isNotFound catch on the route claiming to do the gating', () => {
-    expect(impressumRouteSource).not.toContain('isNotFound');
+  it('enabled Impressum returns page and metadata', async () => {
+    mocks.board.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      features: { impressum: true },
+    });
+    expect(
+      await getLegalPageView({ data: { type: 'impressum' } }),
+    ).toMatchObject({
+      page: { type: 'impressum' },
+      head: expect.any(Object),
+    });
+  });
+  it('disabled Impressum does not disable other legal pages', async () => {
+    mocks.board.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      features: { impressum: false },
+    });
+    expect(
+      await getLegalPageView({ data: { type: 'privacy-policy' } }),
+    ).toMatchObject({
+      page: { type: 'privacy-policy' },
+    });
   });
 });

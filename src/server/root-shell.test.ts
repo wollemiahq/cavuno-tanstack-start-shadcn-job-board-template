@@ -1,52 +1,97 @@
-import { describe, expect, it } from 'vitest';
-
-import { readFileSync } from 'node:fs';
-
-/**
- * Public documents stay viewer-anonymous (X-Cavuno-Doc-Vary). Consent is a
- * client island after paint — the SSR loader must not read cookies or
- * emit consentChoice, or the edge cache cannot reuse one HTML copy.
- */
-const SOURCE = readFileSync(
-  new URL('./root-shell.ts', import.meta.url),
-  'utf8',
-);
-
-function handlerBody(name: string): string {
-  const start = SOURCE.indexOf(`export const ${name}`);
-  expect(start, `${name} was renamed — update this guard`).toBeGreaterThan(-1);
-  const next = SOURCE.indexOf('export const', start + 1);
-  const end = next === -1 ? SOURCE.length : next;
-  return SOURCE.slice(start, end);
-}
-
-describe('getRootShellData stays viewer-anonymous', () => {
-  it('does not read cookies, session, or consent on the public document', () => {
-    const body = handlerBody('getRootShellData');
-    expect(body).not.toContain('consentChoice');
-    expect(body).not.toContain('cookie');
-    expect(body).not.toContain('getSessionUser');
-    expect(body).not.toContain('CookieConsent');
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+type ShellTestContext = {
+  session: Record<string, never> | null;
+  boardAccessHeaders: Record<string, string>;
+};
+const mocks = vi.hoisted(() => {
+  const context: ShellTestContext = { session: null, boardAccessHeaders: {} };
+  return {
+    context,
+    fresh: vi.fn(),
+    stale: vi.fn(),
+    seo: vi.fn(),
+    offer: vi.fn(),
+    me: vi.fn(),
+    grant: vi.fn(),
+    companies: vi.fn(),
+    preview: vi.fn(),
+  };
+});
+vi.mock('@tanstack/react-start', () => ({
+  createServerFn: () => {
+    const chain = {
+      middleware: () => chain,
+      handler:
+        <TResult>(
+          handler: (input: { context: typeof mocks.context }) => TResult,
+        ) =>
+        () =>
+          handler({ context: mocks.context }),
+    };
+    return chain;
+  },
+}));
+vi.mock('@tanstack/react-start/server', () => ({
+  getRequest: () => new Request('https://fixture.example/page'),
+}));
+vi.mock('../lib/board-access-middleware', () => ({
+  boardAccessMiddleware: {},
+}));
+vi.mock('../lib/env', () => ({
+  getServerEnv: () => ({ board: 'pk_fixture' }),
+}));
+vi.mock('../lib/board', () => ({
+  getBoard: () => ({
+    me: { retrieve: mocks.me, access: { grant: mocks.grant } },
+    companies: { list: mocks.companies },
+  }),
+}));
+vi.mock('./preview', () => ({ resolvePreviewStateForViewer: mocks.preview }));
+vi.mock('./queries', () => ({
+  getFreshBoardContext: mocks.fresh,
+  getStaleBoardContext: mocks.stale,
+  getBoardSeo: mocks.seo,
+  getEmployerOfferGate: mocks.offer,
+}));
+vi.mock('./talent-access', () => ({ EMPTY_GRANT: {} }));
+import { getRootShellData, getRootSessionShellData } from './root-shell';
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.context = { session: null, boardAccessHeaders: {} };
+  mocks.fresh.mockResolvedValue({ name: 'Fixture board' });
+  mocks.seo.mockResolvedValue({ canonicalBase: 'https://fixture.example' });
+  mocks.offer.mockResolvedValue({ visible: true });
+});
+describe('public and session shells', () => {
+  it('public document exposes only public fields without viewer reads', async () => {
+    expect(await getRootShellData()).toEqual({
+      origin: 'https://fixture.example',
+      publishableKey: 'pk_fixture',
+      board: { name: 'Fixture board' },
+      seo: { canonicalBase: 'https://fixture.example' },
+      offerGate: { visible: true },
+    });
+    expect(mocks.me).not.toHaveBeenCalled();
+    expect(mocks.grant).not.toHaveBeenCalled();
+    expect(mocks.preview).not.toHaveBeenCalled();
   });
-
-  it('returns only origin, board, seo, and offerGate', () => {
-    const body = handlerBody('getRootShellData');
-    expect(body).toContain('origin:');
-    expect(body).toContain('board,');
-    expect(body).toContain('seo,');
-    expect(body).toContain('offerGate,');
-    expect(body).toContain('getFreshBoardContext');
-    expect(body).toContain('getBoardSeo');
-    expect(body).toContain('getEmployerOfferGate');
+  it('anonymous session makes no viewer calls', async () => {
+    expect(await getRootSessionShellData()).toEqual({ user: null });
+    expect(mocks.me).not.toHaveBeenCalled();
   });
-
-  it('loads session chrome in-process instead of nested server functions', () => {
-    const body = handlerBody('getRootSessionShellData');
-    expect(body).toContain('me.retrieve');
-    expect(body).not.toContain('getSessionUser');
-    expect(body).not.toContain('listCompanies');
-    expect(body).not.toContain('getAccessGrant');
-    expect(body).not.toContain('resolvePreviewStateForViewer');
-    expect(body).not.toContain('companies.list');
+  it('authenticated chrome reads only identity with access headers', async () => {
+    const headers = { 'x-board-access': 'fixture' };
+    mocks.me.mockResolvedValue({ id: 'viewer' });
+    mocks.context = { session: {}, boardAccessHeaders: headers };
+    expect(await getRootSessionShellData()).toEqual({ user: { id: 'viewer' } });
+    expect(mocks.me).toHaveBeenCalledWith(undefined, { headers });
+    expect(mocks.companies).not.toHaveBeenCalled();
+    expect(mocks.grant).not.toHaveBeenCalled();
+    expect(mocks.preview).not.toHaveBeenCalled();
+  });
+  it('identity failure returns anonymous chrome', async () => {
+    mocks.me.mockRejectedValue(new Error('offline'));
+    mocks.context = { session: {}, boardAccessHeaders: {} };
+    expect(await getRootSessionShellData()).toEqual({ user: null });
   });
 });

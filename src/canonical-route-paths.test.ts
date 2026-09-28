@@ -1,38 +1,71 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { readFileSync } from 'node:fs';
+vi.mock('@tanstack/react-start', () => ({
+  createServerFn: () => {
+    const builder = {
+      validator: () => builder,
+      middleware: () => builder,
+      handler:
+        <TData, TResult>(
+          handler: (input: { data: TData; context: object }) => TResult,
+        ) =>
+        (input: { data: TData }) =>
+          handler({ ...input, context: {} }),
+    };
+    return builder;
+  },
+}));
+vi.mock('./lib/board-access-middleware', () => ({ boardAccessMiddleware: {} }));
+vi.mock('./server/board-access', () => ({
+  gatedRead: <TResult>(
+    _context: Record<string, never>,
+    read: (headers: Record<string, string>) => TResult,
+  ) => read({}),
+}));
+vi.mock('./lib/board-context-cache', () => ({
+  readBoardContext: async () => ({ name: 'Fixture board', language: 'en' }),
+}));
+vi.mock('./lib/public-origin', () => ({
+  readPublicOrigin: async () => 'https://fixture.example',
+}));
+vi.mock('./lib/board', () => ({
+  getBoard: () => ({
+    taxonomy: {
+      places: {
+        resolve: async () => ({
+          canonicalSlug: 'london',
+          displayName: 'London',
+        }),
+        list: async () => ({ data: [] }),
+      },
+      skills: {
+        resolve: async () => ({
+          canonicalSlug: 'typescript',
+          displayName: 'TypeScript',
+        }),
+      },
+    },
+    jobs: { list: async () => ({ data: [], count: 0 }) },
+  }),
+}));
 
-function source(path: string) {
-  return readFileSync(new URL(path, import.meta.url), 'utf8');
-}
+import { getJobsLocationSkillPage } from './server/jobs-listing-pages';
 
 describe('canonical board paths', () => {
-  it('builds company salary category links through the typed router path', () => {
-    const route = source('./routes/companies.$companySlug.index.tsx');
-
-    expect(route).toContain('interpolatePath({');
-    expect(route).toContain(
-      "path: '/companies/$companySlug/salaries/$categorySlug'",
-    );
-    expect(route).not.toContain(
-      'href: `/companies/${company.slug}/salaries/${category.categorySlug}`',
-    );
-  });
-
-  it('builds location and skill metadata through the route-owned server page path', () => {
-    // Head path is computed in jobs-listing-pages (not the route module) so
-    // `@cavuno/board/seo` stays out of the universal client entry. The
-    // canonical path must still be the fixed /jobs/locations/…/skills/…
-    // shape — never a loose template that drifts from the route tree.
-    const page = source('./server/jobs-listing-pages.ts');
-
-    expect(page).toContain(
-      // localizeHref wraps the canonical path so /de//fr/ variants
-      // self-canonicalize; the canonical (delocalized) template is unchanged.
-      '`/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`',
-    );
-    expect(page).not.toContain(
-      'path: `/jobs/locations/${params.location}/skills/${params.skill}`',
-    );
+  it('returns a location and skill canonical without listing pagination', async () => {
+    const page = await getJobsLocationSkillPage({
+      data: {
+        locationSlug: 'london',
+        skillSlug: 'typescript',
+        offset: 20,
+        limit: 20,
+      },
+    });
+    expect(page.kind).toBe('ok');
+    if (page.kind !== 'ok') throw new Error('Expected a listing page');
+    expect(page.head.links).toContainEqual({
+      rel: 'canonical',
+      href: 'https://fixture.example/jobs/locations/london/skills/typescript',
+    });
   });
 });

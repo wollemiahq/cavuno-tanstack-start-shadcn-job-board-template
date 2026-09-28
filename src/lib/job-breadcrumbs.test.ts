@@ -34,8 +34,8 @@ describe('jobBreadcrumbItems', () => {
         }),
       ),
     ).toEqual([
-      { name: 'Home', href: '/' },
-      { name: 'Jobs', href: '/jobs' },
+      { name: expect.any(String), href: '/' },
+      { name: expect.any(String), href: '/jobs' },
       { name: 'United States', href: '/jobs/locations/united-states' },
       { name: 'Texas', href: '/jobs/locations/texas-united-states' },
       { name: 'Austin', href: '/jobs/locations/austin-tx-united-states' },
@@ -46,7 +46,12 @@ describe('jobBreadcrumbItems', () => {
 
   it('does not insert the primary category', () => {
     const names = jobBreadcrumbItems(job()).map((crumb) => crumb.name);
-    expect(names).toEqual(['Home', 'Jobs', 'Acme Co', 'Senior Engineer']);
+    expect(names).toEqual([
+      expect.any(String),
+      expect.any(String),
+      'Acme Co',
+      'Senior Engineer',
+    ]);
     expect(names).not.toContain('Engineering');
   });
 
@@ -64,8 +69,8 @@ describe('jobBreadcrumbItems', () => {
         }),
       ),
     ).toEqual([
-      { name: 'Home', href: '/' },
-      { name: 'Jobs', href: '/jobs' },
+      { name: expect.any(String), href: '/' },
+      { name: expect.any(String), href: '/jobs' },
       { name: 'Senior Engineer' },
     ]);
   });
@@ -80,8 +85,8 @@ describe('jobBreadcrumbJsonLd', () => {
         }),
       ),
     ).toEqual([
-      { name: 'Home', path: '/' },
-      { name: 'Jobs', path: '/jobs' },
+      { name: expect.any(String), path: '/' },
+      { name: expect.any(String), path: '/jobs' },
       { name: 'Berlin', path: '/jobs/locations/berlin' },
       { name: 'Acme Co', path: '/companies/acme-co' },
       { name: 'Senior Engineer' },

@@ -87,6 +87,12 @@ const dependencies: ApplyButtonDependencies = {
 };
 
 afterEach(() => {
+  // The HTML fallback must keep personal data out of GET URLs.
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[type="email"], input[name="name"], textarea[name="coverLetter"]',
+  )) {
+    expect(input.form?.method).toBe('post');
+  }
   cleanup();
   navigateToExternalApply.mockReset();
   requestGatewayApply.mockReset();

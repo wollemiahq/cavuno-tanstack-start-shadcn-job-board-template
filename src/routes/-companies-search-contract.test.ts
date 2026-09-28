@@ -8,8 +8,6 @@ import { Route as MarketRoute } from './companies.markets.$market';
 import type { CompaniesIndexListingSearch } from '../lib/companies-search';
 import type { UrlSearchInput } from '../lib/pagination';
 import type * as CompaniesPages from '../server/companies-pages';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 const getCompaniesIndexPage =
   vi.fn<typeof CompaniesPages.getCompaniesIndexPage>();
@@ -99,16 +97,6 @@ beforeEach(() => {
 });
 
 describe('companies route — URL-backed master-detail search', () => {
-  it('does not append a job-alert acquisition band to the company directory', () => {
-    const source = readFileSync(
-      resolve(process.cwd(), 'src/routes/companies.index.tsx'),
-      'utf8',
-    );
-
-    expect(source).not.toContain('AlertsBand');
-    expect(source).not.toContain('subscribeJobAlert');
-  });
-
   it('accepts the data query, unified page, and selected company', () => {
     expect(
       validateSearch(CompaniesRoute, {

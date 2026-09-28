@@ -34,6 +34,12 @@ import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { candidateOAuthReturnTo } from '@/lib/candidate-return-to';
 
 afterEach(() => {
+  // The HTML fallback must keep credentials and personal data out of GET URLs.
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[type="password"], input[autocomplete="one-time-code"], input[type="email"], textarea[name="coverLetter"]',
+  )) {
+    expect(input.form?.method).toBe('post');
+  }
   cleanup();
   vi.restoreAllMocks();
   vi.clearAllMocks();

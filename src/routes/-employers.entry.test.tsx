@@ -201,6 +201,12 @@ function onboardingLoaderContext() {
 
 afterEach(() => {
   vi.useRealTimers();
+  // The HTML fallback must keep credentials and personal data out of GET URLs.
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[type="password"], input[autocomplete="one-time-code"], input[type="email"], textarea[name="coverLetter"]',
+  )) {
+    expect(input.form?.method).toBe('post');
+  }
   cleanup();
   vi.clearAllMocks();
 });

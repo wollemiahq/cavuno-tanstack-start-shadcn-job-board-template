@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/ads.json', () => ({ default: { slots: {} } }));
 
 import { adsSlot, adsSlotFromFile, resolveAdsSlot } from './site-ads';
 
-describe('stock src/ads.json', () => {
+describe('empty ads fixture', () => {
   it('yields no slots until an operator fills placement ids', () => {
     expect(adsSlot('search:rail.start')).toBeNull();
     expect(adsSlot('search:rail.end')).toBeNull();

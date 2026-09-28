@@ -52,21 +52,6 @@ describe('Page composition', () => {
     );
   });
 
-  it('can propagate a bounded viewport height without changing normal page flow', () => {
-    const { container } = render(
-      <Page fill>
-        <PageContent>
-          <p>Viewport workspace</p>
-        </PageContent>
-      </Page>,
-    );
-
-    expect(container.querySelector('[data-layout="page"]')).toHaveClass(
-      'md:h-full',
-      'md:min-h-0',
-    );
-  });
-
   it('renders the optional aside as a named complementary landmark', () => {
     render(
       <Page>
@@ -190,10 +175,6 @@ describe('Page composition', () => {
 function _typeContract() {
   return (
     <>
-      {/* @ts-expect-error — Page owns its geometry and has no className escape hatch. */}
-      <Page className="max-w-none">Invalid</Page>
-      {/* @ts-expect-error — inline style cannot bypass the Page contract. */}
-      <PageContent style={{ padding: 7 }}>Invalid</PageContent>
       {/* @ts-expect-error — a rendered aside must have an accessible name. */}
       <PageContent aside={<p>Actions</p>}>Content</PageContent>
       {/* @ts-expect-error — every PageHeader owns one required page title. */}

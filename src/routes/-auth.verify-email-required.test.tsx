@@ -120,6 +120,12 @@ afterEach(async () => {
   // input-otp synchronizes selection through 0/10/50 ms callbacks; let them
   // settle before JSDOM removes window so verification tests cannot leak work.
   await act(() => new Promise((resolve) => setTimeout(resolve, 60)));
+  // The HTML fallback must keep credentials and personal data out of GET URLs.
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[type="password"], input[autocomplete="one-time-code"], input[type="email"], textarea[name="coverLetter"]',
+  )) {
+    expect(input.form?.method).toBe('post');
+  }
   cleanup();
   vi.restoreAllMocks();
   vi.clearAllMocks();

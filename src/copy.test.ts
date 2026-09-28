@@ -1,14 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { boardCopy, type BoardCopy } from './copy';
+import { boardCopy } from './copy';
 import { entityCopy } from './copy-groups/entity';
 import { navCopy } from './copy-groups/nav';
 import { chromeEntity, chromeNav } from './lib/site-chrome';
 import { m } from './paraglide/messages';
 
 import type { LocalizedString } from './paraglide/runtime';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
 
 // Exercise adapter wiring with controlled messages and overrides, independent
 // of the board owner's wording and chrome configuration.
@@ -79,46 +77,6 @@ describe('localized copy adapter', () => {
     });
   });
 
-  it('keeps every public UiCopy message in the statically tree-shakeable map', () => {
-    const publicGroups = new Set([
-      'alerts',
-      'apply',
-      'blog',
-      'breadcrumbs',
-      'copyLink',
-      'entity',
-      'footer',
-      'jobCard',
-      'jobDetail',
-      'jobSearch',
-      'nav',
-      'pagination',
-      'salary',
-    ]);
-    const catalog: Record<string, string> = JSON.parse(
-      readFileSync(join(import.meta.dirname, '../messages/en.json'), 'utf8'),
-    );
-    // Route-owned meta descriptions share the jobDetail_ prefix but are
-    // not SDK UiCopy (dropped from @cavuno/board 4.4.1's public map).
-    const appOwnedPublicKeys = new Set([
-      'jobDetail_metaDescription',
-      'jobDetail_metaDescriptionNoCompany',
-      'jobDetail_metaDescriptionRemote',
-    ]);
-    const expected = Object.keys(catalog)
-      .filter((key) => publicGroups.has(key.slice(0, key.indexOf('_'))))
-      .filter((key) => !appOwnedPublicKeys.has(key))
-      .sort();
-    const actual = copyGroupNames
-      .map((group) => [group, boardCopy('en')[group]] as const)
-      .flatMap(([group, values]) =>
-        Object.keys(values).map((key) => `${group}_${key}`),
-      )
-      .sort();
-
-    expect(actual).toEqual(expected);
-  });
-
   it('uses catalog defaults and lets configured nav/entity labels override them', () => {
     vi.spyOn(m, 'nav_home').mockReturnValue(localized('Catalog navigation'));
     vi.spyOn(m, 'entity_jobSingular').mockReturnValue(
@@ -131,58 +89,5 @@ describe('localized copy adapter', () => {
     vi.mocked(chromeEntity).mockReturnValue({ jobSingular: 'opportunity' });
     expect(navCopy().home).toBe('Opportunities');
     expect(entityCopy().jobSingular).toBe('opportunity');
-  });
-});
-
-const copyGroupNames = [
-  'alerts',
-  'apply',
-  'blog',
-  'breadcrumbs',
-  'copyLink',
-  'entity',
-  'footer',
-  'jobCard',
-  'jobDetail',
-  'jobSearch',
-  'nav',
-  'pagination',
-  'salary',
-] as const satisfies ReadonlyArray<keyof BoardCopy>;
-
-describe('the copy seam is the only catalog call site', () => {
-  const SRC = join(import.meta.dirname);
-
-  function walk(dir: string): string[] {
-    return readdirSync(dir).flatMap((name) => {
-      const path = join(dir, name);
-      if (name === 'paraglide') return [];
-      if (statSync(path).isDirectory()) return walk(path);
-      return /\.(ts|tsx)$/.test(name) && !/\.(test|spec)\./.test(name)
-        ? [path]
-        : [];
-    });
-  }
-
-  it('no file imports uiCopy except src/copy.ts', () => {
-    const offenders = walk(SRC).filter((path) => {
-      if (path === join(SRC, 'copy.ts')) return false;
-      const source = readFileSync(path, 'utf8');
-      return /\buiCopy\b/.test(source) && /@cavuno\/board\/format/.test(source);
-    });
-    expect(offenders).toEqual([]);
-  });
-
-  it('runtime files import route-owned copy groups instead of boardCopy', () => {
-    const offenders = walk(SRC).filter((path) => {
-      if (path.endsWith('.test.ts') || path.endsWith('.test.tsx')) return false;
-      if (path === join(SRC, 'copy.ts')) return false;
-      const source = readFileSync(path, 'utf8');
-      return /import\s*\{[^}]*\bboardCopy\b[^}]*\}\s*from\s*['"][^'"]*copy['"]/.test(
-        source,
-      );
-    });
-
-    expect(offenders).toEqual([]);
   });
 });

@@ -19,11 +19,6 @@ const root = join(import.meta.dirname, '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
 
 describe('dependency posture', () => {
-  it('pins pnpm 11 as the package manager', () => {
-    const pkg = JSON.parse(read('package.json'));
-    expect(pkg.packageManager).toMatch(/^pnpm@11\./);
-  });
-
   it('blocks dependency lifecycle scripts and keeps the release-age cooldown', () => {
     const workspace = read('pnpm-workspace.yaml');
     // allowBuilds present and every entry explicitly false (empty

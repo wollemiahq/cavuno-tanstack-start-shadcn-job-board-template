@@ -1,4 +1,36 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('../paraglide/messages', () => ({
+  m: {
+    membershipCapacity_postsCredits: ({ count }: { count: number }) =>
+      `credits:${count}`,
+    membershipCapacity_postsSlots: ({ count }: { count: number }) =>
+      `slots:${count}`,
+    membershipCapacity_postsUnlimited: () => 'posts:unlimited',
+    membershipCapacity_featuredCredits: ({ count }: { count: number }) =>
+      `featured-credits:${count}`,
+    membershipCapacity_featuredSlots: ({ count }: { count: number }) =>
+      `featured-slots:${count}`,
+    membershipCapacity_featuredEveryPost: () => 'featured:every',
+    membershipCapacity_featuredNoneOfThem: () => 'featured:none-following',
+    membershipCapacity_featuredNone: () => 'featured:none',
+    planFeature_liveDays: ({ days }: { days: string }) => `days:${days}`,
+    membershipBenefit_postingDiscount: ({ percent }: { percent: string }) =>
+      `discount:${percent}`,
+    employerLanding_featureProfileUnlocks: ({ count }: { count: number }) =>
+      `unlocks:${count}`,
+    membershipBenefit_talentMessagesUnlimited: () => 'messages:unlimited',
+    planFeature_unlimitedValue: ({ name }: { name: string }) =>
+      `unlimited:${name}`,
+    planFeature_countedValue: ({
+      name,
+      value,
+    }: {
+      name: string;
+      value: string;
+    }) => `${value}:${name}`,
+  },
+}));
 
 import {
   configuredMembershipCapacitySentence,
@@ -25,7 +57,7 @@ describe('membership capacity sentence', () => {
       membershipCapacitySentence(
         plan({ 'jobs.included_posts': '3', 'jobs.included_featured': '1' }),
       ),
-    ).toBe('3 one-time posts. 1 of them can be featured.');
+    ).toBe('credits:3. featured-credits:1');
   });
 
   it('reads a slot cap as concurrent, with concurrent featured slots', () => {
@@ -38,7 +70,7 @@ describe('membership capacity sentence', () => {
           'jobs.featured_slots': '2',
         }),
       ),
-    ).toBe('10 jobs live at once. 2 of them can be featured at a time.');
+    ).toBe('slots:10. featured-slots:2');
   });
 
   it('says every post can be featured only when posting itself is unlimited', () => {
@@ -51,17 +83,17 @@ describe('membership capacity sentence', () => {
           'jobs.featured_slots': 'unlimited',
         }),
       ),
-    ).toBe('Unlimited posts. Every post can be featured.');
+    ).toBe('posts:unlimited. featured:every');
   });
 
   it('says none of them can be featured when the plan features nothing', () => {
     expect(
       membershipCapacitySentence(plan({ 'jobs.included_posts': '1' })),
-    ).toBe('1 one-time post. None of them can be featured.');
+    ).toBe('credits:1. featured:none-following');
   });
 
   it('stands alone as "No featured jobs" when there is no posting capacity', () => {
-    expect(membershipCapacitySentence(plan({}))).toBe('No featured jobs');
+    expect(membershipCapacitySentence(plan({}))).toBe('featured:none');
     expect(configuredMembershipCapacitySentence(plan({}))).toBeNull();
   });
 });
@@ -78,12 +110,7 @@ describe('plan benefit lines', () => {
           'talent.messages_sent': 'unlimited',
         }),
       ),
-    ).toEqual([
-      'Live for 60 days',
-      '20% off further job posts',
-      '5 profile unlocks',
-      'Unlimited messages',
-    ]);
+    ).toEqual(['days:60', 'discount:20', 'unlocks:5', 'messages:unlimited']);
   });
 
   it('names the listing duration instead of echoing its dashboard label', () => {
@@ -94,7 +121,7 @@ describe('plan benefit lines', () => {
       planBenefitLines(
         plan({ 'jobs.included_posts': '1', 'jobs.duration_days': '60' }),
       ),
-    ).toEqual(['Live for 60 days']);
+    ).toEqual(['days:60']);
   });
 
   it('promises no listing duration to a plan that grants no listings', () => {
@@ -111,7 +138,7 @@ describe('plan benefit lines', () => {
           'talent.profile_unlocks': '50',
         }),
       ),
-    ).toEqual(['50 profile unlocks']);
+    ).toEqual(['unlocks:50']);
   });
 
   it('renders no line for the featured-selection mechanism', () => {
@@ -130,7 +157,7 @@ describe('plan benefit lines', () => {
       planBenefitLines(
         plan({ 'jobs.included_posts': '0', 'jobs.duration_days': '30' }),
       ),
-    ).toEqual(['Live for 30 days']);
+    ).toEqual(['days:30']);
   });
 
   it('renders nothing for a membership that only carries posting capacity', () => {
@@ -171,8 +198,8 @@ describe('plan benefit lines', () => {
       }),
     ).toEqual([
       'Directory spotlight',
-      '2 conference tickets',
-      'Unlimited support hours',
+      '2:conference tickets',
+      'unlimited:support hours',
     ]);
   });
 });

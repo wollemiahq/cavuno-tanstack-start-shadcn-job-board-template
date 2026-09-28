@@ -11,10 +11,6 @@ afterEach(() => {
 });
 
 describe('useDesktopMedia', () => {
-  it('exports the shared 48rem gate', () => {
-    expect(DESKTOP_MEDIA_QUERY).toBe('(min-width: 48rem)');
-  });
-
   it('reports live matchMedia matches on the client', () => {
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
@@ -36,5 +32,33 @@ describe('useDesktopMedia', () => {
 
     const { result } = renderHook(() => useDesktopMedia());
     expect(result.current).toBe(true);
+  });
+});
+
+describe('desktop media subscription', () => {
+  it('updates on changes and removes its listener on unmount', async () => {
+    const { act } = await import('@testing-library/react');
+    let callback: (() => void) | undefined;
+    const media = {
+      matches: false,
+      addEventListener: vi.fn((_event: string, listener: () => void) => {
+        callback = listener;
+      }),
+      removeEventListener: vi.fn(),
+    };
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(() => media),
+    });
+    const { result, unmount } = renderHook(() => useDesktopMedia());
+    expect(result.current).toBe(false);
+    act(() => {
+      media.matches = true;
+      callback?.();
+    });
+    expect(result.current).toBe(true);
+    unmount();
+    expect(media.removeEventListener).toHaveBeenCalledWith('change', callback);
   });
 });

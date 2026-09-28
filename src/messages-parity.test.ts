@@ -1,47 +1,60 @@
 import { describe, expect, it } from 'vitest';
 
-import { PSEUDO_LOCALES } from './lib/public-locales';
+import { publicLocales } from './lib/public-locales';
+import { baseLocale, locales } from './paraglide/runtime';
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/**
- * Every on-disk chrome catalog (including dormant de/fr that are not in
- * project.inlang/settings.json) must carry the SAME key set as English.
- * A key present in en.json but missing from de/fr compiles as a silent
- * alias to English once that locale is enabled — the en-XA pseudo-locale
- * gate cannot see it (it is generated from en), so 18 employer keys once
- * shipped English on /de/ and /fr/ with green tests.
- */
-const messagesDir = join(import.meta.dirname, '..', 'messages');
-const pseudo = new Set<string>(PSEUDO_LOCALES);
+type Variant = {
+  declarations: string[];
+  match: Record<string, string>;
+};
+type Entry = string | Variant[];
 
-const read = (locale: string): Record<string, string> =>
-  JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), 'utf8'));
+function read(locale: string): Record<string, Entry> {
+  return JSON.parse(
+    readFileSync(
+      join(import.meta.dirname, '../messages', `${locale}.json`),
+      'utf8',
+    ),
+  );
+}
 
-const extraLocales = readdirSync(messagesDir)
-  .filter((name) => name.endsWith('.json'))
-  .map((name) => name.slice(0, -'.json'.length))
-  .filter((locale) => locale !== 'en' && !pseudo.has(locale))
-  .sort();
+function inputs(entry: Entry): string[] {
+  const names = Array.isArray(entry)
+    ? entry.flatMap((variant) =>
+        variant.declarations.filter((declaration) =>
+          declaration.startsWith('input '),
+        ),
+      )
+    : [...entry.matchAll(/\{\{?([\w]+)\}?\}/g)].map(
+        (match) => `input ${match[1]}`,
+      );
+  return [...new Set(names)].sort();
+}
 
-describe('message catalog parity', () => {
-  const en = read('en');
-  const keys = Object.keys(en).filter((k) => !k.startsWith('$'));
+// Dormant catalogs and unused keys do not constrain customer customization.
+// Enabled translations must accept the inputs used by the base messages.
+describe('enabled message catalogs', () => {
+  const base = read(baseLocale);
+  const keys = Object.keys(base).filter((key) => !key.startsWith('$'));
 
-  it('ships at least the English catalog', () => {
+  it('has messages for the configured base locale', () => {
     expect(keys.length).toBeGreaterThan(0);
   });
 
-  for (const locale of extraLocales) {
-    it(`${locale}.json carries every en key (and nothing extra)`, () => {
-      const other = read(locale);
-      const missing = keys.filter((k) => !(k in other));
-      const extra = Object.keys(other).filter(
-        (k) => !k.startsWith('$') && !(k in en),
-      );
-      expect(missing).toEqual([]);
-      expect(extra).toEqual([]);
+  for (const locale of publicLocales(locales).filter(
+    (value) => value !== baseLocale,
+  )) {
+    it(`${locale} supports the base message inputs`, () => {
+      const translated = read(locale);
+      for (const key of keys) {
+        expect(translated, key).toHaveProperty(key);
+        expect(inputs(translated[key]), `${locale}: ${key}`).toEqual(
+          inputs(base[key]),
+        );
+      }
     });
   }
 });

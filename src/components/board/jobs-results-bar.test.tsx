@@ -1,72 +1,55 @@
 // @vitest-environment jsdom
-
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JobsResultsBar } from './jobs-results-bar';
-
-import { m } from '@/paraglide/messages';
-
-beforeEach(() => {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: vi.fn().mockReturnValue({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
-});
-
+vi.mock('@/paraglide/messages', () => ({
+  m: {
+    count_jobs: ({ count }: { count: number }) => `total:${count}`,
+    jobSearch_contextualResultsHeading: ({
+      count,
+      heading,
+    }: {
+      count: string;
+      heading: string;
+    }) => `context:${heading};total:${count}`,
+    jobSearch_resultsShowingRange: ({
+      from,
+      to,
+      count,
+    }: {
+      from: string;
+      to: string;
+      count: number;
+    }) => `range:${from}:${to};total:${count}`,
+  },
+}));
 afterEach(cleanup);
-
-describe('JobsResultsBar', () => {
-  it('uses a singular job noun in the heading and pagination summary', () => {
+describe('JobsResultsBar data', () => {
+  it('passes the visible count and first-page bounds to its summary', () => {
     render(
       <JobsResultsBar visibleCount={1} page={1} pageSize={20} language="en" />,
     );
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      '1 job',
-    );
-    expect(screen.getByText('Showing 1–1 of 1 job')).toBeVisible();
+    expect(screen.getByText('total:1')).toBeVisible();
+    expect(screen.getByText('range:1:1;total:1')).toBeVisible();
   });
-
-  it('promotes the contextual count to the single results heading', () => {
+  it('includes supplied context without fixing its heading placement', () => {
     render(
       <JobsResultsBar
         visibleCount={12}
         page={1}
         pageSize={20}
-        heading="Engineering jobs"
+        heading="Fixture discipline"
         language="en"
       />,
     );
-
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      m.jobSearch_contextualResultsHeading({
-        count: '12',
-        heading: 'Engineering jobs',
-      }),
-    );
     expect(
-      screen.getByText(
-        m.jobSearch_resultsShowingRange({
-          from: '1',
-          to: '12',
-          count: 12,
-          countLabel: '12',
-        }),
-      ),
+      screen.getByText('context:Fixture discipline;total:12'),
     ).toBeVisible();
-    expect(
-      screen.queryByRole('combobox', {
-        name: m.jobSearch_sortPlaceholder(),
-      }),
-    ).toBeNull();
+    expect(screen.getByText('range:1:12;total:12')).toBeVisible();
   });
-
-  it('adds withheld jobs to the total and caps the range at the visible page', () => {
+  it('includes withheld jobs in the total while bounding the range by visible jobs', () => {
     render(
       <JobsResultsBar
         visibleCount={30}
@@ -76,23 +59,10 @@ describe('JobsResultsBar', () => {
         language="en"
       />,
     );
-
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      m.count_jobs({ count: 387, countLabel: '387' }),
-    );
-    expect(
-      screen.getByText(
-        m.jobSearch_resultsShowingRange({
-          from: '21',
-          to: '30',
-          count: 387,
-          countLabel: '387',
-        }),
-      ),
-    ).toBeVisible();
+    expect(screen.getByText('total:387')).toBeVisible();
+    expect(screen.getByText('range:21:30;total:387')).toBeVisible();
   });
-
-  it('keeps the catalog heading and drops the range past the preview', () => {
+  it('does not publish an invalid range beyond the preview', () => {
     render(
       <JobsResultsBar
         visibleCount={30}
@@ -102,19 +72,7 @@ describe('JobsResultsBar', () => {
         language="en"
       />,
     );
-
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      m.count_jobs({ count: 387, countLabel: '387' }),
-    );
-    expect(
-      screen.queryByText(
-        m.jobSearch_resultsShowingRange({
-          from: '41',
-          to: '30',
-          count: 387,
-          countLabel: '387',
-        }),
-      ),
-    ).toBeNull();
+    expect(screen.getByText('total:387')).toBeVisible();
+    expect(screen.queryByText(/^range:/)).toBeNull();
   });
 });

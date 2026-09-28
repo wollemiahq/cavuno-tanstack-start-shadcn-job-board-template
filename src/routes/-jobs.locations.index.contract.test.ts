@@ -1,28 +1,55 @@
 import { describe, expect, it } from 'vitest';
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { Route } from './jobs.locations.index';
 
-describe('locations index breadcrumb contract', () => {
-  it('keeps breadcrumb JSON-LD while the root shell owns visible placement', () => {
-    const route = readFileSync(
-      resolve(process.cwd(), 'src/routes/jobs.locations.index.tsx'),
-      'utf8',
+describe('locations index SEO wiring', () => {
+  it('emits the loader breadcrumb as structured data in the document head', async () => {
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Fixture jobs',
+          item: 'https://fixture.example/jobs',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Fixture locations',
+          item: 'https://fixture.example/jobs/locations',
+        },
+      ],
+    };
+    const head = Route.options.head!;
+    // SAFETY: the head callback reads only the supplied head and JSON-LD fields; the intersection retains fixture evidence while supplying unused framework context types.
+    const descriptor = await head({
+      loaderData: {
+        head: {
+          meta: [],
+          links: [
+            {
+              rel: 'canonical',
+              href: 'https://fixture.example/jobs/locations',
+            },
+          ],
+        },
+        jsonLd: [breadcrumb],
+      },
+    } as {
+      loaderData: {
+        head: { meta: never[]; links: { rel: string; href: string }[] };
+        jsonLd: (typeof breadcrumb)[];
+      };
+    } & Parameters<typeof head>[0]);
+    expect(descriptor.links).toContainEqual({
+      rel: 'canonical',
+      href: 'https://fixture.example/jobs/locations',
+    });
+    const script = descriptor.scripts?.find(
+      (entry) => entry?.type === 'application/ld+json',
     );
-    const page = readFileSync(
-      resolve(process.cwd(), 'src/server/jobs-listing-pages.ts'),
-      'utf8',
-    );
-
-    expect(route).toContain('PageHeader');
-    expect(route).not.toContain('PageHeaderWithBreadcrumb');
-    expect(route).not.toContain('PageBreadcrumb');
-    // JSON-LD breadcrumb trail is computed in the route-owned server page
-    // (out of the universal client entry) and emitted via route head()
-    // scripts — React 19 streaming SSR can drop body-rendered <script>.
-    expect(route).toContain('jsonLdHeadScripts');
-    expect(route).toContain('getJobsLocationsIndexPage');
-    expect(page).toContain("{ name: crumbs.jobs, path: '/' }");
-    expect(page).toContain('{ name: crumbs.locations }');
+    expect(JSON.parse(String(script?.children))).toEqual(breadcrumb);
   });
 });

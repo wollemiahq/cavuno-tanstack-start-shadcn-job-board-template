@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/branding.json', () => ({ default: {} }));
 
 import { backgroundImageUrl, httpsAssetUrl } from './site-branding';
 
@@ -28,7 +30,7 @@ describe('httpsAssetUrl', () => {
 });
 
 describe('backgroundImageUrl', () => {
-  it('is null when src/branding.json is the stock empty file', () => {
+  it('is null for an independently supplied empty branding file', () => {
     expect(backgroundImageUrl()).toBeNull();
   });
 });

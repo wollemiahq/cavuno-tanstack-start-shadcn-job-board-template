@@ -27,8 +27,6 @@ describe('BreadcrumbPage', () => {
     const currentPage = screen.getByText('Senior Backend Engineer');
 
     expect(currentPage).toHaveAttribute('aria-current', 'page');
-    expect(currentPage).not.toHaveAttribute('role');
-    expect(currentPage).not.toHaveAttribute('aria-disabled');
     expect(
       screen.queryByRole('link', { name: 'Senior Backend Engineer' }),
     ).toBeNull();

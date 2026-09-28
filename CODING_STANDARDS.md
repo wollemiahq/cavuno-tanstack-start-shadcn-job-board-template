@@ -7,7 +7,8 @@ Tests should protect behavior that users or downstream code rely on. Use
 accessible roles and localized names to exercise interactions, then assert the
 resulting state, navigation, data, permissions, or error. Exact copy is a
 contract only when an external requirement fixes the wording; otherwise keep
-tests independent of translations and presentation.
+tests independent of translations and presentation. Supply customer-owned copy
+and configuration through explicit test fixtures.
 
 Expected values need an independent source of truth. Do not calculate an
 expected result with the same logic as production or assert a value against
