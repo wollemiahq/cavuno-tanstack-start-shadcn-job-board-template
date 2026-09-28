@@ -1,86 +1,85 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { LEGAL_PLACEHOLDER_PAGES, isLegalPlaceholder } from './index';
-
-import type { LegalPageType } from './types';
-import { Route as AboutRoute } from '@/routes/about';
-import { Route as CookieRoute } from '@/routes/cookie-policy';
-import { Route as ImpressumRoute } from '@/routes/impressum';
-import { Route as PrivacyRoute } from '@/routes/privacy-policy';
-import { Route as TermsRoute } from '@/routes/terms-of-service';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-const LEGAL_ROUTES = [
-  ['/about', AboutRoute],
-  ['/privacy-policy', PrivacyRoute],
-  ['/terms-of-service', TermsRoute],
-  ['/cookie-policy', CookieRoute],
-  ['/impressum', ImpressumRoute],
-] as const;
-
-/**
- * Keeps the noindex registry honest.
- *
- * The starter ships five legal/about pages whose bodies say, in the operator's
- * own footer and in Google's index, "Do not ship it as a real policy". The fix
- * is `robots: noindex` while that callout is present — but a hand-maintained
- * list drifts in the dangerous direction BOTH ways: forget to add a page and it
- * gets indexed as scaffolding; forget to remove one and the operator's real,
- * counsel-reviewed policy stays out of the index forever.
- *
- * So the list is checked against the thing an operator actually deletes: the
- * `<LegalPlaceholderCallout />` in the page's own source file. Each file
- * carries one callout per locale block, and a board serves only the locales
- * in `project.inlang/settings.json` (`en` by default) — so the check is
- * one-directional: a page may be un-listed while callouts remain in locales
- * it does not serve, but a page with no callout left anywhere must not stay
- * listed.
- */
-const CONTENT_FILES: ReadonlyArray<readonly [LegalPageType, string]> = [
-  ['about', 'about.tsx'],
-  ['privacy-policy', 'privacy-policy.tsx'],
-  ['terms-of-service', 'terms-of-service.tsx'],
-  ['cookie-policy', 'cookie-policy.tsx'],
-  ['impressum', 'impressum.tsx'],
-];
-
-function rendersCallout(file: string): boolean {
-  return readFileSync(join(import.meta.dirname, file), 'utf8').includes(
-    '<LegalPlaceholderCallout />',
-  );
-}
-
-describe('legal placeholder noindex registry', () => {
-  it.each(CONTENT_FILES)(
-    '%s is not still listed once every callout is gone',
-    (type, file) => {
-      if (!rendersCallout(file)) expect(isLegalPlaceholder(type)).toBe(false);
+const state = vi.hoisted(() => ({ locale: 'en' }));
+vi.mock('../../paraglide/runtime', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../paraglide/runtime')>()),
+  getLocale: () => state.locale,
+}));
+// Match migrated content: owned prose has no placeholder marker. An
+// untranslated locale may still contain the starter's scaffold.
+vi.mock('./about', () => ({
+  aboutContent: {
+    en: { title: 'Our story', description: 'Owned content', Body: () => null },
+    fr: { title: 'About', description: 'Owned', Body: () => null },
+    es: { title: 'About', description: 'Owned', Body: () => null },
+    pl: { title: 'About', description: 'Owned', Body: () => null },
+    nl: { title: 'About', description: 'Owned', Body: () => null },
+    de: {
+      title: 'Über uns',
+      description: 'Scaffold',
+      placeholder: true,
+      Body: () => null,
     },
-  );
+  },
+}));
 
-  it('lists no page that has no content file', () => {
-    const known = new Set(CONTENT_FILES.map(([type]) => type));
-    for (const type of LEGAL_PLACEHOLDER_PAGES) {
-      expect(known.has(type)).toBe(true);
-    }
+vi.mock('@tanstack/react-start', () => ({
+  createServerFn: () => {
+    const builder = {
+      validator: () => builder,
+      middleware: () => builder,
+      handler:
+        <TData, TResult>(
+          handler: (input: {
+            data: TData;
+            context: Record<string, never>;
+          }) => TResult,
+        ) =>
+        (input: { data: TData }) =>
+          handler({ ...input, context: {} }),
+    };
+    return builder;
+  },
+}));
+vi.mock('../../lib/board-access-middleware', () => ({
+  boardAccessMiddleware: {},
+}));
+vi.mock('../../server/board-access', () => ({
+  gatedRead: <TResult>(_context: Record<string, never>, read: () => TResult) =>
+    read(),
+}));
+vi.mock('../../lib/board-context-cache', () => ({
+  readBoardContext: async () => ({
+    name: 'Example',
+    language: 'en',
+    features: { impressum: true },
+  }),
+}));
+vi.mock('../../lib/public-origin', () => ({
+  readPublicOrigin: async () => 'https://example.com',
+}));
+
+import { Route as AboutRoute } from '../../routes/about';
+import { getLegalPageView } from '../../server/legal-pages';
+
+// Exercise the real head construction and route propagation; only network
+// access and the server-function transport are replaced.
+describe('legal placeholder indexing', () => {
+  it.each([
+    ['en', false, 'owned content without a placeholder marker'],
+    ['de', true, 'an untranslated scaffold'],
+    ['unsupported', false, 'the English content fallback'],
+  ] as const)('uses %s for %s (%s)', async (locale, noindex, _description) => {
+    state.locale = locale;
+    const data = await getLegalPageView({ data: { type: 'about' } });
+    // SAFETY: this route's head reads only loaderData; the fixture is the
+    // actual server result, and unrelated router context is not exercised.
+    const headInput = { loaderData: data } as Parameters<
+      NonNullable<typeof AboutRoute.options.head>
+    >[0];
+    const head = await AboutRoute.options.head!(headInput);
+    const robots = { name: 'robots', content: 'noindex' };
+    if (noindex) expect(head?.meta).toContainEqual(robots);
+    else expect(head?.meta).not.toContainEqual(robots);
   });
-
-  it('emits noindex from the one place every legal route builds its head', () => {
-    const source = readFileSync(
-      join(import.meta.dirname, '..', '..', 'server', 'legal-pages.ts'),
-      'utf8',
-    );
-    expect(source).toContain('isLegalPlaceholder(data.type)');
-    expect(source).toContain("{ name: 'robots', content: 'noindex' }");
-  });
-
-  it.each(LEGAL_ROUTES)(
-    '%s spreads the server head, so the robots meta reaches the document',
-    (_path, route) => {
-      // Same string-level check as -private-route-noindex.test.ts: the head
-      // is a function of loader data, so assert the spread it is built from.
-      expect(route.options.head?.toString()).toContain('...loaderData.head');
-    },
-  );
 });

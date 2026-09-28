@@ -5,6 +5,7 @@ import type { LegalLocale, LegalPageContent } from './types';
 /** Titles match `breadcrumbs_termsOfService` per locale. */
 export const termsOfServiceContent = {
   en: {
+    placeholder: true,
     title: 'Terms of Service',
     description:
       'Placeholder terms of service. Replace this description and body before launch.',
@@ -32,6 +33,7 @@ export const termsOfServiceContent = {
     },
   },
   de: {
+    placeholder: true,
     title: 'Nutzungsbedingungen',
     description:
       'Platzhalter-Nutzungsbedingungen. Beschreibung und Inhalt vor dem Launch ersetzen.',
@@ -61,6 +63,7 @@ export const termsOfServiceContent = {
     },
   },
   fr: {
+    placeholder: true,
     title: "Conditions d'utilisation",
     description:
       "Conditions d'utilisation d'espace réservé. Remplacez cette description et le corps avant le lancement.",
@@ -90,6 +93,7 @@ export const termsOfServiceContent = {
     },
   },
   es: {
+    placeholder: true,
     title: 'Términos del servicio',
     description:
       'Términos del servicio de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
@@ -118,6 +122,7 @@ export const termsOfServiceContent = {
     },
   },
   pl: {
+    placeholder: true,
     title: 'Regulamin',
     description:
       'Przykładowy regulamin. Zastąp ten opis i treść przed uruchomieniem.',
@@ -145,6 +150,7 @@ export const termsOfServiceContent = {
     },
   },
   nl: {
+    placeholder: true,
     title: 'Gebruiksvoorwaarden',
     description:
       'Tijdelijke gebruiksvoorwaarden. Vervang deze beschrijving en inhoud vóór de lancering.',

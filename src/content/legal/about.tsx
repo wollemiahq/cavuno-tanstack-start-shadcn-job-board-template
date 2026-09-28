@@ -5,6 +5,7 @@ import type { LegalLocale, LegalPageContent } from './types';
 /** Titles match `breadcrumbs_about` per locale so h1 / title / crumb agree. */
 export const aboutContent = {
   en: {
+    placeholder: true,
     title: 'About',
     description:
       'Placeholder about page. Replace this description and body before launch.',
@@ -32,6 +33,7 @@ export const aboutContent = {
     },
   },
   de: {
+    placeholder: true,
     title: 'Über uns',
     description:
       'Platzhalter-About-Seite. Beschreibung und Inhalt vor dem Launch ersetzen.',
@@ -59,6 +61,7 @@ export const aboutContent = {
     },
   },
   fr: {
+    placeholder: true,
     title: 'À propos',
     description:
       "Page à propos d'espace réservé. Remplacez cette description et le corps avant le lancement.",
@@ -86,6 +89,7 @@ export const aboutContent = {
     },
   },
   es: {
+    placeholder: true,
     title: 'Acerca de',
     description:
       'Página «Acerca de» de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
@@ -113,6 +117,7 @@ export const aboutContent = {
     },
   },
   pl: {
+    placeholder: true,
     title: 'O nas',
     description:
       'Przykładowa strona „O nas”. Zastąp ten opis i treść przed uruchomieniem.',
@@ -137,6 +142,7 @@ export const aboutContent = {
     },
   },
   nl: {
+    placeholder: true,
     title: 'Over ons',
     description:
       'Tijdelijke Over ons-pagina. Vervang deze beschrijving en inhoud vóór de lancering.',

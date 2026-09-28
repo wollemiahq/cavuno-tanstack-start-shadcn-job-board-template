@@ -8,6 +8,7 @@ import type { LegalLocale, LegalPageContent } from './types';
  */
 export const impressumContent = {
   en: {
+    placeholder: true,
     title: 'Impressum',
     description:
       'Placeholder impressum. Replace this description and body before launch.',
@@ -37,6 +38,7 @@ export const impressumContent = {
     },
   },
   de: {
+    placeholder: true,
     title: 'Impressum',
     description:
       'Platzhalter-Impressum. Beschreibung und Inhalt vor dem Launch ersetzen.',
@@ -66,6 +68,7 @@ export const impressumContent = {
     },
   },
   fr: {
+    placeholder: true,
     // Title stays Impressum (legal term) in every locale; FR breadcrumb catalog
     // uses "Mentions légales" — operators may align the catalog if needed.
     title: 'Impressum',
@@ -98,6 +101,7 @@ export const impressumContent = {
     },
   },
   es: {
+    placeholder: true,
     title: 'Aviso legal',
     description:
       'Aviso legal de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
@@ -127,6 +131,7 @@ export const impressumContent = {
     },
   },
   pl: {
+    placeholder: true,
     title: 'Nota prawna',
     description:
       'Przykładowa nota prawna. Zastąp ten opis i treść przed uruchomieniem.',
@@ -155,6 +160,7 @@ export const impressumContent = {
     },
   },
   nl: {
+    placeholder: true,
     title: 'Juridische informatie',
     description:
       'Tijdelijke pagina met juridische informatie. Vervang deze beschrijving en inhoud vóór de lancering.',

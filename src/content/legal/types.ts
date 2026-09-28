@@ -19,6 +19,8 @@ export type LegalLocale = 'en' | 'de' | 'fr' | 'es' | 'pl' | 'nl';
  * view can compose elements without `dangerouslySetInnerHTML`.
  */
 export type LegalPageContent = {
+  /** Template scaffold: omit or set false when replacing this locale's content. */
+  placeholder?: boolean;
   title: string;
   /** Plain-text meta description + JSON-LD `description` (do not derive from JSX). */
   description: string;

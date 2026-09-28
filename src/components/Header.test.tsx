@@ -38,6 +38,16 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import Header from './Header';
 
+// Feature tests own their navigation inputs instead of inheriting a customer's
+// labels, hidden links, or footer configuration from chrome.json.
+const navigation = vi.hoisted(() => ({
+  home: 'Explore openings',
+  companies: 'Organisations',
+  blog: 'Career stories',
+  talent: 'People directory',
+}));
+vi.mock('@/chrome.json', () => ({ default: { nav: navigation } }));
+
 const signOutMock = vi.fn();
 
 afterEach(() => {
@@ -289,11 +299,13 @@ describe('Header — feature-gated public collections', () => {
     });
 
     expect(
-      await screen.findByRole('link', { name: m.nav_home() }),
+      await screen.findByRole('link', { name: navigation.home }),
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: m.nav_companies() })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: m.nav_blog() })).toBeNull();
-    expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
+    expect(
+      screen.getByRole('link', { name: navigation.companies }),
+    ).toBeTruthy();
+    expect(screen.queryByRole('link', { name: navigation.blog })).toBeNull();
+    expect(screen.queryByRole('link', { name: navigation.talent })).toBeNull();
   });
 
   it('omits Talent when the directory visibility is off even if the legacy boolean is on', async () => {
@@ -302,20 +314,22 @@ describe('Header — feature-gated public collections', () => {
       talentDirectoryVisibility: 'off',
     });
 
-    await screen.findByRole('link', { name: m.nav_home() });
-    expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
+    await screen.findByRole('link', { name: navigation.home });
+    expect(screen.queryByRole('link', { name: navigation.talent })).toBeNull();
   });
 
   it('links Blog and Talent to their collection pages when enabled', async () => {
     renderHeader();
 
     expect(
-      (await screen.findByRole('link', { name: m.nav_blog() })).getAttribute(
+      (await screen.findByRole('link', { name: navigation.blog })).getAttribute(
         'href',
       ),
     ).toBe('/blog');
     expect(
-      screen.getByRole('link', { name: m.nav_talent() }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: navigation.talent })
+        .getAttribute('href'),
     ).toBe('/talent');
   });
 
@@ -327,9 +341,9 @@ describe('Header — feature-gated public collections', () => {
     });
 
     expect(
-      (await screen.findByRole('link', { name: m.nav_talent() })).getAttribute(
-        'href',
-      ),
+      (
+        await screen.findByRole('link', { name: navigation.talent })
+      ).getAttribute('href'),
     ).toBe('/talent');
     expect(screen.getByLabelText(/keyword/i)).toHaveAttribute(
       'placeholder',
@@ -349,7 +363,7 @@ describe('Header — role and public-posting gates', () => {
       },
     });
 
-    await screen.findByRole('link', { name: m.nav_home() });
+    await screen.findByRole('link', { name: navigation.home });
     expect(
       screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
     ).toBeNull();
