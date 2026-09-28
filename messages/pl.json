@@ -652,22 +652,7 @@
     }
   ],
   "companySearch_resultsRegionLabel": "Wyniki wyszukiwania firm",
-  "companySearch_resultsShowingRange": [
-    {
-      "declarations": [
-        "input from",
-        "input to",
-        "input count",
-        "input countLabel",
-        "local countPlural = count: plural"
-      ],
-      "selectors": ["countPlural"],
-      "match": {
-        "countPlural=one": "Wyświetlanie {from}–{to} z {countLabel}",
-        "countPlural=*": "Wyświetlanie {from}–{to} z {countLabel}"
-      }
-    }
-  ],
+  "companySearch_resultsShowingRange": "Wyświetlanie {from}–{to} z {count}",
   "companySearch_retryLabel": "Ponów",
   "companySearch_searchLabel": "Szukaj",
   "companySearch_selectedCompanyRegionLabel": "Wybrana firma",
@@ -1416,7 +1401,24 @@
     }
   ],
   "jobSearch_resultsRegionLabel": "Wyniki wyszukiwania ofert",
-  "jobSearch_resultsShowingRange": "Wyświetlanie {from}–{to} z {count}",
+  "jobSearch_resultsShowingRange": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {from}–{to} z {countLabel}",
+        "countPlural=few": "Wyświetlanie {from}–{to} z {countLabel}",
+        "countPlural=many": "Wyświetlanie {from}–{to} z {countLabel}",
+        "countPlural=*": "Wyświetlanie {from}–{to} z {countLabel}"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Ponów",
   "jobSearch_searchButtonLabel": "Szukaj",
   "jobSearch_selectedJobRegionLabel": "Wybrana oferta",
