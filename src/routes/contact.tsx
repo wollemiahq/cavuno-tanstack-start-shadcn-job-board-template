@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { createFileRoute, notFound } from '@tanstack/react-router';
 
 import { ContactForm } from '../components/contact-form';
@@ -27,6 +29,7 @@ export const Route = createFileRoute('/contact')({
 
 function ContactPage() {
   const { boardName } = Route.useLoaderData();
+  const [sent, setSent] = useState(false);
   return (
     <PageLayout>
       <div className="mx-auto w-full max-w-2xl py-10 md:py-16">
@@ -34,11 +37,13 @@ function ContactPage() {
           <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
             {m.contact_title()}
           </h1>
-          <p className="text-muted-foreground mt-3 text-lg">
-            {m.contact_intro({ boardName })}
-          </p>
+          {!sent ? (
+            <p className="text-muted-foreground mt-3 text-lg">
+              {m.contact_intro({ boardName })}
+            </p>
+          ) : null}
         </div>
-        <ContactForm />
+        <ContactForm onSent={() => setSent(true)} />
       </div>
     </PageLayout>
   );

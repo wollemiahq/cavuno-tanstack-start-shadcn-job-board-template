@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { renderToString } from 'react-dom/server';
+
 import {
   cleanup,
   fireEvent,
@@ -32,6 +34,68 @@ beforeEach(() => {
 });
 
 describe('ContactForm', () => {
+  it('does not allow a native submit before the form hydrates', () => {
+    const html = renderToString(<ContactForm />);
+    const document = new DOMParser().parseFromString(html, 'text/html');
+    expect(document.querySelector('button[type="submit"]')?.textContent).toBe(
+      'Loading form…',
+    );
+    for (const control of document.querySelectorAll(
+      'input[name="name"], input[name="email"], textarea[name="body"], button[type="submit"]',
+    )) {
+      expect(control.hasAttribute('disabled')).toBe(true);
+    }
+
+    render(<ContactForm />);
+    expect(screen.getByLabelText('Name').hasAttribute('disabled')).toBe(false);
+    expect(screen.getByLabelText('Email').hasAttribute('disabled')).toBe(false);
+    expect(screen.getByLabelText('Message').hasAttribute('disabled')).toBe(
+      false,
+    );
+    expect(
+      screen
+        .getByRole('button', { name: 'Send message' })
+        .hasAttribute('disabled'),
+    ).toBe(false);
+  });
+
+  it('replaces the guest form with a persistent email confirmation', async () => {
+    useRootSession.mockReturnValue({ ready: true, user: null });
+    submitContact.mockResolvedValue({
+      ok: true,
+      data: { object: 'contact_submission', success: true },
+    });
+    const onSent = vi.fn();
+    const view = render(<ContactForm onSent={onSent} />);
+    fireEvent.change(screen.getByLabelText('Name'), {
+      target: { value: 'Grace' },
+    });
+    fireEvent.change(screen.getByLabelText('Email'), {
+      target: { value: 'grace@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('Message'), {
+      target: { value: 'Please help with my job alerts.' },
+    });
+    const form = screen
+      .getByRole('button', { name: 'Send message' })
+      .closest('form')!;
+    fireEvent.submit(form);
+
+    const status = await screen.findByRole('status');
+    expect(status.textContent).toContain("We've received your message");
+    expect(status.textContent).toContain('grace@example.com');
+    expect(screen.queryByRole('button', { name: 'Send message' })).toBeNull();
+    expect(onSent).toHaveBeenCalledOnce();
+    expect(
+      screen.getByRole('heading', { name: "We've received your message" }),
+    ).toBe(document.activeElement);
+
+    view.rerender(<ContactForm onSent={onSent} />);
+    expect(screen.getByRole('status').textContent).toContain(
+      'grace@example.com',
+    );
+  });
+
   it('prefills signed-in identity and preserves manual edits', async () => {
     const view = render(<ContactForm />);
     expect(
@@ -58,6 +122,20 @@ describe('ContactForm', () => {
       'grace@example.com',
     );
     expect(screen.queryByLabelText('Subject')).toBeNull();
+
+    submitContact.mockResolvedValue({
+      ok: true,
+      data: { object: 'contact_submission', success: true },
+    });
+    fireEvent.change(screen.getByLabelText('Message'), {
+      target: { value: 'Please help me.' },
+    });
+    fireEvent.submit(
+      screen.getByRole('button', { name: 'Send message' }).closest('form')!,
+    );
+    expect((await screen.findByRole('status')).textContent).toContain(
+      'grace@example.com',
+    );
   });
 
   it('reuses the request id after a failed attempt', async () => {

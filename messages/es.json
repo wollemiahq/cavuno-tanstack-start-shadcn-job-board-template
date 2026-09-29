@@ -11,10 +11,11 @@
   "contact_messageLabel": "Mensaje",
   "contact_websiteLabel": "Sitio web",
   "contact_send": "Enviar mensaje",
+  "contact_loading": "Cargando formulario…",
   "contact_sending": "Enviando…",
   "contact_error": "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
-  "contact_successTitle": "Mensaje enviado",
-  "contact_successBody": "Gracias por escribirnos. El equipo responderá por correo electrónico.",
+  "contact_successTitle": "Hemos recibido tu mensaje",
+  "contact_successBody": "Te responderemos por correo electrónico a {email}.",
   "accessOffer_everyMonths": [
     {
       "declarations": [
