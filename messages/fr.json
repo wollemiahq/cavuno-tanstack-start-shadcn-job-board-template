@@ -3,6 +3,18 @@
   "adPreview_label": "Emplacements publicitaires",
   "adPreview_description": "Afficher des espaces réservés aux emplacements des annonces.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "contact_title": "Nous contacter",
+  "contact_description": "Envoyez un message à l’équipe du site d’emploi.",
+  "contact_intro": "Envoyez un message à {boardName}. Nous vous répondrons dès que possible.",
+  "contact_nameLabel": "Nom",
+  "contact_emailLabel": "E-mail",
+  "contact_messageLabel": "Message",
+  "contact_websiteLabel": "Site web",
+  "contact_send": "Envoyer le message",
+  "contact_sending": "Envoi…",
+  "contact_error": "Votre message n’a pas pu être envoyé. Veuillez réessayer.",
+  "contact_successTitle": "Message envoyé",
+  "contact_successBody": "Merci de nous avoir contactés. L’équipe vous répondra par e-mail.",
   "accessOffer_everyMonths": [
     {
       "declarations": [

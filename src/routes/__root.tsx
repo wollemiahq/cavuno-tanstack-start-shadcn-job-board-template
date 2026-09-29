@@ -219,7 +219,7 @@ function RootErrorPage(props: ErrorComponentProps) {
 }
 
 function RootLayout() {
-  const { board, offerGate, publishableKey } = Route.useLoaderData();
+  const { board, offerGate, publishableKey, contact } = Route.useLoaderData();
 
   // Embed widget: no site chrome, no session island, no BoardAnalyticsBoot
   // (first-party analytics). Third-party iframe.
@@ -242,6 +242,7 @@ function RootLayout() {
         board={board}
         offerGate={offerGate}
         publishableKey={publishableKey}
+        contactEnabled={contact?.enabled === true}
       />
     </RootSessionProvider>
   );
@@ -251,10 +252,12 @@ function RootChrome({
   board,
   offerGate,
   publishableKey,
+  contactEnabled,
 }: {
   board: Awaited<ReturnType<typeof getRootShellData>>['board'];
   offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
   publishableKey: string;
+  contactEnabled: boolean;
 }) {
   const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
     useRootSession();
@@ -550,6 +553,7 @@ function RootChrome({
                   slug={board.slug}
                   features={board.features}
                   footer={board.footer}
+                  contactEnabled={contactEnabled}
                   talentDirectoryVisibility={board.talentDirectoryVisibility}
                   hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
                   hasMembershipPage={offerGate.hasMembershipPage}

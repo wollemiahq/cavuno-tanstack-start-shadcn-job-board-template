@@ -3,6 +3,18 @@
   "adPreview_label": "Miejsca reklamowe",
   "adPreview_description": "Pokaż pola zastępcze w miejscach, w których pojawią się reklamy.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "contact_title": "Skontaktuj się z nami",
+  "contact_description": "Wyślij wiadomość do zespołu portalu pracy.",
+  "contact_intro": "Wyślij wiadomość do {boardName}. Odpowiemy tak szybko, jak to możliwe.",
+  "contact_nameLabel": "Imię i nazwisko",
+  "contact_emailLabel": "E-mail",
+  "contact_messageLabel": "Wiadomość",
+  "contact_websiteLabel": "Strona internetowa",
+  "contact_send": "Wyślij wiadomość",
+  "contact_sending": "Wysyłanie…",
+  "contact_error": "Nie udało się wysłać wiadomości. Spróbuj ponownie.",
+  "contact_successTitle": "Wiadomość wysłana",
+  "contact_successBody": "Dziękujemy za kontakt. Zespół odpowie e-mailem.",
   "accessOffer_everyMonths": [
     {
       "declarations": [

@@ -3,6 +3,18 @@
   "adPreview_label": "Ad placements",
   "adPreview_description": "Show placeholders where ads would appear.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "contact_title": "Contact us",
+  "contact_description": "Send a message to the job board team.",
+  "contact_intro": "Send a message to {boardName}. We will get back to you as soon as we can.",
+  "contact_nameLabel": "Name",
+  "contact_emailLabel": "Email",
+  "contact_messageLabel": "Message",
+  "contact_websiteLabel": "Website",
+  "contact_send": "Send message",
+  "contact_sending": "Sending…",
+  "contact_error": "We could not send your message. Please try again.",
+  "contact_successTitle": "Message sent",
+  "contact_successBody": "Thanks for getting in touch. The team will reply by email.",
   "accessOffer_everyMonths": [
     {
       "declarations": [

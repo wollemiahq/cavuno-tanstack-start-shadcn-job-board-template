@@ -3,6 +3,18 @@
   "adPreview_label": "Ubicaciones de anuncios",
   "adPreview_description": "Mostrar marcadores donde aparecerían los anuncios.",
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "contact_title": "Contáctanos",
+  "contact_description": "Envía un mensaje al equipo de la bolsa de empleo.",
+  "contact_intro": "Envía un mensaje a {boardName}. Te responderemos lo antes posible.",
+  "contact_nameLabel": "Nombre",
+  "contact_emailLabel": "Correo electrónico",
+  "contact_messageLabel": "Mensaje",
+  "contact_websiteLabel": "Sitio web",
+  "contact_send": "Enviar mensaje",
+  "contact_sending": "Enviando…",
+  "contact_error": "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
+  "contact_successTitle": "Mensaje enviado",
+  "contact_successBody": "Gracias por escribirnos. El equipo responderá por correo electrónico.",
   "accessOffer_everyMonths": [
     {
       "declarations": [

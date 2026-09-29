@@ -11,6 +11,7 @@ import {
 } from '../lib/data-source.server';
 import { getServerEnv } from '../lib/env';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
+import { getContactForRoot } from './contact';
 import { resolvePreviewStateForViewer } from './preview';
 import {
   getBoardSeo,
@@ -35,7 +36,7 @@ import { EMPTY_GRANT } from './talent-access';
  */
 export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const [board, seo, offerGate] = await Promise.all([
+    const [board, seo, offerGate, contact] = await Promise.all([
       getFreshBoardContext().catch(async () => {
         const cached = await getStaleBoardContext();
         return {
@@ -53,6 +54,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
         manifest: { name: '' },
       })),
       getEmployerOfferGate(),
+      getContactForRoot(),
     ]);
 
     return {
@@ -64,6 +66,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       board,
       seo,
       offerGate,
+      contact,
     };
   },
 );

@@ -29,12 +29,14 @@ describe('getRootShellData stays viewer-anonymous', () => {
     expect(body).not.toContain('CookieConsent');
   });
 
-  it('returns only origin, board, seo, and offerGate', () => {
+  it('returns only public shell data', () => {
     const body = handlerBody('getRootShellData');
     expect(body).toContain('origin:');
     expect(body).toContain('board,');
     expect(body).toContain('seo,');
     expect(body).toContain('offerGate,');
+    expect(body).toContain('contact,');
+    expect(body).toContain('getContactForRoot');
     expect(body).toContain('getFreshBoardContext');
     expect(body).toContain('getBoardSeo');
     expect(body).toContain('getEmployerOfferGate');
