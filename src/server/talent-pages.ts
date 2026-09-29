@@ -18,6 +18,7 @@ import { readTalentDirectory } from './talent-directory-read';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { selfUrl } from '@/lib/self-url';
+import { talentProfilePath } from '@/lib/talent-profile-path';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -166,6 +167,11 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
       ]);
       const title =
         profile.displayName ?? m.publicProfile_profileFallbackLabel();
+      // A profile without a handle is only reachable by its opaque id.
+      const canonical = selfUrl(
+        seo.origin,
+        talentProfilePath(profile.handle ?? profile.id),
+      );
       const head = {
         meta: [
           { title: headTitle(seo.boardName, title) },
@@ -176,13 +182,12 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: selfUrl(seo.origin, `/p/${profile.handle}`),
+            href: canonical,
           },
         ],
       };
       const displayName =
         profile.displayName ?? m.publicProfile_anonymousCandidateLabel();
-      const canonical = selfUrl(seo.origin, `/p/${profile.handle}`);
       const c = breadcrumbsCopy();
       const person: ProfilePersonJsonLd = {
         '@type': 'Person',

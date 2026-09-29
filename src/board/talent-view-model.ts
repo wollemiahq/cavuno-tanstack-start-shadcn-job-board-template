@@ -1,5 +1,9 @@
 import { formatMonthYear, normalizeWebsiteUrl } from '@cavuno/board/format';
 
+import {
+  talentProfileParam,
+  talentProfilePath,
+} from '@/lib/talent-profile-path';
 import type {
   TalentAccess,
   TalentCandidateAccess,
@@ -106,7 +110,7 @@ export interface TalentProfileVM extends TalentCardVM {
 }
 
 function profilePath(param: string | null) {
-  return param ? `/p/${encodeURIComponent(param)}` : null;
+  return param ? talentProfilePath(param) : null;
 }
 
 /**
@@ -189,8 +193,7 @@ export function employerCanStartMessage(access: {
 
 /** The URL param a card's `detailHref` selects (`id` or `handle`). */
 export function talentCardSelectionKey(vm: TalentCardVM): string | null {
-  if (!vm.detailHref) return null;
-  return decodeURIComponent(vm.detailHref.slice('/p/'.length));
+  return vm.detailHref ? talentProfileParam(vm.detailHref) : null;
 }
 
 function enumLabel(
