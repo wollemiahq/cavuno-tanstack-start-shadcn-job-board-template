@@ -136,8 +136,8 @@ function memoryBindingStore() {
 function renderCompletion(
   state: OAuthCompleteState,
   bindingStore: ReturnType<typeof memoryBindingStore>,
-  consume: ReturnType<typeof vi.fn>,
-  assignLocation: ReturnType<typeof vi.fn>,
+  consume: Parameters<typeof OAuthCompleteView>[0]['consumeSsoLinkProofAction'],
+  assignLocation: (url: string) => void,
 ) {
   return renderRouted(
     <StrictMode>
