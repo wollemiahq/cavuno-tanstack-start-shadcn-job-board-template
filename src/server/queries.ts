@@ -21,7 +21,6 @@ import { getBoard } from '../lib/board';
 import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { resolveBoardAds } from '../lib/board-ads';
-import { resolveBoardSignIn } from '../lib/board-sign-in';
 import {
   readBoardContext,
   readStaleBoardContext,
@@ -29,6 +28,7 @@ import {
   readEmployerOfferGate,
 } from '../lib/board-context-cache';
 import { readBoardSeo } from '../lib/board-seo-cache';
+import { resolveBoardSignIn } from '../lib/board-sign-in';
 import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';

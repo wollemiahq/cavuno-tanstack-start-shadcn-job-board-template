@@ -1,11 +1,11 @@
+import { isEmployerReturnPath } from './board-datalayer-events';
+
 import type {
   BoardRoleSignIn,
   BoardSignInSsoConnection,
   PublicBoardSignIn,
   SignInRole,
 } from '@cavuno/board';
-
-import { isEmployerReturnPath } from './board-datalayer-events';
 
 /**
  * Sign-in options per role from `board.context().signIn`. An API deployment

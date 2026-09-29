@@ -1,4 +1,3 @@
-import type { PublicBoardSignIn } from '@cavuno/board';
 import { notFound } from '@tanstack/react-router';
 
 import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
@@ -17,6 +16,7 @@ import {
   appendOAuthProviderHint,
 } from '@/lib/board-datalayer-events';
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+import type { PublicBoardSignIn } from '@cavuno/board';
 
 const EMPLOYER_DASHBOARD = '/employers/dashboard';
 

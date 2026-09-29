@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import type { PublicBoardSignIn } from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
 
@@ -36,6 +35,7 @@ import {
 import { signInRedirectErrorMessage } from '@/lib/sign-in-redirect-error';
 import { textActionClass, textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
+import type { PublicBoardSignIn } from '@cavuno/board';
 
 type AuthActionFailure = {
   ok: false;
@@ -278,129 +278,129 @@ export function SignInView({
         </Alert>
       ) : null}
       {methods.password && methods.magicLink ? (
-      <RadioGroup
-        name="sign-in-method"
-        value={mode}
-        onValueChange={(next: 'password' | 'magic') => {
-          setMode(next);
-          setError(null);
-        }}
-        className="bg-muted grid grid-cols-2 gap-1 rounded-2xl p-1"
-        aria-label={m.authSignIn_title()}
-      >
-        <label
-          className={cn(
-            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
-            mode === 'password'
-              ? 'bg-background text-foreground shadow-xs'
-              : 'text-muted-foreground',
-          )}
+        <RadioGroup
+          name="sign-in-method"
+          value={mode}
+          onValueChange={(next: 'password' | 'magic') => {
+            setMode(next);
+            setError(null);
+          }}
+          className="bg-muted grid grid-cols-2 gap-1 rounded-2xl p-1"
+          aria-label={m.authSignIn_title()}
         >
-          <RadioGroupItem value="password" className="sr-only" />
-          {m.authSignIn_passwordTabLabel()}
-        </label>
-        <label
-          className={cn(
-            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
-            mode === 'magic'
-              ? 'bg-background text-foreground shadow-xs'
-              : 'text-muted-foreground',
-          )}
-        >
-          <RadioGroupItem value="magic" className="sr-only" />
-          {m.authSignIn_magicLinkTabLabel()}
-        </label>
-      </RadioGroup>
+          <label
+            className={cn(
+              'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
+              mode === 'password'
+                ? 'bg-background text-foreground shadow-xs'
+                : 'text-muted-foreground',
+            )}
+          >
+            <RadioGroupItem value="password" className="sr-only" />
+            {m.authSignIn_passwordTabLabel()}
+          </label>
+          <label
+            className={cn(
+              'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
+              mode === 'magic'
+                ? 'bg-background text-foreground shadow-xs'
+                : 'text-muted-foreground',
+            )}
+          >
+            <RadioGroupItem value="magic" className="sr-only" />
+            {m.authSignIn_magicLinkTabLabel()}
+          </label>
+        </RadioGroup>
       ) : null}
 
       {showCredentialForm ? (
-      <form
-        method="post"
-        className="grid gap-4"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          setPending(true);
-          setError(null);
-          const form = new FormData(event.currentTarget);
-          const email = String(form.get('email'));
-          let result:
-            | Awaited<ReturnType<typeof signInAction>>
-            | Awaited<ReturnType<typeof requestMagicLinkAction>>;
-          try {
-            result =
-              mode === 'password'
-                ? await signInAction({
-                    data: {
-                      email,
-                      password: String(form.get('password')),
-                    },
-                  })
-                : // A sign-in form must never recreate a deleted account:
-                  // `sign_in` makes an unknown email a 404 instead of a
-                  // sign-up token.
-                  await requestMagicLinkAction({
-                    data: {
-                      email,
-                      returnTo,
-                      intent: 'sign_in',
-                    },
-                  });
-          } catch {
-            setError(m.candidateAction_errorText());
-            setPending(false);
-            return;
-          }
-          if (result.ok && mode === 'password') {
-            // The httpOnly session is committed. A hard navigation both
-            // reconciles the shell and prevents later router failures from
-            // being reported as an authentication failure.
-            assignLocation(
-              appendAuthConversionQuery(returnTo, 'login', 'password'),
-            );
-            return;
-          }
-          if (result.ok) {
-            setSentTo(email);
-          } else {
-            handleFailure(result);
-          }
-          setPending(false);
-        }}
-      >
-        <Field
-          label={m.authSignIn_emailLabel()}
-          name="email"
-          type="email"
-          autoComplete="email"
-        />
-        {mode === 'password' ? (
-          <Field
-            label={m.authSignIn_passwordLabel()}
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            labelAction={
-              <Link
-                className={textLinkClass}
-                to="/auth/forgot-password"
-                search={candidateAuthSearch(returnTo)}
-              >
-                {m.authSignIn_forgotPasswordLink()}
-              </Link>
+        <form
+          method="post"
+          className="grid gap-4"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setPending(true);
+            setError(null);
+            const form = new FormData(event.currentTarget);
+            const email = String(form.get('email'));
+            let result:
+              | Awaited<ReturnType<typeof signInAction>>
+              | Awaited<ReturnType<typeof requestMagicLinkAction>>;
+            try {
+              result =
+                mode === 'password'
+                  ? await signInAction({
+                      data: {
+                        email,
+                        password: String(form.get('password')),
+                      },
+                    })
+                  : // A sign-in form must never recreate a deleted account:
+                    // `sign_in` makes an unknown email a 404 instead of a
+                    // sign-up token.
+                    await requestMagicLinkAction({
+                      data: {
+                        email,
+                        returnTo,
+                        intent: 'sign_in',
+                      },
+                    });
+            } catch {
+              setError(m.candidateAction_errorText());
+              setPending(false);
+              return;
             }
+            if (result.ok && mode === 'password') {
+              // The httpOnly session is committed. A hard navigation both
+              // reconciles the shell and prevents later router failures from
+              // being reported as an authentication failure.
+              assignLocation(
+                appendAuthConversionQuery(returnTo, 'login', 'password'),
+              );
+              return;
+            }
+            if (result.ok) {
+              setSentTo(email);
+            } else {
+              handleFailure(result);
+            }
+            setPending(false);
+          }}
+        >
+          <Field
+            label={m.authSignIn_emailLabel()}
+            name="email"
+            type="email"
+            autoComplete="email"
           />
-        ) : null}
-        <FormError message={error} />
-        <Button type="submit" size="lg" className="w-full" disabled={pending}>
-          {pending
-            ? mode === 'password'
-              ? m.authSignIn_signingInLabel()
-              : m.authSignIn_sendingLabel()
-            : mode === 'password'
-              ? m.authSignIn_submitLabel()
-              : m.authSignIn_sendMagicLinkLabel()}
-        </Button>
-      </form>
+          {mode === 'password' ? (
+            <Field
+              label={m.authSignIn_passwordLabel()}
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              labelAction={
+                <Link
+                  className={textLinkClass}
+                  to="/auth/forgot-password"
+                  search={candidateAuthSearch(returnTo)}
+                >
+                  {m.authSignIn_forgotPasswordLink()}
+                </Link>
+              }
+            />
+          ) : null}
+          <FormError message={error} />
+          <Button type="submit" size="lg" className="w-full" disabled={pending}>
+            {pending
+              ? mode === 'password'
+                ? m.authSignIn_signingInLabel()
+                : m.authSignIn_sendingLabel()
+              : mode === 'password'
+                ? m.authSignIn_submitLabel()
+                : m.authSignIn_sendMagicLinkLabel()}
+          </Button>
+        </form>
       ) : null}
 
       {showCredentialForm && showProviderButtons ? (
@@ -408,39 +408,39 @@ export function SignInView({
       ) : null}
 
       {showProviderButtons ? (
-      <div className="flex flex-col gap-3">
-        <SsoConnectionButtons
-          choices={ssoChoices}
-          disabled={pending}
-          onSelect={(choice) => void startSso(choice)}
-        />
-        {methods.google ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          disabled={pending}
-          onClick={() => void startOAuth('google')}
-        >
-          <GoogleIcon />
-          {m.authSignIn_continueWithGoogleLabel()}
-        </Button>
-        ) : null}
-        {methods.linkedin ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          disabled={pending}
-          onClick={() => void startOAuth('linkedin')}
-        >
-          <LinkedInIcon className="size-4 text-[#0A66C2]" />
-          {m.authSignIn_continueWithLinkedinLabel()}
-        </Button>
-        ) : null}
-      </div>
+        <div className="flex flex-col gap-3">
+          <SsoConnectionButtons
+            choices={ssoChoices}
+            disabled={pending}
+            onSelect={(choice) => void startSso(choice)}
+          />
+          {methods.google ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={pending}
+              onClick={() => void startOAuth('google')}
+            >
+              <GoogleIcon />
+              {m.authSignIn_continueWithGoogleLabel()}
+            </Button>
+          ) : null}
+          {methods.linkedin ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              disabled={pending}
+              onClick={() => void startOAuth('linkedin')}
+            >
+              <LinkedInIcon className="size-4 text-[#0A66C2]" />
+              {m.authSignIn_continueWithLinkedinLabel()}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       {showCredentialForm ? null : <FormError message={error} />}

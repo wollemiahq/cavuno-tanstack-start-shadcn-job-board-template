@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import type { PublicBoardSignIn } from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 import { BriefcaseBusiness } from 'lucide-react';
 
@@ -29,6 +28,7 @@ import {
   type SsoChoice,
 } from '@/lib/board-sign-in';
 import { cn } from '@/lib/utils';
+import type { PublicBoardSignIn } from '@cavuno/board';
 
 export function AuthPageCard({
   title,
@@ -350,7 +350,9 @@ function OAuthButton({
       size="lg"
       className="w-full"
       disabled={pending}
-      onClick={() => void startProvider(() => onStart(provider), onStatusChange)}
+      onClick={() =>
+        void startProvider(() => onStart(provider), onStatusChange)
+      }
     >
       {provider === 'google' ? <GoogleIcon /> : <LinkedInIcon />}
       {label}

@@ -1,4 +1,3 @@
-import type { PublicBoardSignIn } from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 
 import {
@@ -17,6 +16,7 @@ import {
 import { reconcileCommittedAction } from '@/lib/action-toast';
 import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
 import { textLinkClass } from '@/lib/text-link';
+import type { PublicBoardSignIn } from '@cavuno/board';
 
 export function SignUpView({
   boardName,

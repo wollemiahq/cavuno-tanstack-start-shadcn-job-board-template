@@ -28,12 +28,10 @@ export const REDIRECT_ERROR_MESSAGES = {
 } satisfies Record<RedirectErrorCode, () => string>;
 
 export function signInRedirectErrorMessage(code: string): string {
-  const known = (SIGN_IN_REDIRECT_ERROR_CODES as readonly string[]).includes(
-    code,
-  );
-  // SAFETY: `known` proves code is one of the SDK's listed redirect codes,
-  // every one of which is a key of REDIRECT_ERROR_MESSAGES.
-  return known
-    ? REDIRECT_ERROR_MESSAGES[code as RedirectErrorCode]()
-    : m.authSignInError_failedText();
+  if (!Object.prototype.hasOwnProperty.call(REDIRECT_ERROR_MESSAGES, code)) {
+    return m.authSignInError_failedText();
+  }
+  // SAFETY: The hasOwnProperty check proves code is one of the
+  // REDIRECT_ERROR_MESSAGES keys before indexing the object.
+  return REDIRECT_ERROR_MESSAGES[code as RedirectErrorCode]();
 }

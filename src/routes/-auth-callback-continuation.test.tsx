@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { ssoLinkProofBindingStore } from '@cavuno/board';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -8,7 +9,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { MagicLinkView } from './-auth.magic-link';
 import {
@@ -88,7 +89,13 @@ describe('auth callback continuation', () => {
         route === MagicLinkRoute ? (
           <MagicLinkView status="invalid" returnTo={returnTo} />
         ) : (
-          <OAuthCompleteView status="invalid" returnTo={returnTo} />
+          <OAuthCompleteView
+            state={{ status: 'invalid' }}
+            returnTo={returnTo}
+            bindingStore={ssoLinkProofBindingStore('board_test')}
+            consumeSsoLinkProofAction={vi.fn()}
+            assignLocation={vi.fn()}
+          />
         ),
       );
 
