@@ -7,10 +7,10 @@ import {
   signUpEmployer,
 } from '../server/auth';
 import {
-  EmployerSignUpUnavailable,
   EmployerSignUpView,
   loadEmployerSignUp,
 } from './-auth.employer.sign-up';
+import { EmployerSignUpUnavailable } from './-auth.employer.sign-up-unavailable';
 
 import { headTitle } from '@/lib/page-title';
 import { textLinkClass } from '@/lib/text-link';

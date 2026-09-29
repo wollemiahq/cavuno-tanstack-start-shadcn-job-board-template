@@ -9,7 +9,6 @@ import {
   RegistrationPage,
   type MarketingConsentCopy,
 } from '@/components/registration-page';
-import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { reconcileCommittedAction } from '@/lib/action-toast';
 import {
   appendAuthIntentQuery,
@@ -56,20 +55,6 @@ export async function loadEmployerSignUp(
   redirectIfSignedIn(user, '/');
   if (!board.features.employers) throw notFound();
   return { boardName: board.name, signIn: board.signIn };
-}
-
-export function EmployerSignUpUnavailable() {
-  return (
-    <div>
-      <Empty className="border-border bg-card border">
-        <EmptyHeader>
-          <EmptyDescription>
-            {m.authEmployerSignUp_notAvailableText()}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </div>
-  );
 }
 
 export function EmployerSignUpView({

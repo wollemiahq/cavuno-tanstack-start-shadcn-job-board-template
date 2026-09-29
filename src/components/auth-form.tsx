@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { AuthPageCard } from '@/components/registration-page';
+import { AuthPageCard } from '@/components/auth-page-card';
 import {
   Field as FormField,
   FieldError,

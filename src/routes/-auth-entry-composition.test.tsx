@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { EmployerSignUpUnavailable } from './-auth.employer.sign-up';
+import { EmployerSignUpUnavailable } from './-auth.employer.sign-up-unavailable';
 import { JoinUnavailable } from './-auth.join';
 
 import { m } from '@/paraglide/messages';

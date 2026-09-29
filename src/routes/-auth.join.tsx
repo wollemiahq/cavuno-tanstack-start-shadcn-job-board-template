@@ -17,8 +17,8 @@ import { m } from '../paraglide/messages';
 import { getAuthJoinSeo } from '../server/marketing-pages';
 import { getBoardContext } from '../server/queries';
 
+import { AuthPageCard, RoleSelector } from '@/components/auth-page-card';
 import { jsonLdHeadScripts } from '@/components/json-ld';
-import { AuthPageCard, RoleSelector } from '@/components/registration-page';
 import { buttonVariants } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
