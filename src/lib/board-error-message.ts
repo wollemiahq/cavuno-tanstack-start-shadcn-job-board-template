@@ -25,6 +25,17 @@ export const CODE_MESSAGES = {
   board_auth_email_taken: m.boardError_emailTakenText,
   board_auth_registration_disabled: m.boardError_registrationDisabledText,
   board_auth_account_not_found: m.boardError_accountNotFoundText,
+  // Board SSO sign-in:
+  sso_required: m.authSso_requiredText,
+  board_auth_sso_connection_not_found:
+    m.authSignInError_connectionUnavailableText,
+  board_auth_sso_role_unavailable: m.authSignInError_roleUnavailableText,
+  board_auth_sso_provider_unavailable:
+    m.authSignInError_connectionUnavailableText,
+  board_auth_sso_browser_mismatch: m.authSso_deviceMismatchBody,
+  board_auth_sso_not_provisioned: m.authSignInError_notProvisionedText,
+  board_auth_sso_identity_linked_elsewhere:
+    m.authSignInError_identityLinkedElsewhereText,
   auth_unauthenticated: m.boardError_unauthorizedText,
   auth_forbidden: m.boardError_forbiddenText,
   validation_bad_request: m.boardError_validationText,

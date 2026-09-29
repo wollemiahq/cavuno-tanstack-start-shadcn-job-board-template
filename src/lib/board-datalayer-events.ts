@@ -12,7 +12,12 @@ export const CAVUNO_AUTH_INTENT_PARAM = 'cavuno_auth_intent';
 /** Staged on returnTo during OAuth so the completion redirect knows the provider. */
 export const CAVUNO_OAUTH_PROVIDER_PARAM = 'cavuno_oauth_provider';
 
-export type BoardAuthMethod = 'password' | 'google' | 'linkedin' | 'magic_link';
+export type BoardAuthMethod =
+  | 'password'
+  | 'google'
+  | 'linkedin'
+  | 'magic_link'
+  | 'sso';
 export type BoardAuthEvent = 'sign_up' | 'login';
 
 export type BoardConversionEvent =
@@ -74,6 +79,7 @@ const BOARD_AUTH_METHODS: ReadonlySet<string> = new Set([
   'google',
   'linkedin',
   'magic_link',
+  'sso',
 ]);
 
 function isBoardAuthMethod(value: string): value is BoardAuthMethod {
@@ -208,7 +214,7 @@ export function incomingAuthSearch(
   return location.searchStr ?? location.href;
 }
 
-function isEmployerReturnPath(pathname: string) {
+export function isEmployerReturnPath(pathname: string) {
   const canonical = stripLocalePrefix(pathname);
   return (
     canonical.startsWith('/employers') ||
@@ -230,8 +236,10 @@ export function resolvePostAuthConversionRedirect(
   url.searchParams.delete(CAVUNO_OAUTH_PROVIDER_PARAM);
   const event: BoardAuthEvent = input.isNewUser ? 'sign_up' : 'login';
   const method: BoardAuthMethod =
-    input.fallbackMethod === 'magic_link'
-      ? 'magic_link'
+    // Magic link and SSO name their own method; only the Google/LinkedIn
+    // exchange needs the provider hint staged on returnTo.
+    input.fallbackMethod === 'magic_link' || input.fallbackMethod === 'sso'
+      ? input.fallbackMethod
       : provider === 'linkedin'
         ? 'linkedin'
         : provider === 'google'

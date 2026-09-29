@@ -3,7 +3,11 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { redirectIfSignedIn, sessionUserOrNull } from '../lib/auth-guard';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { getOAuthAuthorizationUrl, signUp } from '../server/auth';
+import {
+  getOAuthAuthorizationUrl,
+  getSsoAuthorizationUrl,
+  signUp,
+} from '../server/auth';
 import { getBoardContext } from '../server/queries';
 import { SignUpView } from './-auth.sign-up';
 
@@ -22,7 +26,7 @@ export const Route = createFileRoute('/auth/sign-up')({
       getBoardContext(),
     ]);
     redirectIfSignedIn(user, candidateReturnTo(deps.returnTo));
-    return { boardName: board.name };
+    return { boardName: board.name, signIn: board.signIn };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -35,7 +39,7 @@ export const Route = createFileRoute('/auth/sign-up')({
 
 function SignUpPage() {
   const router = useRouter();
-  const { boardName } = Route.useLoaderData();
+  const { boardName, signIn } = Route.useLoaderData();
   const search = Route.useSearch();
   const returnTo = candidateReturnTo(search.returnTo);
   return (
@@ -44,6 +48,8 @@ function SignUpPage() {
       returnTo={returnTo}
       signUpAction={signUp}
       getOAuthAuthorizationUrlAction={getOAuthAuthorizationUrl}
+      getSsoAuthorizationUrlAction={getSsoAuthorizationUrl}
+      signIn={signIn}
       invalidate={async () => {
         await router.invalidate();
       }}

@@ -1,4 +1,8 @@
-import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
+import {
+  isBoardApiError,
+  isSsoRequired,
+  type BoardAuthSession,
+} from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
@@ -27,9 +31,19 @@ type AuthActionError = {
   ok: false;
   code: string;
   message: string;
+  /** On `sso_required`: the SSO connections the role must sign in with. */
+  ssoConnectionIds?: string[];
 };
 
 function authError<T>(error: T): AuthActionError {
+  if (isSsoRequired(error)) {
+    return {
+      ok: false,
+      code: error.code,
+      message: error.message,
+      ssoConnectionIds: error.details.connectionIds,
+    };
+  }
   if (isBoardApiError(error)) {
     return { ok: false, code: error.code, message: error.message };
   }
@@ -306,6 +320,55 @@ export const exchangeOAuth = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.exchangeOAuth(data);
+      persistAuthSession(session);
+      return {
+        ok: true as const,
+        boardUser: session.boardUser,
+        isNewUser: authExchangeIsNewUser(session),
+      };
+    } catch (error) {
+      return authError(error);
+    }
+  });
+
+/**
+ * Start sign-in through one of the board's SSO connections (ids come from
+ * the board context's `signIn.<role>.ssoConnections`). Returns the provider
+ * URL; the browser navigates, and the round trip lands on
+ * `/auth/oauth-complete`.
+ */
+export const getSsoAuthorizationUrl = createServerFn({ method: 'GET' })
+  .validator(
+    (input: {
+      connectionId: string;
+      returnTo?: string;
+      /** Role being signed into; also the role a NEW user is created as. */
+      role?: 'candidate' | 'employer';
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { connectionId, ...query } = data;
+      const result = await getBoard().auth.getSsoAuthorizationUrl(
+        connectionId,
+        query,
+      );
+      return { ok: true as const, authorizeUrl: result.authorizeUrl };
+    } catch (error) {
+      return authError(error);
+    }
+  });
+
+/**
+ * Finish an SSO sign-in that had to confirm the inbox first. The browser
+ * sends the emailed `linkProof` token with the binding it kept when the
+ * sign-in started; the session lands in the httpOnly cookie as usual.
+ */
+export const consumeSsoLinkProof = createServerFn({ method: 'POST' })
+  .validator((input: { token: string; browserBinding?: string }) => input)
+  .handler(async ({ data }) => {
+    try {
+      const session = await getBoard().auth.consumeSsoLinkProof(data);
       persistAuthSession(session);
       return {
         ok: true as const,

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import type { PublicBoardSignIn } from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
 
@@ -17,35 +18,68 @@ import { m } from '../paraglide/messages';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
+import { SsoConnectionButtons } from '@/components/sso-connection-buttons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
+import {
+  appendAuthConversionQuery,
+  appendAuthIntentQuery,
+} from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import {
+  resolveBoardSignIn,
+  signInRoleForReturnTo,
+  ssoChoicesForRequired,
+  type SsoChoice,
+} from '@/lib/board-sign-in';
+import { signInRedirectErrorMessage } from '@/lib/sign-in-redirect-error';
 import { textActionClass, textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
+
+type AuthActionFailure = {
+  ok: false;
+  code: string;
+  message: string;
+  /** Present on `sso_required`: the connections the account must use. */
+  ssoConnectionIds?: string[];
+};
 
 export function SignInView({
   returnTo,
   notice,
+  signIn,
+  redirectError,
   signInAction,
   requestMagicLinkAction,
   getOAuthAuthorizationUrlAction,
+  getSsoAuthorizationUrlAction,
   assignLocation,
 }: {
   returnTo: string;
   notice?: 'password-reset';
+  /** `board.context().signIn`; absent means every built-in method, no SSO. */
+  signIn?: PublicBoardSignIn;
+  /** `?error=` code a Google, LinkedIn or SSO round trip landed here with. */
+  redirectError?: string;
   signInAction: (input: {
     data: { email: string; password: string };
-  }) => Promise<
-    | { ok: true; boardUser?: unknown }
-    | { ok: false; code: string; message: string }
-  >;
+  }) => Promise<{ ok: true; boardUser?: unknown } | AuthActionFailure>;
   requestMagicLinkAction: (input: {
     data: { email: string; returnTo?: string; intent?: 'sign_in' };
-  }) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+  }) => Promise<{ ok: true } | AuthActionFailure>;
   getOAuthAuthorizationUrlAction: (input: {
     data: { provider: 'google' | 'linkedin'; returnTo?: string };
+  }) => Promise<
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
+  >;
+  getSsoAuthorizationUrlAction: (input: {
+    data: {
+      connectionId: string;
+      role: 'candidate' | 'employer';
+      returnTo: string;
+    };
   }) => Promise<
     | { ok: true; authorizeUrl: string }
     | { ok: false; code?: string; message: string }
@@ -54,11 +88,71 @@ export function SignInView({
   navigate: (href: string) => Promise<void>;
   assignLocation: (url: string) => void;
 }) {
-  const [mode, setMode] = useState<'password' | 'magic'>('password');
+  const options = resolveBoardSignIn(signIn);
+  const role = signInRoleForReturnTo(returnTo);
+  const roleSignIn = options[role];
+  const { methods } = roleSignIn;
+  const [mode, setMode] = useState<'password' | 'magic'>(
+    methods.password || !methods.magicLink ? 'password' : 'magic',
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   /** The address a magic link was sent to — non-null swaps in the sent state. */
   const [sentTo, setSentTo] = useState<string | null>(null);
+  /**
+   * Set when the API answered `sso_required` (to a password or magic-link
+   * attempt, or on the provider redirect): only these SSO buttons remain.
+   */
+  const [requiredSso, setRequiredSso] = useState<SsoChoice[] | null>(() =>
+    redirectError === 'sso_required'
+      ? ssoChoicesForRequired(options, role)
+      : null,
+  );
+  const ssoOnly = roleSignIn.ssoRequired || requiredSso !== null;
+  const ssoChoices: SsoChoice[] =
+    requiredSso ??
+    roleSignIn.ssoConnections.map((connection) => ({ connection, role }));
+  const showCredentialForm = methods.password || methods.magicLink;
+  const showProviderButtons =
+    methods.google || methods.linkedin || ssoChoices.length > 0;
+  const redirectErrorText =
+    redirectError && redirectError !== 'sso_required'
+      ? signInRedirectErrorMessage(redirectError)
+      : null;
+
+  function handleFailure(result: AuthActionFailure) {
+    if (result.code === 'sso_required') {
+      setRequiredSso(
+        ssoChoicesForRequired(options, role, result.ssoConnectionIds),
+      );
+      setError(null);
+      return;
+    }
+    setError(boardErrorMessage(result));
+  }
+
+  async function startSso(choice: SsoChoice) {
+    setPending(true);
+    setError(null);
+    try {
+      const result = await getSsoAuthorizationUrlAction({
+        data: {
+          connectionId: choice.connection.id,
+          role: choice.role,
+          returnTo: appendAuthIntentQuery(returnTo, 'login'),
+        },
+      });
+      if (result.ok) {
+        assignLocation(result.authorizeUrl);
+        return;
+      }
+      setError(boardErrorMessage(result));
+    } catch {
+      setError(m.candidateAction_errorText());
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function startOAuth(provider: 'google' | 'linkedin') {
     setPending(true);
@@ -102,7 +196,7 @@ export function SignInView({
                 const result = await requestMagicLinkAction({
                   data: { email: sentTo, returnTo, intent: 'sign_in' },
                 });
-                if (!result.ok) setError(boardErrorMessage(result));
+                if (!result.ok) handleFailure(result);
               } catch {
                 setError(m.candidateAction_errorText());
               } finally {
@@ -132,8 +226,50 @@ export function SignInView({
     );
   }
 
+  if (ssoOnly) {
+    return (
+      <AuthCard
+        title={m.authSignIn_title()}
+        supportingText={m.authSso_requiredText()}
+      >
+        {redirectErrorText ? (
+          <Alert variant="destructive">
+            <AlertDescription>{redirectErrorText}</AlertDescription>
+          </Alert>
+        ) : null}
+        <div className="flex flex-col gap-3">
+          <SsoConnectionButtons
+            choices={ssoChoices}
+            disabled={pending}
+            onSelect={(choice) => void startSso(choice)}
+          />
+        </div>
+        <FormError message={error} />
+        {/* The prompt came from one account's answer; someone else on this
+            device can still use the methods the board offers. */}
+        {requiredSso !== null && !roleSignIn.ssoRequired ? (
+          <button
+            type="button"
+            className={cn(textActionClass, 'justify-self-center text-sm')}
+            onClick={() => {
+              setRequiredSso(null);
+              setError(null);
+            }}
+          >
+            {m.authSso_signInAnotherWayLabel()}
+          </button>
+        ) : null}
+      </AuthCard>
+    );
+  }
+
   return (
     <AuthCard title={m.authSignIn_title()}>
+      {redirectErrorText ? (
+        <Alert variant="destructive">
+          <AlertDescription>{redirectErrorText}</AlertDescription>
+        </Alert>
+      ) : null}
       {notice === 'password-reset' ? (
         <Alert role="status">
           <AlertDescription>
@@ -141,6 +277,7 @@ export function SignInView({
           </AlertDescription>
         </Alert>
       ) : null}
+      {methods.password && methods.magicLink ? (
       <RadioGroup
         name="sign-in-method"
         value={mode}
@@ -174,7 +311,9 @@ export function SignInView({
           {m.authSignIn_magicLinkTabLabel()}
         </label>
       </RadioGroup>
+      ) : null}
 
+      {showCredentialForm ? (
       <form
         method="post"
         className="grid gap-4"
@@ -223,7 +362,7 @@ export function SignInView({
           if (result.ok) {
             setSentTo(email);
           } else {
-            setError(boardErrorMessage(result));
+            handleFailure(result);
           }
           setPending(false);
         }}
@@ -262,10 +401,20 @@ export function SignInView({
               : m.authSignIn_sendMagicLinkLabel()}
         </Button>
       </form>
+      ) : null}
 
-      <AuthDivider label={m.authOrDividerLabel()} />
+      {showCredentialForm && showProviderButtons ? (
+        <AuthDivider label={m.authOrDividerLabel()} />
+      ) : null}
 
+      {showProviderButtons ? (
       <div className="flex flex-col gap-3">
+        <SsoConnectionButtons
+          choices={ssoChoices}
+          disabled={pending}
+          onSelect={(choice) => void startSso(choice)}
+        />
+        {methods.google ? (
         <Button
           type="button"
           variant="outline"
@@ -277,6 +426,8 @@ export function SignInView({
           <GoogleIcon />
           {m.authSignIn_continueWithGoogleLabel()}
         </Button>
+        ) : null}
+        {methods.linkedin ? (
         <Button
           type="button"
           variant="outline"
@@ -288,7 +439,16 @@ export function SignInView({
           <LinkedInIcon className="size-4 text-[#0A66C2]" />
           {m.authSignIn_continueWithLinkedinLabel()}
         </Button>
+        ) : null}
       </div>
+      ) : null}
+
+      {showCredentialForm ? null : <FormError message={error} />}
+      {!showCredentialForm && !showProviderButtons ? (
+        <p className="text-muted-foreground text-center text-sm">
+          {m.authSso_noMethodsText()}
+        </p>
+      ) : null}
 
       {/* Mirrors the sign-up card's prompt+link footer, so the two entry
           points read as one pair rather than two conventions. */}

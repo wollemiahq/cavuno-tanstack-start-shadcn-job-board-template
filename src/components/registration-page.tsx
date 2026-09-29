@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import type { PublicBoardSignIn } from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 import { BriefcaseBusiness } from 'lucide-react';
 
@@ -7,6 +8,7 @@ import { m } from '../paraglide/messages';
 import { AuthDivider } from './auth-form';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import { SsoConnectionButtons } from '@/components/sso-connection-buttons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,6 +23,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import {
+  resolveBoardSignIn,
+  ssoChoicesForRequired,
+  type SsoChoice,
+} from '@/lib/board-sign-in';
 import { cn } from '@/lib/utils';
 
 export function AuthPageCard({
@@ -145,7 +152,13 @@ type RegistrationCopy = {
 
 type RegistrationResult =
   | { ok: true }
-  | { ok: false; code?: string; message: string };
+  | {
+      ok: false;
+      code?: string;
+      message: string;
+      /** Present on `sso_required`: the connections the role must use. */
+      ssoConnectionIds?: string[];
+    };
 type RegistrationSubmitValues = {
   displayName: string;
   email: string;
@@ -172,7 +185,7 @@ export type MarketingConsentCopy = {
 type RegistrationStatus =
   | { state: 'idle' }
   | { state: 'pending' }
-  | { state: 'error'; message: string }
+  | { state: 'error'; message: string; code?: string }
   | { state: 'success' };
 
 export function RegistrationPage({
@@ -184,6 +197,9 @@ export function RegistrationPage({
   footer,
   marketingConsent,
   onOAuthStart,
+  role = 'candidate',
+  signIn,
+  onSsoStart,
 }: {
   title: string;
   supportingText: React.ReactNode;
@@ -195,9 +211,31 @@ export function RegistrationPage({
   onOAuthStart?: (
     provider: 'google' | 'linkedin',
   ) => Promise<OAuthRegistrationResult>;
+  /** The role this page registers; picks `signIn.<role>`. */
+  role?: 'candidate' | 'employer';
+  /** `board.context().signIn`; absent means every built-in method, no SSO. */
+  signIn?: PublicBoardSignIn;
+  onSsoStart?: (choice: SsoChoice) => Promise<OAuthRegistrationResult>;
 }) {
   const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
   const succeeded = status.state === 'success';
+  const options = resolveBoardSignIn(signIn);
+  const roleSignIn = options[role];
+  const { methods } = roleSignIn;
+  /** Set when registration answered `sso_required`: only SSO remains. */
+  const [requiredSso, setRequiredSso] = useState<SsoChoice[] | null>(null);
+  const ssoOnly = roleSignIn.ssoRequired || requiredSso !== null;
+  const ssoChoices: SsoChoice[] = onSsoStart
+    ? (requiredSso ??
+      roleSignIn.ssoConnections.map((connection) => ({ connection, role })))
+    : [];
+  const showForm = methods.password && !ssoOnly;
+  const oauthProviders = (['google', 'linkedin'] as const).filter(
+    (provider) => onOAuthStart && methods[provider] && !ssoOnly,
+  );
+  const showProviderButtons =
+    ssoChoices.length > 0 || oauthProviders.length > 0;
+  const pending = status.state === 'pending';
 
   useEffect(() => {
     if (status.state !== 'success') return;
@@ -219,31 +257,66 @@ export function RegistrationPage({
         </Link>
       ) : (
         <>
-          <RegistrationForm
-            copy={copy}
-            status={status}
-            onSubmit={onSubmit}
-            onStatusChange={setStatus}
-            marketingConsent={marketingConsent}
-          />
-          {onOAuthStart ? (
-            <>
-              <AuthDivider label={m.authOrDividerLabel()} />
-              <div className="flex flex-col gap-3">
+          {ssoOnly ? (
+            <p className="text-muted-foreground text-center text-sm">
+              {m.authSso_requiredText()}
+            </p>
+          ) : null}
+          {showForm ? (
+            <RegistrationForm
+              copy={copy}
+              status={status}
+              onSubmit={async (values) => {
+                const result = await onSubmit(values);
+                if (!result.ok && result.code === 'sso_required') {
+                  setRequiredSso(
+                    ssoChoicesForRequired(
+                      options,
+                      role,
+                      result.ssoConnectionIds,
+                    ),
+                  );
+                }
+                return result;
+              }}
+              onStatusChange={setStatus}
+              marketingConsent={marketingConsent}
+            />
+          ) : null}
+          {showForm && showProviderButtons ? (
+            <AuthDivider label={m.authOrDividerLabel()} />
+          ) : null}
+          {showProviderButtons ? (
+            <div className="flex flex-col gap-3">
+              <SsoConnectionButtons
+                choices={ssoChoices}
+                disabled={pending}
+                onSelect={(choice) => {
+                  if (!onSsoStart) return;
+                  void startProvider(() => onSsoStart(choice), setStatus);
+                }}
+              />
+              {oauthProviders.map((provider) => (
                 <OAuthButton
-                  provider="google"
-                  pending={status.state === 'pending'}
-                  onStart={onOAuthStart}
+                  key={provider}
+                  provider={provider}
+                  pending={pending}
+                  onStart={(value) => onOAuthStart!(value)}
                   onStatusChange={setStatus}
                 />
-                <OAuthButton
-                  provider="linkedin"
-                  pending={status.state === 'pending'}
-                  onStart={onOAuthStart}
-                  onStatusChange={setStatus}
-                />
-              </div>
-            </>
+              ))}
+            </div>
+          ) : null}
+          {/* An `sso_required` answer already swapped in the SSO prompt. */}
+          {!showForm &&
+          status.state === 'error' &&
+          status.code !== 'sso_required' ? (
+            <FieldError>{status.message}</FieldError>
+          ) : null}
+          {!showForm && !showProviderButtons && !ssoOnly ? (
+            <p className="text-muted-foreground text-center text-sm">
+              {m.authSso_noMethodsText()}
+            </p>
           ) : null}
           {footer}
         </>
@@ -277,30 +350,30 @@ function OAuthButton({
       size="lg"
       className="w-full"
       disabled={pending}
-      onClick={async () => {
-        onStatusChange({ state: 'pending' });
-        try {
-          const result = await onStart(provider);
-          if (result.ok) {
-            window.location.assign(result.authorizeUrl);
-            return;
-          }
-          onStatusChange({
-            state: 'error',
-            message: boardErrorMessage(result),
-          });
-        } catch {
-          onStatusChange({
-            state: 'error',
-            message: m.candidateAction_errorText(),
-          });
-        }
-      }}
+      onClick={() => void startProvider(() => onStart(provider), onStatusChange)}
     >
       {provider === 'google' ? <GoogleIcon /> : <LinkedInIcon />}
       {label}
     </Button>
   );
+}
+
+/** Ask for a provider URL (Google, LinkedIn or SSO) and leave for it. */
+async function startProvider(
+  start: () => Promise<OAuthRegistrationResult>,
+  onStatusChange: (status: RegistrationStatus) => void,
+) {
+  onStatusChange({ state: 'pending' });
+  try {
+    const result = await start();
+    if (result.ok) {
+      window.location.assign(result.authorizeUrl);
+      return;
+    }
+    onStatusChange({ state: 'error', message: boardErrorMessage(result) });
+  } catch {
+    onStatusChange({ state: 'error', message: m.candidateAction_errorText() });
+  }
 }
 
 function RegistrationForm({
@@ -340,7 +413,11 @@ function RegistrationForm({
           onStatusChange(
             result.ok
               ? { state: 'success' }
-              : { state: 'error', message: boardErrorMessage(result) },
+              : {
+                  state: 'error',
+                  message: boardErrorMessage(result),
+                  code: result.code,
+                },
           );
         } catch {
           onStatusChange({

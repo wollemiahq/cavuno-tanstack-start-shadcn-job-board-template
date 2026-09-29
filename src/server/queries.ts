@@ -21,6 +21,7 @@ import { getBoard } from '../lib/board';
 import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { resolveBoardAds } from '../lib/board-ads';
+import { resolveBoardSignIn } from '../lib/board-sign-in';
 import {
   readBoardContext,
   readStaleBoardContext,
@@ -107,6 +108,9 @@ function resolveBoardContext(
     // Older SDKs omit `ads`; treat missing as off. Publisher id comes from
     // Cavuno advertising settings, including the optional default ad unit.
     ads: resolveBoardAds(context),
+    // Board SSO arrived after the rest of the context; an API deployment
+    // predating it omits `signIn`. Default to every built-in method, no SSO.
+    signIn: resolveBoardSignIn(context.signIn),
   };
 }
 
