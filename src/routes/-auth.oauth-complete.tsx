@@ -3,151 +3,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  parseOAuthCompletion,
   ssoLinkProofBindingStore,
   type SsoLinkProofBindingStore,
 } from '@cavuno/board';
-import {
-  Link,
-  createFileRoute,
-  getRouteApi,
-  redirect,
-} from '@tanstack/react-router';
+import { Link, getRouteApi } from '@tanstack/react-router';
 
 import { AuthCard } from '../components/auth-form';
 import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
-import {
-  candidateReturnTo,
-  candidateAuthSearch,
-} from '../lib/candidate-return-to';
+import { candidateAuthSearch } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { consumeSsoLinkProof, exchangeOAuth } from '../server/auth';
-import { getSeoBase } from '../server/queries';
+import { consumeSsoLinkProof } from '../server/auth';
 
+import type { OAuthCompleteState } from './-auth.oauth-complete-loader';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { buttonVariants } from '@/components/ui/button';
 import { boardErrorMessage } from '@/lib/board-error-message';
-import { headTitle } from '@/lib/page-title';
-import { searchString, type UrlSearchInput } from '@/lib/pagination';
 import { signInRedirectErrorMessage } from '@/lib/sign-in-redirect-error';
 import { cn } from '@/lib/utils';
 
-/** The completion query the API redirects here with. Every field is opaque
- * text; `parseOAuthCompletion` decides what the page does with it. */
-export interface OAuthCompleteSearch {
-  token?: string;
-  method?: string;
-  role?: string;
-  isNew?: string;
-  status?: string;
-  linkProof?: string;
-  linkProofBinding?: string;
-  error?: string;
-  returnTo: string;
-}
-
-const COMPLETION_KEYS = [
-  'token',
-  'method',
-  'role',
-  'isNew',
-  'status',
-  'linkProof',
-  'linkProofBinding',
-  'error',
-] as const;
-
-export function validateOAuthCompleteSearch(
-  search: UrlSearchInput,
-): OAuthCompleteSearch {
-  const validated: OAuthCompleteSearch = {
-    returnTo: candidateReturnTo(search.returnTo),
-  };
-  for (const key of COMPLETION_KEYS) {
-    const value = searchString(search[key]);
-    if (value) validated[key] = value;
-  }
-  return validated;
-}
-
 const rootApi = getRouteApi('__root__');
-
-export const Route = createFileRoute('/auth/oauth-complete')({
-  validateSearch: validateOAuthCompleteSearch,
-  loaderDeps: ({ search }) => search,
-  loader: ({ deps }) => loadOAuthComplete(deps),
-  head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: headTitle(
-          loaderData?.seo.boardName,
-          m.authOauthComplete_title(),
-        ),
-      },
-      { name: 'robots', content: 'noindex' },
-    ],
-  }),
-  component: OAuthCompletePage,
-});
-
-export type OAuthCompleteState =
-  | { status: 'missing-token' }
-  | { status: 'invalid' }
-  | { status: 'error'; error: string }
-  | { status: 'link-proof-sent'; linkProofBinding: string }
-  | { status: 'link-proof'; linkProof: string };
-
-export async function loadOAuthComplete(
-  deps: OAuthCompleteSearch,
-  actions: {
-    exchangeOAuth: (input: {
-      data: { token: string };
-    }) => Promise<
-      { ok: true; isNewUser: boolean } | { ok: false; message: string }
-    >;
-    getSeoBase: () => ReturnType<typeof getSeoBase>;
-  } = { exchangeOAuth, getSeoBase },
-) {
-  const seoPromise = actions.getSeoBase();
-  const completion = parseOAuthCompletion({ ...deps });
-  switch (completion.kind) {
-    case 'token': {
-      const [result, seo] = await Promise.all([
-        actions.exchangeOAuth({ data: { token: completion.token } }),
-        seoPromise,
-      ]);
-      if (!result.ok) return { status: 'invalid' as const, seo };
-      throw redirect({
-        href: resolvePostAuthConversionRedirect(deps.returnTo, {
-          isNewUser: result.isNewUser,
-          fallbackMethod: completion.method === 'sso' ? 'sso' : 'google',
-        }),
-      });
-    }
-    // The binding and the proof pair up in this browser's storage, so both
-    // steps finish in the component rather than on the server.
-    case 'link_proof_sent':
-      return {
-        status: 'link-proof-sent' as const,
-        linkProofBinding: completion.linkProofBinding,
-        seo: await seoPromise,
-      };
-    case 'link_proof':
-      return {
-        status: 'link-proof' as const,
-        linkProof: completion.linkProof,
-        seo: await seoPromise,
-      };
-    case 'error':
-      return {
-        status: 'error' as const,
-        error: completion.error,
-        seo: await seoPromise,
-      };
-    case 'invalid':
-      return { status: 'missing-token' as const, seo: await seoPromise };
-  }
-}
+const routeApi = getRouteApi('/auth/oauth-complete');
 
 type ConsumeSsoLinkProofAction = (input: {
   data: { token: string; browserBinding?: string };
@@ -156,9 +31,9 @@ type ConsumeSsoLinkProofAction = (input: {
   | { ok: false; code?: string; message: string }
 >;
 
-function OAuthCompletePage() {
-  const { seo: _seo, ...state } = Route.useLoaderData();
-  const { returnTo } = Route.useSearch();
+export function OAuthCompletePage() {
+  const { seo: _seo, ...state } = routeApi.useLoaderData();
+  const { returnTo } = routeApi.useSearch();
   const { board } = rootApi.useLoaderData();
   const bindingStore = useMemo(
     () => ssoLinkProofBindingStore(board.id),

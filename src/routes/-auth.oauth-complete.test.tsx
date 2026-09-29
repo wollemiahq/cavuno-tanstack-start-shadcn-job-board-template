@@ -7,11 +7,11 @@ import { isRedirect } from '@tanstack/react-router';
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { OAuthCompleteView } from './-auth.oauth-complete';
 import {
-  OAuthCompleteView,
   loadOAuthComplete,
   type OAuthCompleteState,
-} from './-auth.oauth-complete';
+} from './-auth.oauth-complete-loader';
 
 import {
   appendAuthIntentQuery,
