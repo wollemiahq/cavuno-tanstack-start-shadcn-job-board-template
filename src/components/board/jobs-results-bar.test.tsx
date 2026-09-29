@@ -4,27 +4,35 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JobsResultsBar } from './jobs-results-bar';
-vi.mock('@/paraglide/messages', () => ({
-  m: {
-    count_jobs: ({ count }: { count: number }) => `total:${count}`,
-    jobSearch_contextualResultsHeading: ({
-      count,
-      heading,
-    }: {
-      count: string;
-      heading: string;
-    }) => `context:${heading};total:${count}`,
-    jobSearch_resultsShowingRange: ({
-      from,
-      to,
-      count,
-    }: {
-      from: string;
-      to: string;
-      count: number;
-    }) => `range:${from}:${to};total:${count}`,
-  },
-}));
+// Stub only the messages whose arguments the assertions inspect; every other
+// key stays the real generated message, so the component can use any catalog
+// key without the test crashing on a missing stub.
+vi.mock('@/paraglide/messages', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/paraglide/messages')>();
+  return {
+    ...actual,
+    m: {
+      ...actual.m,
+      count_jobs: ({ count }: { count: number }) => `total:${count}`,
+      jobSearch_contextualResultsHeading: ({
+        count,
+        heading,
+      }: {
+        count: string;
+        heading: string;
+      }) => `context:${heading};total:${count}`,
+      jobSearch_resultsShowingRange: ({
+        from,
+        to,
+        count,
+      }: {
+        from: string;
+        to: string;
+        count: number;
+      }) => `range:${from}:${to};total:${count}`,
+    },
+  };
+});
 afterEach(cleanup);
 describe('JobsResultsBar data', () => {
   it('passes the visible count and first-page bounds to its summary', () => {
