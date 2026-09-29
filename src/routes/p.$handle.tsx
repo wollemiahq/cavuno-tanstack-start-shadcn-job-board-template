@@ -47,6 +47,13 @@ import type { Plan, TalentCandidateAccess } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
 
+/**
+ * Route-contract role: this is the candidate profile page. Keep this marker
+ * on the profile route if it moves, and build its links through
+ * `@/lib/talent-profile-path`.
+ */
+export const cavunoPage = 'talentProfile';
+
 export const Route = createFileRoute('/p/$handle')({
   staticData: { fullBleed: true, ownsMain: true },
   loader: createTalentProfileLoader(),

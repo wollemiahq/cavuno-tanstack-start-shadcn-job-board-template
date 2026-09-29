@@ -3,6 +3,7 @@ import {
   type UrlSearchInput,
   type UrlSearchValue,
 } from './pagination';
+import { talentProfileParam } from './talent-profile-path';
 
 export type HeaderSearchScope = 'jobs' | 'companies' | 'talent' | 'blog';
 
@@ -84,7 +85,7 @@ function scopeFromPathname(
   if (
     pathname === '/talent' ||
     pathname.startsWith('/talent/') ||
-    pathname.startsWith('/p/')
+    talentProfileParam(pathname) !== null
   ) {
     return 'talent';
   }

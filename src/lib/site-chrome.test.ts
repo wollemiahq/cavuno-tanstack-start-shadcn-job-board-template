@@ -1,29 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  chromeEntity,
-  chromeFooter,
-  chromeNav,
-  chromeRemovedNavItems,
-  orderEnabledNavIds,
-  readChrome,
-} from './site-chrome';
-
-describe('stock src/chrome.json', () => {
-  it('exposes empty overlays so catalog copy stays in place', () => {
-    expect(chromeNav()).toEqual({});
-    expect(chromeEntity()).toEqual({});
-    expect(chromeFooter()).toEqual({
-      description: null,
-      navigationOrder: [],
-      customLinks: [],
-      labels: {},
-    });
-    expect(chromeRemovedNavItems()).toEqual([]);
-  });
-});
+import { orderEnabledNavIds, readChrome } from './site-chrome';
 
 describe('readChrome', () => {
+  it('uses empty overlays when no customization is supplied', () => {
+    expect(readChrome({})).toMatchObject({
+      nav: {},
+      entity: {},
+      footer: {
+        description: null,
+        navigationOrder: [],
+        customLinks: [],
+        labels: {},
+      },
+      removedNavItems: [],
+    });
+  });
   it('lets a provided nav/entity string win and ignores empty strings', () => {
     const parsed = readChrome({
       nav: {
@@ -77,17 +69,6 @@ describe('readChrome', () => {
       { id: 'abc', label: 'Careers Hub', url: 'https://example.com/hub' },
     ]);
     expect(parsed.removedNavItems).toEqual(['talent', 'blog']);
-  });
-});
-
-describe('chrome presentation is git-only', () => {
-  it('does not take description, order, or custom links from an API footer bag', () => {
-    expect(chromeFooter()).toEqual({
-      description: null,
-      navigationOrder: [],
-      customLinks: [],
-      labels: {},
-    });
   });
 });
 

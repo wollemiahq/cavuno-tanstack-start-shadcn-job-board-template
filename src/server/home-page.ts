@@ -22,6 +22,7 @@ import { gatedRead } from './board-access';
 import { resolveHomeCopy } from './home-copy';
 import { readTalentDirectory } from './talent-directory-read';
 
+import { catalogJobCount } from '@/board/job-catalog-count';
 import { topCategoriesFromTaxonomy } from '@/board/top-categories';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { selfUrl } from '@/lib/self-url';
@@ -126,7 +127,7 @@ export const getHomePage = createServerFn({ method: 'GET' })
       const talentPage = talent?.status === 'available' ? talent.page : null;
       const copy = resolveHomeCopy({
         boardName: boardContext.name,
-        jobsCount: page.count,
+        jobsCount: catalogJobCount(page.count, page.gatedCount),
         companiesCount: companies?.count,
         postsCount: blog?.count,
         talentCount: talentPage?.count,

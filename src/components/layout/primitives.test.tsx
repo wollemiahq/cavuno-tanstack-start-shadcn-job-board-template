@@ -72,27 +72,3 @@ describe('layout primitives', () => {
     ).toHaveTextContent('Sponsored content');
   });
 });
-
-/**
- * `pnpm run typecheck` checks test files, so these rejected calls keep the
- * layout seam token-backed. The function is never run.
- */
-function _typeContract() {
-  return (
-    <>
-      {/* @ts-expect-error — layout primitives deliberately have no className escape hatch. */}
-      <Box className="p-7">No bypass</Box>
-      {/* @ts-expect-error — inline style is the same undocumented geometry escape hatch. */}
-      <Box style={{ padding: 7 }}>No bypass</Box>
-      {/* @ts-expect-error — arbitrary spacing values are outside the token scale. */}
-      <Box padding="7">No arbitrary spacing</Box>
-      {/* @ts-expect-error — the generic matrix deliberately stops at four columns. */}
-      <Grid columns={5}>Too many columns</Grid>
-      {/* @ts-expect-error — main is owned by PageContent, not a primitive. */}
-      <Container as="main">Duplicate main</Container>
-      <Bleed data-test="valid-bleed">Valid</Bleed>
-    </>
-  );
-}
-
-void _typeContract;

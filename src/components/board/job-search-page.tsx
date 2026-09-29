@@ -11,24 +11,27 @@ import {
   relatedSearchesToChips,
 } from '@/board/related-searches';
 import { JobSearchResult } from '@/components/board/job-search-result';
-import { JobsFilterControls } from '@/components/board/jobs-filter-controls';
+import {
+  JobsFilterControls,
+  type JobsCustomFilters,
+} from '@/components/board/jobs-filter-controls';
 import { JobsResultsBar } from '@/components/board/jobs-results-bar';
 import {
   useListingAdRails,
   type AdPlacement,
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
-import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
 import {
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
+  SearchResultsToolbar,
 } from '@/components/search-results/search-results';
-import { Alert, AlertAction, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -41,6 +44,7 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { localizePath } from '@/lib/localized-path';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
@@ -48,13 +52,18 @@ import type { ListingFilters } from '@cavuno/board/filters';
 
 function JobsEmpty({
   filters,
+  hasCustomFilters,
   hasRouteConstraint,
 }: {
   filters: ListingFilters;
+  hasCustomFilters: boolean;
   hasRouteConstraint: boolean;
 }) {
   const hasFilters = Boolean(
-    filters.remoteOption || filters.employmentType || filters.seniority?.length,
+    filters.remoteOption ||
+    filters.employmentType ||
+    filters.seniority?.length ||
+    hasCustomFilters,
   );
   const noMatch = hasRouteConstraint || hasFilters || Boolean(filters.q);
 
@@ -93,6 +102,7 @@ export function JobSearchPage({
   page: requestedPage,
   pageSize,
   filters,
+  customFilters,
   language,
   heading,
   relatedSearches,
@@ -115,10 +125,12 @@ export function JobSearchPage({
   page: number;
   pageSize: number;
   filters: ListingFilters;
+  /** Job custom fields for the "All filters" sheet; omit for none. */
+  customFilters?: JobsCustomFilters;
   language: string;
   heading?: string;
   relatedSearches?: RelatedSearch[];
-  onFiltersChange: (next: ListingFilters) => void;
+  onFiltersChange: (next: ListingFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;
   selectedJob?: string;
   onSelectedJobReplace: (jobSlug: string) => void;
@@ -153,7 +165,8 @@ export function JobSearchPage({
   const relatedChips = relatedSearchesToChips(relatedSearches);
   const resultsBar = (
     <JobsResultsBar
-      count={count}
+      visibleCount={count}
+      gatedCount={gatedCount}
       page={page}
       pageSize={pageSize}
       heading={heading}
@@ -166,16 +179,15 @@ export function JobSearchPage({
         data-layout="job-search-page"
         className="md:flex md:h-full md:min-h-0 md:flex-col"
       >
-        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
-          <Container width="wide" gutter="0">
-            <div className="py-3">
-              <JobsFilterControls
-                filters={filters}
-                language={language}
-                onChange={onFiltersChange}
-              />
-            </div>
-          </Container>
+        <Box border="bottom">
+          <SearchResultsToolbar startAd={rails.startAd} endAd={rails.endAd}>
+            <JobsFilterControls
+              filters={filters}
+              customFilters={customFilters}
+              language={language}
+              onChange={onFiltersChange}
+            />
+          </SearchResultsToolbar>
         </Box>
 
         <div
@@ -194,6 +206,7 @@ export function JobSearchPage({
                   <div className="space-y-4">{resultsBar}</div>
                   <JobsEmpty
                     filters={filters}
+                    hasCustomFilters={Boolean(customFilters?.active.length)}
                     hasRouteConstraint={Boolean(heading)}
                   />
                 </div>
@@ -244,27 +257,14 @@ export function JobSearchPage({
                     </ListingAdResults>
                   </InPlaceListingSelect>
 
-                  {gatedCount && gatedCount > 0 ? (
-                    <Alert
-                      aria-label={m.jobSearch_unlockMoreLabel()}
-                      className="bg-muted flex flex-col items-start gap-3 pe-4"
-                    >
-                      <AlertDescription>
-                        {m.jobSearch_gatedCountText({
-                          count: gatedCount.toLocaleString(language),
-                        })}
-                      </AlertDescription>
-                      <AlertAction className="static">
-                        <Link
-                          to="/account/access"
-                          search={{ returnTo }}
-                          className={buttonVariants({ size: 'sm' })}
-                        >
-                          {m.jobSearch_unlockMoreLabel()}
-                        </Link>
-                      </AlertAction>
-                    </Alert>
-                  ) : null}
+                  <PreviewUnlockAlert
+                    gatedCount={gatedCount}
+                    page={page}
+                    pageSize={pageSize}
+                    visibleCount={count ?? 0}
+                    returnTo={returnTo}
+                    language={language}
+                  />
 
                   <ListingPagination
                     compact

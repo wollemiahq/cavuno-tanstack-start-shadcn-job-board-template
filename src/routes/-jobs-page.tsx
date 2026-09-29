@@ -8,6 +8,7 @@ import { toJobCardVM } from '@/board/job-view-model';
 import { JobSearchPage } from '@/components/board/job-search-page';
 import { JobAlertFloatingPrompt } from '@/components/job-alert-floating-prompt';
 import { useRootSession } from '@/components/root-session';
+import { resolveCustomFieldFilters } from '@/lib/custom-field-filters';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { pageSearchValue } from '@/lib/pagination';
 import { saveJob } from '@/server/account';
@@ -17,7 +18,8 @@ const routeApi = getRouteApi('/jobs/');
 const rootApi = getRouteApi('__root__');
 
 export function JobsPage() {
-  const { page, relatedSearches } = routeApi.useLoaderData();
+  const { page, relatedSearches, customFilterFields } =
+    routeApi.useLoaderData();
   const search = routeApi.useSearch();
   const { board } = rootApi.useLoaderData();
   const { user } = useRootSession();
@@ -44,6 +46,10 @@ export function JobsPage() {
         page={search.page ?? 1}
         pageSize={JOBS_PAGE_SIZE}
         filters={search}
+        customFilters={{
+          fields: customFilterFields,
+          active: resolveCustomFieldFilters(customFilterFields, search),
+        }}
         language={getLocale()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={async (jobId) =>

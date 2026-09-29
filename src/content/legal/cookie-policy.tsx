@@ -5,6 +5,7 @@ import type { LegalLocale, LegalPageContent } from './types';
 /** Titles match `breadcrumbs_cookiePolicy` per locale. */
 export const cookiePolicyContent = {
   en: {
+    placeholder: true,
     title: 'Cookie Policy',
     description:
       'Placeholder cookie policy. Replace this description and body before launch.',
@@ -33,6 +34,7 @@ export const cookiePolicyContent = {
     },
   },
   de: {
+    placeholder: true,
     title: 'Cookie-Richtlinie',
     description:
       'Platzhalter-Cookie-Richtlinie. Beschreibung und Inhalt vor dem Launch ersetzen.',
@@ -63,6 +65,7 @@ export const cookiePolicyContent = {
     },
   },
   fr: {
+    placeholder: true,
     title: 'Politique de cookies',
     description:
       "Politique de cookies d'espace réservé. Remplacez cette description et le corps avant le lancement.",
@@ -92,6 +95,7 @@ export const cookiePolicyContent = {
     },
   },
   es: {
+    placeholder: true,
     title: 'Política de cookies',
     description:
       'Política de cookies de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
@@ -120,6 +124,7 @@ export const cookiePolicyContent = {
     },
   },
   pl: {
+    placeholder: true,
     title: 'Polityka cookies',
     description:
       'Przykładowa polityka cookies. Zastąp ten opis i treść przed uruchomieniem.',
@@ -148,6 +153,7 @@ export const cookiePolicyContent = {
     },
   },
   nl: {
+    placeholder: true,
     title: 'Cookiebeleid',
     description:
       'Tijdelijk cookiebeleid. Vervang deze beschrijving en inhoud vóór de lancering.',

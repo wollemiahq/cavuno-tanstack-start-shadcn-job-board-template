@@ -23,7 +23,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { publicLocales } from '../lib/public-locales';
 import { baseLocale, locales, overwriteGetLocale } from '../paraglide/runtime';
@@ -35,8 +35,9 @@ import {
   publicChromeLocales,
 } from './language-switcher';
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+vi.mock('@/paraglide/messages', () => ({
+  m: { languageSwitcher_label: () => 'Fixture locale selector' },
+}));
 
 // Delay the real lazy chunk by a macrotask so the Suspense fallback remains
 // observable without replacing the module under test.
@@ -51,18 +52,8 @@ afterEach(() => {
 });
 
 describe('locale-resolution contract', () => {
-  it('resolves the locale from the URL, base locale unprefixed', () => {
-    const viteConfig = readFileSync(
-      join(import.meta.dirname, '..', '..', 'vite.config.ts'),
-      'utf8',
-    );
-    expect(viteConfig).toMatch(/strategy:\s*\[[^\]]*'url'/);
-    expect(baseLocale).toBe('en');
-  });
-
-  it('production compiles English only — never the en-XA QA pseudo-locale', () => {
-    expect([...locales]).toEqual(['en']);
-    expect(publicChromeLocales()).toEqual(['en']);
+  it('public chrome excludes QA pseudo-locales', () => {
+    expect(publicChromeLocales()).toEqual(publicLocales([...locales]));
     expect(publicLocales([...locales])).not.toContain('en-XA');
   });
 
@@ -109,7 +100,9 @@ describe('LanguageSwitcher rendering', () => {
   it('renders nothing when only one public locale is compiled', async () => {
     overwriteGetLocale(() => 'en');
     renderAt('/jobs');
-    expect(screen.queryByRole('button', { name: 'Language' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'Fixture locale selector' }),
+    ).toBeNull();
     expect(
       document.querySelector('[data-test="language-switcher"]'),
     ).toBeNull();
@@ -125,7 +118,9 @@ describe('LanguageSwitcher rendering', () => {
         menuLoader={delayedMenuLoader}
       />,
     );
-    const trigger = await screen.findByRole('button', { name: 'Language' });
+    const trigger = await screen.findByRole('button', {
+      name: 'Fixture locale selector',
+    });
 
     fireEvent.click(trigger);
 
@@ -140,7 +135,9 @@ describe('LanguageSwitcher rendering', () => {
     overwriteGetLocale(() => 'en');
     const options = buildLocaleOptions('de', '/jobs', ['en', 'de', 'fr']);
     renderAt('/jobs', <LanguageSwitcherPanel options={options} />);
-    const trigger = await screen.findByRole('button', { name: 'Language' });
+    const trigger = await screen.findByRole('button', {
+      name: 'Fixture locale selector',
+    });
     expect(trigger).toHaveTextContent('Deutsch');
 
     fireEvent.click(trigger);

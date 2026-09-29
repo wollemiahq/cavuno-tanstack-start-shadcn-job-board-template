@@ -4,6 +4,7 @@ import { useId, useState } from 'react';
 
 import { ListFilter, XIcon } from 'lucide-react';
 
+import { CustomFieldFilterFields } from '@/components/board/custom-field-filter-fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,6 +32,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  countCustomFieldFilters,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
+import type { CustomFieldFilter } from '@cavuno/board';
 
 const ANY = '__any__';
 
@@ -39,11 +45,29 @@ export type JobsFilterOption = {
   label: string;
 };
 
+/**
+ * Custom-field groups in the sheet, in display order. Each group owns its own
+ * fields and clauses. `job` holds the board's job custom fields; a `company`
+ * group (jobs filtered by their company's profile fields) slots in here once
+ * the Board API accepts `filters.companyCustomFields`.
+ */
+export const JOBS_CUSTOM_FIELD_GROUPS = ['job'] as const;
+export type JobsCustomFieldGroup = (typeof JOBS_CUSTOM_FIELD_GROUPS)[number];
+
 export type JobsFilterValues = {
   workplace?: string;
   employmentType?: string;
   seniority?: string[];
+  customFields?: Partial<Record<JobsCustomFieldGroup, CustomFieldFilter[]>>;
 };
+
+function customFieldCount(value: JobsFilterValues) {
+  return JOBS_CUSTOM_FIELD_GROUPS.reduce(
+    (total, group) =>
+      total + countCustomFieldFilters(value.customFields?.[group] ?? []),
+    0,
+  );
+}
 
 export type JobsFilterToolbarLabels = {
   workplace: string;
@@ -65,6 +89,8 @@ export type JobsFilterToolbarProps = {
     workplace: JobsFilterOption[];
     employmentType: JobsFilterOption[];
     seniority: JobsFilterOption[];
+    /** Filterable custom fields per group; an empty group renders nothing. */
+    customFields?: Partial<Record<JobsCustomFieldGroup, CustomFilterField[]>>;
   };
   value: JobsFilterValues;
   onApply: (value: JobsFilterValues) => void;
@@ -145,12 +171,14 @@ export function JobsFilterToolbar({
   const activeCount =
     Number(Boolean(value.workplace)) +
     Number(Boolean(value.employmentType)) +
-    (value.seniority?.length ?? 0);
+    (value.seniority?.length ?? 0) +
+    customFieldCount(value);
 
   const openSheet = (mode: 'desktop' | 'mobile') => {
     setDraft({
       ...value,
       seniority: value.seniority ? [...value.seniority] : undefined,
+      customFields: value.customFields ? { ...value.customFields } : undefined,
     });
     setSheetMode(mode);
     setSheetOpen(true);
@@ -163,6 +191,7 @@ export function JobsFilterToolbar({
     if (draft.workplace) next.workplace = draft.workplace;
     if (draft.employmentType) next.employmentType = draft.employmentType;
     if (draft.seniority?.length) next.seniority = draft.seniority;
+    if (customFieldCount(draft) > 0) next.customFields = draft.customFields;
     onApply(next);
     closeSheet();
   };
@@ -249,6 +278,20 @@ export function JobsFilterToolbar({
               </Field>
             ))}
           </FieldSet>
+
+          {JOBS_CUSTOM_FIELD_GROUPS.map((group) => (
+            <CustomFieldFilterFields
+              key={group}
+              fields={options.customFields?.[group] ?? []}
+              value={draft.customFields?.[group] ?? []}
+              onChange={(clauses) =>
+                setDraft({
+                  ...draft,
+                  customFields: { ...draft.customFields, [group]: clauses },
+                })
+              }
+            />
+          ))}
         </FieldGroup>
 
         <SheetFooter className="flex-row items-center border-t">

@@ -19,6 +19,12 @@ describe('parseCompanyJobsSearch', () => {
     });
   });
 
+  it('keeps the awaiting-review flag a held post returns with', () => {
+    expect(
+      parseCompanyJobsSearch({ posted: '1', review: '1', job_id: 'job-3' }),
+    ).toEqual({ posted: '1', review: '1', job_id: 'job-3' });
+  });
+
   it('drops empty or unexpected values', () => {
     expect(
       parseCompanyJobsSearch({ checkout_success: 'yes', job_id: '' }),

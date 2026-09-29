@@ -63,9 +63,9 @@ input:
 | 3. Re-derive design docs | `pnpm run gen:design` | `DESIGN.md`, `design/tokens.dtcg.json` |
 | 4. Font sanity check | (in-wrapper) | nothing — it only warns |
 
-Steps 2–4 are the whole reason the wrapper exists: a raw CLI run leaves the
-derived artifacts stale (and the drift gate red), and says nothing about the
-font trap in step 4.
+The wrapper prepares runtime tokens, refreshes the optional design reference,
+and checks font consistency. Direct theme edits only need current runtime
+tokens; documentation freshness does not gate customization.
 
 The CLI also updates `components.json` — notably `tailwind.baseColor`, which it
 sets to the applied preset's base color so a LATER `shadcn add` resolves
@@ -122,6 +122,7 @@ pnpm exec shadcn apply --preset b2D0vQ7G4 --only theme -y
 pnpm exec shadcn add https://tweakcn.com/r/themes/bubblegum.json -y
 
 pnpm run gen:theme
+# Optional: refresh the design reference
 pnpm run gen:design
 ```
 
@@ -169,8 +170,8 @@ that one file:
    --font-sans: 'Inter Variable', sans-serif;
    ```
 
-Then regenerate the derived artifacts — `pnpm run gen:theme && pnpm run
-gen:design` — and verify. OG images follow automatically: `gen:theme`
+Then run `pnpm run gen:theme` and verify. Refresh the optional design
+reference with `gen:design` when needed. OG images follow automatically: `gen:theme`
 derives `ogFontFamily` (heading family, else body) into
 `src/theme/resolved.ts` and the OG routes render with it.
 

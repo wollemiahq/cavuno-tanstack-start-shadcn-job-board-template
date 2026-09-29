@@ -12,15 +12,15 @@ import {
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
-  companiesListingLoaderDeps,
-  parseCompaniesSearch,
+  companiesIndexLoaderDeps,
+  parseCompaniesIndexSearch,
 } from '@/lib/companies-search';
 import { ProgrammaticCompaniesView } from '@/routes/-programmatic-companies-view';
 
 export const Route = createFileRoute('/companies/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
-  validateSearch: parseCompaniesSearch,
-  loaderDeps: ({ search }) => companiesListingLoaderDeps(search),
+  validateSearch: parseCompaniesIndexSearch,
+  loaderDeps: ({ search }) => companiesIndexLoaderDeps(search),
   loader: createCompaniesIndexLoader(),
   head: ({ loaderData }) =>
     loaderData
@@ -30,7 +30,8 @@ export const Route = createFileRoute('/companies/')({
 });
 
 function CompaniesPage() {
-  const { page, markets, searchUnavailable } = Route.useLoaderData();
+  const { page, markets, searchUnavailable, customFilterFields } =
+    Route.useLoaderData();
   const search = Route.useSearch();
 
   return (
@@ -42,6 +43,7 @@ function CompaniesPage() {
         markets={markets}
         search={search}
         searchUnavailable={searchUnavailable}
+        customFilters={{ fields: customFilterFields, search }}
       />
     </>
   );

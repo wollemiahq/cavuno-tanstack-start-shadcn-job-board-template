@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { planDescription, planName } from './plan-labels';
 
 describe('plan copy resolution tiers', () => {
   it('name-mapped plans use the catalog copy', () => {
     expect(planDescription({ name: 'Free' }, 'en')).toBe(
-      'A 30 day standard listing',
+      m.plan_free_description({}, { locale: 'en' }),
     );
   });
 
@@ -16,7 +17,7 @@ describe('plan copy resolution tiers', () => {
       featureSummary: { durationDays: 45, maxActiveJobs: 5, featuredSlots: 1 },
     };
     expect(planDescription(plan, 'en')).toBe(
-      'A 45 day featured listing — Up to 5 active jobs',
+      `${m.planComposed_featuredListing({ days: 45 }, { locale: 'en' })} — ${m.planComposed_maxActiveJobs({ count: 5 }, { locale: 'en' })}`,
     );
   });
 
@@ -101,7 +102,9 @@ describe('unlimited featured plans', () => {
         },
         'en',
       ),
-    ).toBe('A 30 day featured listing — Up to 3 active jobs');
+    ).toBe(
+      `${m.planComposed_featuredListing({ days: 30 }, { locale: 'en' })} — ${m.planComposed_maxActiveJobs({ count: 3 }, { locale: 'en' })}`,
+    );
   });
 });
 

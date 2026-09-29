@@ -1,4 +1,5 @@
 import { searchString, type UrlSearchValue } from './pagination';
+import { talentProfileParam } from './talent-profile-path';
 
 export interface ShellBreadcrumbLabels {
   home: string;
@@ -246,6 +247,15 @@ export function resolveShellBreadcrumb({
   if (segments.length === 0) return finish(items);
 
   const [section, ...rest] = segments;
+  // Before the section branches: a moved profile route (e.g.
+  // `/talent/{$handle}`) must not be claimed by another section.
+  const profileParam = talentProfileParam(pathname);
+  if (profileParam !== null) {
+    items.push({ name: labels.talent, href: '/talent' });
+    items.push({ name: entities.profile ?? readableSegment(profileParam) });
+    return finish(items);
+  }
+
   if (section === 'jobs') {
     items.push({ name: labels.jobs, href: '/jobs' });
     if (rest[0] === 'locations') {
@@ -301,14 +311,6 @@ export function resolveShellBreadcrumb({
 
   if (section === 'talent') {
     items.push({ name: labels.talent });
-    return finish(items);
-  }
-
-  if (section === 'p') {
-    items.push({ name: labels.talent, href: '/talent' });
-    if (rest[0]) {
-      items.push({ name: entities.profile ?? readableSegment(rest[0]) });
-    }
     return finish(items);
   }
 

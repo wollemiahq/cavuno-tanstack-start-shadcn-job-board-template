@@ -1,4 +1,8 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
@@ -11,6 +15,7 @@ import {
   createCompanyProfileLoader,
 } from './-employers.company-profile';
 
+import { boardForms } from '@/board/form-layout';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
@@ -30,12 +35,15 @@ export const Route = createFileRoute('/employers/companies/$slug/profile')({
   component: CompanyProfilePage,
 });
 
+const rootApi = getRouteApi('__root__');
+
 function CompanyProfilePage() {
   const data = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const router = useRouter();
   return (
     <CompanyProfilePageView
-      data={data}
+      data={{ ...data, formLayout: boardForms(board)?.company ?? null }}
       actions={{
         updateCompany,
         uploadCompanyLogo,

@@ -5,6 +5,7 @@ import type { LegalLocale, LegalPageContent } from './types';
 /** Titles match `breadcrumbs_privacyPolicy` per locale. */
 export const privacyPolicyContent = {
   en: {
+    placeholder: true,
     title: 'Privacy Policy',
     description:
       'Placeholder privacy policy. Replace this description and body before launch.',
@@ -32,6 +33,7 @@ export const privacyPolicyContent = {
     },
   },
   de: {
+    placeholder: true,
     title: 'Datenschutzerklärung',
     description:
       'Platzhalter-Datenschutzerklärung. Beschreibung und Inhalt vor dem Launch ersetzen.',
@@ -62,6 +64,7 @@ export const privacyPolicyContent = {
     },
   },
   fr: {
+    placeholder: true,
     title: 'Politique de confidentialité',
     description:
       "Politique de confidentialité d'espace réservé. Remplacez cette description et le corps avant le lancement.",
@@ -91,6 +94,7 @@ export const privacyPolicyContent = {
     },
   },
   es: {
+    placeholder: true,
     title: 'Política de privacidad',
     description:
       'Política de privacidad de ejemplo. Sustituye esta descripción y este contenido antes del lanzamiento.',
@@ -119,6 +123,7 @@ export const privacyPolicyContent = {
     },
   },
   pl: {
+    placeholder: true,
     title: 'Polityka prywatności',
     description:
       'Przykładowa polityka prywatności. Zastąp ten opis i treść przed uruchomieniem.',
@@ -147,6 +152,7 @@ export const privacyPolicyContent = {
     },
   },
   nl: {
+    placeholder: true,
     title: 'Privacybeleid',
     description:
       'Tijdelijk privacybeleid. Vervang deze beschrijving en inhoud vóór de lancering.',

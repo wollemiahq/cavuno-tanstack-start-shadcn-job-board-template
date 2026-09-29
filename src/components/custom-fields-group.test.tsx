@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { CustomFieldsGroup } from './custom-fields-group';
+import { CustomFieldInput } from './custom-fields-group';
 
 import type { PublicBoard } from '@cavuno/board';
 
@@ -31,15 +31,20 @@ const definitions: Definition[] = [
 
 afterEach(cleanup);
 
-describe('CustomFieldsGroup', () => {
+describe('CustomFieldInput', () => {
   it('renders each definition type as an owned control and stores option keys', () => {
     const onChange = vi.fn();
     render(
-      <CustomFieldsGroup
-        definitions={definitions}
-        values={{}}
-        onChange={onChange}
-      />,
+      <>
+        {definitions.map((definition) => (
+          <CustomFieldInput
+            key={definition.key}
+            definition={definition}
+            value={undefined}
+            onChange={(value) => onChange({ [definition.key]: value })}
+          />
+        ))}
+      </>,
     );
 
     expect(screen.getByLabelText('Team')).toBeRequired();
@@ -53,12 +58,5 @@ describe('CustomFieldsGroup', () => {
 
     fireEvent.click(screen.getByRole('checkbox', { name: 'Visa support' }));
     expect(onChange).toHaveBeenCalledWith({ visa_support: true });
-  });
-
-  it('renders nothing when the board defines no custom fields', () => {
-    const { container } = render(
-      <CustomFieldsGroup definitions={[]} values={{}} onChange={vi.fn()} />,
-    );
-    expect(container).toBeEmptyDOMElement();
   });
 });

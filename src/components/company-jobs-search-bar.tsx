@@ -1,13 +1,16 @@
 'use client';
 
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 
 import { useNavigate } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 
 import { ListingSearchBand } from '@/components/board/listing-search-band';
-import type { LocationSuggestionState } from '@/components/location-combobox';
+import type {
+  LocationComboboxHandle,
+  LocationSearchState,
+} from '@/components/location-combobox';
 
 // Location combobox pulls places suggest + popover UI — keep it off the
 // company-jobs critical module graph until the field is needed.
@@ -20,7 +23,8 @@ const LazyLocationCombobox = lazy(() =>
 /**
  * Company-scoped keyword and location search. Submitting resets pagination;
  * location changes apply immediately. Only resolved place slugs are sent to
- * the API, with locationName retained in the URL to restore the field label.
+ * the API, with locationName retained in the URL to restore the field label;
+ * location text typed but not picked resolves to its top place on submit.
  */
 export function CompanyJobsSearchBar({
   companySlug,
@@ -33,9 +37,10 @@ export function CompanyJobsSearchBar({
   /** The place currently filtering results, read back from the URL. */
   location?: { slug: string; name?: string } | null;
   /** Route-owned suggestion controller (`useLocationSuggestions`). */
-  locationSuggestions: LocationSuggestionState;
+  locationSuggestions: LocationSearchState;
 }) {
   const navigate = useNavigate();
+  const locationRef = useRef<LocationComboboxHandle>(null);
   const [query, setQuery] = useState(defaultValue ?? '');
   const [place, setPlace] = useState<{ slug: string; name: string } | null>(
     location?.slug ? { slug: location.slug, name: location.name ?? '' } : null,
@@ -59,7 +64,23 @@ export function CompanyJobsSearchBar({
     <ListingSearchBand
       value={query}
       onChange={setQuery}
-      onSubmit={() => submit()}
+      onSubmit={() => {
+        const field = locationRef.current;
+        if (!field?.hasPendingText()) {
+          submit();
+          return;
+        }
+        void field.resolvePending().then((pending) => {
+          if (pending.kind === 'unmatched' || pending.kind === 'cancelled')
+            return;
+          if (pending.kind === 'resolved') {
+            setPlace(pending.place);
+            submit(pending.place);
+            return;
+          }
+          submit();
+        });
+      }}
       placeholder={m.companyJobs_searchPlaceholderText()}
       inputAriaLabel={m.searchBar_keywordAriaLabel()}
       searchLabel={m.searchBar_searchLabel()}
@@ -75,6 +96,7 @@ export function CompanyJobsSearchBar({
         >
           <LazyLocationCombobox
             {...locationSuggestions}
+            ref={locationRef}
             value={place?.slug}
             valueLabel={place?.name}
             onSelect={(next) => {

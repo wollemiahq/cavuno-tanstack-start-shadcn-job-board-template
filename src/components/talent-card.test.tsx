@@ -29,6 +29,8 @@ const candidate = {
   skills: ['Mathematics', 'Analytical engines'],
   experiences: [],
   education: [],
+  customFieldValues: {},
+  objectReferences: [],
 } satisfies TalentDirectoryEntry;
 
 afterEach(cleanup);

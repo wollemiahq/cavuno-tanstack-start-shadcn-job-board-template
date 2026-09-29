@@ -34,7 +34,7 @@ import {
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
 import { EmptyState } from '@/components/empty-state';
-import { Page } from '@/components/layout/page';
+import { Page, PageContent } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
 import { useRootSession } from '@/components/root-session';
 import {
@@ -126,9 +126,12 @@ export function createMatchesLoader(
   };
 }
 
-/** The loader's two shapes: the recommendations, or the plan lock. */
+/** The loader's shapes: the recommendations, the employer state, or the plan lock. */
 type MatchesData = Awaited<ReturnType<ReturnType<typeof createMatchesLoader>>>;
-type MatchesResults = Extract<MatchesData, { locked: false }>;
+type MatchesResults = Extract<
+  MatchesData,
+  { locked: false; employerOnly: false }
+>;
 
 export const Route = createFileRoute('/matches')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
@@ -166,7 +169,31 @@ function JobMatchesPage() {
       </Page>
     );
   }
+  if (loaderData.employerOnly) return <EmployerMatchesState />;
   return <JobMatchesResults recommendedJobs={loaderData} />;
+}
+
+/** Matches come from a candidate profile; an employer account has none. */
+function EmployerMatchesState() {
+  return (
+    <Page width="wide">
+      <PageContent>
+        <EmptyState
+          icon={<Briefcase aria-hidden="true" />}
+          title={m.accountRecommended_employerTitle()}
+          description={m.accountRecommended_employerText()}
+          action={
+            <Link
+              to="/account"
+              className={buttonVariants({ variant: 'outline' })}
+            >
+              {m.accountRecommended_employerProfileLink()}
+            </Link>
+          }
+        />
+      </PageContent>
+    </Page>
+  );
 }
 
 function JobMatchesResults({

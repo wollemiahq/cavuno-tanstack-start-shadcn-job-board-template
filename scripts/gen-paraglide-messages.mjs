@@ -37,6 +37,18 @@ function readMessages(locale) {
   return JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));
 }
 
+/** `text` as a catalog, or undefined when it is absent or not JSON. */
+function parseCatalog(text) {
+  if (text === undefined) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
 function writePseudoMessages(locale, messages) {
   mkdirSync('messages', { recursive: true });
   const path = `messages/${locale}.json`;
@@ -46,8 +58,25 @@ function writePseudoMessages(locale, messages) {
   ).length;
   // Keep unchanged QA output untouched as well. This prevents the Paraglide
   // Vite plugin from treating every test or CI preparation as a catalog edit.
-  if (existsSync(path) && readFileSync(path, 'utf8') === next) {
+  const existing = existsSync(path) ? readFileSync(path, 'utf8') : undefined;
+  if (existing === next) {
     console.log(`${path} — ${count} keys (unchanged)`);
+    return;
+  }
+  // Same messages, different whitespace: the formatter breaks long arrays
+  // across lines and patch tools land edits in that style, so a byte compare
+  // alone calls every run a change. Rewriting the file then restarts the dev
+  // server's runner for no content change — several catalogs at once tear it
+  // down mid-entry-load and the page fails to fetch its client entry. Compare
+  // the parsed catalogs instead; `JSON.parse` preserves key order, so a
+  // reordered catalog is still a change. An unparseable file falls through to
+  // the rewrite that repairs it.
+  const parsed = parseCatalog(existing);
+  if (
+    parsed !== undefined &&
+    JSON.stringify(parsed) === JSON.stringify(messages)
+  ) {
+    console.log(`${path} — ${count} keys (unchanged content)`);
     return;
   }
   writeFileSync(path, next);

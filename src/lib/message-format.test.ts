@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { baseLocale, isLocale, overwriteGetLocale } from '../paraglide/runtime';
 import {
   EDIT_WINDOW_MS,
@@ -12,7 +13,9 @@ const NOW = new Date('2026-07-01T12:00:00.000Z').getTime();
 
 describe('relativeTime', () => {
   it('collapses sub-minute ages to "now" (inbox rows must not flicker seconds)', () => {
-    expect(relativeTime('2026-07-01T11:59:30.000Z', NOW)).toBe('now');
+    expect(relativeTime('2026-07-01T11:59:30.000Z', NOW)).toBe(
+      m.messageFormat_now(),
+    );
   });
 
   it('uses compact m/h/d units within the last week', () => {
@@ -40,9 +43,11 @@ describe('daySeparator', () => {
     // Derive from `now` so the buckets are correct in any local timezone (the
     // separator groups by local calendar day, not by UTC).
     const DAY = 24 * 60 * 60 * 1000;
-    expect(daySeparator(new Date(NOW).toISOString(), NOW)).toBe('Today');
+    expect(daySeparator(new Date(NOW).toISOString(), NOW)).toBe(
+      m.messageFormat_today(),
+    );
     expect(daySeparator(new Date(NOW - DAY).toISOString(), NOW)).toBe(
-      'Yesterday',
+      m.messageFormat_yesterday(),
     );
   });
 });

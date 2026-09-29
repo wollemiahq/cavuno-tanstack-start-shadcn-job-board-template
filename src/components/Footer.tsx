@@ -5,7 +5,12 @@ import { Link } from '@tanstack/react-router';
 import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
 import { m } from '../paraglide/messages';
 
-import { FacebookIcon, LinkedInIcon, XIcon } from '@/components/brand-icons';
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  XIcon,
+} from '@/components/brand-icons';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
@@ -31,6 +36,7 @@ export interface BoardContextFooter {
   xUrl: string | null;
   facebookUrl: string | null;
   linkedinUrl: string | null;
+  instagramUrl: string | null;
 }
 
 interface FooterLink {
@@ -323,6 +329,13 @@ export default function Footer({
       : null,
     footer?.linkedinUrl
       ? { href: footer.linkedinUrl, label: 'LinkedIn', icon: <LinkedInIcon /> }
+      : null,
+    footer?.instagramUrl
+      ? {
+          href: footer.instagramUrl,
+          label: 'Instagram',
+          icon: <InstagramIcon />,
+        }
       : null,
   ].filter((link) => link !== null);
 

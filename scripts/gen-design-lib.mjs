@@ -26,7 +26,8 @@ import { parseTokens } from './theme-resolved-lib.mjs';
  *                           same tokens.
  *
  * Output is deterministic (stable ordering, LF, trailing newline):
- * CI regenerates and diffs — any hand-edit fails the check.
+ * Refresh these references on demand with gen:design. Runtime validation
+ * does not depend on committed documentation matching the current theme.
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -327,10 +328,8 @@ function patternsSection(patterns) {
   const lines = ['## Patterns', ''];
   lines.push(
     'Named page-level compositions documented under `docs/patterns/`.',
-    'Select a pattern before composing a route (index + drift notes in',
-    '`docs/patterns/README.md`). Every new page starts with the Page family;',
-    'pattern frontmatter adds the components inside that anatomy. Generated',
-    'from each page’s frontmatter.',
+    'Examples and component references from `docs/patterns/README.md`.',
+    'Generated from each page’s frontmatter.',
     '',
   );
   for (const pattern of patterns) {

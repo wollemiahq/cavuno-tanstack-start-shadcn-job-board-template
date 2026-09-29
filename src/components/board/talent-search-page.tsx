@@ -32,7 +32,6 @@ import type { StartTalentConversation } from '@/components/board/talent-message-
 import { TalentSaveToJob } from '@/components/board/talent-save-to-job';
 import { TalentSearchResult } from '@/components/board/talent-search-result';
 import { Box } from '@/components/layout/box';
-import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
 import { useRootSession } from '@/components/root-session';
@@ -40,6 +39,7 @@ import {
   SearchResultDetail,
   SearchResultsLayout,
   SearchResultsList,
+  SearchResultsToolbar,
 } from '@/components/search-results/search-results';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -52,6 +52,11 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import {
+  pickCustomFieldSearch,
+  resolveCustomFieldFilters,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { TalentSearch } from '@/lib/talent-search';
 import {
@@ -71,6 +76,7 @@ import type { TalentDirectoryEntry } from '@cavuno/board';
 export function TalentSearchPage({
   candidates,
   search = {},
+  customFilterFields,
   q,
   skill,
   count,
@@ -89,6 +95,8 @@ export function TalentSearchPage({
 }: {
   candidates: TalentCardVM[];
   search?: TalentSearch;
+  /** Public candidate profile fields for the "All filters" sheet. */
+  customFilterFields?: CustomFilterField[];
   /** Header-owned candidate query that drives the empty-state copy. */
   q?: string;
   /** `?skill=` facet from a deep link — drives the empty-state copy. */
@@ -244,6 +252,10 @@ export function TalentSearchPage({
     search.permitCountry ||
     search.interestedRole ||
     search.sort ||
+    resolveCustomFieldFilters(
+      customFilterFields ?? [],
+      pickCustomFieldSearch(search),
+    ).length > 0 ||
     viewingSourced,
   );
   const candidateVms = viewingSourced ? (sourcedVms ?? []) : candidates;
@@ -346,43 +358,40 @@ export function TalentSearchPage({
         data-layout="talent-search-page"
         className="md:flex md:h-full md:min-h-0 md:flex-col"
       >
-        <Box border="bottom" paddingX={{ base: '4', md: '8' }}>
-          <Container width="wide" gutter="0">
-            <div className="py-3">
-              <TalentFilters
-                search={search}
-                lists={
-                  workspace ? (
-                    <TalentListsPicker
-                      slug={workspace.slug}
-                      lists={lists}
-                      jobs={workspace.jobs}
-                      selectedListId={search.list}
-                      currentFilters={talentSearchToListFilters(search)}
-                      onListsChange={setLists}
-                    />
-                  ) : null
-                }
-                linkJob={
-                  workspace && selectedList ? (
-                    <TalentListJobLink
-                      slug={workspace.slug}
-                      listId={selectedList.id}
-                      jobId={selectedList.jobId}
-                      jobs={workspace.jobs}
-                      onUpdated={(list) =>
-                        setLists((current) =>
-                          current.map((row) =>
-                            row.id === list.id ? list : row,
-                          ),
-                        )
-                      }
-                    />
-                  ) : null
-                }
-              />
-            </div>
-          </Container>
+        <Box border="bottom">
+          <SearchResultsToolbar startAd={rails.startAd} endAd={rails.endAd}>
+            <TalentFilters
+              search={search}
+              customFilterFields={customFilterFields}
+              lists={
+                workspace ? (
+                  <TalentListsPicker
+                    slug={workspace.slug}
+                    lists={lists}
+                    jobs={workspace.jobs}
+                    selectedListId={search.list}
+                    currentFilters={talentSearchToListFilters(search)}
+                    onListsChange={setLists}
+                  />
+                ) : null
+              }
+              linkJob={
+                workspace && selectedList ? (
+                  <TalentListJobLink
+                    slug={workspace.slug}
+                    listId={selectedList.id}
+                    jobId={selectedList.jobId}
+                    jobs={workspace.jobs}
+                    onUpdated={(list) =>
+                      setLists((current) =>
+                        current.map((row) => (row.id === list.id ? list : row)),
+                      )
+                    }
+                  />
+                ) : null
+              }
+            />
+          </SearchResultsToolbar>
         </Box>
 
         <div

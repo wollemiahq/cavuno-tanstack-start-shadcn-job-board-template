@@ -9,12 +9,16 @@
  */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
+import {
+  jobsListingLoaderDeps,
+  parseJobsIndexSearch,
+} from '../lib/jobs-search';
 import { pageToOffset } from '../lib/pagination';
 import { getJobsIndexPage } from '../server/jobs-listing-pages';
 import { JobsPage } from './-jobs-page';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { customFieldRequestSearch } from '@/lib/custom-field-filters';
 
 const JOBS_PAGE_SIZE = 20;
 
@@ -22,7 +26,7 @@ export const Route = createFileRoute('/jobs/')({
   // Full-bleed: the page opens with the gray hero band and owns its own
   // containers.
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
-  validateSearch: parseJobsSearch,
+  validateSearch: parseJobsIndexSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ deps }) => {
     const offset = pageToOffset(deps.page ?? 1, JOBS_PAGE_SIZE);
@@ -33,6 +37,7 @@ export const Route = createFileRoute('/jobs/')({
         employmentType: deps.employmentType,
         seniority: deps.seniority,
         sort: deps.sort,
+        customFields: customFieldRequestSearch(deps),
         offset,
         limit: JOBS_PAGE_SIZE,
       },

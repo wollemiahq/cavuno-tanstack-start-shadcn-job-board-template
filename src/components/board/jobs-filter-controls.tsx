@@ -22,16 +22,31 @@ import {
 } from '@/components/ui/select';
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { jobSearchCopy } from '@/copy-groups/job-search';
+import {
+  withCustomFieldFilters,
+  type CustomFieldSearch,
+  type CustomFilterField,
+} from '@/lib/custom-field-filters';
 import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
 import { searchString } from '@/lib/pagination';
+import type { CustomFieldFilter } from '@cavuno/board';
+
+/** The board's filterable job custom fields and the clauses the URL holds. */
+export type JobsCustomFilters = {
+  fields: CustomFilterField[];
+  active: CustomFieldFilter[];
+};
 
 export function JobsFilterControls({
   filters,
+  customFilters,
   onChange,
 }: {
   filters: ListingFilters;
+  customFilters?: JobsCustomFilters;
   language: string;
-  onChange: (next: ListingFilters) => void;
+  /** `next` carries the `cf.*` URL parameters for the custom-field clauses. */
+  onChange: (next: ListingFilters & CustomFieldSearch) => void;
 }) {
   const copy = {
     jobCard: jobCardCopy(),
@@ -54,7 +69,9 @@ export function JobsFilterControls({
           seniority: m.jobSearch_seniorityPlaceholder(),
           allFilters: m.jobSearch_allFiltersLabel(),
           filters: m.jobSearch_filtersLabel(),
-          sheetDescription: m.jobSearch_filterSheetDescription(),
+          sheetDescription: customFilters?.fields.length
+            ? m.jobSearch_filterSheetDescriptionWithCustomFields()
+            : m.jobSearch_filterSheetDescription(),
           reset: m.jobSearch_resetLabel(),
           apply: m.jobSearch_applyFiltersLabel(),
           close: m.employerCompany_closeLabel(),
@@ -72,11 +89,13 @@ export function JobsFilterControls({
             value: seniority,
             label: seniorityLabel[seniority],
           })),
+          customFields: { job: customFilters?.fields },
         }}
         value={{
           workplace: filters.remoteOption,
           employmentType: filters.employmentType,
           seniority: filters.seniority,
+          customFields: { job: customFilters?.active },
         }}
         onApply={(value) => {
           const nextFilters: ListingFilters = {
@@ -89,15 +108,22 @@ export function JobsFilterControls({
             // SAFETY: JobsFilterToolbar seniority options are built from SENIORITIES.
             seniority: value.seniority as ListingFilters['seniority'],
           };
-          onChange(nextFilters);
+          onChange(
+            withCustomFieldFilters(nextFilters, value.customFields?.job ?? []),
+          );
         }}
         onReset={() =>
-          onChange({
-            ...filters,
-            remoteOption: undefined,
-            employmentType: undefined,
-            seniority: undefined,
-          })
+          onChange(
+            withCustomFieldFilters(
+              {
+                ...filters,
+                remoteOption: undefined,
+                employmentType: undefined,
+                seniority: undefined,
+              },
+              [],
+            ),
+          )
         }
       />
       <Select

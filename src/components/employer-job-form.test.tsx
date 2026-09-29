@@ -37,6 +37,7 @@ import {
   type EmployerJobFormDependencies,
 } from './employer-job-form';
 
+import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
 
@@ -146,6 +147,9 @@ const draftJob: EmployerJob = {
       postalCode: null,
     },
   ],
+  customFieldValues: {},
+  collectionValues: {},
+  resolvedCollectionFields: [],
 };
 
 afterEach(() => {
@@ -223,6 +227,41 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
+        }),
+      ),
+    );
+  });
+
+  it('sends the employer to an awaiting-review list when the board holds the post', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'pending_approval', checkoutUrl: null },
+    });
+
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: '/employers/companies/$slug',
+          reloadDocument: true,
+          search: { posted: '1', review: '1', job_id: 'job-1' },
         }),
       ),
     );
@@ -1235,24 +1274,72 @@ describe('EmployerJobForm — office-location country lock', () => {
     await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
   });
 
-  it('refuses free text while a country lock is active — it carries no country to check', async () => {
-    // Nothing downstream resolves it on this route, so accepting it would be
-    // a hole in the lock this form exists to enforce.
+  it('adds nothing for typed text that was never picked, and Enter never saves', async () => {
     await renderEdit(germany);
     const field = screen.getByLabelText(m.postJob_officeLocationsLabel());
-    fireEvent.change(field, { target: { value: 'Paris' } });
+    fireEvent.input(field, {
+      target: { value: 'Paris' },
+      inputType: 'insertText',
+    });
     fireEvent.keyDown(field, { key: 'Enter' });
 
-    expect(
-      await screen.findByText(
-        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'DE' }),
-      ),
-    ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', {
         name: m.placeTags_removeAriaLabel({ name: 'Paris' }),
       }),
     ).toBeNull();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
+  });
+
+  it('sends a picked location by id and keeps a stored one by its text', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const munich = {
+      id: 'loc-munich',
+      slug: 'loc-munich',
+      name: 'Munich',
+      fullName: 'Munich, Bavaria, Germany',
+      contextLabel: 'Bavaria, Germany',
+      countryCode: 'DE',
+      regionCode: null,
+    };
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={{
+          suggestions: [munich],
+          loading: false,
+          onQueryChange: () => {},
+        }}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={draftJob}
+        jobForm={germany}
+      />,
+    );
+
+    fireEvent.input(screen.getByLabelText(m.postJob_officeLocationsLabel()), {
+      target: { value: 'Muni' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(await screen.findByRole('option', { name: /Munich/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.updateJob.mock.calls[0]![0].data.body.officeLocations).toEqual(
+      [
+        { query: 'Berlin, Germany' },
+        { locationId: 'loc-munich', displayName: 'Munich, Bavaria, Germany' },
+      ],
+    );
   });
 
   it('does not block when the board sets no country restriction', async () => {
@@ -1327,5 +1414,449 @@ describe('EmployerJobForm — members-only board', () => {
 
     await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
     expect(screen.queryByTestId('membership-gate')).toBeNull();
+  });
+});
+
+/**
+ * Board-defined custom fields (Settings → Job form) are one configuration
+ * for every posting surface: the employer form renders the same definitions
+ * the public /post form does, sends the answers, prefills them on edit and
+ * blocks a save that leaves a required one empty — before the platform's
+ * own 400 would.
+ */
+describe('EmployerJobForm — board custom fields', () => {
+  const customFields = [
+    {
+      key: 'team',
+      label: 'Team',
+      type: 'short_text' as const,
+      required: true,
+    },
+    {
+      key: 'perks',
+      label: 'Perks',
+      type: 'multi_select' as const,
+      required: false,
+      options: [
+        { key: 'gym', label: 'Gym' },
+        { key: 'remote', label: 'Remote stipend' },
+      ],
+    },
+  ];
+
+  // `customFieldValues` reaches `EmployerJob` with the Board API release that
+  // opened the employer job surface to custom fields; widened here so the
+  // fixture also compiles against the SDK pin that predates it.
+  const publishedWithAnswers: EmployerJob & {
+    customFieldValues?: Record<string, string | string[] | boolean | number>;
+  } = {
+    ...draftJob,
+    status: 'published',
+    customFieldValues: { team: 'Platform', perks: ['gym'] },
+  };
+
+  it('renders the definitions and sends the answers on a draft create', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Team'), {
+      target: { value: 'Platform' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Gym' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({
+      team: 'Platform',
+      perks: ['gym'],
+    });
+  });
+
+  it('sends no bag at all when the board defines no custom fields', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect('customFieldValues' in body).toBe(false);
+  });
+
+  it('prefills the stored answers on edit and clears a removed one with null', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={publishedWithAnswers}
+        customFields={customFields}
+      />,
+    );
+
+    expect(screen.getByLabelText('Team')).toHaveValue('Platform');
+    expect(screen.getByRole('checkbox', { name: 'Gym' })).toBeChecked();
+
+    // Untick the only perk: the edit must send an explicit clear, because
+    // the update is an additive merge and an omitted key keeps the old value.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Gym' }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({ team: 'Platform', perks: null });
+  });
+
+  it('sends an untouched required Yes/No field as false, and leaves an optional one unanswered', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={[
+          {
+            key: 'visa',
+            label: 'Visa sponsorship',
+            type: 'boolean',
+            required: true,
+          },
+          {
+            key: 'relocation',
+            label: 'Relocation assistance',
+            type: 'boolean',
+            required: false,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]![0].data.body;
+    expect(body.customFieldValues).toEqual({ visa: false });
+  });
+
+  it('names the field when the board refuses a custom field the form could not check', async () => {
+    // e.g. the operator made "Perks" required after this form loaded.
+    mocks.createJob.mockResolvedValue({
+      ok: false,
+      code: 'jobs_constraint_violation',
+      message: '"Perks" is required on this board',
+      violations: [
+        {
+          code: 'custom_field_required',
+          path: ['customFieldValues', 'perks'],
+          params: { label: 'Perks' },
+        },
+      ],
+    });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('Team'), {
+      target: { value: 'Platform' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Perks' }),
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('blocks a save that leaves a required custom field empty', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Team' }),
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+});
+
+describe('EmployerJobForm — operator form layout', () => {
+  const clearance = {
+    key: 'clearance',
+    label: 'Security clearance',
+    type: 'short_text' as const,
+    required: false,
+  };
+  const benefits = {
+    key: 'benefits',
+    label: 'Benefits',
+    typeId: 'type-benefits',
+    multiple: true,
+    required: true,
+    maxSelections: 3,
+  };
+  function builtin(
+    key: string,
+    overrides: { visible?: boolean; locked?: boolean } = {},
+  ) {
+    return {
+      kind: 'builtin' as const,
+      key,
+      visible: overrides.visible ?? true,
+      required: overrides.locked ?? false,
+      locked: overrides.locked ?? false,
+      lockReason: overrides.locked ? ('google_required' as const) : null,
+    };
+  }
+  const layout: JobFormLayoutSource = {
+    forms: {
+      job: [
+        builtin('description', { locked: true }),
+        builtin('title', { locked: true }),
+        builtin('seniority', { visible: false }),
+        {
+          kind: 'custom',
+          key: 'clearance',
+          visible: false,
+          required: false,
+          definition: clearance,
+        },
+        builtin('workArrangement', { locked: true }),
+        builtin('applyMethod', { locked: true }),
+        {
+          kind: 'collection',
+          key: 'benefits',
+          visible: true,
+          required: true,
+          definition: benefits,
+        },
+      ],
+    },
+  };
+
+  async function renderCreate(
+    loadCollectionChoices = vi
+      .fn()
+      .mockResolvedValue([{ id: 'rec-pto', name: 'Paid time off' }]),
+  ) {
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={{ ...dependencies, loadCollectionChoices }}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        jobForm={layout}
+        customFields={[clearance]}
+      />,
+    );
+    return loadCollectionChoices;
+  }
+
+  async function renderEdit(job: EmployerJob, jobForm = layout) {
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={{
+          ...dependencies,
+          loadCollectionChoices: vi.fn().mockResolvedValue([]),
+        }}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={job}
+        jobForm={jobForm}
+        customFields={[clearance]}
+      />,
+    );
+    return container;
+  }
+
+  const benefitsOnJob = {
+    collectionValues: { benefits: ['rec-pto'] },
+    resolvedCollectionFields: [
+      {
+        key: 'benefits',
+        label: 'Benefits',
+        entries: [
+          {
+            id: 'rec-pto',
+            name: 'Paid time off',
+            title: 'Generous paid leave',
+            description: null,
+            titleOverride: 'Generous paid leave',
+            descriptionOverride: null,
+            fields: [],
+            values: {},
+          },
+        ],
+      },
+    ],
+  } satisfies Partial<EmployerJob>;
+
+  it('names a stored collection entry from the job read', async () => {
+    await renderEdit({ ...draftJob, ...benefitsOnJob });
+
+    expect(
+      screen.getByRole('button', {
+        name: m.placeTags_removeAriaLabel({ name: 'Paid time off' }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('saves an edit whose hidden employment type the board no longer allows, without sending it', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    // The layout does not show the employment type, and the board now only
+    // allows `contract`; the job is stored as `full_time`.
+    const container = await renderEdit(
+      { ...draftJob, ...benefitsOnJob, employmentType: 'full_time' },
+      {
+        ...layout,
+        jobForm: { employmentType: { allowedOptions: ['contract'] } },
+      },
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect('employmentType' in body).toBe(false);
+  });
+
+  it('keeps a hidden custom field and an unchanged collection out of an edit', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const container = await renderEdit({
+      ...draftJob,
+      ...benefitsOnJob,
+      customFieldValues: { clearance: 'TS/SCI' },
+    });
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    const body = mocks.updateJob.mock.calls[0]![0].data.body;
+    expect('customFieldValues' in body).toBe(false);
+    expect('collectionValues' in body).toBe(false);
+  });
+
+  it('renders the fields in layout order and leaves hidden ones out', async () => {
+    await renderCreate();
+
+    const description = screen.getByRole('toolbar', {
+      name: m.postJob_descriptionLabel(),
+    });
+    const title = screen.getByLabelText(m.postJob_jobTitleLabel());
+    expect(
+      description.compareDocumentPosition(title) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByLabelText('Benefits')).toBeInTheDocument();
+    expect(screen.queryByLabelText(m.postJob_seniorityLabel())).toBeNull();
+    expect(screen.queryByLabelText('Security clearance')).toBeNull();
+    // Not in the layout, so not on the form.
+    expect(screen.queryByLabelText(m.postJob_salaryMinLabel())).toBeNull();
+  });
+
+  it('blocks a create until a required collection field has an entry, then sends its record ids', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const loadCollectionChoices = await renderCreate();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(
+      await screen.findAllByText(
+        m.jobForm_customFieldRequiredError({ field: 'Benefits' }),
+      ),
+    ).not.toHaveLength(0);
+    expect(mocks.createJob).not.toHaveBeenCalled();
+
+    fireEvent.input(screen.getByLabelText('Benefits'), {
+      target: { value: 'Paid' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(await screen.findByText('Paid time off'));
+    expect(loadCollectionChoices).toHaveBeenCalledWith('benefits', '');
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    const body = mocks.createJob.mock.calls[0]?.[0]?.data.body;
+    expect(body.collectionValues).toEqual({ benefits: ['rec-pto'] });
+    // The hidden custom field is not collected, so it is not sent.
+    expect(body.customFieldValues).toBeUndefined();
+    expect(body.seniority).toBeUndefined();
+    // A create still sends the employment type the body requires, hidden.
+    expect(body.employmentType).toBe('full_time');
   });
 });

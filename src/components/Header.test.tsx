@@ -38,6 +38,16 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { m } from '../paraglide/messages';
 import Header from './Header';
 
+// Feature tests own their navigation inputs instead of inheriting a customer's
+// labels, hidden links, or footer configuration from chrome.json.
+const navigation = vi.hoisted(() => ({
+  home: 'Explore openings',
+  companies: 'Organisations',
+  blog: 'Career stories',
+  talent: 'People directory',
+}));
+vi.mock('@/chrome.json', () => ({ default: { nav: navigation } }));
+
 const signOutMock = vi.fn();
 
 afterEach(() => {
@@ -201,6 +211,17 @@ function renderHeader({
                 })),
                 loading: false,
                 onQueryChange: vi.fn(),
+                // Board places whose name starts with the typed text.
+                resolve: async (text: string) => {
+                  const place = locationSuggestions.find((candidate) =>
+                    candidate.name
+                      .toLowerCase()
+                      .startsWith(text.trim().toLowerCase()),
+                  );
+                  return place
+                    ? { countryCode: null, regionCode: null, ...place }
+                    : null;
+                },
               },
               keywordSuggestions: {
                 suggestions: keywordSuggestions,
@@ -278,11 +299,13 @@ describe('Header — feature-gated public collections', () => {
     });
 
     expect(
-      await screen.findByRole('link', { name: m.nav_home() }),
+      await screen.findByRole('link', { name: navigation.home }),
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: m.nav_companies() })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: m.nav_blog() })).toBeNull();
-    expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
+    expect(
+      screen.getByRole('link', { name: navigation.companies }),
+    ).toBeTruthy();
+    expect(screen.queryByRole('link', { name: navigation.blog })).toBeNull();
+    expect(screen.queryByRole('link', { name: navigation.talent })).toBeNull();
   });
 
   it('omits Talent when the directory visibility is off even if the legacy boolean is on', async () => {
@@ -291,20 +314,22 @@ describe('Header — feature-gated public collections', () => {
       talentDirectoryVisibility: 'off',
     });
 
-    await screen.findByRole('link', { name: m.nav_home() });
-    expect(screen.queryByRole('link', { name: m.nav_talent() })).toBeNull();
+    await screen.findByRole('link', { name: navigation.home });
+    expect(screen.queryByRole('link', { name: navigation.talent })).toBeNull();
   });
 
   it('links Blog and Talent to their collection pages when enabled', async () => {
     renderHeader();
 
     expect(
-      (await screen.findByRole('link', { name: m.nav_blog() })).getAttribute(
+      (await screen.findByRole('link', { name: navigation.blog })).getAttribute(
         'href',
       ),
     ).toBe('/blog');
     expect(
-      screen.getByRole('link', { name: m.nav_talent() }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: navigation.talent })
+        .getAttribute('href'),
     ).toBe('/talent');
   });
 
@@ -316,9 +341,9 @@ describe('Header — feature-gated public collections', () => {
     });
 
     expect(
-      (await screen.findByRole('link', { name: m.nav_talent() })).getAttribute(
-        'href',
-      ),
+      (
+        await screen.findByRole('link', { name: navigation.talent })
+      ).getAttribute('href'),
     ).toBe('/talent');
     expect(screen.getByLabelText(/keyword/i)).toHaveAttribute(
       'placeholder',
@@ -338,7 +363,7 @@ describe('Header — role and public-posting gates', () => {
       },
     });
 
-    await screen.findByRole('link', { name: m.nav_home() });
+    await screen.findByRole('link', { name: navigation.home });
     expect(
       screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
     ).toBeNull();
@@ -574,6 +599,51 @@ describe('Header — native-applications account gating', () => {
         name: m.accountShell_recommendedJobsNav(),
       }),
     ).toBeNull();
+  });
+
+  it('links an employer to their profile page', async () => {
+    renderHeader({ user: { ...signedInUser, role: 'employer' } });
+
+    fireEvent.click(await findAccountButton());
+
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_profileNav(),
+      }),
+    ).toHaveAttribute('href', '/account');
+  });
+
+  it('shows an employer only the account entries that work without a candidate profile', async () => {
+    renderHeader({ user: { ...signedInUser, role: 'employer' } });
+
+    fireEvent.click(await findAccountButton());
+
+    for (const name of [
+      m.accountShell_profileNav(),
+      m.accountShell_jobAlertsNav(),
+      m.accountShell_settingsNav(),
+    ]) {
+      expect(await screen.findByRole('menuitem', { name })).toBeTruthy();
+    }
+    for (const name of [
+      m.accountShell_recommendedJobsNav(),
+      m.accountShell_savedJobsNav(),
+      m.accountShell_applicationsNav(),
+    ]) {
+      expect(screen.queryByRole('menuitem', { name })).toBeNull();
+    }
+  });
+
+  it('links a candidate to the profile editor', async () => {
+    renderHeader({ user: signedInUser });
+
+    fireEvent.click(await findAccountButton());
+
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_profileNav(),
+      }),
+    ).toHaveAttribute('href', '/account');
   });
 
   it('hides the Applications account entry when native applications are off', async () => {
@@ -956,6 +1026,61 @@ describe('Header — pathname-scoped submit-only search', () => {
         '/jobs/locations/sydney?q=robotics',
       ),
     );
+  });
+
+  it('searches typed location text with its top place when Search is tapped without a pick', async () => {
+    const router = renderHeader({
+      initialEntry: '/jobs?q=engineer',
+      locationSuggestions: [
+        {
+          id: 'place-sydney',
+          slug: 'sydney',
+          name: 'Sydney',
+          contextLabel: 'Australia',
+        },
+      ],
+    });
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const location = screen.getByRole<HTMLInputElement>('combobox', {
+      name: /location/i,
+    });
+
+    fireEvent.input(location, {
+      target: { value: 'Syd' },
+      inputType: 'insertText',
+    });
+    // The suggestions popup is still open: Search is tapped straight away.
+    expect(screen.getByRole('option', { name: /Sydney/ })).toBeTruthy();
+    submitContainingForm(keyword);
+
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(
+        '/jobs/locations/sydney?q=engineer',
+      ),
+    );
+    expect(location.value).toBe('Sydney');
+  });
+
+  it('stays put and says so when typed location text matches no place', async () => {
+    const router = renderHeader({ initialEntry: '/jobs?q=engineer' });
+    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const location = screen.getByRole<HTMLInputElement>('combobox', {
+      name: /location/i,
+    });
+
+    fireEvent.input(location, {
+      target: { value: 'Atlantis' },
+      inputType: 'insertText',
+    });
+    submitContainingForm(keyword);
+
+    expect(
+      await screen.findByText(
+        m.locationCombobox_noMatchText({ location: 'Atlantis' }),
+      ),
+    ).toBeTruthy();
+    expect(router.state.location.href).toBe('/jobs?q=engineer');
+    expect(location.value).toBe('Atlantis');
   });
 
   it.each([

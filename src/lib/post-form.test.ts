@@ -129,6 +129,12 @@ describe('stripSocialHandle', () => {
   it('leaves a bare handle untouched', () => {
     expect(stripSocialHandle('acme', ['x.com'])).toBe('acme');
   });
+
+  it('removes a trailing slash from a pasted profile URL', () => {
+    expect(
+      stripSocialHandle('https://www.instagram.com/acme/', ['instagram.com']),
+    ).toBe('acme');
+  });
 });
 
 describe('toSocialUrl', () => {

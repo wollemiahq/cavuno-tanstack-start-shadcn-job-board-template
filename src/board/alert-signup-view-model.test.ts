@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { toAlertSignupVM } from './alert-signup-view-model';
 
+import { alertsCopy } from '@/copy-groups/alerts';
+
 /**
  * The alert-signup mapper is Layer 1b — it owns the copy resolution for
  * the subscribe form, including the uniform submitted result message. These
@@ -31,9 +33,7 @@ describe('toAlertSignupVM', () => {
     for (const m of [submitted, error]) {
       expect(m.length).toBeGreaterThan(0);
     }
-    expect(submitted).toBe(
-      "If this email isn't already subscribed, we've sent a confirmation link — check your inbox.",
-    );
+    expect(submitted).toBe(alertsCopy().jobAlertSuccessToast);
     expect(submitted).not.toBe(error);
   });
 });

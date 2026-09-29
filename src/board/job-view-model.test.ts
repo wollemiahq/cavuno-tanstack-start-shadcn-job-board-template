@@ -12,6 +12,7 @@ import type { PublicJobCard } from '@cavuno/board';
 const baseJob: PublicJobCard = {
   id: 'job_1',
   object: 'job_card',
+  customFieldValues: {},
   slug: 'senior-engineer',
   title: 'Senior Engineer',
   // Server-derived card teaser (always on the wire after API 4.2).
@@ -29,7 +30,12 @@ const baseJob: PublicJobCard = {
   salaryTimeframe: 'year',
   isFeatured: true,
   isSponsored: false,
-  company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
+  company: {
+    slug: 'acme-co',
+    name: 'Acme Co',
+    logoUrl: null,
+    customFieldValues: {},
+  },
   categories: [{ slug: 'engineering', name: 'Engineering' }],
   skills: [{ slug: 'react', name: 'React' }],
   links: {
@@ -141,6 +147,7 @@ describe('toSavedJobCardVM', () => {
   const slimSavedJob: PublicJobCard = {
     id: 'job_2',
     object: 'job_card',
+    customFieldValues: {},
     slug: 'staff-engineer',
     title: 'Staff Engineer',
     publishedAt: null,
@@ -157,7 +164,12 @@ describe('toSavedJobCardVM', () => {
     isFeatured: false,
     isSponsored: false,
     summary: null,
-    company: { slug: 'acme-co', name: 'Acme Co', logoUrl: null },
+    company: {
+      slug: 'acme-co',
+      name: 'Acme Co',
+      logoUrl: null,
+      customFieldValues: {},
+    },
     categories: [],
     skills: [],
     links: {

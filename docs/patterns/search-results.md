@@ -1,7 +1,7 @@
 ---
 name: Search results
 purpose: A progressively enhanced directory that keeps dense results and a decision-complete detail visible together on desktop.
-primitives: [SearchResultsLayout, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail]
+primitives: [SearchResultsLayout, SearchResultsToolbar, SearchResultsList, SearchResultDetail, SearchResultCard, AdRail]
 usedBy: [src/components/search-results/search-results-layout.tsx, src/components/search-results/search-results-list.tsx, src/components/search-results/search-result-detail.tsx, src/components/search-results/search-result-card.tsx, src/components/search-results/ad-rail.tsx, src/components/board/job-search-page.tsx, src/components/board/company-search-page.tsx, src/components/board/talent-search-page.tsx, src/components/board/job-search-result.tsx, src/components/board/company-search-result.tsx, src/components/board/talent-search-result.tsx]
 ---
 
@@ -21,9 +21,10 @@ the entity’s ordinary canonical link owns navigation to its full detail page.
 ## Anatomy
 
 - `SearchResultsLayout` — the centered responsive grid and optional outer ad
-  slots. Its core stays 72rem wide before advertising is allowed to appear.
-  The grid is deliberately borderless: result cards and detail content must not
-  be nested inside a second oversized card.
+  slots. Its core stays aligned with the filter row when advertising appears.
+  The default grid is borderless; shared variants can adapt its presentation.
+- `SearchResultsToolbar` — gives filters the same outer grid and page gutters
+  as the results. Pass the same rail slots to both components.
 - `SearchResultsList` — the named master region and list-scroll restoration seam.
 - `SearchResultDetail` — the desktop-only named detail projection and its own
   scroll-restoration seam. Its compact header is derived from one stable local
@@ -73,6 +74,25 @@ geometry and interaction chrome:
 The default independent-scroll height is `calc(100dvh - 12rem)`. A route with a
 different sticky-header stack sets `--search-results-height` on the layout.
 
+## Custom-field filters
+
+The "All filters" sheet on Jobs, Companies and Talent picks up the operator's
+custom fields on its own, so a new field needs no code change:
+
+- Jobs use the job custom fields from `board.context().customFields.job`;
+  Companies and Talent use the public company and candidate profile fields
+  from `board.profileFields.retrieve()`.
+- `single_select` and `multi_select` fields become a list of checkboxes, one
+  per option; ticking several matches any of them. A `boolean` field becomes
+  one checkbox labelled with the field name, which filters to "yes" only.
+- Number, text, date, link, file and collection-reference fields, and
+  private profile fields, are left out. A board without eligible fields gets
+  no custom section (and Companies no "All filters" button).
+- Selections live in the URL as `cf.<field key>=<option keys>` (or `=true`).
+  `src/lib/custom-field-filters.ts` owns that mapping and drops unknown keys
+  and retired options before a request, so shared links never break. Different
+  fields combine with AND, options within a field with OR, up to 10 fields.
+
 ## Do / Don't
 
 | Do                                                                          | Don't                                                                                           |
@@ -80,8 +100,7 @@ different sticky-header stack sets `--search-results-height` on the layout.
 | Keep every result’s primary activation as a real canonical anchor.          | Turn a result card into a JavaScript-only button or duplicate full detail in the list response. |
 | Give list and detail scope-specific `scrollRestorationId` values.           | Share one scroll position between the two independently scrolling regions.                      |
 | Supply entity-specific children and labels through the named slots.         | Add a universal entity schema or a `type` switch to the shared layout.                          |
-| Let the list divider and selected result card communicate structure.        | Wrap the list and detail in another rounded, bordered card.                                     |
-| Render `AdRail` only when real creative is available.                       | Reserve empty ad columns or show advertising before 1280px compresses the core.                 |
+| Use inline ads below 1440px; show rails only with room and creative.       | Reserve empty ad columns or show a rail below 1440px.                                     |
 | Replace the grid with one full-width recovery state when results are empty. | Keep an empty list rail and blank detail pane on screen.                                        |
 
 ## Used by

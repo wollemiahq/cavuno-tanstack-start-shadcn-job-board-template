@@ -1,36 +1,31 @@
-import { describe, expect, it } from 'vitest';
+import { createMemoryHistory, createRouter } from '@tanstack/react-router';
+import { describe, expect, it, vi } from 'vitest';
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { routeTree } from '../routeTree.gen';
 
-/**
- * The Stripe return routes must sit directly under the root route.
- *
- * `post.tsx` is the wizard and renders no `<Outlet />`, so a `post.success`
- * child would never paint; and `employer.$slug.jobs.tsx` would become the
- * layout parent of the `/jobs/new` cancel alias, whose beforeLoad it would
- * pre-empt. The file names (`post_.success`, `employer.$slug.jobs.index`)
- * carry that; this pins what the generated tree actually resolved.
- */
-const tree = readFileSync(
-  join(import.meta.dirname, '..', 'routeTree.gen.ts'),
-  'utf8',
-);
+vi.mock('../lib/og-render', () => ({ renderOgPng: vi.fn() }));
 
-const ROOT_PARENTED = [
-  'PostSuccessRouteImport',
-  'PostCheckoutCanceledRouteImport',
-  'EmployerSlugJobsIndexRouteImport',
-  'EmployerSlugJobsNewRouteImport',
-];
-
-describe('Stripe return routes are not nested', () => {
-  it.each(ROOT_PARENTED)('%s is parented to the root route', (name) => {
-    const block = tree.match(
-      new RegExp(
-        `preLoaderRoute: typeof ${name}\\n\\s+parentRoute: typeof (\\w+)`,
-      ),
-    );
-    expect(block?.[1]).toBe('rootRouteImport');
-  });
+describe('checkout return routing', () => {
+  it.each([
+    ['/post/success', '/post'],
+    ['/post/checkout-canceled', '/post'],
+    ['/employer/$slug/jobs/', '/employer/$slug/jobs'],
+    ['/employer/$slug/jobs/new', '/employer/$slug/jobs'],
+  ])(
+    '%s is not hidden under the posting wizard or jobs page',
+    (path, blockedParent) => {
+      const router = createRouter({
+        routeTree,
+        history: createMemoryHistory(),
+      });
+      const route = Object.values(router.routesById).find(
+        (candidate) => candidate.fullPath === path,
+      );
+      expect(route, 'Checkout destination must exist').toBeDefined();
+      const ancestors: string[] = [];
+      for (let parent = route?.parentRoute; parent; parent = parent.parentRoute)
+        ancestors.push(parent.fullPath);
+      expect(ancestors).not.toContain(blockedParent);
+    },
+  );
 });

@@ -147,6 +147,8 @@ const draftJob = {
   createdAt: '2026-07-01T00:00:00.000Z',
   updatedAt: '2026-07-01T00:00:00.000Z',
   links: { public: null },
+  customFieldValues: {},
+  collectionValues: {},
 } as const;
 
 const company = {
@@ -177,6 +179,7 @@ const employerCompany = {
   xUrl: null,
   linkedinUrl: 'https://linkedin.com/company/northstar',
   facebookUrl: null,
+  instagramUrl: 'https://www.instagram.com/northstar/',
   logoUrl: null,
 } satisfies CompanyProfileLoaderData['employerCompany'];
 
@@ -454,6 +457,19 @@ describe('employer company workspace', () => {
     expect(
       screen.getByRole('row', { name: /Senior Product Designer/ }),
     ).toHaveAttribute('data-state', 'selected');
+  });
+
+  it('says a held post is awaiting review instead of calling it saved', async () => {
+    await renderJobs([draftJob], {
+      search: { posted: '1', review: '1', job_id: draftJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.postJob_pendingTitle(),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.postJob_pendingBody(),
+    );
   });
 
   it('explains a same-origin save and says so if the new row is not listed yet', async () => {
@@ -806,10 +822,11 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('textbox', { name: 'Website' })).toHaveValue(
       'northstar.example',
     );
-    // The three per-network social fields sit behind their domain addons.
+    // Each social field sits behind its domain addon.
     expect(screen.getByText('linkedin.com/company/')).toBeInTheDocument();
     expect(screen.getByText('x.com/')).toBeInTheDocument();
     expect(screen.getByText('facebook.com/')).toBeInTheDocument();
+    expect(screen.getByText('instagram.com/')).toBeInTheDocument();
     expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
     expect(screen.getByText('Hiring')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
@@ -823,6 +840,12 @@ describe('employer company workspace', () => {
       target: { value: 'https://www.linkedin.com/company/northstar' },
     });
     expect(linkedin).toHaveValue('northstar');
+
+    const instagram = screen.getByRole('textbox', { name: 'Instagram' });
+    fireEvent.change(instagram, {
+      target: { value: 'https://www.instagram.com/northstar/' },
+    });
+    expect(instagram).toHaveValue('northstar');
   });
 
   it('prefills the tagline and social fields from the editable company read', () => {
@@ -837,6 +860,29 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('textbox', { name: 'LinkedIn' })).toHaveValue(
       'northstar',
     );
+    expect(screen.getByRole('textbox', { name: 'Instagram' })).toHaveValue(
+      'northstar',
+    );
+  });
+
+  it('saves an Instagram handle as a profile URL', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    renderProfile();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Instagram' }), {
+      target: { value: 'flexwork.florida' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
+    );
+    expect(
+      profileActions.updateCompany.mock.calls[0]?.[0]?.data.body,
+    ).toMatchObject({
+      instagramUrl: 'https://instagram.com/flexwork.florida',
+    });
   });
 
   it('uploads a new company logo through the profile logo control', async () => {
@@ -1675,5 +1721,141 @@ describe('employer company workspace', () => {
     expect(
       screen.getByText(/Team membership could not be loaded/),
     ).toBeVisible();
+  });
+});
+
+describe('Company profile — operator form layout', () => {
+  function builtin(
+    key: string,
+    options: { visible?: boolean; required?: boolean; locked?: boolean } = {},
+  ) {
+    return {
+      kind: 'builtin' as const,
+      key,
+      visible: options.visible ?? true,
+      required: options.required ?? options.locked ?? false,
+      locked: options.locked ?? false,
+      lockReason: options.locked
+        ? ('google_hiring_organization' as const)
+        : null,
+    };
+  }
+  const motto = {
+    key: 'motto',
+    label: 'Motto',
+    type: 'short_text' as const,
+    required: false,
+    visibility: 'public' as const,
+    editableByOwner: true,
+  };
+  const profileFields = {
+    customFields: { definitions: [motto], values: { motto: 'Onward' } },
+    objectReferences: { definitions: [], selections: [] },
+  };
+
+  it('renders the layout order, leaves hidden fields out and keeps their stored values', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    renderProfile({
+      ...profileLoaderData,
+      formLayout: [
+        builtin('description'),
+        builtin('name', { locked: true }),
+        builtin('summary', { visible: false }),
+        builtin('linkedinUrl', { visible: false }),
+        builtin('instagramUrl', { visible: false }),
+        builtin('website'),
+      ],
+    });
+
+    const about = screen.getByRole('toolbar', { name: 'About' });
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    expect(
+      about.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByRole('textbox', { name: 'Tagline' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'LinkedIn' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Instagram' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
+    );
+    const body = profileActions.updateCompany.mock.calls[0]?.[0]?.data.body;
+    expect(body).toMatchObject({
+      name: 'Northstar Labs',
+      website: 'https://northstar.example',
+    });
+    expect(body).not.toHaveProperty('summary');
+    expect(body).not.toHaveProperty('linkedinUrl');
+    expect(body).not.toHaveProperty('instagramUrl');
+  });
+
+  it('blocks the save while a required field is empty', async () => {
+    renderProfile({
+      ...profileLoaderData,
+      formLayout: [
+        builtin('name', { locked: true }),
+        builtin('logo', { required: true }),
+      ],
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    expect(
+      await screen.findByText(
+        m.profileForm_fieldRequiredError({
+          field: m.employerProfile_logoLabel(),
+        }),
+      ),
+    ).toBeInTheDocument();
+    expect(profileActions.updateCompany).not.toHaveBeenCalled();
+  });
+
+  it('writes a changed custom field through the additive custom-field update', async () => {
+    const updateCompanyCustomFields = vi.fn().mockResolvedValue({ ok: true });
+    const updateCompanyObjectReferences = vi.fn();
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    render(
+      <CompanyProfilePageView
+        data={{
+          ...profileLoaderData,
+          profileFields,
+          formLayout: [
+            builtin('name', { locked: true }),
+            {
+              kind: 'custom',
+              key: 'motto',
+              visible: true,
+              required: false,
+              definition: motto,
+            },
+          ],
+        }}
+        actions={{
+          ...profileActions,
+          updateCompanyCustomFields,
+          updateCompanyObjectReferences,
+        }}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Motto' }), {
+      target: { value: 'Forward' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(updateCompanyCustomFields).toHaveBeenCalledWith({
+        data: {
+          slug: 'northstar-labs',
+          body: { values: { motto: 'Forward' } },
+        },
+      }),
+    );
+    // No collection field changed, so the full-replace write is skipped.
+    expect(updateCompanyObjectReferences).not.toHaveBeenCalled();
   });
 });

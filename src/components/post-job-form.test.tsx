@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PostJobForm } from './post-job-form';
 
 import type { RichTextEditorProps } from './rich-text-editor';
+import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
 import type { JobPostingPlan } from '@cavuno/board';
@@ -66,7 +67,44 @@ const plans: JobPostingPlan[] = [
   },
 ];
 
-afterEach(cleanup);
+/** A worldwide location-search result, as the route's hook maps it. */
+const berlin = {
+  id: 'loc-berlin',
+  slug: 'loc-berlin',
+  name: 'Berlin',
+  fullName: 'Berlin, Germany',
+  contextLabel: 'Germany',
+  countryCode: 'DE',
+  regionCode: null,
+};
+
+const officeLocationSuggestions = {
+  suggestions: [berlin],
+  loading: false,
+  onQueryChange: () => {},
+};
+
+/** Search the office-location picker and pick the Berlin suggestion. */
+function pickBerlin() {
+  const officeLocations = screen.getByLabelText(
+    m.postJob_officeLocationsLabel(),
+  );
+  fireEvent.input(officeLocations, {
+    target: { value: 'Berl' },
+    inputType: 'insertText',
+  });
+  fireEvent.click(screen.getByRole('option', { name: /Berlin/ }));
+}
+
+afterEach(() => {
+  // The HTML fallback must keep personal data out of GET URLs.
+  for (const input of document.querySelectorAll<HTMLInputElement>(
+    'input[type="email"], input[name="name"], textarea[name="coverLetter"]',
+  )) {
+    expect(input.form?.method).toBe('post');
+  }
+  cleanup();
+});
 
 describe('PostJobForm', () => {
   it('submits the complete public posting contract through the selected plan', async () => {
@@ -86,11 +124,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={onSubmit}
         onLogoFetch={vi.fn()}
@@ -120,13 +154,9 @@ describe('PostJobForm', () => {
     fireEvent.change(screen.getByLabelText(m.postJob_applicationUrlLabel()), {
       target: { value: 'acme.example/careers/staff-designer' },
     });
-    // Hybrid (the default) requires somewhere to be on-site at — commit a
-    // free-text office location through the place picker.
-    const officeLocations = screen.getByLabelText(
-      m.postJob_officeLocationsLabel(),
-    );
-    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
-    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+    // Hybrid (the default) requires somewhere to be on-site at — pick an
+    // office location from the worldwide search.
+    pickBerlin();
     fireEvent.change(screen.getByLabelText(m.postJob_salaryMinLabel()), {
       target: { value: '140000' },
     });
@@ -152,7 +182,9 @@ describe('PostJobForm', () => {
         description: '<p>Lead product design across the company.</p>',
         employmentType: 'full_time',
         remoteOption: 'hybrid',
-        officeLocations: [{ displayName: 'Berlin' }],
+        officeLocations: [
+          { locationId: 'loc-berlin', displayName: 'Berlin, Germany' },
+        ],
         applicationUrl: 'https://acme.example/careers/staff-designer',
         salaryMin: 140000,
         salaryMax: 180000,
@@ -171,6 +203,70 @@ describe('PostJobForm', () => {
     ).toBeInTheDocument();
   });
 
+  it('sends an untouched required Yes/No field as No, and leaves an optional one unanswered', async () => {
+    const onSubmit = vi.fn().mockResolvedValue({
+      ok: true,
+      result: {
+        object: 'job_posting_result',
+        status: 'published',
+        jobId: 'job-1',
+        jobSlug: 'staff-product-designer',
+      },
+    });
+
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[
+          {
+            key: 'visa',
+            label: 'Visa sponsorship',
+            type: 'boolean',
+            required: true,
+          },
+          {
+            key: 'relocation',
+            label: 'Relocation assistance',
+            type: 'boolean',
+            required: false,
+          },
+        ]}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={officeLocationSuggestions}
+        plans={plans}
+        onSubmit={onSubmit}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+
+    for (const [label, value] of [
+      [m.postJob_companyNameLabel(), 'Acme Studio'],
+      [m.postJob_companyWebsiteLabel(), 'acme.example'],
+      [m.postJob_contactNameLabel(), 'Ada Lovelace'],
+      [m.postJob_contactEmailLabel(), 'ada@acme.example'],
+      [m.postJob_jobTitleLabel(), 'Staff Product Designer'],
+      [m.postJob_descriptionLabel(), 'Lead product design.'],
+      [m.postJob_applicationUrlLabel(), 'acme.example/careers'],
+    ]) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    pickBerlin();
+
+    const submitButton = screen
+      .getAllByRole('button')
+      .find((button) => button.getAttribute('type') === 'submit');
+    if (!submitButton) throw new Error('The post form needs a submit button');
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ customFieldValues: { visa: false } }),
+    );
+  });
+
   it('explains when posting is unavailable instead of rendering an unusable form', () => {
     render(
       <PostJobForm
@@ -178,11 +274,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={[]}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -204,11 +296,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -239,11 +327,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         initialPlanId="plan-premium"
         onSubmit={vi.fn()}
@@ -269,11 +353,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -317,11 +397,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -362,11 +438,7 @@ describe('PostJobForm', () => {
         customFields={[]}
         remotePermits={null}
         locale="en-AU"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={[
           {
             ...plans[0]!,
@@ -399,11 +471,7 @@ describe('PostJobForm', () => {
         }}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         onSubmit={vi.fn()}
         onLogoFetch={vi.fn()}
@@ -443,11 +511,7 @@ describe('PostJobForm — board job-form constraints', () => {
         customFields={[]}
         remotePermits={null}
         locale="en"
-        officeLocationSuggestions={{
-          suggestions: [],
-          loading: false,
-          onQueryChange: vi.fn(),
-        }}
+        officeLocationSuggestions={officeLocationSuggestions}
         plans={plans}
         jobForm={{ object: 'public_board', jobForm }}
         onSubmit={onSubmit}
@@ -470,11 +534,7 @@ describe('PostJobForm — board job-form constraints', () => {
     ] as const) {
       fireEvent.change(screen.getByLabelText(label), { target: { value } });
     }
-    const officeLocations = screen.getByLabelText(
-      m.postJob_officeLocationsLabel(),
-    );
-    fireEvent.change(officeLocations, { target: { value: 'Berlin' } });
-    fireEvent.keyDown(officeLocations, { key: 'Enter' });
+    pickBerlin();
   }
 
   function submit() {
@@ -558,4 +618,146 @@ describe('PostJobForm — board job-form constraints', () => {
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
+});
+
+describe('PostJobForm — operator form layout', () => {
+  const perks = {
+    key: 'perks',
+    label: 'Perks',
+    type: 'multi_select' as const,
+    required: true,
+    options: [{ key: 'remote_budget', label: 'Remote budget' }],
+  };
+  function builtin(key: string, visible = true) {
+    return {
+      kind: 'builtin' as const,
+      key,
+      visible,
+      required: false,
+      locked: false,
+      lockReason: null,
+    };
+  }
+  const layout: JobFormLayoutSource = {
+    forms: {
+      job: [
+        builtin('company'),
+        builtin('salary'),
+        builtin('title'),
+        builtin('seniority', false),
+        {
+          kind: 'custom',
+          key: 'perks',
+          visible: true,
+          required: true,
+          definition: perks,
+        },
+        builtin('workArrangement'),
+        builtin('description'),
+        builtin('applyMethod'),
+        {
+          kind: 'collection',
+          key: 'benefits',
+          visible: true,
+          required: false,
+          definition: {
+            key: 'benefits',
+            label: 'Benefits',
+            typeId: 'type-benefits',
+            multiple: true,
+            required: false,
+          },
+        },
+      ],
+    },
+  };
+
+  function renderLayout(onSubmit = vi.fn()) {
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[perks]}
+        jobForm={layout}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={officeLocationSuggestions}
+        plans={plans}
+        onSubmit={onSubmit}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+    return onSubmit;
+  }
+
+  it('renders the role fields in layout order and leaves hidden ones out', () => {
+    renderLayout();
+
+    const salary = screen.getByLabelText(m.postJob_salaryMinLabel());
+    const title = screen.getByLabelText(m.postJob_jobTitleLabel());
+    expect(
+      salary.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByLabelText(m.postJob_seniorityLabel())).toBeNull();
+    // Not in the layout: no employment type picker, no office locations.
+    expect(screen.queryByLabelText(m.postJob_employmentTypeLabel())).toBeNull();
+    expect(
+      screen.queryByLabelText(m.postJob_officeLocationsLabel()),
+    ).toBeNull();
+    // Collection fields belong to the signed-in employer form.
+    expect(screen.queryByLabelText('Benefits')).toBeNull();
+  });
+
+  it('blocks submit while a required custom field is unanswered', async () => {
+    const onSubmit = renderLayout();
+
+    fireEvent.change(screen.getByLabelText(m.postJob_descriptionLabel()), {
+      target: { value: 'Build things.' },
+    });
+    fireEvent.submit(
+      screen.getByRole('button', { name: m.postJob_checkoutButtonLabel() }),
+    );
+
+    expect(
+      await screen.findByText(
+        m.jobForm_customFieldRequiredError({ field: 'Perks' }),
+      ),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+it('keeps submission disabled until a picked office finishes resolving', () => {
+  const props = {
+    DescriptionEditor,
+    customFields: [],
+    remotePermits: null,
+    locale: 'en',
+    plans,
+    onSubmit: vi.fn(),
+    onLogoFetch: vi.fn(),
+    onLogoUpload: vi.fn(),
+    onCheckout: vi.fn(),
+  };
+  const { container, rerender } = render(
+    <PostJobForm
+      {...props}
+      officeLocationSuggestions={{
+        ...officeLocationSuggestions,
+        resolving: true,
+      }}
+    />,
+  );
+  expect(container.querySelector('button[type="submit"]')).toBeDisabled();
+  rerender(
+    <PostJobForm
+      {...props}
+      officeLocationSuggestions={{
+        ...officeLocationSuggestions,
+        resolving: false,
+      }}
+    />,
+  );
+  expect(container.querySelector('button[type="submit"]')).not.toBeDisabled();
 });

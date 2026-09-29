@@ -53,6 +53,9 @@ export function HeaderAccountMenu({
       membership.status === 'approved' && membership.company.slug !== null,
   );
   const router = useRouter();
+  // Matches, saved jobs and applications need a candidate profile (hosted
+  // parity); profile, job alerts and settings work for every account.
+  const isCandidate = user.role === 'candidate';
 
   return (
     <DropdownMenu>
@@ -78,7 +81,7 @@ export function HeaderAccountMenu({
         <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
           {m.accountShell_profileNav()}
         </DropdownMenuItem>
-        {jobRecommendationsEnabled ? (
+        {isCandidate && jobRecommendationsEnabled ? (
           <DropdownMenuItem
             nativeButton={false}
             render={<Link to="/matches" />}
@@ -86,19 +89,21 @@ export function HeaderAccountMenu({
             {m.accountShell_recommendedJobsNav()}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem
-          nativeButton={false}
-          render={<Link to="/saved-jobs" />}
-        >
-          {m.accountShell_savedJobsNav()}
-        </DropdownMenuItem>
+        {isCandidate ? (
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/saved-jobs" />}
+          >
+            {m.accountShell_savedJobsNav()}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           nativeButton={false}
           render={<Link to="/me/alerts" />}
         >
           {m.accountShell_jobAlertsNav()}
         </DropdownMenuItem>
-        {nativeApplications ? (
+        {isCandidate && nativeApplications ? (
           <DropdownMenuItem
             nativeButton={false}
             render={<Link to="/me/applications" />}

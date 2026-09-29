@@ -86,9 +86,11 @@ describe('ContactForm', () => {
     expect(status.textContent).toContain('grace@example.com');
     expect(screen.queryByRole('button', { name: 'Send message' })).toBeNull();
     expect(onSent).toHaveBeenCalledOnce();
-    expect(
-      screen.getByRole('heading', { name: "We've received your message" }),
-    ).toBe(document.activeElement);
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { name: "We've received your message" }),
+      ).toBe(document.activeElement),
+    );
 
     view.rerender(<ContactForm onSent={onSent} />);
     expect(screen.getByRole('status').textContent).toContain(

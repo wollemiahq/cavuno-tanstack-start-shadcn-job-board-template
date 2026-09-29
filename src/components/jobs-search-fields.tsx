@@ -1,12 +1,15 @@
 'use client';
 
+import type { Ref } from 'react';
+
 import {
   KeywordCombobox,
   type KeywordSuggestionState,
 } from '@/components/keyword-combobox';
 import {
   LocationCombobox,
-  type LocationSuggestionState,
+  type LocationComboboxHandle,
+  type LocationSearchState,
 } from '@/components/location-combobox';
 import type {
   HeaderSearchLocation,
@@ -15,7 +18,9 @@ import type {
 
 export interface JobsSearchFieldsProps {
   keywordSuggestions: KeywordSuggestionState;
-  locationSuggestions: LocationSuggestionState;
+  locationSuggestions: LocationSearchState;
+  /** Lets the host form settle typed-but-unpicked location text on submit. */
+  locationRef?: Ref<LocationComboboxHandle>;
   value: string;
   location: HeaderSearchLocation | null;
   placeholder: string;
@@ -29,6 +34,7 @@ export interface JobsSearchFieldsProps {
 export function JobsSearchFields({
   keywordSuggestions,
   locationSuggestions,
+  locationRef,
   value,
   location,
   placeholder,
@@ -55,6 +61,7 @@ export function JobsSearchFields({
       />
       <LocationCombobox
         {...locationSuggestions}
+        ref={locationRef}
         value={location?.slug}
         valueLabel={location?.name}
         onSelect={onLocationChange}

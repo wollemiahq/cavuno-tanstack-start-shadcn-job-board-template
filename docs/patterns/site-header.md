@@ -38,9 +38,9 @@ or account actions change width.
 | Talent and public profiles | Keyword | `/talent?q=` |
 | Blog, article, tag, and author routes | Keyword | `/blog?q=` |
 
-The pathname owns the scope. Do not add a search-type selector: the centered
-navigation is the collection switcher, and the URL remains the source of truth
-for the current query.
+The default header derives scope from the pathname and uses navigation to
+switch collections. Alternative controls can use the same search destinations
+and URL state.
 
 ## Composition
 
@@ -68,10 +68,7 @@ navigation bar.
 
 | Do | Don't |
 | --- | --- |
-| Derive search shape and destination from the active route. | Keep a second search-type control beside primary navigation. |
-| Pair Jobs keyword and location inside one visually grouped control. | Split location into an unrelated filter or a second page hero. |
-| Keep the navigation geometrically centered with equal outer tracks. | Center it only within leftover flex space. |
-| Keep the chrome fluid with responsive `Box` gutters. | Put the header inside the canonical 80rem page-body container. |
+| Keep search controls consistent with their URL destination. | Submit one collection’s filters to another collection. |
 | Preserve the URL query on reload, history navigation, and new tabs. | Navigate on every keystroke or keep canonical search state only in React. |
 | Collapse navigation into the mobile disclosure before the header crowds. | Force all four links, search, and account actions into one mobile row. |
 

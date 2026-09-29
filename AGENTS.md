@@ -54,8 +54,15 @@ the locale runtime, and gen:theme still generates runtime token data. Shadcn
 inventory and design descriptions are references rather than ordinary gates.
 
 Run focused tests with `pnpm test path/to/file.test.tsx` (without `--`).
-Choose checks that establish the requested behavior: interactions,
-navigation, data, permissions, accessibility, and relevant failure states.
-Use a browser for responsive or visual changes. Test behavior rather than incidental classes, DOM shape, layout, or copy; exact wording is appropriate
-when an external requirement fixes it. Use relevant subsystem guidance when a
-change touches that area.
+Add or update tests when they protect meaningful behavior or catch a real bug.
+Copy and styling changes usually need no new automated tests. Prefer a few
+useful behavior tests over many assertions about implementation details.
+Keep test inputs independent of customer copy, branding, and navigation choices.
+Test starter-owned behavior and SDK integration, not behavior already covered
+by the SDK or dependency tests.
+Use a browser for responsive or visual changes, and relevant subsystem guidance
+when a change touches that area.
+
+Legal/about content marks unfinished scaffolds with `placeholder: true` in each
+locale's content entry. Remove that flag when replacing the scaffold with owned
+content; indexing follows the resolved locale, including its fallback.

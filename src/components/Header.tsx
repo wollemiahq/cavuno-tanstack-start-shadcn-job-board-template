@@ -26,7 +26,7 @@ import type { CompanyMarketSuggestionState } from '@/components/company-search-c
 import { HeaderSearchEnhanced } from '@/components/header-search-enhanced';
 import type { KeywordSuggestionState } from '@/components/keyword-combobox';
 import { Box } from '@/components/layout/box';
-import type { LocationSuggestionState } from '@/components/location-combobox';
+import type { LocationSearchState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
@@ -80,7 +80,7 @@ export interface HeaderSearchProps {
     keywordSuggestions: KeywordSuggestionState;
     blogSuggestions: KeywordSuggestionState;
     companyMarketSuggestions: CompanyMarketSuggestionState;
-    locationSuggestions: LocationSuggestionState;
+    locationSuggestions: LocationSearchState;
   };
   fields: HeaderSearchFields;
   jobsPlaceholder: string;
@@ -133,7 +133,7 @@ export default function Header({
     keywordSuggestions: KeywordSuggestionState;
     blogSuggestions: KeywordSuggestionState;
     companyMarketSuggestions: CompanyMarketSuggestionState;
-    locationSuggestions: LocationSuggestionState;
+    locationSuggestions: LocationSearchState;
   };
 }) {
   const [menuOpen, setMenuOpen] = useState(false);

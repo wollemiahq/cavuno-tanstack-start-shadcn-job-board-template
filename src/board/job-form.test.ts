@@ -4,6 +4,7 @@ import {
   narrowOptions,
   resolveJobForm,
   resolveJobFormConstraints,
+  parseJobFormViolations,
 } from './job-form';
 
 describe('resolveJobForm', () => {
@@ -133,5 +134,42 @@ describe('narrowOptions', () => {
       'hybrid',
       'on_site',
     ]);
+  });
+});
+
+describe('parseJobFormViolations', () => {
+  it('reads the documented violation shape off an error’s details', () => {
+    expect(
+      parseJobFormViolations({
+        violations: [
+          {
+            code: 'custom_field_required',
+            path: ['customFieldValues', 'team'],
+            params: { label: 'Team' },
+          },
+          { code: 'salary_required', path: ['salaryMin'] },
+        ],
+      }),
+    ).toEqual([
+      {
+        code: 'custom_field_required',
+        path: ['customFieldValues', 'team'],
+        params: {
+          label: 'Team',
+          min: undefined,
+          max: undefined,
+          countries: undefined,
+        },
+      },
+      { code: 'salary_required', path: ['salaryMin'] },
+    ]);
+  });
+
+  it('drops anything that does not match, instead of throwing', () => {
+    expect(parseJobFormViolations(undefined)).toEqual([]);
+    expect(parseJobFormViolations({ violations: 'nope' })).toEqual([]);
+    expect(
+      parseJobFormViolations({ violations: [{ code: 7 }, null, 'x'] }),
+    ).toEqual([]);
   });
 });

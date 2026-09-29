@@ -1,4 +1,7 @@
+import { createRef } from 'react';
+
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -7,7 +10,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { LocationCombobox } from './location-combobox';
+import { m } from '../paraglide/messages';
+import {
+  LocationCombobox,
+  type LocationComboboxHandle,
+} from './location-combobox';
 
 // @vitest-environment jsdom
 /**
@@ -48,10 +55,19 @@ const type = (value: string) => {
   return input;
 };
 
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+  return { promise, resolve };
+};
+
 const locationSearchProps = {
   suggestions: [suggestion({})],
   loading: false,
   onQueryChange: vi.fn(),
+  resolve: vi.fn(async () => null),
 };
 
 describe('LocationCombobox — resolved suggestion presentation', () => {
@@ -289,6 +305,7 @@ describe('LocationCombobox — accessible autocomplete semantics', () => {
         suggestions={locationSearchProps.suggestions}
         loading={false}
         onQueryChange={onQueryChange}
+        resolve={locationSearchProps.resolve}
         onSelect={() => {}}
         onClear={() => {}}
       />,
@@ -323,5 +340,154 @@ describe('LocationCombobox — accessible autocomplete semantics', () => {
       expect(input.getAttribute('aria-activedescendant')).toBe(option.id),
     );
     expect(option.getAttribute('data-highlighted')).not.toBeNull();
+  });
+});
+
+describe('LocationCombobox — typed text the visitor never picked', () => {
+  it('keeps the typed text when the popup closes without a pick', async () => {
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Lond');
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    fireEvent.pointerDown(document.body);
+    fireEvent.mouseDown(document.body);
+    fireEvent.click(document.body);
+    fireEvent.blur(locationInput());
+
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
+    expect(locationInput().value).toBe('Lond');
+  });
+
+  it('resolves pending text to its top place for the search submit', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    const resolve = vi.fn(async () => suggestion({}));
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        resolve={resolve}
+        ref={ref}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Lond');
+    expect(ref.current?.hasPendingText()).toBe(true);
+    let outcome: Awaited<
+      ReturnType<LocationComboboxHandle['resolvePending']>
+    > | null = null;
+    await act(async () => {
+      outcome = (await ref.current?.resolvePending()) ?? null;
+    });
+
+    expect(resolve).toHaveBeenCalledWith('Lond');
+    expect(outcome).toEqual({
+      kind: 'resolved',
+      place: { slug: 'london', name: 'London' },
+    });
+    expect(locationInput().value).toBe('London');
+  });
+
+  it('ignores a deferred success after the visitor types newer text', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    const result = deferred<ReturnType<typeof suggestion> | null>();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        resolve={() => result.promise}
+        ref={ref}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Lond');
+    const pending = ref.current!.resolvePending();
+    type('Paris');
+    await act(async () => result.resolve(suggestion({})));
+
+    await expect(pending).resolves.toEqual({ kind: 'cancelled' });
+    expect(locationInput().value).toBe('Paris');
+  });
+
+  it('ignores a deferred unmatched result after the visitor types newer text', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    const result = deferred<ReturnType<typeof suggestion> | null>();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        suggestions={[]}
+        resolve={() => result.promise}
+        ref={ref}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Atlantis');
+    const pending = ref.current!.resolvePending();
+    type('Paris');
+    await act(async () => result.resolve(null));
+
+    await expect(pending).resolves.toEqual({ kind: 'cancelled' });
+    expect(locationInput().value).toBe('Paris');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('has nothing pending while the field shows the current place', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        ref={ref}
+        value="berlin"
+        valueLabel="Berlin"
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    expect(ref.current?.hasPendingText()).toBe(false);
+    await expect(ref.current?.resolvePending()).resolves.toEqual({
+      kind: 'none',
+    });
+  });
+
+  it('keeps unmatched text and says no jobs are there', async () => {
+    const ref = createRef<LocationComboboxHandle>();
+    render(
+      <LocationCombobox
+        {...locationSearchProps}
+        suggestions={[]}
+        resolve={async () => null}
+        ref={ref}
+        onSelect={() => {}}
+        onClear={() => {}}
+      />,
+    );
+
+    type('Atlantis');
+    await act(async () => {
+      await expect(ref.current?.resolvePending()).resolves.toEqual({
+        kind: 'unmatched',
+      });
+    });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toBe(
+      m.locationCombobox_noMatchText({ location: 'Atlantis' }),
+    );
+    expect(locationInput().value).toBe('Atlantis');
+    expect(locationInput().getAttribute('aria-invalid')).toBe('true');
+    expect(locationInput().getAttribute('aria-describedby')).toBe(alert.id);
+
+    type('Atlantic');
+    expect(locationInput().getAttribute('aria-invalid')).toBeNull();
   });
 });

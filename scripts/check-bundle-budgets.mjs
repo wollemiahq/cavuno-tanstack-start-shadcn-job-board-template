@@ -44,7 +44,12 @@ const BUDGETS = {
   // Advertising adds ~1.7 KiB gzip (223.0 KiB including live anchor clearance). Keep initialization
   // eager to avoid another request before ads can start; the operator accepted
   // this measured feature cost. Other budgets remain unchanged.
-  shell: { raw: 730_000, gzip: 229_000 },
+  // @cavuno/board 4.27.0 (form layouts, collection and profile-field types)
+  // took the shell to 223.9 KiB gzip; main with only the SDK bump was already
+  // over 229_000. The operator accepted this cost, and the budget is
+  // rebaselined to the measurement plus the same ~4 KiB headroom as above so
+  // the next small change does not trip it again.
+  shell: { raw: 730_000, gzip: 233_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {

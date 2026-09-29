@@ -1,4 +1,5 @@
 import { delocalizeSegments } from './localized-path';
+import { talentProfileParam } from './talent-profile-path';
 
 /**
  * Anonymous public-document caching policy.
@@ -13,7 +14,6 @@ const PUBLIC_DOCUMENT_PREFIXES = [
   '/blog',
   '/companies',
   '/jobs',
-  '/p',
   '/salaries',
   '/talent',
 ] as const;
@@ -81,6 +81,7 @@ function pathnameWithoutLocale(pathname: string): string {
 export function isPublicDocumentPath(pathname: string): boolean {
   const normalized = pathnameWithoutLocale(pathname);
   if (PUBLIC_DOCUMENT_PATHS.has(normalized)) return true;
+  if (talentProfileParam(normalized) !== null) return true;
   return PUBLIC_DOCUMENT_PREFIXES.some(
     (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`),
   );

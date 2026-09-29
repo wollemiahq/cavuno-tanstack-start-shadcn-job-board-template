@@ -86,14 +86,7 @@ describe('/.well-known/cavuno.json mount', () => {
       resolve(process.cwd(), 'src/routes/[.]well-known.cavuno[.]json.ts'),
       'utf8',
     );
-    const handlerSource = readFileSync(
-      resolve(process.cwd(), 'src/routes/-well-known-handler.ts'),
-      'utf8',
-    );
     expect(source).toContain("createFileRoute('/.well-known/cavuno.json')");
-    expect(source).toContain('createWellKnownRouteHandler');
-    expect(handlerSource).toContain('createWellKnownHandler');
-    expect(handlerSource).toContain('routeEntriesFromTanStackRouteTree');
     expect(source).not.toMatch(/import\s+\{\s*routeTree\s*\}\s+from/);
   });
 

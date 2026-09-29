@@ -1,5 +1,7 @@
 import { linkOptions } from '@tanstack/react-router';
 
+import { talentProfileLink } from '@/lib/talent-profile-path';
+
 /**
  * One listing-family entity's transit: canonical detail (always the href),
  * desktop homepage listing target, and the `selected*` value for in-place select.
@@ -37,10 +39,7 @@ export function companyDestination(input: { companySlug: string }) {
 
 export function talentDestination(input: { handle: string }) {
   return {
-    canonical: linkOptions({
-      to: '/p/$handle',
-      params: { handle: input.handle },
-    }),
+    canonical: talentProfileLink(input.handle),
     listing: linkOptions({
       to: '/talent',
       search: { selectedTalent: input.handle },

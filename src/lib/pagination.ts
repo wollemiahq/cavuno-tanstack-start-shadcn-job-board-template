@@ -192,3 +192,11 @@ export function shouldRenderPagination(
 ): boolean {
   return totalPages(count, pageSize) > 1;
 }
+
+export function isPreviewUnlockPage(
+  page: number,
+  pageSize: number,
+  visibleCount: number,
+): boolean {
+  return page === totalPages(visibleCount, pageSize);
+}

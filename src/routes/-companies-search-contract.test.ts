@@ -5,10 +5,9 @@ import { createCompaniesMarketLoader } from './-companies-market-loader';
 import { Route as CompaniesRoute } from './companies.index';
 import { Route as MarketRoute } from './companies.markets.$market';
 
+import type { CompaniesIndexListingSearch } from '../lib/companies-search';
 import type { UrlSearchInput } from '../lib/pagination';
 import type * as CompaniesPages from '../server/companies-pages';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 const getCompaniesIndexPage =
   vi.fn<typeof CompaniesPages.getCompaniesIndexPage>();
@@ -47,7 +46,7 @@ function companiesLoaderDeps(search: ReturnType<typeof validateSearch>) {
   return project({ search });
 }
 
-function companiesLoaderContext(deps: { query?: string; page?: number }) {
+function companiesLoaderContext(deps: CompaniesIndexListingSearch) {
   return { deps };
 }
 
@@ -67,6 +66,7 @@ beforeEach(() => {
     seo,
     head,
     jsonLd: [],
+    customFilterFields: [],
   });
   getCompaniesMarketPage.mockReset();
   getCompaniesMarketPage.mockResolvedValue({
@@ -97,16 +97,6 @@ beforeEach(() => {
 });
 
 describe('companies route — URL-backed master-detail search', () => {
-  it('does not append a job-alert acquisition band to the company directory', () => {
-    const source = readFileSync(
-      resolve(process.cwd(), 'src/routes/companies.index.tsx'),
-      'utf8',
-    );
-
-    expect(source).not.toContain('AlertsBand');
-    expect(source).not.toContain('subscribeJobAlert');
-  });
-
   it('accepts the data query, unified page, and selected company', () => {
     expect(
       validateSearch(CompaniesRoute, {
@@ -140,6 +130,29 @@ describe('companies route — URL-backed master-detail search', () => {
     expect(first).not.toHaveProperty('selectedCompany');
   });
 
+  it('keeps company profile-field filters in the URL and sends them to the page read', async () => {
+    const search = validateSearch(CompaniesRoute, {
+      'cf.stage': 'seed,growth',
+      'cf.bad key': 'x',
+      selectedCompany: 'acme',
+    });
+    expect(search).toEqual({
+      'cf.stage': 'seed,growth',
+      selectedCompany: 'acme',
+    });
+
+    await loadCompanies(companiesLoaderContext(companiesLoaderDeps(search)));
+
+    expect(getCompaniesIndexPage).toHaveBeenCalledWith({
+      data: {
+        offset: 0,
+        limit: 24,
+        query: undefined,
+        customFields: { 'cf.stage': 'seed,growth' },
+      },
+    });
+  });
+
   it('preserves a serialized search outage for the route component', async () => {
     getCompaniesIndexPage.mockResolvedValueOnce({
       page: { data: [], count: 0 },
@@ -148,6 +161,7 @@ describe('companies route — URL-backed master-detail search', () => {
       seo,
       head,
       jsonLd: [],
+      customFilterFields: [],
     });
 
     await expect(

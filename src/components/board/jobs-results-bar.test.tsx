@@ -1,57 +1,86 @@
 // @vitest-environment jsdom
-
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JobsResultsBar } from './jobs-results-bar';
-
-import { m } from '@/paraglide/messages';
-
-beforeEach(() => {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: vi.fn().mockReturnValue({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  });
+// Stub only the messages whose arguments the assertions inspect; every other
+// key stays the real generated message, so the component can use any catalog
+// key without the test crashing on a missing stub.
+vi.mock('@/paraglide/messages', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/paraglide/messages')>();
+  return {
+    ...actual,
+    m: {
+      ...actual.m,
+      count_jobs: ({ count }: { count: number }) => `total:${count}`,
+      jobSearch_contextualResultsHeading: ({
+        count,
+        heading,
+      }: {
+        count: string;
+        heading: string;
+      }) => `context:${heading};total:${count}`,
+      jobSearch_resultsShowingRange: ({
+        from,
+        to,
+        count,
+      }: {
+        from: string;
+        to: string;
+        count: number;
+      }) => `range:${from}:${to};total:${count}`,
+    },
+  };
 });
-
 afterEach(cleanup);
-
-describe('JobsResultsBar', () => {
-  it('promotes the contextual count to the single results heading', () => {
+describe('JobsResultsBar data', () => {
+  it('passes the visible count and first-page bounds to its summary', () => {
+    render(
+      <JobsResultsBar visibleCount={1} page={1} pageSize={20} language="en" />,
+    );
+    expect(screen.getByText('total:1')).toBeVisible();
+    expect(screen.getByText('range:1:1;total:1')).toBeVisible();
+  });
+  it('includes supplied context without fixing its heading placement', () => {
     render(
       <JobsResultsBar
-        count={12}
+        visibleCount={12}
         page={1}
         pageSize={20}
-        heading="Engineering jobs"
+        heading="Fixture discipline"
         language="en"
       />,
     );
-
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      m.jobSearch_contextualResultsHeading({
-        count: '12',
-        heading: 'Engineering jobs',
-      }),
-    );
     expect(
-      screen.getByText(
-        m.jobSearch_resultsShowingRange({
-          from: '1',
-          to: '12',
-          count: '12',
-        }),
-      ),
+      screen.getByText('context:Fixture discipline;total:12'),
     ).toBeVisible();
-    expect(
-      screen.queryByRole('combobox', {
-        name: m.jobSearch_sortPlaceholder(),
-      }),
-    ).toBeNull();
+    expect(screen.getByText('range:1:12;total:12')).toBeVisible();
+  });
+  it('includes withheld jobs in the total while bounding the range by visible jobs', () => {
+    render(
+      <JobsResultsBar
+        visibleCount={30}
+        gatedCount={357}
+        page={2}
+        pageSize={20}
+        language="en"
+      />,
+    );
+    expect(screen.getByText('total:387')).toBeVisible();
+    expect(screen.getByText('range:21:30;total:387')).toBeVisible();
+  });
+  it('does not publish an invalid range beyond the preview', () => {
+    render(
+      <JobsResultsBar
+        visibleCount={30}
+        gatedCount={357}
+        page={3}
+        pageSize={20}
+        language="en"
+      />,
+    );
+    expect(screen.getByText('total:387')).toBeVisible();
+    expect(screen.queryByText(/^range:/)).toBeNull();
   });
 });

@@ -1,55 +1,48 @@
-import { describe, expect, it } from 'vitest';
+import { createElement, type ComponentType, type ReactNode } from 'react';
+import { renderToString } from 'react-dom/server';
 
-import { readFileSync } from 'node:fs';
+import { describe, expect, it, vi } from 'vitest';
 
-/**
- * `shellComponent` renders BEFORE loaders resolve — that is the whole
- * point of it, and why the document can flush on the first byte while
- * `getRootShellData`'s public fan-out is still in flight.
- *
- * So `Route.useLoaderData()` inside `RootDocument` is always `undefined`.
- * Dev tolerates it; a production build throws
- *
- *   TypeError: Cannot destructure property 'origin' of
- *   'Route.useLoaderData(...)' as it is undefined
- *
- * out of the ROOT, so every route 500s while the dev server looks
- * perfectly healthy. That divergence is what makes this worth pinning:
- * nothing in local development tells you it is broken.
- *
- * Anything the shell needs belongs in route context (`beforeLoad`), which
- * is resolved by then — see `requestOrigin`.
- */
-const ROOT_SOURCE = readFileSync(
-  new URL('./__root.tsx', import.meta.url),
-  'utf8',
-);
+import { Route } from './__root';
 
-function shellComponentSource(): string {
-  const start = ROOT_SOURCE.indexOf('function RootDocument');
-  expect(start, 'RootDocument was renamed — update this guard').toBeGreaterThan(
-    -1,
-  );
-  return ROOT_SOURCE.slice(start);
-}
-
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tanstack/react-router')>()),
+  HeadContent: () => null,
+  Scripts: () => null,
+}));
+vi.mock('@/components/alternate-links', () => ({
+  AlternateLinks: ({ origin }: { origin: string }) =>
+    createElement('link', {
+      rel: 'alternate',
+      href: `${origin}/fixture-locale`,
+    }),
+}));
+vi.mock('@/components/client-error-reporting-boot', () => ({
+  ClientErrorReportingBoot: () => null,
+}));
 describe('root shell contract', () => {
-  it('the shell never reads loader data', () => {
-    expect(shellComponentSource()).not.toContain('useLoaderData');
-  });
-
-  it('the shell takes origin from route context instead', () => {
-    expect(shellComponentSource()).toContain('Route.useRouteContext()');
-  });
-
-  it('origin is provided by beforeLoad, so it costs no round trip', () => {
-    expect(ROOT_SOURCE).toContain('beforeLoad: () => ({ origin:');
-  });
-
-  it('does not mount messaging polling before email verification', () => {
-    expect(ROOT_SOURCE).toContain('enabled={user.emailVerified}');
-    expect(ROOT_SOURCE).toMatch(
-      /user &&\s*user\.emailVerified &&\s*board\.features\.messaging/,
-    );
+  it('renders the shell from route context before loader data is available', () => {
+    vi.spyOn(Route, 'useRouteContext').mockReturnValue({
+      origin: 'https://fixture.example',
+    });
+    vi.spyOn(Route, 'useLoaderData').mockImplementation(() => {
+      throw new Error('Loader has not resolved');
+    });
+    // SAFETY: __root defines shellComponent as a component accepting children; the server-side route option augmentation is absent from this client test's route type.
+    const options = Route.options as typeof Route.options & {
+      shellComponent: ComponentType<{ children: ReactNode }>;
+    };
+    const shell = options.shellComponent;
+    try {
+      const html = renderToString(
+        createElement(shell, {
+          children: createElement('p', null, 'Fixture pending shell'),
+        }),
+      );
+      expect(html).toContain('https://fixture.example/fixture-locale');
+      expect(html).toContain('Fixture pending shell');
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 });

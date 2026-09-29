@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { jobsListingLoaderDeps, parseJobsSearch } from './jobs-search';
+import {
+  jobsListingLoaderDeps,
+  parseJobsIndexSearch,
+  parseJobsSearch,
+} from './jobs-search';
 
 describe('parseJobsSearch', () => {
   it('parses the canonical listing query and URL-backed job selection', () => {
@@ -44,5 +48,27 @@ describe('jobsListingLoaderDeps', () => {
 
     expect(first).toEqual(second);
     expect(first).not.toHaveProperty('selectedJob');
+  });
+});
+
+describe('parseJobsIndexSearch', () => {
+  it('adds job custom-field parameters to the listing and its fetch deps', () => {
+    const search = parseJobsIndexSearch({
+      remoteOption: 'remote',
+      'cf.work_style': 'async,sync',
+      'cf.four_day_week': true,
+      selectedJob: 'staff-designer',
+    });
+
+    expect(search).toMatchObject({
+      remoteOption: 'remote',
+      'cf.work_style': 'async,sync',
+      'cf.four_day_week': true,
+    });
+    expect(jobsListingLoaderDeps(search)).toEqual({
+      remoteOption: 'remote',
+      'cf.work_style': 'async,sync',
+      'cf.four_day_week': true,
+    });
   });
 });

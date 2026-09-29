@@ -54,6 +54,7 @@ const job = {
   inOfficePeriod: null,
   inOfficeFrequency: null,
   customFieldValues: {},
+  resolvedCollectionFields: [],
   salaryMin: null,
   salaryMax: null,
   salaryCurrency: null,
@@ -87,7 +88,8 @@ const board = {
   },
   primaryDomain: 'jobs.example',
   showCavunoBranding: false,
-  customFields: { job: [] },
+  customFields: { job: [], jobCollections: [] },
+  forms: { job: [], company: [], talent: [] },
   features: {
     jobAlerts: true,
     jobRecommendationsEnabled: true,
@@ -127,6 +129,7 @@ const board = {
     xUrl: null,
     facebookUrl: null,
     linkedinUrl: null,
+    instagramUrl: null,
   },
   footer: {
     contactEmail: null,
@@ -134,6 +137,7 @@ const board = {
     xUrl: null,
     facebookUrl: null,
     linkedinUrl: null,
+    instagramUrl: null,
   },
   talentDirectoryVisibility: 'public',
   talentAccessModel: null,

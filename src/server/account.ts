@@ -5,6 +5,7 @@
  * headers the session middleware resolved, plus the board-access grant the
  * board-access middleware resolved (so a password-protected board answers).
  */
+import { isBoardApiError } from '@cavuno/board';
 import { isRedirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { getRequestHeader } from '@tanstack/react-start/server';
@@ -20,8 +21,10 @@ import {
   sessionMiddleware,
   type SessionContext,
 } from '../lib/session-middleware';
+import { readAccount } from './account-read';
 import { gatedRead } from './board-access';
 import { requireVerifiedBoardUser } from './me-verification';
+import { readRecommendedJobs } from './recommended-jobs-read';
 
 import { parseResumeOnboardingDismissal } from '@/lib/resume-onboarding';
 import type {
@@ -37,6 +40,9 @@ import type {
 type UpdateCandidateProfileWithCountryBody = UpdateCandidateProfileBody & {
   countryCode?: string | null;
 };
+
+/** `PATCH /me/profile` refusal: another candidate on the board has the handle. */
+const CANDIDATE_HANDLE_TAKEN = 'candidate_handle_taken';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authedHeaders(context: SessionContext & BoardAccessContext) {
@@ -79,42 +85,13 @@ export const getResumeOnboardingDismissal = createServerFn({
   parseResumeOnboardingDismissal(getRequestHeader('cookie') ?? null),
 );
 
-/** Everything the `/account` page renders, fetched in parallel. */
+export type { AccountBoard, AccountData } from './account-read';
+
+/** The `/account` read with the session's bearer and board-access grant. */
 export const getAccount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, async () => {
-      const board = getBoard();
-      const headers = authedHeaders(context);
-      const me = await requireVerifiedBoardUser(headers);
-      const [
-        profile,
-        experience,
-        education,
-        skills,
-        languages,
-        savedJobs,
-        resume,
-      ] = await Promise.all([
-        board.me.profile.retrieve(undefined, { headers }),
-        board.me.profile.listExperience({ headers }),
-        board.me.profile.listEducation({ headers }),
-        board.me.profile.listSkills({ headers }),
-        board.me.profile.listLanguages({ headers }),
-        board.me.savedJobs.list({ limit: 50 }, { headers }),
-        board.me.resume.retrieve({ headers }),
-      ]);
-      return {
-        me,
-        profile,
-        experience,
-        education,
-        skills,
-        languages,
-        savedJobs,
-        resume,
-      };
-    }),
+    gatedRead(context, () => readAccount(getBoard(), authedHeaders(context))),
   );
 
 /**
@@ -150,28 +127,9 @@ export const getSavedJobs = createServerFn({ method: 'GET' })
 export const getRecommendedJobs = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, async () => {
-      const headers = authedHeaders(context);
-      await requireVerifiedBoardUser(headers);
-      const board = getBoard();
-      // Job-seeker plan entitlements are per plan and are NOT on the wire, so
-      // there is nothing to pre-gate on: make the call, and translate the
-      // board's 403 into a signal that survives this function's boundary.
-      const [recommended, skills, resume] = await Promise.all([
-        board.me.recommendedJobs
-          .list({ limit: 20 }, { headers })
-          .catch(throwCandidatePaywallSignal),
-        board.me.profile.listSkills({ headers }),
-        board.me.resume.retrieve({ headers }),
-      ]);
-      return {
-        ...recommended,
-        data: recommended.data.filter((item) => item.job != null),
-        skillCount: skills.data.length,
-        parseStatus: resume.parseStatus,
-        resume,
-      };
-    }),
+    gatedRead(context, () =>
+      readRecommendedJobs(getBoard(), authedHeaders(context)),
+    ),
   );
 
 export const updateProfile = createServerFn({ method: 'POST' })
@@ -180,16 +138,29 @@ export const updateProfile = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    // The field is already part of Cavuno's additive HTTP contract. The
-    // current starter SDK predates its generated type, so keep the one narrow
-    // compatibility cast at the server boundary rather than dropping it.
-    // SAFETY: `data` was accepted as UpdateCandidateProfileWithCountryBody,
-    // which is UpdateCandidateProfileBody plus an additive countryCode field.
-    return getBoard().me.profile.update(
-      data as UpdateCandidateProfileBody,
-      undefined,
-      { headers },
-    );
+    try {
+      // The field is already part of Cavuno's additive HTTP contract. The
+      // current starter SDK predates its generated type, so keep the one
+      // narrow compatibility cast at the server boundary rather than
+      // dropping it.
+      // SAFETY: `data` was accepted as UpdateCandidateProfileWithCountryBody,
+      // which is UpdateCandidateProfileBody plus an additive countryCode field.
+      await getBoard().me.profile.update(
+        data as UpdateCandidateProfileBody,
+        undefined,
+        {
+          headers,
+        },
+      );
+    } catch (error) {
+      // The BoardApiError does not survive the server-fn RPC boundary, so a
+      // taken handle comes back as a result the form can show on the field.
+      if (isBoardApiError(error) && error.code === CANDIDATE_HANDLE_TAKEN) {
+        return { ok: false as const, code: CANDIDATE_HANDLE_TAKEN };
+      }
+      throw error;
+    }
+    return { ok: true as const };
   });
 
 /** Live handle-availability check for the profile form. */

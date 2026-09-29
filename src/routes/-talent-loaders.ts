@@ -1,6 +1,7 @@
 import { isNotFound } from '@cavuno/board';
 import { notFound } from '@tanstack/react-router';
 
+import { customFieldRequestSearch } from '@/lib/custom-field-filters';
 import { pageToOffset } from '@/lib/pagination';
 import { talentListingLoaderDeps } from '@/lib/talent-search';
 import {
@@ -63,6 +64,7 @@ export function createTalentDirectoryLoader(
           seniority: deps.seniority,
           permitCountry: deps.permitCountry,
           interestedRole: deps.interestedRole,
+          customFields: customFieldRequestSearch(deps),
           limit: TALENT_PAGE_SIZE,
         },
       });

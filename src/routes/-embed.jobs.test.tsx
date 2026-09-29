@@ -16,6 +16,7 @@ afterEach(cleanup);
 const job = {
   id: 'job-1',
   object: 'job_card',
+  customFieldValues: {},
   slug: 'product-designer',
   title: 'Product Designer',
   description: '<p>Build useful tools.</p>',
@@ -33,7 +34,7 @@ const job = {
   isFeatured: false,
   isSponsored: false,
   summary: 'Build useful tools.',
-  company: { slug: 'acme', name: 'Acme', logoUrl: null },
+  company: { slug: 'acme', name: 'Acme', logoUrl: null, customFieldValues: {} },
   categories: [],
   skills: [],
   links: {

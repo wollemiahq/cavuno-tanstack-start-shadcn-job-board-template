@@ -15,6 +15,8 @@ export function jobSearchCopy() {
     detailErrorTitle: m.jobSearch_detailErrorTitle(),
     detailLoadingLabel: m.jobSearch_detailLoadingLabel(),
     filterSheetDescription: m.jobSearch_filterSheetDescription(),
+    filterSheetDescriptionWithCustomFields:
+      m.jobSearch_filterSheetDescriptionWithCustomFields(),
     filteredEmptyText: m.jobSearch_filteredEmptyText(),
     filtersLabel: m.jobSearch_filtersLabel(),
     gatedCountText: m.jobSearch_gatedCountText({ count: '{{count}}' }),
@@ -46,7 +48,8 @@ export function jobSearchCopy() {
     resultsShowingRange: m.jobSearch_resultsShowingRange({
       from: '{{from}}',
       to: '{{to}}',
-      count: '{{count}}',
+      count: 0,
+      countLabel: '{{count}}',
     }),
     retryLabel: m.jobSearch_retryLabel(),
     searchButtonLabel: m.jobSearch_searchButtonLabel(),

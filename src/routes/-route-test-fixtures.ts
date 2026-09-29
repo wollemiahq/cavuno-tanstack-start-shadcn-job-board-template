@@ -23,6 +23,8 @@ export function publicCompanyFixture(
     salarySampleCount: 0,
     membership: null,
     markets: [],
+    customFieldValues: {},
+    objectReferences: [],
     links: { public: `https://jobs.example/companies/${slug}` },
   };
 }
@@ -62,6 +64,7 @@ export function publicJobFixture(slug: string): PublicJob {
     inOfficePeriod: null,
     inOfficeFrequency: null,
     customFieldValues: {},
+    resolvedCollectionFields: [],
     salaryMin: null,
     salaryMax: null,
     salaryCurrency: null,
@@ -83,6 +86,7 @@ export function publicJobCardFixture(slug: string): PublicJobCard {
   return {
     id: `job-${slug}`,
     object: 'job_card',
+    customFieldValues: {},
     slug,
     title: slug,
     description: null,
@@ -100,7 +104,12 @@ export function publicJobCardFixture(slug: string): PublicJobCard {
     isFeatured: false,
     isSponsored: false,
     summary: null,
-    company: { slug: 'acme', name: 'Acme', logoUrl: null },
+    company: {
+      slug: 'acme',
+      name: 'Acme',
+      logoUrl: null,
+      customFieldValues: {},
+    },
     categories: [],
     skills: [],
     links: { public: `https://jobs.example/companies/acme/jobs/${slug}` },

@@ -1,4 +1,9 @@
 import {
+  parseCustomFieldSearch,
+  pickCustomFieldSearch,
+  type CustomFieldSearch,
+} from '@/lib/custom-field-filters';
+import {
   pageSearchValue,
   parsePageParam,
   searchQueryString,
@@ -15,7 +20,12 @@ export interface CompaniesSearch {
   selectedCompany?: string;
 }
 
+/** `/companies` also filters by public company profile fields (`cf.<key>`). */
+export type CompaniesIndexSearch = CompaniesSearch & CustomFieldSearch;
+
 export type CompaniesListingSearch = Omit<CompaniesSearch, 'selectedCompany'>;
+export type CompaniesIndexListingSearch = CompaniesListingSearch &
+  CustomFieldSearch;
 
 function selectedCompanySearchValue(value: UrlSearchValue) {
   return searchString(value)?.trim() || undefined;
@@ -29,6 +39,12 @@ export function parseCompaniesSearch(search: UrlSearchInput): CompaniesSearch {
   };
 }
 
+export function parseCompaniesIndexSearch(
+  search: UrlSearchInput,
+): CompaniesIndexSearch {
+  return { ...parseCompaniesSearch(search), ...parseCustomFieldSearch(search) };
+}
+
 /** A pane selection changes history, but never the companies listing request. */
 export function companiesListingLoaderDeps(
   search: CompaniesSearch,
@@ -36,6 +52,15 @@ export function companiesListingLoaderDeps(
   return {
     query: search.query,
     page: search.page,
+  };
+}
+
+export function companiesIndexLoaderDeps(
+  search: CompaniesIndexSearch,
+): CompaniesIndexListingSearch {
+  return {
+    ...companiesListingLoaderDeps(search),
+    ...pickCustomFieldSearch(search),
   };
 }
 

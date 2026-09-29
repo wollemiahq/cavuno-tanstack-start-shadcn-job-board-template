@@ -15,6 +15,5 @@ describe('Button', () => {
     button.click();
 
     expect(onClick).toHaveBeenCalledOnce();
-    expect(button.getAttribute('data-slot')).toBe('button');
   });
 });

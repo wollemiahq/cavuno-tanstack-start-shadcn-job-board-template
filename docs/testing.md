@@ -19,8 +19,10 @@ rewriting unrelated tests.
    data at desktop and mobile widths. Visual review belongs in a browser pass,
    where layout, overflow, and responsive regressions can actually be seen.
 5. **Distribution gates** may inspect files only when the file itself is the
-   product contract: generated design artifacts, theme output, the installed
-   shadcn inventory, or the absence of the retired UI dependency tree.
+   product contract: runtime theme output, dependency boundaries, or security
+   configuration. Design documentation and component inventories are optional
+   references; test their generators with fixtures rather than gating UI edits
+   on committed snapshots.
 6. **Bundle budgets** inspect TanStack Start's emitted route manifest after a
    production build. The shared shell and global CSS have independent budgets;
    route increments use a conservative default with explicit allowances for

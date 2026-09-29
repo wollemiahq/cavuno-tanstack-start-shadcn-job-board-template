@@ -29,6 +29,8 @@ function profile(handle: string): TalentProfile {
     education: [],
     skills: [],
     languages: [],
+    customFieldValues: {},
+    objectReferences: [],
   };
 }
 
