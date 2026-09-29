@@ -1,4 +1,5 @@
 import { searchString, type UrlSearchValue } from './pagination';
+import { talentProfileParam } from './talent-profile-path';
 
 export interface ShellBreadcrumbLabels {
   home: string;
@@ -304,11 +305,10 @@ export function resolveShellBreadcrumb({
     return finish(items);
   }
 
-  if (section === 'p') {
+  const profileParam = talentProfileParam(pathname);
+  if (profileParam !== null) {
     items.push({ name: labels.talent, href: '/talent' });
-    if (rest[0]) {
-      items.push({ name: entities.profile ?? readableSegment(rest[0]) });
-    }
+    items.push({ name: entities.profile ?? readableSegment(profileParam) });
     return finish(items);
   }
 
