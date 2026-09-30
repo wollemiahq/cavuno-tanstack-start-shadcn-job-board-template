@@ -1801,6 +1801,8 @@
   "previewToolbar_talentVisibility_employersOnly": "Employers only",
   "previewToolbar_talentVisibility_off": "Off",
   "previewToolbar_talentVisibility_public": "Public",
+  "previewToolbar_localPreviewLabel": "Development preview",
+  "previewToolbar_localPreviewSubtitle": "Preview ad placements without serving ads.",
   "previewToolbar_title": "Preview",
   "previewToolbar_triggerLabel": "Preview toolbar — switch persona and board settings",
   "previewToolbar_viewingAs": "Viewing as:",

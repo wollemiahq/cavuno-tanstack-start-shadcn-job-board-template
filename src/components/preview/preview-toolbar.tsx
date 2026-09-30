@@ -278,7 +278,7 @@ export function PreviewToolbarView({
               className="rounded-full shadow-lg"
               aria-label={
                 localPreviewOnly
-                  ? 'Development preview'
+                  ? m.previewToolbar_localPreviewLabel()
                   : m.previewToolbar_triggerLabel()
               }
             />
@@ -287,7 +287,7 @@ export function PreviewToolbarView({
           <Eye data-icon="inline-start" className="text-muted-foreground" />
           <span className="text-muted-foreground">
             {localPreviewOnly
-              ? 'Development preview'
+              ? m.previewToolbar_localPreviewLabel()
               : m.previewToolbar_viewingAs()}
           </span>
           {!localPreviewOnly && (
@@ -308,12 +308,12 @@ export function PreviewToolbarView({
             <div className="flex flex-col">
               <span className="text-sm font-medium">
                 {localPreviewOnly
-                  ? 'Development preview'
+                  ? m.previewToolbar_localPreviewLabel()
                   : m.previewToolbar_title()}
               </span>
               <span className="text-muted-foreground text-xs">
                 {localPreviewOnly
-                  ? 'Preview ad placements without serving ads.'
+                  ? m.previewToolbar_localPreviewSubtitle()
                   : m.previewToolbar_subtitle()}
               </span>
             </div>

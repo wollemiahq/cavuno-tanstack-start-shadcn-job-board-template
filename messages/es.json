@@ -1801,6 +1801,8 @@
   "previewToolbar_talentVisibility_employersOnly": "Solo empresas",
   "previewToolbar_talentVisibility_off": "Desactivado",
   "previewToolbar_talentVisibility_public": "Público",
+  "previewToolbar_localPreviewLabel": "Vista previa de desarrollo",
+  "previewToolbar_localPreviewSubtitle": "Previsualiza los espacios publicitarios sin mostrar anuncios.",
   "previewToolbar_title": "Vista previa",
   "previewToolbar_triggerLabel": "Barra de vista previa: cambia de perfil y de ajustes del portal",
   "previewToolbar_viewingAs": "Viendo como:",

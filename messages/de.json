@@ -1801,6 +1801,8 @@
   "previewToolbar_talentVisibility_employersOnly": "Nur Arbeitgeber",
   "previewToolbar_talentVisibility_off": "Aus",
   "previewToolbar_talentVisibility_public": "Öffentlich",
+  "previewToolbar_localPreviewLabel": "Entwicklungsvorschau",
+  "previewToolbar_localPreviewSubtitle": "Werbeplätze in der Vorschau ansehen, ohne Anzeigen auszuliefern.",
   "previewToolbar_title": "Vorschau",
   "previewToolbar_triggerLabel": "Vorschau-Symbolleiste — Persona und Board-Einstellungen wechseln",
   "previewToolbar_viewingAs": "Ansicht als:",
