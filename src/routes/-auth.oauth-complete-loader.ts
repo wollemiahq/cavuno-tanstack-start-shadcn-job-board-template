@@ -59,7 +59,7 @@ export async function loadOAuthComplete(
   deps: OAuthCompleteSearch,
   actions: {
     exchangeOAuth: (input: {
-      data: { token: string };
+      data: { token: string; method?: 'sso' };
     }) => Promise<
       { ok: true; isNewUser: boolean } | { ok: false; message: string }
     >;
@@ -71,7 +71,12 @@ export async function loadOAuthComplete(
   switch (completion.kind) {
     case 'token': {
       const [result, seo] = await Promise.all([
-        actions.exchangeOAuth({ data: { token: completion.token } }),
+        actions.exchangeOAuth({
+          data:
+            completion.method === 'sso'
+              ? { token: completion.token, method: 'sso' }
+              : { token: completion.token },
+        }),
         seoPromise,
       ]);
       if (!result.ok) return { status: 'invalid' as const, seo };

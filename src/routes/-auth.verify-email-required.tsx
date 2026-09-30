@@ -21,6 +21,7 @@ import {
   getResume,
   getResumeOnboardingDismissal,
   getSessionUserStrict,
+  getSsoEmailUnconfirmedUserId,
 } from '../server/account';
 import { getSeoBase } from '../server/queries';
 
@@ -49,20 +50,26 @@ export async function loadVerificationGate(
     }>;
     getSessionUserStrict: () => Promise<{
       id: string;
+      email?: string;
       emailVerified: boolean;
       role?: string;
     } | null>;
+    getSsoEmailUnconfirmedUserId?: () => Promise<string | null>;
   } = {
     getResume,
     getResumeOnboardingDismissal,
     getSeoBase,
     getSessionUserStrict,
+    getSsoEmailUnconfirmedUserId,
   },
 ) {
   // Started once, before the try: the error path needs the SEO base too,
   // and re-issuing it there made the failure case pay a second serial
   // round trip (every sibling auth route already shares one promise).
   const seoPromise = actions.getSeoBase();
+  const ssoHintPromise = (
+    actions.getSsoEmailUnconfirmedUserId?.() ?? Promise.resolve(null)
+  ).catch((): string | null => null);
   const user = await actions.getSessionUserStrict();
   const returnTo = candidateReturnTo(deps.returnTo);
   if (!user) {
@@ -76,8 +83,14 @@ export async function loadVerificationGate(
   }
   const role: 'candidate' | 'employer' =
     user.role === 'employer' ? 'employer' : 'candidate';
+  const identity = {
+    email: user.email ?? null,
+    ssoEmailUnconfirmed:
+      !user.emailVerified && (await ssoHintPromise) === user.id,
+  };
   if (role === 'employer') {
     return {
+      ...identity,
       emailVerified: user.emailVerified,
       role,
       resume: null,
@@ -93,6 +106,7 @@ export async function loadVerificationGate(
       seoPromise,
     ]);
     return {
+      ...identity,
       emailVerified: user.emailVerified,
       role,
       resume: user.emailVerified ? resume : null,
@@ -103,6 +117,7 @@ export async function loadVerificationGate(
   } catch (error) {
     if (isRedirect(error)) throw error;
     return {
+      ...identity,
       emailVerified: user.emailVerified,
       role,
       resume: null,
@@ -114,6 +129,8 @@ export async function loadVerificationGate(
 }
 
 export function VerifyEmailRequiredView({
+  email = null,
+  ssoEmailUnconfirmed = false,
   emailVerified,
   role,
   resume,
@@ -130,6 +147,10 @@ export function VerifyEmailRequiredView({
   reportReconciliationError,
   renderResumeUpload,
 }: {
+  /** The signed-in user's email, named so the code's destination is clear. */
+  email?: string | null;
+  /** This browser just signed in through SSO without a confirmed email. */
+  ssoEmailUnconfirmed?: boolean;
   emailVerified: boolean;
   role: 'candidate' | 'employer';
   resume: Resume | null;
@@ -225,7 +246,16 @@ export function VerifyEmailRequiredView({
   return (
     <AuthCard
       title={m.authVerifyEmailRequired_cardTitle()}
-      supportingText={m.authVerifyEmailRequired_introText()}
+      supportingText={
+        <>
+          {email
+            ? m.authVerifyEmailRequired_sentToText({ email })
+            : m.authVerifyEmailRequired_introText()}
+          {ssoEmailUnconfirmed
+            ? ` ${m.authVerifyEmailRequired_ssoReasonText()}`
+            : null}
+        </>
+      }
     >
       <form
         method="post"

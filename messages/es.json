@@ -354,6 +354,8 @@
   "authVerifyEmailRequired_resumeSkipLabel": "Ahora no",
   "authVerifyEmailRequired_resumeTitle": "Añade tu CV",
   "authVerifyEmailRequired_sendingLabel": "Enviando…",
+  "authVerifyEmailRequired_sentToText": "Enviamos un código de 6 dígitos a {email}.",
+  "authVerifyEmailRequired_ssoReasonText": "El inicio de sesión de tu organización no confirmó este correo, así que necesitamos comprobarlo una vez.",
   "authVerifyEmailRequired_title": "Verificar correo",
   "authVerifyEmailRequired_verifyLabel": "Verificar correo",
   "authVerifyEmailRequired_verifyingLabel": "Verificando…",

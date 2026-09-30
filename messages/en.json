@@ -354,6 +354,8 @@
   "authVerifyEmailRequired_resumeSkipLabel": "Skip for now",
   "authVerifyEmailRequired_resumeTitle": "Add your resume",
   "authVerifyEmailRequired_sendingLabel": "Sending…",
+  "authVerifyEmailRequired_sentToText": "We sent a 6-digit code to {email}.",
+  "authVerifyEmailRequired_ssoReasonText": "Your organization's sign-in didn't confirm this email, so we need to check it once.",
   "authVerifyEmailRequired_title": "Verify email",
   "authVerifyEmailRequired_verifyLabel": "Verify email",
   "authVerifyEmailRequired_verifyingLabel": "Verifying…",

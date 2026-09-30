@@ -362,6 +362,8 @@
   "authVerifyEmailRequired_resumeSkipLabel": "Pomiń na razie",
   "authVerifyEmailRequired_resumeTitle": "Dodaj swoje CV",
   "authVerifyEmailRequired_sendingLabel": "Wysyłanie…",
+  "authVerifyEmailRequired_sentToText": "Wysłaliśmy 6-cyfrowy kod na adres {email}.",
+  "authVerifyEmailRequired_ssoReasonText": "Logowanie Twojej organizacji nie potwierdziło tego adresu e-mail, więc musimy sprawdzić go jeden raz.",
   "authVerifyEmailRequired_title": "Zweryfikuj e-mail",
   "authVerifyEmailRequired_verifyLabel": "Zweryfikuj e-mail",
   "authVerifyEmailRequired_verifyingLabel": "Weryfikowanie…",

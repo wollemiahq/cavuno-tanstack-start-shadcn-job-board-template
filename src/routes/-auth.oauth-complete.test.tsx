@@ -92,7 +92,7 @@ describe('/auth/oauth-complete SSO completions', () => {
     });
 
     expect(mocks.exchangeOAuth).toHaveBeenCalledWith({
-      data: { token: 'sso-token' },
+      data: { token: 'sso-token', method: 'sso' },
     });
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;

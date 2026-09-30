@@ -68,13 +68,22 @@ function VerifyEmailRequiredPage() {
   const router = useRouter();
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
-  const { emailVerified, role, resume, resumeOnboardingDismissed, userId } =
-    Route.useLoaderData();
+  const {
+    email,
+    ssoEmailUnconfirmed,
+    emailVerified,
+    role,
+    resume,
+    resumeOnboardingDismissed,
+    userId,
+  } = Route.useLoaderData();
   const returnTo = candidateReturnTo(search.returnTo);
   const jobRecommendationsEnabled =
     board.features.jobRecommendationsEnabled ?? true;
   return (
     <VerifyEmailRequiredView
+      email={email}
+      ssoEmailUnconfirmed={ssoEmailUnconfirmed}
       emailVerified={emailVerified}
       role={role}
       resume={resume}

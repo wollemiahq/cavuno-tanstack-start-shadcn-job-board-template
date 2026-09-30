@@ -354,6 +354,8 @@
   "authVerifyEmailRequired_resumeSkipLabel": "Passer pour l'instant",
   "authVerifyEmailRequired_resumeTitle": "Ajoutez votre CV",
   "authVerifyEmailRequired_sendingLabel": "Envoi…",
+  "authVerifyEmailRequired_sentToText": "Nous avons envoyé un code à 6 chiffres à {email}.",
+  "authVerifyEmailRequired_ssoReasonText": "La connexion de votre organisation n'a pas confirmé cette adresse e-mail, nous devons donc la vérifier une fois.",
   "authVerifyEmailRequired_title": "Vérifier l'e-mail",
   "authVerifyEmailRequired_verifyLabel": "Vérifier l'e-mail",
   "authVerifyEmailRequired_verifyingLabel": "Vérification…",

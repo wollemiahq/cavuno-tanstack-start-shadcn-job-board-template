@@ -44,6 +44,7 @@ const mocks = {
   getSessionUser: vi.fn<
     () => Promise<{
       id: string;
+      email?: string;
       emailVerified: boolean;
       role?: string;
     } | null>
@@ -132,6 +133,8 @@ afterEach(async () => {
 });
 
 function renderVerifyPage({
+  email = null,
+  ssoEmailUnconfirmed = false,
   returnTo = '/account',
   emailVerified = false,
   role = 'candidate',
@@ -141,6 +144,8 @@ function renderVerifyPage({
   jobRecommendationsEnabled = true,
   renderResumeUpload = () => <p>Resume dropzone</p>,
 }: {
+  email?: string | null;
+  ssoEmailUnconfirmed?: boolean;
   returnTo?: string;
   emailVerified?: boolean;
   role?: 'candidate' | 'employer';
@@ -155,6 +160,8 @@ function renderVerifyPage({
 } = {}) {
   return render(
     <VerifyEmailRequiredView
+      email={email}
+      ssoEmailUnconfirmed={ssoEmailUnconfirmed}
       emailVerified={emailVerified}
       role={role}
       resume={resume}
@@ -334,6 +341,18 @@ describe('/auth/verify-email-required search contract', () => {
     expect(
       screen.getByText(m.authVerifyEmailRequired_codeLabel()),
     ).toHaveAttribute('data-slot', 'field-label');
+  });
+
+  it('names the address the code went to and why SSO still asks for it', () => {
+    renderVerifyPage({ email: 'ada@example.com', ssoEmailUnconfirmed: true });
+
+    const supporting = screen.getByText(
+      m.authVerifyEmailRequired_sentToText({ email: 'ada@example.com' }),
+      { exact: false },
+    );
+    expect(supporting).toHaveTextContent(
+      m.authVerifyEmailRequired_ssoReasonText(),
+    );
   });
 
   it('offers no sign-in escape hatch — the gate is verify or resend', () => {
@@ -714,6 +733,35 @@ describe('/auth/verify-email-required resume loader', () => {
       resume: null,
     });
     expect(mocks.getResume).not.toHaveBeenCalled();
+  });
+
+  it('flags the SSO explanation only for the user the SSO hint names', async () => {
+    const run = (hintUserId: string | null) =>
+      loadVerificationGate(
+        { returnTo: '/account' },
+        {
+          getResume: mocks.getResume,
+          getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
+          getSeoBase: mocks.getSeoBase,
+          getSessionUserStrict: mocks.getSessionUser,
+          getSsoEmailUnconfirmedUserId: async () => hintUserId,
+        },
+      );
+    mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
+      email: 'ada@example.com',
+      emailVerified: false,
+      role: 'candidate',
+    });
+    mocks.getResume.mockResolvedValue(emptyResume);
+
+    await expect(run('candidate-1')).resolves.toMatchObject({
+      email: 'ada@example.com',
+      ssoEmailUnconfirmed: true,
+    });
+    await expect(run('someone-else')).resolves.toMatchObject({
+      ssoEmailUnconfirmed: false,
+    });
   });
 
   it('re-throws board-access redirects instead of swallowing them', async () => {

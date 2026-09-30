@@ -354,6 +354,8 @@
   "authVerifyEmailRequired_resumeSkipLabel": "Vorerst überspringen",
   "authVerifyEmailRequired_resumeTitle": "Lebenslauf hinzufügen",
   "authVerifyEmailRequired_sendingLabel": "Wird gesendet …",
+  "authVerifyEmailRequired_sentToText": "Wir haben einen 6-stelligen Code an {email} gesendet.",
+  "authVerifyEmailRequired_ssoReasonText": "Die Anmeldung deiner Organisation hat diese E-Mail-Adresse nicht bestätigt, deshalb prüfen wir sie einmalig.",
   "authVerifyEmailRequired_title": "E-Mail bestätigen",
   "authVerifyEmailRequired_verifyLabel": "E-Mail bestätigen",
   "authVerifyEmailRequired_verifyingLabel": "Wird geprüft …",

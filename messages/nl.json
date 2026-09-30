@@ -354,6 +354,8 @@
   "authVerifyEmailRequired_resumeSkipLabel": "Voor nu overslaan",
   "authVerifyEmailRequired_resumeTitle": "Je cv toevoegen",
   "authVerifyEmailRequired_sendingLabel": "Verzenden…",
+  "authVerifyEmailRequired_sentToText": "We hebben een zescijferige code naar {email} gestuurd.",
+  "authVerifyEmailRequired_ssoReasonText": "De aanmelding van je organisatie heeft dit e-mailadres niet bevestigd, dus we controleren het één keer.",
   "authVerifyEmailRequired_title": "E-mailadres verifiëren",
   "authVerifyEmailRequired_verifyLabel": "E-mailadres verifiëren",
   "authVerifyEmailRequired_verifyingLabel": "Verifiëren…",

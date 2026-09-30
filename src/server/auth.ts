@@ -13,11 +13,12 @@ import {
 import { createServerFn } from '@tanstack/react-start';
 import {
   getRequestHeader,
+  setCookie,
   setResponseHeader,
 } from '@tanstack/react-start/server';
 import { waitUntil } from 'cloudflare:workers';
 
-import { getBoard, getSessionRefresher } from '../lib/board';
+import { authHeaders, getBoard, getSessionRefresher } from '../lib/board';
 import {
   clearSessionForSource,
   getDataSource,
@@ -31,6 +32,10 @@ import {
 } from '../lib/development-origin';
 import { getServerEnv } from '../lib/env';
 import { sessionMiddleware } from '../lib/session-middleware';
+import {
+  SSO_EMAIL_UNCONFIRMED_COOKIE,
+  SSO_EMAIL_UNCONFIRMED_MAX_AGE,
+} from '../lib/sso-email-confirmation';
 
 /** Map API failures to a form-friendly result instead of a 500. */
 type AuthActionError = {
@@ -337,12 +342,42 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
     }
   });
 
+/**
+ * An SSO sign-in whose identity provider did not confirm the email lands on
+ * the verification gate. The API sends no code for that sign-in, so send one
+ * here, once per completed sign-in (the exchange token is single-use, so a
+ * refresh of the verification page never re-sends). Also leave the hint that
+ * lets the page say why an organization sign-in still asks for a code.
+ */
+async function startSsoEmailConfirmation(session: BoardAuthSession) {
+  setCookie(SSO_EMAIL_UNCONFIRMED_COOKIE, session.boardUser.id, {
+    path: '/',
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: SSO_EMAIL_UNCONFIRMED_MAX_AGE,
+  });
+  try {
+    await getBoard().auth.resendVerification({
+      headers: authHeaders(session.accessToken),
+    });
+  } catch (error) {
+    // The session is already signed in; the page's "Resend code" retries.
+    if (!isBoardApiError(error)) throw error;
+  }
+}
+
 export const exchangeOAuth = createServerFn({ method: 'POST' })
-  .validator((input: { token: string }) => input)
+  .validator((input: { token: string; method?: 'sso' }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.exchangeOAuth(data);
+      const session = await getBoard().auth.exchangeOAuth({
+        token: data.token,
+      });
       persistAuthSession(session);
+      if (data.method === 'sso' && !session.boardUser.emailVerified) {
+        await startSsoEmailConfirmation(session);
+      }
       return {
         ok: true as const,
         boardUser: session.boardUser,
