@@ -32,6 +32,7 @@
     "preview": "pnpm run build && vp preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:locale": "node scripts/test-foreign-locale.mjs",
     "check": "vp fmt -c .oxfmtrc.json --check && vp check --no-fmt",
     "check:shadcn": "node scripts/check-shadcn-components.mjs",
     "predeploy": "node scripts/check-board-key.mjs",
