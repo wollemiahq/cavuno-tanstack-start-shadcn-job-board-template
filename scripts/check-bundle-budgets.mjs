@@ -49,7 +49,10 @@ const BUDGETS = {
   // over 229_000. The operator accepted this cost, and the budget is
   // rebaselined to the measurement plus the same ~4 KiB headroom as above so
   // the next small change does not trip it again.
-  shell: { raw: 730_000, gzip: 233_000 },
+  // Contact adds a route registration and footer availability flag to the
+  // shared shell; its form and icon remain in route-only chunks. The 2026-09-30
+  // build measured 233_154 bytes gzip, so retain the same ~4 KiB headroom.
+  shell: { raw: 730_000, gzip: 237_250 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
