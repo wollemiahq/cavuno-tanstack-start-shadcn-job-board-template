@@ -68,6 +68,32 @@ Run the app's production build, boot that output, and repeat the three app probe
 
 The smoke test covers Cavuno board wiring. Performance, visual regression, and broader SEO scoring belong to their dedicated project checks.
 
+## Local browser verification notes
+
+- Confirm the intended grounding before starting. This template documents a
+  deliberately public sandbox configuration in `.dev.vars.example`; with
+  operator authorization, copy it to gitignored `.dev.vars` and run `pnpm dev`
+  on port 3000. The sandbox and Wrangler's committed real-data reference board
+  are different datasets; do not assume their available locations match.
+- For place-hierarchy checks, select an actual country → region → city chain
+  from `/jobs/locations`. Derive expected labels from current board data:
+  ancestor directory names can be shorter than the resolved current-place
+  displayName.
+- The shell breadcrumb is in the footer. On split-pane job listings, scroll
+  over the outer document margin, not inside the results or selected-job pane.
+  Inspect `nav[aria-label="Breadcrumb"]` link targets and the document head's
+  `application/ld+json` scripts as supporting evidence; capture visible pixels
+  separately.
+- Browser automation can inject `devin-hidden`/`devinid` attributes before React
+  hydrates. If hydration errors mention these, retain the logs and distinguish
+  instrumentation artifacts from application-origin mismatches.
+
+### Devin Secrets Needed
+
+Public breadcrumb browsing needs no candidate login. A board other than an
+authorized public reference requires operator-provided `CAVUNO_API_URL` and
+`CAVUNO_BOARD`; never substitute a reference key without authorization.
+
 ## Cavuno SDK reference
 
 For setup and API details beyond this workflow, use the [Cavuno Board SDK documentation](https://cavuno.com/docs/sdk).
