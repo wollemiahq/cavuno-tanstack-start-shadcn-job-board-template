@@ -23,8 +23,15 @@ import { TalentFilters } from './talent-filters';
 import type { CustomFilterField } from '@/lib/custom-field-filters';
 import { parseTalentSearch } from '@/lib/talent-search';
 import { m } from '@/paraglide/messages';
+import { containing } from '@/test/text';
 
 afterEach(cleanup);
+
+/** Matches an accessible name that contains the catalog label. */
+const statusCombobox = { name: m.talentFilters_statusLabel() };
+const sortCombobox = { name: m.jobSearch_sortPlaceholder() };
+const resetButton = { name: m.jobSearch_resetLabel() };
+const allFiltersButton = { name: containing(m.jobSearch_allFiltersLabel()) };
 
 const mentoring: CustomFilterField = {
   kind: 'flag',
@@ -74,48 +81,55 @@ describe('TalentFilters', () => {
   it('renders status, relocate, and sort without a keyword Search field', async () => {
     const { container } = renderFilters();
 
-    const status = await screen.findByRole('combobox', {
-      name: 'Job search status',
-    });
+    const status = await screen.findByRole('combobox', statusCombobox);
     const relocate = screen.getByRole('combobox', {
-      name: 'Open to relocate',
+      name: m.talentFilters_relocateLabel(),
     });
-    expect(status).toHaveTextContent('Any status');
-    expect(relocate).toHaveTextContent('Any relocation');
-    const sort = screen.getByRole('combobox', { name: 'Sort' });
-    expect(sort).toHaveTextContent('Sort:');
-    expect(sort).toHaveTextContent('Best Match');
+    expect(status).toHaveTextContent(m.talentFilters_anyStatusOption());
+    expect(relocate).toHaveTextContent(m.talentFilters_anyRelocateOption());
+    const sort = screen.getByRole('combobox', sortCombobox);
+    expect(sort).toHaveTextContent(`${m.jobSearch_sortPlaceholder()}:`);
+    expect(sort).toHaveTextContent(m.talentFilters_sortBestMatch());
     expect(
       container.querySelector("[data-slot='talent-filter-bar']"),
     ).not.toBeNull();
     expect(screen.queryByRole('searchbox')).toBeNull();
-    expect(screen.queryByPlaceholderText('Name or headline')).toBeNull();
-    expect(screen.queryByLabelText('Search')).toBeNull();
+    expect(
+      screen.queryByPlaceholderText(m.talentFilters_queryPlaceholder()),
+    ).toBeNull();
+    expect(screen.queryByLabelText(m.talentFilters_queryLabel())).toBeNull();
   });
 
   it('describes the Filters sheet as candidate filters, not job results', async () => {
     renderFilters();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    const sheet = screen.getByRole('dialog', { name: 'Filters' });
-    expect(sheet).toHaveTextContent(
-      'Refine candidate results by status and relocation.',
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.jobSearch_filtersLabel() }),
     );
-    expect(sheet).not.toHaveTextContent('Skill');
-    expect(sheet).not.toHaveTextContent('Languages');
-    expect(sheet).not.toHaveTextContent('Seniority');
-    expect(sheet).not.toHaveTextContent('Work authorization');
-    expect(sheet).not.toHaveTextContent('Interested role');
-    expect(sheet).not.toHaveTextContent('Refine job results');
+    const sheet = screen.getByRole('dialog', {
+      name: m.jobSearch_filtersLabel(),
+    });
+    expect(sheet).toHaveTextContent(m.talentFilters_filterSheetDescription());
+    for (const absent of [
+      m.talentFilters_skillLabel(),
+      m.talentFilters_languagesLabel(),
+      m.talentFilters_seniorityLabel(),
+      m.talentFilters_permitCountryLabel(),
+      m.talentFilters_interestedRoleLabel(),
+      m.jobSearch_filterSheetDescription(),
+      m.jobSearch_filterSheetDescriptionWithCustomFields(),
+    ]) {
+      expect(sheet).not.toHaveTextContent(absent);
+    }
   });
 
   it('keeps a job-bound interestedRole when status changes', async () => {
     const { router } = renderFilters('?interestedRole=Robotics%20Engineer');
 
-    fireEvent.click(
-      await screen.findByRole('combobox', { name: 'Job search status' }),
-    );
-    const active = screen.getByRole('option', { name: 'Actively looking' });
+    fireEvent.click(await screen.findByRole('combobox', statusCombobox));
+    const active = screen.getByRole('option', {
+      name: m.talentFilters_statusActive(),
+    });
     fireEvent.pointerDown(active, { pointerType: 'mouse' });
     fireEvent.click(active);
 
@@ -132,7 +146,7 @@ describe('TalentFilters', () => {
       '?interestedRole=Robotics%20Engineer&jobSearchStatus=actively_looking',
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Reset' }));
+    fireEvent.click(await screen.findByRole('button', resetButton));
 
     await waitFor(() =>
       expect(router.state.location.search).toMatchObject({
@@ -145,8 +159,10 @@ describe('TalentFilters', () => {
   it('writes sort to the URL immediately', async () => {
     const { router } = renderFilters();
 
-    fireEvent.click(await screen.findByRole('combobox', { name: 'Sort' }));
-    const newest = screen.getByRole('option', { name: 'Newest' });
+    fireEvent.click(await screen.findByRole('combobox', sortCombobox));
+    const newest = screen.getByRole('option', {
+      name: m.talentFilters_sortNewest(),
+    });
     fireEvent.pointerDown(newest, { pointerType: 'mouse' });
     fireEvent.click(newest);
 
@@ -158,8 +174,8 @@ describe('TalentFilters', () => {
   it('has no All filters button without filterable profile fields', async () => {
     renderFilters();
 
-    await screen.findByRole('combobox', { name: 'Job search status' });
-    expect(screen.queryByRole('button', { name: /All filters/ })).toBeNull();
+    await screen.findByRole('combobox', statusCombobox);
+    expect(screen.queryByRole('button', allFiltersButton)).toBeNull();
   });
 
   it('adds candidate profile fields to the sheet and writes cf.* on Apply', async () => {
@@ -168,8 +184,10 @@ describe('TalentFilters', () => {
       availability,
     ]);
 
-    fireEvent.click(await screen.findByRole('button', { name: /All filters/ }));
-    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    fireEvent.click(await screen.findByRole('button', allFiltersButton));
+    const sheet = screen.getByRole('dialog', {
+      name: m.jobSearch_allFiltersLabel(),
+    });
     expect(sheet).toHaveAccessibleDescription(
       m.talentFilters_filterSheetDescriptionWithCustomFields(),
     );
@@ -180,7 +198,9 @@ describe('TalentFilters', () => {
       within(sheet).getByRole('checkbox', { name: 'Within a month' }),
     );
     fireEvent.click(
-      within(sheet).getByRole('button', { name: 'Apply filters' }),
+      within(sheet).getByRole('button', {
+        name: m.jobSearch_applyFiltersLabel(),
+      }),
     );
 
     await waitFor(() =>
@@ -198,11 +218,11 @@ describe('TalentFilters', () => {
       [mentoring, availability],
     );
 
-    const trigger = await screen.findByRole('button', { name: /All filters/ });
+    const trigger = await screen.findByRole('button', allFiltersButton);
     // The stale `retired` option is ignored.
     expect(trigger).toHaveTextContent('2');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(screen.getByRole('button', resetButton));
 
     await waitFor(() =>
       expect(router.state.location.search).not.toHaveProperty(

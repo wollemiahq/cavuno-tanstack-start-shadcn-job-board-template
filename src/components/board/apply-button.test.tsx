@@ -130,9 +130,15 @@ describe('ApplyButton authentication return paths', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: /^apply$/i })).toBeNull();
+    expect(
+      screen.queryByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    ).toBeNull();
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Check application status' }),
+      await screen.findByRole('button', {
+        name: m.applyButton_retryApplicationStateLabel(),
+      }),
     );
     expect(onRetryApplicationState).toHaveBeenCalledOnce();
   });
@@ -150,12 +156,16 @@ describe('ApplyButton authentication return paths', () => {
       />,
     );
 
-    const apply = screen.getByRole('link', { name: /^apply$/i });
+    const apply = screen.getByRole('link', {
+      name: m.applyButton_applyLabel(),
+    });
     expect(apply.getAttribute('href')).toBe(
       'https://example.com/cjj-starter-apply',
     );
     expect(
-      screen.queryByRole('button', { name: 'Check application status' }),
+      screen.queryByRole('button', {
+        name: m.applyButton_retryApplicationStateLabel(),
+      }),
     ).toBeNull();
   });
 
@@ -258,7 +268,11 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(await screen.findByRole('link', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('link', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
     expect(pushes).toContainEqual({
       event: 'apply_click',
       job_id: 'job_test_1',
@@ -289,7 +303,11 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(await screen.findByRole('link', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('link', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
     expect(track).toHaveBeenCalledWith('job_apply_click', {
       jobId: 'job_test_1',
       jobSlug: 'ordinary-role',
@@ -315,7 +333,11 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
     await waitFor(() =>
       expect(navigateToExternalApply).toHaveBeenCalledWith(
         'https://employer.example/apply/42',
@@ -343,7 +365,11 @@ describe('ApplyButton conversion tracking', () => {
       />,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
     await screen.findByRole('alertdialog');
     expect(pushes).toEqual([]);
   });
@@ -370,7 +396,11 @@ describe('ApplyButton conversion tracking', () => {
     );
     await screen.findByRole('dialog');
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
     await waitFor(() =>
       expect(pushes).toContainEqual({
         event: 'apply_submit',
@@ -405,7 +435,9 @@ describe('ApplyButton gateway external jobs', () => {
       />,
     );
 
-    await screen.findByRole('button', { name: /apply/i });
+    await screen.findByRole('button', {
+      name: m.applyButton_applyLabel(),
+    });
     const form = container.querySelector('form');
     expect(form?.getAttribute('method')).toBe('post');
     expect(form?.getAttribute('action')).toBe('/apply');
@@ -427,14 +459,16 @@ describe('ApplyButton gateway external jobs', () => {
         viewer={null}
       />,
     );
-    await screen.findByRole('button', { name: /apply/i });
+    await screen.findByRole('button', {
+      name: m.applyButton_applyLabel(),
+    });
     const form = container.querySelector('form');
     if (!form) throw new Error('Expected the apply control to render a form');
     fireEvent.submit(form);
     expect(
       (
         await screen.findByRole<HTMLButtonElement>('button', {
-          name: /applying/i,
+          name: m.apply_applyingLabel(),
         })
       ).disabled,
     ).toBe(true);
@@ -452,7 +486,11 @@ describe('ApplyButton gateway external jobs', () => {
       />,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     expect(
       await screen.findByRole('alertdialog', undefined, { timeout: 10_000 }),
@@ -498,7 +536,11 @@ describe('ApplyButton gateway external jobs', () => {
       />,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(navigateToExternalApply).toHaveBeenCalledWith(
@@ -552,7 +594,11 @@ describe('ApplyButton native approval flow', () => {
     );
     await screen.findByRole('dialog');
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     await waitFor(() => expect(order).toEqual(['prepare', 'gateway', 'apply']));
     expect(onApply).toHaveBeenCalledWith(
@@ -561,7 +607,9 @@ describe('ApplyButton native approval flow', () => {
       undefined,
     );
     expect(
-      await screen.findByRole('link', { name: /view applications/i }),
+      await screen.findByRole('link', {
+        name: m.apply_appliedViewApplicationsLabel(),
+      }),
     ).not.toBeNull();
   });
 
@@ -593,7 +641,11 @@ describe('ApplyButton native approval flow', () => {
     );
     await screen.findByRole('dialog');
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alertdialog')).not.toBeNull();
     expect(screen.getByText(m.apply_locationNotEligibleError())).not.toBeNull();
@@ -628,7 +680,11 @@ describe('ApplyButton native approval flow', () => {
     );
     await screen.findByRole('dialog');
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(onApply).toHaveBeenCalledWith(
@@ -638,7 +694,9 @@ describe('ApplyButton native approval flow', () => {
       ),
     );
     expect(
-      await screen.findByRole('link', { name: /view applications/i }),
+      await screen.findByRole('link', {
+        name: m.apply_appliedViewApplicationsLabel(),
+      }),
     ).not.toBeNull();
   });
 });
@@ -708,7 +766,11 @@ describe('ApplyButton guest apply', () => {
     );
 
     expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
-    expect(await screen.findByRole('link', { name: /apply/i })).toBeTruthy();
+    expect(
+      await screen.findByRole('link', {
+        name: m.applyButton_applyLabel(),
+      }),
+    ).toBeTruthy();
   });
 
   it('never offers the guest form once the registration wall is up', async () => {
@@ -727,7 +789,11 @@ describe('ApplyButton guest apply', () => {
     );
 
     expect(screen.queryByLabelText(m.apply_guestEmailLabel())).toBeNull();
-    expect(await screen.findByRole('link', { name: /apply/i })).toBeTruthy();
+    expect(
+      await screen.findByRole('link', {
+        name: m.applyButton_applyLabel(),
+      }),
+    ).toBeTruthy();
   });
 
   it('submits the guest details and confirms', async () => {
@@ -856,7 +922,11 @@ describe('ApplyButton native apply extras', () => {
         target: { value: '  I ship boards.  ' },
       },
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(onApply).toHaveBeenCalledWith('platform-engineer', undefined, {
@@ -882,7 +952,11 @@ describe('ApplyButton native apply extras', () => {
         target: { files: [file] },
       },
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(onUploadResume).toHaveBeenCalledWith({
@@ -892,7 +966,9 @@ describe('ApplyButton native apply extras', () => {
     );
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(
-      await screen.findByRole('link', { name: /view applications/i }),
+      await screen.findByRole('link', {
+        name: m.apply_appliedViewApplicationsLabel(),
+      }),
     ).not.toBeNull();
   });
 
@@ -906,7 +982,11 @@ describe('ApplyButton native apply extras', () => {
     );
     await screen.findByRole('dialog');
 
-    fireEvent.click(await screen.findByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(onApply).toHaveBeenCalledWith(
@@ -948,7 +1028,11 @@ describe('ApplyButton native apply extras', () => {
         target: { files: [resumeFile()] },
       },
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
     expect((await screen.findByRole('alert')).textContent).toBe(
       m.applyButton_resumeUploadError(),
@@ -975,12 +1059,22 @@ describe('ApplyButton native apply extras', () => {
         target: { files: [resumeFile()] },
       },
     );
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
     await screen.findByRole('alert');
 
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
 
-    await screen.findByRole('link', { name: /applied/i });
+    await screen.findByRole('link', {
+      name: m.apply_appliedViewApplicationsLabel(),
+    });
     expect(onUploadResume).toHaveBeenCalledTimes(2);
     expect(onApply).toHaveBeenCalledTimes(1);
   });
@@ -1040,8 +1134,14 @@ describe('ApplyButton native apply extras', () => {
       m.applyButton_resumeLabel(),
     );
     expect(fresh.files).toHaveLength(0);
-    fireEvent.click(screen.getByRole('button', { name: /apply/i }));
-    await screen.findByRole('link', { name: /applied/i });
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.applyButton_applyLabel(),
+      }),
+    );
+    await screen.findByRole('link', {
+      name: m.apply_appliedViewApplicationsLabel(),
+    });
     expect(onUploadResume).not.toHaveBeenCalled();
   });
 });

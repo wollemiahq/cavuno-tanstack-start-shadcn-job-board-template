@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 import type { AccessGrant, PaywallOffer } from '@cavuno/board';
 
@@ -115,7 +116,11 @@ describe('candidate access actions', () => {
     );
 
     await renderAccessPage();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Choose' })[0]!);
+    fireEvent.click(
+      screen.getAllByRole('button', {
+        name: m.accountAccess_chooseLabel(),
+      })[0]!,
+    );
 
     for (const button of screen.getAllByRole('button')) {
       expect(button).toBeDisabled();
@@ -135,11 +140,15 @@ describe('candidate access actions', () => {
     mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
 
     await renderAccessPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.accountAccess_chooseLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
-      expect(screen.getByRole('button', { name: 'Choose' })).toBeEnabled();
+      expect(
+        screen.getByRole('button', { name: m.accountAccess_chooseLabel() }),
+      ).toBeEnabled();
     });
   });
 
@@ -158,13 +167,17 @@ describe('candidate access actions', () => {
 
     await renderAccessPage();
     fireEvent.click(
-      screen.getByRole('button', { name: 'Manage subscription' }),
+      screen.getByRole('button', {
+        name: m.accountAccess_manageSubscriptionLabel(),
+      }),
     );
 
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
       expect(
-        screen.getByRole('button', { name: 'Manage subscription' }),
+        screen.getByRole('button', {
+          name: m.accountAccess_manageSubscriptionLabel(),
+        }),
       ).toBeEnabled();
     });
   });
@@ -178,9 +191,13 @@ describe('candidate access actions', () => {
 
     await renderAccessPage();
 
-    expect(screen.getAllByRole('button', { name: 'Choose' })).toHaveLength(2);
     expect(
-      screen.queryByRole('button', { name: 'Manage subscription' }),
+      screen.getAllByRole('button', { name: m.accountAccess_chooseLabel() }),
+    ).toHaveLength(2);
+    expect(
+      screen.queryByRole('button', {
+        name: m.accountAccess_manageSubscriptionLabel(),
+      }),
     ).toBeNull();
   });
 
@@ -195,7 +212,9 @@ describe('candidate access actions', () => {
     mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
 
     await renderAccessPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.accountAccess_chooseLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.startCheckout).toHaveBeenCalledWith({
@@ -215,7 +234,9 @@ describe('candidate access actions', () => {
     mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
 
     await renderAccessPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.accountAccess_chooseLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.startCheckout).toHaveBeenCalledWith({
@@ -269,7 +290,9 @@ describe('candidate access actions', () => {
 
     await renderAccessPage();
     fireEvent.click(
-      screen.getByRole('button', { name: 'Manage subscription' }),
+      screen.getByRole('button', {
+        name: m.accountAccess_manageSubscriptionLabel(),
+      }),
     );
 
     await waitFor(() => {
@@ -303,9 +326,13 @@ describe('candidate access actions', () => {
     // A lifetime grant cannot be managed via the portal, and it is an entitled
     // state rather than the plan picker.
     expect(
-      screen.queryByRole('button', { name: 'Manage subscription' }),
+      screen.queryByRole('button', {
+        name: m.accountAccess_manageSubscriptionLabel(),
+      }),
     ).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Choose' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: m.accountAccess_chooseLabel() }),
+    ).toBeNull();
   });
 
   it('turns a rejected grant poll into an error toast with a refresh action', async () => {
@@ -317,14 +344,18 @@ describe('candidate access actions', () => {
     mocks.getAccessGrant.mockRejectedValue(new Error('grant unavailable'));
 
     await renderAccessPage();
-    expect(screen.getByText('Confirming your purchase…')).toBeVisible();
+    expect(screen.getByText(m.accountAccess_confirmingText())).toBeVisible();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
     });
 
     expect(mocks.toastActionError).toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.accountAccess_refreshLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('returns the buyer to the captured path once the grant is confirmed', async () => {
@@ -349,7 +380,9 @@ describe('candidate access actions', () => {
     });
     // The bridge state shows instead of parking on the entitled surface.
     expect(
-      screen.queryByRole('button', { name: 'Manage subscription' }),
+      screen.queryByRole('button', {
+        name: m.accountAccess_manageSubscriptionLabel(),
+      }),
     ).toBeNull();
   });
 
@@ -372,7 +405,9 @@ describe('candidate access actions', () => {
 
     expect(mocks.navigate).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('button', { name: 'Manage subscription' }),
+      screen.getByRole('button', {
+        name: m.accountAccess_manageSubscriptionLabel(),
+      }),
     ).toBeVisible();
   });
 });
@@ -410,5 +445,7 @@ it('shows each offer’s configured benefits beside its checkout action', async 
   await renderAccessPage();
   expect(screen.getByRole('list')).toHaveTextContent('Job matching');
   expect(screen.getByRole('list')).toHaveTextContent('Job alerts');
-  expect(screen.getByRole('button', { name: 'Choose' })).toBeEnabled();
+  expect(
+    screen.getByRole('button', { name: m.accountAccess_chooseLabel() }),
+  ).toBeEnabled();
 });

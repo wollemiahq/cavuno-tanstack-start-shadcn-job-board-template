@@ -8,6 +8,9 @@ import { CopyLinkButton } from './copy-link-button';
 import { JobDetail } from './job-detail';
 
 import type { JobDetailVM } from '@/board/job-detail-view-model';
+import { copyLinkCopy } from '@/copy-groups/copy-link';
+
+const copyLink = copyLinkCopy();
 
 const vm: JobDetailVM = {
   breadcrumbs: [],
@@ -61,7 +64,7 @@ describe('JobDetail actions', () => {
 
     const actions = container.querySelector("[data-slot='job-actions']");
     expect(actions).toBeInTheDocument();
-    for (const name of ['Apply', 'Save job', 'copy link']) {
+    for (const name of ['Apply', 'Save job', copyLink.ariaLabel]) {
       expect(actions).toContainElement(screen.getByRole('button', { name }));
     }
   });
@@ -99,11 +102,11 @@ describe('JobDetail actions', () => {
         }
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'copy link' }));
+    fireEvent.click(screen.getByRole('button', { name: copyLink.ariaLabel }));
 
     expect(writeText).toHaveBeenCalledWith(
       'https://board.test/companies/acme/jobs/product-designer',
     );
-    expect(await screen.findByText('Copied')).toBeInTheDocument();
+    expect(await screen.findByText(copyLink.copiedLabel)).toBeInTheDocument();
   });
 });

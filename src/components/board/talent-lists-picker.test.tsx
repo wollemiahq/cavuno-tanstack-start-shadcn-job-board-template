@@ -17,6 +17,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { TalentListsPicker } from './talent-lists-picker';
 
 import { parseTalentSearch } from '@/lib/talent-search';
@@ -94,12 +95,16 @@ describe('TalentListsPicker', () => {
     renderPicker();
 
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Saved searches' }),
+      await screen.findByRole('button', {
+        name: m.talentLists_triggerLabel(),
+      }),
     );
     expect(
-      screen.queryByRole('menuitemcheckbox', { name: 'All candidates' }),
+      screen.queryByRole('menuitemcheckbox', {
+        name: m.talentLists_allCandidates(),
+      }),
     ).toBeNull();
-    expect(screen.queryByText('Sourced')).toBeNull();
+    expect(screen.queryByText(m.talentLists_sourcedHeading())).toBeNull();
     expect(
       screen.queryByRole('menuitemcheckbox', {
         name: 'Smoke Robotics Engineer',
@@ -112,7 +117,7 @@ describe('TalentListsPicker', () => {
       screen.getByRole('menuitemcheckbox', { name: 'Smoke Robotics' }),
     ).toBeTruthy();
     expect(
-      screen.getByRole('menuitem', { name: 'New saved search…' }),
+      screen.getByRole('menuitem', { name: m.talentLists_newList() }),
     ).toBeTruthy();
   });
 
@@ -121,7 +126,7 @@ describe('TalentListsPicker', () => {
 
     fireEvent.click(
       await screen.findByRole('button', {
-        name: 'Saved searches, Berlin engineers',
+        name: `${m.talentLists_triggerLabel()}, Berlin engineers`,
       }),
     );
     fireEvent.click(
@@ -137,7 +142,9 @@ describe('TalentListsPicker', () => {
     const { router } = renderPicker();
 
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Saved searches' }),
+      await screen.findByRole('button', {
+        name: m.talentLists_triggerLabel(),
+      }),
     );
     fireEvent.click(
       screen.getByRole('menuitemcheckbox', { name: 'Berlin engineers' }),
@@ -165,18 +172,24 @@ describe('TalentListsPicker', () => {
     const { onListsChange } = renderPicker();
 
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Saved searches' }),
+      await screen.findByRole('button', {
+        name: m.talentLists_triggerLabel(),
+      }),
     );
     fireEvent.click(
-      screen.getByRole('menuitem', { name: 'New saved search…' }),
+      screen.getByRole('menuitem', { name: m.talentLists_newList() }),
     );
-    expect(screen.getByRole('radio', { name: 'Current filters' })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'A job' })).toBeTruthy();
-    fireEvent.change(await screen.findByLabelText('Name'), {
+    expect(
+      screen.getByRole('radio', { name: m.talentLists_kindBlank() }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('radio', { name: m.talentLists_kindJob() }),
+    ).toBeTruthy();
+    fireEvent.change(await screen.findByLabelText(m.talentLists_nameLabel()), {
       target: { value: 'Platform search' },
     });
     fireEvent.click(
-      screen.getByRole('button', { name: 'Create saved search' }),
+      screen.getByRole('button', { name: m.talentLists_createSubmit() }),
     );
 
     await waitFor(() =>
@@ -203,14 +216,18 @@ describe('TalentListsPicker', () => {
     renderPicker();
 
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Saved searches' }),
+      await screen.findByRole('button', {
+        name: m.talentLists_triggerLabel(),
+      }),
     );
     fireEvent.click(
-      screen.getByRole('menuitem', { name: 'New saved search…' }),
+      screen.getByRole('menuitem', { name: m.talentLists_newList() }),
     );
-    fireEvent.click(screen.getByRole('radio', { name: 'A job' }));
     fireEvent.click(
-      screen.getByRole('button', { name: 'Create saved search' }),
+      screen.getByRole('radio', { name: m.talentLists_kindJob() }),
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentLists_createSubmit() }),
     );
 
     await waitFor(() =>

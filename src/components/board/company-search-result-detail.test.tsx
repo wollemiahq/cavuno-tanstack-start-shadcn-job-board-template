@@ -18,6 +18,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { CompanySearchResultDetail } from './company-search-result-detail';
 
 import type { CompanyDetailVM } from '@/board/company-view-model';
@@ -242,14 +243,20 @@ describe('CompanySearchResultDetail', () => {
     );
     expect(viewSalariesLink).not.toHaveAttribute('role', 'button');
     expect(
-      within(header).queryByRole('link', { name: 'Visit website' }),
+      within(header).queryByRole('link', {
+        name: m.companySearch_visitWebsiteLabel(),
+      }),
     ).toBeNull();
     expect(
       screen.queryByRole('button', { name: /follow|save|contact/i }),
     ).toBeNull();
 
-    const jobsHeading = screen.getByRole('heading', { name: 'Open jobs' });
-    const salariesHeading = screen.getByRole('heading', { name: 'Salaries' });
+    const jobsHeading = screen.getByRole('heading', {
+      name: m.companyDetail_openJobsHeading(),
+    });
+    const salariesHeading = screen.getByRole('heading', {
+      name: m.companyDetail_salariesSummaryHeading(),
+    });
     const marketsHeading = screen.getByRole('heading', { name: 'Markets' });
     expect(jobsHeading.compareDocumentPosition(salariesHeading)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
@@ -258,16 +265,16 @@ describe('CompanySearchResultDetail', () => {
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
     expect(
-      within(screen.getByRole('region', { name: 'Open jobs' })).getByRole(
-        'link',
-        { name: 'View all jobs' },
-      ),
+      within(
+        screen.getByRole('region', { name: m.companyDetail_openJobsHeading() }),
+      ).getByRole('link', { name: m.home_viewAllJobsLabel() }),
     ).toHaveAttribute('href', '/companies/acme-research/jobs');
     expect(
-      within(screen.getByRole('region', { name: 'Salaries' })).getByRole(
-        'link',
-        { name: 'View salaries' },
-      ),
+      within(
+        screen.getByRole('region', {
+          name: m.companyDetail_salariesSummaryHeading(),
+        }),
+      ).getByRole('link', { name: 'View salaries' }),
     ).toHaveAttribute('href', '/companies/acme-research/salaries');
     expect(screen.getByRole('link', { name: 'Role 1' })).toHaveAttribute(
       'href',
@@ -300,10 +307,18 @@ describe('CompanySearchResultDetail', () => {
     ).toBeVisible();
     expect(screen.getByText('3 open jobs')).toBeVisible();
     expect(screen.queryByRole('link', { name: 'View jobs' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'View all jobs' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Visit website' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.home_viewAllJobsLabel() }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.companySearch_visitWebsiteLabel() }),
+    ).toBeNull();
     expect(screen.queryByRole('link', { name: 'View salaries' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'Salaries' })).toBeNull();
+    expect(
+      screen.queryByRole('heading', {
+        name: m.companyDetail_salariesSummaryHeading(),
+      }),
+    ).toBeNull();
     expect(
       document.querySelector("[data-slot='company-detail-primary-actions']"),
     ).toBeNull();
@@ -328,10 +343,16 @@ describe('CompanySearchResultDetail', () => {
     expect(screen.queryByRole('link', { name: 'Acme Research' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'View jobs' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'View salaries' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Visit website' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.companySearch_visitWebsiteLabel() }),
+    ).toBeNull();
     expect(screen.queryByRole('link', { name: 'Developer tools' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'acme.example' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Role 1' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'Salaries' })).toBeNull();
+    expect(
+      screen.queryByRole('heading', {
+        name: m.companyDetail_salariesSummaryHeading(),
+      }),
+    ).toBeNull();
   });
 });

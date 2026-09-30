@@ -18,6 +18,7 @@ import {
   type ApplicationsRouteDependencies,
 } from './-me.applications';
 
+import { m } from '@/paraglide/messages';
 import type { Application } from '@cavuno/board';
 
 const dependencies: ApplicationsRouteDependencies = {
@@ -125,6 +126,10 @@ describe('candidate applications', () => {
     expect(item).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-actions"]')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Withdraw' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.meApplications_withdrawLabel(),
+      }),
+    ).toBeEnabled();
   });
 });

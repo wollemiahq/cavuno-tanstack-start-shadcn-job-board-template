@@ -45,6 +45,7 @@ const navigation = vi.hoisted(() => ({
   companies: 'Organisations',
   blog: 'Career stories',
   talent: 'People directory',
+  post: 'Share a vacancy',
 }));
 vi.mock('@/chrome.json', () => ({ default: { nav: navigation } }));
 
@@ -345,10 +346,9 @@ describe('Header — feature-gated public collections', () => {
         await screen.findByRole('link', { name: navigation.talent })
       ).getAttribute('href'),
     ).toBe('/talent');
-    expect(screen.getByLabelText(/keyword/i)).toHaveAttribute(
-      'placeholder',
-      m.talentDirectory_searchPlaceholder(),
-    );
+    expect(
+      screen.getByLabelText(m.searchBar_keywordAriaLabel()),
+    ).toHaveAttribute('placeholder', m.talentDirectory_searchPlaceholder());
   });
 });
 
@@ -370,9 +370,7 @@ describe('Header — role and public-posting gates', () => {
     expect(
       screen.queryByRole('link', { name: m.siteHeader_signUpLabel() }),
     ).toBeNull();
-    expect(
-      screen.queryByRole('link', { name: m.siteHeader_postJobLabel() }),
-    ).toBeNull();
+    expect(screen.queryByRole('link', { name: navigation.post })).toBeNull();
   });
 
   it.each([
@@ -426,7 +424,9 @@ describe('Header — role and public-posting gates', () => {
         { slug: 'industrial-automation', name: 'Industrial Automation' },
       ],
     });
-    const searchbox = await screen.findByLabelText(/keyword/i);
+    const searchbox = await screen.findByLabelText(
+      m.searchBar_keywordAriaLabel(),
+    );
 
     fireEvent.input(searchbox, {
       target: { value: 'industrial' },
@@ -454,9 +454,9 @@ describe('Header — role and public-posting gates', () => {
     });
 
     expect(
-      (
-        await screen.findByRole('link', { name: m.siteHeader_postJobLabel() })
-      ).getAttribute('href'),
+      (await screen.findByRole('link', { name: navigation.post })).getAttribute(
+        'href',
+      ),
     ).toBe('/post');
     expect(
       screen.queryByRole('link', { name: m.siteHeader_signInLabel() }),
@@ -728,7 +728,7 @@ describe('Header — mobile navigation disclosure', () => {
     renderHeader();
 
     const toggle = await screen.findByRole('button', {
-      name: /navigation menu/i,
+      name: m.siteHeader_openNavMenuAriaLabel(),
     });
 
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -760,7 +760,7 @@ describe('Header — mobile navigation disclosure', () => {
     renderHeader();
 
     const toggle = await screen.findByRole('button', {
-      name: /navigation menu/i,
+      name: m.siteHeader_openNavMenuAriaLabel(),
     });
     fireEvent.click(toggle);
 
@@ -774,7 +774,7 @@ describe('Header — mobile navigation disclosure', () => {
     // empty twin input.
     expect(
       within(mobileMenu).getByRole('link', {
-        name: m.siteHeader_postJobLabel(),
+        name: navigation.post,
       }),
     ).toHaveAttribute('href', '/post');
     expect(mobileMenu.querySelector('form[role="search"]')).toBeNull();
@@ -856,10 +856,14 @@ describe('Header — pathname-scoped submit-only search', () => {
 
     const jobsSearch = await screen.findByRole('search');
     expect(
-      within(jobsSearch).getByRole('combobox', { name: /keyword/i }),
+      within(jobsSearch).getByRole('combobox', {
+        name: m.searchBar_keywordAriaLabel(),
+      }),
     ).toBeTruthy();
     expect(
-      within(jobsSearch).getByRole('combobox', { name: /location/i }),
+      within(jobsSearch).getByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
     ).toBeTruthy();
     expect(jobsSearch).toHaveAttribute('data-search-scope', 'jobs');
 
@@ -869,17 +873,25 @@ describe('Header — pathname-scoped submit-only search', () => {
       'data-search-scope',
       'companies',
     );
-    expect(screen.queryByRole('combobox', { name: /location/i })).toBeNull();
+    expect(
+      screen.queryByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+    ).toBeNull();
 
     cleanup();
     renderHeader({ initialEntry: '/talent' });
     const talentSearch = await screen.findByRole('search');
     expect(talentSearch).toHaveAttribute('data-search-scope', 'talent');
     expect(
-      await within(talentSearch).findByRole('combobox', { name: /location/i }),
+      await within(talentSearch).findByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
     ).toBeTruthy();
     expect(
-      within(talentSearch).getByRole('searchbox', { name: /keyword/i }),
+      within(talentSearch).getByRole('searchbox', {
+        name: m.searchBar_keywordAriaLabel(),
+      }),
     ).toBeTruthy();
 
     cleanup();
@@ -888,7 +900,11 @@ describe('Header — pathname-scoped submit-only search', () => {
       'data-search-scope',
       'blog',
     );
-    expect(screen.queryByRole('combobox', { name: /location/i })).toBeNull();
+    expect(
+      screen.queryByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+    ).toBeNull();
   });
 
   it('stages a canonical Jobs suggestion and navigates only when Search is submitted', async () => {
@@ -904,7 +920,9 @@ describe('Header — pathname-scoped submit-only search', () => {
       ],
     });
 
-    const keyword = await screen.findByRole('combobox', { name: /keyword/i });
+    const keyword = await screen.findByRole('combobox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
     fireEvent.input(keyword, {
       target: { value: 'rob' },
       inputType: 'insertText',
@@ -921,8 +939,12 @@ describe('Header — pathname-scoped submit-only search', () => {
   it('gives the keyword field the same inline clear affordance as location', async () => {
     renderHeader({ initialEntry: '/jobs?q=robotics' });
 
-    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
-    fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
+    const keyword = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.searchBar_clearAriaLabel() }),
+    );
 
     expect(keyword.value).toBe('');
     expect(keyword).toHaveFocus();
@@ -932,9 +954,11 @@ describe('Header — pathname-scoped submit-only search', () => {
     const router = renderHeader({
       initialEntry: '/jobs/locations/sydney?q=engineer',
     });
-    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const keyword = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
     const location = screen.getByRole<HTMLInputElement>('combobox', {
-      name: /location/i,
+      name: m.locationCombobox_locationAriaLabel(),
     });
 
     expect(location.value).toBe('Sydney');
@@ -988,11 +1012,13 @@ describe('Header — pathname-scoped submit-only search', () => {
       renderHeader({ initialEntry, resolvedKeywordLabel });
 
       expect(
-        (await screen.findByLabelText(/keyword/i)).getAttribute('value'),
+        (
+          await screen.findByLabelText(m.searchBar_keywordAriaLabel())
+        ).getAttribute('value'),
       ).toBe(expectedKeyword);
       expect(
         screen.getByRole<HTMLInputElement>('combobox', {
-          name: /location/i,
+          name: m.locationCombobox_locationAriaLabel(),
         }).value,
       ).toBe(expectedLocation);
     },
@@ -1010,8 +1036,12 @@ describe('Header — pathname-scoped submit-only search', () => {
         },
       ],
     });
-    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
-    const location = screen.getByRole('combobox', { name: /location/i });
+    const keyword = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
+    const location = screen.getByRole('combobox', {
+      name: m.locationCombobox_locationAriaLabel(),
+    });
 
     fireEvent.change(keyword, { target: { value: 'robotics' } });
     fireEvent.input(location, {
@@ -1040,9 +1070,11 @@ describe('Header — pathname-scoped submit-only search', () => {
         },
       ],
     });
-    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const keyword = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
     const location = screen.getByRole<HTMLInputElement>('combobox', {
-      name: /location/i,
+      name: m.locationCombobox_locationAriaLabel(),
     });
 
     fireEvent.input(location, {
@@ -1063,9 +1095,11 @@ describe('Header — pathname-scoped submit-only search', () => {
 
   it('stays put and says so when typed location text matches no place', async () => {
     const router = renderHeader({ initialEntry: '/jobs?q=engineer' });
-    const keyword = await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const keyword = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
     const location = screen.getByRole<HTMLInputElement>('combobox', {
-      name: /location/i,
+      name: m.locationCombobox_locationAriaLabel(),
     });
 
     fireEvent.input(location, {
@@ -1123,8 +1157,9 @@ describe('Header — pathname-scoped submit-only search', () => {
     'derives the $name search destination from the pathname and navigates only on submit',
     async ({ initialEntry, initialValue, nextValue, expectedHref }) => {
       const router = renderHeader({ initialEntry });
-      const searchbox =
-        await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+      const searchbox = await screen.findByLabelText<HTMLInputElement>(
+        m.searchBar_keywordAriaLabel(),
+      );
 
       expect(searchbox.value).toBe(initialValue);
 
@@ -1150,7 +1185,9 @@ describe('Header — pathname-scoped submit-only search', () => {
         },
       ],
     });
-    const keyword = await screen.findByRole('combobox', { name: /keyword/i });
+    const keyword = await screen.findByRole('combobox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
     fireEvent.input(keyword, {
       target: { value: 'nurse' },
       inputType: 'insertText',
@@ -1179,7 +1216,7 @@ describe('Header — pathname-scoped submit-only search', () => {
       ],
     });
     const keyword = await screen.findByRole<HTMLInputElement>('combobox', {
-      name: /keyword/i,
+      name: m.searchBar_keywordAriaLabel(),
     });
     fireEvent.input(keyword, {
       target: { value: 'nurse' },
@@ -1206,7 +1243,7 @@ describe('Header — pathname-scoped submit-only search', () => {
       ],
     });
     const searchbox = await screen.findByRole('combobox', {
-      name: /keyword/i,
+      name: m.searchBar_keywordAriaLabel(),
     });
     fireEvent.input(searchbox, {
       target: { value: 'industrial' },
@@ -1225,8 +1262,9 @@ describe('Header — pathname-scoped submit-only search', () => {
 
   it('uses Jobs search from the landing page and hands the query to /jobs', async () => {
     const router = renderHeader({ initialEntry: '/' });
-    const searchbox =
-      await screen.findByLabelText<HTMLInputElement>(/keyword/i);
+    const searchbox = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
 
     fireEvent.change(searchbox, { target: { value: 'systems' } });
     expect(router.state.location.href).toBe('/');

@@ -141,7 +141,9 @@ describe('employer talent-access checkout', () => {
     mocks.startCheckout.mockResolvedValue({ ok: true, data: kit });
 
     await renderEmployers();
-    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.startCheckout).toHaveBeenCalledWith({
@@ -153,7 +155,9 @@ describe('employer talent-access checkout', () => {
       });
     });
     expect(
-      await screen.findByRole('heading', { name: 'Complete your purchase' }),
+      await screen.findByRole('heading', {
+        name: m.employerLanding_completePurchaseTitle(),
+      }),
     ).toBeVisible();
   });
 
@@ -189,8 +193,14 @@ describe('employer talent-access checkout', () => {
         reportActionError={mocks.reportActionError}
       />,
     );
-    expect(screen.queryByRole('combobox', { name: 'Buy for' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    expect(
+      screen.queryByRole('combobox', {
+        name: m.memberships_chooseCompanyLabel(),
+      }),
+    ).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.claim).toHaveBeenCalledWith({
@@ -223,12 +233,16 @@ describe('employer talent-access checkout', () => {
       },
     });
 
-    const picker = screen.getByRole('combobox', { name: 'Buy for' });
+    const picker = screen.getByRole('combobox', {
+      name: m.memberships_chooseCompanyLabel(),
+    });
     expect(picker).toHaveValue('company-acme');
     fireEvent.change(picker, { target: { value: 'company-globex' } });
     expect(mocks.claim).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    );
     await waitFor(() => {
       expect(mocks.claim).toHaveBeenCalledWith({
         data: { planId: 'plan-talent', companyId: 'company-globex' },
@@ -258,10 +272,17 @@ describe('employer talent-access checkout', () => {
       },
     });
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Buy for' }), {
-      target: { value: 'company-globex' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    fireEvent.change(
+      screen.getByRole('combobox', {
+        name: m.memberships_chooseCompanyLabel(),
+      }),
+      {
+        target: { value: 'company-globex' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.claim).toHaveBeenCalledWith({
@@ -288,7 +309,11 @@ describe('employer talent-access checkout', () => {
       },
     });
 
-    expect(screen.queryByRole('combobox', { name: 'Buy for' })).toBeNull();
+    expect(
+      screen.queryByRole('combobox', {
+        name: m.memberships_chooseCompanyLabel(),
+      }),
+    ).toBeNull();
     expect(screen.queryByText('Globex Corporation')).toBeNull();
   });
 
@@ -302,7 +327,9 @@ describe('employer talent-access checkout', () => {
     });
 
     await renderEmployers();
-    fireEvent.click(screen.getByRole('button', { name: 'Subscribe' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.reportActionError).toHaveBeenCalledWith(
@@ -310,7 +337,9 @@ describe('employer talent-access checkout', () => {
       );
     });
     expect(
-      screen.queryByRole('heading', { name: 'Complete your purchase' }),
+      screen.queryByRole('heading', {
+        name: m.employerLanding_completePurchaseTitle(),
+      }),
     ).toBeNull();
   });
 
@@ -322,7 +351,7 @@ describe('employer talent-access checkout', () => {
     mocks.invalidate.mockResolvedValue(undefined);
 
     await renderEmployers({ sessionId: 'cs_talent' });
-    expect(screen.getByText('Confirming your purchase…')).toBeVisible();
+    expect(screen.getByText(m.employerLanding_confirmingText())).toBeVisible();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
@@ -342,7 +371,9 @@ describe('employer talent-access checkout', () => {
     mocks.invalidate.mockResolvedValue(undefined);
 
     await renderEmployers({ hasTalentAccess: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Upgrade' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.employerLanding_upgradeLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.upgrade).toHaveBeenCalledWith({
@@ -368,7 +399,11 @@ describe('employer talent-access checkout', () => {
     });
 
     await renderEmployers({ hasTalentAccess: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Manage billing' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerLanding_manageBillingLabel(),
+      }),
+    );
 
     await waitFor(() => {
       expect(mocks.openBillingPortal).toHaveBeenCalledWith({
@@ -390,11 +425,14 @@ describe('employer talent-access checkout', () => {
   it('keeps anonymous viewers on the join path', async () => {
     await renderEmployers({ viewer: { kind: 'anonymous' } });
 
-    expect(screen.getByRole('link', { name: 'Subscribe' })).toHaveAttribute(
-      'href',
-      '/auth/join?returnTo=%2Femployers',
-    );
-    expect(screen.queryByRole('button', { name: 'Subscribe' })).toBeNull();
+    expect(
+      screen.getByRole('link', { name: m.employerLanding_subscribeLabel() }),
+    ).toHaveAttribute('href', '/auth/join?returnTo=%2Femployers');
+    expect(
+      screen.queryByRole('button', {
+        name: m.employerLanding_subscribeLabel(),
+      }),
+    ).toBeNull();
   });
   /**
    * The regression this guards: "Manage billing" used to require
@@ -415,7 +453,11 @@ describe('employer talent-access checkout', () => {
     });
 
     await renderEmployers({ hasTalentAccess: false });
-    fireEvent.click(screen.getByRole('button', { name: 'Manage billing' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerLanding_manageBillingLabel(),
+      }),
+    );
 
     await waitFor(() => {
       expect(mocks.openBillingPortal).toHaveBeenCalledWith({

@@ -14,6 +14,7 @@ import {
   type MessagesDockDependencies,
 } from './-messages-dock-controller';
 
+import { m } from '@/paraglide/messages';
 import type { Conversation, ConversationDetail, Message } from '@cavuno/board';
 
 const archiveConversation =
@@ -111,7 +112,9 @@ describe('MessagesDockController', () => {
     expect(getInbox).not.toHaveBeenCalled();
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
+      screen.getByRole('button', {
+        name: m.messagingDock_openAriaLabel({ count: 0 }),
+      }),
     );
     await waitFor(() => expect(getInbox).toHaveBeenCalledOnce());
   });
@@ -143,17 +146,21 @@ describe('MessagesDockController', () => {
     );
 
     const launcher = await screen.findByRole('button', {
-      name: 'Open messaging, 2 unread',
+      name: m.messagingDock_openAriaLabel({ count: 2 }),
     });
     fireEvent.click(launcher);
     fireEvent.click(await screen.findByRole('button', { name: /Hue Le/ }));
 
     await waitFor(() => expect(getThread).toHaveBeenCalled());
     expect(
-      screen.getByRole('complementary', { name: 'Messaging' }),
+      screen.getByRole('complementary', {
+        name: m.messagingDock_messagesLabel(),
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('complementary', { name: 'Conversation with Hue Le' }),
+      screen.getByRole('complementary', {
+        name: m.messagingDock_conversationAriaLabel({ name: 'Hue Le' }),
+      }),
     ).toBeInTheDocument();
     expect(
       await screen.findByRole('heading', { name: 'Hue Le' }),
@@ -168,10 +175,12 @@ describe('MessagesDockController', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Open messaging, 0 unread' }),
+      screen.getByRole('button', {
+        name: m.messagingDock_openAriaLabel({ count: 0 }),
+      }),
     );
     expect(
-      await screen.findByText("We couldn't load messages"),
+      await screen.findByText(m.messagingDock_inboxErrorText()),
     ).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
@@ -184,7 +193,9 @@ describe('MessagesDockController', () => {
         nextCursor: null,
       },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.messagingDock_retryLabel() }),
+    );
 
     expect(
       await screen.findByRole('button', { name: /Hue Le/ }),
@@ -209,12 +220,12 @@ describe('MessagesDockController', () => {
 
     fireEvent.click(
       await screen.findByRole('button', {
-        name: 'Open messaging, 1 unread',
+        name: m.messagingDock_openAriaLabel({ count: 1 }),
       }),
     );
     fireEvent.click(await screen.findByRole('button', { name: /Hue Le/ }));
     expect(
-      await screen.findByText("We couldn't load this conversation"),
+      await screen.findByText(m.messagingDock_conversationErrorText()),
     ).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'empty');
 
@@ -229,7 +240,9 @@ describe('MessagesDockController', () => {
       },
       blockStatus: { object: 'block_status', blocked: false },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.messagingDock_retryLabel() }),
+    );
 
     expect(
       await screen.findByRole('heading', { name: 'Hue Le' }),

@@ -26,6 +26,7 @@ const mocks = {
   toastActionReconciliationError: vi.fn(),
 };
 
+import { m } from '../paraglide/messages';
 import { ResumeUpload } from './resume-upload';
 
 async function renderWithRouter(node: React.ReactNode) {
@@ -89,7 +90,7 @@ describe('ResumeUpload', () => {
     );
 
     expect(
-      screen.queryByRole('checkbox', { name: 'Keep my resume saved' }),
+      screen.queryByRole('checkbox', { name: m.resumeUpload_keepCopyLabel() }),
     ).toBeNull();
 
     const attachment = document.querySelector(
@@ -123,14 +124,18 @@ describe('ResumeUpload', () => {
 
     expect(document.querySelector('[data-slot="attachment"]')).toBeVisible();
     expect(
-      screen.getByRole('button', { name: 'Replace resume' }),
+      screen.getByRole('button', { name: m.resumeUpload_replaceLabel() }),
     ).toBeVisible();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.resumeUpload_deleteLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.toastActionError).toHaveBeenCalled();
-      expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+      expect(
+        screen.getByRole('button', { name: m.resumeUpload_deleteLabel() }),
+      ).toBeEnabled();
     });
   });
 
@@ -147,7 +152,7 @@ describe('ResumeUpload', () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'This file is larger than 10MB',
+      m.resumeUpload_fileTooLargeError(),
     );
     expect(mocks.uploadResume).not.toHaveBeenCalled();
   });
@@ -187,7 +192,7 @@ describe('ResumeUpload', () => {
     });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Choose a PDF, DOCX, JPG or PNG file.',
+      m.resumeUpload_fileTypeError(),
     );
     expect(mocks.uploadResume).not.toHaveBeenCalled();
   });
@@ -235,7 +240,9 @@ describe('ResumeUpload', () => {
       await act(() => vi.advanceTimersByTimeAsync(3 * 60 * 1_000));
       const calls = invalidate.mock.calls.length;
       expect(calls).toBeGreaterThan(0);
-      expect(getByRole('status').textContent).toContain('Still parsing');
+      expect(getByRole('status').textContent).toContain(
+        m.resumeUpload_stillParsingText(),
+      );
 
       await act(() => vi.advanceTimersByTimeAsync(8_000));
       expect(invalidate).toHaveBeenCalledTimes(calls);

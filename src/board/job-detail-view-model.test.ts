@@ -195,11 +195,11 @@ describe('toJobDetailVM', () => {
     );
 
     expect(onSite.locationLabel).toBeNull();
-    expect(onSite.workplaceLabel).toBe('On-site');
+    expect(onSite.workplaceLabel).toBe(m.label_remoteOnSite());
     // Remote permit codes resolve to country names (card-mapper parity),
     // not the raw "US, GB".
     expect(vm.locationLabel).toBe('United States and United Kingdom');
-    expect(vm.workplaceLabel).toBe('Remote');
+    expect(vm.workplaceLabel).toBe(m.label_remoteRemote());
 
     const hybrid = toJobDetailVM(
       createJob({
@@ -212,7 +212,7 @@ describe('toJobDetailVM', () => {
     );
 
     expect(hybrid.locationLabel).toBe('Berlin, BE, DE');
-    expect(hybrid.workplaceLabel).toBe('Hybrid');
+    expect(hybrid.workplaceLabel).toBe(m.label_remoteHybrid());
   });
 
   it('resolves a physical location from placeHierarchy when there is no office, matching the card', () => {
@@ -237,7 +237,7 @@ describe('toJobDetailVM', () => {
     );
 
     expect(onSite.locationLabel).toBe('Austin, Texas, US');
-    expect(onSite.workplaceLabel).toBe('On-site');
+    expect(onSite.workplaceLabel).toBe(m.label_remoteOnSite());
   });
 
   it('shows Worldwide for an unconstrained remote job, never "not specified"', () => {

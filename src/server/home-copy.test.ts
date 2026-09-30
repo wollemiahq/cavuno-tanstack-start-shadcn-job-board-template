@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import { resolveHomeCopy } from './home-copy';
 
 const labels = {
@@ -47,7 +48,7 @@ describe('home copy from existing loader data', () => {
     expect(
       resolveHomeCopy({ ...data, jobsCount: 1004 }, templates, labels)
         .jobsTitle,
-    ).toBe('1,004 internships');
+    ).toBe(`${(1004).toLocaleString(getLocale())} internships`);
     expect(
       resolveHomeCopy({ ...data, jobsCount: 1 }, templates, labels).jobsTitle,
     ).toBe('1 internship');

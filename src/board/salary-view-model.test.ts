@@ -6,6 +6,7 @@ import {
 } from '@cavuno/board/paths';
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import {
   companyCategorySalaryPath,
   salaryCompanyMetaDescription,
@@ -27,6 +28,10 @@ import {
   type SalaryLocationNode,
   type SeniorityRow,
 } from './salary-view-model';
+
+/** The "{count} jobs" label the mappers resolve for a job count. */
+const jobCountLabel = (count: number) =>
+  m.count_jobs({ count, countLabel: count.toLocaleString('en') });
 
 /**
  * The salary mappers are Layer 1b — they own the derivations (median from
@@ -62,7 +67,7 @@ describe('toOverallSalaryVM', () => {
     expect(vm.stats[1].value).toEqual(expect.any(String));
     expect(vm.stats[1].value.length).toBeGreaterThan(0);
     expect(vm.headlineValue.length).toBeGreaterThan(0);
-    expect(vm.stats.at(-1)?.value.startsWith('12 ')).toBe(true);
+    expect(vm.stats.at(-1)?.value).toBe(jobCountLabel(12));
   });
 
   it('omits the percentile/median stats when their inputs are absent, always keeping based-on', () => {
@@ -73,7 +78,7 @@ describe('toOverallSalaryVM', () => {
     );
     expect(vm.stats).toHaveLength(1);
     // singular job count copy when jobCount === 1
-    expect(vm.stats[0].value.startsWith('1 ')).toBe(true);
+    expect(vm.stats[0].value).toBe(jobCountLabel(1));
   });
 
   it('drops the median stat unless BOTH band bounds are present, keeping the surrounding percentiles', () => {
@@ -114,7 +119,7 @@ describe('toOverallSalaryVM', () => {
     expect(vm.perYearSuffix).toBe('');
     // Only the non-money "based on N jobs" stat remains.
     expect(vm.stats).toHaveLength(1);
-    expect(vm.stats[0].value.startsWith('12 ')).toBe(true);
+    expect(vm.stats[0].value).toBe(jobCountLabel(12));
   });
 });
 
@@ -151,7 +156,7 @@ describe('toSeniorityTableVM', () => {
   const vm = toSeniorityTableVM(rows, 'en', 'USD');
 
   it('resolves the seniority key through the taxonomy label', () => {
-    expect(vm.rows[0].level).toBe('Senior');
+    expect(vm.rows[0].level).toBe(m.label_senioritySenior());
   });
 
   it('renders a dash baseline when the board average is missing', () => {
@@ -184,12 +189,9 @@ describe('toSalaryRailVM', () => {
     ];
     const vm = toSalaryRailVM('Top companies', items, 'en');
     expect(vm.title).toBe('Top companies');
-    expect(vm.items[0].jobCountLabel.startsWith('1 ')).toBe(true);
-    expect(vm.items[1].jobCountLabel.startsWith('4 ')).toBe(true);
-    // singular vs plural noun must differ
-    expect(vm.items[0].jobCountLabel.slice(2)).not.toBe(
-      vm.items[1].jobCountLabel.slice(2),
-    );
+    // Each row carries its own count into the plural-aware catalog message.
+    expect(vm.items[0].jobCountLabel).toBe(jobCountLabel(1));
+    expect(vm.items[1].jobCountLabel).toBe(jobCountLabel(4));
     expect(vm.items[0].range).toBe('range a');
     expect(vm.items[0].href).toBe('/companies/acme');
   });
@@ -381,9 +383,22 @@ describe('salaryCompanyMetaDescription', () => {
     year: 2026,
   };
 
+  const answer = (jobCount: number) =>
+    m.companySalaries_metaDescriptionWithData({
+      company: 'Acme',
+      range: RANGE,
+      jobCount,
+    });
+  const breakdown = (categoryCount: number) =>
+    m.companySalaries_metaDescriptionCategories({ categoryCount });
+
   it('leads with a self-contained answer naming the pay, the sample and the source', () => {
     expect(salaryCompanyMetaDescription('en', base)).toBe(
-      `Acme pays ${RANGE} per year on average across 1240 job postings. Breakdown across 18 job categories. Updated 2026.`,
+      [
+        answer(1240),
+        breakdown(18),
+        m.companySalaries_metaDescriptionUpdated({ year: 2026 }),
+      ].join(' '),
     );
   });
 
@@ -398,9 +413,13 @@ describe('salaryCompanyMetaDescription', () => {
       ...base,
       categoryCount: 0,
     });
-    expect(description).not.toContain('Breakdown');
-    expect(description).toContain('job postings');
-    expect(description).toContain('2026');
+    expect(description).not.toContain(breakdown(0));
+    expect(description).toBe(
+      [
+        answer(1240),
+        m.companySalaries_metaDescriptionUpdated({ year: 2026 }),
+      ].join(' '),
+    );
   });
 
   it('reads correctly for a company with a single posting in a single category', () => {
@@ -409,10 +428,9 @@ describe('salaryCompanyMetaDescription', () => {
       jobCount: 1,
       categoryCount: 1,
     });
-    expect(description).toContain('1 job posting.');
-    expect(description).not.toContain('1 job postings');
-    expect(description).toContain('1 job category.');
-    expect(description).not.toContain('1 job categories');
+    // The count drives each sentence's plural form in the catalog.
+    expect(description).toContain(answer(1));
+    expect(description).toContain(breakdown(1));
   });
 
   it('never invents a salary when the company has no aggregate', () => {

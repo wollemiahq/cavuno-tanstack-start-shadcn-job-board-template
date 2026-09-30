@@ -18,6 +18,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { JobSearchResultDetail } from './job-search-result-detail';
 
 import type { JobDetailVM } from '@/board/job-detail-view-model';
@@ -172,7 +173,7 @@ describe('JobSearchResultDetail', () => {
       '/companies/acme',
     );
     expect(
-      screen.getByRole('heading', { name: 'About the company' }),
+      screen.getByRole('heading', { name: m.jobDetail_aboutCompanyHeading() }),
     ).toBeVisible();
     const companyProfileLink = screen.getByRole('link', {
       name: 'View company profile',
@@ -190,7 +191,9 @@ describe('JobSearchResultDetail', () => {
       screen.getByText('Acme builds tools for modern product teams.'),
     ).toBeVisible();
     expect(screen.queryByRole('link', { name: 'acme.example' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'View full job' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.jobSearch_viewFullJobLabel() }),
+    ).toBeNull();
     expect(
       screen
         .getByRole('link', { name: 'Design' })
@@ -221,7 +224,9 @@ describe('JobSearchResultDetail', () => {
       />,
     );
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Loading');
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      m.ui_loadingLabel(),
+    );
     expect(
       container.querySelector('[data-slot="job-detail-header-loading"]'),
     ).toBeInTheDocument();

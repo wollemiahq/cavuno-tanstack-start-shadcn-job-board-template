@@ -21,6 +21,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { EmbedJobsHeader } from './embed-jobs-header';
 
 import { m } from '@/paraglide/messages';
+import { containing } from '@/test/text';
 
 afterEach(() => {
   cleanup();
@@ -101,7 +102,7 @@ describe('EmbedJobsHeader', () => {
     ).toBeTruthy();
     expect(
       screen.getByRole('button', {
-        name: new RegExp(m.jobSearch_allFiltersLabel()),
+        name: containing(m.jobSearch_allFiltersLabel()),
       }),
     ).toBeTruthy();
     expect(searchLink()).toBeTruthy();
@@ -131,7 +132,7 @@ describe('EmbedJobsHeader', () => {
     // shows an unfiltered-looking header over filtered results.
     expect(
       screen.getByRole('button', {
-        name: new RegExp(m.jobSearch_allFiltersLabel()),
+        name: containing(m.jobSearch_allFiltersLabel()),
       }),
     ).toHaveTextContent('2');
 
@@ -174,7 +175,7 @@ describe('EmbedJobsHeader', () => {
     // events bubble to the same listener.
     fireEvent.click(
       screen.getByRole('button', {
-        name: new RegExp(m.jobSearch_allFiltersLabel()),
+        name: containing(m.jobSearch_allFiltersLabel()),
       }),
     );
 
@@ -246,7 +247,7 @@ describe('EmbedJobsHeader', () => {
 
     expect(
       screen.getByRole('button', {
-        name: new RegExp(m.jobSearch_allFiltersLabel()),
+        name: containing(m.jobSearch_allFiltersLabel()),
       }),
     ).not.toHaveTextContent('1');
     expect(searchLink().getAttribute('href')).toBe('/jobs');
@@ -300,7 +301,7 @@ describe('EmbedJobsHeader', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: new RegExp(m.jobSearch_allFiltersLabel()),
+        name: containing(m.jobSearch_allFiltersLabel()),
       }),
     );
     fireEvent.click(
@@ -308,7 +309,9 @@ describe('EmbedJobsHeader', () => {
         name: m.jobSearch_workplacePlaceholder(),
       }),
     );
-    const remoteOption = screen.getByRole('option', { name: 'Remote' });
+    const remoteOption = screen.getByRole('option', {
+      name: m.label_remoteRemote(),
+    });
     fireEvent.pointerDown(remoteOption, { pointerType: 'mouse' });
     fireEvent.click(remoteOption);
     fireEvent.click(

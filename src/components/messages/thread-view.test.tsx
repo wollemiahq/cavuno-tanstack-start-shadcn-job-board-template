@@ -20,6 +20,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { ThreadView } from './thread-view';
 
 import type { ConversationDetail, Message } from '@cavuno/board';
@@ -97,11 +98,10 @@ describe('ThreadView', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Hue Le' })).toBeInTheDocument();
-    expect(screen.getByText('Candidate')).toBeInTheDocument();
-    expect(screen.getByText('Unread messages')).toHaveAttribute(
-      'data-slot',
-      'marker-content',
-    );
+    expect(screen.getByText(m.threadView_candidateLabel())).toBeInTheDocument();
+    expect(
+      screen.getByText(m.threadView_unreadMessagesLabel()),
+    ).toHaveAttribute('data-slot', 'marker-content');
     expect(screen.getByTestId('message-stream')).toHaveAttribute(
       'data-slot',
       'message-scroller',
@@ -139,7 +139,7 @@ describe('ThreadView', () => {
       />,
     );
 
-    expect(screen.getByText('Employer')).toBeInTheDocument();
+    expect(screen.getByText(m.threadView_employerLabel())).toBeInTheDocument();
   });
 
   it('uses the shared empty-state composition before a conversation has messages', () => {
@@ -162,7 +162,9 @@ describe('ThreadView', () => {
     );
 
     expect(
-      screen.getByText('No messages yet.').closest('[data-slot="empty"]'),
+      screen
+        .getByText(m.threadView_noMessagesText())
+        .closest('[data-slot="empty"]'),
     ).not.toBeNull();
   });
 
@@ -238,12 +240,18 @@ describe('ThreadView', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Conversation actions' }),
+      screen.getByRole('button', {
+        name: m.threadView_conversationActionsAriaLabel(),
+      }),
     );
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Archive' }));
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.threadView_archiveLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again.',
+      m.boardError_genericText(),
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(onArchive).toHaveBeenCalledOnce();

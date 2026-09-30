@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { planFeatureLines, planOffersFeaturedChoice } from './plan-view-model';
 
 const plan = (features: { key: string | null; value: string | null }[]) => ({
@@ -18,9 +19,9 @@ describe('planFeatureLines', () => {
         ]),
       ),
     ).toEqual([
-      'Live for 30 days',
-      'Up to 5 active jobs',
-      'Includes 1 featured post',
+      m.planFeature_liveDays({ days: '30' }),
+      m.planFeature_maxActive({ count: 5, countLabel: '5' }),
+      m.planFeature_featured({ count: 1, countLabel: '1' }),
     ]);
   });
 
@@ -32,7 +33,7 @@ describe('planFeatureLines', () => {
           { key: 'jobs.feature_selection_mode', value: 'auto' },
         ]),
       ),
-    ).toEqual(['Every post is featured']);
+    ).toEqual([m.planFeature_featuredAuto()]);
   });
 
   it('reads unlimited active jobs and singular caps', () => {
@@ -43,10 +44,13 @@ describe('planFeatureLines', () => {
           { key: 'jobs.duration_days', value: '7' },
         ]),
       ),
-    ).toEqual(['Live for 7 days', 'Unlimited active jobs']);
+    ).toEqual([
+      m.planFeature_liveDays({ days: '7' }),
+      m.planFeature_unlimitedActive(),
+    ]);
     expect(
       planFeatureLines(plan([{ key: 'jobs.max_active', value: '1' }])),
-    ).toEqual(['1 active job at a time']);
+    ).toEqual([m.planFeature_maxActive({ count: 1, countLabel: '1' })]);
   });
 
   it('skips unknown keys, malformed values, and null entries', () => {

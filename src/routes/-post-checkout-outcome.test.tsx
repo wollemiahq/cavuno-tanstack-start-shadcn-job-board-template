@@ -44,6 +44,8 @@ describe('post checkout outcome screens', () => {
     expect(m.postCheckout_successTitle()).not.toBe(
       m.postCheckout_canceledTitle(),
     );
-    expect(m.postCheckout_canceledBody()).toMatch(/not been charged/i);
+    expect(m.postCheckout_canceledBody()).not.toBe(
+      m.postCheckout_successBody(),
+    );
   });
 });

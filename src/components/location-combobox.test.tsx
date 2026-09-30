@@ -47,7 +47,10 @@ afterEach(() => {
   cleanup();
 });
 
-const locationInput = () => screen.getByLabelText<HTMLInputElement>('location');
+const locationInput = () =>
+  screen.getByLabelText<HTMLInputElement>(
+    m.locationCombobox_locationAriaLabel(),
+  );
 
 const type = (value: string) => {
   const input = locationInput();
@@ -149,7 +152,7 @@ describe('LocationCombobox — selection and clear write the URL semantics', () 
         onClear={onClear}
       />,
     );
-    const clear = screen.getByLabelText('clear location');
+    const clear = screen.getByLabelText(m.locationCombobox_clearAriaLabel());
     fireEvent.click(clear);
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(locationInput().value).toBe('');

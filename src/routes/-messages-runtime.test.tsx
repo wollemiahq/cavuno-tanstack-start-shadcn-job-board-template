@@ -11,6 +11,7 @@ import {
   type MessagesRuntimeDependencies,
 } from './-messages-runtime';
 
+import { m } from '@/paraglide/messages';
 import type {
   BlockedUser,
   Conversation,
@@ -87,13 +88,21 @@ describe('messaging runtime failures', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.inboxList_loadMoreLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again.',
+      m.boardError_genericText(),
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
-    expect(screen.getByRole('button', { name: 'Load more' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.inboxList_loadMoreLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('announces a failed unblock without removing the blocked user', async () => {
@@ -102,14 +111,22 @@ describe('messaging runtime failures', () => {
     render(
       <BlockedController initial={[blockedUser]} dependencies={dependencies} />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Unblock' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.blockedList_unblockLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again.',
+      m.boardError_genericText(),
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(screen.getByText('Hue Le')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Unblock' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.blockedList_unblockLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('announces when a conversation could not be marked as read', async () => {
@@ -132,7 +149,7 @@ describe('messaging runtime failures', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again.',
+      m.boardError_genericText(),
     );
   });
 

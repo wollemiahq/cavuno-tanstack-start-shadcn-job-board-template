@@ -40,6 +40,9 @@ import {
 import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
+import { containing } from '@/test/text';
+
+/** Matches an accessible name that contains `text` (a label plus a hint). */
 
 const dependencies = mocks satisfies EmployerJobFormDependencies;
 
@@ -294,7 +297,7 @@ describe('EmployerJobForm', () => {
     fireEvent.submit(container.querySelector('form')!);
 
     const retry = await screen.findByRole('button', {
-      name: 'Proceed to secure checkout',
+      name: m.postJob_checkoutButtonLabel(),
     });
     expect(mocks.updateJob).toHaveBeenCalledOnce();
     fireEvent.click(retry);
@@ -496,12 +499,12 @@ describe('EmployerJobForm', () => {
 
       fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
       const box = screen.getByRole('checkbox', {
-        name: /Feature this listing/,
+        name: containing(m.employerCompany_featureListingLabel()),
       });
       expect(box).not.toBeChecked();
       // The plan card already says what the purchase includes; no "left"
       // hint on a plan not yet bought.
-      expect(screen.queryByText(/featured slot/i)).not.toBeInTheDocument();
+      expect(box).toHaveAccessibleName(m.employerCompany_featureListingLabel());
       fireEvent.click(box);
       fireEvent.submit(container.querySelector('form')!);
 
@@ -537,7 +540,9 @@ describe('EmployerJobForm', () => {
 
       fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
       expect(
-        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+        screen.getByRole('checkbox', {
+          name: containing(m.employerCompany_featureListingLabel()),
+        }),
       ).toBeChecked();
       fireEvent.submit(container.querySelector('form')!);
 
@@ -569,7 +574,9 @@ describe('EmployerJobForm', () => {
       for (const name of [/Growth/, /Auto/, /Unset/]) {
         fireEvent.click(screen.getByRole('radio', { name }));
         expect(
-          screen.queryByRole('checkbox', { name: /Feature this listing/ }),
+          screen.queryByRole('checkbox', {
+            name: containing(m.employerCompany_featureListingLabel()),
+          }),
         ).not.toBeInTheDocument();
       }
     });
@@ -584,11 +591,15 @@ describe('EmployerJobForm', () => {
 
       fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
       fireEvent.click(
-        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+        screen.getByRole('checkbox', {
+          name: containing(m.employerCompany_featureListingLabel()),
+        }),
       );
       fireEvent.click(screen.getByRole('radio', { name: /Other/ }));
       expect(
-        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+        screen.getByRole('checkbox', {
+          name: containing(m.employerCompany_featureListingLabel()),
+        }),
       ).not.toBeChecked();
       fireEvent.submit(container.querySelector('form')!);
 
@@ -614,7 +625,9 @@ describe('EmployerJobForm', () => {
 
       fireEvent.click(screen.getByRole('radio', { name: /Single post/ }));
       expect(
-        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+        screen.getByRole('checkbox', {
+          name: containing(m.employerCompany_featureListingLabel()),
+        }),
       ).toBeChecked();
       fireEvent.submit(container.querySelector('form')!);
 
@@ -641,9 +654,13 @@ describe('EmployerJobForm', () => {
 
       fireEvent.click(screen.getByRole('radio', { name: /Unlimited credits/ }));
       expect(
-        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+        screen.getByRole('checkbox', {
+          name: containing(m.employerCompany_featureListingLabel()),
+        }),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Unlimited featured/)).toBeInTheDocument();
+      expect(
+        screen.getByText(m.employerCompany_featuredUnlimitedText()),
+      ).toBeInTheDocument();
     });
 
     it('offers the choice on a reusable credit that still holds featured slots', async () => {
@@ -663,9 +680,18 @@ describe('EmployerJobForm', () => {
       const { container } = await renderDraftEdit([], [option]);
 
       fireEvent.click(screen.getByRole('radio', { name: /Growth credits/ }));
-      expect(screen.getByText(/1 featured slot left/)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          m.employerCompany_featuredSlotsRemaining({
+            count: 1,
+            countLabel: (1).toLocaleString('en-AU'),
+          }),
+        ),
+      ).toBeInTheDocument();
       fireEvent.click(
-        screen.getByRole('checkbox', { name: /Feature this listing/ }),
+        screen.getByRole('checkbox', {
+          name: containing(m.employerCompany_featureListingLabel()),
+        }),
       );
       fireEvent.submit(container.querySelector('form')!);
 
@@ -749,10 +775,14 @@ describe('EmployerJobForm', () => {
     fireEvent.submit(container.querySelector('form')!);
 
     expect(await screen.findByRole('status')).toHaveTextContent(
-      /change was saved/i,
+      m.employerCompany_reconciliationError(),
     );
     expect(mocks.updateJob).toHaveBeenCalledOnce();
-    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerEditJob_saveLabel(),
+      }),
+    ).toBeDisabled();
   });
 
   it('requires a billing choice before a create can publish', async () => {
@@ -774,7 +804,9 @@ describe('EmployerJobForm', () => {
     fireEvent.submit(container.querySelector('form')!);
 
     await waitFor(() =>
-      expect(screen.getByText(/Choose a credit or plan/)).toBeInTheDocument(),
+      expect(
+        screen.getByText(m.employerPostJob_billingRequiredError()),
+      ).toBeInTheDocument(),
     );
     expect(mocks.createJob).not.toHaveBeenCalled();
   });
@@ -795,7 +827,11 @@ describe('EmployerJobForm', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
     expect(mocks.checkoutJob).not.toHaveBeenCalled();
@@ -824,10 +860,14 @@ describe('EmployerJobForm', () => {
     );
 
     expect(
-      screen.queryByRole('button', { name: 'Post job' }),
+      screen.queryByRole('button', {
+        name: m.postJob_submitButtonLabel(),
+      }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: 'Create draft' }),
+      screen.queryByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
     ).not.toBeInTheDocument();
     expect(screen.getByText(m.postJob_noPlansTitle())).toBeInTheDocument();
   });
@@ -848,10 +888,14 @@ describe('EmployerJobForm', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'Post job' }),
+      screen.getByRole('button', {
+        name: m.postJob_submitButtonLabel(),
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Create draft' }),
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
     ).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Single post/ })).toBeChecked();
   });
@@ -1476,7 +1520,11 @@ describe('EmployerJobForm — board custom fields', () => {
       target: { value: 'Platform' },
     });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Gym' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
     const body = mocks.createJob.mock.calls[0]![0].data.body;
@@ -1502,7 +1550,11 @@ describe('EmployerJobForm — board custom fields', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
     const body = mocks.createJob.mock.calls[0]![0].data.body;
@@ -1569,7 +1621,11 @@ describe('EmployerJobForm — board custom fields', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
     const body = mocks.createJob.mock.calls[0]![0].data.body;
@@ -1608,7 +1664,11 @@ describe('EmployerJobForm — board custom fields', () => {
     fireEvent.change(screen.getByLabelText('Team'), {
       target: { value: 'Platform' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     expect(
       await screen.findByText(
@@ -1634,7 +1694,11 @@ describe('EmployerJobForm — board custom fields', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     expect(
       await screen.findByText(
@@ -1833,7 +1897,11 @@ describe('EmployerJobForm — operator form layout', () => {
     mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
     const loadCollectionChoices = await renderCreate();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     expect(
       await screen.findAllByText(
@@ -1848,7 +1916,11 @@ describe('EmployerJobForm — operator form layout', () => {
     });
     fireEvent.click(await screen.findByText('Paid time off'));
     expect(loadCollectionChoices).toHaveBeenCalledWith('benefits', '');
-    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
 
     await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
     const body = mocks.createJob.mock.calls[0]?.[0]?.data.body;

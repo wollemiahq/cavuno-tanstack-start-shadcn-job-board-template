@@ -12,6 +12,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { MessageBubble } from './message-bubble';
 
 import type { Message } from '@cavuno/board';
@@ -36,6 +37,16 @@ const message: Message = {
 
 afterEach(cleanup);
 
+const TIME_MARKER = '\u0000';
+const [seenPrefix = '', seenSuffix = ''] = m
+  .messageBubble_seenText({ time: TIME_MARKER })
+  .split(TIME_MARKER)
+  .map((part) => part.trim());
+const isSeenText = (content: string) =>
+  content.length > seenPrefix.length + seenSuffix.length &&
+  content.startsWith(seenPrefix) &&
+  content.endsWith(seenSuffix);
+
 describe('MessageBubble', () => {
   it('uses the official shadcn message and bubble composition with visible identity', () => {
     render(
@@ -57,7 +68,7 @@ describe('MessageBubble', () => {
       'end',
     );
     expect(screen.getByText('Abi T. Tunggal')).toBeVisible();
-    expect(screen.getByText(/Seen/)).toHaveAttribute(
+    expect(screen.getByText(isSeenText)).toHaveAttribute(
       'data-slot',
       'message-footer',
     );
@@ -85,19 +96,35 @@ describe('MessageBubble', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Message actions' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Report' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.messageBubble_messageActionsAriaLabel(),
+      }),
+    );
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.messageBubble_reportLabel(),
+      }),
+    );
 
     expect(
-      screen.getByText('Report this message').closest('[data-slot="card"]'),
+      screen
+        .getByText(m.messageBubble_reportTitle())
+        .closest('[data-slot="card"]'),
     ).not.toBeNull();
     expect(
-      screen.getByRole('combobox', { name: 'Report this message' }),
+      screen.getByRole('combobox', {
+        name: m.messageBubble_reportTitle(),
+      }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Submit report' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.messageBubble_submitReportLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Please try again.',
+      m.boardError_genericText(),
     );
     expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
     expect(onReport).toHaveBeenCalledWith('spam');
@@ -117,10 +144,22 @@ describe('MessageBubble', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Message actions' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.messageBubble_messageActionsAriaLabel(),
+      }),
+    );
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.messageBubble_editLabel(),
+      }),
+    );
 
-    expect(screen.getByRole('textbox', { name: 'Edit' })).toBeVisible();
+    expect(
+      screen.getByRole('textbox', {
+        name: m.messageBubble_editLabel(),
+      }),
+    ).toBeVisible();
   });
 
   it('hydrates message timestamps when the server and browser use different timezones', async () => {

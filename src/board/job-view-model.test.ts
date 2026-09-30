@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
+import { isLocale } from '../paraglide/runtime';
 import { toJobCardVM, toSavedJobCardVM } from './job-view-model';
 
 import type { PublicJobCard } from '@cavuno/board';
+
+// Catalog options for a viewer language, as the mapper resolves them (a
+// language the build does not compile falls back to the active locale).
+const localeOpt = (language: string) =>
+  isLocale(language) ? { locale: language } : undefined;
+const remoteWorldwide = (language: string) =>
+  m.label_locationRemoteWorldwide({}, localeOpt(language));
 
 /**
  * The card mapper is Layer 1b — it owns the derivations (compLine, honest
@@ -84,7 +93,7 @@ describe('toJobCardVM', () => {
   it('composes locationLabel from the place label and the SDK workplace label', () => {
     // Worldwide remote cards use the catalog's own phrasing (same as the
     // detail header), not a composition around the wire's English word.
-    expect(vm.locationLabel).toBe('Remote (worldwide)');
+    expect(vm.locationLabel).toBe(remoteWorldwide('en'));
   });
 
   it('states when an on-site card is missing its physical location', () => {
@@ -100,7 +109,7 @@ describe('toJobCardVM', () => {
     );
 
     expect(missingLocation.locationLabel).toBe(
-      'Location not specified (On-site)',
+      `${m.jobDetail_locationNotSpecifiedLabel({}, localeOpt('en'))} (${m.label_remoteOnSite({}, localeOpt('en'))})`,
     );
   });
 
@@ -203,9 +212,9 @@ describe('worldwide remote card wording', () => {
       remoteLocationLabel: 'Weltweit',
       locationLabel: 'Weltweit (Remote)',
     } satisfies PublicJobCard;
-    expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
-    // Chrome catalog follows compiled locales; dormant de stays English.
-    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (worldwide)');
+    expect(toJobCardVM(job, 'en').locationLabel).toBe(remoteWorldwide('en'));
+    // Chrome catalog follows compiled locales; a dormant locale falls back.
+    expect(toJobCardVM(job, 'de').locationLabel).toBe(remoteWorldwide('de'));
   });
 
   it('composes a localized region list from permit codes (constrained remote)', () => {
@@ -246,9 +255,9 @@ describe('worldwide remote card wording', () => {
       remoteLocationLabel: 'Worldwide',
       locationLabel: 'Worldwide (Remote)',
     } satisfies PublicJobCard;
-    expect(toJobCardVM(job, 'de').locationLabel).toBe('Remote (worldwide)');
+    expect(toJobCardVM(job, 'de').locationLabel).toBe(remoteWorldwide('de'));
     // Unified with the detail header's catalog phrasing (was the wire's
     // 'Worldwide (Remote)').
-    expect(toJobCardVM(job, 'en').locationLabel).toBe('Remote (worldwide)');
+    expect(toJobCardVM(job, 'en').locationLabel).toBe(remoteWorldwide('en'));
   });
 });

@@ -11,6 +11,7 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { BlogArticleContent } from './blog-article-content';
 
 import type { PublicBlogPost } from '@cavuno/board';
@@ -127,7 +128,7 @@ describe('BlogArticleContent — complete article presentation', () => {
       screen.getByRole('heading', { level: 1, name: post.title }),
     );
 
-    const body = screen.getByLabelText('Article body');
+    const body = screen.getByLabelText(m.blogPost_articleBodyLabel());
     expect(body).toHaveClass('typeset', 'typeset-content');
     expect(body).toHaveTextContent('Record what can change and who decides.');
     const cover = screen.getByRole('img', { name: post.featureImageAlt! });
@@ -187,6 +188,6 @@ describe('BlogArticleContent — complete article presentation', () => {
     expect(
       screen.getByRole('link', { name: 'Back to the blog' }),
     ).toHaveAttribute('href', '/blog');
-    expect(screen.queryByLabelText('Article body')).toBeNull();
+    expect(screen.queryByLabelText(m.blogPost_articleBodyLabel())).toBeNull();
   });
 });

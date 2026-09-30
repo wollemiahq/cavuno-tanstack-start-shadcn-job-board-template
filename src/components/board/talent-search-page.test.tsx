@@ -26,6 +26,13 @@ import { toTalentCardVM } from '@/board/talent-view-model';
 import { m } from '@/paraglide/messages';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
+const showingRange = (from: number, to: number, count: number) =>
+  m.talentSearch_resultsShowingRange({
+    from: String(from),
+    to: String(to),
+    count: String(count),
+  });
+
 const candidate = {
   object: 'talent_directory_entry',
   id: 'bu_ada-lovelace',
@@ -110,27 +117,35 @@ describe('TalentSearchPage — search results pattern', () => {
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Candidates',
+      m.talentSearch_resultsHeading(),
     );
-    expect(screen.queryByRole('searchbox', { name: /candidate/i })).toBeNull();
+    expect(screen.queryByRole('searchbox')).toBeNull();
     const filterBar = container.querySelector(
       "[data-slot='talent-filter-bar']",
     );
     expect(filterBar).not.toBeNull();
-    expect(filterBar?.textContent ?? '').not.toMatch(/Name or headline/i);
+    expect(filterBar?.textContent ?? '').not.toContain(
+      m.talentFilters_queryPlaceholder(),
+    );
     expect(filterBar?.querySelector('[type="search"]')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Lists' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: m.talentLists_listsHeading() }),
+    ).toBeNull();
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).not.toBeNull();
 
-    const results = screen.getByRole('region', { name: 'Talent results' });
+    const results = screen.getByRole('region', {
+      name: m.talentSearch_resultsRegionLabel(),
+    });
     expect(results.querySelector("[data-slot='talent-filter-bar']")).toBeNull();
     expect(
       within(results).getByRole('link', { name: /Ada Lovelace/i }),
     ).toHaveAttribute('href', '/p/ada-lovelace');
     expect(
-      screen.getByRole('region', { name: 'Selected profile' }),
+      screen.getByRole('region', {
+        name: m.talentSearch_selectedProfileRegionLabel(),
+      }),
     ).toHaveTextContent('Selected profile details');
     expect(
       screen.getByRole('complementary', { name: 'Sponsored start' }),
@@ -150,7 +165,7 @@ describe('TalentSearchPage — search results pattern', () => {
       name: `${m.pagination_ariaLabel()} 2`,
     });
     expect(pageTwo).toHaveAttribute('href', '/?page=2');
-    expect(screen.queryByText('Load more')).toBeNull();
+    expect(screen.queryByText(m.talentDirectory_loadMoreLabel())).toBeNull();
 
     fireEvent.click(pageTwo);
     expect(onPageChange).toHaveBeenCalledWith(2);
@@ -186,16 +201,13 @@ describe('TalentSearchPage — search results pattern', () => {
     });
     const { container } = render(<RouterProvider router={router} />);
 
-    expect(
-      await screen.findByText('No candidates match these filters.'),
-    ).toBeVisible();
+    expect(await screen.findByText(m.talentSearch_noMatchText())).toBeVisible();
     expect(
       container.querySelector("[data-slot='talent-filter-bar']"),
     ).not.toBeNull();
-    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
-      'href',
-      '/talent',
-    );
+    expect(
+      screen.getByRole('link', { name: m.jobSearch_resetFiltersAction() }),
+    ).toHaveAttribute('href', '/talent');
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).toBeInTheDocument();
@@ -274,9 +286,7 @@ describe('TalentSearchPage — results description line', () => {
       pageSize: 24,
     });
 
-    expect(
-      await screen.findByText('Showing 1–24 of 50 candidates'),
-    ).toBeVisible();
+    expect(await screen.findByText(showingRange(1, 24, 50))).toBeVisible();
     expect(screen.queryByText(/more available/)).toBeNull();
   });
 
@@ -288,9 +298,7 @@ describe('TalentSearchPage — results description line', () => {
       pageSize: 24,
     });
 
-    expect(
-      await screen.findByText('Showing 49–50 of 50 candidates'),
-    ).toBeVisible();
+    expect(await screen.findByText(showingRange(49, 50, 50))).toBeVisible();
   });
 });
 

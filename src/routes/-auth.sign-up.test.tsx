@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
 const mocks = {
@@ -75,11 +76,15 @@ describe('/auth/sign-up search contract', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Continue with Google' }),
+      screen.getByRole('button', {
+        name: m.authSignIn_continueWithGoogleLabel(),
+      }),
     );
     await screen.findByRole('alert');
     fireEvent.click(
-      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+      screen.getByRole('button', {
+        name: m.authSignIn_continueWithLinkedinLabel(),
+      }),
     );
 
     expect(mocks.getOAuthAuthorizationUrl).toHaveBeenNthCalledWith(1, {
@@ -109,19 +114,23 @@ describe('/auth/sign-up search contract', () => {
         invalidate={mocks.invalidate}
       />,
     );
-    fireEvent.change(screen.getByLabelText('Name'), {
+    fireEvent.change(screen.getByLabelText(m.authSignUp_nameLabel()), {
       target: { value: 'Ada Lovelace' },
     });
-    fireEvent.change(screen.getByLabelText('Email'), {
+    fireEvent.change(screen.getByLabelText(m.authSignUp_emailLabel()), {
       target: { value: 'ada@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText(m.authSignUp_passwordLabel()), {
       target: { value: 'correct-horse' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authSignUp_submitLabel(),
+      }),
+    );
 
     const action = await screen.findByRole('link', {
-      name: 'Go to my account',
+      name: m.authSignUp_goToAccountLabel(),
     });
     expect(action.getAttribute('href')).toBe(
       buildVerifyEmailRedirectPath(returnTo),

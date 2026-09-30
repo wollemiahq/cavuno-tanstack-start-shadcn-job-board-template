@@ -18,6 +18,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { TalentSearchResultDetail } from './talent-search-result-detail';
 import { profileVm } from './talent-ui-test-fixtures';
 
@@ -113,7 +114,9 @@ describe('TalentSearchResultDetail', () => {
       '/auth/sign-in?returnTo=%2Ftalent',
     );
     expect(
-      within(actions).queryByRole('link', { name: 'View profile' }),
+      within(actions).queryByRole('link', {
+        name: m.talentSearch_viewProfileLabel(),
+      }),
     ).toBeNull();
   });
 
@@ -149,7 +152,9 @@ describe('TalentSearchResultDetail', () => {
       container.querySelector("[data-slot='talent-detail-actions']"),
     ).toBeNull();
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.talentSearch_viewProfileLabel() }),
+    ).toBeNull();
   });
 
   it('starts a conversation by handle and hands off to the returned thread', async () => {
@@ -169,16 +174,22 @@ describe('TalentSearchResultDetail', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Message' }));
     expect(
-      await screen.findByRole('heading', { name: 'Message Ada Lovelace' }),
+      await screen.findByRole('heading', {
+        name: m.talentMessage_title({ name: 'Ada Lovelace' }),
+      }),
     ).toBeVisible();
     fireEvent.change(
-      await screen.findByRole('textbox', { name: 'Send a message' }),
+      await screen.findByRole('textbox', {
+        name: m.composer_placeholderText(),
+      }),
       {
         target: { value: '  Your work looks like a great fit.  ' },
       },
     );
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Send message' }),
+      await screen.findByRole('button', {
+        name: m.composer_sendAriaLabel(),
+      }),
     );
 
     await waitFor(() =>
@@ -206,7 +217,9 @@ describe('TalentSearchResultDetail', () => {
     expect(
       container.querySelector("[data-slot='talent-detail-actions']"),
     ).toBeNull();
-    expect(screen.queryByRole('link', { name: 'View profile' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.talentSearch_viewProfileLabel() }),
+    ).toBeNull();
     expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
     // A read-only placeholder exposes no navigable name link either.
     expect(screen.queryByRole('link', { name: 'Ada Lovelace' })).toBeNull();
@@ -267,7 +280,9 @@ describe('TalentSearchResultDetail', () => {
     ).toHaveAttribute('href', '/auth/sign-in?returnTo=%2Ftalent');
     // The "View profile" button is gone from the pane; the name is the link.
     expect(
-      within(compact).queryByRole('link', { name: 'View profile' }),
+      within(compact).queryByRole('link', {
+        name: m.talentSearch_viewProfileLabel(),
+      }),
     ).toBeNull();
   });
 });

@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { MailAppLinks } from './mail-app-links';
 
 afterEach(cleanup);
@@ -13,11 +14,11 @@ describe('MailAppLinks', () => {
     render(<MailAppLinks />);
 
     const expected = [
-      ['Open Gmail', 'https://mail.google.com/'],
-      ['Open Outlook', 'https://outlook.live.com/mail/'],
-      ['Open Yahoo Mail', 'https://mail.yahoo.com/'],
-      ['Open iCloud Mail', 'https://www.icloud.com/mail'],
-      ['Open Proton Mail', 'https://mail.proton.me/'],
+      [m.authSignIn_openGmailLabel(), 'https://mail.google.com/'],
+      [m.authSignIn_openOutlookLabel(), 'https://outlook.live.com/mail/'],
+      [m.authSignIn_openYahooLabel(), 'https://mail.yahoo.com/'],
+      [m.authSignIn_openIcloudLabel(), 'https://www.icloud.com/mail'],
+      [m.authSignIn_openProtonLabel(), 'https://mail.proton.me/'],
     ] as const;
 
     const links = screen.getAllByRole('link');

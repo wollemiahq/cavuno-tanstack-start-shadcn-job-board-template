@@ -88,7 +88,7 @@ describe('ProfileForm country', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Country'), {
+    fireEvent.change(screen.getByLabelText(m.profileForm_countryLabel()), {
       target: { value: 'AU' },
     });
     fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);

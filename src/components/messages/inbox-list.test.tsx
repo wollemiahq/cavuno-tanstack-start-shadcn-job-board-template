@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { InboxList } from './inbox-list';
 
 import type { Conversation } from '@cavuno/board';
@@ -46,7 +47,9 @@ describe('InboxList', () => {
 
     const row = screen.getByRole('button', { name: /Hue Le · Cavuno/ });
     expect(row).toHaveAttribute('aria-current', 'true');
-    expect(screen.getByLabelText('Unread')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(m.inboxList_unreadAriaLabel()),
+    ).toBeInTheDocument();
 
     fireEvent.click(row);
     expect(onSelect).toHaveBeenCalledWith(conversation.id);

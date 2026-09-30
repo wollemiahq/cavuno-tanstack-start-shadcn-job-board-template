@@ -178,7 +178,9 @@ describe('settings unsubscribe recovery', () => {
   it('returns an expired-link recipient to settings after sign in', async () => {
     await renderSettingsData({ mode: 'unsubscribe-failed' });
 
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+    expect(
+      screen.getByRole('link', { name: m.settings_signInLabel() }),
+    ).toHaveAttribute(
       'href',
       `/auth/sign-in?returnTo=${encodeURIComponent('/settings')}`,
     );

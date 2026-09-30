@@ -11,9 +11,20 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { MembershipPostGate } from './membership-post-gate';
 
 afterEach(cleanup);
+
+const becomeMember = { name: m.postGate_becomeMemberLabel() };
+const signIn = { name: m.postGate_signInLabel() };
+const postAsCompany = { name: m.postGate_postAsCompanyLabel() };
+// The email-free wording of the contact invite, for asserting its absence.
+const contactInvite = m
+  .postGate_contactText({ email: '\u0000' })
+  .split('\u0000')
+  .reduce((longest, part) => (part.length > longest.length ? part : longest))
+  .trim();
 
 type GateProps = React.ComponentProps<typeof MembershipPostGate>;
 
@@ -60,10 +71,11 @@ describe('MembershipPostGate', () => {
   it('offers a signed-out visitor both roads, returning to the gated surface', async () => {
     await renderGate({ boardName: 'Example Jobs', hasMembershipPage: true });
 
-    expect(
-      screen.getByRole('link', { name: 'Become a member' }),
-    ).toHaveAttribute('href', '/memberships');
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+    expect(screen.getByRole('link', becomeMember)).toHaveAttribute(
+      'href',
+      '/memberships',
+    );
+    expect(screen.getByRole('link', signIn)).toHaveAttribute(
       'href',
       '/auth/sign-in?returnTo=%2Fpost',
     );
@@ -72,8 +84,8 @@ describe('MembershipPostGate', () => {
   it('makes sign in the only road when the board publishes no membership plan', async () => {
     await renderGate({ boardName: 'Example Jobs' });
 
-    expect(screen.queryByRole('link', { name: 'Become a member' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+    expect(screen.queryByRole('link', becomeMember)).toBeNull();
+    expect(screen.getByRole('link', signIn)).toHaveAttribute(
       'href',
       '/auth/sign-in?returnTo=%2Fpost',
     );
@@ -86,11 +98,12 @@ describe('MembershipPostGate', () => {
       hasMembershipPage: true,
     });
 
-    expect(
-      screen.getByRole('link', { name: 'Post from your company dashboard' }),
-    ).toHaveAttribute('href', '/employers/dashboard');
-    expect(screen.getByRole('link', { name: 'Become a member' })).toBeVisible();
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(screen.getByRole('link', postAsCompany)).toHaveAttribute(
+      'href',
+      '/employers/dashboard',
+    );
+    expect(screen.getByRole('link', becomeMember)).toBeVisible();
+    expect(screen.queryByRole('link', signIn)).toBeNull();
   });
 
   it('hides the company-workspace road when the visitor is already there', async () => {
@@ -101,20 +114,19 @@ describe('MembershipPostGate', () => {
       showCompanyWorkspaceLink: false,
     });
 
-    expect(
-      screen.queryByRole('link', { name: 'Post from your company dashboard' }),
-    ).toBeNull();
-    expect(screen.getByRole('link', { name: 'Become a member' })).toBeVisible();
+    expect(screen.queryByRole('link', postAsCompany)).toBeNull();
+    expect(screen.getByRole('link', becomeMember)).toBeVisible();
   });
 
   it('hides become-a-member for a signed-in viewer when /memberships would 404', async () => {
     await renderGate({ boardName: 'Example Jobs', signedIn: true });
 
-    expect(
-      screen.getByRole('link', { name: 'Post from your company dashboard' }),
-    ).toHaveAttribute('href', '/employers/dashboard');
-    expect(screen.queryByRole('link', { name: 'Become a member' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(screen.getByRole('link', postAsCompany)).toHaveAttribute(
+      'href',
+      '/employers/dashboard',
+    );
+    expect(screen.queryByRole('link', becomeMember)).toBeNull();
+    expect(screen.queryByRole('link', signIn)).toBeNull();
   });
 
   it('invites the visitor to email for access when the board publishes an address', async () => {
@@ -124,13 +136,17 @@ describe('MembershipPostGate', () => {
     });
 
     expect(
-      screen.getByText('Need access? Email members@example.com.'),
+      screen.getByText(
+        m.postGate_contactText({ email: 'members@example.com' }),
+      ),
     ).toBeVisible();
   });
 
   it('says nothing about email when the board publishes no address', async () => {
     await renderGate({ boardName: 'Example Jobs' });
 
-    expect(screen.queryByText(/Need access/)).toBeNull();
+    expect(
+      screen.queryByText((content) => content.includes(contactInvite)),
+    ).toBeNull();
   });
 });

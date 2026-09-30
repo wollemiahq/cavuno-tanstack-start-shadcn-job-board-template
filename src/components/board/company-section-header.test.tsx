@@ -30,7 +30,10 @@ import {
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { CompanySectionShell } from './company-section-header';
+
+import { containing } from '@/test/text';
 
 beforeEach(() => {
   // The band's decorative DitherCanvas asks for a 2D context; jsdom has none,
@@ -83,7 +86,12 @@ function renderShell(props: ShellProps) {
 }
 
 const tabNav = () =>
-  screen.getByRole('navigation', { name: 'Company sections' });
+  screen.getByRole('navigation', { name: m.companyTabs_navLabel() });
+
+/** Matches an accessible name that contains the catalog label (tab + badge). */
+const overviewTab = containing(m.companyTabs_overview());
+const jobsTab = containing(m.companyTabs_jobs());
+const salariesTab = containing(m.companyTabs_salaries());
 describe('CompanySectionShell — trail locates the entity, tabs navigate within it', () => {
   it('renders the company name as the H1 and the platform summary as the one-liner', async () => {
     renderShell(baseProps);
@@ -116,18 +124,18 @@ describe('CompanySectionShell — tabs are the crawlable section-nav spine', () 
 
     // Active = Overview → an unlinked aria-current label, not an anchor.
     expect(
-      within(tabNav()).queryByRole('link', { name: /Overview/ }),
+      within(tabNav()).queryByRole('link', { name: overviewTab }),
     ).toBeNull();
     const active = tabNav().querySelector('[aria-current="page"]');
-    expect(active?.textContent).toContain('Overview');
+    expect(active?.textContent).toContain(m.companyTabs_overview());
     expect(active?.tagName).not.toBe('A');
 
     // The other two sections are genuine crawlable anchors.
-    const jobs = within(tabNav()).getByRole('link', { name: /Jobs/ });
+    const jobs = within(tabNav()).getByRole('link', { name: jobsTab });
     expect(jobs.tagName).toBe('A');
     expect(jobs.getAttribute('href')).toBe('/companies/anduril/jobs');
 
-    const salaries = within(tabNav()).getByRole('link', { name: /Salaries/ });
+    const salaries = within(tabNav()).getByRole('link', { name: salariesTab });
     expect(salaries.getAttribute('href')).toBe('/companies/anduril/salaries');
   });
 
@@ -135,15 +143,15 @@ describe('CompanySectionShell — tabs are the crawlable section-nav spine', () 
     renderShell({ ...baseProps, activeSection: 'jobs' });
     await screen.findByRole('heading', { level: 1 });
 
-    expect(within(tabNav()).queryByRole('link', { name: /Jobs/ })).toBeNull();
+    expect(within(tabNav()).queryByRole('link', { name: jobsTab })).toBeNull();
     expect(
       within(tabNav())
-        .getByRole('link', { name: /Overview/ })
+        .getByRole('link', { name: overviewTab })
         .getAttribute('href'),
     ).toBe('/companies/anduril');
     expect(
       within(tabNav())
-        .getByRole('link', { name: /Salaries/ })
+        .getByRole('link', { name: salariesTab })
         .getAttribute('href'),
     ).toBe('/companies/anduril/salaries');
   });
@@ -159,9 +167,9 @@ describe('CompanySectionShell — Salaries gates on real data', () => {
   it('hides the Salaries tab when the company has no salary data', async () => {
     renderShell({ ...baseProps, hasSalaries: false });
     await screen.findByRole('heading', { level: 1 });
-    expect(within(tabNav()).queryByText('Salaries')).toBeNull();
+    expect(within(tabNav()).queryByText(m.companyTabs_salaries())).toBeNull();
     // Overview + Jobs still render.
-    expect(within(tabNav()).getByRole('link', { name: /Jobs/ })).toBeTruthy();
+    expect(within(tabNav()).getByRole('link', { name: jobsTab })).toBeTruthy();
   });
 });
 
@@ -171,7 +179,9 @@ describe('CompanySectionShell — shared section header', () => {
     const heading = await screen.findByRole('heading', { level: 1 });
     const content = screen.getByTestId('section-content');
 
-    expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
+    expect(
+      screen.queryByRole('navigation', { name: m.ui_breadcrumbLabel() }),
+    ).toBeNull();
     expect(
       heading.compareDocumentPosition(content) &
         Node.DOCUMENT_POSITION_FOLLOWING,
