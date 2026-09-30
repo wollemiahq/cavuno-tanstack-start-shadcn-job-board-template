@@ -7,6 +7,8 @@ dist-ssr
 .nitro
 .tanstack
 .wrangler
+# Builder working state (job logs, caches); never part of the app.
+.builder/
 .output
 .vinxi
 __unconfig*

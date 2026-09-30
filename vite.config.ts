@@ -17,15 +17,34 @@ import { resolve } from 'node:path';
 import type { OxlintConfig } from 'oxlint';
 import type { ConfigEnv, Plugin } from 'vite';
 
-const previewServer =
+/**
+ * Tool state kept inside the project root that is not part of the app.
+ *
+ * Tailwind scans every file under the root that git does not ignore and
+ * registers each one with Vite. When such a file changes and no module
+ * imports it, Tailwind's dev plugin sends a full reload to the browser and
+ * to the SSR runner (`[vite] program reload`). The builder writes its own
+ * state under `.builder/` while it works (job state and logs, caches), so
+ * each write reloaded the preview: 40 writes and 10 reloads for one copy
+ * edit (2026-09-30), and a background job that rewrites its state every
+ * second kept a preview reloading for as long as it ran.
+ *
+ * `.builder/` is also in `.gitignore`, which stops the scan; ignoring it
+ * here stops the change events reaching any plugin at all. `.wrangler/state`
+ * is the local Worker's cache and storage, rewritten on every request.
+ */
+const devWatch = { ignored: ['**/.builder/**', '**/.wrangler/state/**'] };
+
+const devServer =
   process.env.CAVUNO_PREVIEW_PROXIED === '1'
     ? {
         // The sandbox preserves the public Host on WebSocket upgrades.
         // Vite validates that host before accepting the HMR connection.
         allowedHosts: ['.preview.cavuno.com', '.preview-dev.cavuno.com'],
         hmr: { protocol: 'wss' as const, clientPort: 443 },
+        watch: devWatch,
       }
-    : undefined;
+    : { watch: devWatch };
 
 const antiSlopLint = {
   ignorePatterns: [
@@ -308,8 +327,9 @@ function viteConfig(command: ConfigEnv['command']) {
     // per-session preview hostname it was loaded from, and the sandbox
     // host passes WebSocket upgrades through to vite untouched.
     // Gated on the env var the builder's /serve command sets so local
-    // `npm run dev` keeps vite's defaults.
-    server: previewServer,
+    // `npm run dev` keeps vite's defaults. Both keep tool state out of the
+    // file watcher (see `devWatch`).
+    server: devServer,
     // Boot time. The builder's readiness probe and a preview's first view
     // SSR `/` in workerd, whose module runner pulls the graph one import at
     // a time; warming the SSR entry and the landing routes starts that work
