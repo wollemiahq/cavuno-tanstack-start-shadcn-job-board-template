@@ -42,8 +42,6 @@ import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
 import { containing, normalized } from '@/test/text';
 
-/** Matches an accessible name that contains `text` (a label plus a hint). */
-
 const dependencies = mocks satisfies EmployerJobFormDependencies;
 
 async function renderWithRouter(node: React.ReactNode) {
