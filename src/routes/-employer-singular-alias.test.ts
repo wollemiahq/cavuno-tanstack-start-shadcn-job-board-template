@@ -1,8 +1,10 @@
 import { isRedirect } from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
 
+import { Route as ApplicantsAliasRoute } from './employer.$slug.jobs.$jobId.applicants';
 import { Route as StripeSuccessRoute } from './employer.$slug.jobs.index';
 import { Route as StripeBackRoute } from './employer.$slug.jobs.new';
+import { Route as DashboardAliasRoute } from './employer.index';
 import { Route as InviteAliasRoute } from './employer.invites.accept';
 
 function location(pathname: string, searchStr: string) {
@@ -98,6 +100,59 @@ function runStripeSuccessBeforeLoad(pathname: string, searchStr: string) {
   }
 }
 
+function runDashboardBeforeLoad(pathname: string, searchStr: string) {
+  const beforeLoad = DashboardAliasRoute.options.beforeLoad;
+  if (!beforeLoad) throw new Error('dashboard alias needs beforeLoad');
+  try {
+    return beforeLoad({
+      abortController: new AbortController(),
+      preload: false,
+      params: {},
+      search: {},
+      context: { origin: 'https://careers.acme.test' },
+      location: location(pathname, searchStr),
+      navigate: () => {
+        throw new Error('alias beforeLoad must redirect declaratively');
+      },
+      buildLocation: () => {
+        throw new Error('alias beforeLoad must not build a location');
+      },
+      cause: 'enter',
+      matches: [],
+      routeId: '/employer/',
+    });
+  } catch (error) {
+    return error;
+  }
+}
+
+function runApplicantsBeforeLoad(pathname: string, searchStr: string) {
+  const beforeLoad = ApplicantsAliasRoute.options.beforeLoad;
+  if (!beforeLoad) throw new Error('applicants alias needs beforeLoad');
+  const [, , slug = '', , jobId = ''] = pathname.split('/');
+  try {
+    return beforeLoad({
+      abortController: new AbortController(),
+      preload: false,
+      params: { slug, jobId },
+      search: {},
+      context: { origin: 'https://careers.acme.test' },
+      location: location(pathname, searchStr),
+      navigate: () => {
+        throw new Error('alias beforeLoad must redirect declaratively');
+      },
+      buildLocation: () => {
+        throw new Error('alias beforeLoad must not build a location');
+      },
+      cause: 'enter',
+      matches: [],
+      routeId: '/employer/$slug/jobs/$jobId/applicants',
+    });
+  } catch (error) {
+    return error;
+  }
+}
+
 describe('/employer singular aliases', () => {
   it('308s invite accept onto /employers/invites/accept with the token', () => {
     const result = runInviteBeforeLoad(
@@ -108,6 +163,29 @@ describe('/employer singular aliases', () => {
     if (!isRedirect(result)) return;
     expect(result.options).toMatchObject({
       href: '/employers/invites/accept?token=tok-1',
+      statusCode: 308,
+    });
+  });
+
+  it('308s the approval email dashboard link onto /employers/dashboard', () => {
+    const result = runDashboardBeforeLoad('/employer', '');
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    expect(result.options).toMatchObject({
+      href: '/employers/dashboard',
+      statusCode: 308,
+    });
+  });
+
+  it('308s the new-application email link onto the applicant pipeline', () => {
+    const result = runApplicantsBeforeLoad(
+      '/employer/acme/jobs/job-1/applicants',
+      '',
+    );
+    expect(isRedirect(result)).toBe(true);
+    if (!isRedirect(result)) return;
+    expect(result.options).toMatchObject({
+      href: '/employers/companies/acme/jobs/job-1/applicants',
       statusCode: 308,
     });
   });

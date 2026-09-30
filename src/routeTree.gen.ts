@@ -36,6 +36,7 @@ import { Route as TalentIndexRouteImport } from './routes/talent.index'
 import { Route as SalariesIndexRouteImport } from './routes/salaries.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as EmployersIndexRouteImport } from './routes/employers.index'
+import { Route as EmployerIndexRouteImport } from './routes/employer.index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
@@ -105,6 +106,7 @@ import { Route as CompaniesCompanySlugSalariesCategorySlugRouteImport } from './
 import { Route as CompaniesCompanySlugJobsJobSlugRouteImport } from './routes/companies.$companySlug.jobs.$jobSlug'
 import { Route as JobsLocationsLocationSkillsSkillRouteImport } from './routes/jobs.locations.$location.skills.$skill'
 import { Route as EmployersCompaniesSlugJobsNewRouteImport } from './routes/employers.companies.$slug.jobs.new'
+import { Route as EmployerSlugJobsJobIdApplicantsRouteImport } from './routes/employer.$slug.jobs.$jobId.applicants'
 import { Route as CompaniesCompanySlugJobsJobSlugOgRouteImport } from './routes/companies.$companySlug.jobs.$jobSlug.og'
 import { Route as EmployersCompaniesSlugJobsJobIdEditRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.edit'
 import { Route as EmployersCompaniesSlugJobsJobIdApplicantsRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.applicants'
@@ -242,6 +244,11 @@ const JobsIndexRoute = JobsIndexRouteImport.update({
 const EmployersIndexRoute = EmployersIndexRouteImport.update({
   id: '/employers/',
   path: '/employers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerIndexRoute = EmployerIndexRouteImport.update({
+  id: '/employer/',
+  path: '/employer/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
@@ -610,6 +617,12 @@ const EmployersCompaniesSlugJobsNewRoute =
     path: '/employers/companies/$slug/jobs/new',
     getParentRoute: () => rootRouteImport,
   } as any)
+const EmployerSlugJobsJobIdApplicantsRoute =
+  EmployerSlugJobsJobIdApplicantsRouteImport.update({
+    id: '/employer/$slug/jobs/$jobId/applicants',
+    path: '/employer/$slug/jobs/$jobId/applicants',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CompaniesCompanySlugJobsJobSlugOgRoute =
   CompaniesCompanySlugJobsJobSlugOgRouteImport.update({
     id: '/og',
@@ -684,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
+  '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
@@ -725,6 +739,7 @@ export interface FileRoutesByFullPath {
   '/salaries/skills/$slug/': typeof SalariesSkillsSlugIndexRoute
   '/salaries/titles/$slug/': typeof SalariesTitlesSlugIndexRoute
   '/companies/$companySlug/jobs/$jobSlug/og': typeof CompaniesCompanySlugJobsJobSlugOgRoute
+  '/employer/$slug/jobs/$jobId/applicants': typeof EmployerSlugJobsJobIdApplicantsRoute
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -785,6 +800,7 @@ export interface FileRoutesByTo {
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog': typeof BlogIndexRoute
   '/companies': typeof CompaniesIndexRoute
+  '/employer': typeof EmployerIndexRoute
   '/employers': typeof EmployersIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/salaries': typeof SalariesIndexRoute
@@ -826,6 +842,7 @@ export interface FileRoutesByTo {
   '/salaries/skills/$slug': typeof SalariesSkillsSlugIndexRoute
   '/salaries/titles/$slug': typeof SalariesTitlesSlugIndexRoute
   '/companies/$companySlug/jobs/$jobSlug/og': typeof CompaniesCompanySlugJobsJobSlugOgRoute
+  '/employer/$slug/jobs/$jobId/applicants': typeof EmployerSlugJobsJobIdApplicantsRoute
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -887,6 +904,7 @@ export interface FileRoutesById {
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
+  '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
@@ -928,6 +946,7 @@ export interface FileRoutesById {
   '/salaries/skills/$slug/': typeof SalariesSkillsSlugIndexRoute
   '/salaries/titles/$slug/': typeof SalariesTitlesSlugIndexRoute
   '/companies/$companySlug/jobs/$jobSlug/og': typeof CompaniesCompanySlugJobsJobSlugOgRoute
+  '/employer/$slug/jobs/$jobId/applicants': typeof EmployerSlugJobsJobIdApplicantsRoute
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -990,6 +1009,7 @@ export interface FileRouteTypes {
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
+    | '/employer/'
     | '/employers/'
     | '/jobs/'
     | '/salaries/'
@@ -1031,6 +1051,7 @@ export interface FileRouteTypes {
     | '/salaries/skills/$slug/'
     | '/salaries/titles/$slug/'
     | '/companies/$companySlug/jobs/$jobSlug/og'
+    | '/employer/$slug/jobs/$jobId/applicants'
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1091,6 +1112,7 @@ export interface FileRouteTypes {
     | '/sitemap/$file'
     | '/blog'
     | '/companies'
+    | '/employer'
     | '/employers'
     | '/jobs'
     | '/salaries'
@@ -1132,6 +1154,7 @@ export interface FileRouteTypes {
     | '/salaries/skills/$slug'
     | '/salaries/titles/$slug'
     | '/companies/$companySlug/jobs/$jobSlug/og'
+    | '/employer/$slug/jobs/$jobId/applicants'
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1192,6 +1215,7 @@ export interface FileRouteTypes {
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
+    | '/employer/'
     | '/employers/'
     | '/jobs/'
     | '/salaries/'
@@ -1233,6 +1257,7 @@ export interface FileRouteTypes {
     | '/salaries/skills/$slug/'
     | '/salaries/titles/$slug/'
     | '/companies/$companySlug/jobs/$jobSlug/og'
+    | '/employer/$slug/jobs/$jobId/applicants'
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1293,6 +1318,7 @@ export interface RootRouteChildren {
   SitemapFileRoute: typeof SitemapFileRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
+  EmployerIndexRoute: typeof EmployerIndexRoute
   EmployersIndexRoute: typeof EmployersIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   SalariesIndexRoute: typeof SalariesIndexRoute
@@ -1332,6 +1358,7 @@ export interface RootRouteChildren {
   SalariesLocationsSlugIndexRoute: typeof SalariesLocationsSlugIndexRoute
   SalariesSkillsSlugIndexRoute: typeof SalariesSkillsSlugIndexRoute
   SalariesTitlesSlugIndexRoute: typeof SalariesTitlesSlugIndexRoute
+  EmployerSlugJobsJobIdApplicantsRoute: typeof EmployerSlugJobsJobIdApplicantsRoute
   EmployersCompaniesSlugJobsNewRoute: typeof EmployersCompaniesSlugJobsNewRoute
   JobsLocationsLocationSkillsSkillRoute: typeof JobsLocationsLocationSkillsSkillRoute
   EmployersCompaniesSlugJobsJobIdApplicantsRoute: typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -1527,6 +1554,13 @@ declare module '@tanstack/react-router' {
       path: '/employers'
       fullPath: '/employers/'
       preLoaderRoute: typeof EmployersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/': {
+      id: '/employer/'
+      path: '/employer'
+      fullPath: '/employer/'
+      preLoaderRoute: typeof EmployerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies/': {
@@ -2012,6 +2046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployersCompaniesSlugJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/$slug/jobs/$jobId/applicants': {
+      id: '/employer/$slug/jobs/$jobId/applicants'
+      path: '/employer/$slug/jobs/$jobId/applicants'
+      fullPath: '/employer/$slug/jobs/$jobId/applicants'
+      preLoaderRoute: typeof EmployerSlugJobsJobIdApplicantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/companies/$companySlug/jobs/$jobSlug/og': {
       id: '/companies/$companySlug/jobs/$jobSlug/og'
       path: '/og'
@@ -2129,6 +2170,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapFileRoute: SitemapFileRoute,
   BlogIndexRoute: BlogIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
+  EmployerIndexRoute: EmployerIndexRoute,
   EmployersIndexRoute: EmployersIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   SalariesIndexRoute: SalariesIndexRoute,
@@ -2172,6 +2214,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalariesLocationsSlugIndexRoute: SalariesLocationsSlugIndexRoute,
   SalariesSkillsSlugIndexRoute: SalariesSkillsSlugIndexRoute,
   SalariesTitlesSlugIndexRoute: SalariesTitlesSlugIndexRoute,
+  EmployerSlugJobsJobIdApplicantsRoute: EmployerSlugJobsJobIdApplicantsRoute,
   EmployersCompaniesSlugJobsNewRoute: EmployersCompaniesSlugJobsNewRoute,
   JobsLocationsLocationSkillsSkillRoute: JobsLocationsLocationSkillsSkillRoute,
   EmployersCompaniesSlugJobsJobIdApplicantsRoute:
