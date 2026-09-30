@@ -40,7 +40,7 @@ import {
 import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import { m } from '@/paraglide/messages';
-import { containing } from '@/test/text';
+import { containing, normalized } from '@/test/text';
 
 /** Matches an accessible name that contains `text` (a label plus a hint). */
 
@@ -1156,7 +1156,7 @@ describe('EmployerJobForm — narrowing applied AFTER a job was posted', () => {
     const { container } = await renderNarrowed(jobForm);
     fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
     fireEvent.submit(container.querySelector('form')!);
-    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(await screen.findByText(normalized(text))).toBeInTheDocument();
     expect(mocks.updateJob).not.toHaveBeenCalled();
   }
 
@@ -1248,7 +1248,9 @@ describe('EmployerJobForm — office-location country lock', () => {
 
     expect(
       await screen.findByText(
-        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'FR' }),
+        normalized(
+          m.jobForm_officeLocationCountryNotAllowedError({ countries: 'FR' }),
+        ),
       ),
     ).toBeInTheDocument();
     expect(mocks.updateJob).not.toHaveBeenCalled();
@@ -1293,7 +1295,9 @@ describe('EmployerJobForm — office-location country lock', () => {
 
     expect(
       await screen.findByText(
-        m.jobForm_officeLocationCountryNotAllowedError({ countries: 'DE' }),
+        normalized(
+          m.jobForm_officeLocationCountryNotAllowedError({ countries: 'DE' }),
+        ),
       ),
     ).toBeInTheDocument();
     // Berlin (the fixture's own location) is still the only tag.

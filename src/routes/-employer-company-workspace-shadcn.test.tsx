@@ -61,6 +61,7 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 import type { CompanyJobsSearch } from '../lib/company-jobs-search';
+import { normalized } from '@/test/text';
 
 const pipelineActions = {
   moveApplicant: vi.fn<PipelineActions['moveApplicant']>(),
@@ -657,7 +658,7 @@ describe('employer company workspace', () => {
 
     // The joined figures fill in once the deferred stats resolve, formatted.
     expect(
-      await screen.findByText((1234).toLocaleString(getLocale())),
+      await screen.findByText(normalized((1234).toLocaleString(getLocale()))),
     ).toBeInTheDocument();
     expect(screen.getByText('56')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
@@ -1080,9 +1081,9 @@ describe('employer company workspace', () => {
     expect(
       screen.getByText(m.employerProfileViews_statLabel()),
     ).toBeInTheDocument();
-    // 'en-AU' locale (from the mocked root loader) groups thousands with commas.
+    // Formatted with the board locale's own thousands separator.
     expect(
-      screen.getByText((1204).toLocaleString(getLocale())),
+      screen.getByText(normalized((1204).toLocaleString(getLocale()))),
     ).toBeInTheDocument();
   });
 
@@ -1560,7 +1561,9 @@ describe('employer company workspace', () => {
     );
     expect(
       screen.getByText(
-        m.employerMembers_leaveDialogTitle({ company: company.name }),
+        normalized(
+          m.employerMembers_leaveDialogTitle({ company: company.name }),
+        ),
       ),
     ).toBeInTheDocument();
     fireEvent.click(

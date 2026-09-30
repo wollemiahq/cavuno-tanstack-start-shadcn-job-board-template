@@ -36,8 +36,9 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Same suite with the en-XA pseudo-locale as the board language, so no
-      # test depends on stock English copy.
+      # Same suite with en-XA (every string changes) and then fr (real number
+      # and date formatting) as the board language, so no test depends on
+      # stock English copy or English formatting.
       - name: Test in a non-English locale
         run: pnpm run test:locale
 

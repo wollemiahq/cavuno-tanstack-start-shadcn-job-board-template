@@ -59,8 +59,8 @@ Copy and styling changes usually need no new automated tests. Prefer a few
 useful behavior tests over many assertions about implementation details.
 Keep test inputs independent of customer copy, branding, and navigation choices.
 Find elements and expected wording through the message functions (`m.*()`)
-or roles, never English literals. `pnpm run test:locale` runs the suite with a
-non-English board language, and CI enforces it.
+or roles, never English literals. CI runs `pnpm run test:locale`, which reruns
+the suite in other board languages; to run it locally, stop the dev server first.
 Test starter-owned behavior and SDK integration, not behavior already covered
 by the SDK or dependency tests.
 Use a browser for responsive or visual changes, and relevant subsystem guidance

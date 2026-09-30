@@ -34,6 +34,8 @@ import {
 } from '../board/board-ad-preview';
 import { PreviewToolbarView } from './preview-toolbar';
 
+import { normalized } from '@/test/text';
+
 const capable: PreviewCapability = { canPreview: true, reason: 'sandbox' };
 
 // The trigger is a plain pill visually ("Viewing as: …") but carries a static
@@ -608,7 +610,7 @@ describe('PreviewToolbar', () => {
 
     await waitFor(() =>
       expect(within(confirm).getByRole('alert')).toHaveTextContent(
-        m.previewToolbar_reseedError(),
+        normalized(m.previewToolbar_reseedError()),
       ),
     );
     expect(confirm).toBeVisible();
@@ -639,7 +641,7 @@ describe('PreviewToolbar', () => {
 
       await waitFor(() =>
         expect(screen.getByRole('alert')).toHaveTextContent(
-          m.previewToolbar_switchError(),
+          normalized(m.previewToolbar_switchError()),
         ),
       );
       expect(cookieWrites).toHaveLength(0);
