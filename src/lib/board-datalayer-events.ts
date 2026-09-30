@@ -4,6 +4,10 @@
  */
 
 import { localizePath, stripLocalePrefix } from './localized-path';
+import {
+  mayOfferResumeStep,
+  type SignedInBoardUser,
+} from './resume-onboarding';
 
 export const CAVUNO_AUTH_PARAM = 'cavuno_auth';
 export const CAVUNO_AUTH_METHOD_PARAM = 'cavuno_auth_method';
@@ -222,12 +226,19 @@ export function isEmployerReturnPath(pathname: string) {
   );
 }
 
-/** Resolve OAuth/magic-link completion into a destination with conversion params. */
+/**
+ * Resolve a completed sign-in or sign-up into a destination with conversion
+ * params. New accounts, and any verified candidate who may still owe the
+ * optional resume step, pass through `/auth/verify-email-required`, which
+ * continues to `returnTo` on its own when there is nothing to ask.
+ */
 export function resolvePostAuthConversionRedirect(
   returnTo: string,
   input: {
     isNewUser: boolean;
     fallbackMethod: BoardAuthMethod;
+    /** The signed-in board user; decides the returning-candidate resume step. */
+    boardUser?: SignedInBoardUser | null;
   },
 ): string {
   const url = new URL(returnTo, 'https://example.com');
@@ -246,13 +257,15 @@ export function resolvePostAuthConversionRedirect(
           ? 'google'
           : input.fallbackMethod;
   const destination = `${url.pathname}${url.search}${url.hash}`;
-  if (event === 'sign_up' && !isEmployerReturnPath(url.pathname)) {
+  const passThroughStep =
+    event === 'sign_up' || mayOfferResumeStep(input.boardUser);
+  if (passThroughStep && !isEmployerReturnPath(url.pathname)) {
     const search = new URLSearchParams({
       returnTo: localizePath(destination),
     });
     return appendAuthConversionQuery(
       `${localizePath('/auth/verify-email-required')}?${search}`,
-      'sign_up',
+      event,
       method,
     );
   }

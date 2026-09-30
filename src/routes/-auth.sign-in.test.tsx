@@ -158,6 +158,28 @@ describe('/auth/sign-in search contract', () => {
     expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
+  it('passes a verified candidate password sign-in through the resume step', async () => {
+    mocks.signIn.mockResolvedValue({
+      ok: true,
+      boardUser: { role: 'candidate', emailVerified: true },
+    });
+    const { container } = renderSignIn('/jobs');
+    await screen.findByRole('button', { name: 'Sign in' });
+    fireEvent.change(container.querySelector('input[name="email"]')!, {
+      target: { value: 'candidate@example.com' },
+    });
+    fireEvent.change(container.querySelector('input[name="password"]')!, {
+      target: { value: 'secret-password' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
+
+    await waitFor(() => {
+      expect(mocks.assignLocation).toHaveBeenCalledWith(
+        '/auth/verify-email-required?returnTo=%2Fjobs&cavuno_auth=login&cavuno_auth_method=password',
+      );
+    });
+  });
+
   it('recovers when password sign-in rejects unexpectedly', async () => {
     mocks.signIn.mockRejectedValue(new Error('network unavailable'));
     const { container } = renderSignIn('/account');

@@ -4,7 +4,10 @@
  * verification email (`board.auth.verifyEmailWithCode`) or opens the magic link
  * (which lands on `/auth/verify-email`). Resend re-sends both. A successful
  * verify offers one skippable resume-upload step (the onboarding parse
- * pipeline) before continuing to the validated destination.
+ * pipeline) before continuing to the validated destination. Every verified
+ * candidate sign-in also passes through here, so a candidate with no resume on
+ * file who has not dismissed the offer is asked on their next sign-in; anyone
+ * else entering verified leaves for the destination from the server.
  */
 import { useEffect, useState } from 'react';
 
@@ -23,7 +26,7 @@ import {
   getSessionUserStrict,
   getSsoEmailUnconfirmedUserId,
 } from '../server/account';
-import { getSeoBase } from '../server/queries';
+import { getFreshBoardContext, getSeoBase } from '../server/queries';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -35,11 +38,69 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Label } from '@/components/ui/label';
+import {
+  appendAuthConversionQuery,
+  pickAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { Resume } from '@cavuno/board';
 
+export function resolveVerifiedDestination(
+  returnTo: string,
+  jobRecommendationsEnabled: boolean,
+): string {
+  if (jobRecommendationsEnabled) return returnTo;
+  const pathname = returnTo.split(/[?#]/, 1)[0] ?? returnTo;
+  if (pathname === '/matches') return '/account';
+  const localizedMatch = pathname.match(/^\/([^/]+)\/matches$/);
+  return localizedMatch ? `/${localizedMatch[1]}/account` : returnTo;
+}
+
+export function isJobMatchesDestination(returnTo: string): boolean {
+  const pathname = returnTo.split(/[?#]/, 1)[0] ?? returnTo;
+  return pathname === '/matches' || /^\/[^/]+\/matches$/.test(pathname);
+}
+
+type BoardFeatures = { features: { jobRecommendationsEnabled?: boolean } };
+
+/** Where a verified candidate with nothing left to ask continues to. */
+async function settledDestination(
+  returnTo: string,
+  incomingSearch: string | undefined,
+  getBoardContext: () => Promise<BoardFeatures>,
+): Promise<string> {
+  let destination = returnTo;
+  if (isJobMatchesDestination(returnTo)) {
+    // The matches loader 404s a disabled surface; send the candidate to
+    // their account instead. A failed freshness read keeps the destination,
+    // whose own loader stays the final gate.
+    const enabled = await getBoardContext()
+      .then((board) => board.features.jobRecommendationsEnabled ?? true)
+      .catch(() => true);
+    destination = resolveVerifiedDestination(returnTo, enabled);
+  }
+  // The conversion fires on whichever page the browser lands on.
+  const conversion = pickAuthConversionSearch(incomingSearch);
+  return 'cavuno_auth' in conversion
+    ? appendAuthConversionQuery(
+        destination,
+        conversion.cavuno_auth,
+        conversion.cavuno_auth_method,
+      )
+    : destination;
+}
+
 export async function loadVerificationGate(
-  deps: { returnTo: string },
+  deps: {
+    returnTo: string;
+    /**
+     * Set when the route is entered, not when it revalidates (a resume upload
+     * or a verified code refreshes the loader while the step is on screen).
+     * A verified candidate with a resume on file or a dismissed offer then
+     * leaves for `returnTo` from the server, carrying `search`'s conversion.
+     */
+    arrival?: { search?: string };
+  },
   actions: {
     getResume: () => Promise<Resume>;
     getResumeOnboardingDismissal: () => Promise<string[]>;
@@ -55,12 +116,14 @@ export async function loadVerificationGate(
       role?: string;
     } | null>;
     getSsoEmailUnconfirmedUserId?: () => Promise<string | null>;
+    getFreshBoardContext?: () => Promise<BoardFeatures>;
   } = {
     getResume,
     getResumeOnboardingDismissal,
     getSeoBase,
     getSessionUserStrict,
     getSsoEmailUnconfirmedUserId,
+    getFreshBoardContext,
   },
 ) {
   // Started once, before the try: the error path needs the SEO base too,
@@ -105,12 +168,26 @@ export async function loadVerificationGate(
       actions.getResumeOnboardingDismissal().catch((): string[] => []),
       seoPromise,
     ]);
+    const dismissed = dismissedFor.includes(user.id);
+    if (
+      deps.arrival &&
+      user.emailVerified &&
+      (resume.hasResumeOnFile || dismissed)
+    ) {
+      throw redirect({
+        href: await settledDestination(
+          returnTo,
+          deps.arrival.search,
+          actions.getFreshBoardContext ?? getFreshBoardContext,
+        ),
+      });
+    }
     return {
       ...identity,
       emailVerified: user.emailVerified,
       role,
       resume: user.emailVerified ? resume : null,
-      resumeOnboardingDismissed: dismissedFor.includes(user.id),
+      resumeOnboardingDismissed: dismissed,
       userId: user.id,
       seo,
     };

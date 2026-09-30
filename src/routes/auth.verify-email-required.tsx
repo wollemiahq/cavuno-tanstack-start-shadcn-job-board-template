@@ -11,7 +11,9 @@ import { resendOtp, verifyOtpCode } from '../server/auth';
 import { getFreshBoardContext } from '../server/queries';
 import { updateNotificationPreference } from '../server/settings';
 import {
+  isJobMatchesDestination,
   loadVerificationGate,
+  resolveVerifiedDestination,
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
 
@@ -19,27 +21,14 @@ import {
   toastActionError,
   toastActionReconciliationError,
 } from '@/lib/action-toast';
-import { pickAuthConversionSearch } from '@/lib/board-datalayer-events';
+import {
+  incomingAuthSearch,
+  pickAuthConversionSearch,
+} from '@/lib/board-datalayer-events';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
 const rootApi = getRouteApi('__root__');
-
-export function resolveVerifiedDestination(
-  returnTo: string,
-  jobRecommendationsEnabled: boolean,
-): string {
-  if (jobRecommendationsEnabled) return returnTo;
-  const pathname = returnTo.split(/[?#]/, 1)[0] ?? returnTo;
-  if (pathname === '/matches') return '/account';
-  const localizedMatch = pathname.match(/^\/([^/]+)\/matches$/);
-  return localizedMatch ? `/${localizedMatch[1]}/account` : returnTo;
-}
-
-export function isJobMatchesDestination(returnTo: string): boolean {
-  const pathname = returnTo.split(/[?#]/, 1)[0] ?? returnTo;
-  return pathname === '/matches' || /^\/[^/]+\/matches$/.test(pathname);
-}
 
 export const Route = createFileRoute('/auth/verify-email-required')({
   validateSearch: (search: UrlSearchInput) => ({
@@ -49,7 +38,12 @@ export const Route = createFileRoute('/auth/verify-email-required')({
   loaderDeps: ({ search }) => ({
     returnTo: candidateReturnTo(search.returnTo),
   }),
-  loader: ({ deps }) => loadVerificationGate(deps),
+  loader: ({ deps, cause, location }) =>
+    loadVerificationGate(
+      cause === 'enter'
+        ? { ...deps, arrival: { search: incomingAuthSearch(location) } }
+        : deps,
+    ),
   head: ({ loaderData }) => ({
     meta: [
       {

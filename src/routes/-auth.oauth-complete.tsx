@@ -14,6 +14,7 @@ import { candidateAuthSearch } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { consumeSsoLinkProof } from '../server/auth';
 
+import type { SignedInBoardUser } from '../lib/resume-onboarding';
 import type { OAuthCompleteState } from './-auth.oauth-complete-loader';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { buttonVariants } from '@/components/ui/button';
@@ -27,7 +28,7 @@ const routeApi = getRouteApi('/auth/oauth-complete');
 type ConsumeSsoLinkProofAction = (input: {
   data: { token: string; browserBinding?: string };
 }) => Promise<
-  | { ok: true; isNewUser: boolean }
+  | { ok: true; isNewUser: boolean; boardUser: SignedInBoardUser }
   | { ok: false; code?: string; message: string }
 >;
 
@@ -173,6 +174,7 @@ function LinkProofConsume({
             resolvePostAuthConversionRedirect(returnTo, {
               isNewUser: result.isNewUser,
               fallbackMethod: 'sso',
+              boardUser: result.boardUser,
             }),
           );
           return;

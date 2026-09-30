@@ -12,6 +12,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -61,14 +62,12 @@ const mocks = {
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import {
+  isJobMatchesDestination,
   loadVerificationGate,
+  resolveVerifiedDestination,
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
-import {
-  isJobMatchesDestination,
-  resolveVerifiedDestination,
-  Route,
-} from './auth.verify-email-required';
+import { Route } from './auth.verify-email-required';
 
 import { m } from '@/paraglide/messages';
 
@@ -703,6 +702,81 @@ describe('/auth/verify-email-required resume loader', () => {
       role: 'candidate',
       resume: emptyResume,
       resumeOnboardingDismissed: true,
+    });
+  });
+
+  describe('entered from a sign-in', () => {
+    function enterVerificationGate(
+      returnTo = '/jobs',
+      jobRecommendationsEnabled = true,
+    ) {
+      return loadVerificationGate(
+        {
+          returnTo,
+          arrival: {
+            search: `?returnTo=${encodeURIComponent(returnTo)}&cavuno_auth=login&cavuno_auth_method=sso`,
+          },
+        },
+        {
+          getResume: mocks.getResume,
+          getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
+          getSeoBase: mocks.getSeoBase,
+          getSessionUserStrict: mocks.getSessionUser,
+          getFreshBoardContext: async () => ({
+            features: { jobRecommendationsEnabled },
+          }),
+        },
+      );
+    }
+
+    async function redirectHref(load: Promise<unknown>) {
+      let outcome: unknown;
+      try {
+        await load;
+      } catch (error) {
+        outcome = error;
+      }
+      expect(isRedirect(outcome)).toBe(true);
+      return isRedirect(outcome) ? outcome.options.href : undefined;
+    }
+
+    beforeEach(() => {
+      mocks.getSessionUser.mockResolvedValue({
+        id: 'candidate-1',
+        emailVerified: true,
+        role: 'candidate',
+      });
+      mocks.getResumeOnboardingDismissal.mockResolvedValue([]);
+    });
+
+    it('offers the resume step to a returning candidate without one', async () => {
+      mocks.getResume.mockResolvedValue(emptyResume);
+      await expect(enterVerificationGate()).resolves.toMatchObject({
+        resume: emptyResume,
+        resumeOnboardingDismissed: false,
+      });
+    });
+
+    it('continues with the conversion once a resume is on file', async () => {
+      mocks.getResume.mockResolvedValue(storedResume);
+      expect(await redirectHref(enterVerificationGate())).toBe(
+        '/jobs?cavuno_auth=login&cavuno_auth_method=sso',
+      );
+    });
+
+    it('continues once the candidate dismissed the offer', async () => {
+      mocks.getResume.mockResolvedValue(emptyResume);
+      mocks.getResumeOnboardingDismissal.mockResolvedValue(['candidate-1']);
+      expect(await redirectHref(enterVerificationGate('/matches', false))).toBe(
+        '/account?cavuno_auth=login&cavuno_auth_method=sso',
+      );
+    });
+
+    it('keeps the step on screen when an upload revalidates it', async () => {
+      mocks.getResume.mockResolvedValue(storedResume);
+      await expect(runVerificationGate()).resolves.toMatchObject({
+        resume: storedResume,
+      });
     });
   });
 

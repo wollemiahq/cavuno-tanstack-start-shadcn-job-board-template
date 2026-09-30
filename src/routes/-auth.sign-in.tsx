@@ -15,6 +15,7 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 
+import type { SignedInBoardUser } from '../lib/resume-onboarding';
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { SsoConnectionButtons } from '@/components/sso-connection-buttons';
@@ -22,8 +23,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-  appendAuthConversionQuery,
   appendAuthIntentQuery,
+  resolvePostAuthConversionRedirect,
 } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import {
@@ -67,7 +68,7 @@ export function SignInView({
   redirectError?: string;
   signInAction: (input: {
     data: { email: string; password: string };
-  }) => Promise<{ ok: true; boardUser?: unknown } | AuthActionFailure>;
+  }) => Promise<{ ok: true; boardUser: SignedInBoardUser } | AuthActionFailure>;
   requestMagicLinkAction: (input: {
     data: { email: string; returnTo?: string; intent?: 'sign_in' };
   }) => Promise<{ ok: true } | AuthActionFailure>;
@@ -300,7 +301,7 @@ export function SignInView({
             const email = String(form.get('email'));
             let result:
               | Awaited<ReturnType<typeof signInAction>>
-              | Awaited<ReturnType<typeof requestMagicLinkAction>>;
+              | { ok: true; boardUser?: undefined };
             try {
               result =
                 mode === 'password'
@@ -330,7 +331,11 @@ export function SignInView({
               // reconciles the shell and prevents later router failures from
               // being reported as an authentication failure.
               assignLocation(
-                appendAuthConversionQuery(returnTo, 'login', 'password'),
+                resolvePostAuthConversionRedirect(returnTo, {
+                  isNewUser: false,
+                  fallbackMethod: 'password',
+                  boardUser: result.boardUser,
+                }),
               );
               return;
             }

@@ -44,3 +44,21 @@ export function serializeResumeOnboardingDismissal(userId: string): string {
   const name = `${RESUME_ONBOARDING_COOKIE}_${encodeURIComponent(userId)}`;
   return `${name}=1; Path=/; Max-Age=${RESUME_ONBOARDING_MAX_AGE}; SameSite=Lax`;
 }
+
+/** The part of a sign-in's board user that decides the resume step. */
+export interface SignedInBoardUser {
+  role: 'candidate' | 'employer';
+  emailVerified: boolean;
+}
+
+/**
+ * Whether a completed sign-in passes through the optional resume step. Only a
+ * verified candidate can owe it; the step leaves straight for `returnTo` when
+ * the candidate already has a resume on file or dismissed the offer, so a
+ * member whose first session ended early is still asked exactly once.
+ */
+export function mayOfferResumeStep(
+  boardUser: SignedInBoardUser | null | undefined,
+): boolean {
+  return boardUser?.role === 'candidate' && boardUser.emailVerified;
+}

@@ -8,6 +8,7 @@ import { candidateReturnTo } from '../lib/candidate-return-to';
 import { exchangeOAuth } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 
+import type { SignedInBoardUser } from '../lib/resume-onboarding';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 /** The completion query the API redirects here with. Every field is opaque
@@ -61,7 +62,8 @@ export async function loadOAuthComplete(
     exchangeOAuth: (input: {
       data: { token: string; method?: 'sso' };
     }) => Promise<
-      { ok: true; isNewUser: boolean } | { ok: false; message: string }
+      | { ok: true; isNewUser: boolean; boardUser: SignedInBoardUser }
+      | { ok: false; message: string }
     >;
     getSeoBase: () => ReturnType<typeof getSeoBase>;
   } = { exchangeOAuth, getSeoBase },
@@ -84,6 +86,7 @@ export async function loadOAuthComplete(
         href: resolvePostAuthConversionRedirect(deps.returnTo, {
           isNewUser: result.isNewUser,
           fallbackMethod: completion.method === 'sso' ? 'sso' : 'google',
+          boardUser: result.boardUser,
         }),
       });
     }
