@@ -12,6 +12,7 @@ import { useState } from 'react';
  * public collection without navigating for each keystroke.
  */
 import {
+  Outlet,
   RouterProvider,
   createMemoryHistory,
   createRootRoute,
@@ -126,122 +127,132 @@ function renderHeader({
     initialUrl.pathname.startsWith('/jobs/locations/') ? 'Sydney' : undefined,
     resolvedKeywordLabel,
   );
-  const rootRoute = createRootRoute();
+  // Mounted once in the root route, as __root.tsx does, so navigation keeps
+  // the same Header instance instead of remounting it with each page.
+  function HarnessHeader() {
+    const navigate = useNavigate();
+    const [viewer, setViewer] = useState(user);
+
+    function submitSearch({
+      scope,
+      query,
+      location,
+      term,
+      market,
+    }: HeaderSearchSubmission) {
+      if (scope === 'companies') {
+        if (market) {
+          void navigate({
+            to: '/companies/markets/$market',
+            params: { market: market.slug },
+          });
+        } else {
+          void navigate({ to: '/companies', search: { query } });
+        }
+      } else if (scope === 'talent') {
+        void navigate({
+          to: '/talent',
+          search: { q: query, place: location?.slug },
+        });
+      } else if (scope === 'blog') {
+        void navigate({ to: '/blog', search: { q: query } });
+      } else if (location && term?.type === 'skill') {
+        void navigate({
+          to: '/jobs/locations/$location/skills/$skill',
+          params: { location: location.slug, skill: term.slug },
+        });
+      } else if (location && term?.type === 'category') {
+        void navigate({
+          to: '/jobs/locations/$location/$keyword',
+          params: { location: location.slug, keyword: term.slug },
+        });
+      } else if (term?.type === 'skill') {
+        void navigate({
+          to: '/jobs/skills/$skill',
+          params: { skill: term.slug },
+        });
+      } else if (term?.type === 'category') {
+        void navigate({
+          to: '/jobs/$keyword',
+          params: { keyword: term.slug },
+        });
+      } else if (location) {
+        void navigate({
+          to: '/jobs/locations/$location',
+          params: { location: location.slug },
+          search: { q: query },
+        });
+      } else {
+        void navigate({ to: '/jobs', search: { q: query } });
+      }
+    }
+
+    return (
+      <Header
+        boardName="Robotics Jobs"
+        logoUrl={logoUrl}
+        user={viewer}
+        language="en"
+        features={{ ...features, jobRecommendationsEnabled }}
+        hasAccessGrant={hasAccessGrant}
+        onSignOut={() => setViewer(null)}
+        signOutAction={signOutMock}
+        talentDirectoryVisibility={talentDirectoryVisibility}
+        search={{
+          ...initialSearch,
+          onSubmit: submitSearch,
+          locationSuggestions: {
+            suggestions: locationSuggestions.map((place) => ({
+              countryCode: null,
+              regionCode: null,
+              ...place,
+            })),
+            loading: false,
+            onQueryChange: vi.fn(),
+            // Board places whose name starts with the typed text.
+            resolve: async (text: string) => {
+              const place = locationSuggestions.find((candidate) =>
+                candidate.name
+                  .toLowerCase()
+                  .startsWith(text.trim().toLowerCase()),
+              );
+              return place
+                ? { countryCode: null, regionCode: null, ...place }
+                : null;
+            },
+          },
+          keywordSuggestions: {
+            suggestions: keywordSuggestions,
+            loading: false,
+            onQueryChange: vi.fn(),
+          },
+          blogSuggestions: {
+            suggestions: [],
+            loading: false,
+            onQueryChange: vi.fn(),
+          },
+          companyMarketSuggestions: {
+            suggestions: companyMarketSuggestions,
+            loading: false,
+            onQueryChange: vi.fn(),
+          },
+        }}
+      />
+    );
+  }
+  const rootRoute = createRootRoute({
+    component: () => (
+      <>
+        <HarnessHeader />
+        <Outlet />
+      </>
+    ),
+  });
   const route = (path: string) =>
     createRoute({
       getParentRoute: () => rootRoute,
       path,
-      component: () => {
-        const navigate = useNavigate();
-        const [viewer, setViewer] = useState(user);
-
-        function submitSearch({
-          scope,
-          query,
-          location,
-          term,
-          market,
-        }: HeaderSearchSubmission) {
-          if (scope === 'companies') {
-            if (market) {
-              void navigate({
-                to: '/companies/markets/$market',
-                params: { market: market.slug },
-              });
-            } else {
-              void navigate({ to: '/companies', search: { query } });
-            }
-          } else if (scope === 'talent') {
-            void navigate({
-              to: '/talent',
-              search: { q: query, place: location?.slug },
-            });
-          } else if (scope === 'blog') {
-            void navigate({ to: '/blog', search: { q: query } });
-          } else if (location && term?.type === 'skill') {
-            void navigate({
-              to: '/jobs/locations/$location/skills/$skill',
-              params: { location: location.slug, skill: term.slug },
-            });
-          } else if (location && term?.type === 'category') {
-            void navigate({
-              to: '/jobs/locations/$location/$keyword',
-              params: { location: location.slug, keyword: term.slug },
-            });
-          } else if (term?.type === 'skill') {
-            void navigate({
-              to: '/jobs/skills/$skill',
-              params: { skill: term.slug },
-            });
-          } else if (term?.type === 'category') {
-            void navigate({
-              to: '/jobs/$keyword',
-              params: { keyword: term.slug },
-            });
-          } else if (location) {
-            void navigate({
-              to: '/jobs/locations/$location',
-              params: { location: location.slug },
-              search: { q: query },
-            });
-          } else {
-            void navigate({ to: '/jobs', search: { q: query } });
-          }
-        }
-
-        return (
-          <Header
-            boardName="Robotics Jobs"
-            logoUrl={logoUrl}
-            user={viewer}
-            language="en"
-            features={{ ...features, jobRecommendationsEnabled }}
-            hasAccessGrant={hasAccessGrant}
-            onSignOut={() => setViewer(null)}
-            signOutAction={signOutMock}
-            talentDirectoryVisibility={talentDirectoryVisibility}
-            search={{
-              ...initialSearch,
-              onSubmit: submitSearch,
-              locationSuggestions: {
-                suggestions: locationSuggestions.map((place) => ({
-                  countryCode: null,
-                  regionCode: null,
-                  ...place,
-                })),
-                loading: false,
-                onQueryChange: vi.fn(),
-                // Board places whose name starts with the typed text.
-                resolve: async (text: string) => {
-                  const place = locationSuggestions.find((candidate) =>
-                    candidate.name
-                      .toLowerCase()
-                      .startsWith(text.trim().toLowerCase()),
-                  );
-                  return place
-                    ? { countryCode: null, regionCode: null, ...place }
-                    : null;
-                },
-              },
-              keywordSuggestions: {
-                suggestions: keywordSuggestions,
-                loading: false,
-                onQueryChange: vi.fn(),
-              },
-              blogSuggestions: {
-                suggestions: [],
-                loading: false,
-                onQueryChange: vi.fn(),
-              },
-              companyMarketSuggestions: {
-                suggestions: companyMarketSuggestions,
-                loading: false,
-                onQueryChange: vi.fn(),
-              },
-            }}
-          />
-        );
-      },
+      component: () => null,
     });
 
   const router = createRouter({

@@ -119,7 +119,8 @@ export function AppRouteErrorPage({
   useClientErrorReport(error);
 
   const rateLimited =
-    isRateLimited(error) || /rate limit/i.test(error?.message ?? '');
+    isRateLimited(error) ||
+    (error instanceof Error && /rate limit/i.test(error.message));
 
   // Dual-source escape hatch. Facts come from env+cookie only (no board API),
   // so this still resolves when the demo tenant is the thing that is down.

@@ -49,7 +49,11 @@ const BUDGETS = {
   // over 229_000. The operator accepted this cost, and the budget is
   // rebaselined to the measurement plus the same ~4 KiB headroom as above so
   // the next small change does not trip it again.
-  shell: { raw: 730_000, gzip: 233_000 },
+  // The CVE-2026-102989 TanStack Start security release (server-function
+  // response validation) took the shell from 227.4 to 228.1 KiB gzip; main
+  // had 0.1 KiB left. The fix is not optional, so the budget is rebaselined
+  // to the measurement plus the same ~4 KiB headroom.
+  shell: { raw: 730_000, gzip: 237_500 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {

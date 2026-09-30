@@ -28,11 +28,7 @@ export function ClientErrorReportingBoot() {
 }
 
 /** Mount inside a route errorComponent (server or client). */
-export function ClientErrorReporter({
-  error,
-}: {
-  error: Error & { digest?: string };
-}) {
+export function ClientErrorReporter({ error }: { error: unknown }) {
   useClientErrorReport(error);
   return null;
 }
