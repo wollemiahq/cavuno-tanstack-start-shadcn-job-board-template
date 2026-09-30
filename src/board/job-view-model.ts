@@ -26,6 +26,7 @@ import { enumLabel } from '@/lib/enum-labels';
 import {
   cardLocationLabel,
   isWorldwideRemote,
+  localizedLocationLabel,
   localizedRemoteRegion,
 } from '@/lib/location-labels';
 import { formatJobSalary } from '@/lib/salary-display';
@@ -79,11 +80,12 @@ export interface JobCardVM {
 }
 
 export function toJobCardVM(
-  job: PublicJobCard,
+  job: PublicJobCard & { locationCountryCode?: string | null },
   language: string,
   jobForm?: JobFormSource | null,
 ): JobCardVM {
   const company = job.company;
+  const sourceLanguage = jobForm?.language ?? language;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
   // pills link directly with no resolve round trip and no filtering.
@@ -123,7 +125,12 @@ export function toJobCardVM(
   const placeLabel =
     job.remoteOption === 'remote'
       ? localizedRemoteRegion(job, language)
-      : job.locationLabel;
+      : localizedLocationLabel(
+          job.locationLabel,
+          job.locationCountryCode,
+          language,
+          sourceLanguage,
+        );
   const locationLabel = worldwideRemote
     ? m.label_locationRemoteWorldwide({}, localeOpt)
     : [
@@ -133,7 +140,7 @@ export function toJobCardVM(
         .filter(Boolean)
         .join(' ');
   const compLine =
-    [salaryLabel, cardLocationLabel(job, language)]
+    [salaryLabel, cardLocationLabel(job, language, sourceLanguage)]
       .filter(Boolean)
       .join(' · ') || null;
 
@@ -174,7 +181,10 @@ export function toJobCardVM(
  * taking down the page. Returns `null` when a row cannot map at all.
  */
 export function toSavedJobCardVM(
-  job: PublicJobCard | null | undefined,
+  job:
+    | (PublicJobCard & { locationCountryCode?: string | null })
+    | null
+    | undefined,
   language: string,
   jobForm?: JobFormSource | null,
 ): JobCardVM | null {

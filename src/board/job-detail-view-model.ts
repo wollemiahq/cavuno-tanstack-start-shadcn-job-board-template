@@ -30,6 +30,10 @@ import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
+import {
+  localizedCountryName,
+  localizedOfficeLocationLabel,
+} from '@/lib/location-labels';
 import { searchString } from '@/lib/pagination';
 import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
@@ -164,12 +168,10 @@ export function toJobDetailVM(
   };
 
   const offices = job.officeLocations
-    .map(
-      (o) =>
-        o.displayName ??
-        [o.city ?? o.locality, o.region, o.country].filter(Boolean).join(', '),
+    .map((office) =>
+      localizedOfficeLocationLabel(office, displayLocale, language),
     )
-    .filter(Boolean);
+    .filter((office): office is string => Boolean(office));
 
   // Resolve wire values to words HERE, with the board displayLocale — the facts
   // row must agree with the header, which already renders DisplayNames
@@ -350,12 +352,16 @@ export function toJobDetailVM(
   // header no longer renders raw codes like "US, GB", and the two mappers
   // agree on the remote location.
   const regionNames = factRegionNames;
-  // Country display-name → ISO code, so a place-hierarchy country renders the
-  // way the card's server label does ("United States" → "US", "United
-  // Kingdom" → "GB"). `countryOptions` is the SDK's canonical, board-displayLocale
-  // country lexicon.
+  // Country display-name → ISO code lets the hierarchy's source-language
+  // name be re-rendered in the viewer's locale. Older rows can carry the
+  // board language while the canonical place fallback is English, so accept
+  // both alongside the declared job-form source language.
   const countryNameToCode = new Map(
-    countryOptions(language).map((option) => [option.name, option.code]),
+    [...new Set([jobForm?.language, language, 'en', displayLocale])]
+      .filter((locale): locale is string => Boolean(locale))
+      .flatMap((locale) =>
+        countryOptions(locale).map((option) => [option.name, option.code]),
+      ),
   );
   // The list card resolves its location from the API's pre-computed
   // `locationLabel`, which the full job payload does NOT carry. When a job has
@@ -365,7 +371,13 @@ export function toJobDetailVM(
   // specified" on the detail page while its card shows the place.
   const placeHierarchyLabel =
     job.placeHierarchy
-      .map((place) => countryNameToCode.get(place.name) ?? place.name)
+      .map((place, index) => {
+        if (index !== 0) return place.name;
+        const countryCode = countryNameToCode.get(place.name);
+        return countryCode
+          ? (localizedCountryName(countryCode, displayLocale) ?? place.name)
+          : place.name;
+      })
       .filter(Boolean)
       .reverse()
       .join(', ') || null;

@@ -24,6 +24,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  salaryPlaceListLabel,
   salarySkillInLocationPath,
   salarySkillLocationsPath,
   toOverallSalaryVM,
@@ -97,7 +98,7 @@ function SkillSalaryPage() {
   // skill×location loader resolves + 308s the inbound placeSlug, so the target
   // always has data — unlike the generic /salaries/locations/{place} page.
   const locationItems: RailItem[] = salary.topLocations.map((x) => ({
-    name: x.placeName,
+    name: salaryPlaceListLabel(x),
     href: salarySkillInLocationPath(salary.canonicalSlug, x.placeSlug),
     range:
       formatSalaryRange(

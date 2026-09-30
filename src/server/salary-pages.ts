@@ -39,6 +39,7 @@ import {
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
   salaryPlaceTitle,
+  salaryPlaceListLabel,
   salarySkillInLocationPath,
   salarySkillLocationsPath,
   salaryTitleInLocationPath,
@@ -342,7 +343,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
         [
           itemListJsonLd(
             locations.data.map((l) => ({
-              name: l.placeName,
+              name: salaryPlaceListLabel(l),
               url: selfUrl(seo.origin, salaryLocationPath(l.placeSlug)),
             })),
           ),
@@ -683,7 +684,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
         [
           itemListJsonLd(
             payload.locations.map((l) => ({
-              name: l.placeName,
+              name: salaryPlaceListLabel(l),
               url: boardUrl(
                 seo.origin,
                 salaryTitleInLocationPath(payload.canonicalSlug, l.placeSlug),
@@ -762,7 +763,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
         [
           itemListJsonLd(
             payload.locations.map((l) => ({
-              name: l.placeName,
+              name: salaryPlaceListLabel(l),
               url: boardUrl(
                 seo.origin,
                 salarySkillInLocationPath(payload.canonicalSlug, l.placeSlug),

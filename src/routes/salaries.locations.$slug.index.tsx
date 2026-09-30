@@ -19,6 +19,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  salaryPlaceListLabel,
   salaryLocationSkillsPath,
   salaryLocationTitlesPath,
   salarySkillInLocationPath,
@@ -45,7 +46,7 @@ type City = LocationSalaryDetail['childLocations'][number];
 const cityItem =
   (locale: string, currency: string | null | undefined) =>
   (x: City): RailItem => ({
-    name: x.placeName,
+    name: salaryPlaceListLabel(x),
     href: salaryLocationPath(x.placeSlug),
     range:
       formatSalaryRange(

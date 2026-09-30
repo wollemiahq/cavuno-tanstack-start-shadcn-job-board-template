@@ -169,7 +169,7 @@ describe('toJobDetailVM', () => {
   it('assembles the facts rows (office, permits, timezones, education, experience)', () => {
     const byLabel = Object.fromEntries(vm.facts.map((f) => [f.label, f.value]));
     // Office label falls back to city/region/country when displayName is null.
-    expect(Object.values(byLabel)).toContain('Berlin, BE, DE');
+    expect(Object.values(byLabel)).toContain('Berlin, BE, Germany');
     // Wire values resolve to words: ISO codes through Intl.DisplayNames,
     // joined by Intl.ListFormat — never raw 'US, GB' on a display surface.
     expect(Object.values(byLabel)).toContain(
@@ -211,15 +211,15 @@ describe('toJobDetailVM', () => {
       'en',
     );
 
-    expect(hybrid.locationLabel).toBe('Berlin, BE, DE');
+    expect(hybrid.locationLabel).toBe('Berlin, BE, Germany');
     expect(hybrid.workplaceLabel).toBe('Hybrid');
   });
 
   it('resolves a physical location from placeHierarchy when there is no office, matching the card', () => {
     // on_site job whose location lives in the place taxonomy (no geocoded
-    // office) — the list card shows "Austin, Texas, US", so the detail must
+    // office) — the list card shows "Austin, Texas, United States", so the detail must
     // too, not "Location not specified". placeHierarchy is broad→narrow and
-    // the country resolves to its ISO code, like the card's server label.
+    // the country resolves in the viewer locale, like the card display label.
     const onSite = toJobDetailVM(
       createJob({
         remoteOption: 'on_site',
@@ -236,8 +236,98 @@ describe('toJobDetailVM', () => {
       'en',
     );
 
-    expect(onSite.locationLabel).toBe('Austin, Texas, US');
+    expect(onSite.locationLabel).toBe('Austin, Texas, United States');
     expect(onSite.workplaceLabel).toBe('On-site');
+  });
+
+  it('localizes office and hierarchy countries for the viewer', () => {
+    const spanishOffice = toJobDetailVM(
+      createJob({
+        remoteOption: 'on_site',
+        officeLocations: [
+          {
+            displayName: 'Barcelona, Catalonia, ES',
+            city: 'Barcelona',
+            locality: null,
+            region: 'Catalonia',
+            regionCode: 'CT',
+            country: 'ES',
+            countryCode: 'ES',
+            postalCode: null,
+          },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'en',
+      'es',
+    );
+    expect(spanishOffice.locationLabel).toBe('Barcelona, Catalonia, España');
+    expect(spanishOffice.facts.map((fact) => fact.value)).toContain(
+      'Barcelona, Catalonia, España',
+    );
+
+    const germanHierarchy = toJobDetailVM(
+      createJob({
+        remoteOption: 'on_site',
+        officeLocations: [],
+        placeHierarchy: [
+          { slug: 'united-states', name: 'United States' },
+          { slug: 'illinois-united-states', name: 'Illinois' },
+          { slug: 'chicago-il-united-states', name: 'Chicago' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'en',
+      'de',
+    );
+    expect(germanHierarchy.locationLabel).toBe(
+      'Chicago, Illinois, Vereinigte Staaten',
+    );
+
+    const germanBoardHierarchy = toJobDetailVM(
+      createJob({
+        remoteOption: 'on_site',
+        officeLocations: [],
+        placeHierarchy: [
+          { slug: 'united-states', name: 'United States' },
+          { slug: 'illinois-united-states', name: 'Illinois' },
+          { slug: 'chicago-il-united-states', name: 'Chicago' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'de',
+      'de',
+    );
+    expect(germanBoardHierarchy.locationLabel).toBe(
+      'Chicago, Illinois, Vereinigte Staaten',
+    );
+  });
+
+  it('does not mistake a subdivision named like a country for the country', () => {
+    const atlanta = toJobDetailVM(
+      createJob({
+        remoteOption: 'on_site',
+        officeLocations: [],
+        placeHierarchy: [
+          { slug: 'united-states', name: 'United States' },
+          { slug: 'georgia-united-states', name: 'Georgia' },
+          { slug: 'atlanta-ga-united-states', name: 'Atlanta' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'en',
+      'de',
+    );
+
+    expect(atlanta.locationLabel).toBe('Atlanta, Georgia, Vereinigte Staaten');
   });
 
   it('shows Worldwide for an unconstrained remote job, never "not specified"', () => {

@@ -5,6 +5,8 @@
  * Place names arrive already localized from the wire. Workplace wrapper
  * words come from the canonical enum vocabulary.
  */
+import { countryOptions } from '@cavuno/board/format';
+
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { enumLabel } from './enum-labels';
@@ -16,7 +18,9 @@ export interface LocationLabelJob {
     displayName?: string | null;
     city?: string | null;
     locality?: string | null;
+    region?: string | null;
     country?: string | null;
+    countryCode?: string | null;
   }>;
 }
 
@@ -28,6 +32,8 @@ export interface CardLocationLabelJob {
   /** 4.1.0 derived permit expansion (ISO 3166-1 alpha-2). */
   remoteWorkPermitCountryCodes?: string[];
   locationLabel?: string | null;
+  /** ISO alpha-2 code for the country represented by locationLabel. */
+  locationCountryCode?: string | null;
 }
 
 /**
@@ -39,6 +45,90 @@ export interface CardLocationLabelJob {
 export function isWorldwideRemote(job: CardLocationLabelJob): boolean {
   if (job.remoteOption !== 'remote') return false;
   return job.remoteWorldwide ?? job.remoteLocationLabel === 'Worldwide';
+}
+
+const ISO_COUNTRY_CODES = new Set<string>(
+  countryOptions('en').map((country) => country.code),
+);
+const COUNTRY_CODE_ALIASES = new Map<string, string>([['UK', 'GB']]);
+
+/** Resolve an ISO 3166-1 alpha-2 code in the viewer's locale. */
+export function localizedCountryName(
+  code: string | null | undefined,
+  language?: string,
+): string | null {
+  const normalized = code?.trim().toUpperCase();
+  if (!normalized || !ISO_COUNTRY_CODES.has(normalized)) return null;
+
+  const tag = language && language.length > 0 ? language : undefined;
+  try {
+    return (
+      new Intl.DisplayNames(tag ? [tag] : undefined, { type: 'region' }).of(
+        normalized,
+      ) ?? null
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** Localize the structured country represented by an otherwise opaque label. */
+export function localizedLocationLabel(
+  label: string | null | undefined,
+  countryCode: string | null | undefined,
+  language?: string,
+  sourceLanguage: string | undefined = language,
+  countryAliases: Array<string | null | undefined> = [],
+): string | null {
+  if (!label) return null;
+  const normalizedCode = countryCode?.trim().toUpperCase();
+  const country = localizedCountryName(normalizedCode, language);
+  if (!normalizedCode || !country) return label;
+
+  const suffix = label.match(/(^|,\s*)([^,]+?)\s*$/);
+  const suffixCountry = suffix?.[2].trim().toLocaleLowerCase();
+  const matchesCountry = [
+    normalizedCode,
+    ...[...COUNTRY_CODE_ALIASES.entries()]
+      .filter(([, canonical]) => canonical === normalizedCode)
+      .map(([alias]) => alias),
+    localizedCountryName(normalizedCode, sourceLanguage),
+    localizedCountryName(normalizedCode, 'en'),
+    country,
+    ...countryAliases,
+  ].some(
+    (candidate) => candidate?.trim().toLocaleLowerCase() === suffixCountry,
+  );
+
+  if (suffix && suffix.index !== undefined && matchesCountry) {
+    return `${label.slice(0, suffix.index)}${suffix[1]}${country}`;
+  }
+  return `${label}, ${country}`;
+}
+
+export function localizedOfficeLocationLabel(
+  office: LocationLabelJob['officeLocations'][number],
+  language?: string,
+  sourceLanguage: string | undefined = language,
+): string | null {
+  const displayName = office.displayName?.trim();
+  const countryCode = office.countryCode?.trim().toUpperCase();
+  const rawLabel =
+    displayName ||
+    [
+      office.city ?? office.locality,
+      office.region,
+      countryCode ?? office.country,
+    ]
+      .filter(Boolean)
+      .join(', ');
+  return localizedLocationLabel(
+    rawLabel || null,
+    countryCode,
+    language,
+    sourceLanguage,
+    [office.country],
+  );
 }
 
 /**
@@ -82,12 +172,7 @@ export function locationLabel(
   language?: string,
 ): string {
   const office = job.officeLocations[0];
-  const place = office
-    ? (office.displayName ??
-      [office.city ?? office.locality, office.country]
-        .filter(Boolean)
-        .join(', '))
-    : null;
+  const place = office ? localizedOfficeLocationLabel(office, language) : null;
   // Callers outside a request's chrome context (the OG image renderer)
   // pass the board language explicitly; everyone else keeps the ambient
   // Paraglide locale.
@@ -113,6 +198,7 @@ export function locationLabel(
 export function cardLocationLabel(
   job: CardLocationLabelJob,
   language?: string,
+  sourceLanguage: string | undefined = language,
 ): string {
   const locale = isLocale(language) ? { locale: language } : undefined;
   if (job.remoteOption === 'remote') {
@@ -124,5 +210,14 @@ export function cardLocationLabel(
       ? m.label_locationRemoteIn({ region }, locale)
       : (enumLabel('remote', language) ?? '');
   }
-  return job.locationLabel ?? enumLabel(job.remoteOption) ?? '';
+  return (
+    localizedLocationLabel(
+      job.locationLabel,
+      job.locationCountryCode,
+      language,
+      sourceLanguage,
+    ) ??
+    enumLabel(job.remoteOption) ??
+    ''
+  );
 }
