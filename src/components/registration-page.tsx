@@ -18,12 +18,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import {
+  isSsoOnly,
   resolveBoardSignIn,
-  ssoChoicesForRequired,
+  roleSignInOptions,
+  signInOptionsForAvailable,
+  type SignInOptions,
   type SsoChoice,
 } from '@/lib/board-sign-in';
+import { textActionClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
-import type { PublicBoardSignIn } from '@cavuno/board';
+import type { AvailableSignInMethods, PublicBoardSignIn } from '@cavuno/board';
 
 type RegistrationCopy = {
   nameLabel: string;
@@ -42,8 +46,8 @@ type RegistrationResult =
       ok: false;
       code?: string;
       message: string;
-      /** Present on `sso_required`: the connections the role must use. */
-      ssoConnectionIds?: string[];
+      /** Present on `board_auth_method_unavailable`: what the role can use. */
+      availableMethods?: AvailableSignInMethods;
     };
 type RegistrationSubmitValues = {
   displayName: string;
@@ -106,18 +110,17 @@ export function RegistrationPage({
   const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
   const succeeded = status.state === 'success';
   const options = resolveBoardSignIn(signIn);
-  const roleSignIn = options[role];
-  const { methods } = roleSignIn;
-  /** Set when registration answered `sso_required`: only SSO remains. */
-  const [requiredSso, setRequiredSso] = useState<SsoChoice[] | null>(null);
-  const ssoOnly = roleSignIn.ssoRequired || requiredSso !== null;
-  const ssoChoices: SsoChoice[] = onSsoStart
-    ? (requiredSso ??
-      roleSignIn.ssoConnections.map((connection) => ({ connection, role })))
-    : [];
-  const showForm = methods.password && !ssoOnly;
+  /**
+   * Set when registration answered `board_auth_method_unavailable`: the
+   * methods and SSO connections the role has instead replace the page's own.
+   */
+  const [refused, setRefused] = useState<SignInOptions | null>(null);
+  const offered = refused ?? roleSignInOptions(options, role);
+  const { methods } = offered;
+  const ssoChoices: SsoChoice[] = onSsoStart ? offered.ssoChoices : [];
+  const showForm = methods.password && !refused;
   const oauthProviders = (['google', 'linkedin'] as const).filter(
-    (provider) => onOAuthStart && methods[provider] && !ssoOnly,
+    (provider) => onOAuthStart && methods[provider],
   );
   const showProviderButtons =
     ssoChoices.length > 0 || oauthProviders.length > 0;
@@ -143,9 +146,11 @@ export function RegistrationPage({
         </Link>
       ) : (
         <>
-          {ssoOnly ? (
+          {refused || isSsoOnly(offered) ? (
             <p className="text-muted-foreground text-center text-sm">
-              {m.authSso_requiredText()}
+              {refused
+                ? m.authSignInError_methodUnavailableText()
+                : m.authSso_onlyText()}
             </p>
           ) : null}
           {showForm ? (
@@ -154,12 +159,12 @@ export function RegistrationPage({
               status={status}
               onSubmit={async (values) => {
                 const result = await onSubmit(values);
-                if (!result.ok && result.code === 'sso_required') {
-                  setRequiredSso(
-                    ssoChoicesForRequired(
+                if (!result.ok && result.availableMethods) {
+                  setRefused(
+                    signInOptionsForAvailable(
                       options,
                       role,
-                      result.ssoConnectionIds,
+                      result.availableMethods,
                     ),
                   );
                 }
@@ -193,16 +198,28 @@ export function RegistrationPage({
               ))}
             </div>
           ) : null}
-          {/* An `sso_required` answer already swapped in the SSO prompt. */}
+          {/* A refusal already swapped in the options that remain. */}
           {!showForm &&
           status.state === 'error' &&
-          status.code !== 'sso_required' ? (
+          status.code !== 'board_auth_method_unavailable' ? (
             <FieldError>{status.message}</FieldError>
           ) : null}
-          {!showForm && !showProviderButtons && !ssoOnly ? (
+          {!showForm && !showProviderButtons ? (
             <p className="text-muted-foreground text-center text-sm">
               {m.authSso_noMethodsText()}
             </p>
+          ) : null}
+          {refused ? (
+            <button
+              type="button"
+              className={cn(textActionClass, 'justify-self-center text-sm')}
+              onClick={() => {
+                setRefused(null);
+                setStatus({ state: 'idle' });
+              }}
+            >
+              {m.authSso_signInAnotherWayLabel()}
+            </button>
           ) : null}
           {footer}
         </>

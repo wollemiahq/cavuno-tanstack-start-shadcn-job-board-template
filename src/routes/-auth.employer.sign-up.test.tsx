@@ -163,7 +163,6 @@ describe('/auth/employer/sign-up continuation', () => {
 });
 
 const allBuiltIns: BoardRoleSignIn = {
-  ssoRequired: false,
   methods: { password: true, magicLink: true, google: true, linkedin: true },
   ssoConnections: [],
 };
@@ -171,11 +170,10 @@ const staffSso = {
   id: 'conn_staff',
   label: 'Test Staff',
   logoUrl: null,
-  mode: 'required' as const,
 };
 
 describe('/auth/employer/sign-up board SSO', () => {
-  it('offers only SSO, as an employer, when the board requires it', async () => {
+  it('offers only SSO, as an employer, when every built-in method is off', async () => {
     mocks.getSsoAuthorizationUrl.mockResolvedValue({
       ok: false,
       message: 'SSO unavailable in this test',
@@ -186,7 +184,6 @@ describe('/auth/employer/sign-up board SSO', () => {
         signIn={{
           candidate: allBuiltIns,
           employer: {
-            ssoRequired: true,
             methods: {
               password: false,
               magicLink: false,
@@ -222,12 +219,12 @@ describe('/auth/employer/sign-up board SSO', () => {
     expect(returnTo.searchParams.get('cavuno_auth_intent')).toBe('sign_up');
   });
 
-  it('swaps a refused registration for the SSO connections the API names', async () => {
+  it('swaps a refused registration for the methods the API names', async () => {
     mocks.signUpEmployer.mockResolvedValue({
       ok: false,
-      code: 'sso_required',
-      message: 'This role must sign in with SSO.',
-      ssoConnectionIds: ['conn_staff'],
+      code: 'board_auth_method_unavailable',
+      message: 'Password sign-up is switched off for this role.',
+      availableMethods: { methods: [], ssoConnectionIds: ['conn_staff'] },
     });
     await renderRouted(
       <EmployerSignUpView
@@ -255,13 +252,18 @@ describe('/auth/employer/sign-up board SSO', () => {
       screen.getByRole('button', { name: 'Create employer account' }),
     );
 
-    expect(await screen.findByText(m.authSso_requiredText())).toBeVisible();
+    expect(
+      await screen.findByText(m.authSignInError_methodUnavailableText()),
+    ).toBeVisible();
     expect(screen.queryByLabelText('Work email')).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', {
         name: m.authSso_continueWithLabel({ label: 'Test Staff' }),
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with Google' }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

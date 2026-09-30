@@ -27,22 +27,25 @@ import {
 } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import {
+  isSsoOnly,
   resolveBoardSignIn,
+  roleSignInOptions,
+  signInOptionsForAvailable,
   signInRoleForReturnTo,
-  ssoChoicesForRequired,
+  type SignInOptions,
   type SsoChoice,
 } from '@/lib/board-sign-in';
 import { signInRedirectErrorMessage } from '@/lib/sign-in-redirect-error';
 import { textActionClass, textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
-import type { PublicBoardSignIn } from '@cavuno/board';
+import type { AvailableSignInMethods, PublicBoardSignIn } from '@cavuno/board';
 
 type AuthActionFailure = {
   ok: false;
   code: string;
   message: string;
-  /** Present on `sso_required`: the connections the account must use. */
-  ssoConnectionIds?: string[];
+  /** Present on `board_auth_method_unavailable`: what the account can use. */
+  availableMethods?: AvailableSignInMethods;
 };
 
 export function SignInView({
@@ -90,41 +93,38 @@ export function SignInView({
 }) {
   const options = resolveBoardSignIn(signIn);
   const role = signInRoleForReturnTo(returnTo);
-  const roleSignIn = options[role];
-  const { methods } = roleSignIn;
-  const [mode, setMode] = useState<'password' | 'magic'>(
-    methods.password || !methods.magicLink ? 'password' : 'magic',
-  );
+  /**
+   * Set when the API refused a method with `board_auth_method_unavailable`:
+   * the methods and SSO connections the account's role has instead replace
+   * the page's own options until the user picks "Sign in another way".
+   */
+  const [refused, setRefused] = useState<SignInOptions | null>(null);
+  const offered = refused ?? roleSignInOptions(options, role);
+  const { methods, ssoChoices } = offered;
+  const [chosenMode, setMode] = useState<'password' | 'magic'>('password');
+  const mode: 'password' | 'magic' =
+    methods.password && methods.magicLink
+      ? chosenMode
+      : methods.password
+        ? 'password'
+        : 'magic';
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   /** The address a magic link was sent to — non-null swaps in the sent state. */
   const [sentTo, setSentTo] = useState<string | null>(null);
-  /**
-   * Set when the API answered `sso_required` (to a password or magic-link
-   * attempt, or on the provider redirect): only these SSO buttons remain.
-   */
-  const [requiredSso, setRequiredSso] = useState<SsoChoice[] | null>(() =>
-    redirectError === 'sso_required'
-      ? ssoChoicesForRequired(options, role)
-      : null,
-  );
-  const ssoOnly = roleSignIn.ssoRequired || requiredSso !== null;
-  const ssoChoices: SsoChoice[] =
-    requiredSso ??
-    roleSignIn.ssoConnections.map((connection) => ({ connection, role }));
   const showCredentialForm = methods.password || methods.magicLink;
   const showProviderButtons =
     methods.google || methods.linkedin || ssoChoices.length > 0;
-  const redirectErrorText =
-    redirectError && redirectError !== 'sso_required'
-      ? signInRedirectErrorMessage(redirectError)
-      : null;
+  const redirectErrorText = redirectError
+    ? signInRedirectErrorMessage(redirectError)
+    : null;
 
   function handleFailure(result: AuthActionFailure) {
-    if (result.code === 'sso_required') {
-      setRequiredSso(
-        ssoChoicesForRequired(options, role, result.ssoConnectionIds),
+    if (result.availableMethods) {
+      setRefused(
+        signInOptionsForAvailable(options, role, result.availableMethods),
       );
+      setSentTo(null);
       setError(null);
       return;
     }
@@ -226,46 +226,21 @@ export function SignInView({
     );
   }
 
-  if (ssoOnly) {
-    return (
-      <AuthCard
-        title={m.authSignIn_title()}
-        supportingText={m.authSso_requiredText()}
-      >
-        {redirectErrorText ? (
-          <Alert variant="destructive">
-            <AlertDescription>{redirectErrorText}</AlertDescription>
-          </Alert>
-        ) : null}
-        <div className="flex flex-col gap-3">
-          <SsoConnectionButtons
-            choices={ssoChoices}
-            disabled={pending}
-            onSelect={(choice) => void startSso(choice)}
-          />
-        </div>
-        <FormError message={error} />
-        {/* The prompt came from one account's answer; someone else on this
-            device can still use the methods the board offers. */}
-        {requiredSso !== null && !roleSignIn.ssoRequired ? (
-          <button
-            type="button"
-            className={cn(textActionClass, 'justify-self-center text-sm')}
-            onClick={() => {
-              setRequiredSso(null);
-              setError(null);
-            }}
-          >
-            {m.authSso_signInAnotherWayLabel()}
-          </button>
-        ) : null}
-      </AuthCard>
-    );
-  }
-
   return (
-    <AuthCard title={m.authSignIn_title()}>
-      {redirectErrorText ? (
+    <AuthCard
+      title={m.authSignIn_title()}
+      supportingText={
+        !refused && isSsoOnly(offered) ? m.authSso_onlyText() : undefined
+      }
+    >
+      {refused ? (
+        <Alert role="status">
+          <AlertDescription>
+            {m.authSignInError_methodUnavailableText()}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {redirectErrorText && !refused ? (
         <Alert variant="destructive">
           <AlertDescription>{redirectErrorText}</AlertDescription>
         </Alert>
@@ -448,6 +423,20 @@ export function SignInView({
         <p className="text-muted-foreground text-center text-sm">
           {m.authSso_noMethodsText()}
         </p>
+      ) : null}
+      {/* The refusal came from one account's answer; someone else on this
+          device can still use the methods the page offers. */}
+      {refused ? (
+        <button
+          type="button"
+          className={cn(textActionClass, 'justify-self-center text-sm')}
+          onClick={() => {
+            setRefused(null);
+            setError(null);
+          }}
+        >
+          {m.authSso_signInAnotherWayLabel()}
+        </button>
       ) : null}
 
       {/* Mirrors the sign-up card's prompt+link footer, so the two entry

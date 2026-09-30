@@ -1,6 +1,7 @@
 import {
   isBoardApiError,
-  isSsoRequired,
+  isSignInMethodUnavailable,
+  type AvailableSignInMethods,
   type BoardAuthSession,
 } from '@cavuno/board';
 /**
@@ -24,6 +25,11 @@ import {
   parseSessionForSource,
   serializeSessionForSource,
 } from '../lib/data-source.server';
+import {
+  developmentOriginParam,
+  type DevelopmentOriginUse,
+} from '../lib/development-origin';
+import { getServerEnv } from '../lib/env';
 import { sessionMiddleware } from '../lib/session-middleware';
 
 /** Map API failures to a form-friendly result instead of a 500. */
@@ -31,23 +37,31 @@ type AuthActionError = {
   ok: false;
   code: string;
   message: string;
-  /** On `sso_required`: the SSO connections the role must sign in with. */
-  ssoConnectionIds?: string[];
+  /**
+   * On `board_auth_method_unavailable`: what the account's role can sign in
+   * with instead.
+   */
+  availableMethods?: AvailableSignInMethods;
 };
 
 function authError<T>(error: T): AuthActionError {
-  if (isSsoRequired(error)) {
+  if (isSignInMethodUnavailable(error)) {
     return {
       ok: false,
       code: error.code,
       message: error.message,
-      ssoConnectionIds: error.details.connectionIds,
+      availableMethods: error.details.availableMethods,
     };
   }
   if (isBoardApiError(error)) {
     return { ok: false, code: error.code, message: error.message };
   }
   throw error;
+}
+
+/** `developmentOrigin` for this deployment, when `CAVUNO_DEVELOPMENT_ORIGIN` is set. */
+function developmentOrigin(use: DevelopmentOriginUse) {
+  return developmentOriginParam(getServerEnv().developmentOrigin, use);
 }
 
 function authExchangeIsNewUser(
@@ -84,6 +98,7 @@ export const signUp = createServerFn({ method: 'POST' })
         role: 'candidate',
         method: 'emailpass',
         ...data,
+        ...developmentOrigin('email'),
       });
       persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
@@ -114,6 +129,7 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
         role: 'employer',
         method: 'emailpass',
         ...data,
+        ...developmentOrigin('email'),
       });
       persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
@@ -236,7 +252,10 @@ export const forgotPassword = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
   .handler(async ({ data }) => {
     // Always 204 server-side (no account enumeration) — mirror that.
-    await getBoard().auth.forgotPassword(data);
+    await getBoard().auth.forgotPassword({
+      ...data,
+      ...developmentOrigin('email'),
+    });
     return { ok: true as const };
   });
 
@@ -269,7 +288,10 @@ export const requestMagicLink = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.requestMagicLink(data);
+      await getBoard().auth.requestMagicLink({
+        ...data,
+        ...developmentOrigin('email'),
+      });
       return { ok: true as const };
     } catch (error) {
       return authError(error);
@@ -305,10 +327,10 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     try {
       const { provider, ...query } = data;
-      const result = await getBoard().auth.getOAuthAuthorizationUrl(
-        provider,
-        query,
-      );
+      const result = await getBoard().auth.getOAuthAuthorizationUrl(provider, {
+        ...query,
+        ...developmentOrigin('redirect'),
+      });
       return { ok: true as const, authorizeUrl: result.authorizeUrl };
     } catch (error) {
       return authError(error);
@@ -351,7 +373,7 @@ export const getSsoAuthorizationUrl = createServerFn({ method: 'GET' })
       const { connectionId, ...query } = data;
       const result = await getBoard().auth.getSsoAuthorizationUrl(
         connectionId,
-        query,
+        { ...query, ...developmentOrigin('redirect') },
       );
       return { ok: true as const, authorizeUrl: result.authorizeUrl };
     } catch (error) {

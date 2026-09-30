@@ -15,7 +15,7 @@ export const REDIRECT_ERROR_MESSAGES = {
   oauth_failed: m.authSignInError_failedText,
   oauth_email_unverified: m.authSignInError_emailUnverifiedText,
   role_disabled: m.authSignInError_roleDisabledText,
-  sso_required: m.authSso_requiredText,
+  method_unavailable: m.authSignInError_methodUnavailableText,
   sso_state_invalid: m.authSignInError_stateInvalidText,
   sso_cancelled: m.authSignInError_cancelledText,
   sso_failed: m.authSignInError_ssoFailedText,
@@ -25,6 +25,8 @@ export const REDIRECT_ERROR_MESSAGES = {
   sso_account_disabled: m.authSignInError_accountDisabledText,
   sso_identity_linked_elsewhere: m.authSignInError_identityLinkedElsewhereText,
   sso_link_proof_rate_limited: m.authSignInError_linkProofRateLimitedText,
+  sso_development_origin_not_allowed_for_email:
+    m.authSignInError_developmentOriginEmailText,
 } satisfies Record<RedirectErrorCode, () => string>;
 
 export function signInRedirectErrorMessage(code: string): string {

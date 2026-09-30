@@ -1,6 +1,7 @@
 import { isEmployerReturnPath } from './board-datalayer-events';
 
 import type {
+  AvailableSignInMethods,
   BoardRoleSignIn,
   BoardSignInSsoConnection,
   PublicBoardSignIn,
@@ -13,7 +14,6 @@ import type {
  * SSO connection is offered, which is exactly how the board behaved before.
  */
 const ALL_BUILT_INS: BoardRoleSignIn = {
-  ssoRequired: false,
   methods: { password: true, magicLink: true, google: true, linkedin: true },
   ssoConnections: [],
 };
@@ -43,36 +43,74 @@ export type SsoChoice = {
   role: SignInRole;
 };
 
-/**
- * SSO connections to offer after the API answered `sso_required`. The error
- * lists connection ids without a role, so match them against the page's role
- * first and the other role second. Without ids (a `?error=sso_required`
- * redirect), offer the page role's connections, or the other role's when the
- * page role has none.
- */
-export function ssoChoicesForRequired(
+/** What a sign-in or sign-up card renders: built-in methods plus SSO buttons. */
+export type SignInOptions = {
+  methods: BoardRoleSignIn['methods'];
+  ssoChoices: SsoChoice[];
+};
+
+/** The options `signIn.<role>` offers. */
+export function roleSignInOptions(
   signIn: PublicBoardSignIn,
   role: SignInRole,
-  connectionIds?: readonly string[],
-): SsoChoice[] {
-  const other: SignInRole = role === 'candidate' ? 'employer' : 'candidate';
-  const offered = (from: SignInRole) =>
-    signIn[from].ssoConnections.map((connection) => ({
+): SignInOptions {
+  return {
+    methods: signIn[role].methods,
+    ssoChoices: signIn[role].ssoConnections.map((connection) => ({
       connection,
-      role: from,
-    }));
-  if (!connectionIds || connectionIds.length === 0) {
-    const own = offered(role);
-    return own.length > 0 ? own : offered(other);
-  }
-  const choices: SsoChoice[] = [];
-  for (const id of connectionIds) {
-    const match =
-      offered(role).find((choice) => choice.connection.id === id) ??
-      offered(other).find((choice) => choice.connection.id === id);
-    if (match && !choices.some((choice) => choice.connection.id === id)) {
-      choices.push(match);
+      role,
+    })),
+  };
+}
+
+/**
+ * True when the options are SSO buttons only: every built-in method is off
+ * and at least one connection is listed.
+ */
+export function isSsoOnly(options: SignInOptions): boolean {
+  const { password, magicLink, google, linkedin } = options.methods;
+  return (
+    options.ssoChoices.length > 0 &&
+    !password &&
+    !magicLink &&
+    !google &&
+    !linkedin
+  );
+}
+
+/**
+ * The options to offer after the API refused a method with
+ * `board_auth_method_unavailable`. `details.availableMethods` names what the
+ * account's role can use: built-in method keys (unknown keys are ignored) and
+ * SSO connection ids without a role. The account may belong to the role the
+ * page is not for, so match each id against the page's role first and the
+ * other role second.
+ */
+export function signInOptionsForAvailable(
+  signIn: PublicBoardSignIn,
+  role: SignInRole,
+  available: AvailableSignInMethods,
+): SignInOptions {
+  const listed = new Set<string>(available.methods);
+  const other: SignInRole = role === 'candidate' ? 'employer' : 'candidate';
+  const ssoChoices: SsoChoice[] = [];
+  for (const id of available.ssoConnectionIds) {
+    if (ssoChoices.some((choice) => choice.connection.id === id)) continue;
+    for (const from of [role, other]) {
+      const connection = signIn[from].ssoConnections.find((c) => c.id === id);
+      if (connection) {
+        ssoChoices.push({ connection, role: from });
+        break;
+      }
     }
   }
-  return choices;
+  return {
+    methods: {
+      password: listed.has('password'),
+      magicLink: listed.has('magicLink'),
+      google: listed.has('google'),
+      linkedin: listed.has('linkedin'),
+    },
+    ssoChoices,
+  };
 }

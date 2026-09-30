@@ -26,7 +26,7 @@ export const CODE_MESSAGES = {
   board_auth_registration_disabled: m.boardError_registrationDisabledText,
   board_auth_account_not_found: m.boardError_accountNotFoundText,
   // Board SSO sign-in:
-  sso_required: m.authSso_requiredText,
+  board_auth_method_unavailable: m.authSignInError_methodUnavailableText,
   board_auth_sso_connection_not_found:
     m.authSignInError_connectionUnavailableText,
   board_auth_sso_role_unavailable: m.authSignInError_roleUnavailableText,

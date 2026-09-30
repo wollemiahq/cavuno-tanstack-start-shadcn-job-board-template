@@ -297,7 +297,6 @@ function passwordInput() {
 
 function roleSignIn(overrides: Partial<BoardRoleSignIn> = {}): BoardRoleSignIn {
   return {
-    ssoRequired: false,
     methods: { password: true, magicLink: true, google: true, linkedin: true },
     ssoConnections: [],
     ...overrides,
@@ -308,13 +307,17 @@ const memberSso = {
   id: 'conn_members',
   label: 'Test Members',
   logoUrl: null,
-  mode: 'available' as const,
 };
 const staffSso = {
   id: 'conn_staff',
   label: 'Test Staff',
   logoUrl: null,
-  mode: 'required' as const,
+};
+const NO_BUILT_INS = {
+  password: false,
+  magicLink: false,
+  google: false,
+  linkedin: false,
 };
 
 function renderSignInWith(
@@ -399,17 +402,11 @@ describe('/auth/sign-in board SSO', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows only SSO when the role requires it', async () => {
+  it('shows only SSO when every built-in method is off for the role', async () => {
     renderSignInWith('/account', {
       candidate: roleSignIn({
-        ssoRequired: true,
-        methods: {
-          password: false,
-          magicLink: false,
-          google: false,
-          linkedin: false,
-        },
-        ssoConnections: [{ ...memberSso, mode: 'required' }],
+        methods: NO_BUILT_INS,
+        ssoConnections: [memberSso],
       }),
       employer: roleSignIn(),
     });
@@ -417,6 +414,7 @@ describe('/auth/sign-in board SSO', () => {
     expect(
       await screen.findByRole('button', { name: continueWith('Test Members') }),
     ).toBeInTheDocument();
+    expect(screen.getByText(m.authSso_onlyText())).toBeInTheDocument();
     expect(
       document.querySelector('input[name="email"]'),
     ).not.toBeInTheDocument();
@@ -444,12 +442,15 @@ describe('/auth/sign-in board SSO', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('swaps a refused password sign-in for the connections the API names', async () => {
+  it('swaps a refused password sign-in for the methods the API names', async () => {
     mocks.signIn.mockResolvedValue({
       ok: false,
-      code: 'sso_required',
-      message: 'This account must sign in with SSO.',
-      ssoConnectionIds: ['conn_staff'],
+      code: 'board_auth_method_unavailable',
+      message: 'That sign-in method is switched off for this account.',
+      availableMethods: {
+        methods: ['google'],
+        ssoConnectionIds: ['conn_staff'],
+      },
     });
     mocks.getSsoAuthorizationUrl.mockResolvedValue({
       ok: false,
@@ -457,7 +458,10 @@ describe('/auth/sign-in board SSO', () => {
     });
     const { container } = renderSignInWith('/account', {
       candidate: roleSignIn(),
-      employer: roleSignIn({ ssoRequired: true, ssoConnections: [staffSso] }),
+      employer: roleSignIn({
+        methods: { ...NO_BUILT_INS, google: true },
+        ssoConnections: [staffSso],
+      }),
     });
     await screen.findByRole('button', { name: 'Sign in' });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
@@ -472,6 +476,15 @@ describe('/auth/sign-in board SSO', () => {
       await screen.findByRole('button', { name: continueWith('Test Staff') }),
     );
     expect(passwordInput()).not.toBeInTheDocument();
+    expect(
+      screen.getByText(m.authSignInError_methodUnavailableText()),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Continue with Google' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with LinkedIn' }),
+    ).not.toBeInTheDocument();
     // The connection is the employer's, so SSO starts as an employer.
     await waitFor(() => {
       expect(mocks.getSsoAuthorizationUrl).toHaveBeenCalledWith({
@@ -506,18 +519,24 @@ describe('/auth/sign-in board SSO', () => {
     );
   });
 
-  it('shows the SSO buttons after an sso_required redirect', async () => {
+  it('explains a method_unavailable redirect above the role options', async () => {
     renderSignInWith(
       '/account',
       {
-        candidate: roleSignIn({ ssoConnections: [memberSso] }),
+        candidate: roleSignIn({
+          methods: NO_BUILT_INS,
+          ssoConnections: [memberSso],
+        }),
         employer: roleSignIn(),
       },
-      'sso_required',
+      'method_unavailable',
     );
 
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.authSignInError_methodUnavailableText(),
+    );
     expect(
-      await screen.findByRole('button', { name: continueWith('Test Members') }),
+      screen.getByRole('button', { name: continueWith('Test Members') }),
     ).toBeInTheDocument();
     expect(passwordInput()).not.toBeInTheDocument();
   });

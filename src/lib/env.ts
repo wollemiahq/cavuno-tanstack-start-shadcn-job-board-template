@@ -36,6 +36,15 @@ export interface ServerEnv {
    * dev server, so builder users never see template-developer tooling.
    */
   devTools: boolean;
+  /**
+   * `CAVUNO_DEVELOPMENT_ORIGIN` — the origin this frontend runs on when it is
+   * NOT the board's production origin, e.g. `http://localhost:3000` or an
+   * https preview URL. It must be registered on the board (Settings → SDK →
+   * Development origins) and needs a `pk_…` `CAVUNO_BOARD`. Unset in
+   * production: sign-in round trips and email links then land on the
+   * board's registered origin.
+   */
+  developmentOrigin?: string;
 }
 
 type WorkerEnvBindings = {
@@ -44,6 +53,7 @@ type WorkerEnvBindings = {
   CAVUNO_DEMO_BOARD?: string;
   CAVUNO_DEMO_BOARD_PRIVATE?: string;
   CAVUNO_DEV_TOOLS?: string;
+  CAVUNO_DEVELOPMENT_ORIGIN?: string;
 };
 
 export function getServerEnv(): ServerEnv {
@@ -68,5 +78,29 @@ export function getServerEnv(): ServerEnv {
   // Only the exact string "1" enables template-developer chrome.
   const devTools = raw.CAVUNO_DEV_TOOLS === '1';
 
-  return { apiUrl, board, demoBoard, demoBoardPrivate, devTools };
+  const developmentOrigin = parseDevelopmentOrigin(
+    raw.CAVUNO_DEVELOPMENT_ORIGIN,
+  );
+
+  return {
+    apiUrl,
+    board,
+    demoBoard,
+    demoBoardPrivate,
+    devTools,
+    developmentOrigin,
+  };
+}
+
+/** Normalize to a bare origin; a value that is not a URL fails loud. */
+function parseDevelopmentOrigin(raw: string | undefined): string | undefined {
+  const value = raw?.trim();
+  if (!value) return undefined;
+  try {
+    return new URL(value).origin;
+  } catch {
+    throw new Error(
+      `CAVUNO_DEVELOPMENT_ORIGIN is not a URL: ${JSON.stringify(value)}`,
+    );
+  }
 }
