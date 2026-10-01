@@ -135,8 +135,6 @@ export function CandidatePaywallLock({
           </Card>
         ))}
       </div>
-
-      {browseJobs}
     </section>
   );
 }
