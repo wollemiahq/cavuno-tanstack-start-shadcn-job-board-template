@@ -9,13 +9,13 @@ import {
   RegistrationPage,
   type MarketingConsentCopy,
 } from '@/components/registration-page';
-import { Empty, EmptyDescription, EmptyHeader } from '@/components/ui/empty';
 import { reconcileCommittedAction } from '@/lib/action-toast';
 import {
   appendAuthIntentQuery,
   appendOAuthProviderHint,
 } from '@/lib/board-datalayer-events';
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+import type { PublicBoardSignIn } from '@cavuno/board';
 
 const EMPLOYER_DASHBOARD = '/employers/dashboard';
 
@@ -33,6 +33,7 @@ export async function loadEmployerSignUp(
     getBoardContext: () => Promise<{
       name: string;
       features: { employers: boolean };
+      signIn?: PublicBoardSignIn;
     }>;
     sessionUserOrNull: () => Promise<{
       id: string;
@@ -53,31 +54,21 @@ export async function loadEmployerSignUp(
   }
   redirectIfSignedIn(user, '/');
   if (!board.features.employers) throw notFound();
-  return { boardName: board.name };
-}
-
-export function EmployerSignUpUnavailable() {
-  return (
-    <div>
-      <Empty className="border-border bg-card border">
-        <EmptyHeader>
-          <EmptyDescription>
-            {m.authEmployerSignUp_notAvailableText()}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </div>
-  );
+  return { boardName: board.name, signIn: board.signIn };
 }
 
 export function EmployerSignUpView({
   boardName,
   signUpEmployerAction,
   getOAuthAuthorizationUrlAction,
+  getSsoAuthorizationUrlAction,
+  signIn,
   invalidate,
   footer,
 }: {
   boardName: string;
+  /** `board.context().signIn`; absent means every built-in method, no SSO. */
+  signIn?: PublicBoardSignIn;
   signUpEmployerAction: (input: {
     data: {
       email: string;
@@ -91,6 +82,16 @@ export function EmployerSignUpView({
       provider: 'google' | 'linkedin';
       returnTo: string;
       role: 'employer';
+    };
+  }) => Promise<
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
+  >;
+  getSsoAuthorizationUrlAction: (input: {
+    data: {
+      connectionId: string;
+      role: 'candidate' | 'employer';
+      returnTo: string;
     };
   }) => Promise<
     | { ok: true; authorizeUrl: string }
@@ -138,6 +139,17 @@ export function EmployerSignUpView({
             provider,
             returnTo: employerOAuthReturnTo(provider),
             role: 'employer',
+          },
+        })
+      }
+      role="employer"
+      signIn={signIn}
+      onSsoStart={(choice) =>
+        getSsoAuthorizationUrlAction({
+          data: {
+            connectionId: choice.connection.id,
+            role: choice.role,
+            returnTo: appendAuthIntentQuery(EMPLOYER_DASHBOARD, 'sign_up'),
           },
         })
       }

@@ -23,6 +23,7 @@ import type { UrlSearchInput } from '../lib/pagination';
 const mocks = {
   assignLocation: vi.fn(),
   getOAuthAuthorizationUrl: vi.fn(),
+  getSsoAuthorizationUrl: vi.fn(),
   invalidate: vi.fn(),
   navigate: vi.fn(),
   requestMagicLink: vi.fn(),
@@ -32,8 +33,13 @@ const mocks = {
 import { SignInView } from './-auth.sign-in';
 import { Route } from './auth.sign-in';
 
-import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
+import {
+  appendAuthConversionQuery,
+  appendAuthIntentQuery,
+} from '@/lib/board-datalayer-events';
 import { candidateOAuthReturnTo } from '@/lib/candidate-return-to';
+import { m } from '@/paraglide/messages';
+import type { BoardRoleSignIn, PublicBoardSignIn } from '@cavuno/board';
 
 afterEach(() => {
   // The HTML fallback must keep credentials and personal data out of GET URLs.
@@ -96,6 +102,7 @@ function renderSignIn(
       signInAction={mocks.signIn}
       requestMagicLinkAction={mocks.requestMagicLink}
       getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+      getSsoAuthorizationUrlAction={mocks.getSsoAuthorizationUrl}
       invalidate={mocks.invalidate}
       navigate={mocks.navigate}
       assignLocation={mocks.assignLocation}
@@ -153,6 +160,28 @@ describe('/auth/sign-in search contract', () => {
     });
     expect(mocks.invalidate).not.toHaveBeenCalled();
     expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it('passes a verified candidate password sign-in through the resume step', async () => {
+    mocks.signIn.mockResolvedValue({
+      ok: true,
+      boardUser: { role: 'candidate', emailVerified: true },
+    });
+    const { container } = renderSignIn('/jobs');
+    await screen.findByRole('button', { name: 'Sign in' });
+    fireEvent.change(container.querySelector('input[name="email"]')!, {
+      target: { value: 'candidate@example.com' },
+    });
+    fireEvent.change(container.querySelector('input[name="password"]')!, {
+      target: { value: 'secret-password' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
+
+    await waitFor(() => {
+      expect(mocks.assignLocation).toHaveBeenCalledWith(
+        '/auth/verify-email-required?returnTo=%2Fjobs&cavuno_auth=login&cavuno_auth_method=password',
+      );
+    });
   });
 
   it('recovers when password sign-in rejects unexpectedly', async () => {
@@ -315,5 +344,256 @@ describe('/auth/sign-in search contract', () => {
     expect(nativeRadios).toHaveLength(2);
     expect(nativeRadios[0]).toHaveAttribute('name', 'sign-in-method');
     expect(nativeRadios[1]).toHaveAttribute('name', 'sign-in-method');
+  });
+});
+
+function passwordInput() {
+  return document.querySelector('input[name="password"]');
+}
+
+function roleSignIn(overrides: Partial<BoardRoleSignIn> = {}): BoardRoleSignIn {
+  return {
+    methods: { password: true, magicLink: true, google: true, linkedin: true },
+    ssoConnections: [],
+    ...overrides,
+  };
+}
+
+const memberSso = {
+  id: 'conn_members',
+  label: 'Test Members',
+  logoUrl: null,
+};
+const staffSso = {
+  id: 'conn_staff',
+  label: 'Test Staff',
+  logoUrl: null,
+};
+const NO_BUILT_INS = {
+  password: false,
+  magicLink: false,
+  google: false,
+  linkedin: false,
+};
+
+function renderSignInWith(
+  returnTo: string,
+  signIn: PublicBoardSignIn,
+  redirectError?: string,
+) {
+  return renderRouted(
+    <SignInView
+      returnTo={returnTo}
+      signIn={signIn}
+      redirectError={redirectError}
+      signInAction={mocks.signIn}
+      requestMagicLinkAction={mocks.requestMagicLink}
+      getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+      getSsoAuthorizationUrlAction={mocks.getSsoAuthorizationUrl}
+      invalidate={mocks.invalidate}
+      navigate={mocks.navigate}
+      assignLocation={mocks.assignLocation}
+    />,
+  );
+}
+
+function continueWith(label: string) {
+  return m.authSso_continueWithLabel({ label });
+}
+
+describe('/auth/sign-in board SSO', () => {
+  it('starts sign-in through a connection for the page role', async () => {
+    const returnTo = '/jobs?q=design';
+    mocks.getSsoAuthorizationUrl.mockResolvedValue({
+      ok: true,
+      authorizeUrl: 'https://idp.example/authorize?state=abc',
+    });
+    renderSignInWith(returnTo, {
+      candidate: roleSignIn({ ssoConnections: [memberSso] }),
+      employer: roleSignIn(),
+    });
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: continueWith('Test Members') }),
+    );
+
+    await waitFor(() => {
+      expect(mocks.assignLocation).toHaveBeenCalledWith(
+        'https://idp.example/authorize?state=abc',
+      );
+    });
+    expect(mocks.getSsoAuthorizationUrl).toHaveBeenCalledWith({
+      data: {
+        connectionId: 'conn_members',
+        role: 'candidate',
+        returnTo: appendAuthIntentQuery(returnTo, 'login'),
+      },
+    });
+    // Built-ins the board keeps on stay next to the connection.
+    expect(passwordInput()).toBeInTheDocument();
+  });
+
+  it('offers only the built-in methods the board enables for the role', async () => {
+    renderSignInWith('/account', {
+      candidate: roleSignIn({
+        methods: {
+          password: true,
+          magicLink: false,
+          google: false,
+          linkedin: true,
+        },
+      }),
+      employer: roleSignIn(),
+    });
+
+    await waitFor(() => {
+      expect(passwordInput()).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with Google' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows only SSO when every built-in method is off for the role', async () => {
+    renderSignInWith('/account', {
+      candidate: roleSignIn({
+        methods: NO_BUILT_INS,
+        ssoConnections: [memberSso],
+      }),
+      employer: roleSignIn(),
+    });
+
+    expect(
+      await screen.findByRole('button', { name: continueWith('Test Members') }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(m.authSso_onlyText())).toBeInTheDocument();
+    expect(
+      document.querySelector('input[name="email"]'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with Google' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: m.authSso_signInAnotherWayLabel(),
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('uses the employer options when an employer page sent the visitor here', async () => {
+    renderSignInWith('/employers/dashboard', {
+      candidate: roleSignIn({ ssoConnections: [memberSso] }),
+      employer: roleSignIn({ ssoConnections: [staffSso] }),
+    });
+
+    expect(
+      await screen.findByRole('button', { name: continueWith('Test Staff') }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: continueWith('Test Members') }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('swaps a refused password sign-in for the methods the API names', async () => {
+    mocks.signIn.mockResolvedValue({
+      ok: false,
+      code: 'board_auth_method_unavailable',
+      message: 'That sign-in method is switched off for this account.',
+      availableMethods: {
+        methods: ['google'],
+        ssoConnectionIds: ['conn_staff'],
+      },
+    });
+    mocks.getSsoAuthorizationUrl.mockResolvedValue({
+      ok: false,
+      message: 'SSO unavailable in this test',
+    });
+    const { container } = renderSignInWith('/account', {
+      candidate: roleSignIn(),
+      employer: roleSignIn({
+        methods: { ...NO_BUILT_INS, google: true },
+        ssoConnections: [staffSso],
+      }),
+    });
+    await screen.findByRole('button', { name: 'Sign in' });
+    fireEvent.change(container.querySelector('input[name="email"]')!, {
+      target: { value: 'staff@example.com' },
+    });
+    fireEvent.change(container.querySelector('input[name="password"]')!, {
+      target: { value: 'secret-password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: continueWith('Test Staff') }),
+    );
+    expect(passwordInput()).not.toBeInTheDocument();
+    expect(
+      screen.getByText(m.authSignInError_methodUnavailableText()),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Continue with Google' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Continue with LinkedIn' }),
+    ).not.toBeInTheDocument();
+    // The connection is the employer's, so SSO starts as an employer.
+    await waitFor(() => {
+      expect(mocks.getSsoAuthorizationUrl).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          connectionId: 'conn_staff',
+          role: 'employer',
+        }),
+      });
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.authSso_signInAnotherWayLabel() }),
+    );
+    await waitFor(() => {
+      expect(passwordInput()).toBeInTheDocument();
+    });
+  });
+
+  it('accepts only code-shaped redirect errors and explains them', async () => {
+    expect(validateSearch({ error: 'sso_not_provisioned' })).toEqual({
+      error: 'sso_not_provisioned',
+    });
+    expect(validateSearch({ error: '<b>Call us</b>' })).toEqual({});
+
+    renderSignInWith(
+      '/account',
+      { candidate: roleSignIn(), employer: roleSignIn() },
+      'sso_not_provisioned',
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.authSignInError_notProvisionedText(),
+    );
+  });
+
+  it('explains a method_unavailable redirect above the role options', async () => {
+    renderSignInWith(
+      '/account',
+      {
+        candidate: roleSignIn({
+          methods: NO_BUILT_INS,
+          ssoConnections: [memberSso],
+        }),
+        employer: roleSignIn(),
+      },
+      'method_unavailable',
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.authSignInError_methodUnavailableText(),
+    );
+    expect(
+      screen.getByRole('button', { name: continueWith('Test Members') }),
+    ).toBeInTheDocument();
+    expect(passwordInput()).not.toBeInTheDocument();
   });
 });

@@ -12,3 +12,10 @@ CAVUNO_BOARD=pk_c2f66367a3abaa6bafd00fd3c2de3297
 # placements without serving ads). Opt-in so hosted previews such as the AI
 # builder, which also run the dev server, never show it to board owners.
 CAVUNO_DEV_TOOLS=1
+# Optional. The origin this frontend runs on when it is not the board's
+# production origin, e.g. http://localhost:3000 or an https preview URL.
+# Register it first (Dashboard → Settings → SDK → Development origins).
+# Google, LinkedIn and SSO sign-in then return here instead of production;
+# email links (magic link, verification, password reset) do too, but only
+# for a localhost origin. Leave unset in production.
+# CAVUNO_DEVELOPMENT_ORIGIN=http://localhost:3000

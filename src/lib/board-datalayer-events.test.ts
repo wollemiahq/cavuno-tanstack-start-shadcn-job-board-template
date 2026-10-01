@@ -127,6 +127,33 @@ describe('board-datalayer-events', () => {
     ).toBe('/de/account/connect?cavuno_auth=sign_up&cavuno_auth_method=google');
   });
 
+  it('sends a returning verified candidate through the resume step', () => {
+    const candidate = { role: 'candidate', emailVerified: true } as const;
+    expect(
+      resolvePostAuthConversionRedirect('/jobs?q=design', {
+        isNewUser: false,
+        fallbackMethod: 'sso',
+        boardUser: candidate,
+      }),
+    ).toBe(
+      '/auth/verify-email-required?returnTo=%2Fjobs%3Fq%3Ddesign&cavuno_auth=login&cavuno_auth_method=sso',
+    );
+    // Employers, unverified accounts and employer destinations go straight on.
+    for (const [returnTo, boardUser] of [
+      ['/jobs', { role: 'employer', emailVerified: true }],
+      ['/jobs', { role: 'candidate', emailVerified: false }],
+      ['/employers/dashboard', candidate],
+    ] as const) {
+      expect(
+        resolvePostAuthConversionRedirect(returnTo, {
+          isNewUser: false,
+          fallbackMethod: 'password',
+          boardUser,
+        }),
+      ).toBe(`${returnTo}?cavuno_auth=login&cavuno_auth_method=password`);
+    }
+  });
+
   it('strips auth conversion params from search', () => {
     const search = new URLSearchParams(
       'cavuno_auth=sign_up&cavuno_auth_method=password&returnTo=%2Faccount',

@@ -8,6 +8,7 @@ import { renderRouted } from '@/test/render-routed';
 
 const mocks = {
   getOAuthAuthorizationUrl: vi.fn(),
+  getSsoAuthorizationUrl: vi.fn(),
   invalidate: vi.fn(),
   signUp: vi.fn(),
 };
@@ -71,6 +72,7 @@ describe('/auth/sign-up search contract', () => {
         returnTo={returnTo}
         signUpAction={mocks.signUp}
         getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        getSsoAuthorizationUrlAction={mocks.getSsoAuthorizationUrl}
         invalidate={mocks.invalidate}
       />,
     );
@@ -111,6 +113,7 @@ describe('/auth/sign-up search contract', () => {
         returnTo={returnTo}
         signUpAction={mocks.signUp}
         getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        getSsoAuthorizationUrlAction={mocks.getSsoAuthorizationUrl}
         invalidate={mocks.invalidate}
       />,
     );

@@ -30,7 +30,8 @@ import {
   overwriteGetLocale,
 } from '../paraglide/runtime';
 import { AuthCard, AuthDivider, Field, FormError } from './auth-form';
-import { RegistrationPage, RoleSelector } from './registration-page';
+import { RoleSelector } from './auth-page-card';
+import { RegistrationPage } from './registration-page';
 
 async function render(node: React.ReactNode) {
   const rootRoute = createRootRoute();

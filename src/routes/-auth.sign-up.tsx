@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 
 import {
   candidateAuthSearch,
+  candidateReturnTo,
   buildVerifyEmailRedirectPath,
   candidateOAuthReturnTo,
 } from '../lib/candidate-return-to';
@@ -13,17 +14,23 @@ import {
   type MarketingConsentCopy,
 } from '@/components/registration-page';
 import { reconcileCommittedAction } from '@/lib/action-toast';
+import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
 import { textLinkClass } from '@/lib/text-link';
+import type { PublicBoardSignIn } from '@cavuno/board';
 
 export function SignUpView({
   boardName,
   returnTo,
   signUpAction,
   getOAuthAuthorizationUrlAction,
+  getSsoAuthorizationUrlAction,
+  signIn,
   invalidate,
 }: {
   boardName: string;
   returnTo: string;
+  /** `board.context().signIn`; absent means every built-in method, no SSO. */
+  signIn?: PublicBoardSignIn;
   signUpAction: (input: {
     data: {
       email: string;
@@ -35,6 +42,16 @@ export function SignUpView({
   getOAuthAuthorizationUrlAction: (input: {
     data: {
       provider: 'google' | 'linkedin';
+      returnTo: string;
+    };
+  }) => Promise<
+    | { ok: true; authorizeUrl: string }
+    | { ok: false; code?: string; message: string }
+  >;
+  getSsoAuthorizationUrlAction: (input: {
+    data: {
+      connectionId: string;
+      role: 'candidate' | 'employer';
       returnTo: string;
     };
   }) => Promise<
@@ -78,6 +95,20 @@ export function SignUpView({
           data: {
             provider,
             returnTo: candidateOAuthReturnTo(returnTo, 'sign_up', provider),
+          },
+        })
+      }
+      role="candidate"
+      signIn={signIn}
+      onSsoStart={(choice) =>
+        getSsoAuthorizationUrlAction({
+          data: {
+            connectionId: choice.connection.id,
+            role: choice.role,
+            returnTo: appendAuthIntentQuery(
+              candidateReturnTo(returnTo),
+              'sign_up',
+            ),
           },
         })
       }

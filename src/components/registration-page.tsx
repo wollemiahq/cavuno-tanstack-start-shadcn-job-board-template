@@ -1,136 +1,33 @@
 import { useEffect, useState } from 'react';
 
 import { Link } from '@tanstack/react-router';
-import { BriefcaseBusiness } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { AuthDivider } from './auth-form';
 
+import { AuthPageCard } from '@/components/auth-page-card';
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import { SsoConnectionButtons } from '@/components/sso-connection-buttons';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field as FormField,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldLabel,
-  FieldTitle,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import {
+  isSsoOnly,
+  resolveBoardSignIn,
+  roleSignInOptions,
+  signInOptionsForAvailable,
+  type SignInOptions,
+  type SsoChoice,
+} from '@/lib/board-sign-in';
+import { textActionClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
-
-export function AuthPageCard({
-  title,
-  supportingText,
-  announceTitle = false,
-  children,
-}: {
-  title: string;
-  supportingText?: React.ReactNode;
-  announceTitle?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mx-auto w-full max-w-md py-6 sm:py-12">
-      <Card variant="elevated">
-        {/* CardHeader is a grid, so `items-center` only aligns the cross axis
-            (vertical) — `justify-items-center` is what centres the mark and
-            heading horizontally. */}
-        <CardHeader className="items-center justify-items-center gap-5 text-center">
-          <div
-            aria-hidden
-            className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-2xl shadow-sm"
-          >
-            <BriefcaseBusiness className="size-5" />
-          </div>
-          <div
-            className="grid gap-2"
-            role={announceTitle ? 'status' : undefined}
-            aria-live={announceTitle ? 'polite' : undefined}
-          >
-            <h1 className="font-heading text-foreground text-2xl font-medium tracking-tight">
-              {title}
-            </h1>
-            {supportingText ? (
-              <p className="text-muted-foreground text-sm leading-6">
-                {supportingText}
-              </p>
-            ) : null}
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-5">{children}</CardContent>
-      </Card>
-    </div>
-  );
-}
-
-export function RoleSelector({
-  value,
-  onValueChange,
-  ariaLabel,
-  candidateTitle,
-  candidateBody,
-  employerTitle,
-  employerBody,
-}: {
-  value: 'candidate' | 'employer';
-  onValueChange: (value: 'candidate' | 'employer') => void;
-  ariaLabel: string;
-  candidateTitle: string;
-  candidateBody: string;
-  employerTitle: string;
-  employerBody: string;
-}) {
-  return (
-    <RadioGroup
-      value={value}
-      onValueChange={onValueChange}
-      aria-label={ariaLabel}
-    >
-      <RoleOption
-        value="candidate"
-        title={candidateTitle}
-        body={candidateBody}
-      />
-      <RoleOption value="employer" title={employerTitle} body={employerBody} />
-    </RadioGroup>
-  );
-}
-
-function RoleOption({
-  value,
-  title,
-  body,
-}: {
-  value: 'candidate' | 'employer';
-  title: string;
-  body: string;
-}) {
-  const id = `role-${value}`;
-
-  return (
-    <FieldLabel
-      htmlFor={id}
-      className="hover:bg-muted cursor-pointer transition-colors"
-    >
-      <FormField orientation="horizontal">
-        <FieldContent>
-          <FieldTitle>{title}</FieldTitle>
-          <FieldDescription>{body}</FieldDescription>
-        </FieldContent>
-        <RadioGroupItem
-          id={id}
-          value={value}
-          aria-label={`${title}. ${body}`}
-        />
-      </FormField>
-    </FieldLabel>
-  );
-}
+import type { AvailableSignInMethods, PublicBoardSignIn } from '@cavuno/board';
 
 type RegistrationCopy = {
   nameLabel: string;
@@ -145,7 +42,13 @@ type RegistrationCopy = {
 
 type RegistrationResult =
   | { ok: true }
-  | { ok: false; code?: string; message: string };
+  | {
+      ok: false;
+      code?: string;
+      message: string;
+      /** Present on `board_auth_method_unavailable`: what the role can use. */
+      availableMethods?: AvailableSignInMethods;
+    };
 type RegistrationSubmitValues = {
   displayName: string;
   email: string;
@@ -172,7 +75,7 @@ export type MarketingConsentCopy = {
 type RegistrationStatus =
   | { state: 'idle' }
   | { state: 'pending' }
-  | { state: 'error'; message: string }
+  | { state: 'error'; message: string; code?: string }
   | { state: 'success' };
 
 export function RegistrationPage({
@@ -184,6 +87,9 @@ export function RegistrationPage({
   footer,
   marketingConsent,
   onOAuthStart,
+  role = 'candidate',
+  signIn,
+  onSsoStart,
 }: {
   title: string;
   supportingText: React.ReactNode;
@@ -195,9 +101,30 @@ export function RegistrationPage({
   onOAuthStart?: (
     provider: 'google' | 'linkedin',
   ) => Promise<OAuthRegistrationResult>;
+  /** The role this page registers; picks `signIn.<role>`. */
+  role?: 'candidate' | 'employer';
+  /** `board.context().signIn`; absent means every built-in method, no SSO. */
+  signIn?: PublicBoardSignIn;
+  onSsoStart?: (choice: SsoChoice) => Promise<OAuthRegistrationResult>;
 }) {
   const [status, setStatus] = useState<RegistrationStatus>({ state: 'idle' });
   const succeeded = status.state === 'success';
+  const options = resolveBoardSignIn(signIn);
+  /**
+   * Set when registration answered `board_auth_method_unavailable`: the
+   * methods and SSO connections the role has instead replace the page's own.
+   */
+  const [refused, setRefused] = useState<SignInOptions | null>(null);
+  const offered = refused ?? roleSignInOptions(options, role);
+  const { methods } = offered;
+  const ssoChoices: SsoChoice[] = onSsoStart ? offered.ssoChoices : [];
+  const showForm = methods.password && !refused;
+  const oauthProviders = (['google', 'linkedin'] as const).filter(
+    (provider) => onOAuthStart && methods[provider],
+  );
+  const showProviderButtons =
+    ssoChoices.length > 0 || oauthProviders.length > 0;
+  const pending = status.state === 'pending';
 
   useEffect(() => {
     if (status.state !== 'success') return;
@@ -219,31 +146,80 @@ export function RegistrationPage({
         </Link>
       ) : (
         <>
-          <RegistrationForm
-            copy={copy}
-            status={status}
-            onSubmit={onSubmit}
-            onStatusChange={setStatus}
-            marketingConsent={marketingConsent}
-          />
-          {onOAuthStart ? (
-            <>
-              <AuthDivider label={m.authOrDividerLabel()} />
-              <div className="flex flex-col gap-3">
+          {refused || isSsoOnly(offered) ? (
+            <p className="text-muted-foreground text-center text-sm">
+              {refused
+                ? m.authSignInError_methodUnavailableText()
+                : m.authSso_onlyText()}
+            </p>
+          ) : null}
+          {showForm ? (
+            <RegistrationForm
+              copy={copy}
+              status={status}
+              onSubmit={async (values) => {
+                const result = await onSubmit(values);
+                if (!result.ok && result.availableMethods) {
+                  setRefused(
+                    signInOptionsForAvailable(
+                      options,
+                      role,
+                      result.availableMethods,
+                    ),
+                  );
+                }
+                return result;
+              }}
+              onStatusChange={setStatus}
+              marketingConsent={marketingConsent}
+            />
+          ) : null}
+          {showForm && showProviderButtons ? (
+            <AuthDivider label={m.authOrDividerLabel()} />
+          ) : null}
+          {showProviderButtons ? (
+            <div className="flex flex-col gap-3">
+              <SsoConnectionButtons
+                choices={ssoChoices}
+                disabled={pending}
+                onSelect={(choice) => {
+                  if (!onSsoStart) return;
+                  void startProvider(() => onSsoStart(choice), setStatus);
+                }}
+              />
+              {oauthProviders.map((provider) => (
                 <OAuthButton
-                  provider="google"
-                  pending={status.state === 'pending'}
-                  onStart={onOAuthStart}
+                  key={provider}
+                  provider={provider}
+                  pending={pending}
+                  onStart={(value) => onOAuthStart!(value)}
                   onStatusChange={setStatus}
                 />
-                <OAuthButton
-                  provider="linkedin"
-                  pending={status.state === 'pending'}
-                  onStart={onOAuthStart}
-                  onStatusChange={setStatus}
-                />
-              </div>
-            </>
+              ))}
+            </div>
+          ) : null}
+          {/* A refusal already swapped in the options that remain. */}
+          {!showForm &&
+          status.state === 'error' &&
+          status.code !== 'board_auth_method_unavailable' ? (
+            <FieldError>{status.message}</FieldError>
+          ) : null}
+          {!showForm && !showProviderButtons ? (
+            <p className="text-muted-foreground text-center text-sm">
+              {m.authSso_noMethodsText()}
+            </p>
+          ) : null}
+          {refused ? (
+            <button
+              type="button"
+              className={cn(textActionClass, 'justify-self-center text-sm')}
+              onClick={() => {
+                setRefused(null);
+                setStatus({ state: 'idle' });
+              }}
+            >
+              {m.authSso_signInAnotherWayLabel()}
+            </button>
           ) : null}
           {footer}
         </>
@@ -277,30 +253,32 @@ function OAuthButton({
       size="lg"
       className="w-full"
       disabled={pending}
-      onClick={async () => {
-        onStatusChange({ state: 'pending' });
-        try {
-          const result = await onStart(provider);
-          if (result.ok) {
-            window.location.assign(result.authorizeUrl);
-            return;
-          }
-          onStatusChange({
-            state: 'error',
-            message: boardErrorMessage(result),
-          });
-        } catch {
-          onStatusChange({
-            state: 'error',
-            message: m.candidateAction_errorText(),
-          });
-        }
-      }}
+      onClick={() =>
+        void startProvider(() => onStart(provider), onStatusChange)
+      }
     >
       {provider === 'google' ? <GoogleIcon /> : <LinkedInIcon />}
       {label}
     </Button>
   );
+}
+
+/** Ask for a provider URL (Google, LinkedIn or SSO) and leave for it. */
+async function startProvider(
+  start: () => Promise<OAuthRegistrationResult>,
+  onStatusChange: (status: RegistrationStatus) => void,
+) {
+  onStatusChange({ state: 'pending' });
+  try {
+    const result = await start();
+    if (result.ok) {
+      window.location.assign(result.authorizeUrl);
+      return;
+    }
+    onStatusChange({ state: 'error', message: boardErrorMessage(result) });
+  } catch {
+    onStatusChange({ state: 'error', message: m.candidateAction_errorText() });
+  }
 }
 
 function RegistrationForm({
@@ -340,7 +318,11 @@ function RegistrationForm({
           onStatusChange(
             result.ok
               ? { state: 'success' }
-              : { state: 'error', message: boardErrorMessage(result) },
+              : {
+                  state: 'error',
+                  message: boardErrorMessage(result),
+                  code: result.code,
+                },
           );
         } catch {
           onStatusChange({

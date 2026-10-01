@@ -1,4 +1,9 @@
-import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
+import {
+  isBoardApiError,
+  isSignInMethodUnavailable,
+  type AvailableSignInMethods,
+  type BoardAuthSession,
+} from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
@@ -8,11 +13,12 @@ import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
 import { createServerFn } from '@tanstack/react-start';
 import {
   getRequestHeader,
+  setCookie,
   setResponseHeader,
 } from '@tanstack/react-start/server';
 import { waitUntil } from 'cloudflare:workers';
 
-import { getBoard, getSessionRefresher } from '../lib/board';
+import { authHeaders, getBoard, getSessionRefresher } from '../lib/board';
 import {
   clearSessionForSource,
   getDataSource,
@@ -20,20 +26,47 @@ import {
   parseSessionForSource,
   serializeSessionForSource,
 } from '../lib/data-source.server';
+import {
+  developmentOriginParam,
+  type DevelopmentOriginUse,
+} from '../lib/development-origin';
+import { getServerEnv } from '../lib/env';
 import { sessionMiddleware } from '../lib/session-middleware';
+import {
+  SSO_EMAIL_UNCONFIRMED_COOKIE,
+  SSO_EMAIL_UNCONFIRMED_MAX_AGE,
+} from '../lib/sso-email-confirmation';
 
 /** Map API failures to a form-friendly result instead of a 500. */
 type AuthActionError = {
   ok: false;
   code: string;
   message: string;
+  /**
+   * On `board_auth_method_unavailable`: what the account's role can sign in
+   * with instead.
+   */
+  availableMethods?: AvailableSignInMethods;
 };
 
 function authError<T>(error: T): AuthActionError {
+  if (isSignInMethodUnavailable(error)) {
+    return {
+      ok: false,
+      code: error.code,
+      message: error.message,
+      availableMethods: error.details.availableMethods,
+    };
+  }
   if (isBoardApiError(error)) {
     return { ok: false, code: error.code, message: error.message };
   }
   throw error;
+}
+
+/** `developmentOrigin` for this deployment, when `CAVUNO_DEVELOPMENT_ORIGIN` is set. */
+function developmentOrigin(use: DevelopmentOriginUse) {
+  return developmentOriginParam(getServerEnv().developmentOrigin, use);
 }
 
 function authExchangeIsNewUser(
@@ -70,6 +103,7 @@ export const signUp = createServerFn({ method: 'POST' })
         role: 'candidate',
         method: 'emailpass',
         ...data,
+        ...developmentOrigin('email'),
       });
       persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
@@ -100,6 +134,7 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
         role: 'employer',
         method: 'emailpass',
         ...data,
+        ...developmentOrigin('email'),
       });
       persistAuthSession(session);
       return { ok: true as const, boardUser: session.boardUser };
@@ -222,7 +257,10 @@ export const forgotPassword = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
   .handler(async ({ data }) => {
     // Always 204 server-side (no account enumeration) — mirror that.
-    await getBoard().auth.forgotPassword(data);
+    await getBoard().auth.forgotPassword({
+      ...data,
+      ...developmentOrigin('email'),
+    });
     return { ok: true as const };
   });
 
@@ -255,7 +293,10 @@ export const requestMagicLink = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.requestMagicLink(data);
+      await getBoard().auth.requestMagicLink({
+        ...data,
+        ...developmentOrigin('email'),
+      });
       return { ok: true as const };
     } catch (error) {
       return authError(error);
@@ -291,9 +332,83 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     try {
       const { provider, ...query } = data;
-      const result = await getBoard().auth.getOAuthAuthorizationUrl(
-        provider,
-        query,
+      const result = await getBoard().auth.getOAuthAuthorizationUrl(provider, {
+        ...query,
+        ...developmentOrigin('redirect'),
+      });
+      return { ok: true as const, authorizeUrl: result.authorizeUrl };
+    } catch (error) {
+      return authError(error);
+    }
+  });
+
+/**
+ * An SSO sign-in whose identity provider did not confirm the email lands on
+ * the verification gate. The API sends no code for that sign-in, so send one
+ * here, once per completed sign-in (the exchange token is single-use, so a
+ * refresh of the verification page never re-sends). Also leave the hint that
+ * lets the page say why an organization sign-in still asks for a code.
+ */
+async function startSsoEmailConfirmation(session: BoardAuthSession) {
+  setCookie(SSO_EMAIL_UNCONFIRMED_COOKIE, session.boardUser.id, {
+    path: '/',
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    maxAge: SSO_EMAIL_UNCONFIRMED_MAX_AGE,
+  });
+  try {
+    await getBoard().auth.resendVerification({
+      headers: authHeaders(session.accessToken),
+    });
+  } catch (error) {
+    // The session is already signed in; the page's "Resend code" retries.
+    if (!isBoardApiError(error)) throw error;
+  }
+}
+
+export const exchangeOAuth = createServerFn({ method: 'POST' })
+  .validator((input: { token: string; method?: 'sso' }) => input)
+  .handler(async ({ data }) => {
+    try {
+      const session = await getBoard().auth.exchangeOAuth({
+        token: data.token,
+      });
+      persistAuthSession(session);
+      if (data.method === 'sso' && !session.boardUser.emailVerified) {
+        await startSsoEmailConfirmation(session);
+      }
+      return {
+        ok: true as const,
+        boardUser: session.boardUser,
+        isNewUser: authExchangeIsNewUser(session),
+      };
+    } catch (error) {
+      return authError(error);
+    }
+  });
+
+/**
+ * Start sign-in through one of the board's SSO connections (ids come from
+ * the board context's `signIn.<role>.ssoConnections`). Returns the provider
+ * URL; the browser navigates, and the round trip lands on
+ * `/auth/oauth-complete`.
+ */
+export const getSsoAuthorizationUrl = createServerFn({ method: 'GET' })
+  .validator(
+    (input: {
+      connectionId: string;
+      returnTo?: string;
+      /** Role being signed into; also the role a NEW user is created as. */
+      role?: 'candidate' | 'employer';
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { connectionId, ...query } = data;
+      const result = await getBoard().auth.getSsoAuthorizationUrl(
+        connectionId,
+        { ...query, ...developmentOrigin('redirect') },
       );
       return { ok: true as const, authorizeUrl: result.authorizeUrl };
     } catch (error) {
@@ -301,11 +416,16 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
     }
   });
 
-export const exchangeOAuth = createServerFn({ method: 'POST' })
-  .validator((input: { token: string }) => input)
+/**
+ * Finish an SSO sign-in that had to confirm the inbox first. The browser
+ * sends the emailed `linkProof` token with the binding it kept when the
+ * sign-in started; the session lands in the httpOnly cookie as usual.
+ */
+export const consumeSsoLinkProof = createServerFn({ method: 'POST' })
+  .validator((input: { token: string; browserBinding?: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.exchangeOAuth(data);
+      const session = await getBoard().auth.consumeSsoLinkProof(data);
       persistAuthSession(session);
       return {
         ok: true as const,

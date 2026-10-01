@@ -12,6 +12,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -44,6 +45,7 @@ const mocks = {
   getSessionUser: vi.fn<
     () => Promise<{
       id: string;
+      email?: string;
       emailVerified: boolean;
       role?: string;
     } | null>
@@ -60,14 +62,12 @@ const mocks = {
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import {
+  isJobMatchesDestination,
   loadVerificationGate,
+  resolveVerifiedDestination,
   VerifyEmailRequiredView,
 } from './-auth.verify-email-required';
-import {
-  isJobMatchesDestination,
-  resolveVerifiedDestination,
-  Route,
-} from './auth.verify-email-required';
+import { Route } from './auth.verify-email-required';
 
 import { m } from '@/paraglide/messages';
 
@@ -132,6 +132,8 @@ afterEach(async () => {
 });
 
 function renderVerifyPage({
+  email = null,
+  ssoEmailUnconfirmed = false,
   returnTo = '/account',
   emailVerified = false,
   role = 'candidate',
@@ -141,6 +143,8 @@ function renderVerifyPage({
   jobRecommendationsEnabled = true,
   renderResumeUpload = () => <p>Resume dropzone</p>,
 }: {
+  email?: string | null;
+  ssoEmailUnconfirmed?: boolean;
   returnTo?: string;
   emailVerified?: boolean;
   role?: 'candidate' | 'employer';
@@ -155,6 +159,8 @@ function renderVerifyPage({
 } = {}) {
   return render(
     <VerifyEmailRequiredView
+      email={email}
+      ssoEmailUnconfirmed={ssoEmailUnconfirmed}
       emailVerified={emailVerified}
       role={role}
       resume={resume}
@@ -334,6 +340,18 @@ describe('/auth/verify-email-required search contract', () => {
     expect(
       screen.getByText(m.authVerifyEmailRequired_codeLabel()),
     ).toHaveAttribute('data-slot', 'field-label');
+  });
+
+  it('names the address the code went to and why SSO still asks for it', () => {
+    renderVerifyPage({ email: 'ada@example.com', ssoEmailUnconfirmed: true });
+
+    const supporting = screen.getByText(
+      m.authVerifyEmailRequired_sentToText({ email: 'ada@example.com' }),
+      { exact: false },
+    );
+    expect(supporting).toHaveTextContent(
+      m.authVerifyEmailRequired_ssoReasonText(),
+    );
   });
 
   it('offers no sign-in escape hatch — the gate is verify or resend', () => {
@@ -687,6 +705,81 @@ describe('/auth/verify-email-required resume loader', () => {
     });
   });
 
+  describe('entered from a sign-in', () => {
+    function enterVerificationGate(
+      returnTo = '/jobs',
+      jobRecommendationsEnabled = true,
+    ) {
+      return loadVerificationGate(
+        {
+          returnTo,
+          arrival: {
+            search: `?returnTo=${encodeURIComponent(returnTo)}&cavuno_auth=login&cavuno_auth_method=sso`,
+          },
+        },
+        {
+          getResume: mocks.getResume,
+          getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
+          getSeoBase: mocks.getSeoBase,
+          getSessionUserStrict: mocks.getSessionUser,
+          getFreshBoardContext: async () => ({
+            features: { jobRecommendationsEnabled },
+          }),
+        },
+      );
+    }
+
+    async function redirectHref(load: Promise<unknown>) {
+      let outcome: unknown;
+      try {
+        await load;
+      } catch (error) {
+        outcome = error;
+      }
+      expect(isRedirect(outcome)).toBe(true);
+      return isRedirect(outcome) ? outcome.options.href : undefined;
+    }
+
+    beforeEach(() => {
+      mocks.getSessionUser.mockResolvedValue({
+        id: 'candidate-1',
+        emailVerified: true,
+        role: 'candidate',
+      });
+      mocks.getResumeOnboardingDismissal.mockResolvedValue([]);
+    });
+
+    it('offers the resume step to a returning candidate without one', async () => {
+      mocks.getResume.mockResolvedValue(emptyResume);
+      await expect(enterVerificationGate()).resolves.toMatchObject({
+        resume: emptyResume,
+        resumeOnboardingDismissed: false,
+      });
+    });
+
+    it('continues with the conversion once a resume is on file', async () => {
+      mocks.getResume.mockResolvedValue(storedResume);
+      expect(await redirectHref(enterVerificationGate())).toBe(
+        '/jobs?cavuno_auth=login&cavuno_auth_method=sso',
+      );
+    });
+
+    it('continues once the candidate dismissed the offer', async () => {
+      mocks.getResume.mockResolvedValue(emptyResume);
+      mocks.getResumeOnboardingDismissal.mockResolvedValue(['candidate-1']);
+      expect(await redirectHref(enterVerificationGate('/matches', false))).toBe(
+        '/account?cavuno_auth=login&cavuno_auth_method=sso',
+      );
+    });
+
+    it('keeps the step on screen when an upload revalidates it', async () => {
+      mocks.getResume.mockResolvedValue(storedResume);
+      await expect(runVerificationGate()).resolves.toMatchObject({
+        resume: storedResume,
+      });
+    });
+  });
+
   it('degrades to no resume state while the candidate is unverified', async () => {
     mocks.getSessionUser.mockResolvedValue({
       id: 'candidate-1',
@@ -714,6 +807,35 @@ describe('/auth/verify-email-required resume loader', () => {
       resume: null,
     });
     expect(mocks.getResume).not.toHaveBeenCalled();
+  });
+
+  it('flags the SSO explanation only for the user the SSO hint names', async () => {
+    const run = (hintUserId: string | null) =>
+      loadVerificationGate(
+        { returnTo: '/account' },
+        {
+          getResume: mocks.getResume,
+          getResumeOnboardingDismissal: mocks.getResumeOnboardingDismissal,
+          getSeoBase: mocks.getSeoBase,
+          getSessionUserStrict: mocks.getSessionUser,
+          getSsoEmailUnconfirmedUserId: async () => hintUserId,
+        },
+      );
+    mocks.getSessionUser.mockResolvedValue({
+      id: 'candidate-1',
+      email: 'ada@example.com',
+      emailVerified: false,
+      role: 'candidate',
+    });
+    mocks.getResume.mockResolvedValue(emptyResume);
+
+    await expect(run('candidate-1')).resolves.toMatchObject({
+      email: 'ada@example.com',
+      ssoEmailUnconfirmed: true,
+    });
+    await expect(run('someone-else')).resolves.toMatchObject({
+      ssoEmailUnconfirmed: false,
+    });
   });
 
   it('re-throws board-access redirects instead of swallowing them', async () => {

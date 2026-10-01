@@ -17,6 +17,7 @@ import {
 } from './-selected-job-detail';
 
 import type { SelectedJobState } from './-use-selected-job';
+import { resolveBoardSignIn } from '@/lib/board-sign-in';
 import { m } from '@/paraglide/messages';
 import type { PublicJob } from '@cavuno/board';
 
@@ -158,6 +159,7 @@ const board = {
     workArrangement: { allowedOptions: [] },
     employmentType: { allowedOptions: [] },
   },
+  signIn: resolveBoardSignIn(undefined),
 } satisfies Parameters<typeof SelectedJobDetail>[0]['board'];
 
 const user = {

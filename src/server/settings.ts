@@ -17,6 +17,8 @@ import {
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
 import { persistAuthSession } from '../lib/data-source.server';
+import { developmentOriginParam } from '../lib/development-origin';
+import { getServerEnv } from '../lib/env';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import {
   requireSessionMiddleware,
@@ -158,7 +160,10 @@ export const requestSetPassword = createServerFn({ method: 'POST' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     await requireVerifiedBoardUser(authedHeaders(context));
-    await getBoard().auth.forgotPassword(data);
+    await getBoard().auth.forgotPassword({
+      ...data,
+      ...developmentOriginParam(getServerEnv().developmentOrigin, 'email'),
+    });
     return { ok: true as const };
   });
 

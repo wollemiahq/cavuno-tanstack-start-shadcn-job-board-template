@@ -139,6 +139,7 @@ way; you're just pointing it at your real board instead of the sandbox.
 |---|---|---|
 | `CAVUNO_API_URL` | Board API base URL (`https://api.cavuno.com`) | `.dev.vars` / `wrangler.jsonc` |
 | `CAVUNO_BOARD` | Your board's `pk_…` publishable key (Dashboard → Settings → API) | `.dev.vars` / `wrangler.jsonc` |
+| `CAVUNO_DEVELOPMENT_ORIGIN` | Optional. This frontend's origin when it is not the board's production origin (`http://localhost:3000`, an https preview). Must be registered under Dashboard → Settings → SDK → Development origins. Google, LinkedIn and SSO sign-in return here; email links do only for a localhost origin. Unset in production. | `.dev.vars` |
 
 The `pk_…` key is **client-safe by design**; user sessions live in a
 host-owned httpOnly cookie this app manages itself. The Board API is only ever

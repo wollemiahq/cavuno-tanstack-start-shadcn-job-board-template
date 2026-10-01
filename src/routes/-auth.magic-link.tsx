@@ -11,6 +11,7 @@ import { consumeMagicLink } from '../server/auth';
 /** Magic-link landing — consumes ?token= and creates the starter session. */
 import { getSeoBase } from '../server/queries';
 
+import type { SignedInBoardUser } from '../lib/resume-onboarding';
 import { buttonVariants } from '@/components/ui/button';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
@@ -43,7 +44,8 @@ export async function loadMagicLink(
     consumeMagicLink: (input: {
       data: { token: string };
     }) => Promise<
-      { ok: true; isNewUser: boolean } | { ok: false; message: string }
+      | { ok: true; isNewUser: boolean; boardUser: SignedInBoardUser }
+      | { ok: false; message: string }
     >;
     getSeoBase: () => ReturnType<typeof getSeoBase>;
   } = { consumeMagicLink, getSeoBase },
@@ -61,6 +63,7 @@ export async function loadMagicLink(
     href: resolvePostAuthConversionRedirect(deps.returnTo, {
       isNewUser: result.isNewUser,
       fallbackMethod: 'magic_link',
+      boardUser: result.boardUser,
     }),
   });
 }

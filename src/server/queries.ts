@@ -28,6 +28,7 @@ import {
   readEmployerOfferGate,
 } from '../lib/board-context-cache';
 import { readBoardSeo } from '../lib/board-seo-cache';
+import { resolveBoardSignIn } from '../lib/board-sign-in';
 import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
@@ -107,6 +108,9 @@ function resolveBoardContext(
     // Older SDKs omit `ads`; treat missing as off. Publisher id comes from
     // Cavuno advertising settings, including the optional default ad unit.
     ads: resolveBoardAds(context),
+    // Board SSO arrived after the rest of the context; an API deployment
+    // predating it omits `signIn`. Default to every built-in method, no SSO.
+    signIn: resolveBoardSignIn(context.signIn),
   };
 }
 

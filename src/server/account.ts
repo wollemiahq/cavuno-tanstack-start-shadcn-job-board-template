@@ -27,6 +27,7 @@ import { requireVerifiedBoardUser } from './me-verification';
 import { readRecommendedJobs } from './recommended-jobs-read';
 
 import { parseResumeOnboardingDismissal } from '@/lib/resume-onboarding';
+import { parseSsoEmailUnconfirmed } from '@/lib/sso-email-confirmation';
 import type {
   AlertBody,
   CreateEducationBody,
@@ -84,6 +85,11 @@ export const getResumeOnboardingDismissal = createServerFn({
 }).handler(() =>
   parseResumeOnboardingDismissal(getRequestHeader('cookie') ?? null),
 );
+
+/** Board user id an SSO sign-in left unconfirmed in this browser, if any. */
+export const getSsoEmailUnconfirmedUserId = createServerFn({
+  method: 'GET',
+}).handler(() => parseSsoEmailUnconfirmed(getRequestHeader('cookie') ?? null));
 
 export type { AccountBoard, AccountData } from './account-read';
 
