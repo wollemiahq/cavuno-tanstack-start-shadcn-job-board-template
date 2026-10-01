@@ -162,14 +162,26 @@ describe('hosted-shaped sitemap context', () => {
   it('reuses one complete build across index and bucket requests', async () => {
     const deps = source({ buckets: ['marketing', 'jobs-details'] });
 
-    const [first, second] = await Promise.all([
-      loadSitemapContext(board, ORIGIN, deps),
-      loadSitemapContext(board, ORIGIN, deps),
-    ]);
+    const first = await loadSitemapContext(board, ORIGIN, deps);
+    const second = await loadSitemapContext(board, ORIGIN, deps);
 
     expect(second).toBe(first);
     expect(deps.listedBucketEntries).toHaveBeenCalledOnce();
     expect(deps.buildBucketEntries).toHaveBeenCalledTimes(2);
+  });
+
+  it('never makes a later request wait on a build that never settles', async () => {
+    const deps = source({});
+    // The first crawler request was cancelled mid-build.
+    deps.listedBucketEntries.mockImplementationOnce(
+      () => new Promise(() => {}),
+    );
+    void loadSitemapContext(board, ORIGIN, deps);
+
+    await expect(
+      loadSitemapContext(board, ORIGIN, deps),
+    ).resolves.toBeDefined();
+    expect(deps.listedBucketEntries).toHaveBeenCalledTimes(2);
   });
 
   it('reuses the persistent Worker snapshot across isolated board clients', async () => {

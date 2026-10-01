@@ -33,6 +33,11 @@ work.
   never read process.env at module scope. Keep Board API calls and
   auth/session refresh on the server. Private session credentials stay in the
   host-owned httpOnly cookie, never browser storage or module state.
+- On Workers, I/O belongs to the request that started it, and a cancelled
+  request's pending promises never settle. Never store a pending promise,
+  Response, or stream in module scope, and never share one in-flight read
+  across requests. Cache settled values only, written after the request's
+  own await succeeds; use src/lib/settled-cache.ts.
 - API HTML fields such as job and company descriptions are pre-sanitized.
   Render only those known fields as HTML; do not interpolate other strings into
   dangerouslySetInnerHTML.

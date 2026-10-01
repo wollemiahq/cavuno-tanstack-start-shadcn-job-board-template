@@ -55,6 +55,7 @@ import {
   type PreviewState,
   type PreviewSwitchResult,
 } from '../lib/preview';
+import { createSandboxProbe } from '../lib/sandbox-probe';
 import { signOut } from './auth';
 
 import type { DataSource } from '../lib/data-source';
@@ -73,30 +74,13 @@ function previewBoard() {
  * SDK 2.0 limited generated types to the public Board API and dropped
  * operator-internal fields such as `context.sandbox`. Preview is still
  * sandbox-only: probe `GET /sandbox/personas` (succeeds on sandbox,
- * 404s elsewhere) rather than reading a removed context flag.
- *
- * Sandbox-ness is deployment-static, and getPreviewState sits on the
- * root-shell critical path of EVERY request — memoize the probe per
- * isolate so both answers are paid for once, not per page, and sandbox
- * boards do not fetch the roster twice per render. Only DEFINITIVE
- * outcomes are cached (roster ok → sandbox; 404 → not sandbox); a
- * transient failure answers false for that request without being
- * cached, so a flaky network cannot lock a sandbox board out of its
- * toolbar for the isolate's lifetime.
+ * 404s elsewhere) rather than reading a removed context flag. The answer is
+ * memoized per isolate; see `createSandboxProbe` for what is kept.
  */
-let sandboxProbe: Promise<boolean> | null = null;
-
-function probeSandbox(): Promise<boolean> {
-  sandboxProbe ??= fetchRoster().then(
-    () => true,
-    (error: Error) => {
-      if (isNotFound(error)) return false;
-      sandboxProbe = null;
-      return false;
-    },
-  );
-  return sandboxProbe;
-}
+const { probeSandbox } = createSandboxProbe({
+  fetchRoster: () => fetchRoster(),
+  isNotFound,
+});
 
 async function resolveCapabilityFromBoard(): Promise<PreviewCapability> {
   return resolveCapability({ sandbox: await probeSandbox() });

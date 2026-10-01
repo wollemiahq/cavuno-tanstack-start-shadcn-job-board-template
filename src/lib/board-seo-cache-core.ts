@@ -1,3 +1,5 @@
+import { createSettledCache } from './settled-cache';
+
 import type { DataSource } from './data-source';
 
 export interface BoardSeoDependencies<T> {
@@ -7,27 +9,29 @@ export interface BoardSeoDependencies<T> {
 }
 
 /**
- * One shared `board.seo()` promise per data source per TTL window. A rejected
- * read is dropped so the next request retries instead of pinning a failure.
+ * One settled `board.seo()` value per data source per TTL window. Each request
+ * awaits its own read and stores the result only on success, so a failure is
+ * retried by the next request and a cancelled request never leaves a pending
+ * read behind for others to wait on (see `settled-cache.ts`).
  */
 export function createBoardSeoReader<T>(
   dependencies: BoardSeoDependencies<T>,
   ttlMs: number,
 ) {
-  const cache = new Map<DataSource, { at: number; promise: Promise<T> }>();
+  const cache = createSettledCache<DataSource, T>({
+    ttlMs,
+    now: dependencies.now,
+  });
 
-  function readBoardSeo(): Promise<T> {
+  async function readBoardSeo(): Promise<T> {
     const source = dependencies.getDataSource();
-    const now = dependencies.now();
     const hit = cache.get(source);
-    if (hit && now - hit.at < ttlMs) return hit.promise;
+    if (hit !== undefined) return hit;
 
-    const promise = dependencies.getBoardSeo();
-    cache.set(source, { at: now, promise });
-    promise.catch(() => {
-      if (cache.get(source)?.promise === promise) cache.delete(source);
-    });
-    return promise;
+    const readAt = dependencies.now();
+    const seo = await dependencies.getBoardSeo();
+    cache.set(source, seo, readAt);
+    return seo;
   }
 
   return { readBoardSeo, reset: () => cache.clear() };

@@ -4,9 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * The board context is read 2-3x per document (root shell + each page's
  * `seoBase()`), and every read was a real upstream round trip — the comment
  * claiming the SDK client cached it was wrong. These pin the memo that
- * replaced it: one upstream call per TTL window, kept apart per data source
- * (the preview/demo cookie can point requests at a DIFFERENT board in the
- * same process), and a failure that is never retained.
+ * replaced it: a settled value reused for the TTL window, kept apart per data
+ * source (the preview/demo cookie can point requests at a DIFFERENT board in
+ * the same process), a failure that is never retained, and no request ever
+ * waiting on another request's in-flight read.
  */
 
 interface DataSourceState {
@@ -49,11 +50,45 @@ afterEach(() => {
 });
 
 describe('board context memo', () => {
-  it('collapses the repeat reads of one document into a single fetch', async () => {
-    // root shell + a page's seoBase(), same request
-    await Promise.all([readBoardContext(), readBoardContext()]);
+  it('reuses a settled read for the rest of the window', async () => {
+    await readBoardContext();
     await readBoardContext();
     expect(contextSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('never makes a later request wait on a read that never settles', async () => {
+    // The first request was cancelled mid-fetch, so its read never settles.
+    contextSpy.mockImplementationOnce(() => new Promise(() => {}));
+    void readBoardContext();
+
+    await expect(readBoardContext()).resolves.toEqual({ name: 'Sandbox' });
+    expect(contextSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('never makes a later request wait on a fresh probe that never settles', async () => {
+    contextSpy.mockImplementationOnce(() => new Promise(() => {}));
+    void refreshBoardContext();
+
+    await expect(refreshBoardContext()).resolves.toEqual({ name: 'Sandbox' });
+    expect(contextSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a fresh probe when an older read settles after it', async () => {
+    let resolveSlow!: (value: { name: string }) => void;
+    contextSpy.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSlow = resolve;
+        }),
+    );
+    const slow = readBoardContext();
+    vi.advanceTimersByTime(1);
+    contextSpy.mockResolvedValueOnce({ name: 'Fresh' });
+    await refreshBoardContext();
+
+    resolveSlow({ name: 'Stale' });
+    await slow;
+    await expect(readBoardContext()).resolves.toEqual({ name: 'Fresh' });
   });
 
   it('re-reads once the TTL window closes', async () => {
@@ -154,19 +189,42 @@ describe('board context memo', () => {
 });
 
 describe('employer offer gate memo', () => {
-  it('collapses repeat root-shell gate reads into one load', async () => {
+  it('reuses a settled gate across root-shell reads', async () => {
     const load = vi.fn().mockResolvedValue({ hasEmployerOfferPage: true });
 
-    await Promise.all([
-      readEmployerOfferGate(load),
-      readEmployerOfferGate(load),
-    ]);
+    await readEmployerOfferGate(load);
     await readEmployerOfferGate(load);
 
     expect(load).toHaveBeenCalledTimes(1);
     await expect(readEmployerOfferGate(load)).resolves.toEqual({
       hasEmployerOfferPage: true,
     });
+  });
+
+  it('does not keep a failed load', async () => {
+    const load = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('plans down'))
+      .mockResolvedValueOnce({ hasEmployerOfferPage: true });
+
+    await expect(readEmployerOfferGate(load)).rejects.toThrow('plans down');
+    await expect(readEmployerOfferGate(load)).resolves.toEqual({
+      hasEmployerOfferPage: true,
+    });
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('never makes a later request wait on a load that never settles', async () => {
+    const load = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise(() => {}))
+      .mockResolvedValueOnce({ hasEmployerOfferPage: true });
+    void readEmployerOfferGate(load);
+
+    await expect(readEmployerOfferGate(load)).resolves.toEqual({
+      hasEmployerOfferPage: true,
+    });
+    expect(load).toHaveBeenCalledTimes(2);
   });
 
   it('keeps primary and demo data sources apart', async () => {

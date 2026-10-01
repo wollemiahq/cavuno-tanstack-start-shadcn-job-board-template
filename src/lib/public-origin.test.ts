@@ -106,9 +106,18 @@ describe('readPublicOrigin', () => {
 
   it('costs ONE seo call however many page fns read it in a window', async () => {
     // Home fn + its seoBase() + the sitemap handler, same isolate.
-    await Promise.all([readPublicOrigin(), readPublicOrigin()]);
+    await readPublicOrigin();
+    await readPublicOrigin();
     await readPublicOrigin();
     expect(seoSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('never makes a later request wait on a read that never settles', async () => {
+    seoSpy.mockImplementationOnce(() => new Promise(() => {}));
+    void readPublicOrigin();
+
+    expect(await readPublicOrigin()).toBe('https://careers.acme.com');
+    expect(seoSpy).toHaveBeenCalledTimes(2);
   });
 
   it('re-reads once the TTL window closes', async () => {

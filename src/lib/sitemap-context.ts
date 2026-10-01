@@ -9,6 +9,9 @@ import {
   type SitemapUrlEntry,
 } from '@cavuno/board/sitemap';
 
+import { createSettledCache } from './settled-cache';
+
+import type { SettledCache } from './settled-cache';
 import type { BoardSdk } from '@cavuno/board';
 
 /**
@@ -59,12 +62,13 @@ export const SITEMAP_CONTEXT_TTL_MS = 60 * 60 * 1_000;
 // v2: entries carry `lastModified`; a v1 snapshot holds bare strings.
 const SITEMAP_CONTEXT_CACHE_VERSION = 'v2';
 
-type CachedContext = {
-  expiresAt: number;
-  value: Promise<SitemapContext>;
-};
+// The origin key falls back to the request origin, so bound it per client.
+const SITEMAP_CONTEXT_MAX_ORIGINS = 8;
 
-let contextCache = new WeakMap<BoardSdk, Map<string, CachedContext>>();
+let contextCache = new WeakMap<
+  BoardSdk,
+  SettledCache<string, SitemapContext>
+>();
 let edgeCacheRefused = false;
 
 declare global {
@@ -80,7 +84,7 @@ function defaultEdgeCache(): Cache | undefined {
     return globalThis.caches?.default;
   } catch {
     // Workers for Platforms can expose `caches` but refuse `.default`.
-    // Retain the per-isolate promise cache there instead of failing sitemap XML.
+    // Rely on the per-isolate snapshot there instead of failing sitemap XML.
     edgeCacheRefused = true;
     return undefined;
   }
@@ -253,47 +257,56 @@ export async function buildSitemapContext(
   return { buckets: built };
 }
 
+function snapshotsFor(board: BoardSdk): SettledCache<string, SitemapContext> {
+  let snapshots = contextCache.get(board);
+  if (!snapshots) {
+    snapshots = createSettledCache({
+      ttlMs: SITEMAP_CONTEXT_TTL_MS,
+      maxEntries: SITEMAP_CONTEXT_MAX_ORIGINS,
+    });
+    contextCache.set(board, snapshots);
+  }
+  return snapshots;
+}
+
 /**
- * Cross-request sitemap snapshot. Rejected builds are evicted immediately so
- * a transient API failure cannot poison the cache for the freshness window.
+ * Cross-request sitemap snapshot, settled values only (see
+ * `settled-cache.ts`). Each request reads or builds the snapshot itself and
+ * stores it only once its own build succeeds, so a cancelled crawler request
+ * can never leave a pending build for the index and bucket requests behind
+ * it to wait on. A failed build is not stored; the next request retries.
+ * Concurrent cold requests each build; the gateway edge-caches sitemap
+ * responses in front of the tenant, so that overlap is rare.
  */
-export function loadSitemapContext(
+export async function loadSitemapContext(
   board: BoardSdk,
   origin: string,
   source: SitemapSource = DEFAULT_SOURCE,
 ): Promise<SitemapContext> {
-  const now = Date.now();
-  let byOrigin = contextCache.get(board);
-  if (!byOrigin) {
-    byOrigin = new Map();
-    contextCache.set(board, byOrigin);
+  const snapshots = snapshotsFor(board);
+  const cached = snapshots.get(origin);
+  if (cached) return cached;
+
+  const persisted = await readPersistentContext(origin);
+  if (persisted) {
+    // Age the memo from when the shared snapshot was built.
+    snapshots.set(
+      origin,
+      persisted.context,
+      persisted.expiresAt - SITEMAP_CONTEXT_TTL_MS,
+    );
+    return persisted.context;
   }
 
-  const cached = byOrigin.get(origin);
-  if (cached && cached.expiresAt > now) return cached.value;
-
-  const entry: CachedContext = {
-    expiresAt: now + SITEMAP_CONTEXT_TTL_MS,
-    value: Promise.resolve({ buckets: [] }),
-  };
-  const value = (async () => {
-    const persisted = await readPersistentContext(origin);
-    if (persisted) {
-      entry.expiresAt = persisted.expiresAt;
-      return persisted.context;
-    }
-    const context = await buildSitemapContext(board, origin, source);
-    const expiresAt = Date.now() + SITEMAP_CONTEXT_TTL_MS;
-    entry.expiresAt = expiresAt;
-    await writePersistentContext(origin, context, expiresAt);
-    return context;
-  })().catch((error) => {
-    if (byOrigin?.get(origin)?.value === value) byOrigin.delete(origin);
-    throw error;
-  });
-  entry.value = value;
-  byOrigin.set(origin, entry);
-  return entry.value;
+  const context = await buildSitemapContext(board, origin, source);
+  const builtAt = Date.now();
+  snapshots.set(origin, context, builtAt);
+  await writePersistentContext(
+    origin,
+    context,
+    builtAt + SITEMAP_CONTEXT_TTL_MS,
+  );
+  return context;
 }
 
 /** One `<sitemap>` per chunk file, each stamped with its bucket's freshness. */

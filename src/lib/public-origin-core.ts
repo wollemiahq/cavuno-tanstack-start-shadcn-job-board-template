@@ -1,9 +1,6 @@
-import type { DataSource } from './data-source';
+import { createSettledCache } from './settled-cache';
 
-interface CacheEntry {
-  at: number;
-  promise: Promise<string | null>;
-}
+import type { DataSource } from './data-source';
 
 export interface PublicOriginDependencies {
   /** `board.seo()` — publishes the origin the board advertises to crawlers. */
@@ -44,36 +41,36 @@ export function normalizeOrigin(
  * `seoBase()` into many page reads, and the preview/demo cookie can point
  * requests at a DIFFERENT board in the same process.
  *
- * A rejected read is never retained — the entry is dropped so the next
- * request retries instead of pinning the request-origin fallback for the
+ * Settled values only (see `settled-cache.ts`): each request awaits its own
+ * read. Neither a failed read nor an unusable base is stored, so the next
+ * request asks again instead of pinning the request-origin fallback for the
  * whole TTL window.
  */
 export function createPublicOriginReader(
   dependencies: PublicOriginDependencies,
   ttlMs: number,
 ) {
-  const cache = new Map<DataSource, CacheEntry>();
+  const cache = createSettledCache<DataSource, string>({
+    ttlMs,
+    now: dependencies.now,
+  });
 
-  function readCanonicalOrigin(): Promise<string | null> {
+  async function readCanonicalOrigin(): Promise<string | null> {
     const source = dependencies.getDataSource();
-    const now = dependencies.now();
     const hit = cache.get(source);
-    if (hit && now - hit.at < ttlMs) return hit.promise;
+    if (hit !== undefined) return hit;
 
-    const promise = dependencies
-      .getBoardSeo()
-      .then((seo) => normalizeOrigin(seo?.canonicalBase))
-      .catch(() => null)
-      .then((origin) => {
-        // Neither a failed read nor an unusable base is worth holding: both
-        // mean the next request should ask again.
-        if (origin === null && cache.get(source)?.promise === promise) {
-          cache.delete(source);
-        }
-        return origin;
-      });
-    cache.set(source, { at: now, promise });
-    return promise;
+    const readAt = dependencies.now();
+    let origin: string | null;
+    try {
+      origin = normalizeOrigin(
+        (await dependencies.getBoardSeo())?.canonicalBase,
+      );
+    } catch {
+      origin = null;
+    }
+    if (origin !== null) cache.set(source, origin, readAt);
+    return origin;
   }
 
   /**

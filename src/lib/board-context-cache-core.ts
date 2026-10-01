@@ -1,9 +1,6 @@
-import type { DataSource } from './data-source';
+import { createSettledCache } from './settled-cache';
 
-interface CacheEntry<Value> {
-  at: number;
-  promise: Promise<Value>;
-}
+import type { DataSource } from './data-source';
 
 export interface BoardContextCacheDependencies<Context> {
   getBoardContext: () => Promise<Context>;
@@ -22,92 +19,73 @@ export type EmployerOfferGate = {
   hasCandidatePricingPage: boolean;
 };
 
-/** Per-source memo provider shared by board context and employer gates. */
+/**
+ * Per-source memo provider shared by board context and employer gates.
+ *
+ * Settled values only (see `settled-cache.ts`): each request awaits its own
+ * read and stores the result afterwards, so a cancelled request can never
+ * leave a pending promise for later requests to wait on.
+ */
 export function createBoardContextCache<Context>(
   dependencies: BoardContextCacheDependencies<Context>,
   ttlMs: number,
 ) {
-  const contextCache = new Map<DataSource, CacheEntry<Context>>();
-  const contextRefreshes = new Map<DataSource, Promise<Context>>();
-  const offerGateCache = new Map<DataSource, CacheEntry<EmployerOfferGate>>();
+  const contextCache = createSettledCache<DataSource, Context>({
+    ttlMs,
+    now: dependencies.now,
+  });
+  const offerGateCache = createSettledCache<DataSource, EmployerOfferGate>({
+    ttlMs,
+    now: dependencies.now,
+  });
 
-  function readBoardContext(): Promise<Context> {
+  async function readBoardContext(): Promise<Context> {
     const source = dependencies.getDataSource();
     const hit = contextCache.get(source);
-    const now = dependencies.now();
-    if (hit && now - hit.at < ttlMs) return hit.promise;
+    if (hit !== undefined) return hit;
 
-    const promise = dependencies.getBoardContext().catch((error: Error) => {
-      if (contextCache.get(source)?.promise === promise) {
-        contextCache.delete(source);
-      }
-      throw error;
-    });
-    contextCache.set(source, { at: now, promise });
-    return promise;
+    const readAt = dependencies.now();
+    const context = await dependencies.getBoardContext();
+    contextCache.set(source, context, readAt);
+    return context;
   }
 
-  function refreshBoardContext(): Promise<Context> {
+  /**
+   * Fresh read for kill-switch enforcement. The previous memo stays visible
+   * to sibling loaders while this is in flight and is replaced only on
+   * success.
+   */
+  async function refreshBoardContext(): Promise<Context> {
     const source = dependencies.getDataSource();
-    const active = contextRefreshes.get(source);
-    if (active) return active;
-
-    const now = dependencies.now();
-    let promise: Promise<Context>;
-    promise = dependencies
-      .getFreshBoardContext()
-      .then((context) => {
-        if (contextRefreshes.get(source) === promise) {
-          contextCache.set(source, {
-            at: now,
-            promise: Promise.resolve(context),
-          });
-        }
-        return context;
-      })
-      .finally(() => {
-        if (contextRefreshes.get(source) === promise) {
-          contextRefreshes.delete(source);
-        }
-      });
-    // Keep the previous successful memo visible to sibling route loaders
-    // while the no-store probe is in flight. Replace it only on success.
-    contextRefreshes.set(source, promise);
-    return promise;
+    const readAt = dependencies.now();
+    const context = await dependencies.getFreshBoardContext();
+    contextCache.set(source, context, readAt);
+    return context;
   }
 
-  /** Last successful/in-flight memo regardless of age, used only after an
-   * explicit fresh probe fails so the caller can render a fail-closed shell. */
+  /** Last successful context regardless of age, used only after an explicit
+   * fresh probe fails so the caller can render a fail-closed shell. */
   function readStaleBoardContext(): Promise<Context> | null {
-    return contextCache.get(dependencies.getDataSource())?.promise ?? null;
+    const stale = contextCache.getStale(dependencies.getDataSource());
+    return stale === undefined ? null : Promise.resolve(stale);
   }
 
   function resetBoardContextCache(source?: DataSource): void {
-    if (source) {
-      contextCache.delete(source);
-      contextRefreshes.delete(source);
-    } else {
-      contextCache.clear();
-      contextRefreshes.clear();
-    }
+    if (source) contextCache.delete(source);
+    else contextCache.clear();
   }
 
-  function readEmployerOfferGate(
+  async function readEmployerOfferGate(
     load: () => Promise<EmployerOfferGate>,
   ): Promise<EmployerOfferGate> {
     const source = dependencies.getDataSource();
     const hit = offerGateCache.get(source);
-    const now = dependencies.now();
-    if (hit && now - hit.at < ttlMs) return hit.promise;
+    if (hit !== undefined) return hit;
 
-    const promise = load().catch((error: Error) => {
-      if (offerGateCache.get(source)?.promise === promise) {
-        offerGateCache.delete(source);
-      }
-      throw error;
-    });
-    offerGateCache.set(source, { at: now, promise });
-    return promise;
+    const readAt = dependencies.now();
+    const gate = await load();
+    offerGateCache.set(source, gate, readAt);
+    return gate;
   }
 
   function resetEmployerOfferGateCache(source?: DataSource): void {
