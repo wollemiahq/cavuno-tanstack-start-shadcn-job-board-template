@@ -91,9 +91,8 @@
       }
     }
   ],
-  "accountRecommended_emailLabel": "E-mail mij nieuwe passende vacatures",
-  "accountRecommended_emailLoadError": "Je e-mailvoorkeur kon niet worden geladen.",
-  "accountRecommended_emailWaitlistedText": "Je staat op de wachtlijst voor e-mails met passende vacatures.",
+  "accountRecommended_emailInvitationAction": "E-mails met passende vacatures inschakelen",
+  "accountRecommended_emailInvitationTitle": "Ontvang passende vacatures in je inbox",
   "accountRecommended_employerProfileLink": "Naar je profiel",
   "accountRecommended_employerText": "Je werkgeversaccount heeft geen werkzoekendeprofiel om vacatures mee te matchen.",
   "accountRecommended_employerTitle": "Jobmatches zijn voor werkzoekende-accounts",

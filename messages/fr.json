@@ -91,9 +91,8 @@
       }
     }
   ],
-  "accountRecommended_emailLabel": "Recevoir de nouvelles offres par e-mail",
-  "accountRecommended_emailLoadError": "Impossible de charger votre préférence d’e-mail.",
-  "accountRecommended_emailWaitlistedText": "Vous êtes sur la liste d’attente pour recevoir des offres correspondant à votre profil.",
+  "accountRecommended_emailInvitationAction": "Activer les e-mails d’offres adaptées",
+  "accountRecommended_emailInvitationTitle": "Recevez des offres adaptées dans votre boîte mail",
   "accountRecommended_employerProfileLink": "Aller à votre profil",
   "accountRecommended_employerText": "Votre compte employeur n’a pas de profil candidat auquel comparer les offres.",
   "accountRecommended_employerTitle": "Les offres recommandées sont réservées aux comptes candidats",

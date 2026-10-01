@@ -226,11 +226,13 @@ describe('signed-in settings account cards', () => {
 
   it('shows the candidate-controlled recommendation email preference', async () => {
     await renderSettings();
-    expect(
-      screen.getByRole('checkbox', {
-        name: m.notificationSettings_recommendedJobEmailsTitle(),
-      }),
-    ).not.toBeChecked();
+    const checkbox = screen.getByRole('checkbox', {
+      name: m.notificationSettings_recommendedJobEmailsTitle(),
+    });
+    expect(checkbox).not.toBeChecked();
+    expect(document.getElementById('job-match-emails')).toContainElement(
+      checkbox,
+    );
   });
 
   it('persists the recommendation preference immediately from settings', async () => {

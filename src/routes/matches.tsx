@@ -36,7 +36,7 @@ import {
   CandidateRoutePendingPage,
 } from '@/components/candidate-route-state';
 import { EmptyState } from '@/components/empty-state';
-import { JobMatchEmailPreference } from '@/components/job-match-email-preference';
+import { JobMatchEmailInvitation } from '@/components/job-match-email-invitation';
 import { Page, PageContent } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
 import { useRootSession } from '@/components/root-session';
@@ -288,12 +288,6 @@ function JobMatchesResults({
           })}
         </p>
       ) : null}
-      {emptyKind === 'empty' ? (
-        <JobMatchEmailPreference
-          preference={recommendedJobs.emailPreference}
-          onRefresh={() => router.invalidate()}
-        />
-      ) : null}
     </header>
   );
 
@@ -315,6 +309,13 @@ function JobMatchesResults({
                   className="space-y-4 pt-4 pb-4 md:col-span-2"
                 >
                   {header}
+                  {emptyKind === 'empty' ? (
+                    <div className="max-w-lg px-4 md:px-0">
+                      <JobMatchEmailInvitation
+                        preference={recommendedJobs.emailPreference}
+                      />
+                    </div>
+                  ) : null}
                   {emptyKind === 'needs-profile' ? (
                     <EmptyState
                       icon={<Upload aria-hidden="true" />}
@@ -360,6 +361,11 @@ function JobMatchesResults({
                     {header}
                     <InPlaceListingSelect onSelect={selection.onResultActivate}>
                       <div className="space-y-3">
+                        {emptyKind === 'empty' ? (
+                          <JobMatchEmailInvitation
+                            preference={recommendedJobs.emailPreference}
+                          />
+                        ) : null}
                         {rows.map(({ item, vm }) => (
                           <JobSearchResult
                             key={item.job.id}

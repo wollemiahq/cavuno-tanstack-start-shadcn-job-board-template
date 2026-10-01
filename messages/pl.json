@@ -97,9 +97,8 @@
       }
     }
   ],
-  "accountRecommended_emailLabel": "Wysyłaj mi nowe dopasowania e-mailem",
-  "accountRecommended_emailLoadError": "Nie udało się wczytać ustawienia e-maili.",
-  "accountRecommended_emailWaitlistedText": "Jesteś na liście oczekujących na e-maile z dopasowanymi ofertami.",
+  "accountRecommended_emailInvitationAction": "Włącz e-maile z dopasowanymi ofertami",
+  "accountRecommended_emailInvitationTitle": "Otrzymuj dopasowane oferty na swoją skrzynkę",
   "accountRecommended_employerProfileLink": "Przejdź do profilu",
   "accountRecommended_employerText": "Twoje konto pracodawcy nie ma profilu kandydata, do którego można dopasować oferty.",
   "accountRecommended_employerTitle": "Dopasowania ofert są dla kont kandydatów",

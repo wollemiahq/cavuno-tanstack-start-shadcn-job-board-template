@@ -91,9 +91,8 @@
       }
     }
   ],
-  "accountRecommended_emailLabel": "Neue passende Jobs per E-Mail erhalten",
-  "accountRecommended_emailLoadError": "Deine E-Mail-Einstellung konnte nicht geladen werden.",
-  "accountRecommended_emailWaitlistedText": "Du stehst auf der Warteliste für E-Mails mit passenden Jobs.",
+  "accountRecommended_emailInvitationAction": "E-Mails mit passenden Jobs aktivieren",
+  "accountRecommended_emailInvitationTitle": "Passende Jobs in deinem Posteingang",
   "accountRecommended_employerProfileLink": "Zu deinem Profil",
   "accountRecommended_employerText": "Dein Arbeitgeberkonto hat kein Jobsuchenden-Profil, mit dem Jobs abgeglichen werden können.",
   "accountRecommended_employerTitle": "Passende Jobs gibt es für Jobsuchende-Konten",
