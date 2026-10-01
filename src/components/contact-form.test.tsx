@@ -11,6 +11,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { ContactForm } from './contact-form';
 
 const submitContact = vi.fn();
@@ -38,7 +39,7 @@ describe('ContactForm', () => {
     const html = renderToString(<ContactForm />);
     const document = new DOMParser().parseFromString(html, 'text/html');
     expect(document.querySelector('button[type="submit"]')?.textContent).toBe(
-      'Loading form…',
+      m.contact_loading(),
     );
     for (const control of document.querySelectorAll(
       'input[name="name"], input[name="email"], textarea[name="body"], button[type="submit"]',
@@ -47,14 +48,18 @@ describe('ContactForm', () => {
     }
 
     render(<ContactForm />);
-    expect(screen.getByLabelText('Name').hasAttribute('disabled')).toBe(false);
-    expect(screen.getByLabelText('Email').hasAttribute('disabled')).toBe(false);
-    expect(screen.getByLabelText('Message').hasAttribute('disabled')).toBe(
-      false,
-    );
+    expect(
+      screen.getByLabelText(m.contact_nameLabel()).hasAttribute('disabled'),
+    ).toBe(false);
+    expect(
+      screen.getByLabelText(m.contact_emailLabel()).hasAttribute('disabled'),
+    ).toBe(false);
+    expect(
+      screen.getByLabelText(m.contact_messageLabel()).hasAttribute('disabled'),
+    ).toBe(false);
     expect(
       screen
-        .getByRole('button', { name: 'Send message' })
+        .getByRole('button', { name: m.contact_send() })
         .hasAttribute('disabled'),
     ).toBe(false);
   });
@@ -67,28 +72,28 @@ describe('ContactForm', () => {
     });
     const onSent = vi.fn();
     const view = render(<ContactForm onSent={onSent} />);
-    fireEvent.change(screen.getByLabelText('Name'), {
+    fireEvent.change(screen.getByLabelText(m.contact_nameLabel()), {
       target: { value: 'Grace' },
     });
-    fireEvent.change(screen.getByLabelText('Email'), {
+    fireEvent.change(screen.getByLabelText(m.contact_emailLabel()), {
       target: { value: 'grace@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Message'), {
+    fireEvent.change(screen.getByLabelText(m.contact_messageLabel()), {
       target: { value: 'Please help with my job alerts.' },
     });
     const form = screen
-      .getByRole('button', { name: 'Send message' })
+      .getByRole('button', { name: m.contact_send() })
       .closest('form')!;
     fireEvent.submit(form);
 
     const status = await screen.findByRole('status');
-    expect(status.textContent).toContain("We've received your message");
+    expect(status.textContent).toContain(m.contact_successTitle());
     expect(status.textContent).toContain('grace@example.com');
-    expect(screen.queryByRole('button', { name: 'Send message' })).toBeNull();
+    expect(screen.queryByRole('button', { name: m.contact_send() })).toBeNull();
     expect(onSent).toHaveBeenCalledOnce();
     await waitFor(() =>
       expect(
-        screen.getByRole('heading', { name: "We've received your message" }),
+        screen.getByRole('heading', { name: m.contact_successTitle() }),
       ).toBe(document.activeElement),
     );
 
@@ -102,38 +107,42 @@ describe('ContactForm', () => {
     const view = render(<ContactForm />);
     expect(
       // SAFETY: findByLabelText targets the rendered input with this label.
-      ((await screen.findByLabelText('Name')) as HTMLInputElement).value,
+      (
+        (await screen.findByLabelText(
+          m.contact_nameLabel(),
+        )) as HTMLInputElement
+      ).value,
     ).toBe('Ada Lovelace');
     // SAFETY: getByLabelText targets the rendered email input.
-    expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe(
-      'ada@example.com',
-    );
-    fireEvent.change(screen.getByLabelText('Name'), {
+    expect(
+      (screen.getByLabelText(m.contact_emailLabel()) as HTMLInputElement).value,
+    ).toBe('ada@example.com');
+    fireEvent.change(screen.getByLabelText(m.contact_nameLabel()), {
       target: { value: 'Grace' },
     });
-    fireEvent.change(screen.getByLabelText('Email'), {
+    fireEvent.change(screen.getByLabelText(m.contact_emailLabel()), {
       target: { value: 'grace@example.com' },
     });
     view.rerender(<ContactForm />);
     // SAFETY: getByLabelText targets the rendered name input.
-    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe(
-      'Grace',
-    );
+    expect(
+      (screen.getByLabelText(m.contact_nameLabel()) as HTMLInputElement).value,
+    ).toBe('Grace');
     // SAFETY: getByLabelText targets the rendered email input.
-    expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe(
-      'grace@example.com',
-    );
-    expect(screen.queryByLabelText('Subject')).toBeNull();
+    expect(
+      (screen.getByLabelText(m.contact_emailLabel()) as HTMLInputElement).value,
+    ).toBe('grace@example.com');
+    expect(document.querySelector('[name="subject"]')).toBeNull();
 
     submitContact.mockResolvedValue({
       ok: true,
       data: { object: 'contact_submission', success: true },
     });
-    fireEvent.change(screen.getByLabelText('Message'), {
+    fireEvent.change(screen.getByLabelText(m.contact_messageLabel()), {
       target: { value: 'Please help me.' },
     });
     fireEvent.submit(
-      screen.getByRole('button', { name: 'Send message' }).closest('form')!,
+      screen.getByRole('button', { name: m.contact_send() }).closest('form')!,
     );
     expect((await screen.findByRole('status')).textContent).toContain(
       'grace@example.com',
@@ -148,11 +157,11 @@ describe('ContactForm', () => {
         data: { object: 'contact_submission', success: true },
       });
     render(<ContactForm />);
-    fireEvent.change(screen.getByLabelText('Message'), {
+    fireEvent.change(screen.getByLabelText(m.contact_messageLabel()), {
       target: { value: 'Hello' },
     });
     const form = screen
-      .getByRole('button', { name: 'Send message' })
+      .getByRole('button', { name: m.contact_send() })
       .closest('form')!;
     fireEvent.submit(form);
     await screen.findByRole('alert');
@@ -174,11 +183,11 @@ describe('ContactForm', () => {
       }),
     );
     render(<ContactForm />);
-    fireEvent.change(screen.getByLabelText('Message'), {
+    fireEvent.change(screen.getByLabelText(m.contact_messageLabel()), {
       target: { value: 'Hello' },
     });
     const form = screen
-      .getByRole('button', { name: 'Send message' })
+      .getByRole('button', { name: m.contact_send() })
       .closest('form')!;
     fireEvent.submit(form);
     fireEvent.submit(form);
