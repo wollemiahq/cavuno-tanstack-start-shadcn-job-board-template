@@ -534,6 +534,32 @@ describe('ProfileForm — committed overview refresh', () => {
     expect(field(m.profileForm_handleLabel())).toHaveValue('rowan-edited');
   });
 
+  it('settles the location validation when adopting a committed import', async () => {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    const refresh = await mount(profile);
+    const input = field(m.profileForm_locationLabel());
+    fireEvent.input(input, { target: { value: 'Lyo' } });
+    fireEvent.input(input, { target: { value: 'London' } });
+    submit();
+    expect(
+      await screen.findByText(m.locationField_pickRequiredError()),
+    ).toBeInTheDocument();
+
+    refresh(imported);
+    expect(input).toHaveValue('Houston, Texas, United States');
+    expect(
+      screen.queryByText(m.locationField_pickRequiredError()),
+    ).not.toBeInTheDocument();
+    submit();
+    await waitFor(() =>
+      expect(mocks.updateProfile).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          location: 'Houston, Texas, United States',
+        }),
+      }),
+    );
+  });
+
   it('keeps custom drafts, explicit handles and visibility when overview refreshes', async () => {
     const updateCustomFields = mocks.updateCustomFields.mockResolvedValue({
       ok: true,

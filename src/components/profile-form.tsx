@@ -316,6 +316,13 @@ export function ProfileForm({
     // Polling can commit an imported overview while this editor stays mounted.
     // Only pristine fields follow it; manual drafts and unrelated state stay put.
     setCommittedOverview(incomingOverview);
+    if (
+      incomingOverview.location !== committedOverview.location &&
+      form.location === committedOverview.location
+    ) {
+      setLocationUnpicked(false);
+      setLocationPickError(false);
+    }
     setForm((draft) => {
       const next = { ...draft };
       for (const key of overviewKeys) {
