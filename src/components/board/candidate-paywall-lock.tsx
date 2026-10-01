@@ -1,4 +1,4 @@
-import { defaultStringifySearch } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { ArrowRight, Check, Lock } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -22,7 +22,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
 /** Configured plan details describe the offer; the board's 403 owns access. */
@@ -38,12 +37,9 @@ export function CandidatePaywallLock({
 }) {
   const locale = getLocale();
   const browseJobs = (
-    <a
-      href={localizePath('/jobs')}
-      className={buttonVariants({ variant: 'link' })}
-    >
+    <Link to="/jobs" className={buttonVariants({ variant: 'link' })}>
       {m.accountAccess_browseJobsLink()}
-    </a>
+    </Link>
   );
 
   if (offers.length === 0) {
@@ -127,18 +123,14 @@ export function CandidatePaywallLock({
               ) : null}
             </CardContent>
             <CardFooter>
-              <a
-                href={localizePath(
-                  `/account/access${defaultStringifySearch({
-                    offerKey: offer.offerKey,
-                    returnTo,
-                  })}`,
-                )}
+              <Link
+                to="/account/access"
+                search={{ offerKey: offer.offerKey, returnTo }}
                 className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
               >
                 {m.candidatePaywallLock_ctaLabel()}
                 <ArrowRight aria-hidden="true" />
-              </a>
+              </Link>
             </CardFooter>
           </Card>
         ))}
