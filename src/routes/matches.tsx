@@ -306,7 +306,7 @@ function JobMatchesResults({
               list={
                 <div
                   data-slot="recommended-jobs-empty"
-                  className="space-y-4 pt-4 pb-4 md:col-span-2"
+                  className="space-y-4 pt-4 pb-4 md:col-span-2 md:ps-1"
                 >
                   {header}
                   {emptyKind === 'empty' ? (
@@ -356,7 +356,7 @@ function JobMatchesResults({
                 >
                   <div
                     data-slot="recommended-jobs-content"
-                    className="space-y-4 pe-4 pt-4 pb-4"
+                    className="space-y-4 pe-4 pt-4 pb-4 md:ps-1"
                   >
                     {header}
                     <InPlaceListingSelect onSelect={selection.onResultActivate}>
