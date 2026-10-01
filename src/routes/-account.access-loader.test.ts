@@ -91,6 +91,50 @@ describe('access loader auth bounces', () => {
     });
   });
 
+  it.each([
+    ['UNAUTHENTICATED', '/auth/sign-in'],
+    ['EMAIL_UNVERIFIED', '/auth/verify-email-required'],
+  ])(
+    'preserves the selected offer through %s',
+    async (failure, destination) => {
+      getAccessGrant.mockRejectedValue(new Error(failure));
+
+      const redirect = await redirectFrom(
+        'returnTo=%2Fmatches&offerKey=annual',
+      );
+
+      expect(redirect.options.to).toBe(destination);
+      expect(redirect.options.search).toMatchObject({
+        returnTo: '/account/access?returnTo=%2Fmatches&offerKey=annual',
+      });
+    },
+  );
+
+  it('preserves an offer selection while refusing an unsafe destination', async () => {
+    getAccessGrant.mockRejectedValue(new Error('UNAUTHENTICATED'));
+
+    const redirect = await redirectFrom(
+      'offerKey=annual&returnTo=https%3A%2F%2Fevil.example',
+    );
+
+    expect(redirect.options.search).toEqual({
+      returnTo: '/account/access?offerKey=annual',
+    });
+  });
+
+  it('preserves payment-return state through auth so it cannot restart the selected checkout', async () => {
+    getAccessGrant.mockRejectedValue(new Error('UNAUTHENTICATED'));
+
+    const redirect = await redirectFrom(
+      'offerKey=annual&returnTo=%2Fmatches&session_id=cs_returned',
+    );
+
+    expect(redirect.options.search).toEqual({
+      returnTo:
+        '/account/access?returnTo=%2Fmatches&offerKey=annual&session_id=cs_returned',
+    });
+  });
+
   it('bounces to this page alone when no destination was captured', async () => {
     getAccessGrant.mockRejectedValue(new Error('UNAUTHENTICATED'));
 

@@ -9,7 +9,12 @@
  * lives in the colocated `./-access-page` module so this route file exports only
  * `Route` and stays cleanly code-split.
  */
-import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  defaultStringifySearch,
+  isRedirect,
+  redirect,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getAccessGrant, getPaywallOffers } from '../server/paywall';
@@ -29,9 +34,13 @@ import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
-type AccessSearch = { session_id?: string; returnTo?: string };
+type AccessSearch = {
+  session_id?: string;
+  returnTo?: string;
+  offerKey?: string;
+};
 
-/** Only the raw `returnTo` is read from the location; the rest is the router's. */
+/** Search values are read before nesting this page's path into an auth bounce. */
 type AccessLocation = { search?: UrlSearchInput };
 
 export type AccessLoaderDependencies = {
@@ -57,9 +66,21 @@ export function createAccessLoader(
 ) {
   return async (context: { location: LocationAuthSearch & AccessLocation }) => {
     const { location } = context;
-    const returnTo = accessReturnPath(
+    const accessPath = accessReturnPath(
       safeReturnTo(searchString(location.search?.returnTo)),
     );
+    const offerKey = searchString(location.search?.offerKey);
+    const sessionId = searchString(location.search?.session_id);
+    // Preserve the chosen opaque key through authentication only. Stripe's
+    // return path intentionally omits it so a payment return cannot restart
+    // checkout. Use the router codec to preserve numeric-looking strings too.
+    const authValues: Pick<AccessSearch, 'offerKey' | 'session_id'> = {};
+    if (offerKey) authValues.offerKey = offerKey;
+    if (sessionId) authValues.session_id = sessionId;
+    const authSearch = defaultStringifySearch(authValues);
+    const returnTo = authSearch
+      ? `${accessPath}${accessPath.includes('?') ? '&' : '?'}${authSearch.slice(1)}`
+      : accessPath;
     try {
       const [grant, offers, seo] = await Promise.all([
         dependencies.getAccessGrant(),
@@ -105,8 +126,10 @@ export const Route = createFileRoute('/account_/access')({
     const out: AccessSearch = {};
     const sessionId = searchString(search.session_id);
     const returnTo = searchString(search.returnTo);
+    const offerKey = searchString(search.offerKey);
     if (sessionId) out.session_id = sessionId;
     if (returnTo) out.returnTo = returnTo;
+    if (offerKey) out.offerKey = offerKey;
     return out;
   },
   loader: createAccessLoader(),

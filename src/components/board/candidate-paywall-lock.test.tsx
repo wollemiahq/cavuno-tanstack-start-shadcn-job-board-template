@@ -27,7 +27,7 @@ const offer: CandidatePaywallOffer = {
 afterEach(cleanup);
 
 describe('candidate plan cards', () => {
-  it('shows configured details, cadence and one plan-picker continuation preserving returnTo', () => {
+  it('shows configured details, cadence and a checkout link for the chosen offer preserving returnTo', () => {
     const returnTo = '/matches?selectedJob=job-1';
     render(
       <CandidatePaywallLock
@@ -58,7 +58,32 @@ describe('candidate plan cards', () => {
     const url = new URL(href, 'https://board.example');
     expect(url.pathname).toBe(localizePath('/account/access'));
     expect(url.searchParams.get('returnTo')).toBe(returnTo);
-    expect(url.searchParams.has('offerKey')).toBe(false);
+    expect(url.searchParams.get('offerKey')).toBe(offer.offerKey);
+  });
+
+  it('gives each plan its own checkout link', () => {
+    const annualOffer = { ...offer, offerKey: 'annual-plan', isDefault: false };
+    render(
+      <CandidatePaywallLock
+        title="Feature heading"
+        offers={[offer, annualOffer]}
+        returnTo="/me/alerts"
+      />,
+    );
+    const links = screen.getAllByRole('link', {
+      name: m.candidatePaywallLock_ctaLabel(),
+    });
+    expect(links).toHaveLength(2);
+    expect(
+      links.map((link) => {
+        const url = new URL(
+          link.getAttribute('href')!,
+          'https://board.example',
+        );
+        expect(url.searchParams.get('returnTo')).toBe('/me/alerts');
+        return url.searchParams.get('offerKey');
+      }),
+    ).toEqual([offer.offerKey, annualOffer.offerKey]);
   });
 
   it('shows single-payment cadence without claiming benefits when metadata is unavailable', () => {

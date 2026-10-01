@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { StrictMode, useState } from 'react';
+
 import {
   act,
   cleanup,
@@ -11,7 +13,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
-import type { AccessGrant, PaywallOffer } from '@cavuno/board';
+import type {
+  AccessCheckoutSession,
+  AccessGrant,
+  PaywallOffer,
+} from '@cavuno/board';
+
+vi.mock('../components/paywall/embedded-checkout', () => ({
+  EmbeddedCheckout: ({ kit }: { kit: AccessCheckoutSession }) => (
+    <div
+      data-testid="paywall-embedded-checkout"
+      data-session-id={kit.sessionId}
+    />
+  ),
+}));
 
 interface AccessLoaderData {
   grant: AccessGrant;
@@ -21,6 +36,7 @@ interface AccessLoaderData {
 interface AccessSearch {
   session_id?: string;
   returnTo?: string;
+  offerKey?: string;
 }
 
 const mocks = {
@@ -81,6 +97,7 @@ async function renderAccessPage() {
       offers={loaderData.offers}
       sessionId={search.session_id}
       returnToRaw={search.returnTo}
+      offerKey={search.offerKey}
       getAccessGrantAction={mocks.getAccessGrant}
       openBillingPortalAction={mocks.openBillingPortal}
       startCheckoutAction={mocks.startCheckout}
@@ -99,6 +116,164 @@ afterEach(() => {
 });
 
 describe('candidate access actions', () => {
+  it('starts the selected current offer directly and mounts its checkout', async () => {
+    mocks.useLoaderData.mockReturnValue({
+      grant,
+      offers: [offer, annualOffer],
+    });
+    mocks.useSearch.mockReturnValue({
+      offerKey: 'annual',
+      returnTo: '/matches',
+    });
+    mocks.startCheckout.mockResolvedValue({ sessionId: 'cs_selected' });
+
+    await renderAccessPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('paywall-embedded-checkout')).toHaveAttribute(
+        'data-session-id',
+        'cs_selected',
+      );
+    });
+    expect(mocks.startCheckout).toHaveBeenCalledExactlyOnceWith({
+      data: {
+        offerKey: 'annual',
+        returnPath: '/account/access?returnTo=%2Fmatches',
+      },
+    });
+    expect(
+      screen.queryByRole('button', { name: m.accountAccess_chooseLabel() }),
+    ).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.accountAccess_backToPlansLabel() }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('button', { name: m.accountAccess_chooseLabel() }),
+      ).toHaveLength(2),
+    );
+    expect(mocks.startCheckout).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the picker for an unknown or retired offer without starting checkout', async () => {
+    mocks.useLoaderData.mockReturnValue({
+      grant,
+      offers: [offer, annualOffer],
+    });
+    mocks.useSearch.mockReturnValue({ offerKey: 'ANNUAL' });
+
+    await renderAccessPage();
+
+    expect(
+      screen.getAllByRole('button', { name: m.accountAccess_chooseLabel() }),
+    ).toHaveLength(2);
+    expect(mocks.startCheckout).not.toHaveBeenCalled();
+  });
+
+  it.each(['entitled', 'payment-return'] as const)(
+    'does not start a selected offer in the %s state',
+    async (state) => {
+      mocks.useLoaderData.mockReturnValue({
+        grant: state === 'entitled' ? { ...grant, hasAccess: true } : grant,
+        offers: [offer, annualOffer],
+      });
+      const search: AccessSearch = { offerKey: 'annual' };
+      if (state === 'payment-return') search.session_id = 'cs_returned';
+      mocks.useSearch.mockReturnValue(search);
+
+      await renderAccessPage();
+
+      expect(mocks.startCheckout).not.toHaveBeenCalled();
+    },
+  );
+
+  it('attempts direct checkout once through effect replay, rejection and new render callbacks', async () => {
+    mocks.startCheckout.mockRejectedValue(new Error('checkout unavailable'));
+    let refresh = () => {};
+    function RefreshablePage() {
+      const [, setRevision] = useState(0);
+      refresh = () => setRevision((revision) => revision + 1);
+      return (
+        <AccessPageView
+          grant={{ ...grant }}
+          offers={[{ ...offer }, { ...annualOffer }]}
+          offerKey="annual"
+          getAccessGrantAction={mocks.getAccessGrant}
+          openBillingPortalAction={mocks.openBillingPortal}
+          startCheckoutAction={(input) => mocks.startCheckout(input)}
+          invalidate={async () => {}}
+          navigate={async () => {}}
+          reportActionError={() => mocks.toastActionError()}
+        />
+      );
+    }
+    await renderRouted(
+      <StrictMode>
+        <RefreshablePage />
+      </StrictMode>,
+    );
+
+    await waitFor(() =>
+      expect(mocks.toastActionError).toHaveBeenCalledTimes(1),
+    );
+    await act(async () => refresh());
+
+    expect(mocks.startCheckout).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getAllByRole('button', { name: m.accountAccess_chooseLabel() }),
+    ).toHaveLength(2);
+    // A fresh click remains an explicit retry after the failed automatic start.
+    fireEvent.click(
+      screen.getAllByRole('button', {
+        name: m.accountAccess_chooseLabel(),
+      })[1]!,
+    );
+    await waitFor(() => expect(mocks.startCheckout).toHaveBeenCalledTimes(2));
+  });
+
+  it('does not consume a new selection while a previous checkout start is in flight', async () => {
+    let rejectCheckout: (reason: Error) => void = () => {
+      throw new Error('Checkout rejection was not initialized');
+    };
+    mocks.startCheckout
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            rejectCheckout = reject;
+          }),
+      )
+      .mockRejectedValue(new Error('checkout unavailable'));
+    let selectAnnual = () => {};
+    function ChangingSelection() {
+      const [selectedKey, setSelectedKey] = useState('monthly');
+      selectAnnual = () => setSelectedKey('annual');
+      return (
+        <AccessPageView
+          grant={grant}
+          offers={[offer, annualOffer]}
+          offerKey={selectedKey}
+          getAccessGrantAction={mocks.getAccessGrant}
+          openBillingPortalAction={mocks.openBillingPortal}
+          startCheckoutAction={mocks.startCheckout}
+          invalidate={mocks.invalidate}
+          navigate={mocks.navigate}
+          reportActionError={mocks.toastActionError}
+        />
+      );
+    }
+    await renderRouted(<ChangingSelection />);
+    await act(async () => selectAnnual());
+    expect(mocks.startCheckout).toHaveBeenCalledTimes(1);
+
+    await act(async () => rejectCheckout(new Error('checkout unavailable')));
+
+    await waitFor(() => expect(mocks.startCheckout).toHaveBeenCalledTimes(2));
+    expect(mocks.startCheckout).toHaveBeenNthCalledWith(2, {
+      data: { offerKey: 'annual', returnPath: '/account/access' },
+    });
+  });
+
   it('disables every offer while checkout is starting', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant,

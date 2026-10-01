@@ -13,7 +13,7 @@
  * back there — sanitized with `safeRedirectPath`. With no captured path the
  * entitled state is the fallback destination.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { safeRedirectPath } from '@cavuno/board/server';
 import { Link, getRouteApi, useRouter } from '@tanstack/react-router';
@@ -170,7 +170,7 @@ function PlanCard({
 
 export function AccessPage() {
   const { grant, offers } = routeApi.useLoaderData();
-  const { session_id, returnTo: returnToRaw } = routeApi.useSearch();
+  const { session_id, returnTo: returnToRaw, offerKey } = routeApi.useSearch();
   const router = useRouter();
   return (
     <AccessPageView
@@ -178,6 +178,7 @@ export function AccessPage() {
       offers={offers}
       sessionId={session_id}
       returnToRaw={returnToRaw}
+      offerKey={offerKey}
       getAccessGrantAction={getAccessGrant}
       openBillingPortalAction={openBillingPortal}
       startCheckoutAction={startCheckout}
@@ -199,6 +200,7 @@ export function AccessPageView({
   offers,
   sessionId,
   returnToRaw,
+  offerKey,
   getAccessGrantAction,
   openBillingPortalAction,
   startCheckoutAction,
@@ -210,6 +212,7 @@ export function AccessPageView({
   offers: (PaywallOffer & { benefits?: string[] })[];
   sessionId?: string;
   returnToRaw?: string;
+  offerKey?: string;
   getAccessGrantAction: () => Promise<AccessGrant>;
   openBillingPortalAction: (input: {
     data: { returnPath: string };
@@ -227,9 +230,18 @@ export function AccessPageView({
   // What Stripe brings the buyer back to — this page WITH the captured
   // destination, so a redirect-based method returns with it intact.
   const returnPath = accessReturnPath(returnTo);
+  // A card link is a purchase selection, but only a current SDK offer may
+  // become a checkout request. Unknown or retired keys leave the picker usable.
+  const selectedOffer = offers.find((offer) => offer.offerKey === offerKey);
 
   const [kit, setKit] = useState<AccessCheckoutSession | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(() =>
+    selectedOffer && !grant.hasAccess && !sessionId
+      ? selectedOffer.offerKey
+      : null,
+  );
+  const attemptedSelections = useRef(new Set<string>());
+  const checkoutStarting = useRef(false);
   const [confirmed, setConfirmed] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   // Returning from Stripe with a session id means a checkout just completed —
@@ -295,19 +307,43 @@ export function AccessPageView({
     setPolling(true);
   }, []);
 
-  async function buy(offer: PaywallOffer) {
-    setBusy(offer.offerKey);
-    try {
-      const mountKit = await startCheckoutAction({
-        data: { offerKey: offer.offerKey, returnPath },
-      });
-      setKit(mountKit);
-    } catch {
-      reportActionError();
-    } finally {
-      setBusy(null);
-    }
-  }
+  const buy = useCallback(
+    async (offer: PaywallOffer) => {
+      if (checkoutStarting.current) return;
+      checkoutStarting.current = true;
+      setBusy(offer.offerKey);
+      try {
+        const mountKit = await startCheckoutAction({
+          data: { offerKey: offer.offerKey, returnPath },
+        });
+        setKit(mountKit);
+      } catch {
+        reportActionError();
+      } finally {
+        checkoutStarting.current = false;
+        setBusy(null);
+      }
+    },
+    [reportActionError, returnPath, startCheckoutAction],
+  );
+
+  useEffect(() => {
+    if (
+      !selectedOffer ||
+      hasAccess ||
+      sessionId ||
+      polling ||
+      exhausted ||
+      kit ||
+      checkoutStarting.current ||
+      attemptedSelections.current.has(selectedOffer.offerKey)
+    )
+      return;
+    // Record before starting the mutation: effect replay, loader invalidation,
+    // new callback identities and a failed session must never start it again.
+    attemptedSelections.current.add(selectedOffer.offerKey);
+    void buy(selectedOffer);
+  }, [busy, buy, exhausted, hasAccess, kit, polling, selectedOffer, sessionId]);
 
   async function manage() {
     setBusy('portal');
@@ -427,6 +463,24 @@ export function AccessPageView({
           }
         >
           <EmbeddedCheckout kit={kit} onComplete={handleCheckoutComplete} />
+        </PageContent>
+      </Page>
+    );
+  }
+
+  // A chosen card starts checkout directly, without flashing the plan picker.
+  if (busy !== null && selectedOffer?.offerKey === busy) {
+    return (
+      <Page width="content">
+        <PageContent header={<PageHeader title={m.accountAccess_title()} />}>
+          <Empty className="min-h-80 border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Spinner className="size-5" />
+              </EmptyMedia>
+              <EmptyTitle>{m.accountAccess_startingLabel()}</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         </PageContent>
       </Page>
     );

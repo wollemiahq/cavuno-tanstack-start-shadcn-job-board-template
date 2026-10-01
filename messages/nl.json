@@ -484,10 +484,10 @@
   "candidateLanding_title": "For job seekers",
   "pricing_description": "Compare plans for job seekers and employers.",
   "pricing_title": "Plans and pricing",
-  "candidatePaywallLock_alertsTitle": "Blijf op de hoogte met vacaturemeldingen",
-  "candidatePaywallLock_ctaLabel": "Bekijk abonnementen",
-  "candidatePaywallLock_description": "Bekijk de opties hieronder en vind de voordelen die bij je zoektocht naar werk passen.",
-  "candidatePaywallLock_matchesTitle": "Vind je volgende baan met aanbevolen vacatures",
+  "candidatePaywallLock_alertsTitle": "Ontgrendel vacaturemeldingen",
+  "candidatePaywallLock_ctaLabel": "Doorgaan naar afrekenen",
+  "candidatePaywallLock_description": "Kies een abonnement om toegang te krijgen.",
+  "candidatePaywallLock_matchesTitle": "Ontgrendel aanbevolen vacatures",
   "candidatePaywallLock_recommendedBadge": "Aanbevolen",
   "candidatePaywallLock_noOffersText": "Er zijn momenteel geen betaalde opties beschikbaar. Je kunt vacatures blijven bekijken.",
   "candidatePaywallLock_checkoutTerms": "Bekijk alle betalingsvoorwaarden bij het afrekenen voordat je betaalt.",
@@ -2251,5 +2251,6 @@
   "ui_moreLabel": "Meer",
   "ui_sidebarDescription": "Toont de zijbalk op mobiele apparaten.",
   "ui_sidebarTitle": "Zijbalk",
-  "ui_sidebarToggleLabel": "Zijbalk openen of sluiten"
+  "ui_sidebarToggleLabel": "Zijbalk openen of sluiten",
+  "candidatePaywallLock_includedLabel": "Inbegrepen bij dit abonnement"
 }

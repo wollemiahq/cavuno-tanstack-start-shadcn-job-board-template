@@ -1,4 +1,5 @@
-import { Check, Lock } from 'lucide-react';
+import { defaultStringifySearch } from '@tanstack/react-router';
+import { ArrowRight, Check, Lock } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
@@ -16,22 +17,15 @@ import {
   CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from '@/components/ui/empty';
+import { Separator } from '@/components/ui/separator';
 import { localizePath } from '@/lib/localized-path';
 import { cn } from '@/lib/utils';
 
-/**
- * Plan details for a candidate feature refused by the board's authoritative
- * 403. Configured benefits describe each plan; they never infer entitlement.
- * The shared CTA keeps the existing plan-picker and checkout return path.
- */
+/** Configured plan details describe the offer; the board's 403 owns access. */
 export function CandidatePaywallLock({
   title,
   offers,
@@ -46,7 +40,7 @@ export function CandidatePaywallLock({
   const browseJobs = (
     <a
       href={localizePath('/jobs')}
-      className={buttonVariants({ variant: 'outline' })}
+      className={buttonVariants({ variant: 'link' })}
     >
       {m.accountAccess_browseJobsLink()}
     </a>
@@ -64,28 +58,25 @@ export function CandidatePaywallLock({
   }
 
   return (
-    <section className="flex flex-col items-center gap-8 py-8">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Lock aria-hidden="true" />
-        </EmptyMedia>
-        <Text as="h1" variant="heading1" className="text-center">
+    <section className="flex flex-col items-center gap-6 py-4">
+      <header className="flex max-w-lg flex-col gap-2 text-center">
+        <Text as="h1" variant="heading2">
           {title}
         </Text>
-        <EmptyDescription className="text-center">
+        <Text variant="secondary" size="sm">
           {m.candidatePaywallLock_description()}
-        </EmptyDescription>
-      </EmptyHeader>
+        </Text>
+      </header>
 
       <div
         className={cn(
           'grid w-full gap-4',
-          offers.length === 1 ? 'max-w-md' : 'max-w-4xl sm:grid-cols-2',
+          offers.length === 1 ? 'max-w-lg' : 'max-w-4xl sm:grid-cols-2',
           offers.length > 2 && 'lg:grid-cols-3',
         )}
       >
         {offers.map((offer) => (
-          <Card key={offer.offerKey}>
+          <Card key={offer.offerKey} role="group" aria-label={offer.label}>
             <CardHeader>
               <CardTitle role="heading" aria-level={2}>
                 {offer.label}
@@ -101,48 +92,59 @@ export function CandidatePaywallLock({
                 <CardDescription>{offer.description}</CardDescription>
               ) : null}
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-1">
+            <CardContent className="flex flex-1 flex-col gap-5">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <Text as="p" variant="heading1">
                   {new Intl.NumberFormat(locale, {
                     style: 'currency',
                     currency: offer.currency.toUpperCase(),
-                    currencyDisplay: 'code',
                   }).format(offer.amountCents / 100)}
                 </Text>
-                <Text variant="secondary" size="sm">
+                <Text as="span" variant="secondary" size="sm">
                   {offerBillingLabel(offer)}
                 </Text>
               </div>
               {offer.benefits && offer.benefits.length > 0 ? (
-                <ul className="space-y-3">
-                  {offer.benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-start gap-2">
-                      <Check className="size-4 shrink-0" aria-hidden="true" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <Text variant="body" size="sm" bold>
+                      {m.candidatePaywallLock_includedLabel()}
+                    </Text>
+                    <ul className="space-y-2">
+                      {offer.benefits.map((benefit) => (
+                        <li key={benefit} className="flex items-start gap-2">
+                          <Check
+                            className="size-4 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
               ) : null}
             </CardContent>
+            <CardFooter>
+              <a
+                href={localizePath(
+                  `/account/access${defaultStringifySearch({
+                    offerKey: offer.offerKey,
+                    returnTo,
+                  })}`,
+                )}
+                className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+              >
+                {m.candidatePaywallLock_ctaLabel()}
+                <ArrowRight aria-hidden="true" />
+              </a>
+            </CardFooter>
           </Card>
         ))}
       </div>
 
-      <div className="flex max-w-md flex-col items-center gap-3 text-center">
-        <a
-          href={localizePath(
-            `/account/access?${new URLSearchParams({ returnTo }).toString()}`,
-          )}
-          className={buttonVariants({ size: 'lg' })}
-        >
-          {m.candidatePaywallLock_ctaLabel()}
-        </a>
-        <Text variant="secondary" size="sm">
-          {m.candidatePaywallLock_checkoutTerms()}
-        </Text>
-        {browseJobs}
-      </div>
+      {browseJobs}
     </section>
   );
 }

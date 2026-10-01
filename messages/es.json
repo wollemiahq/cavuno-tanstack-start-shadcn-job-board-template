@@ -484,10 +484,10 @@
   "candidateLanding_title": "For job seekers",
   "pricing_description": "Compare plans for job seekers and employers.",
   "pricing_title": "Plans and pricing",
-  "candidatePaywallLock_alertsTitle": "Mantente al día con alertas de empleo",
-  "candidatePaywallLock_ctaLabel": "Ver planes",
-  "candidatePaywallLock_description": "Explora los planes y encuentra las ventajas que se adapten a tu búsqueda de empleo.",
-  "candidatePaywallLock_matchesTitle": "Encuentra tu próximo puesto con recomendaciones de empleo",
+  "candidatePaywallLock_alertsTitle": "Desbloquea las alertas de empleo",
+  "candidatePaywallLock_ctaLabel": "Continuar al pago",
+  "candidatePaywallLock_description": "Elige un plan para obtener acceso.",
+  "candidatePaywallLock_matchesTitle": "Desbloquea las recomendaciones de empleo",
   "candidatePaywallLock_recommendedBadge": "Recomendado",
   "candidatePaywallLock_noOffersText": "No hay planes de pago disponibles ahora. Puedes seguir buscando empleos.",
   "candidatePaywallLock_checkoutTerms": "Revisa las condiciones de facturación completas en el pago antes de pagar.",
@@ -2251,5 +2251,6 @@
   "ui_moreLabel": "Más",
   "ui_sidebarDescription": "Muestra la barra lateral en móvil.",
   "ui_sidebarTitle": "Barra lateral",
-  "ui_sidebarToggleLabel": "Mostrar u ocultar la barra lateral"
+  "ui_sidebarToggleLabel": "Mostrar u ocultar la barra lateral",
+  "candidatePaywallLock_includedLabel": "Incluido en este plan"
 }
