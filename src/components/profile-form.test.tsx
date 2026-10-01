@@ -36,6 +36,11 @@ import {
   resolveTalentForm,
   type TalentProfileFields,
 } from './profile-form';
+import {
+  RootSessionProvider,
+  type RootSessionDependencies,
+  useRootSession,
+} from './root-session';
 
 import { m } from '@/paraglide/messages';
 
@@ -692,5 +697,70 @@ describe('ProfileForm — committed overview refresh', () => {
       await screen.findByText(m.locationField_pickRequiredError()),
     ).toBeInTheDocument();
     expect(mocks.updateProfile).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ProfileForm — signed-in session refresh', () => {
+  const sessionUser = {
+    id: 'user_1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'bree@example.test',
+    displayName: 'bree',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+
+  function SessionName() {
+    return (
+      <output data-testid="session-name">
+        {useRootSession().user?.displayName ?? ''}
+      </output>
+    );
+  }
+
+  it('updates the session user, which the header and matches read, after a name save', async () => {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    const dependencies: RootSessionDependencies = {
+      getSessionShell: vi
+        .fn()
+        .mockResolvedValueOnce({ user: sessionUser })
+        .mockResolvedValueOnce({
+          user: { ...sessionUser, displayName: 'Bree Example' },
+        }),
+      getEntitlements: vi.fn().mockResolvedValue(null),
+      getCompanies: vi.fn().mockResolvedValue({ data: [] }),
+      resolveHasAccessGrant: vi.fn().mockReturnValue(false),
+    };
+    await renderWithRouter(
+      <RootSessionProvider candidatePaywall={false} dependencies={dependencies}>
+        <SessionName />
+        <ProfileForm
+          profile={{ ...profile, displayName: 'bree' }}
+          language="en"
+          dependencies={mocks}
+          locationSuggestions={{
+            suggestions: [],
+            loading: false,
+            onQueryChange: vi.fn(),
+          }}
+        />
+      </RootSessionProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('session-name')).toHaveTextContent('bree'),
+    );
+
+    fireEvent.change(screen.getByLabelText(m.profileForm_displayNameLabel()), {
+      target: { value: 'Bree Example' },
+    });
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('session-name')).toHaveTextContent(
+        'Bree Example',
+      ),
+    );
+    expect(mocks.toastActionReconciliationError).not.toHaveBeenCalled();
   });
 });

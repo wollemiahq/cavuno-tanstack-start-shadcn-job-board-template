@@ -169,6 +169,80 @@ describe('RootSessionProvider', () => {
     expect(dependencies.getCompanies).not.toHaveBeenCalled();
   });
 
+  describe('refreshUser', () => {
+    function RefreshProbe() {
+      const session = useRootSession();
+      return (
+        <>
+          <output data-testid="name">{session.user?.displayName ?? ''}</output>
+          <button
+            type="button"
+            onClick={() => {
+              session.refreshUser().catch(() => {
+                document.body.dataset.refreshFailed = 'true';
+              });
+            }}
+          >
+            refresh
+          </button>
+        </>
+      );
+    }
+
+    function renderProbe(dependencies: RootSessionDependencies) {
+      return render(
+        <RootSessionProvider candidatePaywall dependencies={dependencies}>
+          <RefreshProbe />
+        </RootSessionProvider>,
+      );
+    }
+
+    afterEach(() => {
+      delete document.body.dataset.refreshFailed;
+    });
+
+    it('replaces the user with the re-read one', async () => {
+      const dependencies = createDependencies({
+        getSessionShell: vi
+          .fn()
+          .mockResolvedValueOnce({ user: verifiedUser })
+          .mockResolvedValueOnce({
+            user: { ...verifiedUser, displayName: 'Grace Hopper' },
+          }),
+      });
+      renderProbe(dependencies);
+      await waitFor(() =>
+        expect(screen.getByTestId('name')).toHaveTextContent('Ada Lovelace'),
+      );
+
+      await act(async () => screen.getByRole('button').click());
+
+      await waitFor(() =>
+        expect(screen.getByTestId('name')).toHaveTextContent('Grace Hopper'),
+      );
+    });
+
+    it('keeps the user and rejects when the re-read has no user', async () => {
+      const dependencies = createDependencies({
+        getSessionShell: vi
+          .fn()
+          .mockResolvedValueOnce({ user: verifiedUser })
+          .mockResolvedValueOnce({ user: null }),
+      });
+      renderProbe(dependencies);
+      await waitFor(() =>
+        expect(screen.getByTestId('name')).toHaveTextContent('Ada Lovelace'),
+      );
+
+      await act(async () => screen.getByRole('button').click());
+
+      await waitFor(() =>
+        expect(document.body.dataset.refreshFailed).toBe('true'),
+      );
+      expect(screen.getByTestId('name')).toHaveTextContent('Ada Lovelace');
+    });
+  });
+
   it('stops the session chain after unmount', async () => {
     let resolveShell: ((value: { user: null }) => void) | undefined;
     const dependencies = createDependencies({

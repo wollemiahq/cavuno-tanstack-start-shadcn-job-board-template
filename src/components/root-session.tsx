@@ -54,6 +54,12 @@ export type RootSessionValue = {
 
 type RootSessionContextValue = RootSessionValue & {
   clearSession: () => void;
+  /**
+   * Re-reads the signed-in user after a write that changes it (name, avatar).
+   * `router.invalidate()` re-runs loaders but not this provider, so without
+   * it the header and `/matches` keep the user as it was at first paint.
+   */
+  refreshUser: () => Promise<void>;
 };
 
 export interface RootSessionDependencies {
@@ -85,6 +91,7 @@ const RootSessionContext = createContext<RootSessionContextValue>({
   preview: EMPTY_ROOT_PREVIEW,
   ready: false,
   clearSession: () => undefined,
+  refreshUser: async () => undefined,
 });
 
 /**
@@ -175,9 +182,17 @@ export function RootSessionProvider({
       talentAccess: EMPTY_TALENT_ACCESS,
     }));
   }, []);
+  const refreshUser = useCallback(async () => {
+    const data = await dependencies.getSessionShell();
+    // Only called after a signed-in write succeeded, so a missing user is a
+    // failed read, not a sign-out: keep the current user and report it.
+    if (!data?.user) throw new Error('Session user refresh failed');
+    const user = data.user;
+    setSession((current) => ({ ...current, user }));
+  }, [dependencies]);
   const value = useMemo(
-    () => ({ ...session, clearSession }),
-    [clearSession, session],
+    () => ({ ...session, clearSession, refreshUser }),
+    [clearSession, refreshUser, session],
   );
 
   return (

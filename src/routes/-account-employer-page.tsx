@@ -15,6 +15,7 @@ import { m } from '../paraglide/messages';
 import { updateProfile } from '../server/account';
 
 import { CandidateShell } from '@/components/candidate-shell';
+import { useRootSession } from '@/components/root-session';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -100,6 +101,7 @@ function EmployerProfileForm({
   dependencies: EmployerAccountDependencies;
 }) {
   const router = useRouter();
+  const { refreshUser } = useRootSession();
   const [displayName, setDisplayName] = useState(storedName);
   const [saving, setSaving] = useState(false);
   const [missingName, setMissingName] = useState(false);
@@ -121,10 +123,9 @@ function EmployerProfileForm({
     }
     setSaving(false);
     void dependencies.toastActionSuccess();
-    await reconcileCommittedAction(
-      () => router.invalidate(),
-      dependencies.toastActionReconciliationError,
-    );
+    await reconcileCommittedAction(async () => {
+      await Promise.all([router.invalidate(), refreshUser()]);
+    }, dependencies.toastActionReconciliationError);
   }
 
   return (

@@ -40,6 +40,7 @@ import {
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
+import { useRootSession } from '@/components/root-session';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -284,6 +285,7 @@ export function ProfileForm({
   } satisfies VisibleToLabels;
 
   const router = useRouter();
+  const { refreshUser } = useRootSession();
   const [form, setForm] = useState<FormState>(() => toForm(profile));
   const countries = countryOptions(language);
   const [status, setStatus] = useState<Status>('idle');
@@ -550,10 +552,9 @@ export function ProfileForm({
     }
     setStatus('idle');
     void dependencies.toastActionSuccess();
-    await reconcileCommittedAction(
-      () => router.invalidate(),
-      dependencies.toastActionReconciliationError,
-    );
+    await reconcileCommittedAction(async () => {
+      await Promise.all([router.invalidate(), refreshUser()]);
+    }, dependencies.toastActionReconciliationError);
   }
 
   // Neither the country nor the profile visibility is a layout field: they

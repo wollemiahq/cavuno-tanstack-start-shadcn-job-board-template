@@ -8,6 +8,7 @@ import { initialsOf } from '../lib/initials';
 import { m } from '../paraglide/messages';
 import { uploadAvatar } from '../server/account';
 
+import { useRootSession } from '@/components/root-session';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { reconcileCommittedAction } from '@/lib/action-toast';
@@ -25,6 +26,7 @@ export function AvatarUpload({
   displayName: string | null;
 }) {
   const router = useRouter();
+  const { refreshUser } = useRootSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
 
@@ -57,7 +59,9 @@ export function AvatarUpload({
               return;
             }
             setStatus('idle');
-            await reconcileCommittedAction(() => router.invalidate());
+            await reconcileCommittedAction(async () => {
+              await Promise.all([router.invalidate(), refreshUser()]);
+            });
             if (inputRef.current) inputRef.current.value = '';
           }}
         />
