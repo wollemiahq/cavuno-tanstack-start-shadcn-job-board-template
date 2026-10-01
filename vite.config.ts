@@ -182,7 +182,10 @@ function paraglideEnabledLocalesOnly(plugin: ParaglidePlugin): ParaglidePlugin {
  * project or messages directory therefore runs the real startup compile,
  * which compiles the edit and hands watching back to the plugin.
  */
-type ParaglideOptions = Parameters<typeof paraglideVitePlugin>[0];
+// Paraglide 2.25 made `outdir` optional; this config always passes one.
+type ParaglideOptions = Parameters<typeof paraglideVitePlugin>[0] & {
+  outdir: string;
+};
 type ParaglideCompileOptions = Required<
   Pick<ParaglideOptions, 'outputStructure' | 'strategy' | 'isServer'>
 >;

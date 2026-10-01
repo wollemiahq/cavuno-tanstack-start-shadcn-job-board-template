@@ -51,4 +51,4 @@ allowBuilds:
 # the patch header. Drop it once @cloudflare/vite-plugin fixes this upstream.
 patchedDependencies:
   sharp@0.35.4: patches/sharp@0.35.4.patch
-  '@cloudflare/vite-plugin@1.49.0': patches/@cloudflare__vite-plugin@1.49.0.patch
+  '@cloudflare/vite-plugin@1.62.2': patches/@cloudflare__vite-plugin@1.62.2.patch
