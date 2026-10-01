@@ -122,6 +122,28 @@ const board = {
     enabled: false,
     clientId: null,
   },
+  signIn: {
+    candidate: {
+      ssoRequired: false,
+      methods: {
+        password: true,
+        magicLink: true,
+        google: false,
+        linkedin: false,
+      },
+      ssoConnections: [],
+    },
+    employer: {
+      ssoRequired: false,
+      methods: {
+        password: true,
+        magicLink: true,
+        google: false,
+        linkedin: false,
+      },
+      ssoConnections: [],
+    },
+  },
   contact: {
     email: null,
     legalName: null,
