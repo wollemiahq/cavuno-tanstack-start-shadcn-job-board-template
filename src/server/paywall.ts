@@ -7,7 +7,7 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 
-import { candidatePlanBenefits } from '../board/candidate-plan-benefits';
+import { candidatePaywallOffers } from '../board/paywall-offer';
 import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
@@ -20,7 +20,7 @@ import {
 import { gatedRead } from './board-access';
 import { requireVerifiedBoardUser } from './me-verification';
 
-import type { AccessCheckoutBody, PaywallOffer } from '@cavuno/board';
+import type { AccessCheckoutBody } from '@cavuno/board';
 
 /** Bearer + board-access grant for one gated `/me/*` call. */
 function authed(
@@ -54,15 +54,7 @@ export const getPaywallOffers = createServerFn({ method: 'GET' })
       ]);
       return {
         ...offers,
-        data: offers.data.map(
-          (offer): PaywallOffer & { benefits?: string[] } => {
-            const plan = plans.data.find((plan) => plan.id === offer.offerKey);
-            return {
-              ...offer,
-              benefits: plan ? candidatePlanBenefits(plan) : [],
-            };
-          },
-        ),
+        data: candidatePaywallOffers(offers.data, plans.data),
       };
     }),
   );

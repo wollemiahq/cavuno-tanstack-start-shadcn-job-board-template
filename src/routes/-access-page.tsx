@@ -28,6 +28,7 @@ import {
   startCheckout,
 } from '../server/paywall';
 
+import { offerBillingLabel } from '@/board/paywall-offer';
 import { EmptyState } from '@/components/empty-state';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Badge } from '@/components/ui/badge';
@@ -91,35 +92,6 @@ export function accessReturnPath(returnTo: string | null): string {
   // a value at 500 characters. A long search URL would fail checkout
   // outright; falling back to the bare page is the pre-existing behaviour.
   return nested.length > RETURN_PATH_MAX_LENGTH ? RETURN_PATH : nested;
-}
-
-/**
- * Billing cadence beside the price, worded from THIS catalog. The wire
- * `billingLabel` is an operator/platform display string in the board
- * language — the structured `offerType` + `intervalUnit`/`intervalCount`
- * fields carry the same fact, so /de/ can read "/Monat". Unknown interval
- * shapes fall back to the wire label rather than guessing.
- */
-function offerBillingLabel(offer: PaywallOffer): string {
-  if (offer.offerType === 'lifetime') return m.accessOffer_oneTime();
-  const count = offer.intervalCount ?? 1;
-  if (offer.intervalUnit === 'month') {
-    return count === 1
-      ? m.accessOffer_perMonth()
-      : m.accessOffer_everyMonths({ count, countLabel: String(count) });
-  }
-  if (offer.intervalUnit === 'year') {
-    return count === 1
-      ? m.accessOffer_perYear()
-      : m.accessOffer_everyYears({ count, countLabel: String(count) });
-  }
-  if (offer.intervalUnit === 'week' && count === 1) {
-    return m.accessOffer_perWeek();
-  }
-  if (offer.intervalUnit === 'day' && count === 1) {
-    return m.accessOffer_perDay();
-  }
-  return offer.billingLabel;
 }
 
 function formatPrice(amountCents: number, currency: string) {

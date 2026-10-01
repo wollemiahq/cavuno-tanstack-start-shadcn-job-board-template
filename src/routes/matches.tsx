@@ -161,11 +161,13 @@ function JobMatchesPage() {
   if (loaderData.locked) {
     return (
       <Page width="wide">
-        <CandidatePaywallLock
-          title={m.candidatePaywallLock_matchesTitle()}
-          offers={loaderData.offers}
-          returnTo="/matches"
-        />
+        <PageContent>
+          <CandidatePaywallLock
+            title={m.candidatePaywallLock_matchesTitle()}
+            offers={loaderData.offers}
+            returnTo="/matches"
+          />
+        </PageContent>
       </Page>
     );
   }
