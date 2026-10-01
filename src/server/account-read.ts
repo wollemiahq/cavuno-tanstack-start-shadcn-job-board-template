@@ -30,8 +30,9 @@ export type AccountBoard = {
 
 /**
  * Everything `/account` renders, by role (hosted parity: the page serves both).
- * A candidate gets the full profile editor's data, fetched in parallel. An
- * employer-only board user has no candidate profile, so they get the employer
+ * A candidate gets the resume status first, then the remaining editor data
+ * in parallel. An employer-only board user has no candidate profile, so they
+ * get the employer
  * profile view — the board user plus the profile singleton for its display
  * name and avatar — and none of the candidate `/me/profile/*` detail reads.
  */
@@ -48,6 +49,9 @@ export async function readAccount(
     const profile = await board.me.profile.retrieve(undefined, { headers });
     return { role: 'employer' as const, me, profile };
   }
+  // A parsed resume means its profile writes have committed. Read that status
+  // first so polling cannot pair it with a profile snapshot taken beforehand.
+  const resume = await board.me.resume.retrieve({ headers });
   const [
     profile,
     experience,
@@ -55,7 +59,6 @@ export async function readAccount(
     skills,
     languages,
     savedJobs,
-    resume,
     customFields,
     objectReferences,
   ] = await Promise.all([
@@ -65,7 +68,6 @@ export async function readAccount(
     board.me.profile.listSkills({ headers }),
     board.me.profile.listLanguages({ headers }),
     board.me.savedJobs.list({ limit: 50 }, { headers }),
-    board.me.resume.retrieve({ headers }),
     // Owner-editable custom fields and collection selections (including
     // private fields the public form layout never lists). Each degrades
     // to `null` so an API without them still renders the profile.

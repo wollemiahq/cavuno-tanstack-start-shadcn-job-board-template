@@ -133,3 +133,45 @@ describe('readAccount', () => {
     expect(candidateReads.retrieve).not.toHaveBeenCalled();
   });
 });
+
+describe('readAccount resume ordering', () => {
+  it('waits for parsed resume before reading the freshly committed profile', async () => {
+    retrieveMe.mockResolvedValue(boardUser('candidate'));
+    let finish!: (value: { parseStatus: string }) => void;
+    retrieveResume.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    candidateReads.retrieve.mockResolvedValue({ displayName: 'Stale name' });
+    const reading = readAccount(board, headers);
+    await vi.waitFor(() => expect(retrieveResume).toHaveBeenCalledTimes(1));
+    expect(candidateReads.retrieve).not.toHaveBeenCalled();
+    candidateReads.retrieve.mockResolvedValue({ displayName: 'Rowan Example' });
+    finish({ parseStatus: 'parsed' });
+    expect(await reading).toMatchObject({
+      resume: { parseStatus: 'parsed' },
+      profile: { displayName: 'Rowan Example' },
+    });
+    expect(candidateReads.retrieve).toHaveBeenCalledTimes(1);
+  });
+
+  it('propagates resume and profile failures while custom fields still degrade', async () => {
+    retrieveMe.mockResolvedValue(boardUser('candidate'));
+    retrieveResume.mockRejectedValueOnce(new Error('resume failed'));
+    await expect(readAccount(board, headers)).rejects.toThrow('resume failed');
+    expect(candidateReads.retrieve).not.toHaveBeenCalled();
+    candidateReads.retrieve.mockRejectedValueOnce(new Error('profile failed'));
+    await expect(readAccount(board, headers)).rejects.toThrow('profile failed');
+    candidateReads.retrieveCustomFields.mockRejectedValueOnce(
+      new Error('unavailable'),
+    );
+    candidateReads.retrieveObjectReferences.mockRejectedValueOnce(
+      new Error('unavailable'),
+    );
+    expect(await readAccount(board, headers)).toMatchObject({
+      customFields: null,
+      objectReferences: null,
+    });
+  });
+});

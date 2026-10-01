@@ -235,6 +235,11 @@ States no seed can freeze — reproduce them by hand.
 3. The parse is async — the UI polls `getResume()`. The **parsing** state is
    the window before status flips to `parsed`/`failed`. To force **parse
    failure**, upload a zero-byte or non-document file.
+4. When parsing finishes, the profile editor refreshes imported name,
+   headline, location, and bio without a page reload. Fields edited locally
+   stay as drafts; country, visibility, handle, and custom-field selections
+   keep their current values. A suggested handle still follows the name until
+   the candidate edits it.
 
 ### Webhook latency window (grant not yet landed)
 

@@ -302,6 +302,33 @@ export function ProfileForm({
   const [locationPickError, setLocationPickError] = useState(false);
   // The handle follows the display name until the candidate types one.
   const [handleFollowsName, setHandleFollowsName] = useState(!profile.handle);
+  const incomingOverview = {
+    displayName: profile.displayName ?? '',
+    headline: profile.headline ?? '',
+    location: profile.location ?? '',
+    bio: profile.bio ?? '',
+  };
+  const [committedOverview, setCommittedOverview] = useState(incomingOverview);
+  const overviewKeys = ['displayName', 'headline', 'location', 'bio'] as const;
+  if (
+    overviewKeys.some((key) => incomingOverview[key] !== committedOverview[key])
+  ) {
+    // Polling can commit an imported overview while this editor stays mounted.
+    // Only pristine fields follow it; manual drafts and unrelated state stay put.
+    setCommittedOverview(incomingOverview);
+    setForm((draft) => {
+      const next = { ...draft };
+      for (const key of overviewKeys) {
+        if (draft[key] === committedOverview[key])
+          next[key] = incomingOverview[key];
+      }
+      if (handleFollowsName && next.displayName !== draft.displayName) {
+        next.handle = handleFromName(next.displayName);
+      }
+      return next;
+    });
+  }
+
   // Format problems show once the candidate edits the handle or saves.
   const [handleShowsProblem, setHandleShowsProblem] = useState(false);
   const [handleCheck, setHandleCheck] = useState<HandleCheck | null>(null);
