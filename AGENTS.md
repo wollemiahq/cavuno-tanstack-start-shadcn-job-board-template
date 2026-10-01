@@ -37,7 +37,10 @@ work.
   request's pending promises never settle. Never store a pending promise,
   Response, or stream in module scope, and never share one in-flight read
   across requests. Cache settled values only, written after the request's
-  own await succeeds; use src/lib/settled-cache.ts.
+  own await succeeds; use src/lib/settled-cache.ts. The one exception is
+  sharing an in-flight read WITHIN a single request: use
+  src/lib/request-memo.ts, keyed on getRequest(), so a different request can
+  never reach the entry.
 - API HTML fields such as job and company descriptions are pre-sanitized.
   Render only those known fields as HTML; do not interpolate other strings into
   dangerouslySetInnerHTML.

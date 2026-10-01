@@ -7,7 +7,12 @@ import { resolve } from 'node:path';
  * On Workers, a cancelled request's pending promises never settle, so a
  * promise kept in module scope hangs every later request that picks it up
  * (2026-10-02). Cross-request caches hold settled values via
- * src/lib/settled-cache.ts; this catches the two forms that brought the bug.
+ * src/lib/settled-cache.ts.
+ *
+ * A narrow tripwire, not the guard: it catches only a Map typed with
+ * `Promise<` inline and a top-level `Promise`-typed variable. A promise
+ * stored in an entry object (`{ at; promise }`) or a named entry type passes
+ * it. The per-cache regression tests and the AGENTS.md rule are the guard.
  */
 const HANG_SOURCES = [
   { name: 'a Map of promises', pattern: /\b(?:Weak)?Map<[^;]*\bPromise</ },

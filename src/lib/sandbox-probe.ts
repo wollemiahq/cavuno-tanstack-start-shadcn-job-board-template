@@ -1,5 +1,3 @@
-import { createSettledCache } from './settled-cache';
-
 import type { PreviewRoster } from './preview';
 
 export interface SandboxProbeDependencies {
@@ -18,16 +16,15 @@ export interface SandboxProbeDependencies {
  * answers false for that request without being kept, so a flaky network
  * cannot lock a sandbox board out of its toolbar.
  *
- * Settled values only (see `settled-cache.ts`): each request awaits its own
- * roster read, so a cancelled request never leaves a pending probe for later
- * viewers to wait on.
+ * Settled values only: each request awaits its own roster read, so a
+ * cancelled request never leaves a pending probe for later viewers to wait
+ * on.
  */
 export function createSandboxProbe(dependencies: SandboxProbeDependencies) {
-  const known = createSettledCache<'sandbox', boolean>({ ttlMs: Infinity });
+  let known: boolean | undefined;
 
   async function probeSandbox(): Promise<boolean> {
-    const hit = known.get('sandbox');
-    if (hit !== undefined) return hit;
+    if (known !== undefined) return known;
 
     // `null` = transient failure: answer false now, ask again next time.
     const answer = await dependencies.fetchRoster().then(
@@ -35,9 +32,14 @@ export function createSandboxProbe(dependencies: SandboxProbeDependencies) {
       (error: Error) => (dependencies.isNotFound(error) ? false : null),
     );
     if (answer === null) return false;
-    known.set('sandbox', answer);
+    known = answer;
     return answer;
   }
 
-  return { probeSandbox, reset: () => known.clear() };
+  return {
+    probeSandbox,
+    reset: () => {
+      known = undefined;
+    },
+  };
 }
