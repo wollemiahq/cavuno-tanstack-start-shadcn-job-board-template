@@ -3,8 +3,8 @@
  *
  * Reads the `__Host-` session cookie for the **active data source**,
  * proactively refreshes the bearer pair when the access token is within
- * 5 minutes of expiry (the SDK has NO auto-refresh by design — refresh
- * tokens are single-use, so the host owns rotation), re-sets the cookie,
+ * 5 minutes of expiry (the SDK has NO auto-refresh by design, so the host
+ * owns rotation), re-sets the cookie,
  * and exposes the session via context. Auth is enforced HERE, per server
  * function — never in `beforeLoad` route guards alone.
  *
@@ -12,10 +12,13 @@
  * refresher. Switching data source never destroys the other source's
  * session, and a demo-tenant token is never sent on a real-tenant request.
  *
- * Refresh race note: refresh tokens are single-use, so concurrent
- * requests share ONE rotation via the SDK's single-flight refresher
- * (`createSessionRefresher`, module-scoped in `board.ts`) instead of
- * racing and burning the pair.
+ * Refresh race note: the SDK refresher holds no shared state, and the API
+ * converges concurrent refreshes of one token, so racing requests each
+ * refresh safely. Within ONE incoming request the refresher from `board.ts`
+ * collapses refreshes of a token to a single call (`collapseRefreshesPerRequest`):
+ * this middleware runs once per server function in a page render, and each
+ * refresh spends the API's shared auth rate limit. Nothing is shared across
+ * requests.
  */
 import { createMiddleware } from '@tanstack/react-start';
 import {
@@ -56,7 +59,7 @@ export interface SessionContext {
 /**
  * PURE session-refresh decision (no request/response globals) — the security
  * seam, isolated for unit testing. Given the parsed session, the clock, and
- * the single-flight refresher, decide the next session state and the cookie
+ * the per-request refresher, decide the next session state and the cookie
  * action, WITHOUT touching headers:
  *
  *  - no session               → stay signed out, no cookie change

@@ -13,7 +13,7 @@ import {
 
 /**
  * `decideSession` is the extracted, pure heart of the session middleware — the
- * single-flight-refresh decision and the catch→clear→signed-out branch, with
+ * refresh decision and the catch→clear→signed-out branch, with
  * no request/response globals. These tests pin each branch so the security
  * seam (who gets signed out, whose cookie rotates, what a failed refresh does)
  * cannot drift silently. The middleware itself stays a thin adapter that only
@@ -72,7 +72,7 @@ describe('decideSession — the session-refresh security seam', () => {
     expect(result).toEqual({ session: rotated, setCookie: 'rotate' });
   });
 
-  it('refresh returning null (burned single-use token / 401) → clear + signed out', async () => {
+  it('refresh returning null (revoked token / 401) → clear + signed out', async () => {
     const current = session({ expiresAt: NOW }); // expired → expiring soon
     const refresh = vi.fn<SessionRefresh>(async () => null);
 

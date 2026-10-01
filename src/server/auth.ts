@@ -115,8 +115,8 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
  * access token the client still believes is live (clock skew, early
  * server-side expiry). Returns `{ ok: true }` and re-sets the cookie on
  * success; clears the cookie on a burned/revoked token; `{ ok: false }` when
- * there is nothing to refresh. Single-flight is preserved by the shared
- * refresher.
+ * there is nothing to refresh. The shared refresher collapses refreshes of
+ * one token per request.
  */
 export const refreshSession = createServerFn({ method: 'POST' }).handler(
   async () => {

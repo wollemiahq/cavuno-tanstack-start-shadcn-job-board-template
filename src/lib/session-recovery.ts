@@ -16,16 +16,19 @@
  *
  * When a call carrying THIS data source's cookie session is rejected
  * ({@link isSessionRejection}):
- *  1. one rotation through the source's single-flight refresher;
+ *  1. one rotation through the source's refresher, which collapses
+ *     refreshes of one token per request (see `collapseRefreshesPerRequest`),
+ *     so this shares a slot with the session middleware's expiring-soon path;
  *  2. success → persist the new pair, retry the call once with the new bearer;
  *     failure → clear the source's cookie, retry the call once with no bearer;
  *  3. the outcome is memoised per request + source + token, so later or
- *     concurrent calls in the same request reuse it (single-use refresh tokens
- *     are never spent twice) and skip the doomed round-trip.
+ *     concurrent calls in the same request reuse it and skip the doomed
+ *     round-trip. Nothing is shared across requests.
  *
  * Calls without a bearer, with a bearer that is not the cookie session, or
  * failing for any other reason are untouched. The happy path adds no IO.
  */
+import { createRequestMemo } from './request-memo';
 import { decideRejectedSession } from './session-decision';
 import { isSessionRejection } from './session-rejection';
 
@@ -42,7 +45,7 @@ export interface SessionRecoveryDependencies {
   getRequestScope: () => Request | null;
   /** The session in this source's cookie on the incoming request. */
   readSession: (source: DataSource) => BoardSession | null;
-  /** This source's shared single-flight refresher. */
+  /** This source's refresher (collapses one token's refreshes per request). */
   refresherFor: (source: DataSource) => SessionRefresh;
   serializeSession: (session: BoardSession, source: DataSource) => string;
   clearSession: (source: DataSource) => string;
@@ -72,16 +75,7 @@ function withSession(
 }
 
 export function createSessionRecovery(deps: SessionRecoveryDependencies) {
-  const recoveries = new WeakMap<Request, Map<string, Recovery>>();
-
-  function recoveriesFor(scope: Request): Map<string, Recovery> {
-    let map = recoveries.get(scope);
-    if (!map) {
-      map = new Map();
-      recoveries.set(scope, map);
-    }
-    return map;
-  }
+  const recoveries = createRequestMemo<Recovery>();
 
   function keyFor(source: DataSource, token: string): string {
     return `${source}\u0000${token}`;
@@ -90,9 +84,7 @@ export function createSessionRecovery(deps: SessionRecoveryDependencies) {
   /** This request's recovery outcome for a source's token, if one ran. */
   function outcomeFor(source: DataSource, token: string): Recovery | undefined {
     const scope = deps.getRequestScope();
-    return scope
-      ? recoveries.get(scope)?.get(keyFor(source, token))
-      : undefined;
+    return scope ? recoveries.get(scope, keyFor(source, token)) : undefined;
   }
 
   /** The memoised recovery for `token`, starting one only if it is the cookie session. */
@@ -101,27 +93,25 @@ export function createSessionRecovery(deps: SessionRecoveryDependencies) {
     source: DataSource,
     token: string,
   ): Recovery | null {
-    const map = recoveriesFor(scope);
     const key = keyFor(source, token);
-    const existing = map.get(key);
+    const existing = recoveries.get(scope, key);
     if (existing) return existing;
 
     const session = deps.readSession(source);
     if (!session || session.accessToken !== token) return null;
 
-    const recovery = decideRejectedSession(
-      session,
-      deps.refresherFor(source),
-    ).then(({ session: next, setCookie }) => {
-      deps.setCookie(
-        setCookie === 'rotate' && next
-          ? deps.serializeSession(next, source)
-          : deps.clearSession(source),
-      );
-      return next;
-    });
-    map.set(key, recovery);
-    return recovery;
+    return recoveries.getOrCreate(scope, key, () =>
+      decideRejectedSession(session, deps.refresherFor(source)).then(
+        ({ session: next, setCookie }) => {
+          deps.setCookie(
+            setCookie === 'rotate' && next
+              ? deps.serializeSession(next, source)
+              : deps.clearSession(source),
+          );
+          return next;
+        },
+      ),
+    );
   }
 
   function wrapFetch(fetch: BoardFetch, source: DataSource): BoardFetch {
@@ -134,7 +124,7 @@ export function createSessionRecovery(deps: SessionRecoveryDependencies) {
 
       const scope = deps.getRequestScope();
       const known = scope
-        ? recoveries.get(scope)?.get(keyFor(source, token))
+        ? recoveries.get(scope, keyFor(source, token))
         : undefined;
       if (known) return fetch<T>(path, withSession(init, await known));
 

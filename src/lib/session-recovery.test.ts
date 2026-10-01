@@ -15,7 +15,7 @@ import type { BoardSession } from '@cavuno/board/server';
  * The revoked-session seam: every Board API call goes through the client's
  * `fetch`, so a session the API has revoked (password change, account
  * deletion, server-side logout, sandbox reseed) is recovered HERE — one
- * refresh through the single-flight refresher, then one retry with the new
+ * refresh through the source's refresher, then one retry with the new
  * bearer, or with no bearer after clearing the cookie. These tests drive the
  * wrapper with an in-memory request scope, cookie jar and refresher.
  */

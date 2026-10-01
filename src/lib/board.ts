@@ -9,7 +9,7 @@
  * client, per-request auth.
  *
  * Dual-source (DMO-01): when `CAVUNO_DEMO_BOARD` is set, a second lazily-
- * created singleton (and its own single-flight session refresher) serves
+ * created singleton (and its own session refresher) serves
  * the demo tenant. `getActiveBoard()` selects by the data-source cookie;
  * `getPreviewBoard()` always prefers the demo client when configured
  * (personas live on the demo tenant). `getBoard()` is an alias of
@@ -39,6 +39,7 @@ import {
 } from './data-source.server';
 import { getServerEnv } from './env';
 import { applyReadCache } from './read-cache';
+import { collapseRefreshesPerRequest } from './session-decision';
 import { createSessionRecovery } from './session-recovery';
 
 import type { DataSource } from './data-source';
@@ -46,19 +47,22 @@ import type { DataSource } from './data-source';
 const APPLY_GATEWAY_CAPABILITY_HEADER = 'x-cavuno-board-capabilities';
 const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1';
 
+/** The incoming request, the scope of per-request memos; `null` outside one. */
+function currentRequest(): Request | null {
+  try {
+    return getRequest();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Revoked-session recovery (see `session-recovery.ts`): a call whose bearer is
  * this source's cookie session and that the API rejects gets one refresh, then
  * one retry with the new bearer or anonymously after the cookie is cleared.
  */
 const sessionRecovery = createSessionRecovery({
-  getRequestScope: () => {
-    try {
-      return getRequest();
-    } catch {
-      return null;
-    }
-  },
+  getRequestScope: currentRequest,
   readSession: (source) =>
     parseSessionForSource(getRequestHeader('cookie') ?? null, source),
   refresherFor: (source) => getSessionRefresherFor(source),
@@ -87,7 +91,8 @@ const registry = createBoardClientRegistry({
     );
     return board;
   },
-  createRefresher: createSessionRefresher,
+  createRefresher: (board) =>
+    collapseRefreshesPerRequest(createSessionRefresher(board), currentRequest),
   getDataSource,
   getServerEnv,
   onRequest: (request) =>
@@ -157,10 +162,11 @@ export function getPreviewBoard(): BoardSdk {
 }
 
 /**
- * The shared single-flight session refresher per data source (one instance
- * for the whole server per source — per-request construction would defeat
- * the single-flight slot that keeps concurrent requests from burning the
- * single-use refresh token).
+ * The session refresher per data source. The SDK refresher holds no shared
+ * state and the API converges concurrent refreshes of one token; the wrapper
+ * collapses refreshes of one token to a single call per incoming request
+ * (never across requests) so one page render spends one refresh against the
+ * API's auth rate limit. See `collapseRefreshesPerRequest`.
  */
 export function getPrimarySessionRefresher(): ReturnType<
   typeof createSessionRefresher
