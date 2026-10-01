@@ -274,14 +274,12 @@ export function resolveJobFormLayout(
         locked: false,
       }),
     ),
-    ...customFields.map(
-      (definition): JobFormEntry => ({
-        kind: 'custom',
-        key: definition.key,
-        required: definition.required,
-        definition,
-      }),
-    ),
+    ...customFields.map((definition): JobFormEntry => ({
+      kind: 'custom',
+      key: definition.key,
+      required: definition.required,
+      definition,
+    })),
     ...(source?.customFields?.jobCollections ?? []).map(
       (definition): JobFormEntry => ({
         kind: 'collection',
@@ -465,28 +463,24 @@ export function resolveProfileFormLayout<TBuiltin extends string>(
         (definition) =>
           definition.editableByOwner && !listed.has(`custom:${definition.key}`),
       )
-      .map(
-        (definition): ProfileFormEntry<TBuiltin> => ({
-          kind: 'custom',
-          key: definition.key,
-          required: definition.required,
-          definition,
-        }),
-      );
+      .map((definition): ProfileFormEntry<TBuiltin> => ({
+        kind: 'custom',
+        key: definition.key,
+        required: definition.required,
+        definition,
+      }));
     const collections = [...ownerCollections.values()]
       .filter(
         (definition) =>
           definition.editableByOwner &&
           !listed.has(`collection:${definition.key}`),
       )
-      .map(
-        (definition): ProfileFormEntry<TBuiltin> => ({
-          kind: 'collection',
-          key: definition.key,
-          required: definition.required === true,
-          definition,
-        }),
-      );
+      .map((definition): ProfileFormEntry<TBuiltin> => ({
+        kind: 'collection',
+        key: definition.key,
+        required: definition.required === true,
+        definition,
+      }));
     return options.fallbackCollectionsFirst
       ? [...collections, ...custom]
       : [...custom, ...collections];
@@ -495,14 +489,12 @@ export function resolveProfileFormLayout<TBuiltin extends string>(
   if (!Array.isArray(layout)) {
     const required = new Set<string>(options.fallbackRequired ?? []);
     return [
-      ...builtins.map(
-        (key): ProfileFormEntry<TBuiltin> => ({
-          kind: 'builtin',
-          key,
-          required: required.has(key),
-          locked: false,
-        }),
-      ),
+      ...builtins.map((key): ProfileFormEntry<TBuiltin> => ({
+        kind: 'builtin',
+        key,
+        required: required.has(key),
+        locked: false,
+      })),
       ...unlisted(new Set()),
     ];
   }

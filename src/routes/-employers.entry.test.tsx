@@ -35,6 +35,7 @@ import {
 } from './employers.dashboard';
 import { Route as OnboardingRoute } from './employers.onboarding.$slug';
 
+import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 import type { CompanyMembership, Plan } from '@cavuno/board';
 
@@ -298,16 +299,23 @@ describe('employer entry surfaces', () => {
     );
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'For employers' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: m.employerLanding_title(),
+      }),
     ).toBeVisible();
     const growthCard = screen.getByText('Growth').closest('[data-slot="card"]');
     if (!(growthCard instanceof HTMLElement)) {
       throw new Error('The Growth plan must render in a card');
     }
-    expect(within(growthCard).getByText('Recommended')).toBeVisible();
+    expect(
+      within(growthCard).getByText(m.employerLanding_recommendedBadge()),
+    ).toBeVisible();
     // A job-posting plan's action posts a job — it is not a subscription.
     expect(
-      within(growthCard).getByRole('link', { name: 'Post a job' }),
+      within(growthCard).getByRole('link', {
+        name: m.siteHeader_postJobLabel(),
+      }),
     ).toHaveAttribute('href', '/post?plan=plan-growth');
   });
 
@@ -337,11 +345,19 @@ describe('employer entry surfaces', () => {
     }
     expect(
       within(talentCard).getByRole('link', {
-        name: 'Subscribe',
+        name: m.employerLanding_subscribeLabel(),
       }),
     ).toHaveAttribute('href', '/employers');
-    expect(within(talentCard).queryByText('Up to 5 active jobs')).toBeNull();
-    expect(within(talentCard).queryByText('30-day listing')).toBeNull();
+    expect(
+      within(talentCard).queryByText(
+        m.employerLanding_featureActiveJobs({ count: 5, countLabel: '5' }),
+      ),
+    ).toBeNull();
+    expect(
+      within(talentCard).queryByText(
+        m.employerLanding_featureListingDuration({ days: 30 }),
+      ),
+    ).toBeNull();
     expect(
       within(talentCard).getByText('For growing hiring teams'),
     ).toBeVisible();
@@ -383,10 +399,11 @@ describe('employer entry surfaces', () => {
     if (!(card instanceof HTMLElement)) {
       throw new Error('The membership plan must render in a card');
     }
-    expect(within(card).getByRole('link', { name: 'Join' })).toHaveAttribute(
-      'href',
-      '/memberships',
-    );
+    expect(
+      within(card).getByRole('link', {
+        name: m.memberships_joinLabel(),
+      }),
+    ).toHaveAttribute('href', '/memberships');
   });
 
   it('renders a quote-only tier as its price text and CTA, never as a price', () => {
@@ -420,7 +437,7 @@ describe('employer entry surfaces', () => {
       throw new Error('The Concierge hiring plan must render in a card');
     }
     expect(within(card).getByText('Priced per engagement')).toBeVisible();
-    expect(within(card).queryByText('Free')).toBeNull();
+    expect(within(card).queryByText(m.employerLanding_freeLabel())).toBeNull();
     expect(
       within(card).getByRole('link', { name: 'Talk to sales' }),
     ).toHaveAttribute('href', 'mailto:sales@example.com');
@@ -451,7 +468,9 @@ describe('employer entry surfaces', () => {
     if (!(card instanceof HTMLElement)) {
       throw new Error('The Bespoke plan must render in a card');
     }
-    expect(within(card).getByText('Custom pricing')).toBeVisible();
+    expect(
+      within(card).getByText(m.memberships_contactPriceFallback()),
+    ).toBeVisible();
     expect(within(card).queryByRole('link')).toBeNull();
   });
 
@@ -464,7 +483,10 @@ describe('employer entry surfaces', () => {
     );
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Your companies' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: m.employerOnboarding_yourCompaniesTitle(),
+      }),
     ).toBeVisible();
     const companyItem = screen
       .getByText('Acme Ventures')
@@ -473,7 +495,11 @@ describe('employer entry surfaces', () => {
       throw new Error('The approved company must render in a workspace item');
     }
     expect(within(companyItem).getByText('owner')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Add company' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerOnboarding_addCompanyLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('preserves only bounded work-email outcomes and announces them once', async () => {
@@ -488,7 +514,7 @@ describe('employer entry surfaces', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Your work email was verified. You can now manage this company.',
+      m.employerDashboard_verifiedApproved(),
     );
     await waitFor(() => expect(consume).toHaveBeenCalledOnce());
 
@@ -523,7 +549,9 @@ describe('employer entry surfaces', () => {
         dependencies={dashboardViewDependencies}
       />,
     );
-    const companySearch = screen.getByLabelText('Search companies by name...');
+    const companySearch = screen.getByLabelText(
+      m.employerOnboarding_searchPlaceholder(),
+    );
     fireEvent.change(companySearch, {
       target: { value: 'Acme' },
     });
@@ -535,10 +563,14 @@ describe('employer entry surfaces', () => {
     ).toBeVisible();
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Add “Acme” as a new company' }),
+      screen.getByRole('button', {
+        name: m.employerOnboarding_addAsNewCompany({ query: 'Acme' }),
+      }),
     );
 
-    const dialog = screen.getByRole('dialog', { name: 'Add a new company' });
+    const dialog = screen.getByRole('dialog', {
+      name: m.employerOnboarding_modalTitle(),
+    });
     expect(dialog).toHaveAttribute('data-slot', 'dialog-content');
   });
 
@@ -571,7 +603,9 @@ describe('employer entry surfaces', () => {
         dependencies={dashboardViewDependencies}
       />,
     );
-    const companySearch = screen.getByLabelText('Search companies by name...');
+    const companySearch = screen.getByLabelText(
+      m.employerOnboarding_searchPlaceholder(),
+    );
 
     fireEvent.change(companySearch, { target: { value: 'Ac' } });
     await act(() => vi.advanceTimersByTimeAsync(250));
@@ -624,7 +658,9 @@ describe('employer entry surfaces', () => {
         dependencies={dashboardViewDependencies}
       />,
     );
-    const input = screen.getByLabelText('Search companies by name...');
+    const input = screen.getByLabelText(
+      m.employerOnboarding_searchPlaceholder(),
+    );
     fireEvent.change(input, { target: { value: 'Acme' } });
     await act(() => vi.advanceTimersByTimeAsync(250));
     expect(screen.getByText('Acme Ventures')).toBeVisible();
@@ -634,11 +670,11 @@ describe('employer entry surfaces', () => {
 
     expect(screen.queryByText('Acme Ventures')).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Something went wrong.',
+      m.employerCompany_genericError(),
     );
     expect(
       screen.getByRole('button', {
-        name: 'Add “Acme Labs” as a new company',
+        name: m.employerOnboarding_addAsNewCompany({ query: 'Acme Labs' }),
       }),
     ).toBeEnabled();
   });
@@ -653,11 +689,22 @@ describe('employer entry surfaces', () => {
     );
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Awaiting approval' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: m.employerOnboarding_awaitingAdminTitle(),
+      }),
     ).toBeVisible();
-    expect(screen.getByText(/request to join Acme Ventures/i)).toBeVisible();
+    expect(
+      screen.getByText(
+        m.employerOnboarding_awaitingAdminBody({ company: 'Acme Ventures' }),
+      ),
+    ).toBeVisible();
     // The step's single escape hatch withdraws the claim (no Back link).
-    expect(screen.getByRole('button', { name: 'Cancel claim' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerDashboard_cancelClaimLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('resets work-email state when navigating between onboarding companies', () => {
@@ -675,9 +722,13 @@ describe('employer entry surfaces', () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole('button', { name: 'Use a different email' }),
+      screen.getByRole('button', {
+        name: m.employerOnboarding_changeEmailLabel(),
+      }),
     );
-    expect(screen.getByLabelText('Work email')).toHaveValue('owner@acme.test');
+    expect(
+      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
+    ).toHaveValue('owner@acme.test');
 
     const secondMembership = {
       ...membership,
@@ -702,9 +753,13 @@ describe('employer entry surfaces', () => {
 
     expect(screen.getByText(/hiring@beta\.test/)).toBeVisible();
     fireEvent.click(
-      screen.getByRole('button', { name: 'Use a different email' }),
+      screen.getByRole('button', {
+        name: m.employerOnboarding_changeEmailLabel(),
+      }),
     );
-    expect(screen.getByLabelText('Work email')).toHaveValue('hiring@beta.test');
+    expect(
+      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
+    ).toHaveValue('hiring@beta.test');
     expect(sendWorkEmail).not.toHaveBeenCalled();
   });
 
@@ -721,11 +776,13 @@ describe('employer entry surfaces', () => {
         dependencies={onboardingViewDependencies}
       />,
     );
-    const cancel = screen.getByRole('button', { name: 'Cancel claim' });
+    const cancel = screen.getByRole('button', {
+      name: m.employerDashboard_cancelClaimLabel(),
+    });
     fireEvent.click(cancel);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'You’re not a member of this company’s team.',
+      m.boardError_notMemberText(),
     );
     expect(cancel).toBeEnabled();
     expect(invalidate).not.toHaveBeenCalled();
@@ -756,7 +813,7 @@ it('shows unlimited featuring instead of dropping the benefit', () => {
     />,
   );
   expect(
-    screen.getByText('Unlimited featured listings on this plan'),
+    screen.getByText(m.employerCompany_featuredUnlimitedText()),
   ).toBeVisible();
 });
 
@@ -791,9 +848,12 @@ it('lists candidate benefits at the exact monthly price and links to candidate c
   );
   expect(screen.getByText('Job matching')).toBeVisible();
   expect(screen.queryByText('Job alerts')).not.toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Subscribe' })).toHaveAttribute(
-    'href',
-    '/account/access',
-  );
-  expect(screen.queryByText('30-day listing')).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('link', {
+      name: m.employerLanding_subscribeLabel(),
+    }),
+  ).toHaveAttribute('href', '/account/access');
+  expect(
+    screen.queryByText(m.employerLanding_featureListingDuration({ days: 30 })),
+  ).not.toBeInTheDocument();
 });

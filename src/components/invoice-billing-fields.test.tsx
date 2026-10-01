@@ -11,6 +11,7 @@ import {
   publicInvoiceBillingBody,
 } from './invoice-billing-fields';
 
+import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
 /**
@@ -109,11 +110,11 @@ describe('InvoiceBillingFields', () => {
       />,
     );
     for (const label of [
-      'Billing email',
-      'Company name',
-      'Street address',
-      'City',
-      'Country',
+      m.invoiceBilling_emailLabel(),
+      m.invoiceBilling_nameLabel(),
+      m.invoiceBilling_line1Label(),
+      m.invoiceBilling_cityLabel(),
+      m.invoiceBilling_countryLabel(),
     ]) {
       expect(screen.getByLabelText(label)).toBeInTheDocument();
     }
@@ -127,8 +128,12 @@ describe('InvoiceBillingFields', () => {
         showEmail={false}
       />,
     );
-    expect(screen.queryByLabelText('Billing email')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Company name')).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(m.invoiceBilling_emailLabel()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText(m.invoiceBilling_nameLabel()),
+    ).toBeInTheDocument();
   });
 
   it('reports edits without dropping the rest of the draft', async () => {
@@ -136,7 +141,7 @@ describe('InvoiceBillingFields', () => {
     await renderRouted(
       <InvoiceBillingFields value={complete} onChange={onChange} />,
     );
-    fireEvent.change(screen.getByLabelText('City'), {
+    fireEvent.change(screen.getByLabelText(m.invoiceBilling_cityLabel()), {
       target: { value: 'Berlin' },
     });
     expect(onChange).toHaveBeenCalledWith({ ...complete, city: 'Berlin' });

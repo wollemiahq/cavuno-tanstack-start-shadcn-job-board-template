@@ -22,6 +22,7 @@ const mocks = {
   toastActionReconciliationError: vi.fn(),
 };
 
+import { m } from '../paraglide/messages';
 import { AlertManagerView } from './alert-manager';
 
 const alert = {
@@ -87,7 +88,7 @@ describe('AlertManager', () => {
 
     expect(
       screen
-        .getByText('You have no job alerts yet.')
+        .getByText(m.alertManager_emptyText())
         .closest('[data-slot="empty"]'),
     ).not.toBeNull();
   });
@@ -106,25 +107,34 @@ describe('AlertManager', () => {
   it('opens creation in the owned dialog with Field compositions', () => {
     renderManager();
 
-    fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_newAlertLabel() }),
+    );
 
     const form = document.querySelector('[data-test="alert-form"]');
     expect(form).not.toBeNull();
     expect(form?.closest('[data-slot="dialog-content"]')).not.toBeNull();
     expect(
-      screen.getByLabelText('Name (optional)').closest('[data-slot="field"]'),
+      screen
+        .getByLabelText(m.alertManager_nameLabel())
+        .closest('[data-slot="field"]'),
     ).not.toBeNull();
-    expect(screen.queryByLabelText('Frequency')).not.toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Workplace' })).toHaveAttribute(
-      'data-slot',
-      'field-set',
-    );
+    expect(
+      screen.queryByLabelText(m.alertManager_frequencyLabel()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('group', {
+        name: m.alertManager_remoteOptionsLegend(),
+      }),
+    ).toHaveAttribute('data-slot', 'field-set');
   });
 
   it('opens editing in the owned right-hand sheet', () => {
     renderManager({ alerts: [alert] });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_editLabel() }),
+    );
 
     const form = document.querySelector('[data-test="alert-form"]');
     expect(form).not.toBeNull();
@@ -137,8 +147,12 @@ describe('AlertManager', () => {
     mocks.createMyAlert.mockResolvedValue(alert);
     renderManager();
 
-    fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Create alert' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_newAlertLabel() }),
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_createAlertLabel() }),
+    );
 
     await waitFor(() =>
       expect(mocks.createMyAlert).toHaveBeenCalledWith({
@@ -154,18 +168,26 @@ describe('AlertManager', () => {
     mocks.createMyAlert.mockResolvedValue(alert);
     renderManager({ places: [berlin] });
 
-    fireEvent.click(screen.getByRole('button', { name: 'New alert' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_newAlertLabel() }),
+    );
     // Everything ticked by default → the location filter is offered already.
-    fireEvent.click(screen.getByRole('checkbox', { name: 'On-site' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Hybrid' }));
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: m.alertManager_remoteOnSite() }),
+    );
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: m.alertManager_remoteHybrid() }),
+    );
 
-    const locations = screen.getByLabelText('Locations');
+    const locations = screen.getByLabelText(m.alertManager_locationsLabel());
     fireEvent.change(locations, { target: { value: 'Ber' } });
     fireEvent.click(await screen.findByRole('option', { name: /Berlin/ }));
 
     expect(screen.getByText('Berlin')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create alert' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_createAlertLabel() }),
+    );
     await waitFor(() =>
       expect(mocks.createMyAlert).toHaveBeenCalledWith({
         data: {
@@ -202,7 +224,7 @@ describe('AlertManager', () => {
     renderManager({ alerts: [alert, secondAlert] });
 
     const [deleteButton, otherDeleteButton] = screen.getAllByRole('button', {
-      name: 'Delete',
+      name: m.alertManager_deleteLabel(),
     });
     fireEvent.click(deleteButton);
     fireEvent.click(deleteButton);
@@ -225,12 +247,16 @@ describe('AlertManager', () => {
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     renderManager({ alerts: [alert] });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_deleteLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.toastActionSuccess).toHaveBeenCalledOnce();
       expect(mocks.toastActionReconciliationError).toHaveBeenCalledOnce();
-      expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
+      expect(
+        screen.getByRole('button', { name: m.alertManager_deleteLabel() }),
+      ).toBeEnabled();
     });
     expect(mocks.toastActionError).not.toHaveBeenCalled();
   });

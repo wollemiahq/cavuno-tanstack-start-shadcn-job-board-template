@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { BlockedList } from './blocked-list';
 
 import type { BlockedUser } from '@cavuno/board';
@@ -23,7 +24,9 @@ describe('BlockedList', () => {
       <BlockedList users={[user]} pendingUserId={null} onUnblock={onUnblock} />,
     );
 
-    const button = screen.getByRole('button', { name: 'Unblock' });
+    const button = screen.getByRole('button', {
+      name: m.blockedList_unblockLabel(),
+    });
     expect(button).toHaveAttribute('data-slot', 'button');
     const row = button.closest('[data-slot="item"]');
     expect(row).not.toBeNull();

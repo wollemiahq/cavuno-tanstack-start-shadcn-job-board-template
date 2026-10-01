@@ -20,6 +20,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   MembershipsPageView,
   type MembershipsViewer,
@@ -175,7 +177,10 @@ async function renderPage(
   // The router mounts asynchronously; wait for the page heading before
   // asserting anything about the page.
   if (waitForHeading) {
-    await screen.findByRole('heading', { level: 1, name: 'Memberships' });
+    await screen.findByRole('heading', {
+      level: 1,
+      name: m.memberships_title(),
+    });
   }
   return result;
 }
@@ -236,7 +241,9 @@ describe('memberships page', () => {
     const card = screen.getByRole('region', { name: 'Founding member' });
 
     expect(
-      within(card).getByText('3 one-time posts. 1 of them can be featured.'),
+      within(card).getByText(
+        `${m.membershipCapacity_postsCredits({ count: 3, countLabel: (3).toLocaleString(getLocale()) })}. ${m.membershipCapacity_featuredCredits({ count: 1, countLabel: (1).toLocaleString(getLocale()) })}`,
+      ),
     ).toBeVisible();
   });
 
@@ -249,10 +256,9 @@ describe('memberships page', () => {
       loadMoreMembers: loadMoreMembers,
     });
 
-    expect(screen.getByRole('link', { name: 'Join' })).toHaveAttribute(
-      'href',
-      '/auth/sign-in?returnTo=%2Fmemberships',
-    );
+    expect(
+      screen.getByRole('link', { name: m.memberships_joinLabel() }),
+    ).toHaveAttribute('href', '/auth/sign-in?returnTo=%2Fmemberships');
   });
 
   it('sends a signed-in viewer with no approved company to the dashboard to connect one', async () => {
@@ -264,15 +270,10 @@ describe('memberships page', () => {
       loadMoreMembers: loadMoreMembers,
     });
 
-    expect(screen.getByRole('link', { name: 'Join' })).toHaveAttribute(
-      'href',
-      '/employers/dashboard',
-    );
     expect(
-      screen.getByText(
-        'Connect an approved company first. Open your employer dashboard to add one.',
-      ),
-    ).toBeVisible();
+      screen.getByRole('link', { name: m.memberships_joinLabel() }),
+    ).toHaveAttribute('href', '/employers/dashboard');
+    expect(screen.getByText(m.memberships_connectCompanyText())).toBeVisible();
   });
 
   it('keeps the dashboard link for a free plan, which the board team assigns', async () => {
@@ -284,15 +285,10 @@ describe('memberships page', () => {
       loadMoreMembers: loadMoreMembers,
     });
 
-    expect(screen.getByRole('link', { name: 'Join' })).toHaveAttribute(
-      'href',
-      '/employers/dashboard',
-    );
     expect(
-      screen.getByText(
-        'Memberships are granted by the board team. Open your employer dashboard to continue.',
-      ),
-    ).toBeVisible();
+      screen.getByRole('link', { name: m.memberships_joinLabel() }),
+    ).toHaveAttribute('href', '/employers/dashboard');
+    expect(screen.getByText(m.memberships_joinDashboardText())).toBeVisible();
   });
 
   it('starts checkout for the approved company and mounts the embedded form', async () => {
@@ -307,8 +303,12 @@ describe('memberships page', () => {
     });
 
     // One company: no picker, the button buys for it directly.
-    expect(screen.queryByLabelText('Buy for')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+    expect(
+      screen.queryByLabelText(m.memberships_chooseCompanyLabel()),
+    ).toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.memberships_joinLabel() }),
+    );
 
     await waitFor(() => {
       expect(startCheckoutAction).toHaveBeenCalledWith({
@@ -322,7 +322,7 @@ describe('memberships page', () => {
     expect(
       await screen.findByRole('heading', {
         level: 1,
-        name: 'Complete your purchase',
+        name: m.employerLanding_completePurchaseTitle(),
       }),
     ).toBeVisible();
     expect(screen.getByTestId('paywall-embedded-checkout')).toBeInTheDocument();
@@ -385,9 +385,14 @@ describe('memberships page', () => {
       history: createMemoryHistory({ initialEntries: ['/'] }),
     });
     render(<RouterProvider router={router} />);
-    await screen.findByRole('heading', { level: 1, name: 'Memberships' });
+    await screen.findByRole('heading', {
+      level: 1,
+      name: m.memberships_title(),
+    });
 
-    const join = await screen.findByRole('button', { name: 'Join' });
+    const join = await screen.findByRole('button', {
+      name: m.memberships_joinLabel(),
+    });
     expect(join).toBeEnabled();
   });
 
@@ -405,10 +410,15 @@ describe('memberships page', () => {
       startCheckoutAction,
     });
 
-    fireEvent.change(screen.getByLabelText('Buy for'), {
-      target: { value: 'globex' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+    fireEvent.change(
+      screen.getByLabelText(m.memberships_chooseCompanyLabel()),
+      {
+        target: { value: 'globex' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.memberships_joinLabel() }),
+    );
 
     await waitFor(() => {
       expect(startCheckoutAction).toHaveBeenCalledWith({
@@ -432,12 +442,12 @@ describe('memberships page', () => {
       startCheckoutAction,
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Join' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.memberships_joinLabel() }),
+    );
 
     expect(
-      await screen.findByText(
-        'This company already has a membership, or has one awaiting payment.',
-      ),
+      await screen.findByText(m.boardError_membershipSeatTakenText()),
     ).toHaveAttribute('role', 'alert');
     expect(screen.queryByTestId('paywall-embedded-checkout')).toBeNull();
   });
@@ -463,14 +473,16 @@ describe('memberships page', () => {
       { waitForHeading: false },
     );
 
-    expect(await screen.findByText('Confirming your purchase…')).toBeVisible();
+    expect(
+      await screen.findByText(m.employerLanding_confirmingText()),
+    ).toBeVisible();
     await waitFor(() => {
       expect(getCheckoutStateAction).toHaveBeenCalledWith({
         data: { companySlug: 'acme', sessionId: 'cs_1' },
       });
     });
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Your membership is active.',
+      m.memberships_confirmedText(),
     );
     expect(invalidate).toHaveBeenCalled();
   });
@@ -498,7 +510,9 @@ describe('memberships page', () => {
     expect(
       screen.getByRole('link', { name: 'Request an invitation' }),
     ).toHaveAttribute('href', 'mailto:members@example.com');
-    expect(screen.queryByRole('link', { name: 'Join' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.memberships_joinLabel() }),
+    ).toBeNull();
   });
 
   it('counts the members of the plan, not the board, and pages the roster', async () => {
@@ -515,8 +529,15 @@ describe('memberships page', () => {
       loadMoreMembers: loadMoreMembers,
     });
 
-    expect(screen.getByText('26 members')).toBeVisible();
-    screen.getByRole('button', { name: 'Show more members' }).click();
+    expect(
+      screen.getByText(
+        m.memberships_memberCount({
+          count: 26,
+          countLabel: (26).toLocaleString(getLocale()),
+        }),
+      ),
+    ).toBeVisible();
+    screen.getByRole('button', { name: m.memberships_loadMoreLabel() }).click();
 
     await waitFor(() =>
       expect(loadMoreMembers).toHaveBeenCalledWith({
@@ -537,6 +558,8 @@ describe('memberships page', () => {
       loadMoreMembers: loadMoreMembers,
     });
 
-    expect(screen.queryByRole('heading', { name: 'Members' })).toBeNull();
+    expect(
+      screen.queryByRole('heading', { name: m.memberships_membersHeading() }),
+    ).toBeNull();
   });
 });

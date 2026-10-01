@@ -5,6 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CopyLinkButton } from './copy-link-button';
 
+import { copyLinkCopy } from '@/copy-groups/copy-link';
+
+const copy = copyLinkCopy();
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -23,15 +27,14 @@ describe('CopyLinkButton', () => {
     render(
       <CopyLinkButton url="https://example.test/jobs/engineer" language="en" />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'copy link' }));
+    fireEvent.click(screen.getByRole('button', { name: copy.ariaLabel }));
 
     expect(writeText).toHaveBeenCalledWith(
       'https://example.test/jobs/engineer',
     );
-    expect(await screen.findByText('Copied')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'copy link' })).toHaveAttribute(
-      'data-slot',
-      'button',
-    );
+    expect(await screen.findByText(copy.copiedLabel)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: copy.ariaLabel }),
+    ).toHaveAttribute('data-slot', 'button');
   });
 });

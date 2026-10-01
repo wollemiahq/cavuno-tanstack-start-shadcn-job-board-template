@@ -16,6 +16,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+
 import type { UrlSearchInput } from '../lib/pagination';
 
 const forgotPassword = vi.fn();
@@ -95,15 +97,23 @@ describe('/auth/forgot-password continuation', () => {
         forgotPasswordAction={forgotPassword}
       />,
     );
-    await screen.findByRole('button', { name: 'Send reset link' });
+    await screen.findByRole('button', {
+      name: m.authForgotPassword_submitLabel(),
+    });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authForgotPassword_submitLabel(),
+      }),
+    );
 
     await waitFor(() => {
       expect(
-        screen.getByRole('link', { name: 'Back to sign in' }),
+        screen.getByRole('link', {
+          name: m.authForgotPassword_backToSignInLabel(),
+        }),
       ).toHaveAttribute(
         'href',
         `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
@@ -123,13 +133,19 @@ describe('/auth/forgot-password continuation', () => {
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authForgotPassword_submitLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
     expect(
-      screen.getByRole('button', { name: 'Send reset link' }),
+      screen.getByRole('button', {
+        name: m.authForgotPassword_submitLabel(),
+      }),
     ).toBeEnabled();
   });
 });

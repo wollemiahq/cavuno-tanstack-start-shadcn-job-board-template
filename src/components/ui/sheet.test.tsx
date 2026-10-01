@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { Sheet, SheetContent, SheetTitle } from './sheet';
 
 afterEach(cleanup);
@@ -18,7 +19,9 @@ describe('Sheet', () => {
       </Sheet>,
     );
 
-    expect(screen.getByRole('button', { name: 'Close' })).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: m.common_closeLabel() }),
+    ).toBeVisible();
     const sheet = screen.getByRole('dialog', { name: 'Default close' });
     expect(sheet).toHaveClass('motion-reduce:transition-none');
     expect(sheet).toHaveClass(
@@ -36,6 +39,8 @@ describe('Sheet', () => {
       </Sheet>,
     );
 
-    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: m.common_closeLabel() }),
+    ).toBeNull();
   });
 });

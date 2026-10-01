@@ -23,6 +23,12 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+import {
+  baseLocale,
+  getLocale,
+  overwriteGetLocale,
+} from '../paraglide/runtime';
 import { AuthCard, AuthDivider, Field, FormError } from './auth-form';
 import { RegistrationPage, RoleSelector } from './registration-page';
 
@@ -175,12 +181,18 @@ describe('RegistrationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'An account with that email already exists.',
+      m.boardError_emailTakenText(),
     );
     expect(screen.getByLabelText('Email')).toHaveValue('alex@example.com');
   });
 
-  it('surfaces the API sentence for an unmapped failure code on an English board', async () => {
+  // English boards show the API's sentence; other languages show the generic
+  // line plus the code, since the API only speaks English.
+  async function submitUnmappedFailure(locale: 'en' | 'de') {
+    // SAFETY: 'de' may not be compiled into this board's locale set. The
+    // error mapper only reads the locale prefix, and messages for an
+    // uncompiled locale fall back to the base catalog.
+    overwriteGetLocale(() => locale as ReturnType<typeof getLocale>);
     await render(
       <RegistrationPage
         title="Create your account"
@@ -205,10 +217,29 @@ describe('RegistrationPage', () => {
       target: { value: 'correct-horse' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    return screen.findByRole('alert');
+  }
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Preview writes are disabled',
-    );
+  it('surfaces the API sentence for an unmapped failure code on an English board', async () => {
+    try {
+      expect(await submitUnmappedFailure('en')).toHaveTextContent(
+        'Preview writes are disabled',
+      );
+    } finally {
+      overwriteGetLocale(() => baseLocale);
+    }
+  });
+
+  it('shows the generic line and code for an unmapped failure on a non-English board', async () => {
+    try {
+      const alert = await submitUnmappedFailure('de');
+      expect(alert).toHaveTextContent(
+        `${m.boardError_genericText()} (preview_mode_write_forbidden)`,
+      );
+      expect(alert).not.toHaveTextContent('Preview writes are disabled');
+    } finally {
+      overwriteGetLocale(() => baseLocale);
+    }
   });
 
   it('recovers when the registration request rejects unexpectedly', async () => {
@@ -236,7 +267,7 @@ describe('RegistrationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
     expect(
       screen.getByRole('button', { name: 'Create account' }),

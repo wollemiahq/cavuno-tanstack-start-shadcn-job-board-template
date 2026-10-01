@@ -1814,6 +1814,8 @@
   "previewToolbar_talentVisibility_employersOnly": "Alleen werkgevers",
   "previewToolbar_talentVisibility_off": "Uit",
   "previewToolbar_talentVisibility_public": "Openbaar",
+  "previewToolbar_localPreviewLabel": "Ontwikkelvoorbeeld",
+  "previewToolbar_localPreviewSubtitle": "Bekijk advertentieplekken zonder advertenties te tonen.",
   "previewToolbar_title": "Voorbeeld",
   "previewToolbar_triggerLabel": "Voorbeeldwerkbalk: wissel van testprofiel of wijzig platforminstellingen",
   "previewToolbar_viewingAs": "Je bekijkt als:",

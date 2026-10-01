@@ -11,6 +11,16 @@ import {
 
 const NOW = new Date('2026-07-01T12:00:00.000Z').getTime();
 
+/** Compact units come from Intl, so pin the locale whose forms are asserted. */
+function inEnglish<T>(run: () => T): T {
+  overwriteGetLocale(() => 'en');
+  try {
+    return run();
+  } finally {
+    overwriteGetLocale(() => baseLocale);
+  }
+}
+
 describe('relativeTime', () => {
   it('collapses sub-minute ages to "now" (inbox rows must not flicker seconds)', () => {
     expect(relativeTime('2026-07-01T11:59:30.000Z', NOW)).toBe(
@@ -19,9 +29,11 @@ describe('relativeTime', () => {
   });
 
   it('uses compact m/h/d units within the last week', () => {
-    expect(relativeTime('2026-07-01T11:45:00.000Z', NOW)).toBe('15m');
-    expect(relativeTime('2026-07-01T09:00:00.000Z', NOW)).toBe('3h');
-    expect(relativeTime('2026-06-29T12:00:00.000Z', NOW)).toBe('2d');
+    inEnglish(() => {
+      expect(relativeTime('2026-07-01T11:45:00.000Z', NOW)).toBe('15m');
+      expect(relativeTime('2026-07-01T09:00:00.000Z', NOW)).toBe('3h');
+      expect(relativeTime('2026-06-29T12:00:00.000Z', NOW)).toBe('2d');
+    });
   });
 
   it('falls back to an absolute date past a week', () => {
@@ -72,8 +84,10 @@ describe('locale-aware formatting', () => {
     const fiveMinAgo = new Date(now - 5 * 60 * 1000).toISOString();
     const twoHoursAgo = new Date(now - 2 * 60 * 60 * 1000).toISOString();
     const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
-    expect(relativeTime(fiveMinAgo, now)).toBe('5m');
-    expect(relativeTime(twoHoursAgo, now)).toBe('2h');
-    expect(relativeTime(threeDaysAgo, now)).toBe('3d');
+    inEnglish(() => {
+      expect(relativeTime(fiveMinAgo, now)).toBe('5m');
+      expect(relativeTime(twoHoursAgo, now)).toBe('2h');
+      expect(relativeTime(threeDaysAgo, now)).toBe('3d');
+    });
   });
 });

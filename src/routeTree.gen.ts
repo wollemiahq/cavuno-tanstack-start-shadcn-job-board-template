@@ -9,215 +9,112 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SiteDotwebmanifestRouteImport } from './routes/site[.]webmanifest'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
-import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
-import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PostRouteImport } from './routes/post'
-import { Route as PasswordRouteImport } from './routes/password'
-import { Route as MessagesRouteImport } from './routes/messages'
-import { Route as MembershipsRouteImport } from './routes/memberships'
-import { Route as MatchesRouteImport } from './routes/matches'
-import { Route as JobSeekersRouteImport } from './routes/job-seekers'
-import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
-import { Route as ImpressumRouteImport } from './routes/impressum'
-import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ApplyRouteImport } from './routes/apply'
-import { Route as AdsDottxtRouteImport } from './routes/ads[.]txt'
-import { Route as AccountRouteImport } from './routes/account'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TalentIndexRouteImport } from './routes/talent.index'
-import { Route as SalariesIndexRouteImport } from './routes/salaries.index'
-import { Route as JobsIndexRouteImport } from './routes/jobs.index'
-import { Route as EmployersIndexRouteImport } from './routes/employers.index'
-import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
-import { Route as BlogIndexRouteImport } from './routes/blog.index'
-import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
-import { Route as PostSuccessRouteImport } from './routes/post_.success'
-import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
-import { Route as PHandleRouteImport } from './routes/p.$handle'
-import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
-import { Route as MeApplicationsRouteImport } from './routes/me.applications'
-import { Route as MeAlertsRouteImport } from './routes/me.alerts'
-import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
-import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
-import { Route as GoSplatRouteImport } from './routes/go.$'
-import { Route as EmployersDashboardRouteImport } from './routes/employers.dashboard'
-import { Route as EmbedJobsRouteImport } from './routes/embed.jobs'
-import { Route as BlogRssDotxmlRouteImport } from './routes/blog.rss[.]xml'
-import { Route as BlogPostSlugRouteImport } from './routes/blog.$postSlug'
-import { Route as AuthVerifyWorkEmailRouteImport } from './routes/auth.verify-work-email'
-import { Route as AuthVerifyEmailRequiredRouteImport } from './routes/auth.verify-email-required'
-import { Route as AuthVerifyEmailRouteImport } from './routes/auth.verify-email'
-import { Route as AuthSignUpRouteImport } from './routes/auth.sign-up'
-import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
-import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
-import { Route as AuthOauthCompleteRouteImport } from './routes/auth.oauth-complete'
-import { Route as AuthMagicLinkRouteImport } from './routes/auth.magic-link'
-import { Route as AuthJoinRouteImport } from './routes/auth.join'
-import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
-import { Route as AuthConfirmEmailChangeRouteImport } from './routes/auth.confirm-email-change'
-import { Route as AlertsManageRouteImport } from './routes/alerts.manage'
-import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
-import { Route as AccountAccessRouteImport } from './routes/account_.access'
+import { Route as SplatRouteImport } from './routes/$'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AdsDottxtRouteImport } from './routes/ads[.]txt'
+import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
+import { Route as ImpressumRouteImport } from './routes/impressum'
+import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
+import { Route as JobSeekersRouteImport } from './routes/job-seekers'
+import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as MembershipsRouteImport } from './routes/memberships'
+import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as PasswordRouteImport } from './routes/password'
+import { Route as PostRouteImport } from './routes/post'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SavedJobsRouteImport } from './routes/saved-jobs'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SiteDotwebmanifestRouteImport } from './routes/site[.]webmanifest'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
-import { Route as SalariesTitlesIndexRouteImport } from './routes/salaries.titles.index'
-import { Route as SalariesSkillsIndexRouteImport } from './routes/salaries.skills.index'
-import { Route as SalariesLocationsIndexRouteImport } from './routes/salaries.locations.index'
-import { Route as SalariesCompaniesIndexRouteImport } from './routes/salaries.companies.index'
-import { Route as JobsLocationsIndexRouteImport } from './routes/jobs.locations.index'
-import { Route as CompaniesCompanySlugIndexRouteImport } from './routes/companies.$companySlug.index'
-import { Route as JobsSkillsSkillRouteImport } from './routes/jobs.skills.$skill'
-import { Route as EmployersOnboardingSlugRouteImport } from './routes/employers.onboarding.$slug'
-import { Route as EmployersInvitesAcceptRouteImport } from './routes/employers.invites.accept'
-import { Route as EmployerInvitesAcceptRouteImport } from './routes/employer.invites.accept'
-import { Route as CompaniesMarketsMarketRouteImport } from './routes/companies.markets.$market'
-import { Route as BlogTagTagSlugRouteImport } from './routes/blog.tag.$tagSlug'
-import { Route as BlogOgChar123postSlugChar125DotjsonRouteImport } from './routes/blog.og.{$postSlug}[.]json'
-import { Route as BlogAuthorAuthorSlugRouteImport } from './routes/blog.author.$authorSlug'
-import { Route as BlogPostSlugOgRouteImport } from './routes/blog.$postSlug.og'
+import { Route as AccountAccessRouteImport } from './routes/account_.access'
+import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
+import { Route as AlertsManageRouteImport } from './routes/alerts.manage'
+import { Route as AuthConfirmEmailChangeRouteImport } from './routes/auth.confirm-email-change'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthJoinRouteImport } from './routes/auth.join'
+import { Route as AuthMagicLinkRouteImport } from './routes/auth.magic-link'
+import { Route as AuthOauthCompleteRouteImport } from './routes/auth.oauth-complete'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
+import { Route as AuthSignUpRouteImport } from './routes/auth.sign-up'
+import { Route as AuthVerifyEmailRouteImport } from './routes/auth.verify-email'
+import { Route as AuthVerifyEmailRequiredRouteImport } from './routes/auth.verify-email-required'
+import { Route as AuthVerifyWorkEmailRouteImport } from './routes/auth.verify-work-email'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogPostSlugRouteImport } from './routes/blog.$postSlug'
+import { Route as BlogRssDotxmlRouteImport } from './routes/blog.rss[.]xml'
+import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
+import { Route as EmbedJobsRouteImport } from './routes/embed.jobs'
+import { Route as EmployerIndexRouteImport } from './routes/employer.index'
+import { Route as EmployersIndexRouteImport } from './routes/employers.index'
+import { Route as EmployersDashboardRouteImport } from './routes/employers.dashboard'
+import { Route as GoSplatRouteImport } from './routes/go.$'
+import { Route as JobsIndexRouteImport } from './routes/jobs.index'
+import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
+import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
+import { Route as MeAlertsRouteImport } from './routes/me.alerts'
+import { Route as MeApplicationsRouteImport } from './routes/me.applications'
+import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
+import { Route as PHandleRouteImport } from './routes/p.$handle'
+import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
+import { Route as PostSuccessRouteImport } from './routes/post_.success'
+import { Route as SalariesIndexRouteImport } from './routes/salaries.index'
+import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
+import { Route as TalentIndexRouteImport } from './routes/talent.index'
 import { Route as AuthEmployerSignUpRouteImport } from './routes/auth.employer.sign-up'
-import { Route as SalariesTitlesSlugIndexRouteImport } from './routes/salaries.titles.$slug.index'
-import { Route as SalariesSkillsSlugIndexRouteImport } from './routes/salaries.skills.$slug.index'
-import { Route as SalariesLocationsSlugIndexRouteImport } from './routes/salaries.locations.$slug.index'
-import { Route as JobsLocationsLocationIndexRouteImport } from './routes/jobs.locations.$location.index'
-import { Route as EmployersCompaniesSlugIndexRouteImport } from './routes/employers.companies.$slug.index'
-import { Route as EmployerSlugJobsIndexRouteImport } from './routes/employer.$slug.jobs.index'
-import { Route as CompaniesCompanySlugSalariesIndexRouteImport } from './routes/companies.$companySlug.salaries.index'
+import { Route as BlogPostSlugOgRouteImport } from './routes/blog.$postSlug.og'
+import { Route as BlogAuthorAuthorSlugRouteImport } from './routes/blog.author.$authorSlug'
+import { Route as BlogOgChar123postSlugChar125DotjsonRouteImport } from './routes/blog.og.{$postSlug}[.]json'
+import { Route as BlogTagTagSlugRouteImport } from './routes/blog.tag.$tagSlug'
+import { Route as CompaniesCompanySlugIndexRouteImport } from './routes/companies.$companySlug.index'
+import { Route as CompaniesMarketsMarketRouteImport } from './routes/companies.markets.$market'
+import { Route as EmployerInvitesAcceptRouteImport } from './routes/employer.invites.accept'
+import { Route as EmployersInvitesAcceptRouteImport } from './routes/employers.invites.accept'
+import { Route as EmployersOnboardingSlugRouteImport } from './routes/employers.onboarding.$slug'
+import { Route as JobsLocationsIndexRouteImport } from './routes/jobs.locations.index'
+import { Route as JobsSkillsSkillRouteImport } from './routes/jobs.skills.$skill'
+import { Route as SalariesCompaniesIndexRouteImport } from './routes/salaries.companies.index'
+import { Route as SalariesLocationsIndexRouteImport } from './routes/salaries.locations.index'
+import { Route as SalariesSkillsIndexRouteImport } from './routes/salaries.skills.index'
+import { Route as SalariesTitlesIndexRouteImport } from './routes/salaries.titles.index'
 import { Route as CompaniesCompanySlugJobsIndexRouteImport } from './routes/companies.$companySlug.jobs.index'
-import { Route as SalariesTitlesSlugLocationsRouteImport } from './routes/salaries.titles.$slug.locations'
-import { Route as SalariesTitlesSlugLocationSlugRouteImport } from './routes/salaries.titles.$slug.$locationSlug'
-import { Route as SalariesSkillsSlugLocationsRouteImport } from './routes/salaries.skills.$slug.locations'
-import { Route as SalariesSkillsSlugLocationSlugRouteImport } from './routes/salaries.skills.$slug.$locationSlug'
-import { Route as SalariesLocationsSlugTitlesRouteImport } from './routes/salaries.locations.$slug.titles'
-import { Route as SalariesLocationsSlugSkillsRouteImport } from './routes/salaries.locations.$slug.skills'
-import { Route as JobsLocationsLocationKeywordRouteImport } from './routes/jobs.locations.$location.$keyword'
-import { Route as EmployersCompaniesSlugProfileRouteImport } from './routes/employers.companies.$slug.profile'
-import { Route as EmployersCompaniesSlugMembersRouteImport } from './routes/employers.companies.$slug.members'
-import { Route as EmployerSlugJobsNewRouteImport } from './routes/employer.$slug.jobs.new'
-import { Route as CompaniesCompanySlugSalariesCategorySlugRouteImport } from './routes/companies.$companySlug.salaries.$categorySlug'
 import { Route as CompaniesCompanySlugJobsJobSlugRouteImport } from './routes/companies.$companySlug.jobs.$jobSlug'
-import { Route as JobsLocationsLocationSkillsSkillRouteImport } from './routes/jobs.locations.$location.skills.$skill'
-import { Route as EmployersCompaniesSlugJobsNewRouteImport } from './routes/employers.companies.$slug.jobs.new'
+import { Route as CompaniesCompanySlugSalariesIndexRouteImport } from './routes/companies.$companySlug.salaries.index'
+import { Route as CompaniesCompanySlugSalariesCategorySlugRouteImport } from './routes/companies.$companySlug.salaries.$categorySlug'
+import { Route as EmployerSlugJobsIndexRouteImport } from './routes/employer.$slug.jobs.index'
+import { Route as EmployerSlugJobsNewRouteImport } from './routes/employer.$slug.jobs.new'
+import { Route as EmployersCompaniesSlugIndexRouteImport } from './routes/employers.companies.$slug.index'
+import { Route as EmployersCompaniesSlugMembersRouteImport } from './routes/employers.companies.$slug.members'
+import { Route as EmployersCompaniesSlugProfileRouteImport } from './routes/employers.companies.$slug.profile'
+import { Route as JobsLocationsLocationIndexRouteImport } from './routes/jobs.locations.$location.index'
+import { Route as JobsLocationsLocationKeywordRouteImport } from './routes/jobs.locations.$location.$keyword'
+import { Route as SalariesLocationsSlugIndexRouteImport } from './routes/salaries.locations.$slug.index'
+import { Route as SalariesLocationsSlugSkillsRouteImport } from './routes/salaries.locations.$slug.skills'
+import { Route as SalariesLocationsSlugTitlesRouteImport } from './routes/salaries.locations.$slug.titles'
+import { Route as SalariesSkillsSlugIndexRouteImport } from './routes/salaries.skills.$slug.index'
+import { Route as SalariesSkillsSlugLocationSlugRouteImport } from './routes/salaries.skills.$slug.$locationSlug'
+import { Route as SalariesSkillsSlugLocationsRouteImport } from './routes/salaries.skills.$slug.locations'
+import { Route as SalariesTitlesSlugIndexRouteImport } from './routes/salaries.titles.$slug.index'
+import { Route as SalariesTitlesSlugLocationSlugRouteImport } from './routes/salaries.titles.$slug.$locationSlug'
+import { Route as SalariesTitlesSlugLocationsRouteImport } from './routes/salaries.titles.$slug.locations'
 import { Route as CompaniesCompanySlugJobsJobSlugOgRouteImport } from './routes/companies.$companySlug.jobs.$jobSlug.og'
-import { Route as EmployersCompaniesSlugJobsJobIdEditRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.edit'
+import { Route as EmployerSlugJobsJobIdApplicantsRouteImport } from './routes/employer.$slug.jobs.$jobId.applicants'
+import { Route as EmployersCompaniesSlugJobsNewRouteImport } from './routes/employers.companies.$slug.jobs.new'
+import { Route as JobsLocationsLocationSkillsSkillRouteImport } from './routes/jobs.locations.$location.skills.$skill'
 import { Route as EmployersCompaniesSlugJobsJobIdApplicantsRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.applicants'
+import { Route as EmployersCompaniesSlugJobsJobIdEditRouteImport } from './routes/employers.companies.$slug.jobs.$jobId.edit'
 
-const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
-  id: '/terms-of-service',
-  path: '/terms-of-service',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SiteDotwebmanifestRoute = SiteDotwebmanifestRouteImport.update({
-  id: '/site.webmanifest',
-  path: '/site.webmanifest',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SavedJobsRoute = SavedJobsRouteImport.update({
-  id: '/saved-jobs',
-  path: '/saved-jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
-  id: '/robots.txt',
-  path: '/robots.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
-  id: '/privacy-policy',
-  path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PostRoute = PostRouteImport.update({
-  id: '/post',
-  path: '/post',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PasswordRoute = PasswordRouteImport.update({
-  id: '/password',
-  path: '/password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MessagesRoute = MessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MembershipsRoute = MembershipsRouteImport.update({
-  id: '/memberships',
-  path: '/memberships',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MatchesRoute = MatchesRouteImport.update({
-  id: '/matches',
-  path: '/matches',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JobSeekersRoute = JobSeekersRouteImport.update({
-  id: '/job-seekers',
-  path: '/job-seekers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexnowKeyDottxtRoute = IndexnowKeyDottxtRouteImport.update({
-  id: '/indexnow-key.txt',
-  path: '/indexnow-key.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImpressumRoute = ImpressumRouteImport.update({
-  id: '/impressum',
-  path: '/impressum',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiePolicyRoute = CookiePolicyRouteImport.update({
-  id: '/cookie-policy',
-  path: '/cookie-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplyRoute = ApplyRouteImport.update({
-  id: '/apply',
-  path: '/apply',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdsDottxtRoute = AdsDottxtRouteImport.update({
-  id: '/ads.txt',
-  path: '/ads.txt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountRoute = AccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplatRoute = SplatRouteImport.update({
@@ -225,179 +122,114 @@ const SplatRoute = SplatRouteImport.update({
   path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TalentIndexRoute = TalentIndexRouteImport.update({
-  id: '/talent/',
-  path: '/talent/',
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SalariesIndexRoute = SalariesIndexRouteImport.update({
-  id: '/salaries/',
-  path: '/salaries/',
+const AdsDottxtRoute = AdsDottxtRouteImport.update({
+  id: '/ads.txt',
+  path: '/ads.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsIndexRoute = JobsIndexRouteImport.update({
-  id: '/jobs/',
-  path: '/jobs/',
+const ApplyRoute = ApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployersIndexRoute = EmployersIndexRouteImport.update({
-  id: '/employers/',
-  path: '/employers/',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
-  id: '/companies/',
-  path: '/companies/',
+const CookiePolicyRoute = CookiePolicyRouteImport.update({
+  id: '/cookie-policy',
+  path: '/cookie-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogIndexRoute = BlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
+const ImpressumRoute = ImpressumRouteImport.update({
+  id: '/impressum',
+  path: '/impressum',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitemapFileRoute = SitemapFileRouteImport.update({
-  id: '/sitemap/$file',
-  path: '/sitemap/$file',
+const IndexnowKeyDottxtRoute = IndexnowKeyDottxtRouteImport.update({
+  id: '/indexnow-key.txt',
+  path: '/indexnow-key.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PostSuccessRoute = PostSuccessRouteImport.update({
-  id: '/post_/success',
-  path: '/post/success',
+const JobSeekersRoute = JobSeekersRouteImport.update({
+  id: '/job-seekers',
+  path: '/job-seekers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PostCheckoutCanceledRoute = PostCheckoutCanceledRouteImport.update({
-  id: '/post_/checkout-canceled',
-  path: '/post/checkout-canceled',
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PHandleRoute = PHandleRouteImport.update({
-  id: '/p/$handle',
-  path: '/p/$handle',
+const MembershipsRoute = MembershipsRouteImport.update({
+  id: '/memberships',
+  path: '/memberships',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
-  id: '/$conversationId',
-  path: '/$conversationId',
-  getParentRoute: () => MessagesRoute,
-} as any)
-const MeApplicationsRoute = MeApplicationsRouteImport.update({
-  id: '/me/applications',
-  path: '/me/applications',
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MeAlertsRoute = MeAlertsRouteImport.update({
-  id: '/me/alerts',
-  path: '/me/alerts',
+const PasswordRoute = PasswordRouteImport.update({
+  id: '/password',
+  path: '/password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsRssDotxmlRoute = JobsRssDotxmlRouteImport.update({
-  id: '/jobs/rss.xml',
-  path: '/jobs/rss.xml',
+const PostRoute = PostRouteImport.update({
+  id: '/post',
+  path: '/post',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsKeywordRoute = JobsKeywordRouteImport.update({
-  id: '/jobs/$keyword',
-  path: '/jobs/$keyword',
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GoSplatRoute = GoSplatRouteImport.update({
-  id: '/go/$',
-  path: '/go/$',
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployersDashboardRoute = EmployersDashboardRouteImport.update({
-  id: '/employers/dashboard',
-  path: '/employers/dashboard',
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmbedJobsRoute = EmbedJobsRouteImport.update({
-  id: '/embed/jobs',
-  path: '/embed/jobs',
+const SavedJobsRoute = SavedJobsRouteImport.update({
+  id: '/saved-jobs',
+  path: '/saved-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogRssDotxmlRoute = BlogRssDotxmlRouteImport.update({
-  id: '/blog/rss.xml',
-  path: '/blog/rss.xml',
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogPostSlugRoute = BlogPostSlugRouteImport.update({
-  id: '/blog/$postSlug',
-  path: '/blog/$postSlug',
+const SiteDotwebmanifestRoute = SiteDotwebmanifestRouteImport.update({
+  id: '/site.webmanifest',
+  path: '/site.webmanifest',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyWorkEmailRoute = AuthVerifyWorkEmailRouteImport.update({
-  id: '/auth/verify-work-email',
-  path: '/auth/verify-work-email',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyEmailRequiredRoute = AuthVerifyEmailRequiredRouteImport.update({
-  id: '/auth/verify-email-required',
-  path: '/auth/verify-email-required',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
-  id: '/auth/verify-email',
-  path: '/auth/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthSignUpRoute = AuthSignUpRouteImport.update({
-  id: '/auth/sign-up',
-  path: '/auth/sign-up',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthSignInRoute = AuthSignInRouteImport.update({
-  id: '/auth/sign-in',
-  path: '/auth/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
-  id: '/auth/reset-password',
-  path: '/auth/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthOauthCompleteRoute = AuthOauthCompleteRouteImport.update({
-  id: '/auth/oauth-complete',
-  path: '/auth/oauth-complete',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthMagicLinkRoute = AuthMagicLinkRouteImport.update({
-  id: '/auth/magic-link',
-  path: '/auth/magic-link',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthJoinRoute = AuthJoinRouteImport.update({
-  id: '/auth/join',
-  path: '/auth/join',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
-  id: '/auth/forgot-password',
-  path: '/auth/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthConfirmEmailChangeRoute = AuthConfirmEmailChangeRouteImport.update({
-  id: '/auth/confirm-email-change',
-  path: '/auth/confirm-email-change',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlertsManageRoute = AlertsManageRouteImport.update({
-  id: '/alerts/manage',
-  path: '/alerts/manage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlertsConfirmRoute = AlertsConfirmRouteImport.update({
-  id: '/alerts/confirm',
-  path: '/alerts/confirm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountAccessRoute = AccountAccessRouteImport.update({
-  id: '/account_/access',
-  path: '/account/access',
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotwellKnownCavunoDotjsonRoute =
@@ -406,65 +238,194 @@ const DotwellKnownCavunoDotjsonRoute =
     path: '/.well-known/cavuno.json',
     getParentRoute: () => rootRouteImport,
   } as any)
-const SalariesTitlesIndexRoute = SalariesTitlesIndexRouteImport.update({
-  id: '/salaries/titles/',
-  path: '/salaries/titles/',
+const AccountAccessRoute = AccountAccessRouteImport.update({
+  id: '/account_/access',
+  path: '/account/access',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SalariesSkillsIndexRoute = SalariesSkillsIndexRouteImport.update({
-  id: '/salaries/skills/',
-  path: '/salaries/skills/',
+const AlertsConfirmRoute = AlertsConfirmRouteImport.update({
+  id: '/alerts/confirm',
+  path: '/alerts/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SalariesLocationsIndexRoute = SalariesLocationsIndexRouteImport.update({
-  id: '/salaries/locations/',
-  path: '/salaries/locations/',
+const AlertsManageRoute = AlertsManageRouteImport.update({
+  id: '/alerts/manage',
+  path: '/alerts/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SalariesCompaniesIndexRoute = SalariesCompaniesIndexRouteImport.update({
-  id: '/salaries/companies/',
-  path: '/salaries/companies/',
+const AuthConfirmEmailChangeRoute = AuthConfirmEmailChangeRouteImport.update({
+  id: '/auth/confirm-email-change',
+  path: '/auth/confirm-email-change',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsLocationsIndexRoute = JobsLocationsIndexRouteImport.update({
-  id: '/jobs/locations/',
-  path: '/jobs/locations/',
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompaniesCompanySlugIndexRoute =
-  CompaniesCompanySlugIndexRouteImport.update({
-    id: '/companies/$companySlug/',
-    path: '/companies/$companySlug/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const JobsSkillsSkillRoute = JobsSkillsSkillRouteImport.update({
-  id: '/jobs/skills/$skill',
-  path: '/jobs/skills/$skill',
+const AuthJoinRoute = AuthJoinRouteImport.update({
+  id: '/auth/join',
+  path: '/auth/join',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployersOnboardingSlugRoute = EmployersOnboardingSlugRouteImport.update({
-  id: '/employers/onboarding/$slug',
-  path: '/employers/onboarding/$slug',
+const AuthMagicLinkRoute = AuthMagicLinkRouteImport.update({
+  id: '/auth/magic-link',
+  path: '/auth/magic-link',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployersInvitesAcceptRoute = EmployersInvitesAcceptRouteImport.update({
-  id: '/employers/invites/accept',
-  path: '/employers/invites/accept',
+const AuthOauthCompleteRoute = AuthOauthCompleteRouteImport.update({
+  id: '/auth/oauth-complete',
+  path: '/auth/oauth-complete',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerInvitesAcceptRoute = EmployerInvitesAcceptRouteImport.update({
-  id: '/employer/invites/accept',
-  path: '/employer/invites/accept',
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompaniesMarketsMarketRoute = CompaniesMarketsMarketRouteImport.update({
-  id: '/companies/markets/$market',
-  path: '/companies/markets/$market',
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/auth/sign-in',
+  path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogTagTagSlugRoute = BlogTagTagSlugRouteImport.update({
-  id: '/blog/tag/$tagSlug',
-  path: '/blog/tag/$tagSlug',
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/auth/sign-up',
+  path: '/auth/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/auth/verify-email',
+  path: '/auth/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyEmailRequiredRoute = AuthVerifyEmailRequiredRouteImport.update({
+  id: '/auth/verify-email-required',
+  path: '/auth/verify-email-required',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyWorkEmailRoute = AuthVerifyWorkEmailRouteImport.update({
+  id: '/auth/verify-work-email',
+  path: '/auth/verify-work-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogPostSlugRoute = BlogPostSlugRouteImport.update({
+  id: '/blog/$postSlug',
+  path: '/blog/$postSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRssDotxmlRoute = BlogRssDotxmlRouteImport.update({
+  id: '/blog/rss.xml',
+  path: '/blog/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
+  id: '/companies/',
+  path: '/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedJobsRoute = EmbedJobsRouteImport.update({
+  id: '/embed/jobs',
+  path: '/embed/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerIndexRoute = EmployerIndexRouteImport.update({
+  id: '/employer/',
+  path: '/employer/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersIndexRoute = EmployersIndexRouteImport.update({
+  id: '/employers/',
+  path: '/employers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersDashboardRoute = EmployersDashboardRouteImport.update({
+  id: '/employers/dashboard',
+  path: '/employers/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoSplatRoute = GoSplatRouteImport.update({
+  id: '/go/$',
+  path: '/go/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsIndexRoute = JobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsKeywordRoute = JobsKeywordRouteImport.update({
+  id: '/jobs/$keyword',
+  path: '/jobs/$keyword',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsRssDotxmlRoute = JobsRssDotxmlRouteImport.update({
+  id: '/jobs/rss.xml',
+  path: '/jobs/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeAlertsRoute = MeAlertsRouteImport.update({
+  id: '/me/alerts',
+  path: '/me/alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeApplicationsRoute = MeApplicationsRouteImport.update({
+  id: '/me/applications',
+  path: '/me/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
+  id: '/$conversationId',
+  path: '/$conversationId',
+  getParentRoute: () => MessagesRoute,
+} as any)
+const PHandleRoute = PHandleRouteImport.update({
+  id: '/p/$handle',
+  path: '/p/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostCheckoutCanceledRoute = PostCheckoutCanceledRouteImport.update({
+  id: '/post_/checkout-canceled',
+  path: '/post/checkout-canceled',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostSuccessRoute = PostSuccessRouteImport.update({
+  id: '/post_/success',
+  path: '/post/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesIndexRoute = SalariesIndexRouteImport.update({
+  id: '/salaries/',
+  path: '/salaries/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapFileRoute = SitemapFileRouteImport.update({
+  id: '/sitemap/$file',
+  path: '/sitemap/$file',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TalentIndexRoute = TalentIndexRouteImport.update({
+  id: '/talent/',
+  path: '/talent/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthEmployerSignUpRoute = AuthEmployerSignUpRouteImport.update({
+  id: '/auth/employer/sign-up',
+  path: '/auth/employer/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogPostSlugOgRoute = BlogPostSlugOgRouteImport.update({
+  id: '/og',
+  path: '/og',
+  getParentRoute: () => BlogPostSlugRoute,
+} as any)
+const BlogAuthorAuthorSlugRoute = BlogAuthorAuthorSlugRouteImport.update({
+  id: '/blog/author/$authorSlug',
+  path: '/blog/author/$authorSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogOgChar123postSlugChar125DotjsonRoute =
@@ -473,129 +434,71 @@ const BlogOgChar123postSlugChar125DotjsonRoute =
     path: '/blog/og/{$postSlug}.json',
     getParentRoute: () => rootRouteImport,
   } as any)
-const BlogAuthorAuthorSlugRoute = BlogAuthorAuthorSlugRouteImport.update({
-  id: '/blog/author/$authorSlug',
-  path: '/blog/author/$authorSlug',
+const BlogTagTagSlugRoute = BlogTagTagSlugRouteImport.update({
+  id: '/blog/tag/$tagSlug',
+  path: '/blog/tag/$tagSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogPostSlugOgRoute = BlogPostSlugOgRouteImport.update({
-  id: '/og',
-  path: '/og',
-  getParentRoute: () => BlogPostSlugRoute,
-} as any)
-const AuthEmployerSignUpRoute = AuthEmployerSignUpRouteImport.update({
-  id: '/auth/employer/sign-up',
-  path: '/auth/employer/sign-up',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalariesTitlesSlugIndexRoute = SalariesTitlesSlugIndexRouteImport.update({
-  id: '/salaries/titles/$slug/',
-  path: '/salaries/titles/$slug/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalariesSkillsSlugIndexRoute = SalariesSkillsSlugIndexRouteImport.update({
-  id: '/salaries/skills/$slug/',
-  path: '/salaries/skills/$slug/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SalariesLocationsSlugIndexRoute =
-  SalariesLocationsSlugIndexRouteImport.update({
-    id: '/salaries/locations/$slug/',
-    path: '/salaries/locations/$slug/',
+const CompaniesCompanySlugIndexRoute =
+  CompaniesCompanySlugIndexRouteImport.update({
+    id: '/companies/$companySlug/',
+    path: '/companies/$companySlug/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const JobsLocationsLocationIndexRoute =
-  JobsLocationsLocationIndexRouteImport.update({
-    id: '/jobs/locations/$location/',
-    path: '/jobs/locations/$location/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const EmployersCompaniesSlugIndexRoute =
-  EmployersCompaniesSlugIndexRouteImport.update({
-    id: '/employers/companies/$slug/',
-    path: '/employers/companies/$slug/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const EmployerSlugJobsIndexRoute = EmployerSlugJobsIndexRouteImport.update({
-  id: '/employer/$slug/jobs/',
-  path: '/employer/$slug/jobs/',
+const CompaniesMarketsMarketRoute = CompaniesMarketsMarketRouteImport.update({
+  id: '/companies/markets/$market',
+  path: '/companies/markets/$market',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CompaniesCompanySlugSalariesIndexRoute =
-  CompaniesCompanySlugSalariesIndexRouteImport.update({
-    id: '/companies/$companySlug/salaries/',
-    path: '/companies/$companySlug/salaries/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const EmployerInvitesAcceptRoute = EmployerInvitesAcceptRouteImport.update({
+  id: '/employer/invites/accept',
+  path: '/employer/invites/accept',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersInvitesAcceptRoute = EmployersInvitesAcceptRouteImport.update({
+  id: '/employers/invites/accept',
+  path: '/employers/invites/accept',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersOnboardingSlugRoute = EmployersOnboardingSlugRouteImport.update({
+  id: '/employers/onboarding/$slug',
+  path: '/employers/onboarding/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsLocationsIndexRoute = JobsLocationsIndexRouteImport.update({
+  id: '/jobs/locations/',
+  path: '/jobs/locations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsSkillsSkillRoute = JobsSkillsSkillRouteImport.update({
+  id: '/jobs/skills/$skill',
+  path: '/jobs/skills/$skill',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesCompaniesIndexRoute = SalariesCompaniesIndexRouteImport.update({
+  id: '/salaries/companies/',
+  path: '/salaries/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesLocationsIndexRoute = SalariesLocationsIndexRouteImport.update({
+  id: '/salaries/locations/',
+  path: '/salaries/locations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesSkillsIndexRoute = SalariesSkillsIndexRouteImport.update({
+  id: '/salaries/skills/',
+  path: '/salaries/skills/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesTitlesIndexRoute = SalariesTitlesIndexRouteImport.update({
+  id: '/salaries/titles/',
+  path: '/salaries/titles/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompaniesCompanySlugJobsIndexRoute =
   CompaniesCompanySlugJobsIndexRouteImport.update({
     id: '/companies/$companySlug/jobs/',
     path: '/companies/$companySlug/jobs/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const SalariesTitlesSlugLocationsRoute =
-  SalariesTitlesSlugLocationsRouteImport.update({
-    id: '/salaries/titles/$slug/locations',
-    path: '/salaries/titles/$slug/locations',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const SalariesTitlesSlugLocationSlugRoute =
-  SalariesTitlesSlugLocationSlugRouteImport.update({
-    id: '/salaries/titles/$slug/$locationSlug',
-    path: '/salaries/titles/$slug/$locationSlug',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const SalariesSkillsSlugLocationsRoute =
-  SalariesSkillsSlugLocationsRouteImport.update({
-    id: '/salaries/skills/$slug/locations',
-    path: '/salaries/skills/$slug/locations',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const SalariesSkillsSlugLocationSlugRoute =
-  SalariesSkillsSlugLocationSlugRouteImport.update({
-    id: '/salaries/skills/$slug/$locationSlug',
-    path: '/salaries/skills/$slug/$locationSlug',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const SalariesLocationsSlugTitlesRoute =
-  SalariesLocationsSlugTitlesRouteImport.update({
-    id: '/salaries/locations/$slug/titles',
-    path: '/salaries/locations/$slug/titles',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const SalariesLocationsSlugSkillsRoute =
-  SalariesLocationsSlugSkillsRouteImport.update({
-    id: '/salaries/locations/$slug/skills',
-    path: '/salaries/locations/$slug/skills',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const JobsLocationsLocationKeywordRoute =
-  JobsLocationsLocationKeywordRouteImport.update({
-    id: '/jobs/locations/$location/$keyword',
-    path: '/jobs/locations/$location/$keyword',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const EmployersCompaniesSlugProfileRoute =
-  EmployersCompaniesSlugProfileRouteImport.update({
-    id: '/employers/companies/$slug/profile',
-    path: '/employers/companies/$slug/profile',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const EmployersCompaniesSlugMembersRoute =
-  EmployersCompaniesSlugMembersRouteImport.update({
-    id: '/employers/companies/$slug/members',
-    path: '/employers/companies/$slug/members',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const EmployerSlugJobsNewRoute = EmployerSlugJobsNewRouteImport.update({
-  id: '/employer/$slug/jobs/new',
-  path: '/employer/$slug/jobs/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompaniesCompanySlugSalariesCategorySlugRoute =
-  CompaniesCompanySlugSalariesCategorySlugRouteImport.update({
-    id: '/companies/$companySlug/salaries/$categorySlug',
-    path: '/companies/$companySlug/salaries/$categorySlug',
     getParentRoute: () => rootRouteImport,
   } as any)
 const CompaniesCompanySlugJobsJobSlugRoute =
@@ -604,16 +507,108 @@ const CompaniesCompanySlugJobsJobSlugRoute =
     path: '/companies/$companySlug/jobs/$jobSlug',
     getParentRoute: () => rootRouteImport,
   } as any)
-const JobsLocationsLocationSkillsSkillRoute =
-  JobsLocationsLocationSkillsSkillRouteImport.update({
-    id: '/jobs/locations/$location/skills/$skill',
-    path: '/jobs/locations/$location/skills/$skill',
+const CompaniesCompanySlugSalariesIndexRoute =
+  CompaniesCompanySlugSalariesIndexRouteImport.update({
+    id: '/companies/$companySlug/salaries/',
+    path: '/companies/$companySlug/salaries/',
     getParentRoute: () => rootRouteImport,
   } as any)
-const EmployersCompaniesSlugJobsNewRoute =
-  EmployersCompaniesSlugJobsNewRouteImport.update({
-    id: '/employers/companies/$slug/jobs/new',
-    path: '/employers/companies/$slug/jobs/new',
+const CompaniesCompanySlugSalariesCategorySlugRoute =
+  CompaniesCompanySlugSalariesCategorySlugRouteImport.update({
+    id: '/companies/$companySlug/salaries/$categorySlug',
+    path: '/companies/$companySlug/salaries/$categorySlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const EmployerSlugJobsIndexRoute = EmployerSlugJobsIndexRouteImport.update({
+  id: '/employer/$slug/jobs/',
+  path: '/employer/$slug/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerSlugJobsNewRoute = EmployerSlugJobsNewRouteImport.update({
+  id: '/employer/$slug/jobs/new',
+  path: '/employer/$slug/jobs/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersCompaniesSlugIndexRoute =
+  EmployersCompaniesSlugIndexRouteImport.update({
+    id: '/employers/companies/$slug/',
+    path: '/employers/companies/$slug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const EmployersCompaniesSlugMembersRoute =
+  EmployersCompaniesSlugMembersRouteImport.update({
+    id: '/employers/companies/$slug/members',
+    path: '/employers/companies/$slug/members',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const EmployersCompaniesSlugProfileRoute =
+  EmployersCompaniesSlugProfileRouteImport.update({
+    id: '/employers/companies/$slug/profile',
+    path: '/employers/companies/$slug/profile',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const JobsLocationsLocationIndexRoute =
+  JobsLocationsLocationIndexRouteImport.update({
+    id: '/jobs/locations/$location/',
+    path: '/jobs/locations/$location/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const JobsLocationsLocationKeywordRoute =
+  JobsLocationsLocationKeywordRouteImport.update({
+    id: '/jobs/locations/$location/$keyword',
+    path: '/jobs/locations/$location/$keyword',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesLocationsSlugIndexRoute =
+  SalariesLocationsSlugIndexRouteImport.update({
+    id: '/salaries/locations/$slug/',
+    path: '/salaries/locations/$slug/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesLocationsSlugSkillsRoute =
+  SalariesLocationsSlugSkillsRouteImport.update({
+    id: '/salaries/locations/$slug/skills',
+    path: '/salaries/locations/$slug/skills',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesLocationsSlugTitlesRoute =
+  SalariesLocationsSlugTitlesRouteImport.update({
+    id: '/salaries/locations/$slug/titles',
+    path: '/salaries/locations/$slug/titles',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesSkillsSlugIndexRoute = SalariesSkillsSlugIndexRouteImport.update({
+  id: '/salaries/skills/$slug/',
+  path: '/salaries/skills/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesSkillsSlugLocationSlugRoute =
+  SalariesSkillsSlugLocationSlugRouteImport.update({
+    id: '/salaries/skills/$slug/$locationSlug',
+    path: '/salaries/skills/$slug/$locationSlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesSkillsSlugLocationsRoute =
+  SalariesSkillsSlugLocationsRouteImport.update({
+    id: '/salaries/skills/$slug/locations',
+    path: '/salaries/skills/$slug/locations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesTitlesSlugIndexRoute = SalariesTitlesSlugIndexRouteImport.update({
+  id: '/salaries/titles/$slug/',
+  path: '/salaries/titles/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalariesTitlesSlugLocationSlugRoute =
+  SalariesTitlesSlugLocationSlugRouteImport.update({
+    id: '/salaries/titles/$slug/$locationSlug',
+    path: '/salaries/titles/$slug/$locationSlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SalariesTitlesSlugLocationsRoute =
+  SalariesTitlesSlugLocationsRouteImport.update({
+    id: '/salaries/titles/$slug/locations',
+    path: '/salaries/titles/$slug/locations',
     getParentRoute: () => rootRouteImport,
   } as any)
 const CompaniesCompanySlugJobsJobSlugOgRoute =
@@ -622,16 +617,34 @@ const CompaniesCompanySlugJobsJobSlugOgRoute =
     path: '/og',
     getParentRoute: () => CompaniesCompanySlugJobsJobSlugRoute,
   } as any)
-const EmployersCompaniesSlugJobsJobIdEditRoute =
-  EmployersCompaniesSlugJobsJobIdEditRouteImport.update({
-    id: '/employers/companies/$slug/jobs/$jobId/edit',
-    path: '/employers/companies/$slug/jobs/$jobId/edit',
+const EmployerSlugJobsJobIdApplicantsRoute =
+  EmployerSlugJobsJobIdApplicantsRouteImport.update({
+    id: '/employer/$slug/jobs/$jobId/applicants',
+    path: '/employer/$slug/jobs/$jobId/applicants',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const EmployersCompaniesSlugJobsNewRoute =
+  EmployersCompaniesSlugJobsNewRouteImport.update({
+    id: '/employers/companies/$slug/jobs/new',
+    path: '/employers/companies/$slug/jobs/new',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const JobsLocationsLocationSkillsSkillRoute =
+  JobsLocationsLocationSkillsSkillRouteImport.update({
+    id: '/jobs/locations/$location/skills/$skill',
+    path: '/jobs/locations/$location/skills/$skill',
     getParentRoute: () => rootRouteImport,
   } as any)
 const EmployersCompaniesSlugJobsJobIdApplicantsRoute =
   EmployersCompaniesSlugJobsJobIdApplicantsRouteImport.update({
     id: '/employers/companies/$slug/jobs/$jobId/applicants',
     path: '/employers/companies/$slug/jobs/$jobId/applicants',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const EmployersCompaniesSlugJobsJobIdEditRoute =
+  EmployersCompaniesSlugJobsJobIdEditRouteImport.update({
+    id: '/employers/companies/$slug/jobs/$jobId/edit',
+    path: '/employers/companies/$slug/jobs/$jobId/edit',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -691,6 +704,7 @@ export interface FileRoutesByFullPath {
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
+  '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
@@ -732,6 +746,7 @@ export interface FileRoutesByFullPath {
   '/salaries/skills/$slug/': typeof SalariesSkillsSlugIndexRoute
   '/salaries/titles/$slug/': typeof SalariesTitlesSlugIndexRoute
   '/companies/$companySlug/jobs/$jobSlug/og': typeof CompaniesCompanySlugJobsJobSlugOgRoute
+  '/employer/$slug/jobs/$jobId/applicants': typeof EmployerSlugJobsJobIdApplicantsRoute
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -793,6 +808,7 @@ export interface FileRoutesByTo {
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog': typeof BlogIndexRoute
   '/companies': typeof CompaniesIndexRoute
+  '/employer': typeof EmployerIndexRoute
   '/employers': typeof EmployersIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/salaries': typeof SalariesIndexRoute
@@ -834,6 +850,7 @@ export interface FileRoutesByTo {
   '/salaries/skills/$slug': typeof SalariesSkillsSlugIndexRoute
   '/salaries/titles/$slug': typeof SalariesTitlesSlugIndexRoute
   '/companies/$companySlug/jobs/$jobSlug/og': typeof CompaniesCompanySlugJobsJobSlugOgRoute
+  '/employer/$slug/jobs/$jobId/applicants': typeof EmployerSlugJobsJobIdApplicantsRoute
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -896,6 +913,7 @@ export interface FileRoutesById {
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
+  '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
@@ -937,6 +955,7 @@ export interface FileRoutesById {
   '/salaries/skills/$slug/': typeof SalariesSkillsSlugIndexRoute
   '/salaries/titles/$slug/': typeof SalariesTitlesSlugIndexRoute
   '/companies/$companySlug/jobs/$jobSlug/og': typeof CompaniesCompanySlugJobsJobSlugOgRoute
+  '/employer/$slug/jobs/$jobId/applicants': typeof EmployerSlugJobsJobIdApplicantsRoute
   '/employers/companies/$slug/jobs/new': typeof EmployersCompaniesSlugJobsNewRoute
   '/jobs/locations/$location/skills/$skill': typeof JobsLocationsLocationSkillsSkillRoute
   '/employers/companies/$slug/jobs/$jobId/applicants': typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -1000,6 +1019,7 @@ export interface FileRouteTypes {
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
+    | '/employer/'
     | '/employers/'
     | '/jobs/'
     | '/salaries/'
@@ -1041,6 +1061,7 @@ export interface FileRouteTypes {
     | '/salaries/skills/$slug/'
     | '/salaries/titles/$slug/'
     | '/companies/$companySlug/jobs/$jobSlug/og'
+    | '/employer/$slug/jobs/$jobId/applicants'
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1102,6 +1123,7 @@ export interface FileRouteTypes {
     | '/sitemap/$file'
     | '/blog'
     | '/companies'
+    | '/employer'
     | '/employers'
     | '/jobs'
     | '/salaries'
@@ -1143,6 +1165,7 @@ export interface FileRouteTypes {
     | '/salaries/skills/$slug'
     | '/salaries/titles/$slug'
     | '/companies/$companySlug/jobs/$jobSlug/og'
+    | '/employer/$slug/jobs/$jobId/applicants'
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1204,6 +1227,7 @@ export interface FileRouteTypes {
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
+    | '/employer/'
     | '/employers/'
     | '/jobs/'
     | '/salaries/'
@@ -1245,6 +1269,7 @@ export interface FileRouteTypes {
     | '/salaries/skills/$slug/'
     | '/salaries/titles/$slug/'
     | '/companies/$companySlug/jobs/$jobSlug/og'
+    | '/employer/$slug/jobs/$jobId/applicants'
     | '/employers/companies/$slug/jobs/new'
     | '/jobs/locations/$location/skills/$skill'
     | '/employers/companies/$slug/jobs/$jobId/applicants'
@@ -1306,6 +1331,7 @@ export interface RootRouteChildren {
   SitemapFileRoute: typeof SitemapFileRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
+  EmployerIndexRoute: typeof EmployerIndexRoute
   EmployersIndexRoute: typeof EmployersIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   SalariesIndexRoute: typeof SalariesIndexRoute
@@ -1345,6 +1371,7 @@ export interface RootRouteChildren {
   SalariesLocationsSlugIndexRoute: typeof SalariesLocationsSlugIndexRoute
   SalariesSkillsSlugIndexRoute: typeof SalariesSkillsSlugIndexRoute
   SalariesTitlesSlugIndexRoute: typeof SalariesTitlesSlugIndexRoute
+  EmployerSlugJobsJobIdApplicantsRoute: typeof EmployerSlugJobsJobIdApplicantsRoute
   EmployersCompaniesSlugJobsNewRoute: typeof EmployersCompaniesSlugJobsNewRoute
   JobsLocationsLocationSkillsSkillRoute: typeof JobsLocationsLocationSkillsSkillRoute
   EmployersCompaniesSlugJobsJobIdApplicantsRoute: typeof EmployersCompaniesSlugJobsJobIdApplicantsRoute
@@ -1353,158 +1380,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms-of-service': {
-      id: '/terms-of-service'
-      path: '/terms-of-service'
-      fullPath: '/terms-of-service'
-      preLoaderRoute: typeof TermsOfServiceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/site.webmanifest': {
-      id: '/site.webmanifest'
-      path: '/site.webmanifest'
-      fullPath: '/site.webmanifest'
-      preLoaderRoute: typeof SiteDotwebmanifestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saved-jobs': {
-      id: '/saved-jobs'
-      path: '/saved-jobs'
-      fullPath: '/saved-jobs'
-      preLoaderRoute: typeof SavedJobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/robots.txt': {
-      id: '/robots.txt'
-      path: '/robots.txt'
-      fullPath: '/robots.txt'
-      preLoaderRoute: typeof RobotsDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy-policy': {
-      id: '/privacy-policy'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy'
-      preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/post': {
-      id: '/post'
-      path: '/post'
-      fullPath: '/post'
-      preLoaderRoute: typeof PostRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/password': {
-      id: '/password'
-      path: '/password'
-      fullPath: '/password'
-      preLoaderRoute: typeof PasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/messages': {
-      id: '/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof MessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/memberships': {
-      id: '/memberships'
-      path: '/memberships'
-      fullPath: '/memberships'
-      preLoaderRoute: typeof MembershipsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/matches': {
-      id: '/matches'
-      path: '/matches'
-      fullPath: '/matches'
-      preLoaderRoute: typeof MatchesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/job-seekers': {
-      id: '/job-seekers'
-      path: '/job-seekers'
-      fullPath: '/job-seekers'
-      preLoaderRoute: typeof JobSeekersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/indexnow-key.txt': {
-      id: '/indexnow-key.txt'
-      path: '/indexnow-key.txt'
-      fullPath: '/indexnow-key.txt'
-      preLoaderRoute: typeof IndexnowKeyDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/impressum': {
-      id: '/impressum'
-      path: '/impressum'
-      fullPath: '/impressum'
-      preLoaderRoute: typeof ImpressumRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookie-policy': {
-      id: '/cookie-policy'
-      path: '/cookie-policy'
-      fullPath: '/cookie-policy'
-      preLoaderRoute: typeof CookiePolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/apply': {
-      id: '/apply'
-      path: '/apply'
-      fullPath: '/apply'
-      preLoaderRoute: typeof ApplyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ads.txt': {
-      id: '/ads.txt'
-      path: '/ads.txt'
-      fullPath: '/ads.txt'
-      preLoaderRoute: typeof AdsDottxtRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account': {
-      id: '/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$': {
@@ -1514,249 +1394,158 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/talent/': {
-      id: '/talent/'
-      path: '/talent'
-      fullPath: '/talent/'
-      preLoaderRoute: typeof TalentIndexRouteImport
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/': {
-      id: '/salaries/'
-      path: '/salaries'
-      fullPath: '/salaries/'
-      preLoaderRoute: typeof SalariesIndexRouteImport
+    '/ads.txt': {
+      id: '/ads.txt'
+      path: '/ads.txt'
+      fullPath: '/ads.txt'
+      preLoaderRoute: typeof AdsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/': {
-      id: '/jobs/'
-      path: '/jobs'
-      fullPath: '/jobs/'
-      preLoaderRoute: typeof JobsIndexRouteImport
+    '/apply': {
+      id: '/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof ApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employers/': {
-      id: '/employers/'
-      path: '/employers'
-      fullPath: '/employers/'
-      preLoaderRoute: typeof EmployersIndexRouteImport
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/companies/': {
-      id: '/companies/'
-      path: '/companies'
-      fullPath: '/companies/'
-      preLoaderRoute: typeof CompaniesIndexRouteImport
+    '/cookie-policy': {
+      id: '/cookie-policy'
+      path: '/cookie-policy'
+      fullPath: '/cookie-policy'
+      preLoaderRoute: typeof CookiePolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/': {
-      id: '/blog/'
-      path: '/blog'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof BlogIndexRouteImport
+    '/impressum': {
+      id: '/impressum'
+      path: '/impressum'
+      fullPath: '/impressum'
+      preLoaderRoute: typeof ImpressumRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sitemap/$file': {
-      id: '/sitemap/$file'
-      path: '/sitemap/$file'
-      fullPath: '/sitemap/$file'
-      preLoaderRoute: typeof SitemapFileRouteImport
+    '/indexnow-key.txt': {
+      id: '/indexnow-key.txt'
+      path: '/indexnow-key.txt'
+      fullPath: '/indexnow-key.txt'
+      preLoaderRoute: typeof IndexnowKeyDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/post_/success': {
-      id: '/post_/success'
-      path: '/post/success'
-      fullPath: '/post/success'
-      preLoaderRoute: typeof PostSuccessRouteImport
+    '/job-seekers': {
+      id: '/job-seekers'
+      path: '/job-seekers'
+      fullPath: '/job-seekers'
+      preLoaderRoute: typeof JobSeekersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/post_/checkout-canceled': {
-      id: '/post_/checkout-canceled'
-      path: '/post/checkout-canceled'
-      fullPath: '/post/checkout-canceled'
-      preLoaderRoute: typeof PostCheckoutCanceledRouteImport
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/p/$handle': {
-      id: '/p/$handle'
-      path: '/p/$handle'
-      fullPath: '/p/$handle'
-      preLoaderRoute: typeof PHandleRouteImport
+    '/memberships': {
+      id: '/memberships'
+      path: '/memberships'
+      fullPath: '/memberships'
+      preLoaderRoute: typeof MembershipsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/messages/$conversationId': {
-      id: '/messages/$conversationId'
-      path: '/$conversationId'
-      fullPath: '/messages/$conversationId'
-      preLoaderRoute: typeof MessagesConversationIdRouteImport
-      parentRoute: typeof MessagesRoute
-    }
-    '/me/applications': {
-      id: '/me/applications'
-      path: '/me/applications'
-      fullPath: '/me/applications'
-      preLoaderRoute: typeof MeApplicationsRouteImport
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/me/alerts': {
-      id: '/me/alerts'
-      path: '/me/alerts'
-      fullPath: '/me/alerts'
-      preLoaderRoute: typeof MeAlertsRouteImport
+    '/password': {
+      id: '/password'
+      path: '/password'
+      fullPath: '/password'
+      preLoaderRoute: typeof PasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/rss.xml': {
-      id: '/jobs/rss.xml'
-      path: '/jobs/rss.xml'
-      fullPath: '/jobs/rss.xml'
-      preLoaderRoute: typeof JobsRssDotxmlRouteImport
+    '/post': {
+      id: '/post'
+      path: '/post'
+      fullPath: '/post'
+      preLoaderRoute: typeof PostRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/$keyword': {
-      id: '/jobs/$keyword'
-      path: '/jobs/$keyword'
-      fullPath: '/jobs/$keyword'
-      preLoaderRoute: typeof JobsKeywordRouteImport
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/go/$': {
-      id: '/go/$'
-      path: '/go/$'
-      fullPath: '/go/$'
-      preLoaderRoute: typeof GoSplatRouteImport
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employers/dashboard': {
-      id: '/employers/dashboard'
-      path: '/employers/dashboard'
-      fullPath: '/employers/dashboard'
-      preLoaderRoute: typeof EmployersDashboardRouteImport
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/embed/jobs': {
-      id: '/embed/jobs'
-      path: '/embed/jobs'
-      fullPath: '/embed/jobs'
-      preLoaderRoute: typeof EmbedJobsRouteImport
+    '/saved-jobs': {
+      id: '/saved-jobs'
+      path: '/saved-jobs'
+      fullPath: '/saved-jobs'
+      preLoaderRoute: typeof SavedJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/rss.xml': {
-      id: '/blog/rss.xml'
-      path: '/blog/rss.xml'
-      fullPath: '/blog/rss.xml'
-      preLoaderRoute: typeof BlogRssDotxmlRouteImport
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/$postSlug': {
-      id: '/blog/$postSlug'
-      path: '/blog/$postSlug'
-      fullPath: '/blog/$postSlug'
-      preLoaderRoute: typeof BlogPostSlugRouteImport
+    '/site.webmanifest': {
+      id: '/site.webmanifest'
+      path: '/site.webmanifest'
+      fullPath: '/site.webmanifest'
+      preLoaderRoute: typeof SiteDotwebmanifestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/verify-work-email': {
-      id: '/auth/verify-work-email'
-      path: '/auth/verify-work-email'
-      fullPath: '/auth/verify-work-email'
-      preLoaderRoute: typeof AuthVerifyWorkEmailRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/verify-email-required': {
-      id: '/auth/verify-email-required'
-      path: '/auth/verify-email-required'
-      fullPath: '/auth/verify-email-required'
-      preLoaderRoute: typeof AuthVerifyEmailRequiredRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/verify-email': {
-      id: '/auth/verify-email'
-      path: '/auth/verify-email'
-      fullPath: '/auth/verify-email'
-      preLoaderRoute: typeof AuthVerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/sign-up': {
-      id: '/auth/sign-up'
-      path: '/auth/sign-up'
-      fullPath: '/auth/sign-up'
-      preLoaderRoute: typeof AuthSignUpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/sign-in': {
-      id: '/auth/sign-in'
-      path: '/auth/sign-in'
-      fullPath: '/auth/sign-in'
-      preLoaderRoute: typeof AuthSignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/reset-password': {
-      id: '/auth/reset-password'
-      path: '/auth/reset-password'
-      fullPath: '/auth/reset-password'
-      preLoaderRoute: typeof AuthResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/oauth-complete': {
-      id: '/auth/oauth-complete'
-      path: '/auth/oauth-complete'
-      fullPath: '/auth/oauth-complete'
-      preLoaderRoute: typeof AuthOauthCompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/magic-link': {
-      id: '/auth/magic-link'
-      path: '/auth/magic-link'
-      fullPath: '/auth/magic-link'
-      preLoaderRoute: typeof AuthMagicLinkRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/join': {
-      id: '/auth/join'
-      path: '/auth/join'
-      fullPath: '/auth/join'
-      preLoaderRoute: typeof AuthJoinRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/forgot-password': {
-      id: '/auth/forgot-password'
-      path: '/auth/forgot-password'
-      fullPath: '/auth/forgot-password'
-      preLoaderRoute: typeof AuthForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/confirm-email-change': {
-      id: '/auth/confirm-email-change'
-      path: '/auth/confirm-email-change'
-      fullPath: '/auth/confirm-email-change'
-      preLoaderRoute: typeof AuthConfirmEmailChangeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alerts/manage': {
-      id: '/alerts/manage'
-      path: '/alerts/manage'
-      fullPath: '/alerts/manage'
-      preLoaderRoute: typeof AlertsManageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alerts/confirm': {
-      id: '/alerts/confirm'
-      path: '/alerts/confirm'
-      fullPath: '/alerts/confirm'
-      preLoaderRoute: typeof AlertsConfirmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account_/access': {
-      id: '/account_/access'
-      path: '/account/access'
-      fullPath: '/account/access'
-      preLoaderRoute: typeof AccountAccessRouteImport
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/cavuno.json': {
@@ -1766,102 +1555,256 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownCavunoDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/titles/': {
-      id: '/salaries/titles/'
-      path: '/salaries/titles'
-      fullPath: '/salaries/titles/'
-      preLoaderRoute: typeof SalariesTitlesIndexRouteImport
+    '/account_/access': {
+      id: '/account_/access'
+      path: '/account/access'
+      fullPath: '/account/access'
+      preLoaderRoute: typeof AccountAccessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/skills/': {
-      id: '/salaries/skills/'
-      path: '/salaries/skills'
-      fullPath: '/salaries/skills/'
-      preLoaderRoute: typeof SalariesSkillsIndexRouteImport
+    '/alerts/confirm': {
+      id: '/alerts/confirm'
+      path: '/alerts/confirm'
+      fullPath: '/alerts/confirm'
+      preLoaderRoute: typeof AlertsConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/locations/': {
-      id: '/salaries/locations/'
-      path: '/salaries/locations'
-      fullPath: '/salaries/locations/'
-      preLoaderRoute: typeof SalariesLocationsIndexRouteImport
+    '/alerts/manage': {
+      id: '/alerts/manage'
+      path: '/alerts/manage'
+      fullPath: '/alerts/manage'
+      preLoaderRoute: typeof AlertsManageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/companies/': {
-      id: '/salaries/companies/'
-      path: '/salaries/companies'
-      fullPath: '/salaries/companies/'
-      preLoaderRoute: typeof SalariesCompaniesIndexRouteImport
+    '/auth/confirm-email-change': {
+      id: '/auth/confirm-email-change'
+      path: '/auth/confirm-email-change'
+      fullPath: '/auth/confirm-email-change'
+      preLoaderRoute: typeof AuthConfirmEmailChangeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/locations/': {
-      id: '/jobs/locations/'
-      path: '/jobs/locations'
-      fullPath: '/jobs/locations/'
-      preLoaderRoute: typeof JobsLocationsIndexRouteImport
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/companies/$companySlug/': {
-      id: '/companies/$companySlug/'
-      path: '/companies/$companySlug'
-      fullPath: '/companies/$companySlug/'
-      preLoaderRoute: typeof CompaniesCompanySlugIndexRouteImport
+    '/auth/join': {
+      id: '/auth/join'
+      path: '/auth/join'
+      fullPath: '/auth/join'
+      preLoaderRoute: typeof AuthJoinRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/skills/$skill': {
-      id: '/jobs/skills/$skill'
-      path: '/jobs/skills/$skill'
-      fullPath: '/jobs/skills/$skill'
-      preLoaderRoute: typeof JobsSkillsSkillRouteImport
+    '/auth/magic-link': {
+      id: '/auth/magic-link'
+      path: '/auth/magic-link'
+      fullPath: '/auth/magic-link'
+      preLoaderRoute: typeof AuthMagicLinkRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employers/onboarding/$slug': {
-      id: '/employers/onboarding/$slug'
-      path: '/employers/onboarding/$slug'
-      fullPath: '/employers/onboarding/$slug'
-      preLoaderRoute: typeof EmployersOnboardingSlugRouteImport
+    '/auth/oauth-complete': {
+      id: '/auth/oauth-complete'
+      path: '/auth/oauth-complete'
+      fullPath: '/auth/oauth-complete'
+      preLoaderRoute: typeof AuthOauthCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employers/invites/accept': {
-      id: '/employers/invites/accept'
-      path: '/employers/invites/accept'
-      fullPath: '/employers/invites/accept'
-      preLoaderRoute: typeof EmployersInvitesAcceptRouteImport
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/invites/accept': {
-      id: '/employer/invites/accept'
-      path: '/employer/invites/accept'
-      fullPath: '/employer/invites/accept'
-      preLoaderRoute: typeof EmployerInvitesAcceptRouteImport
+    '/auth/sign-in': {
+      id: '/auth/sign-in'
+      path: '/auth/sign-in'
+      fullPath: '/auth/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/companies/markets/$market': {
-      id: '/companies/markets/$market'
-      path: '/companies/markets/$market'
-      fullPath: '/companies/markets/$market'
-      preLoaderRoute: typeof CompaniesMarketsMarketRouteImport
+    '/auth/sign-up': {
+      id: '/auth/sign-up'
+      path: '/auth/sign-up'
+      fullPath: '/auth/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/tag/$tagSlug': {
-      id: '/blog/tag/$tagSlug'
-      path: '/blog/tag/$tagSlug'
-      fullPath: '/blog/tag/$tagSlug'
-      preLoaderRoute: typeof BlogTagTagSlugRouteImport
+    '/auth/verify-email': {
+      id: '/auth/verify-email'
+      path: '/auth/verify-email'
+      fullPath: '/auth/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/og/{$postSlug}.json': {
-      id: '/blog/og/{$postSlug}.json'
-      path: '/blog/og/{$postSlug}.json'
-      fullPath: '/blog/og/{$postSlug}.json'
-      preLoaderRoute: typeof BlogOgChar123postSlugChar125DotjsonRouteImport
+    '/auth/verify-email-required': {
+      id: '/auth/verify-email-required'
+      path: '/auth/verify-email-required'
+      fullPath: '/auth/verify-email-required'
+      preLoaderRoute: typeof AuthVerifyEmailRequiredRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/author/$authorSlug': {
-      id: '/blog/author/$authorSlug'
-      path: '/blog/author/$authorSlug'
-      fullPath: '/blog/author/$authorSlug'
-      preLoaderRoute: typeof BlogAuthorAuthorSlugRouteImport
+    '/auth/verify-work-email': {
+      id: '/auth/verify-work-email'
+      path: '/auth/verify-work-email'
+      fullPath: '/auth/verify-work-email'
+      preLoaderRoute: typeof AuthVerifyWorkEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$postSlug': {
+      id: '/blog/$postSlug'
+      path: '/blog/$postSlug'
+      fullPath: '/blog/$postSlug'
+      preLoaderRoute: typeof BlogPostSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/rss.xml': {
+      id: '/blog/rss.xml'
+      path: '/blog/rss.xml'
+      fullPath: '/blog/rss.xml'
+      preLoaderRoute: typeof BlogRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/': {
+      id: '/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof CompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/jobs': {
+      id: '/embed/jobs'
+      path: '/embed/jobs'
+      fullPath: '/embed/jobs'
+      preLoaderRoute: typeof EmbedJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/': {
+      id: '/employer/'
+      path: '/employer'
+      fullPath: '/employer/'
+      preLoaderRoute: typeof EmployerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers/': {
+      id: '/employers/'
+      path: '/employers'
+      fullPath: '/employers/'
+      preLoaderRoute: typeof EmployersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers/dashboard': {
+      id: '/employers/dashboard'
+      path: '/employers/dashboard'
+      fullPath: '/employers/dashboard'
+      preLoaderRoute: typeof EmployersDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/go/$': {
+      id: '/go/$'
+      path: '/go/$'
+      fullPath: '/go/$'
+      preLoaderRoute: typeof GoSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/': {
+      id: '/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs/'
+      preLoaderRoute: typeof JobsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$keyword': {
+      id: '/jobs/$keyword'
+      path: '/jobs/$keyword'
+      fullPath: '/jobs/$keyword'
+      preLoaderRoute: typeof JobsKeywordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/rss.xml': {
+      id: '/jobs/rss.xml'
+      path: '/jobs/rss.xml'
+      fullPath: '/jobs/rss.xml'
+      preLoaderRoute: typeof JobsRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/alerts': {
+      id: '/me/alerts'
+      path: '/me/alerts'
+      fullPath: '/me/alerts'
+      preLoaderRoute: typeof MeAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/applications': {
+      id: '/me/applications'
+      path: '/me/applications'
+      fullPath: '/me/applications'
+      preLoaderRoute: typeof MeApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages/$conversationId': {
+      id: '/messages/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/messages/$conversationId'
+      preLoaderRoute: typeof MessagesConversationIdRouteImport
+      parentRoute: typeof MessagesRoute
+    }
+    '/p/$handle': {
+      id: '/p/$handle'
+      path: '/p/$handle'
+      fullPath: '/p/$handle'
+      preLoaderRoute: typeof PHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post_/checkout-canceled': {
+      id: '/post_/checkout-canceled'
+      path: '/post/checkout-canceled'
+      fullPath: '/post/checkout-canceled'
+      preLoaderRoute: typeof PostCheckoutCanceledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post_/success': {
+      id: '/post_/success'
+      path: '/post/success'
+      fullPath: '/post/success'
+      preLoaderRoute: typeof PostSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/': {
+      id: '/salaries/'
+      path: '/salaries'
+      fullPath: '/salaries/'
+      preLoaderRoute: typeof SalariesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap/$file': {
+      id: '/sitemap/$file'
+      path: '/sitemap/$file'
+      fullPath: '/sitemap/$file'
+      preLoaderRoute: typeof SitemapFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/talent/': {
+      id: '/talent/'
+      path: '/talent'
+      fullPath: '/talent/'
+      preLoaderRoute: typeof TalentIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/employer/sign-up': {
+      id: '/auth/employer/sign-up'
+      path: '/auth/employer/sign-up'
+      fullPath: '/auth/employer/sign-up'
+      preLoaderRoute: typeof AuthEmployerSignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/$postSlug/og': {
@@ -1871,60 +1814,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogPostSlugOgRouteImport
       parentRoute: typeof BlogPostSlugRoute
     }
-    '/auth/employer/sign-up': {
-      id: '/auth/employer/sign-up'
-      path: '/auth/employer/sign-up'
-      fullPath: '/auth/employer/sign-up'
-      preLoaderRoute: typeof AuthEmployerSignUpRouteImport
+    '/blog/author/$authorSlug': {
+      id: '/blog/author/$authorSlug'
+      path: '/blog/author/$authorSlug'
+      fullPath: '/blog/author/$authorSlug'
+      preLoaderRoute: typeof BlogAuthorAuthorSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/titles/$slug/': {
-      id: '/salaries/titles/$slug/'
-      path: '/salaries/titles/$slug'
-      fullPath: '/salaries/titles/$slug/'
-      preLoaderRoute: typeof SalariesTitlesSlugIndexRouteImport
+    '/blog/og/{$postSlug}.json': {
+      id: '/blog/og/{$postSlug}.json'
+      path: '/blog/og/{$postSlug}.json'
+      fullPath: '/blog/og/{$postSlug}.json'
+      preLoaderRoute: typeof BlogOgChar123postSlugChar125DotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/skills/$slug/': {
-      id: '/salaries/skills/$slug/'
-      path: '/salaries/skills/$slug'
-      fullPath: '/salaries/skills/$slug/'
-      preLoaderRoute: typeof SalariesSkillsSlugIndexRouteImport
+    '/blog/tag/$tagSlug': {
+      id: '/blog/tag/$tagSlug'
+      path: '/blog/tag/$tagSlug'
+      fullPath: '/blog/tag/$tagSlug'
+      preLoaderRoute: typeof BlogTagTagSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/locations/$slug/': {
-      id: '/salaries/locations/$slug/'
-      path: '/salaries/locations/$slug'
-      fullPath: '/salaries/locations/$slug/'
-      preLoaderRoute: typeof SalariesLocationsSlugIndexRouteImport
+    '/companies/$companySlug/': {
+      id: '/companies/$companySlug/'
+      path: '/companies/$companySlug'
+      fullPath: '/companies/$companySlug/'
+      preLoaderRoute: typeof CompaniesCompanySlugIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/locations/$location/': {
-      id: '/jobs/locations/$location/'
-      path: '/jobs/locations/$location'
-      fullPath: '/jobs/locations/$location/'
-      preLoaderRoute: typeof JobsLocationsLocationIndexRouteImport
+    '/companies/markets/$market': {
+      id: '/companies/markets/$market'
+      path: '/companies/markets/$market'
+      fullPath: '/companies/markets/$market'
+      preLoaderRoute: typeof CompaniesMarketsMarketRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employers/companies/$slug/': {
-      id: '/employers/companies/$slug/'
-      path: '/employers/companies/$slug'
-      fullPath: '/employers/companies/$slug/'
-      preLoaderRoute: typeof EmployersCompaniesSlugIndexRouteImport
+    '/employer/invites/accept': {
+      id: '/employer/invites/accept'
+      path: '/employer/invites/accept'
+      fullPath: '/employer/invites/accept'
+      preLoaderRoute: typeof EmployerInvitesAcceptRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/$slug/jobs/': {
-      id: '/employer/$slug/jobs/'
-      path: '/employer/$slug/jobs'
-      fullPath: '/employer/$slug/jobs/'
-      preLoaderRoute: typeof EmployerSlugJobsIndexRouteImport
+    '/employers/invites/accept': {
+      id: '/employers/invites/accept'
+      path: '/employers/invites/accept'
+      fullPath: '/employers/invites/accept'
+      preLoaderRoute: typeof EmployersInvitesAcceptRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/companies/$companySlug/salaries/': {
-      id: '/companies/$companySlug/salaries/'
-      path: '/companies/$companySlug/salaries'
-      fullPath: '/companies/$companySlug/salaries/'
-      preLoaderRoute: typeof CompaniesCompanySlugSalariesIndexRouteImport
+    '/employers/onboarding/$slug': {
+      id: '/employers/onboarding/$slug'
+      path: '/employers/onboarding/$slug'
+      fullPath: '/employers/onboarding/$slug'
+      preLoaderRoute: typeof EmployersOnboardingSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/locations/': {
+      id: '/jobs/locations/'
+      path: '/jobs/locations'
+      fullPath: '/jobs/locations/'
+      preLoaderRoute: typeof JobsLocationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/skills/$skill': {
+      id: '/jobs/skills/$skill'
+      path: '/jobs/skills/$skill'
+      fullPath: '/jobs/skills/$skill'
+      preLoaderRoute: typeof JobsSkillsSkillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/companies/': {
+      id: '/salaries/companies/'
+      path: '/salaries/companies'
+      fullPath: '/salaries/companies/'
+      preLoaderRoute: typeof SalariesCompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/locations/': {
+      id: '/salaries/locations/'
+      path: '/salaries/locations'
+      fullPath: '/salaries/locations/'
+      preLoaderRoute: typeof SalariesLocationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/skills/': {
+      id: '/salaries/skills/'
+      path: '/salaries/skills'
+      fullPath: '/salaries/skills/'
+      preLoaderRoute: typeof SalariesSkillsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/titles/': {
+      id: '/salaries/titles/'
+      path: '/salaries/titles'
+      fullPath: '/salaries/titles/'
+      preLoaderRoute: typeof SalariesTitlesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies/$companySlug/jobs/': {
@@ -1934,74 +1919,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesCompanySlugJobsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/titles/$slug/locations': {
-      id: '/salaries/titles/$slug/locations'
-      path: '/salaries/titles/$slug/locations'
-      fullPath: '/salaries/titles/$slug/locations'
-      preLoaderRoute: typeof SalariesTitlesSlugLocationsRouteImport
+    '/companies/$companySlug/jobs/$jobSlug': {
+      id: '/companies/$companySlug/jobs/$jobSlug'
+      path: '/companies/$companySlug/jobs/$jobSlug'
+      fullPath: '/companies/$companySlug/jobs/$jobSlug'
+      preLoaderRoute: typeof CompaniesCompanySlugJobsJobSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/salaries/titles/$slug/$locationSlug': {
-      id: '/salaries/titles/$slug/$locationSlug'
-      path: '/salaries/titles/$slug/$locationSlug'
-      fullPath: '/salaries/titles/$slug/$locationSlug'
-      preLoaderRoute: typeof SalariesTitlesSlugLocationSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/salaries/skills/$slug/locations': {
-      id: '/salaries/skills/$slug/locations'
-      path: '/salaries/skills/$slug/locations'
-      fullPath: '/salaries/skills/$slug/locations'
-      preLoaderRoute: typeof SalariesSkillsSlugLocationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/salaries/skills/$slug/$locationSlug': {
-      id: '/salaries/skills/$slug/$locationSlug'
-      path: '/salaries/skills/$slug/$locationSlug'
-      fullPath: '/salaries/skills/$slug/$locationSlug'
-      preLoaderRoute: typeof SalariesSkillsSlugLocationSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/salaries/locations/$slug/titles': {
-      id: '/salaries/locations/$slug/titles'
-      path: '/salaries/locations/$slug/titles'
-      fullPath: '/salaries/locations/$slug/titles'
-      preLoaderRoute: typeof SalariesLocationsSlugTitlesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/salaries/locations/$slug/skills': {
-      id: '/salaries/locations/$slug/skills'
-      path: '/salaries/locations/$slug/skills'
-      fullPath: '/salaries/locations/$slug/skills'
-      preLoaderRoute: typeof SalariesLocationsSlugSkillsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jobs/locations/$location/$keyword': {
-      id: '/jobs/locations/$location/$keyword'
-      path: '/jobs/locations/$location/$keyword'
-      fullPath: '/jobs/locations/$location/$keyword'
-      preLoaderRoute: typeof JobsLocationsLocationKeywordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employers/companies/$slug/profile': {
-      id: '/employers/companies/$slug/profile'
-      path: '/employers/companies/$slug/profile'
-      fullPath: '/employers/companies/$slug/profile'
-      preLoaderRoute: typeof EmployersCompaniesSlugProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employers/companies/$slug/members': {
-      id: '/employers/companies/$slug/members'
-      path: '/employers/companies/$slug/members'
-      fullPath: '/employers/companies/$slug/members'
-      preLoaderRoute: typeof EmployersCompaniesSlugMembersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employer/$slug/jobs/new': {
-      id: '/employer/$slug/jobs/new'
-      path: '/employer/$slug/jobs/new'
-      fullPath: '/employer/$slug/jobs/new'
-      preLoaderRoute: typeof EmployerSlugJobsNewRouteImport
+    '/companies/$companySlug/salaries/': {
+      id: '/companies/$companySlug/salaries/'
+      path: '/companies/$companySlug/salaries'
+      fullPath: '/companies/$companySlug/salaries/'
+      preLoaderRoute: typeof CompaniesCompanySlugSalariesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies/$companySlug/salaries/$categorySlug': {
@@ -2011,25 +1940,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesCompanySlugSalariesCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/companies/$companySlug/jobs/$jobSlug': {
-      id: '/companies/$companySlug/jobs/$jobSlug'
-      path: '/companies/$companySlug/jobs/$jobSlug'
-      fullPath: '/companies/$companySlug/jobs/$jobSlug'
-      preLoaderRoute: typeof CompaniesCompanySlugJobsJobSlugRouteImport
+    '/employer/$slug/jobs/': {
+      id: '/employer/$slug/jobs/'
+      path: '/employer/$slug/jobs'
+      fullPath: '/employer/$slug/jobs/'
+      preLoaderRoute: typeof EmployerSlugJobsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/locations/$location/skills/$skill': {
-      id: '/jobs/locations/$location/skills/$skill'
-      path: '/jobs/locations/$location/skills/$skill'
-      fullPath: '/jobs/locations/$location/skills/$skill'
-      preLoaderRoute: typeof JobsLocationsLocationSkillsSkillRouteImport
+    '/employer/$slug/jobs/new': {
+      id: '/employer/$slug/jobs/new'
+      path: '/employer/$slug/jobs/new'
+      fullPath: '/employer/$slug/jobs/new'
+      preLoaderRoute: typeof EmployerSlugJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employers/companies/$slug/jobs/new': {
-      id: '/employers/companies/$slug/jobs/new'
-      path: '/employers/companies/$slug/jobs/new'
-      fullPath: '/employers/companies/$slug/jobs/new'
-      preLoaderRoute: typeof EmployersCompaniesSlugJobsNewRouteImport
+    '/employers/companies/$slug/': {
+      id: '/employers/companies/$slug/'
+      path: '/employers/companies/$slug'
+      fullPath: '/employers/companies/$slug/'
+      preLoaderRoute: typeof EmployersCompaniesSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers/companies/$slug/members': {
+      id: '/employers/companies/$slug/members'
+      path: '/employers/companies/$slug/members'
+      fullPath: '/employers/companies/$slug/members'
+      preLoaderRoute: typeof EmployersCompaniesSlugMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers/companies/$slug/profile': {
+      id: '/employers/companies/$slug/profile'
+      path: '/employers/companies/$slug/profile'
+      fullPath: '/employers/companies/$slug/profile'
+      preLoaderRoute: typeof EmployersCompaniesSlugProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/locations/$location/': {
+      id: '/jobs/locations/$location/'
+      path: '/jobs/locations/$location'
+      fullPath: '/jobs/locations/$location/'
+      preLoaderRoute: typeof JobsLocationsLocationIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/locations/$location/$keyword': {
+      id: '/jobs/locations/$location/$keyword'
+      path: '/jobs/locations/$location/$keyword'
+      fullPath: '/jobs/locations/$location/$keyword'
+      preLoaderRoute: typeof JobsLocationsLocationKeywordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/locations/$slug/': {
+      id: '/salaries/locations/$slug/'
+      path: '/salaries/locations/$slug'
+      fullPath: '/salaries/locations/$slug/'
+      preLoaderRoute: typeof SalariesLocationsSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/locations/$slug/skills': {
+      id: '/salaries/locations/$slug/skills'
+      path: '/salaries/locations/$slug/skills'
+      fullPath: '/salaries/locations/$slug/skills'
+      preLoaderRoute: typeof SalariesLocationsSlugSkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/locations/$slug/titles': {
+      id: '/salaries/locations/$slug/titles'
+      path: '/salaries/locations/$slug/titles'
+      fullPath: '/salaries/locations/$slug/titles'
+      preLoaderRoute: typeof SalariesLocationsSlugTitlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/skills/$slug/': {
+      id: '/salaries/skills/$slug/'
+      path: '/salaries/skills/$slug'
+      fullPath: '/salaries/skills/$slug/'
+      preLoaderRoute: typeof SalariesSkillsSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/skills/$slug/$locationSlug': {
+      id: '/salaries/skills/$slug/$locationSlug'
+      path: '/salaries/skills/$slug/$locationSlug'
+      fullPath: '/salaries/skills/$slug/$locationSlug'
+      preLoaderRoute: typeof SalariesSkillsSlugLocationSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/skills/$slug/locations': {
+      id: '/salaries/skills/$slug/locations'
+      path: '/salaries/skills/$slug/locations'
+      fullPath: '/salaries/skills/$slug/locations'
+      preLoaderRoute: typeof SalariesSkillsSlugLocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/titles/$slug/': {
+      id: '/salaries/titles/$slug/'
+      path: '/salaries/titles/$slug'
+      fullPath: '/salaries/titles/$slug/'
+      preLoaderRoute: typeof SalariesTitlesSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/titles/$slug/$locationSlug': {
+      id: '/salaries/titles/$slug/$locationSlug'
+      path: '/salaries/titles/$slug/$locationSlug'
+      fullPath: '/salaries/titles/$slug/$locationSlug'
+      preLoaderRoute: typeof SalariesTitlesSlugLocationSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salaries/titles/$slug/locations': {
+      id: '/salaries/titles/$slug/locations'
+      path: '/salaries/titles/$slug/locations'
+      fullPath: '/salaries/titles/$slug/locations'
+      preLoaderRoute: typeof SalariesTitlesSlugLocationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies/$companySlug/jobs/$jobSlug/og': {
@@ -2039,11 +2059,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesCompanySlugJobsJobSlugOgRouteImport
       parentRoute: typeof CompaniesCompanySlugJobsJobSlugRoute
     }
-    '/employers/companies/$slug/jobs/$jobId/edit': {
-      id: '/employers/companies/$slug/jobs/$jobId/edit'
-      path: '/employers/companies/$slug/jobs/$jobId/edit'
-      fullPath: '/employers/companies/$slug/jobs/$jobId/edit'
-      preLoaderRoute: typeof EmployersCompaniesSlugJobsJobIdEditRouteImport
+    '/employer/$slug/jobs/$jobId/applicants': {
+      id: '/employer/$slug/jobs/$jobId/applicants'
+      path: '/employer/$slug/jobs/$jobId/applicants'
+      fullPath: '/employer/$slug/jobs/$jobId/applicants'
+      preLoaderRoute: typeof EmployerSlugJobsJobIdApplicantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers/companies/$slug/jobs/new': {
+      id: '/employers/companies/$slug/jobs/new'
+      path: '/employers/companies/$slug/jobs/new'
+      fullPath: '/employers/companies/$slug/jobs/new'
+      preLoaderRoute: typeof EmployersCompaniesSlugJobsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/locations/$location/skills/$skill': {
+      id: '/jobs/locations/$location/skills/$skill'
+      path: '/jobs/locations/$location/skills/$skill'
+      fullPath: '/jobs/locations/$location/skills/$skill'
+      preLoaderRoute: typeof JobsLocationsLocationSkillsSkillRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employers/companies/$slug/jobs/$jobId/applicants': {
@@ -2051,6 +2085,13 @@ declare module '@tanstack/react-router' {
       path: '/employers/companies/$slug/jobs/$jobId/applicants'
       fullPath: '/employers/companies/$slug/jobs/$jobId/applicants'
       preLoaderRoute: typeof EmployersCompaniesSlugJobsJobIdApplicantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers/companies/$slug/jobs/$jobId/edit': {
+      id: '/employers/companies/$slug/jobs/$jobId/edit'
+      path: '/employers/companies/$slug/jobs/$jobId/edit'
+      fullPath: '/employers/companies/$slug/jobs/$jobId/edit'
+      preLoaderRoute: typeof EmployersCompaniesSlugJobsJobIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -2150,6 +2191,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapFileRoute: SitemapFileRoute,
   BlogIndexRoute: BlogIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
+  EmployerIndexRoute: EmployerIndexRoute,
   EmployersIndexRoute: EmployersIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   SalariesIndexRoute: SalariesIndexRoute,
@@ -2193,6 +2235,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalariesLocationsSlugIndexRoute: SalariesLocationsSlugIndexRoute,
   SalariesSkillsSlugIndexRoute: SalariesSkillsSlugIndexRoute,
   SalariesTitlesSlugIndexRoute: SalariesTitlesSlugIndexRoute,
+  EmployerSlugJobsJobIdApplicantsRoute: EmployerSlugJobsJobIdApplicantsRoute,
   EmployersCompaniesSlugJobsNewRoute: EmployersCompaniesSlugJobsNewRoute,
   JobsLocationsLocationSkillsSkillRoute: JobsLocationsLocationSkillsSkillRoute,
   EmployersCompaniesSlugJobsJobIdApplicantsRoute:

@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { Composer } from './composer';
 
 describe('Composer', () => {
@@ -29,14 +30,18 @@ describe('Composer', () => {
       />,
     );
 
-    const textarea = screen.getByRole('textbox', { name: 'Send a message' });
+    const textarea = screen.getByRole('textbox', {
+      name: m.composer_placeholderText(),
+    });
 
     fireEvent.change(textarea, { target: { value: 'Keep this draft' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.composer_sendAriaLabel() }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       // errorMessage never echoes wire text — generic viewer-locale line.
-      'Something went wrong. Please try again.',
+      m.boardError_genericText(),
     );
     expect(screen.getByRole('alert')).toHaveAttribute(
       'data-slot',
@@ -45,7 +50,7 @@ describe('Composer', () => {
     expect(textarea).toHaveValue('Keep this draft');
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: 'Send message' }),
+        screen.getByRole('button', { name: m.composer_sendAriaLabel() }),
       ).toBeEnabled(),
     );
   });
@@ -58,7 +63,9 @@ describe('Composer', () => {
       <Composer disabled={false} hint={null} onSend={onSend} onSent={onSent} />,
     );
 
-    const textarea = screen.getByRole('textbox', { name: 'Send a message' });
+    const textarea = screen.getByRole('textbox', {
+      name: m.composer_placeholderText(),
+    });
     fireEvent.change(textarea, { target: { value: '  Hello there  ' } });
     fireEvent.keyDown(textarea, { key: 'Enter', ctrlKey: true });
 
@@ -81,12 +88,16 @@ describe('Composer', () => {
       />,
     );
 
-    const textarea = screen.getByRole('textbox', { name: 'Send a message' });
+    const textarea = screen.getByRole('textbox', {
+      name: m.composer_placeholderText(),
+    });
     fireEvent.change(textarea, { target: { value: 'Keep this message' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.composer_sendAriaLabel() }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'This candidate isn’t accepting messages.',
+      m.boardError_messagingRecipientNotOpenText(),
     );
     expect(textarea).toHaveValue('Keep this message');
   });

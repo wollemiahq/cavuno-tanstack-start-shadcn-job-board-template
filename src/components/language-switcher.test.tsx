@@ -64,15 +64,30 @@ describe('locale-resolution contract', () => {
   });
 });
 
+/**
+ * The base locale serves the canonical, unprefixed path; every other locale
+ * is prefixed and uses its own section slug. Which locale is the base is a
+ * board choice, so expectations follow `baseLocale` instead of assuming one.
+ */
+function expectedHref(locale: string, canonical: string, prefixed: string) {
+  return locale === baseLocale ? canonical : prefixed;
+}
+
 describe('buildLocaleOptions preserves the current path', () => {
   const extra = ['en', 'de', 'fr'] as const;
 
   it('re-localizes the active path per option, keeping the query', () => {
     const options = buildLocaleOptions('en', '/jobs?q=react', extra);
     const byLocale = Object.fromEntries(options.map((o) => [o.locale, o.href]));
-    expect(byLocale.en).toBe('/jobs?q=react');
-    expect(byLocale.de).toBe('/de/jobs?q=react');
-    expect(byLocale.fr).toBe('/fr/emplois?q=react');
+    expect(byLocale.en).toBe(
+      expectedHref('en', '/jobs?q=react', '/en/jobs?q=react'),
+    );
+    expect(byLocale.de).toBe(
+      expectedHref('de', '/jobs?q=react', '/de/jobs?q=react'),
+    );
+    expect(byLocale.fr).toBe(
+      expectedHref('fr', '/jobs?q=react', '/fr/emplois?q=react'),
+    );
   });
 
   it('marks the active locale and nothing else', () => {
@@ -81,9 +96,11 @@ describe('buildLocaleOptions preserves the current path', () => {
       'de',
     ]);
     expect(options.find((o) => o.locale === 'de')?.href).toBe(
-      '/de/unternehmen',
+      expectedHref('de', '/companies', '/de/unternehmen'),
     );
-    expect(options.find((o) => o.locale === 'en')?.href).toBe('/companies');
+    expect(options.find((o) => o.locale === 'en')?.href).toBe(
+      expectedHref('en', '/companies', '/en/companies'),
+    );
   });
 });
 
@@ -150,10 +167,13 @@ describe('LanguageSwitcher rendering', () => {
       .getByText('Deutsch')
       .closest('[aria-current="true"]');
     expect(current).not.toBeNull();
-    expect(current).toHaveAttribute('href', '/de/jobs');
+    expect(current).toHaveAttribute(
+      'href',
+      expectedHref('de', '/jobs', '/de/jobs'),
+    );
     expect(within(menu).getByText('English').closest('a')).toHaveAttribute(
       'href',
-      '/jobs',
+      expectedHref('en', '/jobs', '/en/jobs'),
     );
   });
 });

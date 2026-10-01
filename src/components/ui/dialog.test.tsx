@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import {
   Dialog,
   DialogContent,
@@ -48,7 +49,9 @@ describe('Dialog', () => {
       </Dialog>,
     );
 
-    expect(screen.getByRole('button', { name: 'Close' })).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: m.common_closeLabel() }),
+    ).toBeVisible();
 
     rerender(
       <Dialog open>
@@ -61,6 +64,8 @@ describe('Dialog', () => {
       </Dialog>,
     );
 
-    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: m.common_closeLabel() }),
+    ).toBeNull();
   });
 });

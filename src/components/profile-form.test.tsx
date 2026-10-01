@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   RouterProvider,
   createMemoryHistory,
@@ -8,6 +10,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -21,12 +24,18 @@ import type { CandidateProfile } from '@cavuno/board';
 const mocks = {
   checkHandle: vi.fn(),
   updateProfile: vi.fn(),
+  updateCustomFields: vi.fn(),
+  updateObjectReferences: vi.fn(),
   toastActionError: vi.fn(),
   toastActionReconciliationError: vi.fn(),
   toastActionSuccess: vi.fn(),
 };
 
-import { ProfileForm, resolveTalentForm } from './profile-form';
+import {
+  ProfileForm,
+  resolveTalentForm,
+  type TalentProfileFields,
+} from './profile-form';
 
 import { m } from '@/paraglide/messages';
 
@@ -88,7 +97,7 @@ describe('ProfileForm country', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Country'), {
+    fireEvent.change(screen.getByLabelText(m.profileForm_countryLabel()), {
       target: { value: 'AU' },
     });
     fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
@@ -433,5 +442,255 @@ describe('ProfileForm — location', () => {
     expect(
       screen.queryByText(m.locationField_pickRequiredError()),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('ProfileForm — committed overview refresh', () => {
+  const imported = {
+    ...profile,
+    displayName: 'Rowan Example',
+    headline: 'Senior platform engineer',
+    location: 'Houston, Texas, United States',
+    bio: 'Builds reliable platforms.',
+  };
+  const suggestions = {
+    suggestions: [],
+    loading: false,
+    onQueryChange: vi.fn(),
+  };
+  async function mount(
+    initial: CandidateProfile,
+    profileFields?: TalentProfileFields,
+  ) {
+    let refresh!: (next: CandidateProfile) => void;
+    function Editor() {
+      const [current, setCurrent] = useState(initial);
+      refresh = setCurrent;
+      return (
+        <ProfileForm
+          profile={current}
+          profileFields={profileFields}
+          language="en"
+          dependencies={mocks}
+          locationSuggestions={suggestions}
+        />
+      );
+    }
+    await renderWithRouter(<Editor />);
+    return (next: CandidateProfile) => act(() => refresh(next));
+  }
+  const field = (name: string) => screen.getByLabelText(name);
+  const submit = () =>
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+
+  it.each(['', 'rowan'])(
+    'refreshes and submits imported overview from initial name %s',
+    async (displayName) => {
+      mocks.updateProfile.mockResolvedValue({ ok: true });
+      const refresh = await mount({
+        ...profile,
+        displayName,
+        headline: null,
+        location: null,
+      });
+      refresh(imported);
+      expect(field(m.profileForm_displayNameLabel())).toHaveValue(
+        'Rowan Example',
+      );
+      expect(field(m.profileForm_headlineLabel())).toHaveValue(
+        'Senior platform engineer',
+      );
+      expect(field(m.profileForm_locationLabel())).toHaveValue(
+        'Houston, Texas, United States',
+      );
+      expect(field(m.profileForm_bioLabel())).toHaveValue(
+        'Builds reliable platforms.',
+      );
+      submit();
+      await waitFor(() =>
+        expect(mocks.updateProfile).toHaveBeenCalledWith({
+          data: expect.objectContaining({
+            displayName: 'Rowan Example',
+            headline: 'Senior platform engineer',
+            location: 'Houston, Texas, United States',
+            bio: 'Builds reliable platforms.',
+          }),
+        }),
+      );
+    },
+  );
+
+  it('keeps automatic handle following after an imported name', async () => {
+    const refresh = await mount({
+      ...profile,
+      handle: null,
+      displayName: 'rowan',
+    });
+    refresh({ ...imported, handle: null });
+    expect(field(m.profileForm_handleLabel())).toHaveValue('rowan-example');
+    fireEvent.change(field(m.profileForm_displayNameLabel()), {
+      target: { value: 'Rowan Edited' },
+    });
+    expect(field(m.profileForm_handleLabel())).toHaveValue('rowan-edited');
+  });
+
+  it('settles the location validation when adopting a committed import', async () => {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    const refresh = await mount(profile);
+    const input = field(m.profileForm_locationLabel());
+    fireEvent.input(input, { target: { value: 'Lyo' } });
+    fireEvent.input(input, { target: { value: 'London' } });
+    submit();
+    expect(
+      await screen.findByText(m.locationField_pickRequiredError()),
+    ).toBeInTheDocument();
+
+    refresh(imported);
+    expect(input).toHaveValue('Houston, Texas, United States');
+    expect(
+      screen.queryByText(m.locationField_pickRequiredError()),
+    ).not.toBeInTheDocument();
+    submit();
+    await waitFor(() =>
+      expect(mocks.updateProfile).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          location: 'Houston, Texas, United States',
+        }),
+      }),
+    );
+  });
+
+  it('keeps custom drafts, explicit handles and visibility when overview refreshes', async () => {
+    const updateCustomFields = mocks.updateCustomFields.mockResolvedValue({
+      ok: true,
+    });
+    const refresh = await mount(
+      { ...profile, profileVisibility: 'hidden' },
+      {
+        customFields: {
+          definitions: [
+            {
+              key: 'portfolio_note',
+              label: 'Portfolio note',
+              type: 'short_text',
+              required: false,
+              visibility: 'private',
+              editableByOwner: true,
+            },
+          ],
+          values: { portfolio_note: 'Stored note' },
+        },
+        objectReferences: {
+          definitions: [
+            {
+              key: 'certifications',
+              label: 'Certifications',
+              typeId: 'certification',
+              multiple: true,
+              visibility: 'private',
+              editableByOwner: true,
+              allowOverrides: false,
+            },
+          ],
+          selections: [
+            {
+              fieldKey: 'certifications',
+              fieldLabel: 'Certifications',
+              recordId: 'cert-1',
+              title: 'Sample certificate',
+              valueDefinitions: [],
+              entryDefinitions: [],
+              values: {},
+              entries: [],
+              fields: [],
+              attributes: {},
+            },
+          ],
+        },
+      },
+    );
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    fireEvent.change(screen.getByLabelText('Portfolio note'), {
+      target: { value: 'Unsaved note' },
+    });
+    fireEvent.change(field(m.profileForm_handleLabel()), {
+      target: { value: 'chosen-handle' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.placeTags_removeAriaLabel({ name: 'Sample certificate' }),
+      }),
+    );
+    refresh(imported);
+    expect(screen.getByLabelText('Portfolio note')).toHaveValue('Unsaved note');
+    expect(screen.queryByText('Sample certificate')).not.toBeInTheDocument();
+    mocks.updateObjectReferences.mockResolvedValue({ ok: true });
+    submit();
+    await waitFor(() =>
+      expect(updateCustomFields).toHaveBeenCalledWith({
+        data: { values: { portfolio_note: 'Unsaved note' } },
+      }),
+    );
+    await waitFor(() =>
+      expect(mocks.updateObjectReferences).toHaveBeenCalledWith({
+        data: { selections: [] },
+      }),
+    );
+    expect(mocks.updateProfile).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        handle: 'chosen-handle',
+        profileVisibility: 'hidden',
+      }),
+    });
+  });
+
+  it('preserves dirty overview and eligibility across polling and a late save', async () => {
+    let finish!: (value: { ok: true }) => void;
+    mocks.updateProfile.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const refresh = await mount(profile);
+    fireEvent.change(field(m.profileForm_displayNameLabel()), {
+      target: { value: 'Manual name' },
+    });
+    fireEvent.change(field(m.profileForm_headlineLabel()), {
+      target: { value: 'Submitted headline' },
+    });
+    fireEvent.change(screen.getByLabelText(m.profileForm_countryLabel()), {
+      target: { value: 'AU' },
+    });
+    submit();
+    fireEvent.change(field(m.profileForm_headlineLabel()), {
+      target: { value: 'Newer draft' },
+    });
+    fireEvent.input(field(m.profileForm_locationLabel()), {
+      target: { value: 'Unpicked draft' },
+      inputType: 'insertText',
+    });
+    refresh({ ...profile });
+    refresh(imported);
+    await act(async () => finish({ ok: true }));
+    refresh({
+      ...imported,
+      displayName: 'Manual name',
+      headline: 'Submitted headline',
+    });
+    expect(field(m.profileForm_displayNameLabel())).toHaveValue('Manual name');
+    expect(field(m.profileForm_headlineLabel())).toHaveValue('Newer draft');
+    expect(field(m.profileForm_locationLabel())).toHaveValue('Unpicked draft');
+    expect(field(m.profileForm_handleLabel())).toHaveValue('ada');
+    expect(screen.getByLabelText(m.profileForm_countryLabel())).toHaveValue(
+      'AU',
+    );
+    expect(field(m.profileForm_bioLabel())).toHaveValue(
+      'Builds reliable platforms.',
+    );
+    submit();
+    expect(
+      await screen.findByText(m.locationField_pickRequiredError()),
+    ).toBeInTheDocument();
+    expect(mocks.updateProfile).toHaveBeenCalledTimes(1);
   });
 });

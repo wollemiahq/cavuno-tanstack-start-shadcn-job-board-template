@@ -25,6 +25,7 @@ import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
 import type { CustomFilterField } from '@/lib/custom-field-filters';
 import { m } from '@/paraglide/messages';
+import { containing } from '@/test/text';
 import type { PublicCompany } from '@cavuno/board';
 
 const company: PublicCompany = {
@@ -48,6 +49,21 @@ const company: PublicCompany = {
 // The page now takes resolved `CompanyCardVM[]`; the test maps the wire
 // fixture exactly as the route pane does.
 const companyVm = toCompanyCardVM(company, getCompanySearchLabels());
+
+const companyCount = (count: number) =>
+  m.count_companies({ count, countLabel: String(count) });
+const showingRange = (from: number, to: number, count: number) =>
+  m.companySearch_resultsShowingRange({
+    from: String(from),
+    to: String(to),
+    count: String(count),
+  });
+// The board-name-free part of the index intro sentence.
+const indexIntro = m
+  .companiesIndex_metaDescription({ boardName: '\u0000' })
+  .split('\u0000')
+  .reduce((longest, part) => (part.length > longest.length ? part : longest))
+  .trim();
 
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
@@ -109,13 +125,15 @@ describe('CompanySearchPage — search results pattern', () => {
     expect(container.querySelectorAll('main')).toHaveLength(1);
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      '1 company',
+      companyCount(1),
     );
-    expect(screen.queryByText(/Companies and employers hiring on/)).toBeNull();
+    expect(screen.queryByText(containing(indexIntro))).toBeNull();
     expect(
-      screen.queryByRole('searchbox', { name: 'Company name' }),
+      screen.queryByRole('searchbox', { name: m.companySearch_queryLabel() }),
     ).toBeNull();
-    expect(screen.queryByRole('combobox', { name: 'Market' })).toBeNull();
+    expect(
+      screen.queryByRole('combobox', { name: m.companySearch_marketLabel() }),
+    ).toBeNull();
     expect(
       container.querySelector("[data-slot='company-filter-bar']"),
     ).toBeNull();
@@ -126,15 +144,21 @@ describe('CompanySearchPage — search results pattern', () => {
       container.querySelector("[data-slot='search-results-layout']"),
     ).not.toBeNull();
 
-    const results = screen.getByRole('region', { name: 'Company results' });
-    const detail = screen.getByRole('region', { name: 'Selected company' });
+    const results = screen.getByRole('region', {
+      name: m.companySearch_resultsRegionLabel(),
+    });
+    const detail = screen.getByRole('region', {
+      name: m.companySearch_selectedCompanyRegionLabel(),
+    });
     expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
     expect(
       within(results).getByRole('link', { name: /Acme/i }),
     ).toHaveAttribute('href', '/companies/acme');
     expect(
       within(
-        screen.getByRole('region', { name: 'Browse by market' }),
+        screen.getByRole('region', {
+          name: m.companiesIndex_browseByMarketHeading(),
+        }),
       ).getByRole('link', { name: 'Technology' }),
     ).toHaveAttribute('href', '/companies/markets/technology');
     expect(
@@ -213,10 +237,9 @@ describe('CompanySearchPage — search results pattern', () => {
     const { container } = render(<RouterProvider router={router} />);
 
     expect(await screen.findByText(/no-such-company/i)).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Reset filters' })).toHaveAttribute(
-      'href',
-      '/companies',
-    );
+    expect(
+      screen.getByRole('link', { name: m.jobSearch_resetFiltersAction() }),
+    ).toHaveAttribute('href', '/companies');
     expect(
       container.querySelector("[data-slot='search-results-layout']"),
     ).toBeInTheDocument();
@@ -257,10 +280,12 @@ describe('CompanySearchPage — search results pattern', () => {
     render(<RouterProvider router={router} />);
 
     expect(
-      await screen.findByText('Company search is temporarily unavailable'),
+      await screen.findByText(m.companySearch_unavailableTitle()),
     ).toBeVisible();
-    expect(screen.queryByText('0 companies')).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Reset filters' })).toBeNull();
+    expect(screen.queryByText(companyCount(0))).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.jobSearch_resetFiltersAction() }),
+    ).toBeNull();
   });
 });
 
@@ -299,9 +324,7 @@ describe('CompanySearchPage — results description line', () => {
     // description line states the precise range.
     renderPage({ count: 37, page: 1, pageSize: 24 });
 
-    expect(
-      await screen.findByText('Showing 1–24 of 37 companies'),
-    ).toBeVisible();
+    expect(await screen.findByText(showingRange(1, 24, 37))).toBeVisible();
   });
 
   it('renders the same exact range for free-text search, now offset-paginated', async () => {
@@ -309,9 +332,7 @@ describe('CompanySearchPage — results description line', () => {
     // states the precise range — never a fabricated cursor count.
     renderPage({ query: 'acme', count: 37, page: 2, pageSize: 24 });
 
-    expect(
-      await screen.findByText('Showing 25–37 of 37 companies'),
-    ).toBeVisible();
+    expect(await screen.findByText(showingRange(25, 37, 37))).toBeVisible();
     expect(screen.queryByText(/more available/)).toBeNull();
   });
 });
@@ -434,10 +455,14 @@ describe('CompanySearchPage — company profile-field filters', () => {
       },
     });
 
-    const trigger = screen.getByRole('button', { name: /All filters/ });
+    const trigger = screen.getByRole('button', {
+      name: containing(m.jobSearch_allFiltersLabel()),
+    });
     expect(trigger).toHaveTextContent('1');
     fireEvent.click(trigger);
-    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    const sheet = screen.getByRole('dialog', {
+      name: m.jobSearch_allFiltersLabel(),
+    });
     fireEvent.click(within(sheet).getByRole('checkbox', { name: 'Seed' }));
     fireEvent.click(
       within(sheet).getByRole('checkbox', { name: 'Hires remotely' }),
@@ -445,7 +470,9 @@ describe('CompanySearchPage — company profile-field filters', () => {
     expect(onChange).not.toHaveBeenCalled();
 
     fireEvent.click(
-      within(sheet).getByRole('button', { name: 'Apply filters' }),
+      within(sheet).getByRole('button', {
+        name: m.jobSearch_applyFiltersLabel(),
+      }),
     );
 
     expect(onChange).toHaveBeenCalledWith([
@@ -464,7 +491,9 @@ describe('CompanySearchPage — company profile-field filters', () => {
       },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.jobSearch_resetLabel() }),
+    );
     expect(onChange).toHaveBeenCalledWith([]);
   });
 
@@ -473,7 +502,11 @@ describe('CompanySearchPage — company profile-field filters', () => {
       customFilters: { fields: [], active: [], onChange: vi.fn() },
     });
 
-    expect(screen.queryByRole('button', { name: /All filters/ })).toBeNull();
+    expect(
+      screen.queryByRole('button', {
+        name: containing(m.jobSearch_allFiltersLabel()),
+      }),
+    ).toBeNull();
   });
 
   it('offers a reset when filters match no companies', async () => {

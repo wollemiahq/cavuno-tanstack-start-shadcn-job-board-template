@@ -12,6 +12,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { TalentListJobLink } from './talent-list-job-link';
 
 import type { TalentListRecord } from '@/server/employers';
@@ -59,7 +60,11 @@ describe('TalentListJobLink', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('combobox', { name: 'Link to a job' }));
+    fireEvent.click(
+      screen.getByRole('combobox', {
+        name: m.talentLists_linkJobEmpty(),
+      }),
+    );
     await pick('Second role');
 
     await waitFor(() =>
@@ -93,7 +98,7 @@ describe('TalentListJobLink', () => {
     render(<Harness />);
 
     fireEvent.click(screen.getByRole('combobox', { name: 'First role' }));
-    await pick('Not linked');
+    await pick(m.talentLists_linkJobNone());
 
     await waitFor(() =>
       expect(updateList).toHaveBeenCalledWith({
@@ -101,9 +106,13 @@ describe('TalentListJobLink', () => {
       }),
     );
 
-    fireEvent.click(screen.getByRole('combobox', { name: 'Link to a job' }));
+    fireEvent.click(
+      screen.getByRole('combobox', {
+        name: m.talentLists_linkJobEmpty(),
+      }),
+    );
     expect(
-      await screen.findByRole('option', { name: 'Not linked' }),
+      await screen.findByRole('option', { name: m.talentLists_linkJobNone() }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('option', { name: 'First role' }),

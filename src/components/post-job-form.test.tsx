@@ -428,7 +428,7 @@ describe('PostJobForm', () => {
     expect(alert).toHaveAttribute('data-slot', 'field-error');
     // Unknown code resolves to the generic viewer-locale line, never
     // the wire sentence.
-    expect(alert).toHaveTextContent('Something went wrong. Please try again.');
+    expect(alert).toHaveTextContent(m.boardError_genericText());
   });
 
   it('never presents an inactive paid plan as free', () => {
@@ -556,7 +556,9 @@ describe('PostJobForm — board job-form constraints', () => {
 
   it('narrows the employment-type picker so the default is a value the board accepts', () => {
     renderConstrained({ employmentType: { allowedOptions: ['contract'] } });
-    expect(triggerText(m.postJob_employmentTypeLabel())).toBe('Contract');
+    expect(triggerText(m.postJob_employmentTypeLabel())).toBe(
+      m.label_employmentContract(),
+    );
   });
 
   it('narrows the currency picker to the board allow-list', () => {
@@ -566,7 +568,9 @@ describe('PostJobForm — board job-form constraints', () => {
 
   it('defaults the work arrangement to a value the board accepts', () => {
     renderConstrained({ workArrangement: { allowedOptions: ['remote'] } });
-    expect(triggerText(m.postJob_remoteOptionLabel())).toBe('Remote');
+    expect(triggerText(m.postJob_remoteOptionLabel())).toBe(
+      m.label_remoteRemote(),
+    );
   });
 
   it('keeps the form defaults when the board sets no restriction', () => {
@@ -574,7 +578,9 @@ describe('PostJobForm — board job-form constraints', () => {
     // board's work arrangement from hybrid to remote and its currency off
     // USD.
     renderConstrained({});
-    expect(triggerText(m.postJob_remoteOptionLabel())).toBe('Hybrid');
+    expect(triggerText(m.postJob_remoteOptionLabel())).toBe(
+      m.label_remoteHybrid(),
+    );
     expect(triggerText(m.postJob_currencyLabel())).toBe('USD');
   });
 

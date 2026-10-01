@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 
 import { BoardApiError } from '@cavuno/board';
+import { formatDate } from '@cavuno/board/format';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -28,6 +29,7 @@ import { ApplicantPipelineBoard } from '../components/employer/applicant-pipelin
 import { CompanyMembersTable } from '../components/employer/company-members-table';
 import { handleEmployerLoaderErrorUsing } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 import {
   ApplicantsPageView,
   createApplicantsLoader,
@@ -59,6 +61,7 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 import type { CompanyJobsSearch } from '../lib/company-jobs-search';
+import { normalized } from '@/test/text';
 
 const pipelineActions = {
   moveApplicant: vi.fn<PipelineActions['moveApplicant']>(),
@@ -443,9 +446,19 @@ describe('employer company workspace', () => {
       { ...draftJob, id: 'c', status: 'draft' },
     ]);
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Northstar Labs Jobs' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: m.employerJobs_companyJobsHeading({ company: 'Northstar Labs' }),
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText('You have 2 active jobs.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        m.employerJobs_activeJobs({
+          count: 2,
+          countLabel: (2).toLocaleString(getLocale()),
+        }),
+      ),
+    ).toBeInTheDocument();
   });
 
   it('explains a Stripe return and highlights the posted job', async () => {
@@ -453,7 +466,9 @@ describe('employer company workspace', () => {
       search: { checkout_success: '1', job_id: draftJob.id },
     });
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Payment received');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerJobs_checkoutSuccessTitle(),
+    );
     expect(
       screen.getByRole('row', { name: /Senior Product Designer/ }),
     ).toHaveAttribute('data-state', 'selected');
@@ -526,22 +541,32 @@ describe('employer company workspace', () => {
     );
     // Publish is no longer a standalone pill — it lives only in the menu.
     expect(
-      screen.queryByRole('link', { name: 'Publish' }),
+      screen.queryByRole('link', { name: m.employerJobs_publishLabel() }),
     ).not.toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Actions for Senior Product Designer',
+        name: m.employerJobs_actionsMenuLabel({
+          title: 'Senior Product Designer',
+        }),
       }),
     );
     // A draft's Publish menu item lands on the edit page (plan picker + pay).
-    expect(screen.getByRole('menuitem', { name: 'Publish' })).toHaveAttribute(
+    expect(
+      screen.getByRole('menuitem', {
+        name: m.employerJobs_publishLabel(),
+      }),
+    ).toHaveAttribute(
       'href',
       '/employers/companies/northstar-labs/jobs/job-1/edit',
     );
-    expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
     expect(
-      screen.queryByRole('menuitem', { name: 'Applicants' }),
+      screen.getByRole('menuitem', { name: m.employerJobs_editLabel() }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', {
+        name: m.employerCompany_applicantsLabel(),
+      }),
     ).not.toBeInTheDocument();
   });
 
@@ -556,19 +581,29 @@ describe('employer company workspace', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Actions for Senior Product Designer',
+        name: m.employerJobs_actionsMenuLabel({
+          title: 'Senior Product Designer',
+        }),
       }),
     );
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    fireEvent.click(
+      screen.getByRole('menuitem', {
+        name: m.employerCompany_deleteLabel(),
+      }),
+    );
 
     expect(jobsActions.deleteJob).not.toHaveBeenCalled();
     const dialog = screen.getByRole('alertdialog', {
-      name: 'Delete Senior Product Designer?',
+      name: m.employerJobs_deleteConfirmTitle({
+        title: 'Senior Product Designer',
+      }),
     });
     expect(dialog).toHaveTextContent(
-      'This permanently deletes Senior Product Designer and removes its public job page.',
+      m.employerJobs_deleteConfirmBody({ title: 'Senior Product Designer' }),
     );
-    const confirm = within(dialog).getByRole('button', { name: 'Delete' });
+    const confirm = within(dialog).getByRole('button', {
+      name: m.employerCompany_deleteLabel(),
+    });
     fireEvent.click(confirm);
     fireEvent.click(confirm);
     expect(jobsActions.deleteJob).toHaveBeenCalledOnce();
@@ -576,7 +611,7 @@ describe('employer company workspace', () => {
     resolveDelete({ ok: true, data: null });
     await waitFor(() =>
       expect(jobsActions.toastSuccess).toHaveBeenCalledWith(
-        'Senior Product Designer was deleted.',
+        m.employerJobs_deletedToast({ title: 'Senior Product Designer' }),
       ),
     );
   });
@@ -606,17 +641,25 @@ describe('employer company workspace', () => {
 
     // Column headers exist immediately (table paints before stats stream in).
     expect(
-      screen.getByRole('columnheader', { name: 'Views' }),
+      screen.getByRole('columnheader', {
+        name: m.employerJobs_viewsColumn(),
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('columnheader', { name: 'Apply clicks' }),
+      screen.getByRole('columnheader', {
+        name: m.employerJobs_applyClicksColumn(),
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('columnheader', { name: 'Applications' }),
+      screen.getByRole('columnheader', {
+        name: m.employerJobs_applicationsColumn(),
+      }),
     ).toBeInTheDocument();
 
     // The joined figures fill in once the deferred stats resolve, formatted.
-    expect(await screen.findByText('1,234')).toBeInTheDocument();
+    expect(
+      await screen.findByText(normalized((1234).toLocaleString(getLocale()))),
+    ).toBeInTheDocument();
     expect(screen.getByText('56')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
   });
@@ -649,7 +692,9 @@ describe('employer company workspace', () => {
     expect(screen.getByText('5')).toBeInTheDocument();
     // …but a null application count reads as the dash + an accessible label,
     // and is never coerced to 0.
-    expect(screen.getByText('Not available')).toBeInTheDocument();
+    expect(
+      screen.getByText(m.employerJobs_statUnavailableLabel()),
+    ).toBeInTheDocument();
     expect(screen.queryByText('0')).not.toBeInTheDocument();
   });
 
@@ -711,7 +756,9 @@ describe('employer company workspace', () => {
         },
       ],
     });
-    expect(await screen.findByText('No activity yet')).toBeInTheDocument();
+    expect(
+      await screen.findByText(m.employerStats_emptyTitle()),
+    ).toBeInTheDocument();
     cleanup();
 
     // Real activity → the chart renders (its accessible label is present).
@@ -733,10 +780,12 @@ describe('employer company workspace', () => {
     });
     expect(
       await screen.findByRole('img', {
-        name: 'Daily views and apply clicks over the last 30 days',
+        name: m.employerStats_chartAriaLabel(),
       }),
     ).toBeInTheDocument();
-    expect(screen.queryByText('No activity yet')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(m.employerStats_emptyTitle()),
+    ).not.toBeInTheDocument();
   });
 
   it('shows a distinct Expired chip and flips the date to the expiry', async () => {
@@ -749,9 +798,21 @@ describe('employer company workspace', () => {
       },
     ]);
     // Past its expiry, the published masquerade is replaced by an Expired chip.
-    expect(screen.getByText('Expired')).toBeInTheDocument();
-    expect(screen.getByText(/Expired on/)).toBeInTheDocument();
-    expect(screen.queryByText(/^Posted/)).not.toBeInTheDocument();
+    expect(screen.getByText(m.employerJob_statusExpired())).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        m.employerJobs_expiredOn({
+          date: formatDate(getLocale(), '2026-07-01T00:00:00.000Z') ?? '',
+        }),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        m.jobDetail_posted({
+          date: formatDate(getLocale(), '2026-06-01T00:00:00.000Z') ?? '',
+        }),
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('republishes an entitled job in place and toasts', async () => {
@@ -766,10 +827,16 @@ describe('employer company workspace', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Actions for Senior Product Designer',
+        name: m.employerJobs_actionsMenuLabel({
+          title: 'Senior Product Designer',
+        }),
       }),
     );
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Republish' }));
+    fireEvent.click(
+      screen.getByRole('menuitem', {
+        name: m.employerCompany_republishLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(jobsActions.publishJob).toHaveBeenCalledTimes(1),
@@ -793,10 +860,16 @@ describe('employer company workspace', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Actions for Senior Product Designer',
+        name: m.employerJobs_actionsMenuLabel({
+          title: 'Senior Product Designer',
+        }),
       }),
     );
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Republish' }));
+    fireEvent.click(
+      screen.getByRole('menuitem', {
+        name: m.employerCompany_republishLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(jobsActions.navigateToEdit).toHaveBeenCalledWith(
@@ -811,37 +884,56 @@ describe('employer company workspace', () => {
     renderProfile();
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Company profile' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: m.employerCompany_profileHeading(),
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: /View public page/ }),
+      screen.getByRole('link', { name: m.employerProfile_viewPublicLabel() }),
     ).toHaveAttribute('href', 'https://jobs.example/companies/northstar-labs');
-    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue(
-      'Northstar Labs',
-    );
-    expect(screen.getByRole('textbox', { name: 'Website' })).toHaveValue(
-      'northstar.example',
-    );
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerCompany_nameLabel(),
+      }),
+    ).toHaveValue('Northstar Labs');
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerCompany_websiteLabel(),
+      }),
+    ).toHaveValue('northstar.example');
     // Each social field sits behind its domain addon.
     expect(screen.getByText('linkedin.com/company/')).toBeInTheDocument();
     expect(screen.getByText('x.com/')).toBeInTheDocument();
     expect(screen.getByText('facebook.com/')).toBeInTheDocument();
     expect(screen.getByText('instagram.com/')).toBeInTheDocument();
-    expect(screen.getByRole('toolbar', { name: 'About' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('toolbar', {
+        name: m.employerProfile_aboutHeading(),
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Hiring')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save company' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    ).toBeEnabled();
   });
 
   it('auto-strips a pasted social URL down to the handle', () => {
     renderProfile();
 
-    const linkedin = screen.getByRole('textbox', { name: 'LinkedIn' });
+    const linkedin = screen.getByRole('textbox', {
+      name: m.employerProfile_linkedinLabel(),
+    });
     fireEvent.change(linkedin, {
       target: { value: 'https://www.linkedin.com/company/northstar' },
     });
     expect(linkedin).toHaveValue('northstar');
 
-    const instagram = screen.getByRole('textbox', { name: 'Instagram' });
+    const instagram = screen.getByRole('textbox', {
+      name: m.employerProfile_instagramLabel(),
+    });
     fireEvent.change(instagram, {
       target: { value: 'https://www.instagram.com/northstar/' },
     });
@@ -853,16 +945,22 @@ describe('employer company workspace', () => {
 
     // The tagline is no longer a write-only blank — it round-trips from
     // `summary`, so the field carries the stored value on load.
-    expect(screen.getByRole('textbox', { name: 'Tagline' })).toHaveValue(
-      'Hiring, humanely.',
-    );
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerProfile_taglineLabel(),
+      }),
+    ).toHaveValue('Hiring, humanely.');
     // A stored social URL prefills as the bare handle behind its domain addon.
-    expect(screen.getByRole('textbox', { name: 'LinkedIn' })).toHaveValue(
-      'northstar',
-    );
-    expect(screen.getByRole('textbox', { name: 'Instagram' })).toHaveValue(
-      'northstar',
-    );
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerProfile_linkedinLabel(),
+      }),
+    ).toHaveValue('northstar');
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerProfile_instagramLabel(),
+      }),
+    ).toHaveValue('northstar');
   });
 
   it('saves an Instagram handle as a profile URL', async () => {
@@ -870,10 +968,19 @@ describe('employer company workspace', () => {
     profileActions.invalidate.mockResolvedValue(undefined);
     renderProfile();
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Instagram' }), {
-      target: { value: 'flexwork.florida' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: m.employerProfile_instagramLabel(),
+      }),
+      {
+        target: { value: 'flexwork.florida' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
@@ -894,7 +1001,9 @@ describe('employer company workspace', () => {
 
     // The upload control is present now (no more "not available here yet").
     expect(
-      screen.getByRole('button', { name: 'Change logo' }),
+      screen.getByRole('button', {
+        name: m.logoUpload_changeLogoLabel(),
+      }),
     ).toBeInTheDocument();
 
     const input = document.querySelector<HTMLInputElement>(
@@ -927,13 +1036,21 @@ describe('employer company workspace', () => {
     profileActions.invalidate.mockRejectedValue(new Error('refresh failed'));
     renderProfile();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
     );
-    expect(await screen.findByText(/change was saved/i)).toBeInTheDocument();
-    expect(screen.queryByText('Something went wrong.')).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(m.employerCompany_reconciliationError()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(m.employerCompany_genericError()),
+    ).not.toBeInTheDocument();
   });
 
   it('streams the profile-views stat into the header once the deferred read resolves', async () => {
@@ -962,10 +1079,12 @@ describe('employer company workspace', () => {
     });
 
     expect(
-      screen.getByText('Profile views · last 30 days'),
+      screen.getByText(m.employerProfileViews_statLabel()),
     ).toBeInTheDocument();
-    // 'en-AU' locale (from the mocked root loader) groups thousands with commas.
-    expect(screen.getByText('1,204')).toBeInTheDocument();
+    // Formatted with the board locale's own thousands separator.
+    expect(
+      screen.getByText(normalized((1204).toLocaleString(getLocale()))),
+    ).toBeInTheDocument();
   });
 
   it('shows the honest zero state when the company has no profile views yet', async () => {
@@ -977,7 +1096,9 @@ describe('employer company workspace', () => {
       renderProfile(data);
     });
 
-    expect(screen.getByText('No views yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(m.employerProfileViews_emptyText()),
+    ).toBeInTheDocument();
   });
 
   it('renders the applicant pipeline as a kanban board with cards in their stage column', () => {
@@ -1051,7 +1172,11 @@ describe('employer company workspace', () => {
         name: 'Senior Product Designer',
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Published · 1 applicant/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `${m.employerJob_statusPublished()} · ${m.employerApplicants_count({ count: 1, countLabel: '1' })}`,
+      ),
+    ).toBeInTheDocument();
     // Each visible stage is a column; the Review column carries the card.
     expect(
       screen.getByRole('heading', { level: 3, name: 'Review' }),
@@ -1060,10 +1185,16 @@ describe('employer company workspace', () => {
       screen.getByRole('heading', { level: 3, name: 'Interview' }),
     ).toBeInTheDocument();
     const reviewColumn = screen.getByRole('grid', {
-      name: 'Review applicants',
+      name: m.employerApplicants_columnLabel({ stage: 'Review' }),
     });
     expect(within(reviewColumn).getByText('Ada Lovelace')).toBeInTheDocument();
-    expect(within(reviewColumn).getByText(/Applied/)).toBeInTheDocument();
+    expect(
+      within(reviewColumn).getByText(
+        m.employerApplicants_appliedLabel({
+          date: formatDate(getLocale(), '2026-07-13T00:00:00.000Z') ?? '',
+        }),
+      ),
+    ).toBeInTheDocument();
   });
 
   function reviewBoardVM(): PipelineBoardVM {
@@ -1105,12 +1236,22 @@ describe('employer company workspace', () => {
       />,
     );
 
-    expect(screen.getByRole('combobox', { name: 'Stage' })).toBeInTheDocument();
     expect(
-      screen.getByRole('textbox', { name: 'Add a private note' }),
+      screen.getByRole('combobox', {
+        name: m.employerApplicants_stageLabel(),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerApplicants_notePlaceholder(),
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText('Note: Strong portfolio')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: m.employerApplicants_rejectLabel(),
+      }),
+    ).toBeInTheDocument();
   });
 
   it('keeps a failed stage rename open and reports the error in the dialog', async () => {
@@ -1147,15 +1288,23 @@ describe('employer company workspace', () => {
       />,
     );
 
-    const input = screen.getByRole('textbox', { name: 'Stage name' });
+    const input = screen.getByRole('textbox', {
+      name: m.employerApplicants_stageNameLabel(),
+    });
     expect(input).toHaveValue('Portfolio review');
     fireEvent.change(input, { target: { value: 'Interview' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerApplicants_saveLabel(),
+      }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Rename failed');
-    expect(screen.getByRole('textbox', { name: 'Stage name' })).toHaveValue(
-      'Interview',
-    );
+    expect(
+      screen.getByRole('textbox', {
+        name: m.employerApplicants_stageNameLabel(),
+      }),
+    ).toHaveValue('Interview');
     expect(pipelineActions.invalidate).not.toHaveBeenCalled();
   });
 
@@ -1175,7 +1324,11 @@ describe('employer company workspace', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerApplicants_rejectLabel(),
+      }),
+    );
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Reject failed');
@@ -1196,15 +1349,23 @@ describe('employer company workspace', () => {
       />,
     );
 
-    const note = screen.getByRole('textbox', { name: 'Add a private note' });
+    const note = screen.getByRole('textbox', {
+      name: m.employerApplicants_notePlaceholder(),
+    });
     fireEvent.change(note, { target: { value: 'Strong communicator' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save note' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerApplicants_saveNoteLabel(),
+      }),
+    );
 
     await waitFor(() => expect(note).toHaveValue(''));
     expect(pipelineActions.toastError).toHaveBeenCalledWith(
-      expect.stringMatching(/change was saved/i),
+      m.employerCompany_reconciliationError(),
     );
-    expect(screen.queryByText('Something went wrong.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(m.employerApplicants_genericError()),
+    ).not.toBeInTheDocument();
   });
 
   it('moves a card optimistically through the detail sheet stage picker', async () => {
@@ -1257,7 +1418,11 @@ describe('employer company workspace', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('combobox', { name: 'Stage' }));
+    fireEvent.click(
+      screen.getByRole('combobox', {
+        name: m.employerApplicants_stageLabel(),
+      }),
+    );
     const interviewOption = await screen.findByRole('option', {
       name: 'Interview',
     });
@@ -1275,9 +1440,11 @@ describe('employer company workspace', () => {
     );
     // Optimistic: the stage picker adopts Interview immediately (the card's
     // resolved column follows the same override) while the move is in flight.
-    expect(screen.getByRole('combobox', { name: 'Stage' })).toHaveTextContent(
-      'Interview',
-    );
+    expect(
+      screen.getByRole('combobox', {
+        name: m.employerApplicants_stageLabel(),
+      }),
+    ).toHaveTextContent('Interview');
 
     // Settle the move; the loader invalidation is what refetches truth.
     await act(async () => {
@@ -1394,7 +1561,9 @@ describe('employer company workspace', () => {
     );
     expect(
       screen.getByText(
-        m.employerMembers_leaveDialogTitle({ company: company.name }),
+        normalized(
+          m.employerMembers_leaveDialogTitle({ company: company.name }),
+        ),
       ),
     ).toBeInTheDocument();
     fireEvent.click(
@@ -1638,7 +1807,7 @@ describe('employer company workspace', () => {
     );
 
     const trigger = screen
-      .getByText('Invited')
+      .getByText(m.employerMembers_invitedColumn())
       .closest<HTMLElement>('[data-slot="tooltip-trigger"]');
     if (!trigger) throw new Error('Expected the invite expiry tooltip trigger');
     fireEvent.focus(trigger);
@@ -1719,7 +1888,7 @@ describe('employer company workspace', () => {
       screen.getByRole('button', { name: m.employerDelete_submitLabel() }),
     ).toBeDisabled();
     expect(
-      screen.getByText(/Team membership could not be loaded/),
+      screen.getByText(m.employerDelete_membersUnknownText()),
     ).toBeVisible();
   });
 });
@@ -1768,16 +1937,36 @@ describe('Company profile — operator form layout', () => {
       ],
     });
 
-    const about = screen.getByRole('toolbar', { name: 'About' });
-    const name = screen.getByRole('textbox', { name: 'Name' });
+    const about = screen.getByRole('toolbar', {
+      name: m.employerProfile_aboutHeading(),
+    });
+    const name = screen.getByRole('textbox', {
+      name: m.employerCompany_nameLabel(),
+    });
     expect(
       about.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(screen.queryByRole('textbox', { name: 'Tagline' })).toBeNull();
-    expect(screen.queryByRole('textbox', { name: 'LinkedIn' })).toBeNull();
-    expect(screen.queryByRole('textbox', { name: 'Instagram' })).toBeNull();
+    expect(
+      screen.queryByRole('textbox', {
+        name: m.employerProfile_taglineLabel(),
+      }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('textbox', {
+        name: m.employerProfile_linkedinLabel(),
+      }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('textbox', {
+        name: m.employerProfile_instagramLabel(),
+      }),
+    ).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
@@ -1801,7 +1990,11 @@ describe('Company profile — operator form layout', () => {
       ],
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
 
     expect(
       await screen.findByText(
@@ -1845,7 +2038,11 @@ describe('Company profile — operator form layout', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Motto' }), {
       target: { value: 'Forward' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
 
     await waitFor(() =>
       expect(updateCompanyCustomFields).toHaveBeenCalledWith({

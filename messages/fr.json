@@ -1814,6 +1814,8 @@
   "previewToolbar_talentVisibility_employersOnly": "Employeurs uniquement",
   "previewToolbar_talentVisibility_off": "Désactivé",
   "previewToolbar_talentVisibility_public": "Public",
+  "previewToolbar_localPreviewLabel": "Aperçu de développement",
+  "previewToolbar_localPreviewSubtitle": "Prévisualiser les emplacements publicitaires sans diffuser d’annonces.",
   "previewToolbar_title": "Aperçu",
   "previewToolbar_triggerLabel": "Barre d’aperçu — changer de persona et de paramètres du site",
   "previewToolbar_viewingAs": "Affichage en tant que :",

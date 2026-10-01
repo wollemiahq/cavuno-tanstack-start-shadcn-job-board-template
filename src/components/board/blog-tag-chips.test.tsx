@@ -11,6 +11,7 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { BlogTagChips } from './blog-tag-chips';
 
 import type { PublicBlogTag } from '@cavuno/board';
@@ -64,12 +65,13 @@ describe('BlogTagChips — shared blog topic row', () => {
     renderChips(<BlogTagChips tags={tags} allActive />);
 
     expect(
-      await screen.findByRole('navigation', { name: 'Article topics' }),
+      await screen.findByRole('navigation', {
+        name: m.blogIndex_topicsLabel(),
+      }),
     ).toBeVisible();
-    expect(screen.getByRole('link', { name: 'All' })).toHaveAttribute(
-      'href',
-      '/blog',
-    );
+    expect(
+      screen.getByRole('link', { name: m.blogIndex_allTagsLabel() }),
+    ).toHaveAttribute('href', '/blog');
     expect(
       screen.getByRole('link', { name: 'Design systems' }),
     ).toHaveAttribute('href', '/blog/tag/design-systems');
@@ -82,7 +84,9 @@ describe('BlogTagChips — shared blog topic row', () => {
   it('marks All active on the index in the default (primary) treatment', async () => {
     renderChips(<BlogTagChips tags={tags} allActive />);
 
-    const all = await screen.findByRole('link', { name: 'All' });
+    const all = await screen.findByRole('link', {
+      name: m.blogIndex_allTagsLabel(),
+    });
     expect(all).toHaveAttribute('aria-current', 'page');
     expect(
       screen.getByRole('link', { name: 'Design systems' }),
@@ -101,7 +105,7 @@ describe('BlogTagChips — shared blog topic row', () => {
     expect(other).toHaveAttribute('href', '/blog/tag/hiring');
 
     // "All" points back to the index and is not active on a tag page.
-    const all = screen.getByRole('link', { name: 'All' });
+    const all = screen.getByRole('link', { name: m.blogIndex_allTagsLabel() });
     expect(all).toHaveAttribute('href', '/blog');
     expect(all).not.toHaveAttribute('aria-current');
   });

@@ -27,17 +27,20 @@ const mocks = {
   invalidate: vi.fn<PreviewToolbarDependencies['invalidate']>(),
 };
 
+import { m } from '../../paraglide/messages';
 import {
   BoardAdPreviewProvider,
   useBoardAdPreview,
 } from '../board/board-ad-preview';
 import { PreviewToolbarView } from './preview-toolbar';
 
+import { normalized } from '@/test/text';
+
 const capable: PreviewCapability = { canPreview: true, reason: 'sandbox' };
 
 // The trigger is a plain pill visually ("Viewing as: …") but carries a static
 // aria-label so assistive tech announces the control's purpose (a11y gate).
-const PANEL_LABEL = 'Preview toolbar — switch persona and board settings';
+const PANEL_LABEL = m.previewToolbar_triggerLabel();
 
 const personas: PreviewPersona[] = [
   {
@@ -130,19 +133,25 @@ describe('ad placement preview', () => {
       adPreviewEnabled: true,
     });
     fireEvent.click(
-      screen.getByRole('button', { name: 'Development preview' }),
+      screen.getByRole('button', {
+        name: m.previewToolbar_localPreviewLabel(),
+      }),
     );
     expect(
-      screen.queryByRole('button', { name: 'Emails' }),
+      screen.queryByRole('button', { name: m.previewToolbar_emails() }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('switch', { name: 'Ad placements' }),
+      screen.queryByRole('switch', { name: m.adPreview_label() }),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.previewToolbar_boardSettings() }),
+    );
     expect(
-      screen.queryByRole('switch', { name: 'Blog' }),
+      screen.queryByRole('switch', { name: m.previewFlag_blogEnabled_label() }),
     ).not.toBeInTheDocument();
-    const toggle = await screen.findByRole('switch', { name: 'Ad placements' });
+    const toggle = await screen.findByRole('switch', {
+      name: m.adPreview_label(),
+    });
     expect(toggle).not.toBeChecked();
     fireEvent.click(toggle);
     await waitFor(() =>
@@ -158,9 +167,11 @@ describe('ad placement preview', () => {
       ),
     );
     openMenu();
-    fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
     fireEvent.click(
-      await screen.findByRole('switch', { name: 'Ad placements' }),
+      screen.getByRole('button', { name: m.previewToolbar_boardSettings() }),
+    );
+    fireEvent.click(
+      await screen.findByRole('switch', { name: m.adPreview_label() }),
     );
     await waitFor(() =>
       expect(screen.getByLabelText('Ad preview state')).toHaveTextContent(
@@ -174,7 +185,7 @@ describe('ad placement preview', () => {
     renderToolbar();
     openMenu();
     expect(
-      screen.queryByRole('switch', { name: 'Ad placements' }),
+      screen.queryByRole('switch', { name: m.adPreview_label() }),
     ).not.toBeInTheDocument();
   });
 });
@@ -188,7 +199,9 @@ function openMenu() {
 // then the gear. Opening it dismisses the menu (a separate focused surface).
 function openBoardSettings() {
   openMenu();
-  fireEvent.click(screen.getByRole('button', { name: 'Board settings' }));
+  fireEvent.click(
+    screen.getByRole('button', { name: m.previewToolbar_boardSettings() }),
+  );
 }
 
 function getPreviewActions() {
@@ -237,7 +250,7 @@ describe('PreviewToolbar', () => {
 
   it('shows "Anonymous" in the pill when signed out', () => {
     renderToolbar();
-    expect(screen.getByText('Anonymous')).toBeInTheDocument();
+    expect(screen.getByText(m.previewToolbar_anonymous())).toBeInTheDocument();
   });
 
   it('names the current viewer in the pill', () => {
@@ -274,8 +287,8 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     fireEvent.click(screen.getByRole('button', { name: PANEL_LABEL }));
 
-    expect(screen.getByText('Candidates')).toBeInTheDocument();
-    expect(screen.getByText('Employers')).toBeInTheDocument();
+    expect(screen.getByText(m.previewToolbar_candidates())).toBeInTheDocument();
+    expect(screen.getByText(m.previewToolbar_employers())).toBeInTheDocument();
     expect(screen.getByText('Nadia New')).toBeInTheDocument();
     expect(screen.getByText('Verified, empty everything')).toBeInTheDocument();
     expect(screen.getByText('Adam Admin')).toBeInTheDocument();
@@ -313,7 +326,7 @@ describe('PreviewToolbar', () => {
 
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        /reseeded.*re-switch/i,
+        m.previewToolbar_staleReseed(),
       ),
     );
     expect(mocks.invalidate).not.toHaveBeenCalled();
@@ -327,22 +340,26 @@ describe('PreviewToolbar', () => {
     // row; the flag controls have moved out to their own surface.
     const actions = getPreviewActions();
     expect(
-      within(actions).getByRole('button', { name: 'Board settings' }),
+      within(actions).getByRole('button', {
+        name: m.previewToolbar_boardSettings(),
+      }),
     ).toBeInTheDocument();
     expect(
-      within(actions).getByRole('button', { name: 'Emails' }),
+      within(actions).getByRole('button', { name: m.previewToolbar_emails() }),
     ).toBeInTheDocument();
     expect(
-      within(actions).getByRole('button', { name: 'Reseed' }),
+      within(actions).getByRole('button', { name: m.previewToolbar_reseed() }),
     ).toBeInTheDocument();
     expect(
-      within(actions).getByRole('button', { name: 'Exit preview' }),
+      within(actions).getByRole('button', { name: m.previewToolbar_exit() }),
     ).toBeInTheDocument();
 
     // No flag switch/select is present in the persona menu anymore.
     expect(screen.queryByRole('switch')).toBeNull();
     expect(
-      screen.queryByRole('combobox', { name: 'Talent directory' }),
+      screen.queryByRole('combobox', {
+        name: m.previewFlag_talentDirectoryVisibility_label(),
+      }),
     ).toBeNull();
   });
 
@@ -356,13 +373,19 @@ describe('PreviewToolbar', () => {
     );
     if (!panel) throw new Error('Expected the board settings panel to open');
     expect(
-      within(panel).getByRole('switch', { name: 'Candidate paywall' }),
+      within(panel).getByRole('switch', {
+        name: m.previewFlag_jobAccessPaywallEnabled_label(),
+      }),
     ).toBeInTheDocument();
     expect(
-      within(panel).getByRole('combobox', { name: 'Talent directory' }),
+      within(panel).getByRole('combobox', {
+        name: m.previewFlag_talentDirectoryVisibility_label(),
+      }),
     ).toBeInTheDocument();
     expect(
-      within(panel).getByRole('switch', { name: 'Job recommendations' }),
+      within(panel).getByRole('switch', {
+        name: m.previewFlag_jobRecommendationsEnabled_label(),
+      }),
     ).toBeInTheDocument();
   });
 
@@ -371,7 +394,11 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     openBoardSettings();
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Candidate paywall' }));
+    fireEvent.click(
+      screen.getByRole('switch', {
+        name: m.previewFlag_jobAccessPaywallEnabled_label(),
+      }),
+    );
 
     await waitFor(() =>
       expect(mocks.updateSandboxFlags).toHaveBeenCalledWith({
@@ -397,8 +424,12 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     openBoardSettings();
 
-    const blog = screen.getByRole('switch', { name: 'Blog' });
-    const alerts = screen.getByRole('switch', { name: 'Job alerts' });
+    const blog = screen.getByRole('switch', {
+      name: m.previewFlag_blogEnabled_label(),
+    });
+    const alerts = screen.getByRole('switch', {
+      name: m.previewFlag_jobAlertsEnabled_label(),
+    });
     fireEvent.click(blog);
     fireEvent.click(alerts);
 
@@ -427,17 +458,19 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     openBoardSettings();
 
-    const blog = screen.getByRole('switch', { name: 'Blog' });
+    const blog = screen.getByRole('switch', {
+      name: m.previewFlag_blogEnabled_label(),
+    });
     fireEvent.click(blog);
 
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        /setting was updated.*couldn't refresh/i,
+        m.previewToolbar_flagRefreshError(),
       ),
     );
     expect(blog).not.toBeChecked();
     expect(screen.getByRole('alert')).not.toHaveTextContent(
-      /couldn't update board settings/i,
+      m.previewToolbar_flagError(),
     );
   });
 
@@ -452,11 +485,15 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     openBoardSettings();
 
-    const blog = screen.getByRole('switch', { name: 'Blog' });
+    const blog = screen.getByRole('switch', {
+      name: m.previewFlag_blogEnabled_label(),
+    });
     expect(blog).toBeChecked();
     fireEvent.click(blog);
     expect(blog).not.toBeChecked();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.common_closeLabel() }),
+    );
 
     await waitFor(() =>
       expect(
@@ -467,7 +504,9 @@ describe('PreviewToolbar', () => {
     await waitFor(() => expect(mocks.invalidate).toHaveBeenCalledOnce());
 
     openBoardSettings();
-    expect(screen.getByRole('switch', { name: 'Blog' })).toBeChecked();
+    expect(
+      screen.getByRole('switch', { name: m.previewFlag_blogEnabled_label() }),
+    ).toBeChecked();
   }, 10_000);
 
   it('sets the tri-state talent directory via the enum config key', async () => {
@@ -476,7 +515,9 @@ describe('PreviewToolbar', () => {
     openBoardSettings();
 
     fireEvent.change(
-      screen.getByRole('combobox', { name: 'Talent directory' }),
+      screen.getByRole('combobox', {
+        name: m.previewFlag_talentDirectoryVisibility_label(),
+      }),
       { target: { value: 'employers_only' } },
     );
 
@@ -493,11 +534,13 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     openBoardSettings();
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Blog' }));
+    fireEvent.click(
+      screen.getByRole('switch', { name: m.previewFlag_blogEnabled_label() }),
+    );
 
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        /couldn't update board settings/i,
+        m.previewToolbar_flagError(),
       ),
     );
     // Control reverts: no router invalidation on failure, so the switch stays
@@ -509,7 +552,9 @@ describe('PreviewToolbar', () => {
     mocks.listSandboxEmails.mockResolvedValue([]);
     renderToolbar();
     openMenu();
-    fireEvent.click(screen.getByRole('button', { name: 'Emails' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.previewToolbar_emails() }),
+    );
 
     // The Emails sheet mounts and lazily loads its captures on open.
     await waitFor(() =>
@@ -525,11 +570,15 @@ describe('PreviewToolbar', () => {
     renderToolbar();
     openMenu();
     // The footer's Reseed action opens the confirm dialog.
-    fireEvent.click(screen.getByRole('button', { name: 'Reseed' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.previewToolbar_reseed() }),
+    );
 
     // The confirm action lives in the alert dialog.
     const confirm = screen.getByRole('alertdialog');
-    fireEvent.click(within(confirm).getByRole('button', { name: 'Reseed' }));
+    fireEvent.click(
+      within(confirm).getByRole('button', { name: m.previewToolbar_reseed() }),
+    );
 
     await waitFor(() => expect(mocks.reseedSandbox).toHaveBeenCalled());
     // Reseed purges the viewer's own board user — reload to the honest state.
@@ -551,19 +600,23 @@ describe('PreviewToolbar', () => {
     mocks.reseedSandbox.mockReturnValue(resultFactory());
     renderToolbar();
     openMenu();
-    fireEvent.click(screen.getByRole('button', { name: 'Reseed' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.previewToolbar_reseed() }),
+    );
     const confirm = screen.getByRole('alertdialog');
-    fireEvent.click(within(confirm).getByRole('button', { name: 'Reseed' }));
+    fireEvent.click(
+      within(confirm).getByRole('button', { name: m.previewToolbar_reseed() }),
+    );
 
     await waitFor(() =>
       expect(within(confirm).getByRole('alert')).toHaveTextContent(
-        /couldn't reseed.*try again/i,
+        normalized(m.previewToolbar_reseedError()),
       ),
     );
     expect(confirm).toBeVisible();
     expect(reloadMock).not.toHaveBeenCalled();
     expect(
-      within(confirm).getByRole('button', { name: 'Reseed' }),
+      within(confirm).getByRole('button', { name: m.previewToolbar_reseed() }),
     ).not.toBeDisabled();
   });
 
@@ -588,7 +641,7 @@ describe('PreviewToolbar', () => {
 
       await waitFor(() =>
         expect(screen.getByRole('alert')).toHaveTextContent(
-          /couldn't switch persona.*session is unchanged/i,
+          normalized(m.previewToolbar_switchError()),
         ),
       );
       expect(cookieWrites).toHaveLength(0);
@@ -624,14 +677,14 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
     const { unmount } = renderToolbar({ demoConfigured: false });
     openMenu();
     expect(
-      screen.queryByRole('button', { name: /Your board \(real data\)/i }),
+      screen.queryByRole('button', { name: m.previewToolbar_yourBoard() }),
     ).toBeNull();
     unmount();
 
     renderToolbar({ demoConfigured: true, dataSource: 'board' });
     openMenu();
     expect(
-      screen.getByRole('button', { name: /Your board \(real data\)/i }),
+      screen.getByRole('button', { name: m.previewToolbar_yourBoard() }),
     ).toBeInTheDocument();
   });
 
@@ -644,14 +697,18 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
     openMenu();
     const actions = getPreviewActions();
     expect(
-      within(actions).queryByRole('button', { name: 'Board settings' }),
+      within(actions).queryByRole('button', {
+        name: m.previewToolbar_boardSettings(),
+      }),
     ).toBeNull();
     expect(
-      within(actions).queryByRole('button', { name: 'Reseed' }),
+      within(actions).queryByRole('button', {
+        name: m.previewToolbar_reseed(),
+      }),
     ).toBeNull();
     // Emails + Exit remain — shared-tenant tools that do not mutate config.
     expect(
-      within(actions).getByRole('button', { name: 'Emails' }),
+      within(actions).getByRole('button', { name: m.previewToolbar_emails() }),
     ).toBeInTheDocument();
   });
 
@@ -666,10 +723,14 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
     openMenu();
     let actions = getPreviewActions();
     expect(
-      within(actions).queryByRole('button', { name: 'Board settings' }),
+      within(actions).queryByRole('button', {
+        name: m.previewToolbar_boardSettings(),
+      }),
     ).toBeNull();
     expect(
-      within(actions).queryByRole('button', { name: 'Reseed' }),
+      within(actions).queryByRole('button', {
+        name: m.previewToolbar_reseed(),
+      }),
     ).toBeNull();
     unmount();
 
@@ -681,10 +742,12 @@ describe('PreviewToolbar dual-source switcher (T5)', () => {
     openMenu();
     actions = getPreviewActions();
     expect(
-      within(actions).getByRole('button', { name: 'Board settings' }),
+      within(actions).getByRole('button', {
+        name: m.previewToolbar_boardSettings(),
+      }),
     ).toBeInTheDocument();
     expect(
-      within(actions).getByRole('button', { name: 'Reseed' }),
+      within(actions).getByRole('button', { name: m.previewToolbar_reseed() }),
     ).toBeInTheDocument();
   });
 });
@@ -702,7 +765,7 @@ describe('PreviewToolbar data-source cookie + escape hatch (R1/R2/R4)', () => {
 
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        /reseeded.*re-switch/i,
+        m.previewToolbar_staleReseed(),
       ),
     );
     // No cookie write, no reload — chrome and data source stay aligned.
@@ -744,7 +807,7 @@ describe('PreviewToolbar data-source cookie + escape hatch (R1/R2/R4)', () => {
     ).not.toBeNull();
     openMenu();
     expect(
-      screen.getByRole('button', { name: /Your board \(real data\)/i }),
+      screen.getByRole('button', { name: m.previewToolbar_yourBoard() }),
     ).toBeInTheDocument();
     // Persona machinery + secondary tools stay hidden off-capability.
     expect(screen.queryByText('Nadia New')).toBeNull();

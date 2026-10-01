@@ -1878,6 +1878,8 @@
   "previewToolbar_talentVisibility_employersOnly": "Tylko pracodawcy",
   "previewToolbar_talentVisibility_off": "Wyłączone",
   "previewToolbar_talentVisibility_public": "Publiczne",
+  "previewToolbar_localPreviewLabel": "Podgląd deweloperski",
+  "previewToolbar_localPreviewSubtitle": "Podejrzyj miejsca reklamowe bez wyświetlania reklam.",
   "previewToolbar_title": "Podgląd",
   "previewToolbar_triggerLabel": "Pasek podglądu — przełączaj personę i ustawienia portalu",
   "previewToolbar_viewingAs": "Przeglądasz jako:",

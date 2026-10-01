@@ -58,7 +58,7 @@ function renderPagination(ui: React.ReactElement) {
 
 describe('ListingPagination — owned shadcn navigation', () => {
   it('renders nothing for one page and otherwise mounts the single shadcn pagination composition', async () => {
-    const { container, rerender } = renderPagination(
+    const { container } = renderPagination(
       <ListingPagination
         page={1}
         count={20}
@@ -70,30 +70,18 @@ describe('ListingPagination — owned shadcn navigation', () => {
 
     expect(container.querySelector('[data-slot="pagination"]')).toBeNull();
 
-    const rootRoute = createRootRoute();
-    const indexRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: '/',
-      component: () => (
-        <ListingPagination
-          page={2}
-          count={60}
-          pageSize={20}
-          hrefForPage={(page) => `/jobs?page=${page}`}
-          onPageChange={vi.fn()}
-        />
-      ),
-    });
-    const jobsRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: '/jobs',
-      component: () => null,
-    });
-    const router = createRouter({
-      routeTree: rootRoute.addChildren([indexRoute, jobsRoute]),
-      history: createMemoryHistory({ initialEntries: ['/'] }),
-    });
-    rerender(<RouterProvider router={router} />);
+    // A fresh mount per case: a RouterProvider does not re-load a router
+    // swapped in under it.
+    cleanup();
+    renderPagination(
+      <ListingPagination
+        page={2}
+        count={60}
+        pageSize={20}
+        hrefForPage={(page) => `/jobs?page=${page}`}
+        onPageChange={vi.fn()}
+      />,
+    );
 
     const pagination = await screen.findByRole('navigation', {
       name: 'Pagination',

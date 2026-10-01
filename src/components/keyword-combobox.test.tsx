@@ -45,7 +45,11 @@ describe('KeywordCombobox', () => {
       />,
     );
 
-    fireEvent.focus(screen.getByRole('combobox', { name: /keyword/i }));
+    fireEvent.focus(
+      screen.getByRole('combobox', {
+        name: m.searchBar_keywordAriaLabel(),
+      }),
+    );
 
     expect(container.querySelector('[data-combobox-anchor]')).not.toBeNull();
     expect(
@@ -78,7 +82,9 @@ describe('KeywordCombobox', () => {
       />,
     );
 
-    const input = screen.getByRole('combobox', { name: /keyword/i });
+    const input = screen.getByRole('combobox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
     fireEvent.input(input, {
       target: { value: 'robo' },
       inputType: 'insertText',
@@ -116,7 +122,11 @@ describe('KeywordCombobox', () => {
       />,
     );
 
-    fireEvent.focus(screen.getByRole('combobox', { name: /keyword/i }));
+    fireEvent.focus(
+      screen.getByRole('combobox', {
+        name: m.searchBar_keywordAriaLabel(),
+      }),
+    );
 
     // Posts and tags are genuinely different things in one list, so each row
     // keeps its kind badge — unlike the jobs scope above. Asserted per ROW:
@@ -145,7 +155,9 @@ describe('KeywordCombobox', () => {
           onClear={() => {}}
         />,
       );
-      const input = screen.getByRole('combobox', { name: /keyword/i });
+      const input = screen.getByRole('combobox', {
+        name: m.searchBar_keywordAriaLabel(),
+      });
       // Typing opens the suggestion list, as it does for a visitor.
       fireEvent.input(input, {
         target: { value: 'robo' },

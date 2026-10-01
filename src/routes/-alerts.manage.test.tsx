@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ManagePageView, type AlertManageDependencies } from './-alerts.manage';
 
+import { m } from '@/paraglide/messages';
 import type { JobAlertManageState } from '@cavuno/board';
 
 const invalidate = vi.fn<() => Promise<void>>();
@@ -63,7 +64,9 @@ describe('public job-alert management', () => {
     renderManage({ error: true });
 
     expect(
-      screen.getByText('Manage link invalid').closest('[data-slot="empty"]'),
+      screen
+        .getByText(m.alertsManage_invalidTitle())
+        .closest('[data-slot="empty"]'),
     ).not.toBeNull();
   });
 
@@ -75,7 +78,7 @@ describe('public job-alert management', () => {
 
     expect(
       screen
-        .getByText("You're unsubscribed from all job alerts.")
+        .getByText(m.alertsManage_unsubscribedText())
         .closest('[data-slot="alert"]'),
     ).not.toBeNull();
   });
@@ -86,7 +89,9 @@ describe('public job-alert management', () => {
       { subscription: 'subscription-1', token: 'subscription-token' },
     );
 
-    const item = screen.getByText('All jobs').closest('[data-slot="item"]');
+    const item = screen
+      .getByText(m.alertsManage_allJobsText())
+      .closest('[data-slot="item"]');
     expect(item).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-actions"]')).not.toBeNull();
@@ -101,16 +106,20 @@ describe('public job-alert management', () => {
       { subscription: 'subscription-1', token: 'subscription-token' },
     );
     fireEvent.click(
-      screen.getByRole('button', { name: 'Unsubscribe from all alerts' }),
+      screen.getByRole('button', {
+        name: m.alertsManage_unsubscribeAllLabel(),
+      }),
     );
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveAttribute('data-slot', 'alert');
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Something went wrong. Try again.',
+        m.alertsManage_actionErrorText(),
       );
       expect(
-        screen.getByRole('button', { name: 'Unsubscribe from all alerts' }),
+        screen.getByRole('button', {
+          name: m.alertsManage_unsubscribeAllLabel(),
+        }),
       ).toBeEnabled();
     });
     expect(invalidate).not.toHaveBeenCalled();
@@ -128,17 +137,19 @@ describe('public job-alert management', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Unsubscribe from all alerts' }),
+      screen.getByRole('button', {
+        name: m.alertsManage_unsubscribeAllLabel(),
+      }),
     );
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'Your change was saved, but this page could not refresh.',
+        m.candidateAction_reconciliationError(),
       );
     });
     expect(dependencies.unsubscribeJobAlert).toHaveBeenCalledOnce();
     expect(screen.getByRole('alert')).not.toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.alertsManage_actionErrorText(),
     );
   });
 });

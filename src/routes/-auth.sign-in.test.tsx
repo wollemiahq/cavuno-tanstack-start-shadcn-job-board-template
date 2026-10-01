@@ -16,6 +16,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+
 import type { UrlSearchInput } from '../lib/pagination';
 
 const mocks = {
@@ -123,7 +125,7 @@ describe('/auth/sign-in search contract', () => {
 
     renderSignIn('/account', 'password-reset');
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Your password was updated. Sign in with your new password.',
+      m.authSignIn_passwordResetSuccessText(),
     );
   });
 
@@ -133,14 +135,16 @@ describe('/auth/sign-in search contract', () => {
     mocks.signIn.mockResolvedValue({ ok: true });
     mocks.invalidate.mockRejectedValue(new Error('refresh unavailable'));
     const { container } = renderSignIn(returnTo);
-    await screen.findByRole('button', { name: 'Sign in' });
+    await screen.findByRole('button', { name: m.authSignIn_submitLabel() });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'secret-password' },
     });
-    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.authSignIn_submitLabel() }),
+    );
 
     await waitFor(() => {
       expect(mocks.assignLocation).toHaveBeenCalledWith(
@@ -154,20 +158,22 @@ describe('/auth/sign-in search contract', () => {
   it('recovers when password sign-in rejects unexpectedly', async () => {
     mocks.signIn.mockRejectedValue(new Error('network unavailable'));
     const { container } = renderSignIn('/account');
-    await screen.findByRole('button', { name: 'Sign in' });
+    await screen.findByRole('button', { name: m.authSignIn_submitLabel() });
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
     fireEvent.change(container.querySelector('input[name="password"]')!, {
       target: { value: 'secret-password' },
     });
-    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.authSignIn_submitLabel() }),
+    );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
     expect(
-      await screen.findByRole('button', { name: 'Sign in' }),
+      await screen.findByRole('button', { name: m.authSignIn_submitLabel() }),
     ).toBeEnabled();
   });
 
@@ -175,12 +181,18 @@ describe('/auth/sign-in search contract', () => {
     const returnTo = '/jobs?q=design&selectedJob=product-designer';
     mocks.requestMagicLink.mockResolvedValue({ ok: true });
     const { container } = renderSignIn(returnTo);
-    fireEvent.click(await screen.findByRole('radio', { name: 'Magic link' }));
+    fireEvent.click(
+      await screen.findByRole('radio', {
+        name: m.authSignIn_magicLinkTabLabel(),
+      }),
+    );
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'candidate@example.com' },
     });
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Send magic link' }),
+      await screen.findByRole('button', {
+        name: m.authSignIn_sendMagicLinkLabel(),
+      }),
     );
 
     await waitFor(() => {
@@ -197,18 +209,26 @@ describe('/auth/sign-in search contract', () => {
       message: 'No account exists for that email.',
     });
     const { container } = renderSignIn('/jobs');
-    fireEvent.click(await screen.findByRole('radio', { name: 'Magic link' }));
+    fireEvent.click(
+      await screen.findByRole('radio', {
+        name: m.authSignIn_magicLinkTabLabel(),
+      }),
+    );
     fireEvent.change(container.querySelector('input[name="email"]')!, {
       target: { value: 'deleted@example.com' },
     });
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Send magic link' }),
+      await screen.findByRole('button', {
+        name: m.authSignIn_sendMagicLinkLabel(),
+      }),
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No account exists for that email. Create an account first.',
+      m.boardError_accountNotFoundText(),
     );
-    expect(screen.queryByText(/check your email/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(m.authSignIn_magicLinkSentTitle()),
+    ).not.toBeInTheDocument();
   });
 
   it('includes the validated destination in an OAuth request', async () => {
@@ -219,7 +239,9 @@ describe('/auth/sign-in search contract', () => {
     });
     renderSignIn(returnTo);
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Continue with Google' }),
+      await screen.findByRole('button', {
+        name: m.authSignIn_continueWithGoogleLabel(),
+      }),
     );
 
     await waitFor(() => {
@@ -238,14 +260,18 @@ describe('/auth/sign-in search contract', () => {
     );
     renderSignIn('/account');
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Continue with Google' }),
+      await screen.findByRole('button', {
+        name: m.authSignIn_continueWithGoogleLabel(),
+      }),
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
     expect(
-      await screen.findByRole('button', { name: 'Continue with Google' }),
+      await screen.findByRole('button', {
+        name: m.authSignIn_continueWithGoogleLabel(),
+      }),
     ).toBeEnabled();
   });
 
@@ -254,7 +280,9 @@ describe('/auth/sign-in search contract', () => {
     renderSignIn(returnTo);
 
     expect(
-      await screen.findByRole('link', { name: 'Forgot password?' }),
+      await screen.findByRole('link', {
+        name: m.authSignIn_forgotPasswordLink(),
+      }),
     ).toHaveAttribute(
       'href',
       `/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`,
@@ -263,7 +291,9 @@ describe('/auth/sign-in search contract', () => {
     // the role is unknown here, so `/auth/join` resolves it. The destination
     // still has to survive the hop.
     expect(
-      await screen.findByRole('link', { name: 'Get started' }),
+      await screen.findByRole('link', {
+        name: m.authSignIn_getStartedLink(),
+      }),
     ).toHaveAttribute(
       'href',
       `/auth/join?returnTo=${encodeURIComponent(returnTo)}`,
@@ -272,8 +302,12 @@ describe('/auth/sign-in search contract', () => {
 
   it('uses native radio controls for keyboard-correct sign-in method selection', async () => {
     const { container } = renderSignIn('/account');
-    const password = await screen.findByRole('radio', { name: 'Password' });
-    const magic = await screen.findByRole('radio', { name: 'Magic link' });
+    const password = await screen.findByRole('radio', {
+      name: m.authSignIn_passwordTabLabel(),
+    });
+    const magic = await screen.findByRole('radio', {
+      name: m.authSignIn_magicLinkTabLabel(),
+    });
     const nativeRadios = container.querySelectorAll('input[type="radio"]');
 
     expect(password).toHaveAttribute('aria-checked', 'true');

@@ -29,6 +29,7 @@ import {
   talentListingLoaderDeps,
   type TalentListingSearch,
 } from '@/lib/talent-search';
+import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
 const getTalentIndexPage =
@@ -264,16 +265,22 @@ describe('talent directory route — query and capability contracts', () => {
     expect(container.querySelector("[data-slot='empty']")).not.toBeNull();
     expect(
       screen.getByRole('heading', {
-        name: 'This talent directory is for employers',
+        name: m.talentDirectory_restrictedHeading(),
       }),
     ).toBeVisible();
-    const signUpLink = screen.getByRole('link', { name: 'Sign up' });
+    const signUpLink = screen.getByRole('link', {
+      name: m.siteHeader_signUpLabel(),
+    });
     expect(signUpLink).toHaveAttribute('href', '/auth/employer/sign-up');
     expect(signUpLink).not.toHaveAttribute('role', 'button');
-    const signInLink = screen.getByRole('link', { name: 'Sign in' });
+    const signInLink = screen.getByRole('link', {
+      name: m.talentDirectory_signInLabel(),
+    });
     expect(signInLink).toHaveAttribute('href', '/auth/sign-in');
     expect(signInLink).not.toHaveAttribute('role', 'button');
-    expect(screen.queryByRole('heading', { name: 'Talent' })).toBeNull();
+    expect(
+      screen.queryByRole('heading', { name: m.talentDirectory_title() }),
+    ).toBeNull();
   });
 
   it('offers a signed-in candidate the add-company path instead of another sign-in', async () => {
@@ -281,10 +288,20 @@ describe('talent directory route — query and capability contracts', () => {
       <RestrictedTalentDirectory boardName="Acme Careers" signedIn />,
     );
 
-    const addCompany = screen.getByRole('link', { name: 'Add company' });
+    const addCompany = screen.getByRole('link', {
+      name: m.employerOnboarding_addCompanyLabel(),
+    });
     expect(addCompany).toHaveAttribute('href', '/employers/dashboard?add=true');
-    expect(screen.queryByRole('link', { name: 'Sign up' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(
+      screen.queryByRole('link', {
+        name: m.siteHeader_signUpLabel(),
+      }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('link', {
+        name: m.talentDirectory_signInLabel(),
+      }),
+    ).toBeNull();
   });
 
   it('does not disguise an unrelated forbidden response as an employer-only directory', async () => {
@@ -339,12 +356,10 @@ describe('canonical talent profile route', () => {
       paramsError: null,
       searchError: null,
       updatedAt: Date.now(),
-      _nonReactive: {},
       loaderData,
       context: { origin: 'https://careers.acme.test' },
       search: {},
       _strictSearch: {},
-      fetchCount: 1,
       abortController: new AbortController(),
       cause: 'enter',
       loaderDeps: {},
@@ -406,12 +421,10 @@ describe('canonical talent profile route', () => {
       paramsError: null,
       searchError: null,
       updatedAt: Date.now(),
-      _nonReactive: {},
       loaderData,
       context: { origin: 'https://careers.acme.test' },
       search: {},
       _strictSearch: {},
-      fetchCount: 1,
       abortController: new AbortController(),
       cause: 'enter',
       loaderDeps: {},
@@ -444,20 +457,28 @@ describe('canonical talent profile route', () => {
   it('routes an employer without talent access to pricing', async () => {
     await renderProfile({ user: { role: 'employer' }, hasTalentAccess: false });
 
-    expect(screen.getByRole('link', { name: 'Message' })).toHaveAttribute(
-      'href',
-      '/employers',
-    );
+    expect(
+      screen.getByRole('link', { name: m.talentSearch_messageLabel() }),
+    ).toHaveAttribute('href', '/employers');
   });
 
   it('lets an eligible employer message the candidate by public handle', async () => {
     await renderProfile({ user: { role: 'employer' }, hasTalentAccess: true });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Message' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Send a message' }), {
-      target: { value: 'Hello Ada' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentSearch_messageLabel() }),
+    );
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: m.composer_placeholderText(),
+      }),
+      {
+        target: { value: 'Hello Ada' },
+      },
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.composer_sendAriaLabel() }),
+    );
 
     await waitFor(() =>
       expect(onStartConversation).toHaveBeenCalledWith({
@@ -471,7 +492,9 @@ describe('canonical talent profile route', () => {
   it('routes an anonymous viewer’s Message action to sign-in', async () => {
     await renderProfile();
 
-    const message = screen.getByRole('link', { name: 'Message' });
+    const message = screen.getByRole('link', {
+      name: m.talentSearch_messageLabel(),
+    });
     const href = message.getAttribute('href') ?? '';
     expect(href).toContain('/auth/sign-in');
     expect(href).toContain('returnTo');
@@ -483,7 +506,9 @@ describe('canonical talent profile route', () => {
     expect(
       container.querySelector("[data-slot='talent-profile-actions']"),
     ).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.talentSearch_messageLabel() }),
+    ).toBeNull();
   });
 
   it('hides the Message action when board messaging is disabled', async () => {
@@ -492,7 +517,9 @@ describe('canonical talent profile route', () => {
       messagingEnabled: false,
     });
 
-    expect(screen.queryByRole('link', { name: 'Message' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: m.talentSearch_messageLabel() }),
+    ).toBeNull();
   });
 
   it('offers an upgrade link when an employer has access but no message credits', async () => {
@@ -503,9 +530,13 @@ describe('canonical talent profile route', () => {
     });
 
     expect(
-      screen.getByRole('link', { name: 'Upgrade to message' }),
+      screen.getByRole('link', {
+        name: m.talentSearch_upgradeToMessageLabel(),
+      }),
     ).toHaveAttribute('href', '/employers');
-    expect(screen.queryByRole('button', { name: 'Message' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: m.talentSearch_messageLabel() }),
+    ).toBeNull();
   });
 
   it('renders the named profile without an unlock gate', async () => {
@@ -515,10 +546,10 @@ describe('canonical talent profile route', () => {
       screen.getByRole('heading', { level: 1, name: 'Ada Lovelace' }),
     ).toBeVisible();
     expect(
-      screen.queryByRole('heading', { name: 'Unlock this profile' }),
+      screen.queryByRole('heading', { name: m.talentUnlock_neededTitle() }),
     ).toBeNull();
     expect(
-      screen.queryByRole('heading', { name: 'Talent access required' }),
+      screen.queryByRole('heading', { name: m.talentUnlock_noPlanTitle() }),
     ).toBeNull();
   });
 });
@@ -601,8 +632,12 @@ describe('opaque talent profile unlock gate', () => {
       expect(screen.getAllByRole('listitem', { hidden: true })).toHaveLength(
         redactedProfile.experiences.length + redactedProfile.education.length,
       );
-      expect(screen.getByText('Experience')).toBeInTheDocument();
-      expect(screen.getByText('Education')).toBeInTheDocument();
+      expect(
+        screen.getByText(m.publicProfile_experienceHeading()),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(m.publicProfile_educationHeading()),
+      ).toBeInTheDocument();
       unmount();
     }
   });
@@ -621,11 +656,15 @@ describe('opaque talent profile unlock gate', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Unlock profile' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentUnlock_confirmAction() }),
+    );
     const dialog = screen.getByRole('alertdialog');
     expect(dialog).toBeVisible();
     fireEvent.click(
-      within(dialog).getByRole('button', { name: 'Unlock profile' }),
+      within(dialog).getByRole('button', {
+        name: m.talentUnlock_confirmAction(),
+      }),
     );
 
     await waitFor(() => expect(onUnlock).toHaveBeenCalledOnce());
@@ -677,7 +716,9 @@ describe('opaque talent profile unlock gate', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Upgrade' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentUnlock_upgradeLabel() }),
+    );
     expect(onUpgrade).toHaveBeenCalledWith('plan-pro');
   });
 
@@ -695,7 +736,9 @@ describe('opaque talent profile unlock gate', () => {
     );
 
     expect(
-      screen.getByRole('link', { name: 'View talent plans' }),
+      screen.getByRole('link', {
+        name: m.talentUnlock_viewPlansLabel(),
+      }),
     ).toHaveAttribute('href', '/employers');
   });
 });

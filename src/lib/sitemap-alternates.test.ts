@@ -1,9 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   LOCALIZED_BUCKETS,
   renderUrlsetWithAlternates,
 } from './sitemap-alternates';
+
+// Compile only the board language, whatever it is, so the single-locale
+// cases below hold for any base locale.
+vi.mock('../paraglide/runtime', async (importOriginal) => {
+  const runtime = await importOriginal<typeof import('../paraglide/runtime')>();
+  return { ...runtime, locales: [runtime.baseLocale] };
+});
 
 const ORIGIN = 'https://board.example';
 

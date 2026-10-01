@@ -49,10 +49,16 @@ const BUDGETS = {
   // over 229_000. The operator accepted this cost, and the budget is
   // rebaselined to the measurement plus the same ~4 KiB headroom as above so
   // the next small change does not trip it again.
-  // Contact adds a route registration and footer availability flag to the
-  // shared shell; its form and icon remain in route-only chunks. The 2026-09-30
-  // build measured 233_154 bytes gzip, so retain the same ~4 KiB headroom.
-  shell: { raw: 730_000, gzip: 237_250 },
+  // The CVE-2026-102989 TanStack Start security release (server-function
+  // response validation) took the shell from 227.4 to 228.1 KiB gzip; main
+  // had 0.1 KiB left. The fix is not optional, so the budget is rebaselined
+  // to the measurement plus the same ~4 KiB headroom.
+  // The 2026-10 dependency refresh, accepted by the operator because these
+  // upgrades are needed anyway: React 19.3 adds 8.7 KiB gzip, and Vite+ 1.0's
+  // bundler splits the shell into 88 chunks instead of 43 (+3.9 KiB gzip for
+  // the same raw bytes). Measured 726.8 KiB raw / 242.3 KiB gzip; rebaselined
+  // with the same ~4 KiB gzip headroom.
+  shell: { raw: 760_000, gzip: 252_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
@@ -74,7 +80,9 @@ const BUDGETS = {
     '/post': { raw: 565_000, gzip: 183_000 },
     // Shell→route reassignment after salary SEO left main (job-detail /
     // resolve-copy-group no longer shell-shared). Total first load fell.
-    '/employers/companies/$slug/': { raw: 440_000, gzip: 135_000 },
+    // 2026-10 dependency refresh (Recharts 3.10, Vite+ 1.0 chunking): measured
+    // 452.5 KiB raw / 135.4 KiB gzip.
+    '/employers/companies/$slug/': { raw: 470_000, gzip: 142_000 },
     // React Aria's drag-and-drop/grid runtime belongs only to this private
     // workflow; it is intentionally charged here instead of every public URL.
     // Removing the leaked messaging/auth graph from the shell also reassigns
@@ -84,11 +92,14 @@ const BUDGETS = {
     '/employers/companies/$slug/jobs/$jobId/applicants': {
       // Measurement noise after trunk talent Save/lists landed next to the
       // sourced-rail convert path: 400.5 KiB raw vs the prior 410_000 ceil.
-      raw: 412_000,
+      // 2026-10 dependency refresh (Recharts 3.10 alone is +5.9 KiB gzip on
+      // the analytics chart, plus Vite+ 1.0 chunking): measured 445.9 KiB raw
+      // / 126.5 KiB gzip.
+      raw: 465_000,
       // Sourced-rail convert-on-drop (GridList MIME + convert RPC) added
       // ~0.3 KiB gzip on top of the React Aria drag runtime already charged
       // here. 112 KiB was 109.4; CI measured 109.7.
-      gzip: 114_000,
+      gzip: 133_000,
     },
     // Desktop-only enhanced search is lazy shell work. Removing the shared
     // Base UI footer menu also made TanStack attribute more of the remaining
@@ -103,7 +114,8 @@ const BUDGETS = {
     // the All-filters sheet, not the shared shell. Anti-slop replaced
     // module mocks with injected list/save seams on those controls;
     // measured 155.7 / 54.7 after that.
-    '/talent/': { raw: 165_000, gzip: 58_000 },
+    // 2026-10 dependency refresh: measured 167.5 KiB raw / 59.0 KiB gzip.
+    '/talent/': { raw: 175_000, gzip: 62_000 },
   },
 };
 

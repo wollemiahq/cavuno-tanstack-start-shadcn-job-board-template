@@ -3,7 +3,6 @@ import { companySalaryPath } from '@cavuno/board/paths';
 import {
   createFileRoute,
   getRouteApi,
-  interpolatePath,
   Link,
   notFound,
 } from '@tanstack/react-router';
@@ -16,6 +15,7 @@ import { getSimilarCompanies } from '../server/queries';
 
 import { toJobCardVM } from '@/board/job-view-model';
 import {
+  companyCategorySalaryPath,
   formatSalaryRange,
   toOverallSalaryVM,
   toSalaryRailVM,
@@ -141,13 +141,7 @@ function CompanyPage() {
   const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
     (category) => ({
       name: category.categoryName,
-      href: interpolatePath({
-        path: '/companies/$companySlug/salaries/$categorySlug',
-        params: {
-          companySlug: company.slug,
-          categorySlug: category.categorySlug,
-        },
-      }).interpolatedPath,
+      href: companyCategorySalaryPath(company.slug, category.categorySlug),
       range:
         formatSalaryRange(
           getLocale(),

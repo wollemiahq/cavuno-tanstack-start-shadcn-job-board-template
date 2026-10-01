@@ -13,6 +13,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SelectedCompanyDetail } from './-selected-company-detail';
 
+import { toOverallSalaryVM } from '@/board/salary-view-model';
+import { m } from '@/paraglide/messages';
 import type { PublicCompanyDetail, PublicJobCard } from '@cavuno/board';
 
 const company = {
@@ -37,42 +39,39 @@ const company = {
 const jobs = {
   object: 'list' as const,
   url: '/companies/acme/jobs',
-  data: Array.from(
-    { length: 5 },
-    (_, index): PublicJobCard => ({
-      id: `job-${index + 1}`,
-      object: 'job_card',
+  data: Array.from({ length: 5 }, (_, index): PublicJobCard => ({
+    id: `job-${index + 1}`,
+    object: 'job_card',
+    customFieldValues: {},
+    slug: `role-${index + 1}`,
+    title: `Role ${index + 1}`,
+    description: '<p>Build useful tools.</p>',
+    publishedAt: null,
+    employmentType: 'full_time',
+    remoteOption: 'hybrid',
+    remoteLocationLabel: null,
+    remoteWorldwide: false,
+    remoteWorkPermitCountryCodes: [],
+    locationLabel: 'Sydney',
+    salaryMin: 180_000,
+    salaryMax: 240_000,
+    salaryCurrency: 'USD',
+    salaryTimeframe: 'year',
+    isFeatured: false,
+    isSponsored: false,
+    summary: 'Build useful tools.',
+    company: {
+      slug: 'acme',
+      name: 'Acme',
+      logoUrl: null,
       customFieldValues: {},
-      slug: `role-${index + 1}`,
-      title: `Role ${index + 1}`,
-      description: '<p>Build useful tools.</p>',
-      publishedAt: null,
-      employmentType: 'full_time',
-      remoteOption: 'hybrid',
-      remoteLocationLabel: null,
-      remoteWorldwide: false,
-      remoteWorkPermitCountryCodes: [],
-      locationLabel: 'Sydney',
-      salaryMin: 180_000,
-      salaryMax: 240_000,
-      salaryCurrency: 'USD',
-      salaryTimeframe: 'year',
-      isFeatured: false,
-      isSponsored: false,
-      summary: 'Build useful tools.',
-      company: {
-        slug: 'acme',
-        name: 'Acme',
-        logoUrl: null,
-        customFieldValues: {},
-      },
-      categories: [{ slug: 'engineering', name: 'Engineering' }],
-      skills: [],
-      links: {
-        public: `https://jobs.example/companies/acme/jobs/role-${index + 1}`,
-      },
-    }),
-  ),
+    },
+    categories: [{ slug: 'engineering', name: 'Engineering' }],
+    skills: [],
+    links: {
+      public: `https://jobs.example/companies/acme/jobs/role-${index + 1}`,
+    },
+  })),
   hasMore: false,
   nextCursor: null,
 };
@@ -84,6 +83,16 @@ const salarySummary = {
 };
 
 afterEach(cleanup);
+
+/** The salary card's job-count line, worded by the same view model the card uses. */
+function basedOnJobsText(jobCount: number) {
+  const sample = toOverallSalaryVM(
+    { avgMin: 180_000, avgMax: 240_000, jobCount },
+    'en',
+    'USD',
+  ).stats.at(-1);
+  return `${sample?.label} ${sample?.value}`;
+}
 
 function renderSelectedCompany(
   state: Parameters<typeof SelectedCompanyDetail>[0]['state'],
@@ -139,13 +148,19 @@ describe('SelectedCompanyDetail', () => {
     expect(screen.queryByText('Acme')).toBeNull();
     expect(screen.queryByText('Builds rockets.')).toBeNull();
     expect(
-      screen.queryByRole('link', { name: 'View company' }),
+      screen.queryByRole('link', {
+        name: m.companySearch_viewCompanyLabel(),
+      }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: 'View jobs' }),
+      screen.queryByRole('link', {
+        name: m.companySearch_viewJobsLabel(),
+      }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: 'View salaries' }),
+      screen.queryByRole('link', {
+        name: m.companyDetail_viewSalariesLink(),
+      }),
     ).not.toBeInTheDocument();
 
     loading.unmount();
@@ -157,18 +172,31 @@ describe('SelectedCompanyDetail', () => {
       retry: vi.fn(),
     });
 
-    expect(screen.queryByRole('link', { name: 'View company' })).toBeNull();
     expect(
-      await screen.findByRole('link', { name: 'View jobs' }),
+      screen.queryByRole('link', {
+        name: m.companySearch_viewCompanyLabel(),
+      }),
+    ).toBeNull();
+    expect(
+      await screen.findByRole('link', {
+        name: m.companySearch_viewJobsLabel(),
+      }),
     ).toHaveAttribute('href', '/companies/acme/jobs');
-    expect(screen.getAllByRole('link', { name: 'View salaries' })).toHaveLength(
-      2,
-    );
-    expect(screen.getByRole('link', { name: 'View all jobs' })).toHaveAttribute(
-      'href',
-      '/companies/acme/jobs',
-    );
-    expect(screen.queryByRole('link', { name: 'Visit website' })).toBeNull();
+    expect(
+      screen.getAllByRole('link', {
+        name: m.companyDetail_viewSalariesLink(),
+      }),
+    ).toHaveLength(2);
+    expect(
+      screen.getByRole('link', {
+        name: m.home_viewAllJobsLabel(),
+      }),
+    ).toHaveAttribute('href', '/companies/acme/jobs');
+    expect(
+      screen.queryByRole('link', {
+        name: m.companySearch_visitWebsiteLabel(),
+      }),
+    ).toBeNull();
     expect(screen.getByRole('link', { name: 'acme.example' })).toHaveAttribute(
       'href',
       'https://acme.example',
@@ -179,7 +207,7 @@ describe('SelectedCompanyDetail', () => {
     );
     expect(screen.getByRole('link', { name: 'Role 4' })).toBeVisible();
     expect(screen.queryByRole('link', { name: 'Role 5' })).toBeNull();
-    expect(screen.getByText('Based on 12 jobs')).toBeVisible();
+    expect(screen.getByText(basedOnJobsText(12))).toBeVisible();
   });
 
   it('uses real category salary data when an overall salary is unavailable', async () => {
@@ -204,10 +232,16 @@ describe('SelectedCompanyDetail', () => {
     });
 
     expect(
-      await screen.findAllByRole('link', { name: 'View salaries' }),
+      await screen.findAllByRole('link', {
+        name: m.companyDetail_viewSalariesLink(),
+      }),
     ).toHaveLength(2);
-    expect(screen.queryByRole('link', { name: 'View jobs' })).toBeNull();
+    expect(
+      screen.queryByRole('link', {
+        name: m.companySearch_viewJobsLabel(),
+      }),
+    ).toBeNull();
     expect(screen.getByText('Engineering')).toBeVisible();
-    expect(screen.getByText('Based on 5 jobs')).toBeVisible();
+    expect(screen.getByText(basedOnJobsText(5))).toBeVisible();
   });
 });

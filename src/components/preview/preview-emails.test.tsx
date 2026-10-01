@@ -11,6 +11,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { rewritePreviewEmailLinks } from '../../lib/preview';
+import { m } from '../../paraglide/messages';
 
 import type { PreviewEmail } from '../../lib/preview';
 import type { LoadPreviewEmails } from './preview-emails';
@@ -51,7 +52,9 @@ afterEach(() => {
 
 function openPanel() {
   render(<PreviewEmailsSheet loadEmails={mocks.listSandboxEmails} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Emails' }));
+  fireEvent.click(
+    screen.getByRole('button', { name: m.previewToolbar_emails() }),
+  );
 }
 
 /** The master list — scopes queries so a subject that also appears in the
@@ -122,7 +125,9 @@ describe('PreviewEmailsSheet', () => {
 
     // The newest email opens by default, so the detail metadata block names it.
     const pane = await findDetail();
-    expect(within(pane).getByText('Subject')).toBeInTheDocument();
+    expect(
+      within(pane).getByText(m.previewToolbar_emailsSubject()),
+    ).toBeInTheDocument();
     expect(
       within(pane).getByText('Your magic sign-in link'),
     ).toBeInTheDocument();
@@ -130,7 +135,9 @@ describe('PreviewEmailsSheet', () => {
 
     // The body remains isolated, but narrowly permits user-activated top-level
     // navigation so completion links can leave the mail pane.
-    const frame = within(pane).getByTitle<HTMLIFrameElement>('Email body');
+    const frame = within(pane).getByTitle<HTMLIFrameElement>(
+      m.previewToolbar_emailsBodyLabel(),
+    );
     expect(frame.tagName).toBe('IFRAME');
     expect(frame).toHaveAttribute(
       'sandbox',
@@ -150,12 +157,16 @@ describe('PreviewEmailsSheet', () => {
     );
 
     const pane = await findDetail();
-    expect(await within(pane).findByText('Plain text')).toBeInTheDocument();
+    expect(
+      await within(pane).findByText(m.previewToolbar_emailsPlainText()),
+    ).toBeInTheDocument();
     expect(
       within(pane).getByText(/Verify: https:\/\/board\.test\/verify/),
     ).toBeInTheDocument();
     // No iframe is mounted for a plain-text-only capture.
-    expect(within(pane).queryByTitle('Email body')).toBeNull();
+    expect(
+      within(pane).queryByTitle(m.previewToolbar_emailsBodyLabel()),
+    ).toBeNull();
   });
 
   it('renders the server-retargeted verify link at the local origin, not the board', async () => {
@@ -180,7 +191,9 @@ describe('PreviewEmailsSheet', () => {
     openPanel();
 
     const pane = await findDetail();
-    const frame = within(pane).getByTitle<HTMLIFrameElement>('Email body');
+    const frame = within(pane).getByTitle<HTMLIFrameElement>(
+      m.previewToolbar_emailsBodyLabel(),
+    );
     const srcdoc = frame.getAttribute('srcdoc') ?? '';
     // The link now opens in the running app, path/query preserved…
     expect(srcdoc).toContain(
@@ -200,7 +213,7 @@ describe('PreviewEmailsSheet', () => {
     openPanel();
 
     expect(
-      await screen.findByText('No captured emails yet'),
+      await screen.findByText(m.previewToolbar_emailsEmpty()),
     ).toBeInTheDocument();
     expect(screen.queryByText('Your magic sign-in link')).toBeNull();
   });
@@ -210,10 +223,14 @@ describe('PreviewEmailsSheet', () => {
     openPanel();
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent(/Couldn't load captured emails/i);
+    expect(alert).toHaveTextContent(m.previewToolbar_emailsError());
 
     mocks.listSandboxEmails.mockResolvedValueOnce(emails);
-    fireEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
+    fireEvent.click(
+      within(alert).getByRole('button', {
+        name: m.previewToolbar_emailsRetry(),
+      }),
+    );
 
     await waitFor(() =>
       expect(

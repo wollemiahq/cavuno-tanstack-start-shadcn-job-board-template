@@ -16,6 +16,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+
 import type { UrlSearchInput } from '../lib/pagination';
 
 const mocks = {
@@ -98,7 +100,9 @@ describe('/auth/reset-password continuation', () => {
     );
 
     expect(
-      await screen.findByRole('link', { name: 'Request a new link' }),
+      await screen.findByRole('link', {
+        name: m.authResetPassword_requestNewLinkLabel(),
+      }),
     ).toHaveAttribute(
       'href',
       `/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`,
@@ -121,7 +125,9 @@ describe('/auth/reset-password continuation', () => {
       target: { value: 'strong-password' },
     });
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Update password' }),
+      await screen.findByRole('button', {
+        name: m.authResetPassword_submitLabel(),
+      }),
     );
 
     await waitFor(() =>
@@ -146,14 +152,18 @@ describe('/auth/reset-password continuation', () => {
       target: { value: 'strong-password' },
     });
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Update password' }),
+      await screen.findByRole('button', {
+        name: m.authResetPassword_submitLabel(),
+      }),
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Something went wrong. Try again.',
+      m.candidateAction_errorText(),
     );
     expect(
-      await screen.findByRole('button', { name: 'Update password' }),
+      await screen.findByRole('button', {
+        name: m.authResetPassword_submitLabel(),
+      }),
     ).toBeEnabled();
   });
 
@@ -176,11 +186,13 @@ describe('/auth/reset-password continuation', () => {
       target: { value: 'strong-password' },
     });
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Update password' }),
+      await screen.findByRole('button', {
+        name: m.authResetPassword_submitLabel(),
+      }),
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'This link is invalid or has expired — request a new one.',
+      m.authResetPassword_expiredError(),
     );
     expect(mocks.redirectToSignIn).not.toHaveBeenCalled();
   });

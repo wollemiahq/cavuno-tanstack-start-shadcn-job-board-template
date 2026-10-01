@@ -38,12 +38,10 @@ export function initialProfileSelections(selections: readonly Selection[]) {
       key,
       selections
         .filter((selection) => selection.fieldKey === key)
-        .map(
-          (selection): CollectionChoice => ({
-            id: selection.recordId,
-            name: selection.title,
-          }),
-        ),
+        .map((selection): CollectionChoice => ({
+          id: selection.recordId,
+          name: selection.title,
+        })),
     ]),
   );
 }

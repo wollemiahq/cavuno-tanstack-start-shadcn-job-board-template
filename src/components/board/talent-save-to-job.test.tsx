@@ -10,6 +10,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { TalentSaveToJob } from './talent-save-to-job';
 
 const saveCandidate = vi.fn();
@@ -29,12 +30,16 @@ const lists = [
   { id: 'tl_b', name: 'Frontend list', jobId: 'job_b' },
 ];
 
-function saveTrigger(name: 'Shortlist' | 'Shortlisted' = 'Shortlist') {
-  return screen.getByRole('combobox', { name });
+/** The Shortlist trigger, named by whether the candidate is already saved. */
+function saveTrigger(state: 'save' | 'saved' = 'save') {
+  return screen.getByRole('combobox', {
+    name:
+      state === 'saved' ? m.talentSave_savedLabel() : m.talentSave_saveLabel(),
+  });
 }
 
-async function openSavePicker(name: 'Shortlist' | 'Shortlisted' = 'Shortlist') {
-  const trigger = saveTrigger(name);
+async function openSavePicker(state: 'save' | 'saved' = 'save') {
+  const trigger = saveTrigger(state);
   fireEvent.mouseDown(trigger);
   fireEvent.click(trigger);
 }
@@ -62,7 +67,7 @@ describe('TalentSaveToJob', () => {
       />,
     );
 
-    expect(screen.queryByText('Shortlist for')).toBeNull();
+    expect(screen.queryByText(m.talentSave_jobLabel())).toBeNull();
     await openSavePicker();
     await pickOption('Backend');
     await pickOption('Frontend');
@@ -83,7 +88,7 @@ describe('TalentSaveToJob', () => {
         candidateBoardUserId: 'bu_ada',
       },
     });
-    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
+    expect(saveTrigger('saved')).not.toBeDisabled();
   });
 
   it('asks which destination when the company has only one published job', async () => {
@@ -116,7 +121,7 @@ describe('TalentSaveToJob', () => {
       />,
     );
 
-    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
+    expect(saveTrigger('saved')).not.toBeDisabled();
     expect(saveCandidate).not.toHaveBeenCalled();
   });
 
@@ -132,7 +137,7 @@ describe('TalentSaveToJob', () => {
       />,
     );
 
-    expect(saveTrigger('Shortlist')).not.toBeDisabled();
+    expect(saveTrigger('save')).not.toBeDisabled();
 
     rerender(
       <TalentSaveToJob
@@ -146,7 +151,7 @@ describe('TalentSaveToJob', () => {
       />,
     );
 
-    expect(saveTrigger('Shortlisted')).not.toBeDisabled();
+    expect(saveTrigger('saved')).not.toBeDisabled();
     expect(saveCandidate).not.toHaveBeenCalled();
   });
 

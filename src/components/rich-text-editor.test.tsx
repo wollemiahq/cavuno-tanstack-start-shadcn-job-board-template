@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import {
   createRichTextEditor,
   type RichTextEditorDependencies,
@@ -257,8 +258,8 @@ describe('RichTextEditor', () => {
       screen.getByRole('textbox', { name: 'Job description' }),
     ).toHaveAttribute('contenteditable', 'true');
 
-    const bold = screen.getByRole('button', { name: 'Bold' });
-    const italic = screen.getByRole('button', { name: 'Italic' });
+    const bold = screen.getByRole('button', { name: m.richText_bold() });
+    const italic = screen.getByRole('button', { name: m.richText_italic() });
     expect(bold).toHaveAttribute('aria-pressed', 'true');
     expect(italic).toHaveAttribute('aria-pressed', 'false');
     expect(italic).toHaveAttribute('type', 'button');
@@ -275,7 +276,9 @@ describe('RichTextEditor', () => {
       content: '<p>Initial description</p>',
       immediatelyRender: false,
     });
-    expect(screen.getByText('5 characters left')).toBeInTheDocument();
+    expect(
+      screen.getByText(m.richText_charactersLeft({ count: 5 })),
+    ).toBeInTheDocument();
 
     editorHarness.options?.onUpdate({ editor: editorHarness.editor });
     expect(onChange).toHaveBeenCalledWith('<p>Updated description</p>');
@@ -284,10 +287,14 @@ describe('RichTextEditor', () => {
   it('restores the editor selection and rejects unsafe link schemes', () => {
     renderEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
-    const url = screen.getByRole('textbox', { name: 'URL' });
+    fireEvent.click(screen.getByRole('button', { name: m.richText_unlink() }));
+    const url = screen.getByRole('textbox', {
+      name: m.richText_linkUrlLabel(),
+    });
     fireEvent.change(url, { target: { value: 'javascript:alert(1)' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.richText_linkApply() }),
+    );
 
     expect(editorHarness.calls.setTextSelection).toHaveBeenCalledWith({
       from: 3,
@@ -302,8 +309,8 @@ describe('RichTextEditor', () => {
   it('anchors the link popover to the selected text rather than the toolbar button', async () => {
     renderEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
-    await screen.findByRole('textbox', { name: 'URL' });
+    fireEvent.click(screen.getByRole('button', { name: m.richText_unlink() }));
+    await screen.findByRole('textbox', { name: m.richText_linkUrlLabel() });
 
     // The popover measures its anchor, which resolves to the selection's own
     // document coordinates — not the trigger's.
@@ -325,8 +332,8 @@ describe('RichTextEditor', () => {
     editorHarness.markRange = { from: 2, to: 11 };
     renderEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
-    await screen.findByRole('textbox', { name: 'URL' });
+    fireEvent.click(screen.getByRole('button', { name: m.richText_unlink() }));
+    await screen.findByRole('textbox', { name: m.richText_linkUrlLabel() });
 
     expect(editorHarness.calls.getMarkRange).toHaveBeenCalledWith(
       editorHarness.resolvedFrom,
@@ -344,8 +351,10 @@ describe('RichTextEditor', () => {
   it('applies the link to the saved selection and keeps it after the popover closes', async () => {
     renderEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
-    const url = await screen.findByRole('textbox', { name: 'URL' });
+    fireEvent.click(screen.getByRole('button', { name: m.richText_unlink() }));
+    const url = await screen.findByRole('textbox', {
+      name: m.richText_linkUrlLabel(),
+    });
     fireEvent.change(url, { target: { value: 'example.com/careers' } });
     fireEvent.keyDown(url, { key: 'Enter' });
 
@@ -360,7 +369,7 @@ describe('RichTextEditor', () => {
     });
     await waitFor(() =>
       expect(
-        screen.queryByRole('textbox', { name: 'URL' }),
+        screen.queryByRole('textbox', { name: m.richText_linkUrlLabel() }),
       ).not.toBeInTheDocument(),
     );
   });
@@ -368,13 +377,15 @@ describe('RichTextEditor', () => {
   it('closes on Escape without touching the document', async () => {
     renderEditor();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove link' }));
-    const url = await screen.findByRole('textbox', { name: 'URL' });
+    fireEvent.click(screen.getByRole('button', { name: m.richText_unlink() }));
+    const url = await screen.findByRole('textbox', {
+      name: m.richText_linkUrlLabel(),
+    });
     fireEvent.keyDown(url, { key: 'Escape' });
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('textbox', { name: 'URL' }),
+        screen.queryByRole('textbox', { name: m.richText_linkUrlLabel() }),
       ).not.toBeInTheDocument(),
     );
     expect(editorHarness.calls.setLink).not.toHaveBeenCalled();

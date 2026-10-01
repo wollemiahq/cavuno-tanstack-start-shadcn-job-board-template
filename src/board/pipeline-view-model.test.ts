@@ -1,5 +1,7 @@
+import { formatDate } from '@cavuno/board/format';
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { toPipelineBoardVM } from './pipeline-view-model';
 
 import type { EmployerApplicant, EmployerPipeline } from '@cavuno/board';
@@ -151,9 +153,13 @@ describe('toPipelineBoardVM', () => {
     const card = vm.cards[0]!;
     expect(card.name).toBe('Ada Lovelace');
     expect(card.initials).toBe('AL');
-    expect(card.appliedLabel).toMatch(/Applied/);
+    expect(card.appliedLabel).toBe(
+      m.employerApplicants_appliedLabel({
+        date: formatDate('en', '2026-07-13T00:00:00.000Z')!,
+      }),
+    );
     expect(card.timeline[0]?.text).toBe(
-      'Note: Strong portfolio · Grace Hopper',
+      `${m.employerApplicants_timelineNote({ note: 'Strong portfolio' })} · Grace Hopper`,
     );
   });
 });

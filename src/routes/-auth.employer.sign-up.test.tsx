@@ -10,6 +10,7 @@ import {
 } from './-auth.employer.sign-up';
 
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
 const mocks = {
@@ -47,11 +48,15 @@ describe('/auth/employer/sign-up continuation', () => {
     );
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Continue with Google' }),
+      screen.getByRole('button', {
+        name: m.authSignIn_continueWithGoogleLabel(),
+      }),
     );
     await screen.findByRole('alert');
     fireEvent.click(
-      screen.getByRole('button', { name: 'Continue with LinkedIn' }),
+      screen.getByRole('button', {
+        name: m.authSignIn_continueWithLinkedinLabel(),
+      }),
     );
 
     for (const [index, provider] of ['google', 'linkedin'].entries()) {
@@ -78,21 +83,29 @@ describe('/auth/employer/sign-up continuation', () => {
         invalidate={mocks.invalidate}
       />,
     );
-    fireEvent.change(screen.getByLabelText('Name'), {
+    fireEvent.change(screen.getByLabelText(m.authEmployerSignUp_nameLabel()), {
       target: { value: 'Ada Employer' },
     });
-    fireEvent.change(screen.getByLabelText('Work email'), {
-      target: { value: 'ada@company.example' },
-    });
-    fireEvent.change(screen.getByLabelText('Password'), {
-      target: { value: 'correct-horse' },
-    });
+    fireEvent.change(
+      screen.getByLabelText(m.authEmployerSignUp_workEmailLabel()),
+      {
+        target: { value: 'ada@company.example' },
+      },
+    );
+    fireEvent.change(
+      screen.getByLabelText(m.authEmployerSignUp_passwordLabel()),
+      {
+        target: { value: 'correct-horse' },
+      },
+    );
     fireEvent.click(
-      screen.getByRole('button', { name: 'Create employer account' }),
+      screen.getByRole('button', {
+        name: m.authEmployerSignUp_submitLabel(),
+      }),
     );
 
     const action = await screen.findByRole('link', {
-      name: 'Go to employer dashboard',
+      name: m.authEmployerSignUp_goToDashboardLabel(),
     });
     expect(action.getAttribute('href')).toBe(
       buildVerifyEmailRedirectPath('/employers/dashboard'),

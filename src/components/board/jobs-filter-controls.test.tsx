@@ -15,8 +15,11 @@ import { JobsFilterControls } from './jobs-filter-controls';
 
 import type { CustomFilterField } from '@/lib/custom-field-filters';
 import { m } from '@/paraglide/messages';
+import { containing } from '@/test/text';
 
 afterEach(cleanup);
+
+/** Matches an accessible name that contains the catalog label. */
 
 const customFields: CustomFilterField[] = [
   {
@@ -43,17 +46,20 @@ describe('JobsFilterControls', () => {
       />,
     );
 
-    const sort = screen.getByRole('combobox', { name: 'Sort' });
-    expect(sort).toHaveTextContent('Sort:');
-    expect(sort).toHaveTextContent('Relevance');
+    const sort = screen.getByRole('combobox', {
+      name: m.jobSearch_sortPlaceholder(),
+    });
+    expect(sort).toHaveTextContent(`${m.jobSearch_sortPlaceholder()}:`);
+    expect(sort).toHaveTextContent(m.jobCard_aiRankedLabel());
 
     fireEvent.click(sort);
-    expect(screen.getByRole('option', { name: 'Relevance' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    expect(
+      screen.getByRole('option', { name: m.jobCard_aiRankedLabel() }),
+    ).toHaveAttribute('aria-selected', 'true');
 
-    const dateOption = screen.getByRole('option', { name: 'Date' });
+    const dateOption = screen.getByRole('option', {
+      name: m.jobCard_sortNewestLabel(),
+    });
     fireEvent.pointerDown(dateOption, { pointerType: 'mouse' });
     fireEvent.click(dateOption);
 
@@ -76,10 +82,14 @@ describe('JobsFilterControls', () => {
       />,
     );
 
-    const trigger = screen.getByRole('button', { name: /All filters/ });
+    const trigger = screen.getByRole('button', {
+      name: containing(m.jobSearch_allFiltersLabel()),
+    });
     expect(trigger).toHaveTextContent('1');
     fireEvent.click(trigger);
-    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    const sheet = screen.getByRole('dialog', {
+      name: m.jobSearch_allFiltersLabel(),
+    });
     expect(sheet).toHaveAccessibleDescription(
       m.jobSearch_filterSheetDescriptionWithCustomFields(),
     );
@@ -95,7 +105,9 @@ describe('JobsFilterControls', () => {
       within(sheet).getByRole('checkbox', { name: 'Four-day week' }),
     );
     fireEvent.click(
-      within(sheet).getByRole('button', { name: 'Apply filters' }),
+      within(sheet).getByRole('button', {
+        name: m.jobSearch_applyFiltersLabel(),
+      }),
     );
 
     expect(onChange).toHaveBeenCalledWith(
@@ -126,7 +138,9 @@ describe('JobsFilterControls', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: m.jobSearch_resetLabel() }),
+    );
 
     const next = onChange.mock.calls[0]?.[0];
     expect(next).toMatchObject({ remoteOption: undefined });
@@ -143,8 +157,14 @@ describe('JobsFilterControls', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /All filters/ }));
-    const sheet = screen.getByRole('dialog', { name: 'All filters' });
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: containing(m.jobSearch_allFiltersLabel()),
+      }),
+    );
+    const sheet = screen.getByRole('dialog', {
+      name: m.jobSearch_allFiltersLabel(),
+    });
     expect(sheet).toHaveAccessibleDescription(
       m.jobSearch_filterSheetDescription(),
     );

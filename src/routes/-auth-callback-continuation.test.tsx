@@ -10,6 +10,7 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { MagicLinkView } from './-auth.magic-link';
 import {
   OAuthCompleteView,
@@ -78,11 +79,11 @@ describe('auth callback continuation', () => {
   );
 
   it.each([
-    ['magic-link', MagicLinkRoute],
-    ['oauth-complete', OAuthCompleteRoute],
+    ['magic-link', MagicLinkRoute, m.authMagicLink_signInLabel],
+    ['oauth-complete', OAuthCompleteRoute, m.authOauthComplete_signInLabel],
   ] as const)(
     'keeps returnTo on the %s recovery link',
-    async (_name, route) => {
+    async (_name, route, signInLabel) => {
       const returnTo = '/jobs?q=design&selectedJob=product-designer';
       renderRouted(
         route === MagicLinkRoute ? (
@@ -93,7 +94,7 @@ describe('auth callback continuation', () => {
       );
 
       expect(
-        await screen.findByRole('link', { name: 'Sign in' }),
+        await screen.findByRole('link', { name: signInLabel() }),
       ).toHaveAttribute(
         'href',
         `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,

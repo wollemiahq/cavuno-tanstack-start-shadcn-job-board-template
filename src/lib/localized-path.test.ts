@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { baseLocale } from '../paraglide/runtime';
 import {
   delocalizeSegments,
   localizePath,
@@ -7,21 +8,35 @@ import {
   stripLocalePrefix,
 } from './localized-path';
 
+/** The board language serves canonical unprefixed paths; every other locale
+ * gets its prefix and translated section. */
+function localized(locale: string, canonical: string, translated: string) {
+  return locale === baseLocale ? canonical : translated;
+}
+
 describe('localized route slugs', () => {
   it('localizes the section segment per locale', () => {
-    expect(localizePath('/jobs', { locale: 'fr' })).toBe('/fr/emplois');
+    expect(localizePath('/jobs', { locale: 'fr' })).toBe(
+      localized('fr', '/jobs', '/fr/emplois'),
+    );
     expect(localizePath('/jobs/skills/react', { locale: 'fr' })).toBe(
-      '/fr/emplois/skills/react',
+      localized('fr', '/jobs/skills/react', '/fr/emplois/skills/react'),
     );
     expect(localizePath('/companies', { locale: 'fr' })).toBe(
-      '/fr/entreprises',
+      localized('fr', '/companies', '/fr/entreprises'),
     );
-    expect(localizePath('/salaries', { locale: 'de' })).toBe('/de/gehaelter');
-    expect(localizePath('/talent', { locale: 'de' })).toBe('/de/talente');
+    expect(localizePath('/salaries', { locale: 'de' })).toBe(
+      localized('de', '/salaries', '/de/gehaelter'),
+    );
+    expect(localizePath('/talent', { locale: 'de' })).toBe(
+      localized('de', '/talent', '/de/talente'),
+    );
     // German keeps the anglicism for jobs.
-    expect(localizePath('/jobs', { locale: 'de' })).toBe('/de/jobs');
+    expect(localizePath('/jobs', { locale: 'de' })).toBe(
+      localized('de', '/jobs', '/de/jobs'),
+    );
     // Base locale: no prefix, canonical segments.
-    expect(localizePath('/jobs', { locale: 'en' })).toBe('/jobs');
+    expect(localizePath('/jobs', { locale: baseLocale })).toBe('/jobs');
   });
 
   it('delocalizes translated segments back to canonical', () => {
@@ -66,7 +81,11 @@ describe('edge shapes', () => {
 
   it('preserves query and hash through both directions', () => {
     expect(localizePath('/jobs?q=react&page=2#results', { locale: 'fr' })).toBe(
-      '/fr/emplois?q=react&page=2#results',
+      localized(
+        'fr',
+        '/jobs?q=react&page=2#results',
+        '/fr/emplois?q=react&page=2#results',
+      ),
     );
     expect(delocalizeSegments('/fr/emplois?q=react#results')).toBe(
       '/fr/jobs?q=react#results',
@@ -79,6 +98,12 @@ describe('edge shapes', () => {
     ).toBe('/fr/jobs/locations/berlin-germany/skills/react');
     expect(
       localizePath('/companies/acme/jobs/vp-of-growth', { locale: 'de' }),
-    ).toBe('/de/unternehmen/acme/jobs/vp-of-growth');
+    ).toBe(
+      localized(
+        'de',
+        '/companies/acme/jobs/vp-of-growth',
+        '/de/unternehmen/acme/jobs/vp-of-growth',
+      ),
+    );
   });
 });
