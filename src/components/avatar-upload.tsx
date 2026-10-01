@@ -26,7 +26,7 @@ export function AvatarUpload({
   displayName: string | null;
 }) {
   const router = useRouter();
-  const { refreshUser } = useRootSession();
+  const { refreshSession } = useRootSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
 
@@ -60,7 +60,7 @@ export function AvatarUpload({
             }
             setStatus('idle');
             await reconcileCommittedAction(async () => {
-              await Promise.all([router.invalidate(), refreshUser()]);
+              await Promise.all([router.invalidate(), refreshSession()]);
             });
             if (inputRef.current) inputRef.current.value = '';
           }}

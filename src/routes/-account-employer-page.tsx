@@ -101,7 +101,7 @@ function EmployerProfileForm({
   dependencies: EmployerAccountDependencies;
 }) {
   const router = useRouter();
-  const { refreshUser } = useRootSession();
+  const { refreshSession } = useRootSession();
   const [displayName, setDisplayName] = useState(storedName);
   const [saving, setSaving] = useState(false);
   const [missingName, setMissingName] = useState(false);
@@ -124,7 +124,7 @@ function EmployerProfileForm({
     setSaving(false);
     void dependencies.toastActionSuccess();
     await reconcileCommittedAction(async () => {
-      await Promise.all([router.invalidate(), refreshUser()]);
+      await Promise.all([router.invalidate(), refreshSession()]);
     }, dependencies.toastActionReconciliationError);
   }
 

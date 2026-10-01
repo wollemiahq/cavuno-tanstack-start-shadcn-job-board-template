@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 
+import { useRootSession } from '../components/root-session';
 import { m } from '../paraglide/messages';
 import {
   claimCompany,
@@ -58,6 +59,7 @@ function EmployerDashboard() {
   const companies = Route.useLoaderData();
   const { add, verified } = Route.useSearch();
   const router = useRouter();
+  const { refreshSession } = useRootSession();
   const consumeVerificationOutcome = useCallback(() => {
     void router.navigate({
       to: '/employers/dashboard',
@@ -76,7 +78,9 @@ function EmployerDashboard() {
         searchCompanies,
         claimCompany,
         createCompany,
-        invalidate: () => router.invalidate(),
+        invalidate: async () => {
+          await Promise.all([router.invalidate(), refreshSession()]);
+        },
         navigateToOnboarding: (slug) =>
           router.navigate({
             to: '/employers/onboarding/$slug',

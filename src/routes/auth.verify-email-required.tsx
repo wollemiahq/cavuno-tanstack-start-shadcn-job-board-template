@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-router';
 
 import { ResumeUpload } from '../components/resume-upload';
+import { useRootSession } from '../components/root-session';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 import { resendOtp, verifyOtpCode } from '../server/auth';
@@ -41,6 +42,26 @@ export function isJobMatchesDestination(returnTo: string): boolean {
   return pathname === '/matches' || /^\/[^/]+\/matches$/.test(pathname);
 }
 
+/**
+ * Builds the view's `invalidate`. After a successful code (no `sync`) the
+ * root session still holds `emailVerified: false`, so it is re-read alongside
+ * the loaders; otherwise save gates and the messages dock stay stale. A failed
+ * code (`sync`) only reconciles lockout state and must not report a refresh
+ * failure over the typed error.
+ */
+export function verifyEmailInvalidate(
+  invalidateRouter: (options?: { sync: true }) => Promise<void>,
+  refreshSession: () => Promise<void>,
+): (sync?: boolean) => Promise<void> {
+  return async (sync) => {
+    if (sync) {
+      await invalidateRouter({ sync: true });
+      return;
+    }
+    await Promise.all([invalidateRouter(), refreshSession()]);
+  };
+}
+
 export const Route = createFileRoute('/auth/verify-email-required')({
   validateSearch: (search: UrlSearchInput) => ({
     returnTo: candidateReturnTo(search.returnTo),
@@ -66,6 +87,7 @@ export const Route = createFileRoute('/auth/verify-email-required')({
 
 function VerifyEmailRequiredPage() {
   const router = useRouter();
+  const { refreshSession } = useRootSession();
   const search = Route.useSearch();
   const { board } = rootApi.useLoaderData();
   const { emailVerified, role, resume, resumeOnboardingDismissed, userId } =
@@ -87,9 +109,10 @@ function VerifyEmailRequiredPage() {
       updateNotificationPreferenceAction={async (input) => {
         await updateNotificationPreference(input);
       }}
-      invalidate={async (sync) => {
-        await router.invalidate(sync ? { sync: true } : undefined);
-      }}
+      invalidate={verifyEmailInvalidate(
+        (options) => router.invalidate(options),
+        refreshSession,
+      )}
       navigate={async (href) => {
         let recommendationsEnabled = jobRecommendationsEnabled;
         if (isJobMatchesDestination(href)) {

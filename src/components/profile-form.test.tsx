@@ -37,12 +37,14 @@ import {
   type TalentProfileFields,
 } from './profile-form';
 import {
+  EMPTY_ROOT_PREVIEW,
   RootSessionProvider,
   type RootSessionDependencies,
   useRootSession,
 } from './root-session';
 
 import { m } from '@/paraglide/messages';
+import { EMPTY_GRANT } from '@/server/talent-access';
 
 async function renderWithRouter(node: React.ReactNode) {
   const rootRoute = createRootRoute();
@@ -728,7 +730,11 @@ describe('ProfileForm — signed-in session refresh', () => {
         .mockResolvedValueOnce({
           user: { ...sessionUser, displayName: 'Bree Example' },
         }),
-      getEntitlements: vi.fn().mockResolvedValue(null),
+      getEntitlements: vi.fn().mockResolvedValue({
+        preview: EMPTY_ROOT_PREVIEW,
+        hasGrant: false,
+        talentAccess: EMPTY_GRANT,
+      }),
       getCompanies: vi.fn().mockResolvedValue({ data: [] }),
       resolveHasAccessGrant: vi.fn().mockReturnValue(false),
     };

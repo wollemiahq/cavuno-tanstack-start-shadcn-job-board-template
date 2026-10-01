@@ -285,7 +285,7 @@ export function ProfileForm({
   } satisfies VisibleToLabels;
 
   const router = useRouter();
-  const { refreshUser } = useRootSession();
+  const { refreshSession } = useRootSession();
   const [form, setForm] = useState<FormState>(() => toForm(profile));
   const countries = countryOptions(language);
   const [status, setStatus] = useState<Status>('idle');
@@ -553,7 +553,7 @@ export function ProfileForm({
     setStatus('idle');
     void dependencies.toastActionSuccess();
     await reconcileCommittedAction(async () => {
-      await Promise.all([router.invalidate(), refreshUser()]);
+      await Promise.all([router.invalidate(), refreshSession()]);
     }, dependencies.toastActionReconciliationError);
   }
 

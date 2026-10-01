@@ -169,16 +169,24 @@ describe('RootSessionProvider', () => {
     expect(dependencies.getCompanies).not.toHaveBeenCalled();
   });
 
-  describe('refreshUser', () => {
+  describe('refreshSession', () => {
     function RefreshProbe() {
       const session = useRootSession();
       return (
         <>
           <output data-testid="name">{session.user?.displayName ?? ''}</output>
+          <output data-testid="refreshed">
+            {JSON.stringify({
+              emailVerified: session.user?.emailVerified ?? null,
+              companyIds:
+                session.employerCompanies?.map(({ id }) => id) ?? null,
+              hasAccessGrant: session.hasAccessGrant,
+            })}
+          </output>
           <button
             type="button"
             onClick={() => {
-              session.refreshUser().catch(() => {
+              session.refreshSession().catch(() => {
                 document.body.dataset.refreshFailed = 'true';
               });
             }}
@@ -196,6 +204,8 @@ describe('RootSessionProvider', () => {
         </RootSessionProvider>,
       );
     }
+
+    const unverifiedUser = { ...verifiedUser, emailVerified: false };
 
     afterEach(() => {
       delete document.body.dataset.refreshFailed;
@@ -220,6 +230,38 @@ describe('RootSessionProvider', () => {
       await waitFor(() =>
         expect(screen.getByTestId('name')).toHaveTextContent('Grace Hopper'),
       );
+      expect(document.body.dataset.refreshFailed).toBeUndefined();
+    });
+
+    it('loads companies and re-applies entitlements once the user is verified', async () => {
+      const dependencies = createDependencies({
+        getSessionShell: vi
+          .fn()
+          .mockResolvedValueOnce({ user: unverifiedUser })
+          .mockResolvedValueOnce({ user: verifiedUser }),
+        getCompanies: vi.fn().mockResolvedValue({ data: [membership] }),
+        resolveHasAccessGrant: vi
+          .fn()
+          .mockReturnValueOnce(false)
+          .mockReturnValueOnce(true),
+      });
+      renderProbe(dependencies);
+      await waitFor(() =>
+        expect(screen.getByTestId('refreshed')).toHaveTextContent(
+          '{"emailVerified":false,"companyIds":null,"hasAccessGrant":false}',
+        ),
+      );
+      expect(dependencies.getEntitlements).toHaveBeenCalledOnce();
+
+      await act(async () => screen.getByRole('button').click());
+
+      await waitFor(() =>
+        expect(screen.getByTestId('refreshed')).toHaveTextContent(
+          '{"emailVerified":true,"companyIds":["membership-acme"],"hasAccessGrant":true}',
+        ),
+      );
+      expect(dependencies.getEntitlements).toHaveBeenCalledTimes(2);
+      expect(document.body.dataset.refreshFailed).toBeUndefined();
     });
 
     it('keeps the user and rejects when the re-read has no user', async () => {
@@ -241,6 +283,68 @@ describe('RootSessionProvider', () => {
       );
       expect(screen.getByTestId('name')).toHaveTextContent('Ada Lovelace');
     });
+
+    it.each([
+      [
+        'companies',
+        {
+          getCompanies: vi
+            .fn()
+            .mockResolvedValueOnce({ data: [membership] })
+            .mockRejectedValueOnce(new Error('unavailable')),
+          getEntitlements: vi.fn().mockResolvedValue({
+            preview: EMPTY_ROOT_PREVIEW,
+            hasGrant: true,
+            talentAccess: EMPTY_GRANT,
+          }),
+        },
+      ],
+      [
+        'entitlements',
+        {
+          getCompanies: vi.fn().mockResolvedValue({ data: [membership] }),
+          getEntitlements: vi
+            .fn()
+            .mockResolvedValueOnce({
+              preview: EMPTY_ROOT_PREVIEW,
+              hasGrant: true,
+              talentAccess: EMPTY_GRANT,
+            })
+            .mockRejectedValueOnce(new Error('unavailable')),
+        },
+      ],
+    ])(
+      'keeps the current %s, applies the new user, and rejects when that read fails',
+      async (_label, overrides) => {
+        const dependencies = createDependencies({
+          getSessionShell: vi
+            .fn()
+            .mockResolvedValueOnce({ user: verifiedUser })
+            .mockResolvedValueOnce({
+              user: { ...verifiedUser, displayName: 'Grace Hopper' },
+            }),
+          getCompanies: overrides.getCompanies,
+          getEntitlements: overrides.getEntitlements,
+          resolveHasAccessGrant: vi.fn().mockReturnValue(true),
+        });
+        renderProbe(dependencies);
+        await waitFor(() =>
+          expect(screen.getByTestId('refreshed')).toHaveTextContent(
+            '{"emailVerified":true,"companyIds":["membership-acme"],"hasAccessGrant":true}',
+          ),
+        );
+
+        await act(async () => screen.getByRole('button').click());
+
+        await waitFor(() =>
+          expect(document.body.dataset.refreshFailed).toBe('true'),
+        );
+        expect(screen.getByTestId('name')).toHaveTextContent('Grace Hopper');
+        expect(screen.getByTestId('refreshed')).toHaveTextContent(
+          '{"emailVerified":true,"companyIds":["membership-acme"],"hasAccessGrant":true}',
+        );
+      },
+    );
   });
 
   it('stops the session chain after unmount', async () => {

@@ -67,9 +67,17 @@ import {
   isJobMatchesDestination,
   resolveVerifiedDestination,
   Route,
+  verifyEmailInvalidate,
 } from './auth.verify-email-required';
 
+import {
+  EMPTY_ROOT_PREVIEW,
+  RootSessionProvider,
+  type RootSessionDependencies,
+  useRootSession,
+} from '@/components/root-session';
 import { m } from '@/paraglide/messages';
+import { EMPTY_GRANT } from '@/server/talent-access';
 
 const emptyResume: Resume = {
   object: 'resume',
@@ -347,6 +355,116 @@ describe('/auth/verify-email-required search contract', () => {
         name: m.authVerifyEmailRequired_verifyLabel(),
       }),
     ).toBeNull();
+  });
+});
+
+describe('/auth/verify-email-required session refresh', () => {
+  const candidate = {
+    id: 'candidate-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'candidate@example.test',
+    displayName: 'Ada Lovelace',
+    emailVerified: false,
+    hasPassword: true,
+  } as const;
+
+  function SessionVerifiedPage() {
+    const { user, refreshSession } = useRootSession();
+    return (
+      <>
+        <output data-testid="session-verified">
+          {String(user?.emailVerified ?? null)}
+        </output>
+        <VerifyEmailRequiredView
+          emailVerified={false}
+          role="candidate"
+          resume={emptyResume}
+          resumeOnboardingDismissed={false}
+          userId="candidate-1"
+          returnTo="/jobs"
+          jobRecommendationsEnabled
+          verifyOtpCodeAction={mocks.verifyOtpCode}
+          resendOtpAction={mocks.resendOtp}
+          updateNotificationPreferenceAction={
+            mocks.updateNotificationPreference
+          }
+          invalidate={verifyEmailInvalidate(mocks.invalidate, refreshSession)}
+          navigate={mocks.navigate}
+          reportActionError={mocks.toastActionError}
+          reportReconciliationError={mocks.toastActionReconciliationError}
+          renderResumeUpload={() => <p>Resume dropzone</p>}
+        />
+      </>
+    );
+  }
+
+  function renderWithSession(
+    getSessionShell: RootSessionDependencies['getSessionShell'],
+  ) {
+    const dependencies: RootSessionDependencies = {
+      getSessionShell,
+      getEntitlements: vi.fn().mockResolvedValue({
+        preview: EMPTY_ROOT_PREVIEW,
+        hasGrant: false,
+        talentAccess: EMPTY_GRANT,
+      }),
+      getCompanies: vi.fn().mockResolvedValue({ data: [] }),
+      resolveHasAccessGrant: vi.fn().mockReturnValue(false),
+    };
+    return render(
+      <RootSessionProvider candidatePaywall={false} dependencies={dependencies}>
+        <SessionVerifiedPage />
+      </RootSessionProvider>,
+    );
+  }
+
+  it('refreshes the signed-in session after a successful code so it reads as verified', async () => {
+    mocks.verifyOtpCode.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockResolvedValue(undefined);
+    const { container } = renderWithSession(
+      vi
+        .fn()
+        .mockResolvedValueOnce({ user: candidate })
+        .mockResolvedValueOnce({
+          user: { ...candidate, emailVerified: true },
+        }),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId('session-verified')).toHaveTextContent('false'),
+    );
+
+    fireEvent.change(container.querySelector('input[name="code"]')!, {
+      target: { value: '123456' },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('session-verified')).toHaveTextContent('true'),
+    );
+    expect(mocks.invalidate).toHaveBeenCalledOnce();
+    expect(mocks.invalidate).not.toHaveBeenCalledWith({ sync: true });
+    expect(mocks.toastActionReconciliationError).not.toHaveBeenCalled();
+  });
+
+  it('does not refresh the session after a failed code', async () => {
+    mocks.verifyOtpCode.mockResolvedValue({
+      ok: false,
+      message: 'Invalid verification code',
+    });
+    mocks.invalidate.mockResolvedValue(undefined);
+    const getSessionShell = vi.fn().mockResolvedValue({ user: candidate });
+    const { container } = renderWithSession(getSessionShell);
+    await waitFor(() => expect(getSessionShell).toHaveBeenCalledOnce());
+
+    fireEvent.change(container.querySelector('input[name="code"]')!, {
+      target: { value: '123456' },
+    });
+
+    await waitFor(() =>
+      expect(mocks.invalidate).toHaveBeenCalledWith({ sync: true }),
+    );
+    expect(getSessionShell).toHaveBeenCalledOnce();
+    expect(mocks.toastActionReconciliationError).not.toHaveBeenCalled();
   });
 });
 

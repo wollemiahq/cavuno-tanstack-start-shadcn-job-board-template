@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 
+import { useRootSession } from '../components/root-session';
 import { m } from '../paraglide/messages';
 import { cancelClaim, sendWorkEmail } from '../server/employers';
 import {
@@ -30,6 +31,7 @@ function OnboardingPage() {
   const { membership } = Route.useLoaderData();
   const { slug } = Route.useParams();
   const router = useRouter();
+  const { refreshSession } = useRootSession();
   return (
     <EmployerOnboardingPageView
       membership={membership}
@@ -37,7 +39,9 @@ function OnboardingPage() {
       dependencies={{
         sendWorkEmail,
         cancelClaim,
-        invalidate: () => router.invalidate(),
+        invalidate: async () => {
+          await Promise.all([router.invalidate(), refreshSession()]);
+        },
         navigateToDashboard: () =>
           router.navigate({ to: '/employers/dashboard' }),
         showActionError: toastActionError,

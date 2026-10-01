@@ -55,11 +55,14 @@ export type RootSessionValue = {
 type RootSessionContextValue = RootSessionValue & {
   clearSession: () => void;
   /**
-   * Re-reads the signed-in user after a write that changes it (name, avatar).
-   * `router.invalidate()` re-runs loaders but not this provider, so without
-   * it the header and `/matches` keep the user as it was at first paint.
+   * Re-reads everything this provider holds (user, employer memberships,
+   * entitlements) after a write that changes it: name, avatar, email
+   * verification, company create/claim/cancel. `router.invalidate()` re-runs
+   * loaders but not this provider, so without it the header, messages dock,
+   * save gates and `/matches` keep the session as it was at first paint.
+   * Rejects when any read fails; slices that did resolve are still applied.
    */
-  refreshUser: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 };
 
 export interface RootSessionDependencies {
@@ -91,8 +94,18 @@ const RootSessionContext = createContext<RootSessionContextValue>({
   preview: EMPTY_ROOT_PREVIEW,
   ready: false,
   clearSession: () => undefined,
-  refreshUser: async () => undefined,
+  refreshSession: async () => undefined,
 });
+
+/** Validates a company list response; throws on a malformed one. */
+function employerCompaniesFrom(
+  result: Awaited<ReturnType<RootSessionDependencies['getCompanies']>>,
+): CompanyMembership[] {
+  if (!result || !Array.isArray(result.data)) {
+    throw new TypeError('Invalid employer companies response');
+  }
+  return result.data;
+}
 
 /**
  * Loads signed-in chrome (user, employer memberships, paywall grant, preview
@@ -136,10 +149,7 @@ export function RootSessionProvider({
             .getCompanies()
             .then((result) => {
               if (cancelled) return;
-              if (!result || !Array.isArray(result.data)) {
-                throw new TypeError('Invalid employer companies response');
-              }
-              const employerCompanies = result.data;
+              const employerCompanies = employerCompaniesFrom(result);
               setSession((current) => ({
                 ...current,
                 employerCompanies,
@@ -182,17 +192,44 @@ export function RootSessionProvider({
       talentAccess: EMPTY_TALENT_ACCESS,
     }));
   }, []);
-  const refreshUser = useCallback(async () => {
+  const refreshSession = useCallback(async () => {
     const data = await dependencies.getSessionShell();
     // Only called after a signed-in write succeeded, so a missing user is a
-    // failed read, not a sign-out: keep the current user and report it.
+    // failed read, not a sign-out: keep the current session and report it.
     if (!data?.user) throw new Error('Session user refresh failed');
     const user = data.user;
     setSession((current) => ({ ...current, user }));
-  }, [dependencies]);
+    // Same gate as the mount chain: memberships are only readable once the
+    // email is verified. A failed slice keeps its current value.
+    const [companies, entitlements] = await Promise.allSettled([
+      user.emailVerified
+        ? dependencies.getCompanies().then(employerCompaniesFrom)
+        : Promise.resolve(null),
+      dependencies.getEntitlements().then((result) => {
+        if (!result) throw new TypeError('Invalid entitlements response');
+        return result;
+      }),
+    ]);
+    const refreshed: Partial<RootSessionValue> = {};
+    if (companies.status === 'fulfilled') {
+      refreshed.employerCompanies = companies.value;
+    }
+    if (entitlements.status === 'fulfilled') {
+      refreshed.hasAccessGrant = dependencies.resolveHasAccessGrant(
+        candidatePaywall,
+        entitlements.value.hasGrant,
+      );
+      refreshed.talentAccess = entitlements.value.talentAccess;
+      refreshed.preview = entitlements.value.preview;
+    }
+    setSession((current) => ({ ...current, ...refreshed }));
+    if (companies.status === 'rejected' || entitlements.status === 'rejected') {
+      throw new Error('Session refresh failed');
+    }
+  }, [candidatePaywall, dependencies]);
   const value = useMemo(
-    () => ({ ...session, clearSession, refreshUser }),
-    [clearSession, refreshUser, session],
+    () => ({ ...session, clearSession, refreshSession }),
+    [clearSession, refreshSession, session],
   );
 
   return (
