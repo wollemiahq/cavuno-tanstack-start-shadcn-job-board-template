@@ -276,6 +276,35 @@ function paraglideSkipCompiledStart(
   return Array.isArray(plugin) ? plugin.map(wrap) : wrap(plugin);
 }
 
+/**
+ * TanStack devtools' package tooling, which the hosted preview drops.
+ *
+ * This plugin runs `pnpm outdated` at every dev-server start, which
+ * fetches registry metadata for every dependency (and, under Vite+, the
+ * pinned pnpm first). It also installs or bumps packages when asked. All
+ * of it serves the Packages panel of the `TanStackDevtools` shell. This
+ * app does not mount that shell, and nothing in the builder's sandbox
+ * reads the result. Every preview boot still paid for it: a pnpm
+ * download, about 80 registry requests, and a few seconds of CPU beside
+ * the first render. Local `pnpm dev` keeps it.
+ */
+const DEVTOOLS_PACKAGE_TOOLS = '@tanstack/devtools:event-client-setup';
+
+function devtoolsPlugins(): Plugin[] {
+  const hostedPreview = process.env.CAVUNO_PREVIEW_PROXIED === '1';
+  const plugins = devtools({
+    // Console piping POSTs every browser console call to
+    // /__tsd/console-pipe on the dev server. Behind the hosted preview
+    // proxy nobody reads that terminal, and a failing pipe request looks
+    // like a page error. Local `pnpm dev` keeps it.
+    consolePiping: { enabled: !hostedPreview },
+  });
+  if (!hostedPreview) {
+    return plugins;
+  }
+  return plugins.filter((plugin) => plugin.name !== DEVTOOLS_PACKAGE_TOOLS);
+}
+
 function viteConfig(command: ConfigEnv['command']) {
   const paraglideCompile: ParaglideCompileOptions = {
     // Production matches TanStack's Start + Paraglide reference: one
@@ -379,15 +408,7 @@ function viteConfig(command: ConfigEnv['command']) {
       command === 'serve'
         ? paraglideSkipCompiledStart(paraglide, paraglideOptions)
         : paraglide,
-      devtools({
-        // Console piping POSTs every browser console call to
-        // /__tsd/console-pipe on the dev server. Behind the hosted preview
-        // proxy nobody reads that terminal, and a failing pipe request looks
-        // like a page error. Local `pnpm dev` keeps it.
-        consolePiping: {
-          enabled: process.env.CAVUNO_PREVIEW_PROXIED !== '1',
-        },
-      }),
+      devtoolsPlugins(),
       cloudflare({ viteEnvironment: { name: 'ssr' } }),
       tailwindcss(),
       tanstackStart({
