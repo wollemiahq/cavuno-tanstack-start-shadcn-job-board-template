@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_emailLabel": "Recibir nuevas coincidencias por correo",
+  "accountRecommended_emailLoadError": "No se pudo cargar tu preferencia de correo.",
+  "accountRecommended_emailWaitlistedText": "Estás en la lista de espera para recibir correos con empleos que coincidan con tu perfil.",
   "accountRecommended_employerProfileLink": "Ir a tu perfil",
   "accountRecommended_employerText": "Tu cuenta de empresa no tiene un perfil de candidato con el que comparar empleos.",
   "accountRecommended_employerTitle": "Las coincidencias de empleo son para cuentas de candidatos",

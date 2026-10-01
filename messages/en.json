@@ -91,6 +91,9 @@
       }
     }
   ],
+  "accountRecommended_emailLabel": "Email me new matches",
+  "accountRecommended_emailLoadError": "Couldn’t load your email preference.",
+  "accountRecommended_emailWaitlistedText": "You’re on the waiting list for match emails.",
   "accountRecommended_employerProfileLink": "Go to your profile",
   "accountRecommended_employerText": "Your employer account has no job seeker profile to match jobs against.",
   "accountRecommended_employerTitle": "Job matches are for job seeker accounts",
