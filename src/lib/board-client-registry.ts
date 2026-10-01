@@ -11,11 +11,15 @@ export interface BoardClientRegistryDependencies<
   Refresher,
   RequestHook,
 > {
-  createClient: (options: {
-    baseUrl: string;
-    board: string;
-    onRequest: RequestHook;
-  }) => Client;
+  /** `source` scopes per-client session handling (cookie + refresher). */
+  createClient: (
+    options: {
+      baseUrl: string;
+      board: string;
+      onRequest: RequestHook;
+    },
+    source: DataSource,
+  ) => Client;
   createRefresher: (client: Client) => Refresher;
   getDataSource: () => DataSource;
   getServerEnv: () => BoardClientRegistryEnv;
@@ -31,18 +35,17 @@ export function createBoardClientRegistry<Client, Refresher, RequestHook>(
   let primaryRefresher: Refresher | null = null;
   let demoRefresher: Refresher | null = null;
 
-  function createClient(board: string): Client {
+  function createClient(board: string, source: DataSource): Client {
     const { apiUrl } = dependencies.getServerEnv();
-    return dependencies.createClient({
-      baseUrl: apiUrl,
-      board,
-      onRequest: dependencies.onRequest,
-    });
+    return dependencies.createClient(
+      { baseUrl: apiUrl, board, onRequest: dependencies.onRequest },
+      source,
+    );
   }
 
   function getPrimaryBoard(): Client {
     if (!primaryClient) {
-      primaryClient = createClient(dependencies.getServerEnv().board);
+      primaryClient = createClient(dependencies.getServerEnv().board, 'board');
     }
     return primaryClient;
   }
@@ -50,7 +53,7 @@ export function createBoardClientRegistry<Client, Refresher, RequestHook>(
   function getDemoBoard(): Client | null {
     const { demoBoard } = dependencies.getServerEnv();
     if (!demoBoard) return null;
-    if (!demoClient) demoClient = createClient(demoBoard);
+    if (!demoClient) demoClient = createClient(demoBoard, 'demo');
     return demoClient;
   }
 

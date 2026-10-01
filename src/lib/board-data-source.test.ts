@@ -34,6 +34,7 @@ const dataSourceState: DataSourceState = {
 interface TestClient {
   board: string;
   kind: 'sdk';
+  source: 'board' | 'demo';
 }
 
 interface TestRefresher {
@@ -44,8 +45,8 @@ interface TestRefresher {
 const clients: TestClient[] = [];
 const refreshers: TestRefresher[] = [];
 const registry = createBoardClientRegistry({
-  createClient: ({ board }): TestClient => {
-    const client: TestClient = { board, kind: 'sdk' };
+  createClient: ({ board }, source): TestClient => {
+    const client: TestClient = { board, kind: 'sdk', source };
     clients.push(client);
     return client;
   },
@@ -105,6 +106,12 @@ describe('getActiveBoard (T1 + T2)', () => {
     dataSourceState.source = 'board';
     expect(getActiveBoard()).toBe(getPrimaryBoard());
     expect(getActiveBoard().board).toBe('pk_primary');
+  });
+
+  it('each client is built knowing its own data source (session recovery scope)', () => {
+    envState.demoBoard = 'pk_demo';
+    expect(getPrimaryBoard().source).toBe('board');
+    expect(getDemoBoard()?.source).toBe('demo');
   });
 
   it('each data source has its own session refresher singleton', () => {

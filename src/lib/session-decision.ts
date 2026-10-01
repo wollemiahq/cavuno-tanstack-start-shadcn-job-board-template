@@ -23,6 +23,30 @@ export async function decideSession(
     return { session, setCookie: null };
   }
 
+  return rotateOrClear(session, refresh);
+}
+
+/**
+ * The API rejected a session the cookie still holds (not expiring locally):
+ * try ONE rotation, else sign out. The caller retries its request once with
+ * the result — the new bearer, or none.
+ */
+export function decideRejectedSession(
+  session: BoardSession,
+  refresh: SessionRefresh,
+): Promise<SessionResolution & { setCookie: 'clear' | 'rotate' }> {
+  return rotateOrClear(session, refresh);
+}
+
+/**
+ * The catch collapses ANY refresh throw to the signed-out/clear branch (the
+ * refresher returns null only on a 401 and rethrows the rest): never loop,
+ * never surface the error to the caller.
+ */
+async function rotateOrClear(
+  session: BoardSession,
+  refresh: SessionRefresh,
+): Promise<SessionResolution & { setCookie: 'clear' | 'rotate' }> {
   let next: BoardSession | null;
   try {
     next = await refresh(session);

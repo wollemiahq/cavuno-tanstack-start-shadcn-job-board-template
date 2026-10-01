@@ -17,23 +17,76 @@
  * cookie without a mass rename — when the demo key is absent the alias is
  * byte-identical to the pre-dual-source primary-only client.
  */
-import { createBoardClient, type BoardSdk } from '@cavuno/board';
+import {
+  createBoardClient,
+  type BoardSdk,
+  type CreateBoardClientOptions,
+} from '@cavuno/board';
 import { createSessionRefresher } from '@cavuno/board/server';
-import { getRequest, getRequestHeader } from '@tanstack/react-start/server';
+import {
+  getRequest,
+  getRequestHeader,
+  setResponseHeader,
+} from '@tanstack/react-start/server';
 
 import { applyAudienceAttribution } from './audience-request';
 import { createBoardClientRegistry } from './board-client-registry';
-import { getDataSource } from './data-source.server';
+import {
+  clearSessionForSource,
+  getDataSource,
+  parseSessionForSource,
+  serializeSessionForSource,
+} from './data-source.server';
 import { getServerEnv } from './env';
 import { applyReadCache } from './read-cache';
+import { createSessionRecovery } from './session-recovery';
 
 import type { DataSource } from './data-source';
 
 const APPLY_GATEWAY_CAPABILITY_HEADER = 'x-cavuno-board-capabilities';
 const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1';
 
+/**
+ * Revoked-session recovery (see `session-recovery.ts`): a call whose bearer is
+ * this source's cookie session and that the API rejects gets one refresh, then
+ * one retry with the new bearer or anonymously after the cookie is cleared.
+ */
+const sessionRecovery = createSessionRecovery({
+  getRequestScope: () => {
+    try {
+      return getRequest();
+    } catch {
+      return null;
+    }
+  },
+  readSession: (source) =>
+    parseSessionForSource(getRequestHeader('cookie') ?? null, source),
+  refresherFor: (source) => getSessionRefresherFor(source),
+  serializeSession: serializeSessionForSource,
+  clearSession: clearSessionForSource,
+  setCookie: (value) => setResponseHeader('Set-Cookie', value),
+});
+
+/**
+ * This request's recovery outcome for a source's rejected access token:
+ * `null` = signed out, a session = rotated, `undefined` = none ran.
+ */
+export function getSessionRecoveryOutcome(
+  source: DataSource,
+  accessToken: string,
+) {
+  return sessionRecovery.outcomeFor(source, accessToken);
+}
+
 const registry = createBoardClientRegistry({
-  createClient: createBoardClient,
+  createClient: (options: CreateBoardClientOptions, source) => {
+    const board = createBoardClient(options);
+    board.client.fetch = sessionRecovery.wrapFetch(
+      board.client.fetch.bind(board.client),
+      source,
+    );
+    return board;
+  },
   createRefresher: createSessionRefresher,
   getDataSource,
   getServerEnv,

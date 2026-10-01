@@ -23,13 +23,18 @@ import {
   setResponseHeader,
 } from '@tanstack/react-start/server';
 
-import { authHeaders, getSessionRefresher } from './board';
+import {
+  authHeaders,
+  getSessionRecoveryOutcome,
+  getSessionRefresher,
+} from './board';
 import {
   clearSessionForSource,
   getDataSource,
   parseSessionForSource,
   serializeSessionForSource,
 } from './data-source.server';
+import { guardRequiredSession } from './require-session-guard';
 
 import type { DataSource } from './data-source';
 import type { BoardSession } from '@cavuno/board/server';
@@ -100,9 +105,13 @@ export const sessionMiddleware = createMiddleware({ type: 'function' }).server(
 /** Required session: throws 401-shaped error when signed out. */
 export const requireSessionMiddleware = createMiddleware({ type: 'function' })
   .middleware([sessionMiddleware])
-  .server(async ({ next, context }) => {
-    if (!context.session) {
-      throw new Error('UNAUTHENTICATED');
-    }
-    return next({ context });
-  });
+  // The guard and `getSessionRecoveryOutcome` are referenced only inside
+  // `.server()`, which the client build strips; a top-level reference would
+  // pull them and `./board`'s server-only imports into the client bundle.
+  .server(({ next, context }) =>
+    guardRequiredSession(
+      context,
+      () => next({ context }),
+      getSessionRecoveryOutcome,
+    ),
+  );
