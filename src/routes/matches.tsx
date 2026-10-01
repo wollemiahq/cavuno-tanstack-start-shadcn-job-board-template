@@ -26,6 +26,7 @@ import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
 import { toSavedJobCardVM } from '@/board/job-view-model';
+import { candidateOffersForFeature } from '@/board/paywall-offer';
 import { CandidatePaywallLock } from '@/components/board/candidate-paywall-lock';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import { SaveJobButton } from '@/components/board/save-job-button';
@@ -104,7 +105,11 @@ export function createMatchesLoader(
           dependencies.getPaywallOffers().catch(() => ({ data: [] })),
           dependencies.getSeoBase(),
         ]);
-        return { locked: true as const, offers: offers.data, seo };
+        return {
+          locked: true as const,
+          offers: candidateOffersForFeature(offers.data, 'matches'),
+          seo,
+        };
       }
       if (authFailure === 'email-unverified') {
         throw redirect({

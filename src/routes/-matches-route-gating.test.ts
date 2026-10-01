@@ -204,6 +204,7 @@ describe('matches route — job-seeker plan gate', () => {
           intervalUnit: 'month',
           intervalCount: 1,
           isDefault: true,
+          entitlements: { listings: true, matches: true, job_alerts: true },
         },
       ],
       hasMore: false,
@@ -214,6 +215,53 @@ describe('matches route — job-seeker plan gate', () => {
 
     expect(data).toMatchObject({ locked: true });
     expect(data.locked && data.offers).toHaveLength(1);
+  });
+
+  it('offers only plans that unlock matches, even when an alerts plan is the default', async () => {
+    getRecommendedJobs.mockRejectedValue(
+      new Error('CANDIDATE_PAYWALL_ACCESS_REQUIRED'),
+    );
+    const base = {
+      object: 'paywall_offer' as const,
+      label: 'Plan',
+      billingLabel: 'per month',
+      amountCents: 900,
+      currency: 'usd',
+      offerType: 'recurring' as const,
+      intervalUnit: 'month',
+      intervalCount: 1,
+    };
+    getPaywallOffers.mockResolvedValue({
+      object: 'list',
+      url: '/v1/paywall/offers',
+      hasMore: false,
+      nextCursor: null,
+      data: [
+        {
+          ...base,
+          offerKey: 'alerts',
+          isDefault: true,
+          entitlements: { listings: false, matches: false, job_alerts: true },
+        },
+        {
+          ...base,
+          offerKey: 'matches',
+          isDefault: false,
+          entitlements: { listings: false, matches: true, job_alerts: false },
+        },
+        {
+          ...base,
+          offerKey: 'combined',
+          isDefault: false,
+          entitlements: { listings: true, matches: true, job_alerts: true },
+        },
+      ],
+    });
+    const data = await createMatchesLoader(dependencies)();
+    expect(data.locked && data.offers.map((row) => row.offerKey)).toEqual([
+      'matches',
+      'combined',
+    ]);
   });
 
   it('does not sign the viewer out when their plan is what is missing', async () => {
