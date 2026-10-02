@@ -51,9 +51,9 @@ import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
 import { useRootSession } from '@/components/root-session';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
@@ -76,6 +76,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
   reconcileCommittedAction,
@@ -141,6 +142,7 @@ function toHomePlace(
         countryCode: place.countryCode,
         placeType: place.placeType,
         city: place.city,
+        name: place.name,
       }
     : null;
 }
@@ -732,6 +734,81 @@ export function ProfileForm({
     </Field>
   );
 
+  // The commute distance and the relocation switch sit under the location
+  // (or on their own when the layout hides it); both read the home place.
+  const homePlaceName = homePlace?.city || homePlace?.name || '';
+  const homeCountryName = homePlace?.countryCode
+    ? countries.find((country) => country.code === homePlace.countryCode)?.name
+    : undefined;
+  const locationSettings = (
+    <div className="flex flex-col gap-4 sm:col-span-2">
+      {showsCommuteRadius ? (
+        <Field className="gap-1.5" data-invalid={commuteError || undefined}>
+          <FieldLabel htmlFor="profile-commute-radius">
+            {m.profileForm_commuteRadiusLabel()}
+          </FieldLabel>
+          <InputGroup className="w-40">
+            <InputGroupInput
+              ref={commuteInput}
+              id="profile-commute-radius"
+              type="number"
+              inputMode="numeric"
+              min={commuteBounds.min}
+              max={commuteBounds.max}
+              step={1}
+              value={commuteText}
+              aria-invalid={commuteError || undefined}
+              aria-describedby={
+                commuteError
+                  ? 'profile-commute-radius-description profile-commute-radius-error'
+                  : 'profile-commute-radius-description'
+              }
+              onChange={(event) => {
+                setCommuteDraft({
+                  text: event.target.value,
+                  unit: commuteUnit,
+                });
+                setCommuteError(false);
+                setStatus('idle');
+              }}
+            />
+            <InputGroupAddon align="inline-end">
+              {unitLabel(commuteUnit)}
+            </InputGroupAddon>
+          </InputGroup>
+          <FieldDescription id="profile-commute-radius-description">
+            {m.profileForm_commuteRadiusDescription({ place: homePlaceName })}
+          </FieldDescription>
+          {commuteError ? (
+            <FieldError id="profile-commute-radius-error">
+              {commuteRangeMessage}
+            </FieldError>
+          ) : null}
+        </Field>
+      ) : null}
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldLabel htmlFor="profile-open-to-relocate">
+            {m.profileForm_openToRelocatingLabel()}
+          </FieldLabel>
+          <FieldDescription id="profile-open-to-relocate-description">
+            {homeCountryName
+              ? m.profileForm_openToRelocateCountryDescription({
+                  country: homeCountryName,
+                })
+              : m.profileForm_openToRelocateNoCountryDescription()}
+          </FieldDescription>
+        </FieldContent>
+        <Switch
+          id="profile-open-to-relocate"
+          aria-describedby="profile-open-to-relocate-description"
+          checked={form.openToRelocate}
+          onCheckedChange={(checked) => set('openToRelocate', checked)}
+        />
+      </Field>
+    </div>
+  );
+
   const handleStatusText =
     shownHandleIssue === 'required'
       ? m.profileForm_handleRequiredError()
@@ -876,6 +953,7 @@ export function ProfileForm({
                           id: place.id,
                           countryCode: place.countryCode,
                           placeType: place.placeType ?? null,
+                          name: place.name,
                         },
                   );
                 }}
@@ -892,6 +970,7 @@ export function ProfileForm({
               ) : null}
             </Field>
             {countryField}
+            {locationSettings}
           </>
         );
       case 'bio':
@@ -1048,68 +1127,14 @@ export function ProfileForm({
           <div className="grid gap-4 sm:grid-cols-2">{handleField}</div>
         )}
         {shows('location') ? null : (
-          <div className="grid gap-4 sm:grid-cols-2">{countryField}</div>
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">{countryField}</div>
+            {locationSettings}
+          </>
         )}
         {shows('jobSearchStatus') ? null : (
           <div className="grid gap-4 sm:grid-cols-3">{visibilityField}</div>
         )}
-
-        {showsCommuteRadius ? (
-          <Field className="gap-1.5" data-invalid={commuteError || undefined}>
-            <FieldLabel htmlFor="profile-commute-radius">
-              {m.profileForm_commuteRadiusLabel()}
-            </FieldLabel>
-            <InputGroup className="w-40">
-              <InputGroupInput
-                ref={commuteInput}
-                id="profile-commute-radius"
-                type="number"
-                inputMode="numeric"
-                min={commuteBounds.min}
-                max={commuteBounds.max}
-                step={1}
-                value={commuteText}
-                aria-invalid={commuteError || undefined}
-                aria-describedby={
-                  commuteError
-                    ? 'profile-commute-radius-description profile-commute-radius-error'
-                    : 'profile-commute-radius-description'
-                }
-                onChange={(event) => {
-                  setCommuteDraft({
-                    text: event.target.value,
-                    unit: commuteUnit,
-                  });
-                  setCommuteError(false);
-                  setStatus('idle');
-                }}
-              />
-              <InputGroupAddon align="inline-end">
-                {unitLabel(commuteUnit)}
-              </InputGroupAddon>
-            </InputGroup>
-            <FieldDescription id="profile-commute-radius-description">
-              {m.profileForm_commuteRadiusDescription()}
-            </FieldDescription>
-            {commuteError ? (
-              <FieldError id="profile-commute-radius-error">
-                {commuteRangeMessage}
-              </FieldError>
-            ) : null}
-          </Field>
-        ) : null}
-
-        <Field orientation="horizontal" className="w-fit">
-          <FieldLabel className="cursor-pointer">
-            <Checkbox
-              checked={form.openToRelocate}
-              onCheckedChange={(checked) =>
-                set('openToRelocate', checked === true)
-              }
-            />
-            {m.profileForm_openToRelocatingLabel()}
-          </FieldLabel>
-        </Field>
 
         <div className="flex flex-wrap items-center gap-3">
           <Button
