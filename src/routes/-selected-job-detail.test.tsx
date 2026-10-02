@@ -105,6 +105,7 @@ const board = {
     impressum: false,
     nativeApplications: true,
     messaging: true,
+    contactPage: true,
   },
   analytics: {
     ga4MeasurementId: null,

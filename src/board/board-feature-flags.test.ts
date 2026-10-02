@@ -35,6 +35,7 @@ function features(
     impressum: false,
     nativeApplications: true,
     messaging: true,
+    contactPage: true,
     ...extra,
   };
 }
