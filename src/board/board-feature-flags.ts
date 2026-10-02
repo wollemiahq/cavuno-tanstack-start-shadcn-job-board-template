@@ -89,3 +89,18 @@ export function failClosedJobRecommendations<
 >(features: Features): Features {
   return { ...features, jobRecommendationsEnabled: false };
 }
+
+/**
+ * `features.contactPage`: whether the public Contact page is live (the same
+ * rule as `GET /contact`'s `enabled`). `null` when the API predates the field,
+ * so the caller can fall back to one `/contact` read instead of hiding a
+ * working Contact link.
+ */
+export function readContactPageFlag(
+  features: BoardContextFeatures,
+): boolean | null {
+  // SAFETY: additive wire field, typed by @cavuno/board from the release
+  // after 4.31.1; the pinned SDK does not declare it yet.
+  const parity = features as BoardContextFeatures & { contactPage?: boolean };
+  return parity.contactPage ?? null;
+}

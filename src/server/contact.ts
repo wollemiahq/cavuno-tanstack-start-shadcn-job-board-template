@@ -76,7 +76,11 @@ export const getContact = createServerFn({ method: 'GET' }).handler(() =>
   getBoard().client.fetch<BoardContact>('/contact'),
 );
 
-/** Root chrome must survive while a deployment rolls out the Contact endpoint. */
+/**
+ * Root chrome fallback for a board context without `features.contactPage`
+ * (an API predating it). Root chrome must survive while a deployment rolls
+ * out the Contact endpoint.
+ */
 export const getContactForRoot = createServerOnlyFn(
   async (): Promise<BoardContact | null> => {
     try {

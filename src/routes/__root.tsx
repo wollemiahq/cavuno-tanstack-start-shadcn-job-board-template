@@ -219,7 +219,8 @@ function RootErrorPage(props: ErrorComponentProps) {
 }
 
 function RootLayout() {
-  const { board, offerGate, publishableKey, contact } = Route.useLoaderData();
+  const { board, offerGate, publishableKey, contactEnabled } =
+    Route.useLoaderData();
 
   // Embed widget: no site chrome, no session island, no BoardAnalyticsBoot
   // (first-party analytics). Third-party iframe.
@@ -242,7 +243,7 @@ function RootLayout() {
         board={board}
         offerGate={offerGate}
         publishableKey={publishableKey}
-        contactEnabled={contact?.enabled === true}
+        contactEnabled={contactEnabled}
       />
     </RootSessionProvider>
   );

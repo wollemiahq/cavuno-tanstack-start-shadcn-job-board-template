@@ -1,7 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { failClosedJobRecommendations } from '../board/board-feature-flags';
+import {
+  failClosedJobRecommendations,
+  readContactPageFlag,
+} from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import {
@@ -22,7 +25,7 @@ import {
 import { EMPTY_GRANT } from './talent-access';
 
 /**
- * Public root shell only — board identity, SEO, footer gate.
+ * Public root shell only — board identity, SEO, footer gates.
  *
  * Fully viewer-anonymous: the document must render byte-identically for
  * consented and undecided visitors so the edge cache can reuse one copy.
@@ -36,14 +39,15 @@ import { EMPTY_GRANT } from './talent-access';
  */
 export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const [board, seo, offerGate, contact] = await Promise.all([
-      getFreshBoardContext().catch(async () => {
-        const cached = await getStaleBoardContext();
-        return {
-          ...cached,
-          features: failClosedJobRecommendations(cached.features),
-        };
-      }),
+    const boardContext = getFreshBoardContext().catch(async () => {
+      const cached = await getStaleBoardContext();
+      return {
+        ...cached,
+        features: failClosedJobRecommendations(cached.features),
+      };
+    });
+    const [board, seo, offerGate, contactEnabled] = await Promise.all([
+      boardContext,
       // seo() 503s when the pk_ has no registered public origin (local
       // unpublished API). Ads.txt / IndexNow / GSC must not 500 the shell.
       getBoardSeo().catch(() => ({
@@ -54,7 +58,13 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
         manifest: { name: '' },
       })),
       getEmployerOfferGate(),
-      getContactForRoot(),
+      // The footer Contact link rides the board context. Only a context from
+      // an API that predates `features.contactPage` costs a `/contact` read.
+      boardContext.then(
+        async ({ features }) =>
+          readContactPageFlag(features) ??
+          (await getContactForRoot())?.enabled === true,
+      ),
     ]);
 
     return {
@@ -66,7 +76,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       board,
       seo,
       offerGate,
-      contact,
+      contactEnabled,
     };
   },
 );

@@ -60,7 +60,10 @@ import { getRootShellData, getRootSessionShellData } from './root-shell';
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.context = { session: null, boardAccessHeaders: {} };
-  mocks.fresh.mockResolvedValue({ name: 'Fixture board' });
+  mocks.fresh.mockResolvedValue({
+    name: 'Fixture board',
+    features: { contactPage: true },
+  });
   mocks.seo.mockResolvedValue({ canonicalBase: 'https://fixture.example' });
   mocks.offer.mockResolvedValue({ visible: true });
   mocks.contact.mockResolvedValue({
@@ -74,18 +77,31 @@ describe('public and session shells', () => {
     expect(await getRootShellData()).toEqual({
       origin: 'https://fixture.example',
       publishableKey: 'pk_fixture',
-      board: { name: 'Fixture board' },
+      board: { name: 'Fixture board', features: { contactPage: true } },
       seo: { canonicalBase: 'https://fixture.example' },
       offerGate: { visible: true },
-      contact: {
-        object: 'board_contact',
-        enabled: true,
-        boardName: 'Fixture board',
-      },
+      contactEnabled: true,
     });
     expect(mocks.me).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();
     expect(mocks.preview).not.toHaveBeenCalled();
+    expect(mocks.contact).not.toHaveBeenCalled();
+  });
+  it('footer Contact link reads the board context, not /contact', async () => {
+    mocks.fresh.mockResolvedValue({
+      name: 'Fixture board',
+      features: { contactPage: false },
+    });
+    expect(await getRootShellData()).toMatchObject({ contactEnabled: false });
+    expect(mocks.contact).not.toHaveBeenCalled();
+  });
+  it('a context without the Contact flag falls back to one /contact read', async () => {
+    mocks.fresh.mockResolvedValue({ name: 'Fixture board', features: {} });
+    expect(await getRootShellData()).toMatchObject({ contactEnabled: true });
+    expect(mocks.contact).toHaveBeenCalledTimes(1);
+
+    mocks.contact.mockResolvedValue(null);
+    expect(await getRootShellData()).toMatchObject({ contactEnabled: false });
   });
   it('anonymous session makes no viewer calls', async () => {
     expect(await getRootSessionShellData()).toEqual({ user: null });
