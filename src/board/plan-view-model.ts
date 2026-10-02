@@ -73,7 +73,10 @@ export function planFeatureLines(
 
   if (byKey.get('jobs.featured_slots') === 'unlimited') {
     lines.push(m.employerCompany_featuredUnlimitedText());
-  } else if (byKey.get('jobs.feature_selection_mode') === 'auto') {
+  } else if (
+    byKey.get('jobs.feature_selection_mode') === 'auto' &&
+    Number(byKey.get('jobs.featured_slots')) > 0
+  ) {
     lines.push(m.planFeature_featuredAuto());
   } else {
     const slots = Number(byKey.get('jobs.featured_slots'));

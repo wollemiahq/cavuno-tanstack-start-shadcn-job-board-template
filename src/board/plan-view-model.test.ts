@@ -36,6 +36,19 @@ describe('planFeatureLines', () => {
     ).toEqual([m.planFeature_featuredAuto()]);
   });
 
+  it('promises no featuring when an auto plan sells no featured slot', () => {
+    // `auto` is the platform's default mode, so a plain plan carries it
+    // alongside `featured_slots: 0`.
+    expect(
+      planFeatureLines(
+        plan([
+          { key: 'jobs.featured_slots', value: '0' },
+          { key: 'jobs.feature_selection_mode', value: 'auto' },
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
   it('reads unlimited active jobs and singular caps', () => {
     expect(
       planFeatureLines(
