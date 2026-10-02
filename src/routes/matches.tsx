@@ -313,6 +313,7 @@ function JobMatchesResults({
                     <div className="max-w-lg px-4 md:px-0">
                       <JobMatchEmailInvitation
                         preference={recommendedJobs.emailPreference}
+                        onEnabled={() => router.invalidate()}
                       />
                     </div>
                   ) : null}
@@ -364,6 +365,7 @@ function JobMatchesResults({
                         {emptyKind === 'empty' ? (
                           <JobMatchEmailInvitation
                             preference={recommendedJobs.emailPreference}
+                            onEnabled={() => router.invalidate()}
                           />
                         ) : null}
                         {rows.map(({ item, vm }) => (

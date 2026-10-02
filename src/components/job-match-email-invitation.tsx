@@ -1,7 +1,9 @@
-import { Link } from '@tanstack/react-router';
+import { useId, useRef, useState } from 'react';
+
 import { ArrowRight, Mail } from 'lucide-react';
 
-import { buttonVariants } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,16 +11,72 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionReconciliationError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 import { m } from '@/paraglide/messages';
+import { updateNotificationPreference } from '@/server/settings';
 import type { NotificationPreference } from '@cavuno/board';
 
-/** Invite opted-out candidates to the existing email preference in Settings. */
+/** Enable matching-job emails without leaving the candidate's matches. */
 export function JobMatchEmailInvitation({
   preference,
+  onEnabled,
+  updatePreference = updateNotificationPreference,
 }: {
   preference: NotificationPreference | null;
+  onEnabled: () => void | Promise<void>;
+  updatePreference?: typeof updateNotificationPreference;
 }) {
-  if (!preference || preference.subscribed) return null;
+  const errorId = useId();
+  const saving = useRef(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(false);
+  const [confirmed, setConfirmed] = useState<{
+    source: NotificationPreference;
+    saved: NotificationPreference;
+  } | null>(null);
+
+  // The accepted response wins while the loader still has its old snapshot.
+  // A newer server preference (for example a Settings opt-out) wins afterward.
+  const confirmedIsCurrent =
+    confirmed &&
+    (preference === confirmed.source ||
+      (confirmed.saved.updatedAt != null &&
+        (preference?.updatedAt == null ||
+          preference.updatedAt <= confirmed.saved.updatedAt)));
+  if (!preference || preference.subscribed || confirmedIsCurrent) return null;
+
+  async function enableEmails() {
+    if (saving.current || !preference) return;
+    saving.current = true;
+    setPending(true);
+    setError(false);
+    try {
+      const result = await updatePreference({
+        data: { channel: 'recommendedJobEmails', subscribed: true },
+      });
+      const saved = result.data.find(
+        (item) => item.channel === 'recommendedJobEmails',
+      );
+      if (!saved?.subscribed) throw new Error('Subscription not confirmed');
+      setConfirmed({ source: preference, saved });
+    } catch {
+      setError(true);
+      void toastActionError();
+      saving.current = false;
+      setPending(false);
+      return;
+    }
+    void toastActionSuccess();
+    await reconcileCommittedAction(onEnabled, toastActionReconciliationError);
+    saving.current = false;
+    setPending(false);
+  }
 
   return (
     <Card size="sm">
@@ -35,16 +93,29 @@ export function JobMatchEmailInvitation({
           {m.notificationSettings_recommendedJobEmailsDescription()}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Link
-          to="/settings"
-          hash="job-match-emails"
-          hashScrollIntoView={{ block: 'center' }}
-          className={buttonVariants({ className: 'w-full' })}
+      <CardContent className="space-y-2">
+        <Button
+          type="button"
+          className="w-full"
+          disabled={pending}
+          aria-busy={pending}
+          aria-describedby={error ? errorId : undefined}
+          onClick={() => void enableEmails()}
         >
-          {m.accountRecommended_emailInvitationAction()}
-          <ArrowRight data-icon="inline-end" aria-hidden="true" />
-        </Link>
+          {pending
+            ? m.profileForm_savingLabel()
+            : m.accountRecommended_emailInvitationAction()}
+          {pending ? (
+            <Spinner data-icon="inline-end" aria-hidden="true" />
+          ) : (
+            <ArrowRight data-icon="inline-end" aria-hidden="true" />
+          )}
+        </Button>
+        {error ? (
+          <Alert id={errorId} variant="destructive">
+            <AlertDescription>{m.candidateAction_errorText()}</AlertDescription>
+          </Alert>
+        ) : null}
       </CardContent>
     </Card>
   );
