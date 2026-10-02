@@ -182,6 +182,11 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         post.coverUrl ??
         `${seo.origin}${blogPostPath(post.slug)}/og`;
       const shareTitle = post.seoTitle ?? post.title;
+      // The feature-image alt only describes the header image.
+      const ogImageAlt =
+        ogImage === post.coverUrl
+          ? (post.featureImageAlt ?? post.title)
+          : post.title;
       const shareDescription = post.seoDescription ?? post.customExcerpt;
       const canonical =
         post.canonicalUrl ?? selfUrl(seo.origin, blogPostPath(post.slug));
@@ -200,10 +205,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
           { property: 'og:url', content: canonical },
           { property: 'og:site_name', content: seo.boardName },
           { property: 'og:image', content: ogImage },
-          {
-            property: 'og:image:alt',
-            content: post.featureImageAlt ?? post.title,
-          },
+          { property: 'og:image:alt', content: ogImageAlt },
           ...(post.publishedAt
             ? [
                 {
