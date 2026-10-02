@@ -325,6 +325,31 @@ describe('talent directory route — query and capability contracts', () => {
 
     expect(isRouteNotFound(outcome)).toBe(true);
   });
+
+  it('renders the site not-found page, not an empty directory, when the directory is off', async () => {
+    const NotFoundComponent = TalentRoute.options.notFoundComponent;
+    if (!NotFoundComponent) {
+      throw new Error('The talent directory route defines no not-found page');
+    }
+
+    await renderRouted(
+      <NotFoundComponent data={undefined} isNotFound routeId="/talent/" />,
+    );
+
+    // The route owns `<main>`, so its not-found must supply the landmark.
+    expect(screen.getByRole('main')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: m.notFound_heading() }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('link', { name: m.notFound_browseJobsLink() }),
+    ).toHaveAttribute('href', '/');
+    expect(
+      screen.queryByRole('heading', { name: m.talentDirectory_title() }),
+    ).toBeNull();
+    expect(screen.queryByText(m.talentDirectory_notFoundText())).toBeNull();
+    expect(screen.queryByText(m.talentDirectory_emptyText())).toBeNull();
+  });
 });
 
 describe('canonical talent profile route', () => {

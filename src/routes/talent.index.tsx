@@ -1,11 +1,9 @@
 import {
-  Link,
   createFileRoute,
   getRouteApi,
   useLocation,
   useNavigate,
 } from '@tanstack/react-router';
-import { Users } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -22,12 +20,11 @@ import {
   toTalentCardVM,
   type TalentDetailViewer,
 } from '@/board/talent-view-model';
+import { NotFound } from '@/components/app-not-found';
 import { TalentSearchPage } from '@/components/board/talent-search-page';
-import { EmptyState } from '@/components/empty-state';
 import { jsonLdHeadScripts } from '@/components/json-ld';
-import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { Page, PageContent } from '@/components/layout/page';
 import { useRootSession } from '@/components/root-session';
-import { buttonVariants } from '@/components/ui/button';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import { localizePath } from '@/lib/localized-path';
 import { pageSearchValue } from '@/lib/pagination';
@@ -65,20 +62,17 @@ export const Route = createFileRoute('/talent/')({
   notFoundComponent: TalentDirectoryNotFound,
 });
 
+/**
+ * The directory API 404s only when the board has no talent directory (Off),
+ * so this is the site's ordinary 404, not an empty directory: no talent
+ * wording, matching the head's not-found title. The route owns `<main>`, so
+ * the shared page frame supplies the landmark the root shell leaves out.
+ */
 function TalentDirectoryNotFound() {
   return (
     <Page width="wide">
-      <PageContent header={<PageHeader title={m.talentDirectory_title()} />}>
-        <EmptyState
-          icon={<Users aria-hidden="true" />}
-          title={m.talentDirectory_notFoundText()}
-          description={m.talentDirectory_emptyText()}
-          action={
-            <Link to="/jobs" className={buttonVariants({ variant: 'outline' })}>
-              {m.meApplications_browseJobsLink()}
-            </Link>
-          }
-        />
+      <PageContent>
+        <NotFound />
       </PageContent>
     </Page>
   );
