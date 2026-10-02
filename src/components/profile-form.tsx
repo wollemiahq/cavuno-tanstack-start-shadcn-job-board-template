@@ -2,7 +2,8 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 
-import { countryOptions, distanceUnitForCountry } from '@cavuno/board/format';
+import { countryOptions } from '@cavuno/board/format';
+import { distanceUnitForCountry } from '@/board/sdk-distance-shim';
 import { useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';

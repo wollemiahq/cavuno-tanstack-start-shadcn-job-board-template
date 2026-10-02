@@ -5,7 +5,7 @@ import {
   distanceUnitToKm,
   kmToDistanceUnit,
   type DistanceUnit,
-} from '@cavuno/board/format';
+} from './sdk-distance-shim';
 
 /**
  * The profile's commute distance as a form shows it. The API speaks
