@@ -75,6 +75,9 @@ const profile = {
   jobSearchStatus: 'open_to_offers',
   jobSearchStatusVisibleTo: 'everyone',
   openToRelocate: false,
+  locationPlace: null,
+  commuteRadiusKm: null,
+  commuteRadiusDefaultKm: 50,
 } satisfies CandidateProfile;
 
 afterEach(() => {
@@ -449,6 +452,173 @@ describe('ProfileForm — location', () => {
     expect(
       screen.queryByText(m.locationField_pickRequiredError()),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('ProfileForm — home place and commute distance', () => {
+  const lyon = {
+    id: 'loc-lyon',
+    slug: 'loc-lyon',
+    name: 'Lyon',
+    fullName: 'Lyon, Auvergne-Rhône-Alpes, France',
+    contextLabel: 'Auvergne-Rhône-Alpes, France',
+    countryCode: 'FR',
+    regionCode: null,
+    placeType: 'city',
+  };
+  const texas = {
+    id: 'loc-texas',
+    slug: 'loc-texas',
+    name: 'Texas',
+    fullName: 'Texas, United States',
+    contextLabel: 'United States',
+    countryCode: 'US',
+    regionCode: null,
+    placeType: 'region',
+  };
+  const houston = {
+    id: 'loc-houston',
+    name: 'Houston, Texas, United States',
+    countryCode: 'US',
+    region: 'Texas',
+    city: 'Houston',
+    placeType: 'city',
+  } as const;
+
+  async function renderForm(overrides: Partial<CandidateProfile> = {}) {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    await renderWithRouter(
+      <ProfileForm
+        profile={{ ...profile, ...overrides }}
+        language="en"
+        dependencies={mocks}
+        locationSuggestions={{
+          suggestions: [lyon, texas],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+      />,
+    );
+  }
+
+  const locationInput = () =>
+    screen.getByLabelText(m.profileForm_locationLabel());
+  const commuteInput = () =>
+    screen.queryByLabelText(m.profileForm_commuteRadiusLabel());
+  function pick(name: RegExp) {
+    fireEvent.input(locationInput(), {
+      target: { value: 'Ly' },
+      inputType: 'insertText',
+    });
+    fireEvent.click(screen.getByRole('option', { name }));
+  }
+  const submit = () =>
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+  const sent = () => mocks.updateProfile.mock.calls[0]?.[0]?.data;
+
+  it('sends a picked place as locationId and shows the commute distance in km', async () => {
+    await renderForm();
+    expect(commuteInput()).toBeNull();
+
+    pick(/Lyon/);
+
+    expect(commuteInput()).toHaveValue(50);
+    expect(
+      screen.getByText(m.profileForm_commuteRadiusKilometresUnit()),
+    ).toBeInTheDocument();
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).toMatchObject({
+      location: 'Lyon, Auvergne-Rhône-Alpes, France',
+      locationId: 'loc-lyon',
+    });
+    // An untouched distance keeps the market default.
+    expect(sent()).not.toHaveProperty('commuteRadiusKm');
+  });
+
+  it('hides the commute distance for a region', async () => {
+    await renderForm();
+
+    pick(/Texas/);
+
+    expect(commuteInput()).toBeNull();
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).toMatchObject({ locationId: 'loc-texas' });
+    expect(sent()).not.toHaveProperty('commuteRadiusKm');
+  });
+
+  it('shows a saved distance in miles and saves an edit in km', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusKm: 48.3,
+      commuteRadiusDefaultKm: 40,
+    });
+    expect(commuteInput()).toHaveValue(30);
+    expect(
+      screen.getByText(m.profileForm_commuteRadiusMilesUnit()),
+    ).toBeInTheDocument();
+
+    fireEvent.change(commuteInput()!, { target: { value: '10' } });
+    submit();
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    // 10 mi, to one decimal; the stored place is not sent again.
+    expect(sent()).toMatchObject({ commuteRadiusKm: 16.1 });
+    expect(sent()).not.toHaveProperty('locationId');
+  });
+
+  it('prefills the default in miles for a home place without a saved distance', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusDefaultKm: 40,
+    });
+
+    expect(commuteInput()).toHaveValue(25);
+  });
+
+  it('blocks a distance outside the bounds with an inline error', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusDefaultKm: 40,
+    });
+
+    fireEvent.change(commuteInput()!, { target: { value: '200' } });
+    submit();
+
+    expect(
+      await screen.findByText(
+        m.profileForm_commuteRadiusRangeError({
+          min: `1 ${m.profileForm_commuteRadiusMilesUnit()}`,
+          max: `155 ${m.profileForm_commuteRadiusMilesUnit()}`,
+        }),
+      ),
+    ).toBeInTheDocument();
+    expect(commuteInput()).toHaveAttribute('aria-invalid', 'true');
+    expect(commuteInput()).toHaveFocus();
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('shows a refused place on the location field', async () => {
+    await renderForm();
+    mocks.updateProfile.mockResolvedValue({
+      ok: false,
+      code: 'locations_invalid_id',
+      field: 'location',
+    });
+
+    pick(/Lyon/);
+    submit();
+
+    await waitFor(() =>
+      expect(locationInput()).toHaveAccessibleDescription(
+        m.boardError_locationInvalidText(),
+      ),
+    );
+    expect(mocks.toastActionSuccess).not.toHaveBeenCalled();
   });
 });
 
