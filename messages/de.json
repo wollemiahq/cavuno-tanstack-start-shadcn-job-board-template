@@ -183,6 +183,8 @@
   "alertsManage_activeBadge": "Aktiv",
   "alertsManage_allJobsText": "Alle Jobs",
   "alertsManage_deleteLabel": "Löschen",
+  "alertsManage_emptyBody": "Du hast alle deine Job-Alerts gelöscht und bekommst keine Alert-E-Mails mehr.",
+  "alertsManage_emptyTitle": "Keine Job-Alerts mehr",
   "alertsManage_invalidBody": "Dieser Verwaltungslink ist ungültig oder abgelaufen. Nutze den Link aus einer aktuellen Job-Benachrichtigungs-E-Mail.",
   "alertsManage_invalidTitle": "Verwaltungslink ungültig",
   "alertsManage_pausedBadge": "Pausiert",

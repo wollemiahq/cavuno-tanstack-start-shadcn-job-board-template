@@ -183,6 +183,8 @@
   "alertsManage_activeBadge": "Activa",
   "alertsManage_allJobsText": "Todas las ofertas",
   "alertsManage_deleteLabel": "Eliminar",
+  "alertsManage_emptyBody": "Has eliminado todas tus alertas de empleo, así que no recibirás más correos de alertas.",
+  "alertsManage_emptyTitle": "No te quedan alertas de empleo",
   "alertsManage_invalidBody": "Este enlace de gestión no es válido o ha caducado. Usa el enlace de un correo de alertas reciente.",
   "alertsManage_invalidTitle": "Enlace de gestión no válido",
   "alertsManage_pausedBadge": "En pausa",

@@ -4,14 +4,23 @@
  * this starter serves). The subscription-wide token gates the read + unsubscribe
  * /resubscribe; each preference carries its own token for delete.
  *
+ * The email's unsubscribe link is the manage link plus `unsubscribe=1`: the
+ * page unsubscribes on arrival, then drops the param. It runs from the client,
+ * not the loader, so link scanners that prefetch the email's links (they don't
+ * run scripts) can't unsubscribe anyone.
+ *
  * In-place filter editing is intentionally omitted: stored filters use place
  * IDs while the subscribe/update body uses place slugs (not reversible), so
  * editing would drop the location scope. Re-subscribe via the form to change
  * filters. Unsubscribe / resubscribe / delete are the full self-service set here.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -52,10 +61,17 @@ import type {
 } from '@cavuno/board';
 
 type AlertManageSeo = { boardName: string };
-type LoaderData = ({ state: JobAlertManageState } | { error: true }) & {
-  seo: AlertManageSeo;
+// `empty`: the token is valid but no alerts remain (the last one was deleted).
+type ManageData =
+  | { state: JobAlertManageState }
+  | { empty: true }
+  | { error: true };
+type LoaderData = ManageData & { seo: AlertManageSeo };
+type ManageSearch = {
+  subscription?: string;
+  token?: string;
+  unsubscribe?: true;
 };
-type ManageSearch = { subscription?: string; token?: string };
 
 export type AlertManageDependencies = {
   deleteJobAlertPreference: (options: {
@@ -63,7 +79,7 @@ export type AlertManageDependencies = {
   }) => ReturnType<typeof deleteJobAlertPreference>;
   getJobAlertManageState: (options: {
     data: JobAlertManageQuery;
-  }) => Promise<JobAlertManageState>;
+  }) => Promise<JobAlertManageState | null>;
   getSeoBase: () => Promise<AlertManageSeo>;
   resubscribeJobAlert: (options: {
     data: JobAlertManageTokenInput;
@@ -86,8 +102,15 @@ export const Route = createFileRoute('/alerts/manage')({
   validateSearch: (search: UrlSearchInput): ManageSearch => ({
     subscription: searchString(search.subscription),
     token: searchString(search.token),
+    unsubscribe:
+      searchString(search.unsubscribe) === '1' || search.unsubscribe === 1
+        ? true
+        : undefined,
   }),
-  loaderDeps: ({ search }) => search,
+  loaderDeps: ({ search }) => ({
+    subscription: search.subscription,
+    token: search.token,
+  }),
   loader: createAlertManageLoader(),
   head: ({ loaderData }) => alertManageHead(loaderData),
   component: ManagePage,
@@ -96,7 +119,11 @@ export const Route = createFileRoute('/alerts/manage')({
 export function createAlertManageLoader(
   dependencies: AlertManageDependencies = alertManageDependencies,
 ) {
-  return async ({ deps }: { deps: ManageSearch }): Promise<LoaderData> => {
+  return async ({
+    deps,
+  }: {
+    deps: Pick<ManageSearch, 'subscription' | 'token'>;
+  }): Promise<LoaderData> => {
     // Started before the branch so it overlaps the manage-state read.
     const seoPromise = dependencies.getSeoBase();
     if (!deps.subscription || !deps.token) {
@@ -109,7 +136,7 @@ export function createAlertManageLoader(
         }),
         seoPromise,
       ]);
-      return { state, seo };
+      return state ? { state, seo } : { empty: true, seo };
     } catch {
       return { error: true, seo: await seoPromise };
     }
@@ -148,6 +175,7 @@ function filtersSummary(filters: JobAlertStoredFilters): string {
 function ManagePage() {
   const data = Route.useLoaderData();
   const router = useRouter();
+  const navigate = useNavigate({ from: Route.fullPath });
   return (
     <ManagePageView
       data={data}
@@ -155,7 +183,29 @@ function ManagePage() {
       invalidate={async () => {
         await router.invalidate();
       }}
+      clearUnsubscribeIntent={() => {
+        void navigate({
+          search: (prev) => ({ ...prev, unsubscribe: undefined }),
+          replace: true,
+          resetScroll: false,
+        });
+      }}
     />
+  );
+}
+
+function ManageNotice({ title, body }: { title: string; body: string }) {
+  return (
+    <Page width="narrow">
+      <PageContent>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>{title}</EmptyTitle>
+            <EmptyDescription>{body}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </PageContent>
+    </Page>
   );
 }
 
@@ -163,53 +213,22 @@ export function ManagePageView({
   data,
   search,
   invalidate,
+  clearUnsubscribeIntent,
   dependencies = alertManageDependencies,
 }: {
-  data: { state: JobAlertManageState } | { error: true };
+  data: ManageData;
   search: ManageSearch;
   invalidate: () => Promise<void>;
+  clearUnsubscribeIntent: () => void;
   dependencies?: AlertManageDependencies;
 }) {
   const [pending, setPending] = useState(false);
   const [actionError, setActionError] = useState<
     'mutation' | 'reconciliation' | null
   >(null);
-
-  if ('error' in data) {
-    return (
-      <Page width="narrow">
-        <PageContent>
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{m.alertsManage_invalidTitle()}</EmptyTitle>
-              <EmptyDescription>
-                {m.alertsManage_invalidBody()}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </PageContent>
-      </Page>
-    );
-  }
-
-  const { state } = data;
   const { subscription, token } = search;
-  if (!subscription || !token) {
-    return (
-      <Page width="narrow">
-        <PageContent>
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{m.alertsManage_invalidTitle()}</EmptyTitle>
-              <EmptyDescription>
-                {m.alertsManage_invalidBody()}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </PageContent>
-      </Page>
-    );
-  }
+  const state = 'state' in data ? data.state : null;
+
   const run = async (action: () => Promise<void>) => {
     setPending(true);
     setActionError(null);
@@ -227,6 +246,45 @@ export function ManagePageView({
     }
     setPending(false);
   };
+
+  // One-click unsubscribe from the email link. The ref keeps it to a single
+  // request (StrictMode double-runs effects); once handled, the param goes so
+  // a reload doesn't unsubscribe again after a resubscribe.
+  const unsubscribeHandled = useRef(false);
+  const wantsUnsubscribe = Boolean(
+    search.unsubscribe && state && subscription && token,
+  );
+  useEffect(() => {
+    if (!wantsUnsubscribe || unsubscribeHandled.current) return;
+    unsubscribeHandled.current = true;
+    if (state?.unsubscribed) {
+      clearUnsubscribeIntent();
+      return;
+    }
+    void run(async () => {
+      await dependencies.unsubscribeJobAlert({
+        data: { subscriptionId: subscription!, token: token! },
+      });
+    }).then(clearUnsubscribeIntent);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per arrival
+  }, [wantsUnsubscribe]);
+
+  if ('empty' in data) {
+    return (
+      <ManageNotice
+        title={m.alertsManage_emptyTitle()}
+        body={m.alertsManage_emptyBody()}
+      />
+    );
+  }
+  if (!state || !subscription || !token) {
+    return (
+      <ManageNotice
+        title={m.alertsManage_invalidTitle()}
+        body={m.alertsManage_invalidBody()}
+      />
+    );
+  }
 
   return (
     <Page width="narrow">

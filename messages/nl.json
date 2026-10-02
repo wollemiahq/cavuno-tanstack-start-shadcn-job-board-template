@@ -183,6 +183,8 @@
   "alertsManage_activeBadge": "Actief",
   "alertsManage_allJobsText": "Alle vacatures",
   "alertsManage_deleteLabel": "Verwijderen",
+  "alertsManage_emptyBody": "Je hebt al je vacature-alerts verwijderd, dus je krijgt geen alert-e-mails meer.",
+  "alertsManage_emptyTitle": "Geen vacature-alerts meer",
   "alertsManage_invalidBody": "Deze beheerlink is ongeldig of verlopen. Gebruik de link uit een recente e-mail over vacaturemeldingen.",
   "alertsManage_invalidTitle": "Ongeldige beheerlink",
   "alertsManage_pausedBadge": "Gepauzeerd",

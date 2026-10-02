@@ -191,6 +191,8 @@
   "alertsManage_activeBadge": "Aktywny",
   "alertsManage_allJobsText": "Wszystkie oferty",
   "alertsManage_deleteLabel": "Usuń",
+  "alertsManage_emptyBody": "Usunięto wszystkie Twoje alerty o ofertach pracy, więc nie będziesz już otrzymywać e-maili z alertami.",
+  "alertsManage_emptyTitle": "Nie masz już alertów o ofertach pracy",
   "alertsManage_invalidBody": "Ten link do zarządzania jest nieprawidłowy lub wygasł. Użyj linku z niedawnego e-maila z alertem o ofertach pracy.",
   "alertsManage_invalidTitle": "Nieprawidłowy link do zarządzania",
   "alertsManage_pausedBadge": "Wstrzymany",

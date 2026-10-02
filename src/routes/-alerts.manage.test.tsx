@@ -9,12 +9,17 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ManagePageView, type AlertManageDependencies } from './-alerts.manage';
+import {
+  ManagePageView,
+  createAlertManageLoader,
+  type AlertManageDependencies,
+} from './-alerts.manage';
 
 import { m } from '@/paraglide/messages';
 import type { JobAlertManageState } from '@cavuno/board';
 
 const invalidate = vi.fn<() => Promise<void>>();
+const clearUnsubscribeIntent = vi.fn<() => void>();
 const dependencies: AlertManageDependencies = {
   deleteJobAlertPreference: vi.fn(),
   getJobAlertManageState: vi.fn(),
@@ -46,14 +51,15 @@ afterEach(() => {
 });
 
 function renderManage(
-  data: { state: JobAlertManageState } | { error: true },
-  search: { subscription?: string; token?: string } = {},
+  data: { state: JobAlertManageState } | { empty: true } | { error: true },
+  search: { subscription?: string; token?: string; unsubscribe?: true } = {},
 ) {
   render(
     <ManagePageView
       data={data}
       search={search}
       invalidate={invalidate}
+      clearUnsubscribeIntent={clearUnsubscribeIntent}
       dependencies={dependencies}
     />,
   );
@@ -151,5 +157,59 @@ describe('public job-alert management', () => {
     expect(screen.getByRole('alert')).not.toHaveTextContent(
       m.alertsManage_actionErrorText(),
     );
+  });
+
+  it('shows the no-alerts state, not the invalid link, once every alert is deleted', async () => {
+    vi.mocked(dependencies.getSeoBase).mockResolvedValue({
+      boardName: 'Board',
+    });
+    vi.mocked(dependencies.getJobAlertManageState).mockResolvedValue(null);
+    const data = await createAlertManageLoader(dependencies)({
+      deps: { subscription: 'subscription-1', token: 'subscription-token' },
+    });
+    expect(data).toMatchObject({ empty: true });
+
+    renderManage(data, {
+      subscription: 'subscription-1',
+      token: 'subscription-token',
+    });
+    expect(screen.getByText(m.alertsManage_emptyTitle())).toBeInTheDocument();
+    expect(screen.queryByText(m.alertsManage_invalidTitle())).toBeNull();
+  });
+
+  it('unsubscribes once on arrival from the email unsubscribe link', async () => {
+    vi.mocked(dependencies.unsubscribeJobAlert).mockResolvedValue({
+      object: 'job_alert_manage_result',
+      success: true,
+    });
+    invalidate.mockResolvedValue();
+    renderManage(
+      { state },
+      {
+        subscription: 'subscription-1',
+        token: 'subscription-token',
+        unsubscribe: true,
+      },
+    );
+
+    await waitFor(() => expect(clearUnsubscribeIntent).toHaveBeenCalledOnce());
+    expect(dependencies.unsubscribeJobAlert).toHaveBeenCalledExactlyOnceWith({
+      data: { subscriptionId: 'subscription-1', token: 'subscription-token' },
+    });
+    expect(invalidate).toHaveBeenCalledOnce();
+  });
+
+  it('skips the unsubscribe call when already unsubscribed', () => {
+    renderManage(
+      { state: { ...state, unsubscribed: true } },
+      {
+        subscription: 'subscription-1',
+        token: 'subscription-token',
+        unsubscribe: true,
+      },
+    );
+
+    expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
+    expect(clearUnsubscribeIntent).toHaveBeenCalledOnce();
   });
 });

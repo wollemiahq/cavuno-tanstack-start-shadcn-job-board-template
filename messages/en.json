@@ -183,6 +183,8 @@
   "alertsManage_activeBadge": "Active",
   "alertsManage_allJobsText": "All jobs",
   "alertsManage_deleteLabel": "Delete",
+  "alertsManage_emptyBody": "You've deleted all your job alerts, so you won't get any more alert emails.",
+  "alertsManage_emptyTitle": "No job alerts left",
   "alertsManage_invalidBody": "This manage link is invalid or has expired. Use the link from a recent job-alert email.",
   "alertsManage_invalidTitle": "Manage link invalid",
   "alertsManage_pausedBadge": "Paused",
