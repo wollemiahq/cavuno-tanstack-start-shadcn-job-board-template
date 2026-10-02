@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
 
 import { useDesktopMedia } from '@/hooks/use-desktop-media';
@@ -50,9 +50,15 @@ export function useSearchSelection({
   // only a subsequent page change does.
   const previousPage = useRef(page);
 
+  // Routes pass an inline `onReplace`, so its identity changes every render.
+  // Keying the sync on it re-navigates on any re-render that lands before the
+  // URL commits (a route reading `useLocation()` re-renders as navigation
+  // starts), and each new navigation supersedes the last: an endless loop.
+  // Sync only when the selection itself changes.
+  const replaceSelection = useEffectEvent(onReplace);
   useEffect(() => {
-    if (activeId && activeId !== selectedId) onReplace(activeId);
-  }, [activeId, onReplace, selectedId]);
+    if (activeId && activeId !== selectedId) replaceSelection(activeId);
+  }, [activeId, selectedId]);
 
   useEffect(() => {
     const previousId = previousActiveId.current;

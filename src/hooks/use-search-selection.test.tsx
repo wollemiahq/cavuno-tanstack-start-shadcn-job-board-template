@@ -104,6 +104,21 @@ describe('useSearchSelection', () => {
     expect(onReplace).toHaveBeenCalledTimes(1);
   });
 
+  it('replaces once while the URL catches up, even as the route re-renders', async () => {
+    setDesktop(true);
+    const onReplace = vi.fn();
+
+    const { rerender } = render(<Harness onReplace={(id) => onReplace(id)} />);
+    await waitFor(() => expect(onReplace).toHaveBeenCalledTimes(1));
+
+    // Routes pass an inline callback; a re-render before the replace commits
+    // must not start another navigation.
+    rerender(<Harness onReplace={(id) => onReplace(id)} />);
+    rerender(<Harness onReplace={(id) => onReplace(id)} />);
+
+    expect(onReplace).toHaveBeenCalledTimes(1);
+  });
+
   it('pushes an explicit desktop selection', () => {
     setDesktop(true);
     const onPush = vi.fn();
