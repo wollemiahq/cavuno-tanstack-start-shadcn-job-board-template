@@ -4,6 +4,7 @@ import {
   candidateAuthSearch,
   buildVerifyEmailRedirectPath,
   candidateOAuthReturnTo,
+  verificationEmailReturnTo,
 } from '../lib/candidate-return-to';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
@@ -30,6 +31,7 @@ export function SignUpView({
       password: string;
       displayName: string;
       marketingConsent?: boolean;
+      returnTo?: string;
     };
   }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
   getOAuthAuthorizationUrlAction: (input: {
@@ -69,7 +71,12 @@ export function SignUpView({
       marketingConsent={marketingConsent}
       successHref={buildVerifyEmailRedirectPath(returnTo)}
       onSubmit={async (values) => {
-        const result = await signUpAction({ data: values });
+        // The emailed verification link returns here too, not only the
+        // in-tab `successHref` path.
+        const emailReturnTo = verificationEmailReturnTo(returnTo);
+        const result = await signUpAction({
+          data: emailReturnTo ? { ...values, returnTo: emailReturnTo } : values,
+        });
         if (result.ok) await reconcileCommittedAction(invalidate);
         return result;
       }}

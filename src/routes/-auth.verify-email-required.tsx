@@ -11,7 +11,10 @@ import { useEffect, useState } from 'react';
 import { isRedirect, redirect } from '@tanstack/react-router';
 
 import { AuthCard, FormError } from '../components/auth-form';
-import { candidateReturnTo } from '../lib/candidate-return-to';
+import {
+  candidateReturnTo,
+  verificationEmailReturnTo,
+} from '../lib/candidate-return-to';
 import {
   EMPTY_RESUME,
   serializeResumeOnboardingDismissal,
@@ -140,9 +143,9 @@ export function VerifyEmailRequiredView({
   verifyOtpCodeAction: (input: {
     data: { code: string };
   }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
-  resendOtpAction: () => Promise<
-    { ok: true } | { ok: false; code?: string; message: string }
-  >;
+  resendOtpAction: (input: {
+    data: { returnTo?: string };
+  }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
   updateNotificationPreferenceAction: (input: {
     data: { channel: 'recommendedJobEmails'; subscribed: boolean };
   }) => Promise<void>;
@@ -294,7 +297,9 @@ export function VerifyEmailRequiredView({
           setResent(false);
           setResending(true);
           try {
-            const result = await resendOtpAction();
+            const result = await resendOtpAction({
+              data: { returnTo: verificationEmailReturnTo(returnTo) },
+            });
             if (result.ok) {
               setResent(true);
             } else {

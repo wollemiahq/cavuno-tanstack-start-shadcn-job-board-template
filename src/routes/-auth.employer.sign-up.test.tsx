@@ -115,6 +115,10 @@ describe('/auth/employer/sign-up continuation', () => {
     expect(url.searchParams.get('returnTo')).toBe('/employers/dashboard');
     expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
     expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
+    // The emailed link keeps the platform's employer landing: no returnTo.
+    expect(mocks.signUpEmployer.mock.calls[0]![0].data).not.toHaveProperty(
+      'returnTo',
+    );
   });
 
   it('re-enters the verification gate for an existing unverified employer session', async () => {

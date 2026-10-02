@@ -38,7 +38,8 @@ const mocks = {
   }),
   invalidate: vi.fn<(options?: { sync?: boolean }) => Promise<void>>(),
   navigate: vi.fn<(href: string) => Promise<void>>(),
-  resendOtp: vi.fn<() => Promise<AuthResult>>(),
+  resendOtp:
+    vi.fn<(input: { data: { returnTo?: string } }) => Promise<AuthResult>>(),
   verifyOtpCode:
     vi.fn<(input: { data: { code: string } }) => Promise<AuthResult>>(),
   getSessionUser: vi.fn<
@@ -334,6 +335,31 @@ describe('/auth/verify-email-required search contract', () => {
     expect(status).toHaveAttribute('data-slot', 'alert');
     expect(status).toHaveTextContent(m.authVerifyEmailRequired_resentText());
   });
+
+  it.each([
+    [
+      '/companies/acme/jobs/product-designer',
+      '/companies/acme/jobs/product-designer',
+    ],
+    ['/account', undefined],
+  ])(
+    'asks the resent email link to return to %s',
+    async (returnTo, emailReturnTo) => {
+      mocks.resendOtp.mockResolvedValue({ ok: true });
+
+      renderVerifyPage({ returnTo });
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: m.authVerifyEmailRequired_resendLabel(),
+        }),
+      );
+
+      await screen.findByRole('status');
+      expect(mocks.resendOtp).toHaveBeenCalledWith({
+        data: { returnTo: emailReturnTo },
+      });
+    },
+  );
 
   it('composes the verification code control as an owned field', () => {
     const { container } = renderVerifyPage();

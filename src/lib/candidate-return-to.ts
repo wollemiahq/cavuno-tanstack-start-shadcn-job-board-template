@@ -5,7 +5,7 @@ import {
   appendAuthIntentQuery,
   appendOAuthProviderHint,
 } from './board-datalayer-events';
-import { localizePath } from './localized-path';
+import { localizePath, stripLocalePrefix } from './localized-path';
 import { searchString } from './pagination';
 
 const DEFAULT_CANDIDATE_RETURN_TO = '/account';
@@ -65,6 +65,25 @@ export function buildVerifyEmailRedirectPath<T>(value: T) {
     'sign_up',
     'password',
   );
+}
+
+/**
+ * The `returnTo` the platform appends to the verification email link — the
+ * same value `candidateVerifyEmailHref` carries, so the emailed link and the
+ * in-tab code path finish at one destination. Undefined for the default and
+ * the root, which leave the link without a return path.
+ */
+export function verificationEmailReturnTo<T>(value: T) {
+  const returnTo = candidateReturnTo(value);
+  const canonical = stripLocalePrefix(returnTo);
+  const bare = !/[?#]/.test(returnTo);
+  if (
+    bare &&
+    (canonical === DEFAULT_CANDIDATE_RETURN_TO || canonical === '/')
+  ) {
+    return undefined;
+  }
+  return localizePath(returnTo);
 }
 
 export function candidateOAuthReturnTo<T>(

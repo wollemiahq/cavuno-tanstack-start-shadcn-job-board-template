@@ -141,4 +141,51 @@ describe('/auth/sign-up search contract', () => {
     expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
     expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
   });
+
+  it.each([
+    [
+      '/companies/acme/jobs/product-designer',
+      '/companies/acme/jobs/product-designer',
+    ],
+    ['/account', undefined],
+  ])(
+    'carries the %s destination on the verification email link',
+    async (returnTo, emailReturnTo) => {
+      mocks.signUp.mockResolvedValue({ ok: true });
+      mocks.invalidate.mockResolvedValue(undefined);
+      await renderRouted(
+        <SignUpView
+          boardName="Cavuno Jobs"
+          returnTo={returnTo}
+          signUpAction={mocks.signUp}
+          getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+          invalidate={mocks.invalidate}
+        />,
+      );
+      fireEvent.change(screen.getByLabelText(m.authSignUp_nameLabel()), {
+        target: { value: 'Ada Lovelace' },
+      });
+      fireEvent.change(screen.getByLabelText(m.authSignUp_emailLabel()), {
+        target: { value: 'ada@example.com' },
+      });
+      fireEvent.change(screen.getByLabelText(m.authSignUp_passwordLabel()), {
+        target: { value: 'correct-horse' },
+      });
+      fireEvent.click(
+        screen.getByRole('button', { name: m.authSignUp_submitLabel() }),
+      );
+
+      await screen.findByRole('link', {
+        name: m.authSignUp_goToAccountLabel(),
+      });
+      expect(mocks.signUp).toHaveBeenCalledTimes(1);
+      const { data } = mocks.signUp.mock.calls[0]![0];
+      expect(data.email).toBe('ada@example.com');
+      if (emailReturnTo) {
+        expect(data.returnTo).toBe(emailReturnTo);
+      } else {
+        expect(data).not.toHaveProperty('returnTo');
+      }
+    },
+  );
 });

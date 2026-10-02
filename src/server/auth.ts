@@ -62,6 +62,8 @@ export const signUp = createServerFn({ method: 'POST' })
       displayName: string;
       /** True only when the rendered marketing checkbox was ticked. */
       marketingConsent?: boolean;
+      /** Same-origin path the verification email link returns to. */
+      returnTo?: string;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -92,6 +94,8 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
       displayName: string;
       /** True only when the rendered marketing checkbox was ticked. */
       marketingConsent?: boolean;
+      /** Same-origin path the verification email link returns to. */
+      returnTo?: string;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -197,10 +201,14 @@ export const verifyOtpCode = createServerFn({ method: 'POST' })
     }
   });
 
-/** Re-send the verification email (fresh code + magic link) to the signed-in user. */
+/**
+ * Re-send the verification email (fresh code + magic link) to the signed-in
+ * user. `returnTo` rides on the emailed link so it lands where sign-up began.
+ */
 export const resendOtp = createServerFn({ method: 'POST' })
+  .validator((input?: { returnTo?: string }) => input)
   .middleware([sessionMiddleware])
-  .handler(async ({ context }) => {
+  .handler(async ({ data, context }) => {
     if (!context.session) {
       return {
         ok: false as const,
@@ -209,9 +217,12 @@ export const resendOtp = createServerFn({ method: 'POST' })
       };
     }
     try {
-      await getBoard().auth.resendVerification({
+      const board = getBoard();
+      const options: Parameters<typeof board.auth.resendVerification>[0] = {
         headers: context.authHeaders,
-      });
+      };
+      if (data?.returnTo) options.body = { returnTo: data.returnTo };
+      await board.auth.resendVerification(options);
       return { ok: true as const };
     } catch (error) {
       return authError(error);
