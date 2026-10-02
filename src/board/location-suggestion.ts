@@ -14,6 +14,11 @@ export interface LocationSuggestionVM {
   /** ISO country code — the job-posting office-location payload carries it. */
   countryCode: string | null;
   regionCode: string | null;
+  /**
+   * Level of a worldwide location-search result (`country`, `region`,
+   * `city` or `locality`). Board places leave it unset.
+   */
+  placeType?: string | null;
 }
 
 function contextLabel(countryCode: string | null, locale: string) {
@@ -62,5 +67,6 @@ export function toGlobalLocationSuggestionVM(
     contextLabel: location.contextLabel,
     countryCode: location.countryCode,
     regionCode: null,
+    placeType: location.placeType,
   };
 }
