@@ -90,6 +90,7 @@ function renderHeader({
   talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
   user = null,
   hasAccessGrant = false,
+  hasMembershipPage = false,
   logoUrl = null,
   locationSuggestions = [],
   keywordSuggestions = [],
@@ -102,6 +103,7 @@ function renderHeader({
   talentDirectoryVisibility?: TalentDirectoryVisibility;
   user?: React.ComponentProps<typeof Header>['user'];
   hasAccessGrant?: boolean;
+  hasMembershipPage?: boolean;
   logoUrl?: string | null;
   locationSuggestions?: Array<{
     id: string;
@@ -199,6 +201,7 @@ function renderHeader({
         onSignOut={() => setViewer(null)}
         signOutAction={signOutMock}
         talentDirectoryVisibility={talentDirectoryVisibility}
+        hasMembershipPage={hasMembershipPage}
         search={{
           ...initialSearch,
           onSubmit: submitSearch,
@@ -474,6 +477,49 @@ describe('Header — role and public-posting gates', () => {
     ).toBeNull();
     expect(
       screen.queryByRole('link', { name: m.siteHeader_signUpLabel() }),
+    ).toBeNull();
+  });
+});
+
+describe('Header — Memberships link', () => {
+  const viewer = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+
+  it.each([
+    ['a signed-out visitor', null],
+    ['an employer', { ...viewer, role: 'employer' as const }],
+  ])('links %s to memberships', async (_viewer, user) => {
+    renderHeader({ hasMembershipPage: true, user });
+
+    expect(
+      await screen.findByRole('link', { name: m.nav_memberships() }),
+    ).toHaveAttribute('href', '/memberships');
+  });
+
+  it('hides memberships from a signed-in job seeker, including the mobile menu', async () => {
+    renderHeader({ hasMembershipPage: true, user: viewer });
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.siteHeader_openNavMenuAriaLabel(),
+      }),
+    );
+    const mobileMenu = await screen.findByRole('dialog', {
+      name: m.siteHeader_primaryNavigationAriaLabel(),
+    });
+
+    expect(
+      within(mobileMenu).getByRole('link', { name: navigation.home }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('link', { name: m.nav_memberships() }),
     ).toBeNull();
   });
 });

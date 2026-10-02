@@ -18,12 +18,14 @@ import { Badge } from '@/components/ui/badge';
 import { footerCopy } from '@/copy-groups/footer';
 import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import { membershipNavVisible } from '@/lib/membership-nav';
 import {
   chromeFooter,
   chromeRemovedNavItems,
   type ChromeCustomLink,
 } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
+import type { BoardUser } from '@cavuno/board';
 /**
  * Contact/social identity from `board.context().contact` (kept on the
  * public API). Presentation — description, nav order, custom links — is
@@ -173,6 +175,7 @@ export default function Footer({
   talentDirectoryVisibility,
   hasEmployerOfferPage,
   hasMembershipPage = false,
+  viewerRole = null,
   hasCandidatePricingPage = false,
   flush = false,
   breadcrumb,
@@ -223,6 +226,11 @@ export default function Footer({
    * `/memberships` 404s.
    */
   hasMembershipPage?: boolean;
+  /**
+   * The signed-in viewer's role, or null when signed out. A job seeker gets
+   * no Memberships link (memberships are an employer product).
+   */
+  viewerRole?: BoardUser['role'] | null;
   /** Remove the outer gap when the preceding route already fills a viewport. */
   flush?: boolean;
   /** Optional compact navigation trail rendered as the footer's first row. */
@@ -277,7 +285,8 @@ export default function Footer({
     ...(hasEmployerOfferPage && !removedNav.has('pricing')
       ? [{ href: '/employers', label: copy.nav.pricing }]
       : []),
-    ...(hasMembershipPage && !removedNav.has('memberships')
+    ...(membershipNavVisible(hasMembershipPage, viewerRole) &&
+    !removedNav.has('memberships')
       ? [{ href: '/memberships', label: copy.nav.memberships }]
       : []),
     ...(talentLinked && !removedNav.has('talent')

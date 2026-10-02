@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import Footer, { type BoardContextFooter } from './Footer';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -33,7 +34,13 @@ const contact: BoardContextFooter = {
   instagramUrl: null,
 };
 
-function renderFooter(footer: BoardContextFooter) {
+function renderFooter(
+  footer: BoardContextFooter,
+  membership: Pick<
+    React.ComponentProps<typeof Footer>,
+    'hasMembershipPage' | 'viewerRole'
+  > = {},
+) {
   return render(
     <Footer
       boardName="Example Jobs"
@@ -52,6 +59,7 @@ function renderFooter(footer: BoardContextFooter) {
       contactEnabled={false}
       talentDirectoryVisibility="off"
       hasEmployerOfferPage={false}
+      {...membership}
     />,
   );
 }
@@ -73,5 +81,26 @@ describe('Footer social links', () => {
     renderFooter(contact);
 
     expect(screen.queryByRole('link', { name: 'Instagram' })).toBeNull();
+  });
+});
+
+describe('Footer Memberships link', () => {
+  it.each([
+    ['a signed-out visitor', null],
+    ['an employer', 'employer' as const],
+  ])('links %s to memberships', (_viewer, viewerRole) => {
+    renderFooter(contact, { hasMembershipPage: true, viewerRole });
+
+    expect(
+      screen.getByRole('link', { name: m.nav_memberships() }),
+    ).toHaveAttribute('href', '/memberships');
+  });
+
+  it('hides memberships from a signed-in job seeker', () => {
+    renderFooter(contact, { hasMembershipPage: true, viewerRole: 'candidate' });
+
+    expect(
+      screen.queryByRole('link', { name: m.nav_memberships() }),
+    ).toBeNull();
   });
 });

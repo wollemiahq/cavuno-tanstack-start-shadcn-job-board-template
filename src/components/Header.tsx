@@ -39,6 +39,7 @@ import type {
   HeaderSearchTerm,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import { membershipNavVisible } from '@/lib/membership-nav';
 import {
   chromeFooter,
   chromeRemovedNavItems,
@@ -224,7 +225,7 @@ export default function Header({
       icon: BadgeCheck,
       // Loader-driven, so the link never flashes in on a board that
       // publishes no membership plan (and /memberships 404s there).
-      enabled: hasMembershipPage,
+      enabled: membershipNavVisible(hasMembershipPage, user?.role),
     },
   ] as const;
   const enabledNavLinks = navLinks.filter(

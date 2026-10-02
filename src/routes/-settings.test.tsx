@@ -90,6 +90,7 @@ const account = {
 async function renderSettings(
   overrides: {
     hasPassword?: boolean;
+    role?: 'candidate' | 'employer';
     jobRecommendationsEnabled?: boolean;
     preferences?: {
       object: 'notification_preference';
@@ -127,7 +128,11 @@ async function renderSettings(
         },
       ],
       consent: null,
-      account: { ...account, hasPassword: overrides.hasPassword ?? true },
+      account: {
+        ...account,
+        hasPassword: overrides.hasPassword ?? true,
+        role: overrides.role ?? account.role,
+      },
     },
     overrides.jobRecommendationsEnabled,
   );
@@ -233,6 +238,38 @@ describe('signed-in settings account cards', () => {
     expect(document.getElementById('job-match-emails')).toContainElement(
       checkbox,
     );
+  });
+
+  it('gives an employer the new-application channel without job-seeker emails', async () => {
+    await renderSettings({ role: 'employer' });
+
+    expect(
+      screen.getByRole('checkbox', {
+        name: m.notificationSettings_messageEmailsTitle(),
+      }),
+    ).toBeChecked();
+    expect(
+      screen.getByRole('checkbox', {
+        name: m.notificationSettings_employerApplicationEmailsTitle(),
+      }),
+    ).toBeChecked();
+    expect(
+      screen.getByText(
+        m.notificationSettings_employerApplicationEmailsDescription(),
+      ),
+    ).toBeInTheDocument();
+    for (const name of [
+      m.notificationSettings_applicationEmailsTitle(),
+      m.notificationSettings_recommendedJobEmailsTitle(),
+    ]) {
+      expect(screen.queryByRole('checkbox', { name })).toBeNull();
+    }
+    expect(
+      document.querySelector('[data-test="settings-email-card"]'),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-test="danger-zone"]'),
+    ).toBeInTheDocument();
   });
 
   it('persists the recommendation preference immediately from settings', async () => {

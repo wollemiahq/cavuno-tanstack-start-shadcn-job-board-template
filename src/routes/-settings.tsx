@@ -159,6 +159,12 @@ export function settingsHead(
   };
 }
 
+type SettingsAccount = {
+  email: string;
+  hasPassword?: unknown;
+  role: 'candidate' | 'employer';
+};
+
 type ChannelNames = Record<Channel, () => string>;
 
 const CHANNEL_NAMES = {
@@ -179,7 +185,7 @@ export function SettingsPageView({
         mode: 'settings';
         preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
         consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
-        account: { email: string; hasPassword?: unknown };
+        account: SettingsAccount;
       };
   jobRecommendationsEnabled?: boolean;
   dependencies?: SettingsRouteDependencies;
@@ -259,7 +265,7 @@ function SignedInSettings({
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
   consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
-  account: { email: string; hasPassword?: unknown };
+  account: SettingsAccount;
   jobRecommendationsEnabled: boolean;
   dependencies: SettingsRouteDependencies;
 }) {
@@ -277,6 +283,7 @@ function SignedInSettings({
           </h2>
           <NotificationSettings
             preferences={preferences}
+            role={account.role}
             recommendedJobEmailsEnabled={jobRecommendationsEnabled}
             updatePreference={dependencies.updateNotificationPreference}
           />

@@ -116,7 +116,7 @@ export const setMarketingConsent = createServerFn({ method: 'POST' })
     return data.granted ? consent.grant(options) : consent.withdraw(options);
   });
 
-/** The signed-in board user for /settings (email + hasPassword). */
+/** The signed-in board user for /settings (email, hasPassword, role). */
 export const getSettingsAccount = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>

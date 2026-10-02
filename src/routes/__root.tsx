@@ -554,6 +554,7 @@ function RootChrome({
                   talentDirectoryVisibility={board.talentDirectoryVisibility}
                   hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
                   hasMembershipPage={offerGate.hasMembershipPage}
+                  viewerRole={user?.role ?? null}
                   hasCandidatePricingPage={offerGate.hasCandidatePricingPage}
                   cookiePreferencesAction={<CookiePreferencesFooterAction />}
                 />

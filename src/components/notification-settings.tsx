@@ -17,7 +17,7 @@ import {
   toastActionError,
   toastActionSuccess,
 } from '@/lib/action-toast';
-import type { NotificationPreference } from '@cavuno/board';
+import type { BoardUser, NotificationPreference } from '@cavuno/board';
 
 type StarterNotificationPreference = Omit<NotificationPreference, 'channel'> & {
   channel: StarterNotificationChannel;
@@ -42,16 +42,50 @@ const CHANNEL_LABELS = {
 >;
 
 /**
+ * Employers share the message and application channels but receive
+ * different emails on them: `applicationEmails` is the "a candidate applied
+ * to your company's job" email. Job recommendations are candidate-only.
+ */
+const EMPLOYER_CHANNEL_LABELS = {
+  messageEmails: {
+    title: m.notificationSettings_messageEmailsTitle,
+    description: m.notificationSettings_employerMessageEmailsDescription,
+  },
+  applicationEmails: {
+    title: m.notificationSettings_employerApplicationEmailsTitle,
+    description: m.notificationSettings_employerApplicationEmailsDescription,
+  },
+} satisfies Partial<
+  Record<
+    StarterNotificationChannel,
+    { title: () => string; description: () => string }
+  >
+>;
+
+function channelLabel(
+  channel: StarterNotificationChannel,
+  role: BoardUser['role'],
+) {
+  if (role === 'employer' && channel !== 'recommendedJobEmails') {
+    return EMPLOYER_CHANNEL_LABELS[channel];
+  }
+  return CHANNEL_LABELS[channel];
+}
+
+/**
  * Email notification toggles — one checkbox per channel over
  * `board.me.notificationPreferences` (retrieve / update). Each toggle
  * PUTs immediately and refreshes.
  */
 export function NotificationSettings({
   preferences,
+  role = 'candidate',
   recommendedJobEmailsEnabled = true,
   updatePreference = updateNotificationPreference,
 }: {
   preferences: StarterNotificationPreference[];
+  /** The signed-in account's role; employers get no job-seeker channels. */
+  role?: BoardUser['role'];
   recommendedJobEmailsEnabled?: boolean;
   updatePreference?: (options: {
     data: StarterUpdateNotificationPreferenceBody;
@@ -59,12 +93,16 @@ export function NotificationSettings({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  const visiblePreferences =
+    role === 'employer'
+      ? preferences.filter((pref) => pref.channel !== 'recommendedJobEmails')
+      : preferences;
 
   return (
     <div className="space-y-3">
       <ul className="divide-border divide-y" data-test="notification-settings">
-        {preferences.map((pref) => {
-          const label = CHANNEL_LABELS[pref.channel];
+        {visiblePreferences.map((pref) => {
+          const label = channelLabel(pref.channel, role);
           const recommendationPaused =
             pref.channel === 'recommendedJobEmails' &&
             !recommendedJobEmailsEnabled;
