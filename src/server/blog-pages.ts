@@ -175,32 +175,48 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         latest: latest?.data ?? [],
         limit: 3,
       });
+      // Share image precedence (hosted parity): the post's explicit OG image,
+      // then its header image, then the starter's generated /og card.
       const ogImage =
-        post.ogImageUrl ?? `${seo.origin}${blogPostPath(post.slug)}/og`;
+        post.ogImageUrl ??
+        post.coverUrl ??
+        `${seo.origin}${blogPostPath(post.slug)}/og`;
+      const shareTitle = post.seoTitle ?? post.title;
+      const shareDescription = post.seoDescription ?? post.customExcerpt;
+      const canonical =
+        post.canonicalUrl ?? selfUrl(seo.origin, blogPostPath(post.slug));
       const head = {
         meta: [
+          { title: headTitle(seo.boardName, shareTitle) },
+          ...(shareDescription
+            ? [
+                { name: 'description', content: shareDescription },
+                { property: 'og:description', content: shareDescription },
+                { name: 'twitter:description', content: shareDescription },
+              ]
+            : []),
+          { property: 'og:title', content: shareTitle },
+          { property: 'og:type', content: 'article' },
+          { property: 'og:url', content: canonical },
+          { property: 'og:site_name', content: seo.boardName },
+          { property: 'og:image', content: ogImage },
           {
-            title: headTitle(seo.boardName, post.seoTitle ?? post.title),
+            property: 'og:image:alt',
+            content: post.featureImageAlt ?? post.title,
           },
-          ...((post.seoDescription ?? post.customExcerpt)
+          ...(post.publishedAt
             ? [
                 {
-                  name: 'description',
-                  content: (post.seoDescription ?? post.customExcerpt)!,
+                  property: 'article:published_time',
+                  content: post.publishedAt,
                 },
               ]
             : []),
-          { property: 'og:image', content: ogImage },
           { name: 'twitter:card', content: 'summary_large_image' },
+          { name: 'twitter:title', content: shareTitle },
           { name: 'twitter:image', content: ogImage },
         ],
-        links: [
-          {
-            rel: 'canonical',
-            href:
-              post.canonicalUrl ?? selfUrl(seo.origin, blogPostPath(post.slug)),
-          },
-        ],
+        links: [{ rel: 'canonical', href: canonical }],
       };
       const permalink =
         post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
