@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 
-import { countryOptions } from '@cavuno/board/format';
+import { countryOptions, distanceUnitForCountry } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -13,6 +13,15 @@ import {
   updateProfileObjectReferences,
 } from '../server/form-fields';
 
+import {
+  commuteRadiusBounds,
+  commuteRadiusFromDisplay,
+  commuteRadiusToDisplay,
+  effectiveCommuteRadiusKm,
+  parseCommuteRadius,
+  takesCommuteRadius,
+  type HomePlace,
+} from '@/board/commute-radius';
 import { customFieldLabel } from '@/board/custom-field-labels';
 import {
   TALENT_FORM_BUILTINS,
@@ -52,6 +61,11 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import {
   NativeSelect,
   NativeSelectOption,
 } from '@/components/ui/native-select';
@@ -69,6 +83,7 @@ import {
   toastActionReconciliationError,
   toastActionSuccess,
 } from '@/lib/action-toast';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import {
   handleFromName,
   handleProblem,
@@ -114,6 +129,35 @@ function toForm(profile: CandidateProfileWithCountry): FormState {
     jobSearchStatusVisibleTo: profile.jobSearchStatusVisibleTo,
     openToRelocate: profile.openToRelocate,
   };
+}
+
+/** The stored home place, as the place the form measures commutes from. */
+function toHomePlace(
+  place: CandidateProfile['locationPlace'],
+): HomePlace | null {
+  return place
+    ? {
+        id: place.id,
+        countryCode: place.countryCode,
+        placeType: place.placeType,
+        city: place.city,
+      }
+    : null;
+}
+
+/** A commute distance the candidate typed, in the unit it was typed in. */
+type CommuteDraft = { text: string; unit: 'mi' | 'km' };
+
+/** A typed distance re-expressed in `unit`; unparseable text is kept. */
+function convertCommuteText(
+  draft: CommuteDraft,
+  unit: CommuteDraft['unit'],
+): string {
+  const value = draft.text.trim() === '' ? Number.NaN : Number(draft.text);
+  if (!Number.isFinite(value)) return draft.text;
+  return String(
+    commuteRadiusToDisplay(commuteRadiusFromDisplay(value, draft.unit), unit),
+  );
 }
 
 type Status = 'idle' | 'saving';
@@ -302,6 +346,21 @@ export function ProfileForm({
   // location is whatever the profile already had, so it starts settled.
   const [locationUnpicked, setLocationUnpicked] = useState(false);
   const [locationPickError, setLocationPickError] = useState(false);
+  // A location refused by the API on save (unknown id, lookup down).
+  const [locationSaveError, setLocationSaveError] = useState<string | null>(
+    null,
+  );
+  // The place commutes are measured from: the stored one, a fresh pick, or
+  // none once the candidate types over it.
+  const [homePlace, setHomePlace] = useState<HomePlace | null>(() =>
+    toHomePlace(profile.locationPlace),
+  );
+  const storedHomePlaceId = profile.locationPlace?.id ?? null;
+  const commuteInput = useRef<HTMLInputElement>(null);
+  // `null` until the candidate edits the distance; an untouched field saves
+  // nothing, so the stored value (or the market default) stays.
+  const [commuteDraft, setCommuteDraft] = useState<CommuteDraft | null>(null);
+  const [commuteError, setCommuteError] = useState(false);
   // The handle follows the display name until the candidate types one.
   const [handleFollowsName, setHandleFollowsName] = useState(!profile.handle);
   const incomingOverview = {
@@ -324,6 +383,8 @@ export function ProfileForm({
     ) {
       setLocationUnpicked(false);
       setLocationPickError(false);
+      setLocationSaveError(null);
+      setHomePlace(toHomePlace(profile.locationPlace));
     }
     setForm((draft) => {
       const next = { ...draft };
@@ -468,6 +529,36 @@ export function ProfileForm({
     return null;
   }
 
+  const showsCommuteRadius = takesCommuteRadius(homePlace);
+  const commuteUnit = distanceUnitForCountry(homePlace?.countryCode);
+  const commuteBounds = commuteRadiusBounds(commuteUnit);
+  const unitLabel = (unit: CommuteDraft['unit']) =>
+    unit === 'mi'
+      ? m.profileForm_commuteRadiusMilesUnit()
+      : m.profileForm_commuteRadiusKilometresUnit();
+  // An edited distance keeps its length when a new home place changes the
+  // unit; an untouched one shows the saved distance or the market default.
+  const commuteText = commuteDraft
+    ? commuteDraft.unit === commuteUnit
+      ? commuteDraft.text
+      : convertCommuteText(commuteDraft, commuteUnit)
+    : String(
+        commuteRadiusToDisplay(
+          effectiveCommuteRadiusKm(
+            profile.commuteRadiusKm,
+            homePlace?.countryCode,
+            homePlace?.id === storedHomePlaceId
+              ? profile.commuteRadiusDefaultKm
+              : undefined,
+          ),
+          commuteUnit,
+        ),
+      );
+  const commuteRangeMessage = m.profileForm_commuteRadiusRangeError({
+    min: `${commuteBounds.min} ${unitLabel(commuteUnit)}`,
+    max: `${commuteBounds.max} ${unitLabel(commuteUnit)}`,
+  });
+
   async function loadChoices(fieldKey: string, search: string) {
     const result = await (
       dependencies.listObjectReferenceChoices ??
@@ -489,6 +580,15 @@ export function ProfileForm({
       locationInput.current?.focus();
       return;
     }
+    const commuteValue =
+      showsCommuteRadius && commuteDraft
+        ? parseCommuteRadius(commuteText, commuteUnit)
+        : null;
+    if (showsCommuteRadius && commuteDraft && commuteValue === null) {
+      setCommuteError(true);
+      commuteInput.current?.focus();
+      return;
+    }
     if (missing) return;
     setStatus('saving');
     const handle = form.handle;
@@ -506,7 +606,19 @@ export function ProfileForm({
       if (shows('name')) data.displayName = form.displayName.trim();
       data.handle = handle;
       if (shows('headline')) data.headline = form.headline.trim();
-      if (shows('location')) data.location = form.location.trim();
+      if (shows('location')) {
+        data.location = form.location.trim();
+        // The picked place goes only when it changed; `null` drops a stored
+        // place the candidate typed over or cleared.
+        const homePlaceId = homePlace?.id ?? null;
+        if (homePlaceId !== storedHomePlaceId) data.locationId = homePlaceId;
+      }
+      if (commuteValue !== null) {
+        data.commuteRadiusKm = commuteRadiusFromDisplay(
+          commuteValue,
+          commuteUnit,
+        );
+      }
       if (shows('bio')) data.bio = form.bio.trim();
       if (shows('jobSearchStatus')) {
         data.jobSearchStatus = form.jobSearchStatus;
@@ -514,8 +626,18 @@ export function ProfileForm({
       }
       const result = await dependencies.updateProfile({ data });
       if (!result.ok) {
-        // Another candidate took the handle since the last probe.
         setStatus('idle');
+        if ('field' in result && result.field === 'location') {
+          setLocationSaveError(boardErrorMessage({ code: result.code }));
+          locationInput.current?.focus();
+          return;
+        }
+        if ('field' in result && result.field === 'commuteRadius') {
+          setCommuteError(true);
+          commuteInput.current?.focus();
+          return;
+        }
+        // Another candidate took the handle since the last probe.
         setHandleCheck({ handle, status: 'taken' });
         handleInput.current?.focus();
         return;
@@ -716,7 +838,9 @@ export function ProfileForm({
           <>
             <Field
               className="gap-1.5"
-              data-invalid={locationPickError || undefined}
+              data-invalid={
+                locationPickError || Boolean(locationSaveError) || undefined
+              }
             >
               <FieldLabel htmlFor="profile-location">
                 {m.profileForm_locationLabel()}
@@ -727,25 +851,43 @@ export function ProfileForm({
                 value={form.location}
                 placeholder={m.profileForm_locationPlaceholder()}
                 searchingText={m.locationCombobox_searchingText()}
-                invalid={locationPickError}
+                invalid={locationPickError || Boolean(locationSaveError)}
                 describedBy={
-                  locationPickError ? 'profile-location-error' : undefined
+                  locationPickError || locationSaveError
+                    ? 'profile-location-error'
+                    : undefined
                 }
                 onValueChange={(location) => {
                   set('location', location);
                   setLocationUnpicked(location.trim() !== '');
                   setLocationPickError(false);
+                  setLocationSaveError(null);
+                  setHomePlace(null);
                 }}
                 onPick={(place) => {
                   set('location', place.fullName ?? place.name);
                   setLocationUnpicked(false);
                   setLocationPickError(false);
+                  setLocationSaveError(null);
+                  setHomePlace(
+                    place.id === storedHomePlaceId
+                      ? toHomePlace(profile.locationPlace)
+                      : {
+                          id: place.id,
+                          countryCode: place.countryCode,
+                          placeType: place.placeType ?? null,
+                        },
+                  );
                 }}
                 {...locationSuggestions}
               />
               {locationPickError ? (
                 <FieldError id="profile-location-error">
                   {m.locationField_pickRequiredError()}
+                </FieldError>
+              ) : locationSaveError ? (
+                <FieldError id="profile-location-error">
+                  {locationSaveError}
                 </FieldError>
               ) : null}
             </Field>
@@ -911,6 +1053,51 @@ export function ProfileForm({
         {shows('jobSearchStatus') ? null : (
           <div className="grid gap-4 sm:grid-cols-3">{visibilityField}</div>
         )}
+
+        {showsCommuteRadius ? (
+          <Field className="gap-1.5" data-invalid={commuteError || undefined}>
+            <FieldLabel htmlFor="profile-commute-radius">
+              {m.profileForm_commuteRadiusLabel()}
+            </FieldLabel>
+            <InputGroup className="w-40">
+              <InputGroupInput
+                ref={commuteInput}
+                id="profile-commute-radius"
+                type="number"
+                inputMode="numeric"
+                min={commuteBounds.min}
+                max={commuteBounds.max}
+                step={1}
+                value={commuteText}
+                aria-invalid={commuteError || undefined}
+                aria-describedby={
+                  commuteError
+                    ? 'profile-commute-radius-description profile-commute-radius-error'
+                    : 'profile-commute-radius-description'
+                }
+                onChange={(event) => {
+                  setCommuteDraft({
+                    text: event.target.value,
+                    unit: commuteUnit,
+                  });
+                  setCommuteError(false);
+                  setStatus('idle');
+                }}
+              />
+              <InputGroupAddon align="inline-end">
+                {unitLabel(commuteUnit)}
+              </InputGroupAddon>
+            </InputGroup>
+            <FieldDescription id="profile-commute-radius-description">
+              {m.profileForm_commuteRadiusDescription()}
+            </FieldDescription>
+            {commuteError ? (
+              <FieldError id="profile-commute-radius-error">
+                {commuteRangeMessage}
+              </FieldError>
+            ) : null}
+          </Field>
+        ) : null}
 
         <Field orientation="horizontal" className="w-fit">
           <FieldLabel className="cursor-pointer">
