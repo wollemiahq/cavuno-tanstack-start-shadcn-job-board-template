@@ -602,6 +602,56 @@ describe('ProfileForm — home place and commute distance', () => {
     expect(mocks.updateProfile).not.toHaveBeenCalled();
   });
 
+  it('names the home place and its country under the commute and relocation fields', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusDefaultKm: 40,
+    });
+
+    expect(commuteInput()).toHaveAccessibleDescription(
+      m.profileForm_commuteRadiusDescription({ place: 'Houston' }),
+    );
+    expect(
+      screen.getByRole('switch', {
+        name: m.profileForm_openToRelocatingLabel(),
+      }),
+    ).toHaveAccessibleDescription(
+      m.profileForm_openToRelocateCountryDescription({
+        country: 'United States',
+      }),
+    );
+
+    pick(/Lyon/);
+
+    expect(commuteInput()).toHaveAccessibleDescription(
+      m.profileForm_commuteRadiusDescription({ place: 'Lyon' }),
+    );
+    expect(
+      screen.getByRole('switch', {
+        name: m.profileForm_openToRelocatingLabel(),
+      }),
+    ).toHaveAccessibleDescription(
+      m.profileForm_openToRelocateCountryDescription({ country: 'France' }),
+    );
+  });
+
+  it('saves the relocation switch, with the country-less copy and no home place', async () => {
+    await renderForm();
+    const relocate = screen.getByRole('switch', {
+      name: m.profileForm_openToRelocatingLabel(),
+    });
+    expect(relocate).toHaveAccessibleDescription(
+      m.profileForm_openToRelocateNoCountryDescription(),
+    );
+
+    fireEvent.click(relocate);
+    submit();
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).toMatchObject({ openToRelocate: true });
+  });
+
   it('shows a refused place on the location field', async () => {
     await renderForm();
     mocks.updateProfile.mockResolvedValue({

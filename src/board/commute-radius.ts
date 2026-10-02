@@ -20,6 +20,8 @@ export type HomePlace = {
   countryCode: string | null;
   placeType: string | null;
   city?: string | null;
+  /** The place's own name, e.g. `Lyon`; a stored place's full name. */
+  name?: string | null;
 };
 
 /**
