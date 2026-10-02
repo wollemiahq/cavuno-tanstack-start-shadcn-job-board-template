@@ -270,7 +270,11 @@ function MembershipPlanCard({
     <Card className={cn('h-full', plan.isRecommended && 'ring-primary ring-2')}>
       <CardHeader>
         <CardTitle>{planName(plan)}</CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
+        {description ? (
+          <CardDescription className="whitespace-pre-line">
+            {description}
+          </CardDescription>
+        ) : null}
         {plan.isRecommended ? (
           <CardAction>
             <Badge>{m.employerLanding_recommendedBadge()}</Badge>

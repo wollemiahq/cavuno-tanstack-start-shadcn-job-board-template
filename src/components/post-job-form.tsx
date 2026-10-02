@@ -1224,7 +1224,7 @@ export function PostJobForm({
                       </span>
                     </FieldTitle>
                     {planDescription(plan) ? (
-                      <FieldDescription>
+                      <FieldDescription className="whitespace-pre-line">
                         {planDescription(plan)}
                       </FieldDescription>
                     ) : null}

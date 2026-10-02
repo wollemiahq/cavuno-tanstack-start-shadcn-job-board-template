@@ -217,7 +217,9 @@ function PlanCard({
       <CardHeader>
         <CardTitle>{planName(plan)}</CardTitle>
         {planDescription(plan) ? (
-          <CardDescription>{planDescription(plan)}</CardDescription>
+          <CardDescription className="whitespace-pre-line">
+            {planDescription(plan)}
+          </CardDescription>
         ) : null}
         {plan.isRecommended ? (
           <CardAction>

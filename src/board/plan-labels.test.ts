@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { m } from '../paraglide/messages';
+import { baseLocale } from '../paraglide/runtime';
 import { planDescription, planName } from './plan-labels';
 
 describe('plan copy resolution tiers', () => {
@@ -13,7 +14,6 @@ describe('plan copy resolution tiers', () => {
   it('unmapped plans compose from the structured featureSummary', () => {
     const plan = {
       name: 'Enterprise blast',
-      description: 'Operator prose in board language',
       featureSummary: { durationDays: 45, maxActiveJobs: 5, featuredSlots: 1 },
     };
     expect(planDescription(plan, 'en')).toBe(
@@ -44,6 +44,58 @@ describe('plan copy resolution tiers', () => {
         'en',
       ),
     ).toBe('Find and contact candidates');
+  });
+});
+
+describe('operator descriptions on board-language pages', () => {
+  it.each(['Free', 'Enterprise blast'])(
+    'shows the %s job-posting plan description as written',
+    (name) => {
+      const description = 'Logo on cards\nSocial auto-broadcast';
+      expect(
+        planDescription(
+          {
+            name,
+            description,
+            purpose: 'job_posting',
+            featureSummary: {
+              durationDays: 45,
+              maxActiveJobs: 1,
+              featuredSlots: 1,
+            },
+          },
+          baseLocale,
+        ),
+      ).toBe(description);
+    },
+  );
+
+  it('keeps the translated copy for an untouched seeded plan', () => {
+    expect(
+      planDescription(
+        { name: 'Free', description: 'A 30 day standard listing' },
+        baseLocale,
+      ),
+    ).toBe(m.plan_free_description({}, { locale: baseLocale }));
+  });
+
+  it('composes the summary when the description is blank', () => {
+    expect(
+      planDescription(
+        {
+          name: 'Enterprise blast',
+          description: '  ',
+          featureSummary: {
+            durationDays: 45,
+            maxActiveJobs: 1,
+            featuredSlots: 1,
+          },
+        },
+        baseLocale,
+      ),
+    ).toBe(
+      m.planComposed_featuredListing({ days: 45 }, { locale: baseLocale }),
+    );
   });
 });
 
