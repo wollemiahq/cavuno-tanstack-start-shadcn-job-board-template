@@ -557,6 +557,19 @@ export function ProfileForm({
           commuteUnit,
         ),
       );
+  // An emptied field resets to the market default, shown as its placeholder.
+  const commuteDefaultText = String(
+    commuteRadiusToDisplay(
+      effectiveCommuteRadiusKm(
+        null,
+        homePlace?.countryCode,
+        homePlace?.id === storedHomePlaceId
+          ? profile.commuteRadiusDefaultKm
+          : undefined,
+      ),
+      commuteUnit,
+    ),
+  );
   const commuteRangeMessage = m.profileForm_commuteRadiusRangeError({
     min: `${commuteBounds.min} ${unitLabel(commuteUnit)}`,
     max: `${commuteBounds.max} ${unitLabel(commuteUnit)}`,
@@ -583,11 +596,13 @@ export function ProfileForm({
       locationInput.current?.focus();
       return;
     }
+    const commuteEdited = showsCommuteRadius && commuteDraft !== null;
+    const commuteCleared = commuteEdited && commuteText.trim() === '';
     const commuteValue =
-      showsCommuteRadius && commuteDraft
+      commuteEdited && !commuteCleared
         ? parseCommuteRadius(commuteText, commuteUnit)
         : null;
-    if (showsCommuteRadius && commuteDraft && commuteValue === null) {
+    if (commuteEdited && !commuteCleared && commuteValue === null) {
       setCommuteError(true);
       commuteInput.current?.focus();
       return;
@@ -616,7 +631,10 @@ export function ProfileForm({
         const homePlaceId = homePlace?.id ?? null;
         if (homePlaceId !== storedHomePlaceId) data.locationId = homePlaceId;
       }
-      if (commuteValue !== null) {
+      if (commuteCleared) {
+        // `null` resets the distance to the market default.
+        data.commuteRadiusKm = null;
+      } else if (commuteValue !== null) {
         data.commuteRadiusKm = commuteRadiusFromDisplay(
           commuteValue,
           commuteUnit,
@@ -759,6 +777,7 @@ export function ProfileForm({
                 max={commuteBounds.max}
                 step={1}
                 value={commuteText}
+                placeholder={commuteDefaultText}
                 aria-invalid={commuteError || undefined}
                 aria-describedby={
                   commuteError
