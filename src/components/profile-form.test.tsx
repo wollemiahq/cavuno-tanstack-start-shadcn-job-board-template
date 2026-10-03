@@ -485,7 +485,28 @@ describe('ProfileForm — home place and commute distance', () => {
     placeType: 'city',
   } as const;
 
-  async function renderForm(overrides: Partial<CandidateProfile> = {}) {
+  const houstonSuggestion = {
+    id: 'loc-houston',
+    slug: 'loc-houston',
+    name: 'Houston',
+    fullName: 'Houston, Texas, United States',
+    contextLabel: 'United States',
+    countryCode: 'US',
+    regionCode: null,
+    placeType: 'city',
+  };
+  const storedTexas = {
+    id: 'loc-texas',
+    name: 'Texas, United States',
+    countryCode: 'US',
+    region: 'Texas',
+    placeType: 'region',
+  } as const;
+
+  async function renderForm(
+    overrides: Partial<CandidateProfile> = {},
+    suggestions = [lyon, texas],
+  ) {
     mocks.updateProfile.mockResolvedValue({ ok: true });
     await renderWithRouter(
       <ProfileForm
@@ -493,7 +514,7 @@ describe('ProfileForm — home place and commute distance', () => {
         language="en"
         dependencies={mocks}
         locationSuggestions={{
-          suggestions: [lyon, texas],
+          suggestions,
           loading: false,
           onQueryChange: vi.fn(),
         }}
@@ -600,6 +621,88 @@ describe('ProfileForm — home place and commute distance', () => {
     expect(commuteInput()).toHaveAttribute('aria-invalid', 'true');
     expect(commuteInput()).toHaveFocus();
     expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('shows a saved distance in km when a region home becomes a km city', async () => {
+    await renderForm({
+      location: storedTexas.name,
+      locationPlace: storedTexas,
+      commuteRadiusKm: 80,
+      commuteRadiusDefaultKm: 40,
+    });
+    expect(commuteInput()).toBeNull();
+
+    pick(/Lyon/);
+
+    expect(commuteInput()).toHaveValue(80);
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).not.toHaveProperty('commuteRadiusKm');
+  });
+
+  it('shows a saved distance in miles when a region home becomes a US city', async () => {
+    await renderForm(
+      {
+        location: storedTexas.name,
+        locationPlace: storedTexas,
+        commuteRadiusKm: 80,
+        commuteRadiusDefaultKm: 40,
+      },
+      [houstonSuggestion],
+    );
+
+    pick(/Houston/);
+
+    expect(commuteInput()).toHaveValue(50);
+  });
+
+  it('re-expresses an untouched saved distance in the new unit', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusKm: 80,
+      commuteRadiusDefaultKm: 40,
+    });
+    expect(commuteInput()).toHaveValue(50);
+
+    pick(/Lyon/);
+
+    expect(commuteInput()).toHaveValue(80);
+  });
+
+  it('converts a typed distance when the unit changes', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusKm: 80,
+      commuteRadiusDefaultKm: 40,
+    });
+    fireEvent.change(commuteInput()!, { target: { value: '30' } });
+
+    pick(/Lyon/);
+
+    expect(commuteInput()).toHaveValue(48);
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).toMatchObject({ commuteRadiusKm: 48 });
+  });
+
+  it('resets an emptied distance to the market default', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusKm: 80,
+      commuteRadiusDefaultKm: 40,
+    });
+
+    fireEvent.change(commuteInput()!, { target: { value: '' } });
+
+    expect(commuteInput()).toHaveValue(null);
+    expect(commuteInput()).toHaveAttribute('placeholder', '25');
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).toMatchObject({ commuteRadiusKm: null });
+    expect(commuteInput()).not.toHaveAttribute('aria-invalid');
   });
 
   it('names the home place under the commute field', async () => {
