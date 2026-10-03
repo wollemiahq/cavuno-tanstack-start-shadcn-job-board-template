@@ -3,7 +3,6 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
-import { distanceUnitForCountry } from '@/board/sdk-distance-shim';
 import { useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -42,6 +41,7 @@ import {
   type ProfileFieldValue,
   type ProfileSelections,
 } from '@/board/profile-field-writes';
+import { distanceUnitForCountry } from '@/board/sdk-distance-shim';
 import { CollectionFieldPicker } from '@/components/collection-field-picker';
 import {
   CustomFieldInput,
