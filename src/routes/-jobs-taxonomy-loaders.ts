@@ -2,7 +2,10 @@ import { notFound, redirect } from '@tanstack/react-router';
 
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from './-programmatic-jobs-constants';
 
-import { jobsListingLoaderDeps } from '@/lib/jobs-search';
+import {
+  jobsListingLoaderDeps,
+  type LocationJobsSearch,
+} from '@/lib/jobs-search';
 import { pageToOffset } from '@/lib/pagination';
 import {
   getJobsCategoryPage,
@@ -13,6 +16,7 @@ import {
 } from '@/server/jobs-listing-pages';
 
 type JobsListingDeps = ReturnType<typeof jobsListingLoaderDeps>;
+type LocationJobsListingDeps = Omit<LocationJobsSearch, 'selectedJob'>;
 
 export function createJobsCategoryLoader(
   loadPage: typeof getJobsCategoryPage = getJobsCategoryPage,
@@ -55,12 +59,13 @@ export function createJobsLocationCategoryLoader(
     deps,
   }: {
     params: { location: string; keyword: string };
-    deps: JobsListingDeps;
+    deps: LocationJobsListingDeps;
   }) => {
     const result = await loadPage({
       data: {
         locationSlug: params.location,
         categorySlug: params.keyword,
+        within: deps.within,
         remoteOption: deps.remoteOption,
         employmentType: deps.employmentType,
         seniority: deps.seniority,
@@ -89,11 +94,12 @@ export function createJobsLocationLoader(
     deps,
   }: {
     params: { location: string };
-    deps: JobsListingDeps;
+    deps: LocationJobsListingDeps;
   }) => {
     const result = await loadPage({
       data: {
         locationSlug: params.location,
+        within: deps.within,
         q: deps.q,
         remoteOption: deps.remoteOption,
         employmentType: deps.employmentType,

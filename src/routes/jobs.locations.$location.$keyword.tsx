@@ -9,19 +9,23 @@
  */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
+import {
+  jobsListingLoaderDeps,
+  parseLocationJobsSearch,
+} from '../lib/jobs-search';
 import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { createJobsLocationCategoryLoader } from './-jobs-taxonomy-loaders';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
+import { SearchRadiusScope } from '@/components/board/search-radius-scope';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
 import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
-  validateSearch: parseJobsSearch,
+  validateSearch: parseLocationJobsSearch,
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: createJobsLocationCategoryLoader(),
   head: ({ loaderData }) =>
@@ -33,15 +37,36 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
 });
 
 function LocationCategoryPage() {
-  const { place, category, list, relatedSearches } = Route.useLoaderData();
+  const { place, category, list, relatedSearches, searchRadius } =
+    Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   return (
     <ProgrammaticJobsView
       heading={m.locationCategoryPage_jobsHeading({
         category: category.displayName,
         place: place.displayName,
       })}
+      resultsScope={
+        searchRadius ? (
+          <SearchRadiusScope
+            place={place.displayName}
+            unit={searchRadius.unit}
+            within={searchRadius.selected?.value}
+            onWithinChange={(within) =>
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  within,
+                  page: undefined,
+                  selectedJob: undefined,
+                }),
+              })
+            }
+          />
+        ) : undefined
+      }
       count={list.count}
       gatedCount={list.gatedCount}
       jobs={list.data}

@@ -44,6 +44,7 @@ import {
 } from '@/board/custom-field-labels';
 import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
+import { placeSearchRadius } from '@/board/search-radius';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import {
@@ -160,6 +161,36 @@ function trailJsonLd(trail: { name: string; href?: string }[]) {
       ? { name: crumb.name, path: localizePath(crumb.href) }
       : { name: crumb.name },
   );
+}
+
+/**
+ * A location page widened by `within` is a filtered view of the plain
+ * location page, which stays the canonical URL: keep it out of the index
+ * while its job links are still followed.
+ */
+function noindexWhenWidened<T extends { meta: object[] }>(
+  head: T,
+  widened: boolean,
+): T {
+  if (!widened) return head;
+  return {
+    ...head,
+    meta: [...head.meta, { name: 'robots', content: 'noindex, follow' }],
+  };
+}
+
+/**
+ * The `radius` (km) a location listing asks for. Only a `within` URL waits
+ * for the place first: its unit and level decide the kilometres, and a
+ * region or country ignores it. Every other request keeps the place resolve
+ * in the same batch as the listing.
+ */
+async function listingRadiusKm(
+  placeRead: Promise<TaxonomyResolution | null>,
+  within: number | undefined,
+): Promise<number | undefined> {
+  if (within === undefined) return undefined;
+  return placeSearchRadius(await placeRead, within)?.selected?.km;
 }
 
 /** The board's job custom fields as "All filters" controls. */
@@ -453,17 +484,25 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
  */
 export const getJobsLocationPage = createServerFn({ method: 'GET' })
   .validator(
-    (input: JobsListingFiltersInput & { locationSlug: string }) => input,
+    (
+      input: JobsListingFiltersInput & {
+        locationSlug: string;
+        /** Search distance in the place's unit; see `@/board/search-radius`. */
+        within?: number;
+      },
+    ) => input,
   )
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
+      const placeRead = resolveOrNull(
+        board.taxonomy.places.resolve(data.locationSlug, { headers }),
+      );
+      const radius = await listingRadiusKm(placeRead, data.within);
       const [place, listResult, seo, placeTree] = await Promise.all([
-        resolveOrNull(
-          board.taxonomy.places.resolve(data.locationSlug, { headers }),
-        ),
+        placeRead,
         data.q
           ? settled(
               board.jobs.search(
@@ -471,6 +510,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
                   query: data.q,
                   filters: {
                     location: data.locationSlug,
+                    radius,
                     remoteOption: filters.remoteOption,
                     employmentType: filters.employmentType,
                     seniority: filters.seniority,
@@ -485,7 +525,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             )
           : settled(
               board.jobs.list(
-                { ...filters, location: data.locationSlug },
+                {
+                  ...filters,
+                  location: data.locationSlug,
+                  radius,
+                },
                 { headers },
               ),
             ),
@@ -502,6 +546,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const list = listResult.value;
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
+      const searchRadius = placeSearchRadius(place, data.within);
       const heading = m.locationPage_jobsHeading({ place: place.displayName });
       // Hosted parity: Home > Jobs > country > … > current place (terminal).
       const crumbs = breadcrumbsCopy();
@@ -510,21 +555,24 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place),
       ];
-      const head = listingHead({
-        title: listingPageTitle({
-          heading: heading,
-          boardName: seo.boardName,
-          language: seo.language,
-          count: catalogJobCount(list.count, list.gatedCount),
+      const head = noindexWhenWidened(
+        listingHead({
+          title: listingPageTitle({
+            heading: heading,
+            boardName: seo.boardName,
+            language: seo.language,
+            count: catalogJobCount(list.count, list.gatedCount),
+          }),
+          origin: seo.origin,
+          path: localizePath(`/jobs/locations/${data.locationSlug}`),
+          description: listingMetaDescription({
+            heading: heading,
+            boardName: seo.boardName,
+            count: catalogJobCount(list.count, list.gatedCount),
+          }),
         }),
-        origin: seo.origin,
-        path: localizePath(`/jobs/locations/${data.locationSlug}`),
-        description: listingMetaDescription({
-          heading: heading,
-          boardName: seo.boardName,
-          count: catalogJobCount(list.count, list.gatedCount),
-        }),
-      });
+        Boolean(searchRadius?.selected),
+      );
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -538,6 +586,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches,
+        searchRadius,
         head,
         jsonLd,
         breadcrumbTrail,
@@ -559,6 +608,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       input: JobsListingFiltersInput & {
         locationSlug: string;
         categorySlug: string;
+        /** Search distance in the place's unit; see `@/board/search-radius`. */
+        within?: number;
       },
     ) => input,
   )
@@ -567,10 +618,12 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
+      const placeRead = resolveOrNull(
+        board.taxonomy.places.resolve(data.locationSlug, { headers }),
+      );
+      const radius = await listingRadiusKm(placeRead, data.within);
       const [place, category, listResult, seo, placeTree] = await Promise.all([
-        resolveOrNull(
-          board.taxonomy.places.resolve(data.locationSlug, { headers }),
-        ),
+        placeRead,
         resolveOrNull(
           board.taxonomy.categories.resolve(data.categorySlug, { headers }),
         ),
@@ -579,6 +632,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             {
               ...filters,
               location: data.locationSlug,
+              radius,
               category: data.categorySlug,
             },
             { headers },
@@ -599,6 +653,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
+      const searchRadius = placeSearchRadius(place, data.within);
       const heading = m.locationCategoryPage_jobsHeading({
         category: category.displayName,
         place: place.displayName,
@@ -617,23 +672,26 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         }),
         { name: category.displayName },
       ];
-      const head = listingHead({
-        title: listingPageTitle({
-          heading: heading,
-          boardName: seo.boardName,
-          language: seo.language,
-          count: catalogJobCount(list.count, list.gatedCount),
+      const head = noindexWhenWidened(
+        listingHead({
+          title: listingPageTitle({
+            heading: heading,
+            boardName: seo.boardName,
+            language: seo.language,
+            count: catalogJobCount(list.count, list.gatedCount),
+          }),
+          origin: seo.origin,
+          path: localizePath(
+            `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+          ),
+          description: listingMetaDescription({
+            heading: heading,
+            boardName: seo.boardName,
+            count: catalogJobCount(list.count, list.gatedCount),
+          }),
         }),
-        origin: seo.origin,
-        path: localizePath(
-          `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
-        ),
-        description: listingMetaDescription({
-          heading: heading,
-          boardName: seo.boardName,
-          count: catalogJobCount(list.count, list.gatedCount),
-        }),
-      });
+        Boolean(searchRadius?.selected),
+      );
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -648,6 +706,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches: list.relatedSearches,
+        searchRadius,
         head,
         jsonLd,
         breadcrumbTrail,

@@ -51,6 +51,7 @@ describe('location jobs route — combined keyword and place filtering', () => {
         origin: 'https://example.com',
       },
       relatedSearches: undefined,
+      searchRadius: null,
       head: { meta: [], links: [] },
       jsonLd: [],
       breadcrumbTrail: [
@@ -69,6 +70,23 @@ describe('location jobs route — combined keyword and place filtering', () => {
         locationSlug: 'sydney',
         q: 'robotics',
       }),
+    });
+  });
+});
+
+describe('location jobs route — search distance', () => {
+  it('passes the URL `within` to the page read', async () => {
+    getJobsLocationPage.mockResolvedValue({ kind: 'not_found' });
+
+    await expect(
+      loadLocationJobs({
+        params: { location: 'sydney' },
+        deps: { within: 25 },
+      }),
+    ).rejects.toBeDefined();
+
+    expect(getJobsLocationPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({ locationSlug: 'sydney', within: 25 }),
     });
   });
 });
