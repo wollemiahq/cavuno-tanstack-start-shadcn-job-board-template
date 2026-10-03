@@ -22,6 +22,7 @@ export function JobsResultsBar({
   pageSize,
   heading,
   language,
+  scope,
   className,
 }: {
   visibleCount?: number;
@@ -32,6 +33,8 @@ export function JobsResultsBar({
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
   language: string;
+  /** What the results cover, such as the location search distance. */
+  scope?: React.ReactNode;
   className?: string;
 }) {
   // Viewer chrome locale for number/plural formatting (prop kept for call-site
@@ -78,6 +81,7 @@ export function JobsResultsBar({
         <h1 className="text-foreground text-lg font-semibold tracking-tight">
           {totalLabel}
         </h1>
+        {scope}
         {rangeLabel ? (
           <p className="text-muted-foreground text-xs">{rangeLabel}</p>
         ) : null}

@@ -108,6 +108,7 @@ export function JobSearchPage({
   jobForm,
   language,
   heading,
+  resultsScope,
   relatedSearches,
   onFiltersChange,
   onPageChange,
@@ -134,6 +135,8 @@ export function JobSearchPage({
   jobForm?: JobFormSource | null;
   language: string;
   heading?: string;
+  /** Rendered under the result count; see `JobsResultsBar` `scope`. */
+  resultsScope?: React.ReactNode;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: JobsFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;
@@ -176,6 +179,7 @@ export function JobSearchPage({
       pageSize={pageSize}
       heading={heading}
       language={language}
+      scope={resultsScope}
     />
   );
   return (

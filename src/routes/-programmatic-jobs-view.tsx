@@ -26,6 +26,7 @@ type LooseNavigate = (opts: {
 
 export function ProgrammaticJobsView({
   heading,
+  resultsScope,
   count,
   gatedCount,
   jobs,
@@ -37,6 +38,8 @@ export function ProgrammaticJobsView({
   onSaveJob,
 }: {
   heading: string;
+  /** Rendered under the result count, such as the location search distance. */
+  resultsScope?: React.ReactNode;
   count?: number;
   gatedCount?: number;
   jobs: PublicJobCard[];
@@ -70,6 +73,7 @@ export function ProgrammaticJobsView({
       <JobSearchPage
         ads={board.ads}
         heading={heading}
+        resultsScope={resultsScope}
         count={count}
         gatedCount={gatedCount}
         jobs={jobs.map((job) => toJobCardVM(job, getLocale(), board))}
