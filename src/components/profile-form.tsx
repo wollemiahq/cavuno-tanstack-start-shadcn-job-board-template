@@ -735,11 +735,9 @@ export function ProfileForm({
   );
 
   // The commute distance and the relocation switch sit under the location
-  // (or on their own when the layout hides it); both read the home place.
+  // (or on their own when the layout hides it); both read the home place. The
+  // country follows them: it is an eligibility answer, not the home place.
   const homePlaceName = homePlace?.city || homePlace?.name || '';
-  const homeCountryName = homePlace?.countryCode
-    ? countries.find((country) => country.code === homePlace.countryCode)?.name
-    : undefined;
   const locationSettings = (
     <div className="flex flex-col gap-4 sm:col-span-2">
       {showsCommuteRadius ? (
@@ -747,35 +745,39 @@ export function ProfileForm({
           <FieldLabel htmlFor="profile-commute-radius">
             {m.profileForm_commuteRadiusLabel()}
           </FieldLabel>
-          <InputGroup className="w-40">
-            <InputGroupInput
-              ref={commuteInput}
-              id="profile-commute-radius"
-              type="number"
-              inputMode="numeric"
-              min={commuteBounds.min}
-              max={commuteBounds.max}
-              step={1}
-              value={commuteText}
-              aria-invalid={commuteError || undefined}
-              aria-describedby={
-                commuteError
-                  ? 'profile-commute-radius-description profile-commute-radius-error'
-                  : 'profile-commute-radius-description'
-              }
-              onChange={(event) => {
-                setCommuteDraft({
-                  text: event.target.value,
-                  unit: commuteUnit,
-                });
-                setCommuteError(false);
-                setStatus('idle');
-              }}
-            />
-            <InputGroupAddon align="inline-end">
-              {unitLabel(commuteUnit)}
-            </InputGroupAddon>
-          </InputGroup>
+          {/* A vertical Field stretches its direct children; the wrapper takes
+              that width so the short numeric field keeps its own. */}
+          <div>
+            <InputGroup className="w-32">
+              <InputGroupInput
+                ref={commuteInput}
+                id="profile-commute-radius"
+                type="number"
+                inputMode="numeric"
+                min={commuteBounds.min}
+                max={commuteBounds.max}
+                step={1}
+                value={commuteText}
+                aria-invalid={commuteError || undefined}
+                aria-describedby={
+                  commuteError
+                    ? 'profile-commute-radius-description profile-commute-radius-error'
+                    : 'profile-commute-radius-description'
+                }
+                onChange={(event) => {
+                  setCommuteDraft({
+                    text: event.target.value,
+                    unit: commuteUnit,
+                  });
+                  setCommuteError(false);
+                  setStatus('idle');
+                }}
+              />
+              <InputGroupAddon align="inline-end">
+                {unitLabel(commuteUnit)}
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
           <FieldDescription id="profile-commute-radius-description">
             {m.profileForm_commuteRadiusDescription({ place: homePlaceName })}
           </FieldDescription>
@@ -792,11 +794,7 @@ export function ProfileForm({
             {m.profileForm_openToRelocatingLabel()}
           </FieldLabel>
           <FieldDescription id="profile-open-to-relocate-description">
-            {homeCountryName
-              ? m.profileForm_openToRelocateCountryDescription({
-                  country: homeCountryName,
-                })
-              : m.profileForm_openToRelocateNoCountryDescription()}
+            {m.profileForm_openToRelocateDescription()}
           </FieldDescription>
         </FieldContent>
         <Switch
@@ -969,8 +967,8 @@ export function ProfileForm({
                 </FieldError>
               ) : null}
             </Field>
-            {countryField}
             {locationSettings}
+            {countryField}
           </>
         );
       case 'bio':
@@ -1128,8 +1126,8 @@ export function ProfileForm({
         )}
         {shows('location') ? null : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2">{countryField}</div>
             {locationSettings}
+            <div className="grid gap-4 sm:grid-cols-2">{countryField}</div>
           </>
         )}
         {shows('jobSearchStatus') ? null : (

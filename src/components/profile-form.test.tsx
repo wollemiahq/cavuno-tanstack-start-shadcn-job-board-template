@@ -602,7 +602,7 @@ describe('ProfileForm — home place and commute distance', () => {
     expect(mocks.updateProfile).not.toHaveBeenCalled();
   });
 
-  it('names the home place and its country under the commute and relocation fields', async () => {
+  it('names the home place under the commute field', async () => {
     await renderForm({
       location: houston.name,
       locationPlace: houston,
@@ -616,33 +616,43 @@ describe('ProfileForm — home place and commute distance', () => {
       screen.getByRole('switch', {
         name: m.profileForm_openToRelocatingLabel(),
       }),
-    ).toHaveAccessibleDescription(
-      m.profileForm_openToRelocateCountryDescription({
-        country: 'United States',
-      }),
-    );
+    ).toHaveAccessibleDescription(m.profileForm_openToRelocateDescription());
 
     pick(/Lyon/);
 
     expect(commuteInput()).toHaveAccessibleDescription(
       m.profileForm_commuteRadiusDescription({ place: 'Lyon' }),
     );
-    expect(
-      screen.getByRole('switch', {
-        name: m.profileForm_openToRelocatingLabel(),
-      }),
-    ).toHaveAccessibleDescription(
-      m.profileForm_openToRelocateCountryDescription({ country: 'France' }),
-    );
   });
 
-  it('saves the relocation switch, with the country-less copy and no home place', async () => {
+  it('orders location, commute, relocation, then country', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusDefaultKm: 40,
+    });
+
+    const order = [
+      'profile-location',
+      'profile-commute-radius',
+      'profile-open-to-relocate',
+      'profile-country',
+    ].map((id) => document.getElementById(id));
+    for (const [index, element] of order.slice(1).entries()) {
+      expect(
+        order[index]!.compareDocumentPosition(element!) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+
+  it('saves the relocation switch, with no home place', async () => {
     await renderForm();
     const relocate = screen.getByRole('switch', {
       name: m.profileForm_openToRelocatingLabel(),
     });
     expect(relocate).toHaveAccessibleDescription(
-      m.profileForm_openToRelocateNoCountryDescription(),
+      m.profileForm_openToRelocateDescription(),
     );
 
     fireEvent.click(relocate);
