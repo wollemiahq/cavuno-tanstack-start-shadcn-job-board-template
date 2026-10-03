@@ -51,6 +51,18 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* The site header is sticky (`min-h-16` plus its bottom border), so anything
+   the browser scrolls into view — a required field focused by native form
+   validation, an in-page anchor — would otherwise land underneath it. Pad the
+   viewport's scroll snapport by the header height plus a little breathing
+   room. Keep --site-header-height in step with the header in Header.tsx. */
+:root {
+  --site-header-height: calc(var(--spacing) * 16 + 1px);
+}
+html {
+  scroll-padding-top: calc(var(--site-header-height) + var(--spacing) * 4);
+}
+
 /* Quiet the classic scrollbars that live in that reserved space: a slim,
    muted thumb on a transparent track, themed via --border so both modes
    stay subtle. Standard properties only (Chromium 121+/Firefox; Safari

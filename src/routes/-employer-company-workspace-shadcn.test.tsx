@@ -463,7 +463,7 @@ describe('employer company workspace', () => {
 
   it('explains a Stripe return and highlights the posted job', async () => {
     await renderJobs([draftJob], {
-      search: { checkout_success: '1', job_id: draftJob.id },
+      search: { checkout_success: 1, job_id: draftJob.id },
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -476,7 +476,7 @@ describe('employer company workspace', () => {
 
   it('says a held post is awaiting review instead of calling it saved', async () => {
     await renderJobs([draftJob], {
-      search: { posted: '1', review: '1', job_id: draftJob.id },
+      search: { posted: 1, review: 1, job_id: draftJob.id },
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -489,7 +489,7 @@ describe('employer company workspace', () => {
 
   it('explains a same-origin save and says so if the new row is not listed yet', async () => {
     await renderJobs([draftJob], {
-      search: { posted: '1', job_id: 'job-missing' },
+      search: { posted: 1, job_id: 'job-missing' },
     });
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -497,6 +497,19 @@ describe('employer company workspace', () => {
     );
     expect(screen.getByRole('alert')).toHaveTextContent(
       m.employerJobs_postedMissingBody(),
+    );
+  });
+
+  it('confirms a saved edit without describing a new draft', async () => {
+    await renderJobs([draftJob], {
+      search: { edited: 1, job_id: draftJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.employerEditJob_savedText(),
+    );
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      m.employerJobs_postedBody(),
     );
   });
 
@@ -1029,6 +1042,34 @@ describe('employer company workspace', () => {
     expect(formData.get('slug')).toBe('northstar-labs');
     expect(formData.get('logo')).toBe(file);
     await waitFor(() => expect(profileActions.invalidate).toHaveBeenCalled());
+  });
+
+  it('confirms a saved company profile with a success toast', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    renderProfile();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    await waitFor(() =>
+      expect(profileActions.toastSuccess).toHaveBeenCalledOnce(),
+    );
+    expect(profileActions.invalidate).toHaveBeenCalledOnce();
+  });
+
+  it('does not toast success when the company write fails', async () => {
+    profileActions.updateCompany.mockResolvedValue({
+      ok: false,
+      message: 'Website is invalid.',
+    });
+    renderProfile();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save company' }));
+
+    expect(
+      await screen.findByText(m.boardError_genericText()),
+    ).toBeInTheDocument();
+    expect(profileActions.toastSuccess).not.toHaveBeenCalled();
   });
 
   it('reports profile reconciliation failure without calling the saved write failed', async () => {
@@ -1979,6 +2020,24 @@ describe('Company profile — operator form layout', () => {
     expect(body).not.toHaveProperty('summary');
     expect(body).not.toHaveProperty('linkedinUrl');
     expect(body).not.toHaveProperty('instagramUrl');
+  });
+
+  it('names the social links group once when the layout splits it', () => {
+    renderProfile({
+      ...profileLoaderData,
+      formLayout: [
+        builtin('linkedinUrl'),
+        builtin('name', { locked: true }),
+        builtin('xUrl'),
+      ],
+    });
+
+    expect(
+      screen.getAllByRole('group', { name: m.employerProfile_linksHeading() }),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole('textbox', { name: m.employerProfile_xLabel() }),
+    ).toBeInTheDocument();
   });
 
   it('blocks the save while a required field is empty', async () => {

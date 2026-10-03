@@ -18,6 +18,12 @@ import {
 } from '../server/employers';
 import { getSeoBase } from '../server/queries';
 
+import {
+  COMPANY_FORM_BUILTINS,
+  requiresBuiltin,
+  resolveProfileFormLayout,
+  showsBuiltin,
+} from '@/board/form-layout';
 import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -58,7 +64,7 @@ import {
 } from '@/components/ui/item';
 import { Spinner } from '@/components/ui/spinner';
 import type { UrlSearchInput } from '@/lib/pagination';
-import type { CompanyMembership } from '@cavuno/board';
+import type { BoardProfileFormField, CompanyMembership } from '@cavuno/board';
 
 type CompanyStatusLabels = Record<CompanyMembership['status'], () => string>;
 
@@ -129,12 +135,20 @@ export function EmployerDashboardView({
   add,
   verified,
   consumeVerificationOutcome,
+  companyFormLayout = null,
   dependencies,
 }: {
   companies: CompanyMembership[];
   add?: boolean;
   verified?: WorkEmailVerificationOutcome;
   consumeVerificationOutcome?: () => void;
+  /**
+   * The operator's company form (`board.context().forms.company`), which
+   * decides whether the new-company dialog shows and requires a website.
+   * `null` from an API that predates form layouts: the website stays
+   * optional.
+   */
+  companyFormLayout?: readonly BoardProfileFormField[] | null;
   dependencies: EmployerDashboardViewDependencies;
 }) {
   const [adding, setAdding] = useState(add === true);
@@ -149,6 +163,7 @@ export function EmployerDashboardView({
       <ConnectCompany
         onBack={companies.length > 0 ? () => setAdding(false) : undefined}
         verificationOutcome={verificationOutcome}
+        companyFormLayout={companyFormLayout}
         dependencies={dependencies}
       />
     );
@@ -277,10 +292,12 @@ type ConnectCompanyState = {
 function ConnectCompany({
   onBack,
   verificationOutcome,
+  companyFormLayout,
   dependencies,
 }: {
   onBack?: () => void;
   verificationOutcome?: WorkEmailVerificationOutcome;
+  companyFormLayout: readonly BoardProfileFormField[] | null;
   dependencies: EmployerDashboardViewDependencies;
 }) {
   const anchorRef = useComboboxAnchor();
@@ -501,6 +518,7 @@ function ConnectCompany({
           <CreateCompanyModal
             initialName={query.trim()}
             onClose={() => updateState({ modalOpen: false })}
+            companyFormLayout={companyFormLayout}
             dependencies={dependencies}
           />
         ) : null}
@@ -533,12 +551,24 @@ function VerificationOutcomeAlert({
 function CreateCompanyModal({
   initialName,
   onClose,
+  companyFormLayout,
   dependencies,
 }: {
   initialName: string;
   onClose: () => void;
+  companyFormLayout: readonly BoardProfileFormField[] | null;
   dependencies: EmployerDashboardViewDependencies;
 }) {
+  // The website follows the company form layout, like the company profile:
+  // hidden, required, or (the default, and without a layout) optional.
+  const companyEntries = resolveProfileFormLayout(
+    companyFormLayout,
+    COMPANY_FORM_BUILTINS,
+    null,
+    { fallbackRequired: ['name'] },
+  );
+  const showsWebsite = showsBuiltin(companyEntries, 'website');
+  const websiteRequired = requiresBuiltin(companyEntries, 'website');
   const [form, setForm] = useState({ name: initialName, website: '' });
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'error' | 'committed'
@@ -569,8 +599,18 @@ function CreateCompanyModal({
           onSubmit={async (event) => {
             event.preventDefault();
             if (status === 'saving' || status === 'committed') return;
+            const website = showsWebsite ? form.website.trim() : '';
+            if (websiteRequired && !website) {
+              // Native validation lets a whitespace-only value through.
+              setStatus('error');
+              setMessage(
+                m.profileForm_fieldRequiredError({
+                  field: m.employerCompany_websiteLabel(),
+                }),
+              );
+              return;
+            }
             setStatus('saving');
-            const website = form.website.trim();
             let result: Awaited<ReturnType<typeof dependencies.createCompany>>;
             try {
               const body = website
@@ -622,36 +662,41 @@ function CreateCompanyModal({
                 required
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="company-website">
-                {m.employerDashboard_websiteOptionalLabel()}
-              </FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>
-                  <InputGroupText>
-                    {m.employerDashboard_websiteProtocolPrefix()}
-                  </InputGroupText>
-                </InputGroupAddon>
-                <InputGroupInput
-                  id="company-website"
-                  value={form.website}
-                  placeholder={m.employerDashboard_websitePlaceholder()}
-                  // The name is usually pre-filled from the search query, so
-                  // the website is the first thing left to type.
-                  autoFocus={Boolean(initialName)}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      // Pasted full URLs collapse into the fixed prefix.
-                      website: event.currentTarget.value.replace(
-                        /^https?:\/\//i,
-                        '',
-                      ),
-                    })
-                  }
-                />
-              </InputGroup>
-            </Field>
+            {showsWebsite ? (
+              <Field>
+                <FieldLabel htmlFor="company-website">
+                  {websiteRequired
+                    ? m.employerCompany_websiteLabel()
+                    : m.employerDashboard_websiteOptionalLabel()}
+                </FieldLabel>
+                <InputGroup>
+                  <InputGroupAddon>
+                    <InputGroupText>
+                      {m.employerDashboard_websiteProtocolPrefix()}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="company-website"
+                    value={form.website}
+                    required={websiteRequired}
+                    placeholder={m.employerDashboard_websitePlaceholder()}
+                    // The name is usually pre-filled from the search query, so
+                    // the website is the first thing left to type.
+                    autoFocus={Boolean(initialName)}
+                    onChange={(event) =>
+                      setForm({
+                        ...form,
+                        // Pasted full URLs collapse into the fixed prefix.
+                        website: event.currentTarget.value.replace(
+                          /^https?:\/\//i,
+                          '',
+                        ),
+                      })
+                    }
+                  />
+                </InputGroup>
+              </Field>
+            ) : null}
             {status === 'error' || (status === 'committed' && message) ? (
               <FieldError>{message}</FieldError>
             ) : null}

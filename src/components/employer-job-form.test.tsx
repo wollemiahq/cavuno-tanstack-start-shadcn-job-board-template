@@ -14,6 +14,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -262,7 +263,7 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
-          search: { posted: '1', review: '1', job_id: 'job-1' },
+          search: { posted: 1, review: 1, job_id: 'job-1' },
         }),
       ),
     );
@@ -745,7 +746,7 @@ describe('EmployerJobForm', () => {
         expect.objectContaining({
           to: '/employers/companies/$slug',
           reloadDocument: true,
-          search: { posted: '1', job_id: 'job-1' },
+          search: { edited: 1, job_id: 'job-1' },
         }),
       ),
     );
@@ -1206,6 +1207,45 @@ describe('EmployerJobForm — narrowing applied AFTER a job was posted', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
     fireEvent.submit(container.querySelector('form')!);
     await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('EmployerJobForm — seniority placeholder', () => {
+  function renderCreate(jobForm?: JobFormSource) {
+    return renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        jobForm={jobForm}
+      />,
+    );
+  }
+
+  function seniorityTrigger() {
+    return screen.getByLabelText(m.postJob_seniorityLabel());
+  }
+
+  it('does not call a required seniority optional', async () => {
+    await renderCreate({
+      object: 'public_board',
+      jobForm: { seniority: { required: true } },
+    });
+    expect(seniorityTrigger()).toHaveTextContent(
+      m.postJob_senioritySelectPlaceholder(),
+    );
+  });
+
+  it('keeps the optional placeholder when seniority is optional', async () => {
+    await renderCreate();
+    expect(seniorityTrigger()).toHaveTextContent(
+      m.postJob_seniorityPlaceholder(),
+    );
   });
 });
 
@@ -1672,11 +1712,57 @@ describe('EmployerJobForm — board custom fields', () => {
       }),
     );
 
+    // Under the Perks field and by the submit button.
     expect(
-      await screen.findByText(
+      await screen.findAllByText(
         m.jobForm_customFieldRequiredError({ field: 'Perks' }),
       ),
-    ).toBeInTheDocument();
+    ).toHaveLength(2);
+  });
+
+  it('shows a refused custom field rule under that field', async () => {
+    mocks.createJob.mockResolvedValue({
+      ok: false,
+      code: 'jobs_constraint_violation',
+      message: '"Team" is too long',
+      violations: [
+        {
+          code: 'custom_field_too_long',
+          path: ['customFieldValues', 'team'],
+          params: { label: 'Team' },
+        },
+      ],
+    });
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={{ ...draftJob, remoteOption: 'remote' }}
+        customFields={customFields}
+      />,
+    );
+
+    const team = screen.getByLabelText('Team');
+    fireEvent.change(team, { target: { value: 'Platform' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    const message = m.jobForm_customFieldInvalidError({ field: 'Team' });
+    const teamField = team.closest<HTMLElement>('[role="group"]')!;
+    expect(await within(teamField).findByRole('alert')).toHaveTextContent(
+      message,
+    );
+    expect(team).toHaveAttribute('aria-invalid', 'true');
+
+    // Editing the field clears its refusal.
+    fireEvent.change(team, { target: { value: 'Core' } });
+    expect(within(teamField).queryByRole('alert')).toBeNull();
+    expect(team).not.toHaveAttribute('aria-invalid');
   });
 
   it('blocks a save that leaves a required custom field empty', async () => {
