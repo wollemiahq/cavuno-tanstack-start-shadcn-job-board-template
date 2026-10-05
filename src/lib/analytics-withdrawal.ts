@@ -10,8 +10,8 @@
  * cookie (ADR-0085): boards on `*.cavuno.app` share a parent domain that is
  * not on the public suffix list, so a `Domain=cavuno.app` write from one
  * board would delete other boards' and Cavuno's cookies. The starter's
- * direct GA4 config pins `cookie_domain` to the host, so its `_ga*` cookies
- * are host-only and cleared here. Cookies a vendor scopes to a parent
+ * direct GA4 config sets `cookie_domain: 'none'`, so its `_ga*` cookies are
+ * host-only and cleared here. Cookies a vendor scopes to a parent
  * domain (Meta `_fbp`, AdSense `__gads` on a custom domain, GA loaded by
  * the owner's own GTM container with `cookie_domain: auto`), cookies from
  * tags an owner adds inside their GTM container, and cookies vendors set on
@@ -33,7 +33,7 @@ const ANALYTICS_COOKIE_NAMES = new Set([
 ]);
 
 /**
- * Exact patterns, so a fork's own cookies (`_gallery_view`) never match.
+ * Anchored patterns, so a fork's own cookies (`_gallery_view`) never match.
  * Per-property variants: GA4's `_ga_<MEASUREMENT_ID>`, `_gac_<ID>`,
  * `_gat_<ID>`, and the conversion linker's `_gcl_au` / `_gcl_aw`.
  */
@@ -46,7 +46,7 @@ const ANALYTICS_COOKIE_PATTERNS = [
   /^_gid$/,
   // Google conversion linker.
   /^_gcl_/,
-  // Meta Pixel browser and click ids.
+  // Meta Pixel browser and click ids: only a host-only copy (fbevents scopes them to `.<eTLD+1>`).
   /^_fbp$/,
   /^_fbc$/,
 ];

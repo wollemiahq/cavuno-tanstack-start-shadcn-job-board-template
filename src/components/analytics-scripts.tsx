@@ -28,17 +28,17 @@ interface VendorScript {
 }
 
 /**
- * Host-scoped GA4 cookies (MIG-11): never let `_ga` default to a parent
+ * Host-only GA4 cookies (MIG-11): never let `_ga` default to a parent
  * domain like `.cavuno.app` on custom board domains.
  */
 function ga4ConfigSnippet(measurementId: string): string {
   const id = JSON.stringify(measurementId);
-  const hostname = JSON.stringify(window.location.hostname);
   return (
     'window.dataLayer=window.dataLayer||[];' +
     'window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};' +
     "window.gtag('js',new Date());" +
-    `window.gtag('config',${id},{cookie_domain:${hostname},cookie_flags:'SameSite=Lax;Secure'});`
+    // 'none' → host-only cookies the board can clear on withdrawal; ADR-0085 forbids Domain= writes.
+    `window.gtag('config',${id},{cookie_domain:'none',cookie_flags:'SameSite=Lax;Secure'});`
   );
 }
 
@@ -140,7 +140,8 @@ function injectVendorScripts(analytics: BoardAnalyticsConfig): boolean {
  * waits for an explicit accept — a deny (or no choice yet) loads nothing.
  * Loaded scripts cannot be unloaded, so a later decline withdraws them
  * (see CookieConsentProvider): their first-party cookies are cleared and the
- * page reloads once without them. Reopening "Cookie preferences" alone
+ * page reloads once without them (after a decline in another tab, on the
+ * next navigation). Reopening "Cookie preferences" alone
  * leaves them running.
  */
 export function AnalyticsScripts({

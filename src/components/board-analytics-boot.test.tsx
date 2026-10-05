@@ -17,6 +17,7 @@ afterEach(() => {
   document.cookie = 'cavuno_cookie_consent=; Path=/; Max-Age=0';
   localStorage.clear();
   window.history.replaceState({}, '', '/');
+  delete window.__cavunoAnalyticsOff;
 });
 
 describe('BoardAnalyticsBoot', () => {
@@ -132,21 +133,21 @@ describe('Cavuno Analytics consent', () => {
     expect(withdraw).toHaveBeenCalledTimes(1);
   });
 
-  it('withdraws once when another tab declines', () => {
+  it('silences, but does not reload, when another tab declines', () => {
     document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
     const { withdraw } = renderWithConsent(true);
-    const declineElsewhere = () =>
-      act(() => {
-        window.dispatchEvent(
-          new StorageEvent('storage', {
-            key: 'cavuno:cookie-consent',
-            newValue: 'denied',
-          }),
-        );
-      });
-    declineElsewhere();
-    declineElsewhere();
-    expect(withdraw).toHaveBeenCalledTimes(1);
+    document.cookie = 'session-id=abc; Path=/';
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'cavuno:cookie-consent',
+          newValue: 'denied',
+        }),
+      );
+    });
+    expect(withdraw).not.toHaveBeenCalled();
+    expect(window.__cavunoAnalyticsOff).toBe(true);
+    expect(document.cookie).not.toContain('session-id');
   });
 
   it('never withdraws what was never installed', () => {

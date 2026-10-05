@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { CookieIcon } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -38,10 +38,21 @@ import {
 } from '@/lib/cookie-consent';
 import { chromeCookieConsent } from '@/lib/site-chrome';
 
-/** Legacy localStorage key — migrated once to the consent cookie on mount. */
+/**
+ * Cross-tab mirror of the choice: its `storage` event tells other tabs. The
+ * consent cookie is the source of truth (a pre-cookie value found here is
+ * migrated to the cookie on mount).
+ */
 const STORAGE_KEY = 'cavuno:cookie-consent';
 
 export type { CookieConsentChoice };
+
+declare global {
+  interface Window {
+    /** Cavuno tracker kill switch: `metrics.js` sends nothing while true. */
+    __cavunoAnalyticsOff?: boolean;
+  }
+}
 
 interface CookieConsentState {
   /** The board's `analytics.cookieConsentRequired` flag. */
@@ -86,6 +97,10 @@ export function useCookieConsent(): CookieConsentState {
   return useContext(CookieConsentContext);
 }
 
+function loadFullPage(href: string) {
+  window.location.assign(href);
+}
+
 function persistChoice(choice: CookieConsentChoice) {
   document.cookie = serializeCookieConsent(choice);
   try {
@@ -113,19 +128,24 @@ function clearPersistedChoice() {
  * post-hydration pop-in is accepted and standard for consent UIs. The
  * public document can then be edge-cached without varying on the cookie.
  *
- * On mount: `document.cookie` via `parseCookieConsent`, then the legacy
- * localStorage key, else `null` (undecided).
+ * On mount: `document.cookie` via `parseCookieConsent`, then the
+ * localStorage mirror (migrated to the cookie), else `null` (undecided).
  */
 export function CookieConsentProvider({
   required,
   withdrawAnalytics = withdrawLoadedAnalytics,
+  loadDocument = loadFullPage,
   children,
 }: {
   required: boolean;
   /** Test seam; runtime clears analytics cookies and reloads. */
   withdrawAnalytics?: () => void;
+  /** Test seam; runtime does a full page load of `href`. */
+  loadDocument?: (href: string) => void;
   children: ReactNode;
 }) {
+  // Absent only in isolated tests that render no router.
+  const router = useRouter({ warn: false });
   const [choice, setChoice] = useState<CookieConsentChoice | null | undefined>(
     undefined,
   );
@@ -142,6 +162,8 @@ export function CookieConsentProvider({
     analyticsLoaded.current = false;
     withdrawAnalytics();
   }, [withdrawAnalytics]);
+  // Set when another tab declined after this one loaded trackers.
+  const [reloadOnNavigate, setReloadOnNavigate] = useState(false);
 
   useEffect(() => {
     const fromCookie = parseCookieConsent(document.cookie);
@@ -162,20 +184,42 @@ export function CookieConsentProvider({
     setChoice(null);
   }, []);
 
-  // A choice made in another tab applies here too: a decline there must
-  // stop the trackers this tab loaded, not leave them beaconing.
+  // A choice made in another tab applies here too. A decline there must
+  // stop the trackers this tab loaded, but reloading a background tab now
+  // would lose what the visitor typed: silence the Cavuno tracker, clear the
+  // cookies, and swap in a tracker-free document on the next navigation.
+  // (`null` is a reopen elsewhere: the earlier choice stands here.)
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY) return;
       if (event.newValue === 'accepted') setChoice('accepted');
       if (event.newValue === 'denied') {
         setChoice('denied');
-        withdrawIfLoaded();
+        if (!analyticsLoaded.current) return;
+        analyticsLoaded.current = false;
+        window.__cavunoAnalyticsOff = true;
+        clearAnalyticsCookies();
+        setReloadOnNavigate(true);
       }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, [withdrawIfLoaded]);
+  }, []);
+
+  // A history blocker runs before the router commits a navigation, so the
+  // client render (and any tracker pageview) never happens: load the target
+  // as a full page instead. Back/forward has already moved the URL; loading
+  // it then replaces the current entry.
+  useEffect(() => {
+    if (!reloadOnNavigate || !router) return;
+    return router.history.block({
+      blockerFn: ({ nextLocation, action }) => {
+        loadDocument(nextLocation.href);
+        return action === 'PUSH' || action === 'REPLACE';
+      },
+      enableBeforeUnload: false,
+    });
+  }, [reloadOnNavigate, router, loadDocument]);
 
   // A declined visitor carries no analytics cookies. Swept on every load,
   // not only at withdrawal: trackers rewrite some cookies as the withdrawn

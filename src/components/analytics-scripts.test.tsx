@@ -135,7 +135,7 @@ describe('AnalyticsScripts', () => {
     );
     expect(
       document.getElementById('cavuno-analytics-ga4')?.textContent,
-    ).toContain(`window.gtag('config',"G-TEST123",{cookie_domain:`);
+    ).toContain(`window.gtag('config',"G-TEST123",{cookie_domain:'none',`);
   });
 
   it.each([

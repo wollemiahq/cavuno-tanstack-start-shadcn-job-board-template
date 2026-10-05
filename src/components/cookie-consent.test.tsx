@@ -2,16 +2,19 @@
 
 import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 /**
  * Cookie-consent behavior: the choice is resolved client-side after mount
  * so SSR / the first render never paint the banner or footer action. After
- * mount, no cookie + required opens the banner; a saved cookie or legacy
+ * mount, no cookie + required opens the banner; a saved cookie or
  * localStorage choice closes it and shows "Cookie preferences". Accept/deny
- * persist to cookie (+ legacy localStorage); the reopener clears them.
+ * persist to cookie (+ the cross-tab localStorage mirror); the reopener
+ * clears them.
  */
 import {
+  Link,
   RouterProvider,
   createMemoryHistory,
   createRootRoute,
@@ -19,6 +22,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -47,6 +51,7 @@ const STORAGE_KEY = 'cavuno:cookie-consent';
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  delete window.__cavunoAnalyticsOff;
   document.cookie = `${COOKIE_CONSENT_COOKIE}=; Path=/; Max-Age=0`;
   for (const el of document.querySelectorAll(
     'script[id^="cavuno-analytics-"]',
@@ -68,6 +73,7 @@ function renderWithRouter(ui: () => ReactNode) {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   render(<RouterProvider router={router} />);
+  return router;
 }
 
 const bannerRegion = () =>
@@ -312,5 +318,75 @@ describe('floating-stack slot handover', () => {
       name: m.jobAlertFloatingPrompt_defaultTitle(),
     });
     expect(bannerRegion()).not.toBeInTheDocument();
+  });
+});
+
+describe('a choice made in another tab', () => {
+  /** A tracker that has run in this document, plus an in-app link. */
+  function LoadedTracker() {
+    const { markAnalyticsLoaded } = useCookieConsent();
+    useEffect(markAnalyticsLoaded, [markAnalyticsLoaded]);
+    return <Link to="/cookie-policy">Policy</Link>;
+  }
+
+  function renderLoaded() {
+    document.cookie = serializeCookieConsent('accepted');
+    const withdraw = vi.fn();
+    const loadDocument = vi.fn();
+    const router = renderWithRouter(() => (
+      <CookieConsentProvider
+        required
+        withdrawAnalytics={withdraw}
+        loadDocument={loadDocument}
+      >
+        <LoadedTracker />
+        <CookiePreferencesFooterAction />
+      </CookieConsentProvider>
+    ));
+    return { withdraw, loadDocument, router };
+  }
+
+  const otherTab = (newValue: string | null) =>
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', { key: STORAGE_KEY, newValue }),
+      );
+    });
+
+  it('a decline silences trackers now and full-loads the next navigation', async () => {
+    const { withdraw, loadDocument, router } = renderLoaded();
+    await screen.findByText('Policy');
+    document.cookie = '_ga=GA1.1.1; Path=/';
+
+    otherTab('denied');
+
+    expect(withdraw).not.toHaveBeenCalled();
+    expect(loadDocument).not.toHaveBeenCalled();
+    expect(window.__cavunoAnalyticsOff).toBe(true);
+    expect(document.cookie).not.toContain('_ga=');
+
+    fireEvent.click(screen.getByText('Policy'));
+    await waitFor(() =>
+      expect(loadDocument).toHaveBeenCalledWith('/cookie-policy'),
+    );
+    expect(router.state.location.pathname).toBe('/');
+  });
+
+  it('a reopen leaves this tab alone', async () => {
+    const { withdraw, loadDocument, router } = renderLoaded();
+    await screen.findByText('Policy');
+
+    otherTab(null);
+
+    expect(window.__cavunoAnalyticsOff).toBeUndefined();
+    expect(
+      screen.getByRole('button', { name: m.cookieConsent_preferencesLabel() }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Policy'));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/cookie-policy'),
+    );
+    expect(withdraw).not.toHaveBeenCalled();
+    expect(loadDocument).not.toHaveBeenCalled();
   });
 });
