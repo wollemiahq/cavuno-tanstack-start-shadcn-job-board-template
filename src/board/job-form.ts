@@ -17,6 +17,9 @@
  * permissive for that reason.
  */
 
+import { EMPLOYMENT_TYPES } from '@cavuno/board/filters';
+
+import { enumLabel } from '@/lib/enum-labels';
 import { searchString } from '@/lib/pagination';
 
 export type JobFormVisibility = {
@@ -42,12 +45,30 @@ type JobFormGroup = {
   location?: { visible?: boolean; allowedCountries?: string[] | null };
   sponsorship?: { visible?: boolean };
   workArrangement?: { allowedOptions?: string[] };
-  employmentType?: { allowedOptions?: string[] };
+  employmentType?: {
+    allowedOptions?: string[];
+    customTypes?: readonly JobFormCustomEmploymentType[] | null;
+    order?: readonly string[] | null;
+  };
+};
+
+/**
+ * A board-defined employment type (e.g. "Casual"). `employmentType` is its
+ * built-in Google equivalent; an un-`offered` type still labels the jobs
+ * that use it but is never offered to a poster.
+ */
+export type JobFormCustomEmploymentType = {
+  key: string;
+  label: string;
+  employmentType: string;
+  offered: boolean;
 };
 
 /**
  * Visibility plus the constraints the platform enforces on write.
- * `null` on an allow-list means "no restriction"; a list is never empty.
+ * `null` on an allow-list means "no restriction"; a list is never empty,
+ * except `employmentType.allowedOptions` on a board whose offered custom
+ * types replace every built-in.
  */
 export type JobFormConstraints = JobFormVisibility & {
   salary: {
@@ -64,7 +85,13 @@ export type JobFormConstraints = JobFormVisibility & {
   };
   location: { visible: boolean; allowedCountries: string[] | null };
   workArrangement: { allowedOptions: string[] | null };
-  employmentType: { allowedOptions: string[] | null };
+  employmentType: {
+    allowedOptions: string[] | null;
+    /** Every custom type, offered or not, in the board's order. */
+    customTypes: JobFormCustomEmploymentType[];
+    /** Built-in values and custom keys in display order (`[]` = none set). */
+    order: string[];
+  };
 };
 
 /**
@@ -96,7 +123,7 @@ const UNCONSTRAINED: JobFormConstraints = {
   location: { visible: true, allowedCountries: null },
   sponsorship: { visible: true },
   workArrangement: { allowedOptions: null },
-  employmentType: { allowedOptions: null },
+  employmentType: { allowedOptions: null, customTypes: [], order: [] },
 };
 
 function visibleFlag(value: { visible?: boolean } | undefined): boolean {
@@ -157,10 +184,153 @@ export function resolveJobFormConstraints(
     workArrangement: {
       allowedOptions: allowList(jobForm.workArrangement?.allowedOptions),
     },
-    employmentType: {
-      allowedOptions: allowList(jobForm.employmentType?.allowedOptions),
-    },
+    employmentType: resolveEmploymentTypeConstraints(jobForm.employmentType),
   };
+}
+
+function resolveEmploymentTypeConstraints(
+  group: JobFormGroup['employmentType'],
+): JobFormConstraints['employmentType'] {
+  const customTypes = group?.customTypes ?? [];
+  // An empty built-in list means "only custom types" when the board offers
+  // some; otherwise it reads as no restriction, like every other allow-list.
+  const allowedOptions =
+    group?.allowedOptions?.length === 0 &&
+    customTypes.some((type) => type.offered)
+      ? []
+      : allowList(group?.allowedOptions);
+  return {
+    allowedOptions,
+    customTypes: customTypes.map(({ key, label, employmentType, offered }) => ({
+      key,
+      label,
+      employmentType,
+      offered,
+    })),
+    order: [...(group?.order ?? [])],
+  };
+}
+
+/**
+ * The job search's employment-type filter options: the board's offered
+ * built-ins within the listing filter vocabulary plus its offered custom
+ * types, in the board's order.
+ */
+export function employmentTypeFilterChoices(
+  source?: JobFormSource | null,
+): EmploymentTypeChoice[] {
+  return employmentTypeChoices(
+    resolveJobFormConstraints(source).employmentType,
+    EMPLOYMENT_TYPES,
+  ).choices;
+}
+
+/** Prefix marking a custom employment type key in a picker value. */
+export const CUSTOM_EMPLOYMENT_TYPE_PREFIX = 'custom:';
+
+/** Every built-in employment type on the wire. */
+const BUILTIN_EMPLOYMENT_TYPES: readonly string[] = [
+  'full_time',
+  'part_time',
+  'contract',
+  'internship',
+  'temporary',
+  'volunteer',
+  'other',
+];
+
+/**
+ * The built-ins a form offers when the board context predates allow-lists
+ * (the posting picker's long-standing set).
+ */
+const DEFAULT_EMPLOYMENT_TYPES: readonly string[] = [
+  'full_time',
+  'part_time',
+  'contract',
+  'internship',
+  'temporary',
+];
+
+/** A board's employment-type picker: its choices, and the pinned one. */
+export type EmploymentTypeChoices = {
+  choices: EmploymentTypeChoice[];
+  /** The only choice when there is exactly one (the field collapses). */
+  pinned: EmploymentTypeChoice | null;
+};
+
+/** One option of an employment-type picker or filter. */
+export type EmploymentTypeChoice = {
+  /** The built-in value, or `custom:<key>` for a custom type. */
+  value: string;
+  /** The built-in sent as `employmentType` (a custom type's equivalent). */
+  employmentType: string;
+  /** The custom type key sent as `customEmploymentType`, or `null`. */
+  customEmploymentType: string | null;
+  label: string;
+};
+
+/** The picker value for a job's stored employment type. */
+export function employmentTypeChoiceValue(job: {
+  employmentType?: string | null;
+  customEmploymentType?: { key: string } | null;
+}): string | null {
+  if (job.customEmploymentType) {
+    return `${CUSTOM_EMPLOYMENT_TYPE_PREFIX}${job.customEmploymentType.key}`;
+  }
+  return job.employmentType ?? null;
+}
+
+/**
+ * The employment types a board offers, in its display order: the offered
+ * built-ins (within `vocabulary`) interleaved with the offered custom types
+ * by `order`. `pinned` is the only choice when there is exactly one: the
+ * form collapses the field and submits that value.
+ *
+ * Leans permissive like `narrowOptions`: when nothing at all would be
+ * offered, the vocabulary's defaults are, and the server stays the judge.
+ */
+export function employmentTypeChoices(
+  employmentType: JobFormConstraints['employmentType'],
+  vocabulary: readonly string[] = BUILTIN_EMPLOYMENT_TYPES,
+): EmploymentTypeChoices {
+  const inVocabulary = (values: readonly string[]) =>
+    values.filter((value) => vocabulary.includes(value));
+  const offeredCustom = employmentType.customTypes.filter(
+    (type) => type.offered,
+  );
+  let builtins = inVocabulary(
+    employmentType.allowedOptions ?? DEFAULT_EMPLOYMENT_TYPES,
+  );
+  if (builtins.length === 0 && offeredCustom.length === 0) {
+    builtins = inVocabulary(DEFAULT_EMPLOYMENT_TYPES);
+  }
+  const ranked = [
+    ...builtins.map((value): EmploymentTypeChoice & { id: string } => ({
+      id: value,
+      value,
+      employmentType: value,
+      customEmploymentType: null,
+      label: enumLabel(value) ?? value,
+    })),
+    ...offeredCustom.map((type): EmploymentTypeChoice & { id: string } => ({
+      id: type.key,
+      value: `${CUSTOM_EMPLOYMENT_TYPE_PREFIX}${type.key}`,
+      employmentType: type.employmentType,
+      customEmploymentType: type.key,
+      label: type.label,
+    })),
+  ];
+  const rank = new Map(employmentType.order.map((id, index) => [id, index]));
+  const unranked = employmentType.order.length;
+  const choices = ranked
+    .map((choice, index) => ({ choice, index }))
+    .sort(
+      (a, b) =>
+        (rank.get(a.choice.id) ?? unranked + a.index) -
+        (rank.get(b.choice.id) ?? unranked + b.index),
+    )
+    .map(({ choice: { id: _id, ...choice } }) => choice);
+  return { choices, pinned: choices.length === 1 ? choices[0]! : null };
 }
 
 /**

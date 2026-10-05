@@ -28,6 +28,19 @@ describe('parseJobsSearch', () => {
     expect(parseJobsSearch({ selectedJob: 42 }).selectedJob).toBeUndefined();
   });
 
+  it('keeps a custom employment type key next to the built-in filter', () => {
+    expect(parseJobsSearch({ customEmploymentType: ' casual ' })).toMatchObject(
+      { customEmploymentType: 'casual' },
+    );
+    expect(
+      parseJobsSearch({ customEmploymentType: '' }).customEmploymentType,
+    ).toBeUndefined();
+    expect(
+      parseJobsSearch({ customEmploymentType: ['casual'] })
+        .customEmploymentType,
+    ).toBeUndefined();
+  });
+
   it('accepts the hosted-board query parameter as the canonical job query', () => {
     expect(parseJobsSearch({ query: 'robotics engineer' })).toMatchObject({
       q: 'robotics engineer',

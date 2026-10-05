@@ -51,6 +51,7 @@ export function JobsNotFound() {
             <div className="py-3">
               <JobsFilterControls
                 filters={filters}
+                jobForm={board}
                 language={board.language}
                 onChange={(next) =>
                   navigate({

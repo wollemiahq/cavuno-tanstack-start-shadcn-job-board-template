@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
+import { baseLocale } from '../paraglide/runtime';
 import {
   createJobsRssHandler,
   type JobsRssBoard,
@@ -30,6 +32,7 @@ const olderJob: PublicJobCard = {
   description: '<p>Build durable systems.</p>',
   publishedAt: '2026-06-01T00:00:00.000Z',
   employmentType: 'full_time',
+  customEmploymentType: null,
   remoteOption: null,
   remoteLocationLabel: null,
   remoteWorldwide: false,
@@ -101,5 +104,29 @@ describe('/jobs/rss.xml', () => {
 
     expect(xml).toContain('Keep ]]&gt; inside the description.');
     expect(xml).not.toContain('Keep ]]> inside the description.');
+  });
+
+  it("labels a job by the board's custom employment type, not its built-in", async () => {
+    // The feed speaks the board language; match the messages' locale to it.
+    context.mockResolvedValue({ name: 'Example Jobs', language: baseLocale });
+    listJobs.mockResolvedValue({
+      data: [
+        {
+          ...newerJob,
+          employmentType: 'part_time',
+          customEmploymentType: { key: 'casual', label: 'Casual' },
+        },
+        olderJob,
+      ],
+    });
+    const xml = await (await getRss()).text();
+
+    expect(xml).toContain(m.rssJobs_typeLine({ type: 'Casual' }));
+    expect(xml).not.toContain(
+      m.rssJobs_typeLine({ type: m.label_employmentPartTime() }),
+    );
+    expect(xml).toContain(
+      m.rssJobs_typeLine({ type: m.label_employmentFullTime() }),
+    );
   });
 });

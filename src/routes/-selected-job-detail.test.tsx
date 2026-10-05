@@ -64,6 +64,7 @@ const job = {
   applyAction: 'external_direct',
   seniority: null,
   employmentType: null,
+  customEmploymentType: null,
   publishedAt: null,
   expiresAt: null,
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -179,7 +180,7 @@ const board = {
     location: { visible: true, allowedCountries: null },
     sponsorship: { visible: true },
     workArrangement: { allowedOptions: [] },
-    employmentType: { allowedOptions: [] },
+    employmentType: { allowedOptions: [], customTypes: [], order: [] },
   },
 } satisfies Parameters<typeof SelectedJobDetail>[0]['board'];
 

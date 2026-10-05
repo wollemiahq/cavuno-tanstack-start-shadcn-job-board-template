@@ -109,6 +109,7 @@ const draftJob: EmployerJob = {
   status: 'draft',
   companyId: 'c1',
   employmentType: 'full_time',
+  customEmploymentType: null,
   remoteOption: 'hybrid',
   seniority: 'senior',
   salaryMin: 100000,
@@ -1206,6 +1207,142 @@ describe('EmployerJobForm — narrowing applied AFTER a job was posted', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
     fireEvent.submit(container.querySelector('form')!);
     await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('EmployerJobForm — custom employment types', () => {
+  const casual = {
+    key: 'casual',
+    label: 'Casual',
+    employmentType: 'part_time',
+    offered: true,
+  };
+  const fifo = {
+    key: 'fifo',
+    label: 'Fly-in fly-out',
+    employmentType: 'contract',
+    offered: false,
+  };
+  const board: JobFormSource = {
+    object: 'public_board',
+    jobForm: {
+      employmentType: {
+        allowedOptions: ['full_time', 'contract'],
+        customTypes: [casual, fifo],
+        order: ['full_time', 'casual', 'contract', 'fifo'],
+      },
+    },
+  };
+  const casualJob: EmployerJob = {
+    ...draftJob,
+    employmentType: 'part_time',
+    customEmploymentType: { key: 'casual', label: 'Casual' },
+  };
+
+  function renderForm(
+    mode: Parameters<typeof EmployerJobForm>[0]['mode'],
+    job?: EmployerJob,
+  ) {
+    return renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={mode}
+        job={job}
+        jobForm={board}
+      />,
+    );
+  }
+
+  function employmentTypePicker() {
+    return screen.getByRole('combobox', {
+      name: m.postJob_employmentTypeLabel(),
+    });
+  }
+
+  async function saveEdit(job: EmployerJob) {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderForm(
+      { kind: 'edit', jobId: 'job-1', status: 'draft' },
+      job,
+    );
+    return container;
+  }
+
+  it('creates a job with a picked custom type and its built-in equivalent', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    await renderForm(
+      { kind: 'create' },
+      { ...draftJob, remoteOption: 'remote' },
+    );
+
+    fireEvent.click(employmentTypePicker());
+    const option = screen.getByRole('option', { name: 'Casual' });
+    fireEvent.pointerDown(option, { pointerType: 'mouse' });
+    fireEvent.click(option);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_createDraftLabel(),
+      }),
+    );
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    expect(mocks.createJob.mock.calls[0]?.[0].data.body).toMatchObject({
+      employmentType: 'part_time',
+      customEmploymentType: 'casual',
+    });
+  });
+
+  it("preselects a job's custom type and keeps it on save", async () => {
+    const container = await saveEdit(casualJob);
+    expect(employmentTypePicker()).toHaveTextContent('Casual');
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.updateJob.mock.calls[0]?.[0].data.body).toMatchObject({
+      employmentType: 'part_time',
+      customEmploymentType: 'casual',
+    });
+  });
+
+  it('clears the custom type when an edit saves a built-in', async () => {
+    const container = await saveEdit(draftJob);
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.updateJob.mock.calls[0]?.[0].data.body).toMatchObject({
+      employmentType: 'full_time',
+      customEmploymentType: null,
+    });
+  });
+
+  it('blocks a stored custom type the board no longer offers', async () => {
+    const container = await saveEdit({
+      ...draftJob,
+      employmentType: 'contract',
+      customEmploymentType: { key: 'fifo', label: 'Fly-in fly-out' },
+    });
+
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    expect(
+      await screen.findByText(normalized(m.jobForm_optionNotAllowedError())),
+    ).toBeInTheDocument();
+    expect(mocks.updateJob).not.toHaveBeenCalled();
   });
 });
 

@@ -2,11 +2,11 @@ import type {
   HeaderSearchLocation,
   HeaderSearchTerm,
 } from '@/lib/header-search';
-import type { ListingFilters } from '@cavuno/board/filters';
+import type { JobsFilters } from '@/lib/jobs-search';
 
 export type JobsSearchFilters = Pick<
-  ListingFilters,
-  'remoteOption' | 'employmentType' | 'seniority'
+  JobsFilters,
+  'remoteOption' | 'employmentType' | 'customEmploymentType' | 'seniority'
 >;
 
 export interface ResolveJobsSearchTargetInput {
@@ -62,6 +62,9 @@ function compactFilters(filters?: JobsSearchFilters): JobsSearchFilters {
   const compact: JobsSearchFilters = {};
   if (filters.remoteOption) compact.remoteOption = filters.remoteOption;
   if (filters.employmentType) compact.employmentType = filters.employmentType;
+  if (filters.customEmploymentType) {
+    compact.customEmploymentType = filters.customEmploymentType;
+  }
   if (filters.seniority?.length) compact.seniority = filters.seniority;
   return compact;
 }

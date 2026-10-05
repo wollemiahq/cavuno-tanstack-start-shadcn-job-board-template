@@ -29,6 +29,7 @@ function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     employmentType: 'full_time',
+    customEmploymentType: null,
     seniority: 'senior',
     remoteOption: 'remote',
     remotePermits: [],
@@ -115,6 +116,7 @@ const similar: PublicJobCard[] = [
     },
     publishedAt: null,
     employmentType: 'full_time',
+    customEmploymentType: null,
     remoteOption: 'remote',
     remoteLocationLabel: 'Worldwide',
     remoteWorldwide: true,
@@ -149,6 +151,21 @@ describe('toJobDetailVM', () => {
       { salary: { visible: false } },
     );
     expect(hidden.salaryLabel).toBeNull();
+  });
+
+  it("labels the employment type by the board's custom type when the job has one", () => {
+    expect(vm.employmentTypeLabel).toBe(m.label_employmentFullTime());
+    const casual = toJobDetailVM(
+      createJob({
+        employmentType: 'part_time',
+        customEmploymentType: { key: 'casual', label: 'Casual' },
+      }),
+      customFields,
+      similar,
+      null,
+      'en',
+    );
+    expect(casual.employmentTypeLabel).toBe('Casual');
   });
 
   it('builds chip hrefs from the canonical path helpers', () => {

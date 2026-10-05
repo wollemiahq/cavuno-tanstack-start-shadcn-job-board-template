@@ -115,6 +115,8 @@ async function settled<T>(promise: Promise<T>): Promise<Settled<T>> {
 export type JobsListingFiltersInput = {
   remoteOption?: RemoteOption;
   employmentType?: EmploymentType;
+  /** A board custom employment type key (`customEmploymentType=` in the URL). */
+  customEmploymentType?: string;
   seniority?: Seniority[];
   sort?: JobSort;
   offset: number;
@@ -127,11 +129,20 @@ function listFilters(
   input: JobsListingFiltersInput,
 ): Pick<
   JobsListQuery,
-  'remoteOption' | 'employmentType' | 'seniority' | 'sort' | 'offset' | 'limit'
+  | 'remoteOption'
+  | 'employmentType'
+  | 'customEmploymentType'
+  | 'seniority'
+  | 'sort'
+  | 'offset'
+  | 'limit'
 > {
   return {
     remoteOption: input.remoteOption ? [input.remoteOption] : undefined,
     employmentType: input.employmentType ? [input.employmentType] : undefined,
+    customEmploymentType: input.customEmploymentType
+      ? [input.customEmploymentType]
+      : undefined,
     seniority: input.seniority?.length ? input.seniority : undefined,
     sort: input.sort,
     offset: input.offset,
@@ -204,6 +215,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
                 filters: {
                   remoteOption: filters.remoteOption,
                   employmentType: filters.employmentType,
+                  customEmploymentType: filters.customEmploymentType,
                   seniority: filters.seniority,
                   customFields,
                 },
@@ -473,6 +485,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
                     location: data.locationSlug,
                     remoteOption: filters.remoteOption,
                     employmentType: filters.employmentType,
+                    customEmploymentType: filters.customEmploymentType,
                     seniority: filters.seniority,
                   },
                   sort: filters.sort,

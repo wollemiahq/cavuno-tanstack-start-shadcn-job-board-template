@@ -2,7 +2,7 @@ import { jobDetailPath } from '@cavuno/board/paths';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '@/lib/board';
-import { enumLabel } from '@/lib/enum-labels';
+import { jobEmploymentTypeLabel } from '@/lib/enum-labels';
 import { jobTitleAtCompany } from '@/lib/page-title';
 import { readPublicOrigin } from '@/lib/public-origin';
 import { m } from '@/paraglide/messages';
@@ -90,10 +90,9 @@ export function createJobsRssHandler(
         );
         const parts: string[] = [];
         parts.push(m.rssJobs_companyLine({ name: company.name }, locale));
-        if (job.employmentType) {
-          const typeLabel = enumLabel(job.employmentType, context.language);
-          if (typeLabel)
-            parts.push(m.rssJobs_typeLine({ type: typeLabel }, locale));
+        const typeLabel = jobEmploymentTypeLabel(job, context.language);
+        if (typeLabel) {
+          parts.push(m.rssJobs_typeLine({ type: typeLabel }, locale));
         }
         if (job.description) parts.push(job.description);
         const description = sanitizeCdata(parts.join(' — '));

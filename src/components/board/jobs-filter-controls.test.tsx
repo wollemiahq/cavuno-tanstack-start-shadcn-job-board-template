@@ -34,6 +34,30 @@ const customFields: CustomFilterField[] = [
   { kind: 'flag', key: 'four_day_week', label: 'Four-day week' },
 ];
 
+/** A board with one custom employment type offered and one retired. */
+const jobForm = {
+  jobForm: {
+    employmentType: {
+      allowedOptions: ['contract', 'full_time'],
+      customTypes: [
+        {
+          key: 'casual',
+          label: 'Casual',
+          employmentType: 'part_time',
+          offered: true,
+        },
+        {
+          key: 'fifo',
+          label: 'Fly-in fly-out',
+          employmentType: 'contract',
+          offered: false,
+        },
+      ],
+      order: ['contract', 'casual', 'full_time', 'fifo'],
+    },
+  },
+};
+
 describe('JobsFilterControls', () => {
   it('shows the current sort and updates the listing selection', () => {
     const onChange = vi.fn();
@@ -171,6 +195,75 @@ describe('JobsFilterControls', () => {
     // Only the built-in seniority checkboxes remain.
     expect(within(sheet).getAllByRole('checkbox')).toHaveLength(
       SENIORITIES.length,
+    );
+  });
+
+  it("offers the board's employment types in its order and filters by a custom one", () => {
+    const onChange = vi.fn();
+
+    render(
+      <JobsFilterControls
+        filters={{ q: 'barista' }}
+        jobForm={jobForm}
+        language="en"
+        onChange={onChange}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('combobox', { name: m.jobSearch_typePlaceholder() }),
+    );
+    expect(
+      screen.getAllByRole('option').map((option) => option.textContent),
+    ).toEqual([
+      m.jobSearch_anyTypeLabel(),
+      m.label_employmentContract(),
+      'Casual',
+      m.label_employmentFullTime(),
+    ]);
+
+    const casual = screen.getByRole('option', { name: 'Casual' });
+    fireEvent.pointerDown(casual, { pointerType: 'mouse' });
+    fireEvent.click(casual);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        q: 'barista',
+        employmentType: undefined,
+        customEmploymentType: 'casual',
+      }),
+    );
+  });
+
+  it('shows the active custom employment type and swaps it for a built-in', () => {
+    const onChange = vi.fn();
+
+    render(
+      <JobsFilterControls
+        filters={{ customEmploymentType: 'casual' }}
+        jobForm={jobForm}
+        language="en"
+        onChange={onChange}
+      />,
+    );
+
+    const type = screen.getByRole('combobox', {
+      name: m.jobSearch_typePlaceholder(),
+    });
+    expect(type).toHaveTextContent('Casual');
+
+    fireEvent.click(type);
+    const contract = screen.getByRole('option', {
+      name: m.label_employmentContract(),
+    });
+    fireEvent.pointerDown(contract, { pointerType: 'mouse' });
+    fireEvent.click(contract);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employmentType: 'contract',
+        customEmploymentType: undefined,
+      }),
     );
   });
 });

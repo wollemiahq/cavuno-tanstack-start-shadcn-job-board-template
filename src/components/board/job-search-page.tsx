@@ -5,6 +5,7 @@ import { Search } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 import { ListingAdResults } from './listing-ad-results';
 
+import type { JobFormSource } from '@/board/job-form';
 import type { JobCardVM } from '@/board/job-view-model';
 import {
   relatedSearchesTitle,
@@ -45,23 +46,24 @@ import {
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
+import type { JobsFilters } from '@/lib/jobs-search';
 import { localizePath } from '@/lib/localized-path';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
-import type { ListingFilters } from '@cavuno/board/filters';
 
 function JobsEmpty({
   filters,
   hasCustomFilters,
   hasRouteConstraint,
 }: {
-  filters: ListingFilters;
+  filters: JobsFilters;
   hasCustomFilters: boolean;
   hasRouteConstraint: boolean;
 }) {
   const hasFilters = Boolean(
     filters.remoteOption ||
     filters.employmentType ||
+    filters.customEmploymentType ||
     filters.seniority?.length ||
     hasCustomFilters,
   );
@@ -103,6 +105,7 @@ export function JobSearchPage({
   pageSize,
   filters,
   customFilters,
+  jobForm,
   language,
   heading,
   relatedSearches,
@@ -124,13 +127,15 @@ export function JobSearchPage({
   gatedCount?: number;
   page: number;
   pageSize: number;
-  filters: ListingFilters;
+  filters: JobsFilters;
   /** Job custom fields for the "All filters" sheet; omit for none. */
   customFilters?: JobsCustomFilters;
+  /** The board context: its employment types become the Type options. */
+  jobForm?: JobFormSource | null;
   language: string;
   heading?: string;
   relatedSearches?: RelatedSearch[];
-  onFiltersChange: (next: ListingFilters & CustomFieldSearch) => void;
+  onFiltersChange: (next: JobsFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;
   selectedJob?: string;
   onSelectedJobReplace: (jobSlug: string) => void;
@@ -184,6 +189,7 @@ export function JobSearchPage({
             <JobsFilterControls
               filters={filters}
               customFilters={customFilters}
+              jobForm={jobForm}
               language={language}
               onChange={onFiltersChange}
             />

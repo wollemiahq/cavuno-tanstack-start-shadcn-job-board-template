@@ -4,7 +4,6 @@ import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import {
-  EMPLOYMENT_TYPES,
   REMOTE_OPTIONS,
   SENIORITIES,
   type ListingFilters,
@@ -14,6 +13,10 @@ import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
+import {
+  employmentTypeFilterChoices,
+  type JobFormSource,
+} from '@/board/job-form';
 import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
 import {
   KeywordCombobox,
@@ -32,6 +35,10 @@ import type {
   HeaderSearchTerm,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import {
+  employmentTypeFilterFromValue,
+  employmentTypeFilterValue,
+} from '@/lib/jobs-search';
 import {
   resolveJobsSearchTarget,
   type JobsSearchFilters,
@@ -65,6 +72,7 @@ export function EmbedJobsHeader({
   boardName,
   logoUrl,
   initialSearch,
+  jobForm,
   keywordSuggestions,
   locationSuggestions,
 }: {
@@ -80,6 +88,8 @@ export function EmbedJobsHeader({
     q?: string;
     location?: string;
   } & JobsSearchFilters;
+  /** The board context: its employment types become the Type options. */
+  jobForm?: JobFormSource | null;
   /** Route-owned suggestion controllers (`useKeywordSuggestions` / `useLocationSuggestions`). */
   keywordSuggestions: KeywordSuggestionState;
   locationSuggestions: LocationSearchState;
@@ -91,21 +101,26 @@ export function EmbedJobsHeader({
       ? { slug: initialSearch.location, name: initialSearch.location }
       : null,
   );
-  const [filters, setFilters] = useState<JobsSearchFilters>({
-    remoteOption: initialSearch.remoteOption,
+  const employmentTypeOptions = employmentTypeFilterChoices(jobForm).map(
+    ({ value, label }) => ({ value, label }),
+  );
+  const [filters, setFilters] = useState<JobsSearchFilters>(() => {
     // `volunteer` and `other` are wire values the embed's own list can filter
     // on, but they are NOT in the listing filter vocabulary, so the /jobs
-    // destination drops them. Staging one would light the badge and populate
-    // no Type option, over a Search that opens the unfiltered board — the
-    // exact thing this header promises not to do.
-    // SAFETY: The include check proves the embed query's raw employment type
-    // is one of the public listing filter members before staging it.
-    employmentType: EMPLOYMENT_TYPES.includes(
-      initialSearch.employmentType as (typeof EMPLOYMENT_TYPES)[number],
-    )
-      ? initialSearch.employmentType
-      : undefined,
-    seniority: initialSearch.seniority,
+    // destination drops them; nor is a type the board does not offer a Type
+    // option. Staging one would light the badge and populate no Type option,
+    // over a Search that opens the unfiltered board — the exact thing this
+    // header promises not to do.
+    const employmentType = employmentTypeFilterValue(initialSearch);
+    return {
+      remoteOption: initialSearch.remoteOption,
+      ...employmentTypeFilterFromValue(
+        employmentTypeOptions.some((option) => option.value === employmentType)
+          ? employmentType
+          : undefined,
+      ),
+      seniority: initialSearch.seniority,
+    };
   });
   const copy = { jobSearch: jobSearchCopy() };
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
@@ -248,10 +263,7 @@ export function EmbedJobsHeader({
                 value: option,
                 label: enumLabel(option) ?? option,
               })),
-              employmentType: EMPLOYMENT_TYPES.map((type) => ({
-                value: type,
-                label: enumLabel(type) ?? type,
-              })),
+              employmentType: employmentTypeOptions,
               seniority: SENIORITIES.map((seniority) => ({
                 value: seniority,
                 label: seniorityLabel[seniority],
@@ -259,16 +271,14 @@ export function EmbedJobsHeader({
             }}
             value={{
               workplace: filters.remoteOption,
-              employmentType: filters.employmentType,
+              employmentType: employmentTypeFilterValue(filters),
               seniority: filters.seniority,
             }}
             onApply={(value) => {
               const nextFilters: JobsSearchFilters = {
                 // SAFETY: JobsFilterToolbar options are built from REMOTE_OPTIONS.
                 remoteOption: value.workplace as ListingFilters['remoteOption'],
-                // SAFETY: JobsFilterToolbar options are built from EMPLOYMENT_TYPES.
-                employmentType:
-                  value.employmentType as ListingFilters['employmentType'],
+                ...employmentTypeFilterFromValue(value.employmentType),
                 // SAFETY: JobsFilterToolbar seniority options are built from SENIORITIES.
                 seniority: value.seniority as ListingFilters['seniority'],
               };

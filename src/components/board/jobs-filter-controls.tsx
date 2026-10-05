@@ -2,7 +2,6 @@
 
 import {
   DEFAULT_SORT,
-  EMPLOYMENT_TYPES,
   REMOTE_OPTIONS,
   SENIORITIES,
   type ListingFilters,
@@ -11,6 +10,10 @@ import { ArrowUpDown } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
+import {
+  employmentTypeFilterChoices,
+  type JobFormSource,
+} from '@/board/job-form';
 import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
 import {
   Select,
@@ -28,6 +31,11 @@ import {
   type CustomFilterField,
 } from '@/lib/custom-field-filters';
 import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
+import {
+  employmentTypeFilterFromValue,
+  employmentTypeFilterValue,
+  type JobsFilters,
+} from '@/lib/jobs-search';
 import { searchString } from '@/lib/pagination';
 import type { CustomFieldFilter } from '@cavuno/board';
 
@@ -40,13 +48,16 @@ export type JobsCustomFilters = {
 export function JobsFilterControls({
   filters,
   customFilters,
+  jobForm,
   onChange,
 }: {
-  filters: ListingFilters;
+  filters: JobsFilters;
   customFilters?: JobsCustomFilters;
+  /** The board context: its employment types become the Type options. */
+  jobForm?: JobFormSource | null;
   language: string;
   /** `next` carries the `cf.*` URL parameters for the custom-field clauses. */
-  onChange: (next: ListingFilters & CustomFieldSearch) => void;
+  onChange: (next: JobsFilters & CustomFieldSearch) => void;
 }) {
   const copy = {
     jobCard: jobCardCopy(),
@@ -81,10 +92,9 @@ export function JobsFilterControls({
             value: option,
             label: enumLabel(option) ?? option,
           })),
-          employmentType: EMPLOYMENT_TYPES.map((type) => ({
-            value: type,
-            label: enumLabel(type) ?? type,
-          })),
+          employmentType: employmentTypeFilterChoices(jobForm).map(
+            ({ value, label }) => ({ value, label }),
+          ),
           seniority: SENIORITIES.map((seniority) => ({
             value: seniority,
             label: seniorityLabel[seniority],
@@ -93,18 +103,16 @@ export function JobsFilterControls({
         }}
         value={{
           workplace: filters.remoteOption,
-          employmentType: filters.employmentType,
+          employmentType: employmentTypeFilterValue(filters),
           seniority: filters.seniority,
           customFields: { job: customFilters?.active },
         }}
         onApply={(value) => {
-          const nextFilters: ListingFilters = {
+          const nextFilters: JobsFilters = {
             ...filters,
             // SAFETY: JobsFilterToolbar options are built from REMOTE_OPTIONS.
             remoteOption: value.workplace as ListingFilters['remoteOption'],
-            // SAFETY: JobsFilterToolbar options are built from EMPLOYMENT_TYPES.
-            employmentType:
-              value.employmentType as ListingFilters['employmentType'],
+            ...employmentTypeFilterFromValue(value.employmentType),
             // SAFETY: JobsFilterToolbar seniority options are built from SENIORITIES.
             seniority: value.seniority as ListingFilters['seniority'],
           };
@@ -119,6 +127,7 @@ export function JobsFilterControls({
                 ...filters,
                 remoteOption: undefined,
                 employmentType: undefined,
+                customEmploymentType: undefined,
                 seniority: undefined,
               },
               [],

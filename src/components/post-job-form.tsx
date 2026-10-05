@@ -94,7 +94,7 @@ import {
   type JobFormEntry,
   type JobFormLayoutSource,
 } from '@/board/form-layout';
-import { narrowOptions } from '@/board/job-form';
+import { employmentTypeChoices, narrowOptions } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';
@@ -113,14 +113,6 @@ import type {
   PublicBoard,
   RemotePermitTaxonomyEntry,
 } from '@cavuno/board';
-
-const EMPLOYMENT_TYPES = [
-  'full_time',
-  'part_time',
-  'contract',
-  'internship',
-  'temporary',
-] as const;
 
 const REMOTE_OPTIONS = ['remote', 'hybrid', 'on_site'] as const;
 
@@ -389,10 +381,10 @@ export function PostJobForm({
   // carrying a disallowed value (`JOBS_CONSTRAINT_VIOLATION`), so an
   // un-narrowed picker is a trap: the employer fills the whole form and
   // only then learns the option was never on offer.
-  const allowedEmploymentTypes = narrowOptions(
-    EMPLOYMENT_TYPES,
-    jobForm.employmentType.allowedOptions,
-  );
+  // Offered built-ins and the board's offered custom types, in its order.
+  // A single choice collapses the field: every submission is pinned to it.
+  const { choices: employmentChoices, pinned: pinnedEmploymentType } =
+    employmentTypeChoices(jobForm.employmentType);
   const allowedRemoteOptions = narrowOptions(
     REMOTE_OPTIONS,
     jobForm.workArrangement.allowedOptions,
@@ -401,10 +393,22 @@ export function PostJobForm({
     SENIORITIES,
     jobForm.seniority.allowedOptions,
   );
-  const employmentItems = allowedEmploymentTypes.map((value) => ({
+  const employmentItems = employmentChoices.map(({ value, label }) => ({
     value,
-    label: enumLabel(value) ?? value,
+    label,
   }));
+  // A hidden (or collapsed) employment type keeps the form's default, like
+  // the dashboard form: the posting body always carries one. A custom type
+  // sends its key with its built-in equivalent.
+  const employmentTypeSubmission = (value: string | undefined) => {
+    const choice =
+      employmentChoices.find((candidate) => candidate.value === value) ??
+      employmentChoices[0];
+    return {
+      employmentType: choice?.employmentType ?? value ?? '',
+      customEmploymentType: choice?.customEmploymentType ?? undefined,
+    };
+  };
   const remoteItems = allowedRemoteOptions.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
@@ -657,10 +661,9 @@ export function PostJobForm({
         contactEmail: String(form.get('contactEmail')),
         title: String(form.get('title')),
         description,
-        // A hidden employment type keeps the form's default, like the
-        // dashboard form: the posting body always carries one.
-        employmentType:
-          readString(form, 'employmentType') ?? allowedEmploymentTypes[0],
+        ...employmentTypeSubmission(
+          pinnedEmploymentType?.value ?? readString(form, 'employmentType'),
+        ),
         remoteOption: String(form.get('remoteOption')),
         officeLocations: jobForm.location.visible
           ? officeLocations.map(({ locationId, displayName }) => ({
@@ -1005,11 +1008,17 @@ export function PostJobForm({
   // The role section: every entry but the company block and the collection
   // fields, with employment type and seniority side by side wherever the
   // layout places them next to each other.
+  // A collapsed employment type (one choice) renders nothing.
   const rows = layoutRows(
     layout.filter(
       (entry) =>
         entry.kind !== 'collection' &&
-        !(entry.kind === 'builtin' && entry.key === 'company'),
+        !(entry.kind === 'builtin' && entry.key === 'company') &&
+        !(
+          pinnedEmploymentType &&
+          entry.kind === 'builtin' &&
+          entry.key === 'employmentType'
+        ),
     ),
     (entry) =>
       entry.kind === 'builtin' &&

@@ -20,6 +20,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { EmbedJobsHeader } from './embed-jobs-header';
 
+import { parseJobsSearch } from '@/lib/jobs-search';
 import { m } from '@/paraglide/messages';
 import { containing } from '@/test/text';
 
@@ -64,6 +65,7 @@ async function renderHeader(
   locations: Parameters<
     typeof EmbedJobsHeader
   >[0]['locationSuggestions'] = locationSuggestions,
+  jobForm?: Parameters<typeof EmbedJobsHeader>[0]['jobForm'],
 ) {
   const rootRoute = createRootRoute({
     component: () => (
@@ -71,6 +73,7 @@ async function renderHeader(
         boardName="Acme Board"
         logoUrl={null}
         initialSearch={initialSearch}
+        jobForm={jobForm}
         keywordSuggestions={keywordSuggestions}
         locationSuggestions={locations}
       />
@@ -83,6 +86,30 @@ async function renderHeader(
   await router.load();
   return render(<RouterProvider router={router} />);
 }
+
+/** A board with one custom employment type offered and one retired. */
+const jobForm = {
+  jobForm: {
+    employmentType: {
+      allowedOptions: ['contract', 'full_time'],
+      customTypes: [
+        {
+          key: 'casual',
+          label: 'Casual',
+          employmentType: 'part_time',
+          offered: true,
+        },
+        {
+          key: 'fifo',
+          label: 'Fly-in fly-out',
+          employmentType: 'contract',
+          offered: false,
+        },
+      ],
+      order: ['contract', 'casual', 'full_time', 'fifo'],
+    },
+  },
+};
 
 const searchLink = () =>
   screen.getByRole('link', { name: m.searchBar_searchAriaLabel() });
@@ -266,6 +293,36 @@ describe('EmbedJobsHeader', () => {
       remoteOption: 'remote',
       employmentType: 'contract',
     });
+  });
+
+  it("carries the board's custom employment type to the jobs listing", async () => {
+    await renderHeader(
+      { customEmploymentType: 'casual' },
+      locationSuggestions,
+      jobForm,
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: containing(m.jobSearch_allFiltersLabel()),
+      }),
+    ).toHaveTextContent('1');
+    const query = Object.fromEntries(
+      new URLSearchParams(searchLink().getAttribute('href')?.split('?')[1]),
+    );
+    expect(parseJobsSearch(query)).toMatchObject({
+      customEmploymentType: 'casual',
+    });
+  });
+
+  it('does not stage a custom employment type the board no longer offers', async () => {
+    await renderHeader(
+      { customEmploymentType: 'fifo' },
+      locationSuggestions,
+      jobForm,
+    );
+
+    expect(searchLink().getAttribute('href')).toBe('/jobs');
   });
 
   it('routes a picked taxonomy term to its programmatic page', async () => {

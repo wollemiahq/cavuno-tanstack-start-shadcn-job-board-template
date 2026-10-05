@@ -4,6 +4,7 @@ import { m } from '../paraglide/messages';
 import {
   employerJobStatusBadgeVariant,
   employerJobStatusLabel,
+  employerJobTypeLabel,
   isEmployerJobExpired,
 } from './employer-job-labels';
 
@@ -52,5 +53,25 @@ describe('isEmployerJobExpired', () => {
     expect(
       isEmployerJobExpired({ status: 'published', expiresAt: null }, now),
     ).toBe(false);
+  });
+});
+
+describe('employerJobTypeLabel', () => {
+  it("shows the board's custom employment type over its built-in equivalent", () => {
+    expect(
+      employerJobTypeLabel('en', {
+        employmentType: 'part_time',
+        customEmploymentType: { key: 'casual', label: 'Casual' },
+      }),
+    ).toBe('Casual');
+  });
+
+  it('falls back to the built-in label when the job has no custom type', () => {
+    expect(
+      employerJobTypeLabel('en', {
+        employmentType: 'contract',
+        customEmploymentType: null,
+      }),
+    ).toBe(m.label_employmentContract());
   });
 });

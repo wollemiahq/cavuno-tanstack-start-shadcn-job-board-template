@@ -583,7 +583,7 @@ function JobRow({
         </div>
       </TableCell>
       <TableCell className="text-muted-foreground">
-        {employerJobTypeLabel(language, job.employmentType)}
+        {employerJobTypeLabel(language, job)}
       </TableCell>
       <TableCell>
         <Badge variant={employerJobStatusBadgeVariant(displayStatus)}>

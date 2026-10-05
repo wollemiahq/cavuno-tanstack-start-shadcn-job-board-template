@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createJobsLocationLoader } from './-jobs-taxonomy-loaders';
 
 import type { getJobsLocationPage as GetJobsLocationPage } from '../server/jobs-listing-pages';
+import { jobsListingLoaderDeps, parseJobsSearch } from '@/lib/jobs-search';
 
 const getJobsLocationPage = vi.fn<typeof GetJobsLocationPage>();
 const loadLocationJobs = createJobsLocationLoader(getJobsLocationPage);
@@ -69,6 +70,19 @@ describe('location jobs route — combined keyword and place filtering', () => {
         locationSlug: 'sydney',
         q: 'robotics',
       }),
+    });
+  });
+
+  it('threads a custom employment type from the URL into the jobs query', async () => {
+    await loadLocationJobs({
+      params: { location: 'sydney' },
+      deps: jobsListingLoaderDeps(
+        parseJobsSearch({ customEmploymentType: 'casual' }),
+      ),
+    });
+
+    expect(getJobsLocationPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({ customEmploymentType: 'casual' }),
     });
   });
 });

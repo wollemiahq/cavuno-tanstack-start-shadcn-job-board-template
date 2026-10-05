@@ -28,6 +28,8 @@ export type JobPostingFormInput = {
   title: string;
   description: string;
   employmentType: string;
+  /** A board custom type key; `employmentType` is then its built-in equivalent. */
+  customEmploymentType?: string;
   remoteOption: string;
   seniority?: string;
   /** Resolved office places (display name + optional geo codes). */
@@ -85,6 +87,7 @@ export function toCreateJobPostingInput(
       title: data.title,
       description: data.description,
       employmentType: data.employmentType,
+      customEmploymentType: data.customEmploymentType,
       remoteOption: data.remoteOption,
       seniority: data.seniority,
       officeLocations: data.officeLocations,

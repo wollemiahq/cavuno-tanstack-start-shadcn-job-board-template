@@ -54,6 +54,7 @@ function jobs(slug: string) {
     description: null,
     publishedAt: null,
     employmentType: null,
+    customEmploymentType: null,
     remoteOption: null,
     remoteLocationLabel: null,
     remoteWorldwide: false,

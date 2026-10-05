@@ -46,6 +46,7 @@ export function JobsPage() {
         page={search.page ?? 1}
         pageSize={JOBS_PAGE_SIZE}
         filters={search}
+        jobForm={board}
         customFilters={{
           fields: customFilterFields,
           active: resolveCustomFieldFilters(customFilterFields, search),

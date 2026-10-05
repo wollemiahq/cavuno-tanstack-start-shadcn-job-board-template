@@ -26,6 +26,7 @@ const job: PublicJobCard = {
   description: '<p>Own product discovery.</p>',
   publishedAt: null,
   employmentType: 'full_time',
+  customEmploymentType: null,
   remoteOption: 'hybrid',
   remoteLocationLabel: null,
   remoteWorldwide: null,

@@ -1,7 +1,4 @@
-import {
-  parseListingFilters,
-  type ListingFilters,
-} from '@cavuno/board/filters';
+import { parseListingFilters } from '@cavuno/board/filters';
 /**
  * Home `/` — the designed landing, not the bare search page.
  * The root is a pure landing page. Old root search/filter URLs redirect to
@@ -18,9 +15,10 @@ import { getHomePage } from '../server/home-page';
 import { HomePage } from './-home-page';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { parseCustomEmploymentType, type JobsFilters } from '@/lib/jobs-search';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
-interface JobsSearch extends ListingFilters {
+interface JobsSearch extends JobsFilters {
   cursor?: string;
 }
 
@@ -29,6 +27,10 @@ export const Route = createFileRoute('/')({
   staticData: { fullBleed: true, ownsMain: true },
   validateSearch: (search: UrlSearchInput): JobsSearch => ({
     ...parseListingFilters(search),
+    // The embed widget's "see all" link carries a custom type here too.
+    customEmploymentType: parseCustomEmploymentType(
+      search.customEmploymentType,
+    ),
     cursor: searchString(search.cursor),
   }),
   beforeLoad: ({ search }) => {
@@ -38,6 +40,7 @@ export const Route = createFileRoute('/')({
       Boolean(jobsSearch.q) ||
       Boolean(jobsSearch.remoteOption) ||
       Boolean(jobsSearch.employmentType) ||
+      Boolean(jobsSearch.customEmploymentType) ||
       Boolean(jobsSearch.seniority?.length) ||
       Boolean(jobsSearch.company?.length) ||
       Boolean(jobsSearch.sort);

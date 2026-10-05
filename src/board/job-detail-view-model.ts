@@ -28,7 +28,7 @@ import {
 } from '@/board/custom-field-labels';
 import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
-import { enumLabel } from '@/lib/enum-labels';
+import { enumLabel, jobEmploymentTypeLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
 import { searchString } from '@/lib/pagination';
 import { formatJobSalary } from '@/lib/salary-display';
@@ -398,9 +398,7 @@ export function toJobDetailVM(
     sector: job.categories[0]?.name ?? null,
     locationLabel: location,
     workplaceLabel: job.remoteOption ? enumLabel(job.remoteOption) : null,
-    employmentTypeLabel: job.employmentType
-      ? enumLabel(job.employmentType)
-      : null,
+    employmentTypeLabel: jobEmploymentTypeLabel(job),
     seniorityLabel: job.seniority ? enumLabel(job.seniority) : null,
     salaryLabel,
     publishedLabel: published ? copy.posted(published) : null,

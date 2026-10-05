@@ -35,6 +35,7 @@ export const Route = createFileRoute('/jobs/')({
         q: deps.q,
         remoteOption: deps.remoteOption,
         employmentType: deps.employmentType,
+        customEmploymentType: deps.customEmploymentType,
         seniority: deps.seniority,
         sort: deps.sort,
         customFields: customFieldRequestSearch(deps),

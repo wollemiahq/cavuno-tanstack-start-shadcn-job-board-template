@@ -30,6 +30,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { parseCustomEmploymentType } from '@/lib/jobs-search';
 import { headTitle } from '@/lib/page-title';
 import {
   searchNumber,
@@ -82,6 +83,8 @@ interface EmbedSearch {
   q?: string;
   remoteOption?: RemoteOption;
   employmentType?: EmploymentType;
+  /** A board custom employment type key. */
+  customEmploymentType?: string;
   seniority?: Seniority;
   location?: string;
   limit?: number;
@@ -119,6 +122,9 @@ export const Route = createFileRoute('/embed/jobs')({
     q: searchString(search.query) ?? searchString(search.q),
     remoteOption: embedRemoteOption(search.remoteOption),
     employmentType: embedEmploymentType(search.employmentType),
+    customEmploymentType: parseCustomEmploymentType(
+      search.customEmploymentType,
+    ),
     seniority: embedSeniority(search.seniority),
     location: searchString(search.location),
     limit: searchNumber(search.limit),
@@ -133,6 +139,9 @@ export const Route = createFileRoute('/embed/jobs')({
           remoteOption: deps.remoteOption ? [deps.remoteOption] : undefined,
           employmentType: deps.employmentType
             ? [deps.employmentType]
+            : undefined,
+          customEmploymentType: deps.customEmploymentType
+            ? [deps.customEmploymentType]
             : undefined,
           seniority: deps.seniority ? [deps.seniority] : undefined,
           location: deps.location,
@@ -188,6 +197,7 @@ function buildEmbedCta(
     search.q ||
     search.location ||
     search.employmentType ||
+    search.customEmploymentType ||
     search.remoteOption ||
     search.seniority,
   );
@@ -202,6 +212,7 @@ function buildEmbedCta(
         location: search.location,
         remoteOption: search.remoteOption,
         employmentType: search.employmentType,
+        customEmploymentType: search.customEmploymentType,
         seniority: search.seniority,
       },
     };
@@ -250,8 +261,10 @@ export function EmbedJobsView({
             location: search.location,
             remoteOption: search.remoteOption,
             employmentType: search.employmentType,
+            customEmploymentType: search.customEmploymentType,
             seniority: search.seniority ? [search.seniority] : undefined,
           },
+          jobForm,
           keywordSuggestions,
           locationSuggestions,
         })}
@@ -317,8 +330,11 @@ type EmbedJobsHeaderInput = {
     location?: string;
     remoteOption?: RemoteOption;
     employmentType?: EmploymentType;
+    customEmploymentType?: string;
     seniority?: Seniority[];
   };
+  /** The board context: its employment types become the Type options. */
+  jobForm?: JobFormSource | null;
   keywordSuggestions: ReturnType<typeof useKeywordSuggestions>;
   locationSuggestions: ReturnType<typeof useLocationSuggestions>;
 };

@@ -44,6 +44,8 @@ import {
   type JobFormLayoutSource,
 } from '@/board/form-layout';
 import {
+  employmentTypeChoiceValue,
+  employmentTypeChoices,
   narrowOptions,
   type JobFormConstraints,
   type JobFormViolation,
@@ -119,14 +121,6 @@ import type {
   UpdateEmployerJobBody,
 } from '@cavuno/board';
 
-const EMPLOYMENT_TYPES = [
-  'full_time',
-  'part_time',
-  'contract',
-  'internship',
-  'temporary',
-] as const;
-
 const REMOTE_OPTIONS = ['remote', 'hybrid', 'on_site'] as const;
 
 const SENIORITIES = [
@@ -157,7 +151,8 @@ function jobFormConstraintError(
     currency: string;
   },
   jobForm: JobFormConstraints,
-  showsEmploymentType: boolean,
+  /** The picker's choice values; `null` when the field is hidden. */
+  employmentTypeChoiceValues: readonly string[] | null,
 ): string {
   // An EDIT opens with the job's stored values, which predate any narrowing
   // the operator has since applied — so a job saved as full_time / hybrid /
@@ -165,13 +160,11 @@ function jobFormConstraintError(
   // rejects such a save too (`jobs_constraint_violation`, mapped below);
   // checking here names the field before the round trip. A hidden
   // employment type has no picker to fix it with, and an edit does not
-  // send it.
+  // send it. A custom type the board no longer offers is caught the same
+  // way as a built-in it no longer allows.
   const disallowed = (
     [
-      [
-        showsEmploymentType ? jobForm.employmentType.allowedOptions : null,
-        form.employmentType,
-      ],
+      [employmentTypeChoiceValues, form.employmentType],
       [jobForm.workArrangement.allowedOptions, form.remoteOption],
     ] as const
   ).some(([allowed, value]) => allowed && !allowed.includes(value));
@@ -420,7 +413,6 @@ function preferredDefault<T extends string>(
   return allowed.includes(preferred) ? preferred : (allowed[0] ?? preferred);
 }
 
-type EmploymentTypeOption = (typeof EMPLOYMENT_TYPES)[number];
 type RemoteOptionChoice = (typeof REMOTE_OPTIONS)[number];
 type SeniorityOption = (typeof SENIORITIES)[number];
 
@@ -452,7 +444,8 @@ function isPermitType(value: string): value is PermitType {
 
 type EmployerJobFormState = {
   title: string;
-  employmentType: EmploymentTypeOption;
+  /** Picker value: a built-in, or `custom:<key>` for a custom type. */
+  employmentType: string;
   seniority: SeniorityOption | null;
   remoteOption: RemoteOptionChoice;
   officeLocations: OfficeLocationDraft[];
@@ -582,7 +575,7 @@ function initialForm(
   // otherwise open the form pre-filled with a value it rejects, and the
   // employer would never think to change it.
   defaults: {
-    employmentType: EmploymentTypeOption;
+    employmentType: string;
     remoteOption: RemoteOptionChoice;
     currency: string;
   },
@@ -644,9 +637,7 @@ function initialForm(
 
   return {
     title: job.title,
-    employmentType:
-      EMPLOYMENT_TYPES.find((value) => value === job.employmentType) ??
-      defaults.employmentType,
+    employmentType: employmentTypeChoiceValue(job) ?? defaults.employmentType,
     seniority,
     remoteOption:
       REMOTE_OPTIONS.find((value) => value === job.remoteOption) ??
@@ -692,10 +683,18 @@ export function EmployerJobForm({
   // Narrow every picker to what the board accepts. The platform 400s a job
   // carrying a disallowed value (`JOBS_CONSTRAINT_VIOLATION`), so an
   // un-narrowed picker offers options the save will reject.
-  const allowedEmploymentTypes = narrowOptions(
-    EMPLOYMENT_TYPES,
-    jobForm.employmentType.allowedOptions,
-  );
+  // Offered built-ins and the board's offered custom types, in its order.
+  // A single choice collapses the field: every submission is pinned to it.
+  // An edit whose stored type is not that choice keeps the picker instead,
+  // so the save is blocked with the field in view, exactly like a stored
+  // type the board no longer allows, rather than silently retyping the job.
+  const { choices: employmentChoices, pinned: boardPinnedEmploymentType } =
+    employmentTypeChoices(jobForm.employmentType);
+  const pinnedEmploymentType =
+    boardPinnedEmploymentType &&
+    (!job || employmentTypeChoiceValue(job) === boardPinnedEmploymentType.value)
+      ? boardPinnedEmploymentType
+      : null;
   const allowedRemoteOptions = narrowOptions(
     REMOTE_OPTIONS,
     jobForm.workArrangement.allowedOptions,
@@ -736,7 +735,10 @@ export function EmployerJobForm({
 
   const [form, setForm] = useState(() => ({
     ...initialForm(job, countryName, {
-      employmentType: preferredDefault('full_time', allowedEmploymentTypes),
+      employmentType: preferredDefault(
+        'full_time',
+        employmentChoices.map(({ value }) => value),
+      ),
       remoteOption: preferredDefault('hybrid', allowedRemoteOptions),
       currency: preferredDefault(
         'USD',
@@ -856,10 +858,16 @@ export function EmployerJobForm({
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const employmentItems = allowedEmploymentTypes.map((value) => ({
+  const employmentItems = employmentChoices.map(({ value, label }) => ({
     value,
-    label: enumLabel(value) ?? value,
+    label,
   }));
+  // The value a save sends: the pinned choice on a collapsed field.
+  const employmentTypeValue =
+    pinnedEmploymentType?.value ?? form.employmentType;
+  const employmentChoice = employmentChoices.find(
+    (choice) => choice.value === employmentTypeValue,
+  );
   const remoteItems = allowedRemoteOptions.map((value) => ({
     value,
     label: enumLabel(value) ?? value,
@@ -923,9 +931,17 @@ export function EmployerJobForm({
     const body: CreateEmployerJobBody = {
       title: form.title.trim(),
       description: form.description,
-      employmentType: form.employmentType,
+      // The constraint check has already refused a value the board does not
+      // offer, so the choice is found; a custom type sends its built-in.
+      // SAFETY: choices carry built-in wire values (the board's allow-list or
+      // a custom type's Google equivalent); the server validates either way.
+      employmentType: (employmentChoice?.employmentType ??
+        employmentTypeValue) as CreateEmployerJobBody['employmentType'],
       remoteOption: form.remoteOption,
     };
+    if (employmentChoice?.customEmploymentType) {
+      body.customEmploymentType = employmentChoice.customEmploymentType;
+    }
     // Only a board that shows custom fields sends the bag at all. A field
     // the layout hides is not sent, so an edit keeps its stored answer.
     if (layoutCustomFields.length > 0) {
@@ -1125,7 +1141,13 @@ export function EmployerJobForm({
     );
     setFieldErrors((prev) => ({ ...prev, collection: missingCollection }));
     const constraintError =
-      jobFormConstraintError(form, jobForm, shows('employmentType')) ||
+      jobFormConstraintError(
+        { ...form, employmentType: employmentTypeValue },
+        jobForm,
+        shows('employmentType')
+          ? employmentChoices.map(({ value }) => value)
+          : null,
+      ) ||
       missingRequiredCustomField(layoutCustomFields, form.customFieldValues) ||
       missingCollection?.message;
     if (constraintError) {
@@ -1189,14 +1211,18 @@ export function EmployerJobForm({
     }
 
     // Edit. A hidden employment type is left out so the job keeps its
-    // stored one; create still sends the default the body requires.
-    const { employmentType, ...built } = buildBody();
+    // stored one; create still sends the default the body requires. A
+    // built-in choice clears any custom type the job had.
+    const { employmentType, customEmploymentType, ...built } = buildBody();
     const body: UpdateEmployerJobBody = {
       ...built,
       ...salaryClear(),
       applicationUrl: applicationUrl ?? null,
     };
-    if (shows('employmentType')) body.employmentType = employmentType;
+    if (shows('employmentType')) {
+      body.employmentType = employmentType;
+      body.customEmploymentType = customEmploymentType ?? null;
+    }
     let result: Awaited<ReturnType<typeof actions.updateJob>>;
     try {
       result = await actions.updateJob({
@@ -1242,8 +1268,8 @@ export function EmployerJobForm({
             <Select
               items={employmentItems}
               value={form.employmentType}
-              onValueChange={(value: EmploymentTypeOption | null) =>
-                set('employmentType', value ?? 'full_time')
+              onValueChange={(value: string | null) =>
+                set('employmentType', value ?? form.employmentType)
               }
             >
               <SelectTrigger id="job-employment-type" className="w-full">
@@ -1665,11 +1691,21 @@ export function EmployerJobForm({
 
   // Employment type and seniority keep sitting side by side wherever the
   // layout places them next to each other.
-  const rows = layoutRows(layout, (entry) =>
-    entry.kind === 'builtin' &&
-    (entry.key === 'employmentType' || entry.key === 'seniority')
-      ? 'roleType'
-      : null,
+  // A collapsed employment type (one choice) renders nothing.
+  const rows = layoutRows(
+    layout.filter(
+      (entry) =>
+        !(
+          pinnedEmploymentType &&
+          entry.kind === 'builtin' &&
+          entry.key === 'employmentType'
+        ),
+    ),
+    (entry) =>
+      entry.kind === 'builtin' &&
+      (entry.key === 'employmentType' || entry.key === 'seniority')
+        ? 'roleType'
+        : null,
   );
 
   const submitLabel =

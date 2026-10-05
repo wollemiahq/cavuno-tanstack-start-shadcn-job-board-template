@@ -555,9 +555,61 @@ describe('PostJobForm — board job-form constraints', () => {
   }
 
   it('narrows the employment-type picker so the default is a value the board accepts', () => {
-    renderConstrained({ employmentType: { allowedOptions: ['contract'] } });
+    renderConstrained({
+      employmentType: { allowedOptions: ['contract', 'temporary'] },
+    });
     expect(triggerText(m.postJob_employmentTypeLabel())).toBe(
       m.label_employmentContract(),
+    );
+  });
+
+  const casual = {
+    key: 'casual',
+    label: 'Casual',
+    employmentType: 'part_time',
+    offered: true,
+  };
+
+  it('posts a board custom employment type with its built-in equivalent', async () => {
+    const onSubmit = renderConstrained({
+      employmentType: {
+        allowedOptions: ['full_time'],
+        customTypes: [casual],
+        order: ['full_time', 'casual'],
+      },
+    });
+    fillRequiredFields();
+    fireEvent.click(screen.getByLabelText(m.postJob_employmentTypeLabel()));
+    const option = screen.getByRole('option', { name: 'Casual' });
+    fireEvent.pointerDown(option, { pointerType: 'mouse' });
+    fireEvent.click(option);
+    submit();
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          employmentType: 'part_time',
+          customEmploymentType: 'casual',
+        }),
+      ),
+    );
+  });
+
+  it('collapses a single employment type and pins every posting to it', async () => {
+    const onSubmit = renderConstrained({
+      employmentType: { allowedOptions: [], customTypes: [casual], order: [] },
+    });
+    expect(screen.queryByLabelText(m.postJob_employmentTypeLabel())).toBeNull();
+    fillRequiredFields();
+    submit();
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          employmentType: 'part_time',
+          customEmploymentType: 'casual',
+        }),
+      ),
     );
   });
 
