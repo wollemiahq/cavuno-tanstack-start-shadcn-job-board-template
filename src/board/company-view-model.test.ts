@@ -28,6 +28,7 @@ const company: PublicCompany = {
   salarySampleCount: 0,
   membership: null,
   customFieldValues: {},
+  customFieldMedia: {},
   objectReferences: [],
   links: { public: 'https://jobs.example/companies/acme-research' },
 };

@@ -32,6 +32,7 @@ const company = {
   membership: null,
   markets: [{ slug: 'technology', name: 'Technology' }],
   customFieldValues: {},
+  customFieldMedia: {},
   objectReferences: [],
   links: { public: 'https://jobs.example/companies/acme' },
 } satisfies PublicCompanyDetail;

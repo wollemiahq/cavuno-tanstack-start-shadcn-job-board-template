@@ -93,6 +93,7 @@ function company(summary: string): PublicCompanyDetail {
     membership: null,
     markets: [],
     customFieldValues: {},
+    customFieldMedia: {},
     objectReferences: [],
     links: { public: 'https://jobs.example/companies/acme' },
   };
