@@ -34,7 +34,8 @@ export type PlaceSearchRadius = {
 
 /**
  * The radius control `place` takes, with `within` applied; `null` for a
- * region or country, which shows no control and ignores `within`.
+ * region, a country or a place without a point, which show no control: the
+ * API widens only a city or locality around its point.
  */
 export function placeSearchRadius(
   place: TaxonomyResolution | null,
@@ -42,6 +43,7 @@ export function placeSearchRadius(
 ): PlaceSearchRadius | null {
   const placeType = place?.geo?.placeType;
   if (placeType !== 'city' && placeType !== 'locality') return null;
+  if (place?.geo?.lat == null || place.geo.lng == null) return null;
   const unit = distanceUnitForCountry(place?.geo?.countryCode);
   const selected =
     within === undefined

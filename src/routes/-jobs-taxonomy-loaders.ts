@@ -132,12 +132,13 @@ export function createJobsLocationSkillLoader(
     deps,
   }: {
     params: { location: string; skill: string };
-    deps: JobsListingDeps;
+    deps: LocationJobsListingDeps;
   }) => {
     const result = await loadPage({
       data: {
         locationSlug: params.location,
         skillSlug: params.skill,
+        within: deps.within,
         remoteOption: deps.remoteOption,
         employmentType: deps.employmentType,
         customEmploymentType: deps.customEmploymentType,

@@ -734,6 +734,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       input: JobsListingFiltersInput & {
         locationSlug: string;
         skillSlug: string;
+        /** Search distance in the place's unit; see `@/board/search-radius`. */
+        within?: number;
       },
     ) => input,
   )
@@ -745,10 +747,12 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // Both resolves join the listing/SEO batch (see the sibling
       // location+category page). An alias slug still 308s — it just also
       // fetched a listing it discards, which is the rare path.
+      const placeRead = resolveOrNull(
+        board.taxonomy.places.resolve(data.locationSlug, { headers }),
+      );
+      const radius = await listingRadiusKm(placeRead, data.within);
       const [place, skill, listResult, seo, placeTree] = await Promise.all([
-        resolveOrNull(
-          board.taxonomy.places.resolve(data.locationSlug, { headers }),
-        ),
+        placeRead,
         resolveOrNull(
           board.taxonomy.skills.resolve(data.skillSlug, { headers }),
         ),
@@ -757,6 +761,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             {
               ...filters,
               location: data.locationSlug,
+              radius,
               skill: data.skillSlug,
             },
             { headers },
@@ -777,6 +782,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
+      const searchRadius = placeSearchRadius(place, data.within);
       const heading = m.locationSkillPage_jobsHeading({
         skill: skill.displayName,
         place: place.displayName,
@@ -795,23 +801,26 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         }),
         { name: skill.displayName },
       ];
-      const head = listingHead({
-        title: listingPageTitle({
-          heading: heading,
-          boardName: seo.boardName,
-          language: seo.language,
-          count: catalogJobCount(list.count, list.gatedCount),
+      const head = noindexWhenWidened(
+        listingHead({
+          title: listingPageTitle({
+            heading: heading,
+            boardName: seo.boardName,
+            language: seo.language,
+            count: catalogJobCount(list.count, list.gatedCount),
+          }),
+          origin: seo.origin,
+          path: localizePath(
+            `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+          ),
+          description: listingMetaDescription({
+            heading: heading,
+            boardName: seo.boardName,
+            count: catalogJobCount(list.count, list.gatedCount),
+          }),
         }),
-        origin: seo.origin,
-        path: localizePath(
-          `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
-        ),
-        description: listingMetaDescription({
-          heading: heading,
-          boardName: seo.boardName,
-          count: catalogJobCount(list.count, list.gatedCount),
-        }),
-      });
+        Boolean(searchRadius?.selected),
+      );
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -826,6 +835,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches: list.relatedSearches,
+        searchRadius,
         head,
         jsonLd,
         breadcrumbTrail,

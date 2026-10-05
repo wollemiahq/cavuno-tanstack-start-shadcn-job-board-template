@@ -68,4 +68,11 @@ describe('placeSearchRadius', () => {
     expect(placeSearchRadius(place('country', 'FR'), undefined)).toBeNull();
     expect(placeSearchRadius(null, 25)).toBeNull();
   });
+
+  it('offers no distance for a city without a point', () => {
+    const city = place('city', 'US');
+    expect(
+      placeSearchRadius({ ...city, geo: { ...city.geo!, lat: null } }, 25),
+    ).toBeNull();
+  });
 });

@@ -43,6 +43,7 @@ vi.mock('../lib/board', () => ({
   getBoard: () => ({
     taxonomy: {
       categories: { resolve: mocks.resolve },
+      skills: { resolve: mocks.resolve },
       places: { resolve: mocks.resolve, list: mocks.tree },
     },
     jobs: { list: mocks.list, search: mocks.search },
@@ -52,6 +53,7 @@ vi.mock('../lib/board', () => ({
 import {
   getJobsLocationCategoryPage,
   getJobsLocationPage,
+  getJobsLocationSkillPage,
 } from './jobs-listing-pages';
 
 function resolution(placeType: string, countryCode: string) {
@@ -86,8 +88,10 @@ const emptyList = {
 
 const page = { locationSlug: 'fixture-place', offset: 0, limit: 24 };
 
-function robots(head: { meta: object[] }) {
-  return head.meta.find((entry) => 'name' in entry && entry.name === 'robots');
+type HeadMeta = { name?: string; content?: string };
+
+function robots(head: { meta: HeadMeta[] }) {
+  return head.meta.find((entry) => entry.name === 'robots');
 }
 
 beforeEach(() => {
@@ -191,6 +195,31 @@ describe('location listing search distance', () => {
     });
     expect(query.radius).toBeCloseTo(8.05, 2);
     if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(robots(result.head)?.content).toBe('noindex, follow');
+  });
+
+  it('widens the location + skill listing too', async () => {
+    mocks.resolve.mockImplementation(async (slug: string) =>
+      slug === 'react'
+        ? { ...resolution('city', 'US'), type: 'skill', displayName: 'React' }
+        : resolution('city', 'US'),
+    );
+
+    const result = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'react', within: 10 },
+    });
+
+    const [query] = mocks.list.mock.calls[0] ?? [];
+    expect(query).toMatchObject({
+      location: 'fixture-place',
+      skill: 'react',
+    });
+    expect(query.radius).toBeCloseTo(16.09, 2);
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(result.searchRadius).toMatchObject({
+      unit: 'mi',
+      selected: { value: 10 },
+    });
     expect(robots(result.head)?.content).toBe('noindex, follow');
   });
 });
