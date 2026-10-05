@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import {
   employerJobStatusBadgeVariant,
   employerJobStatusLabel,
@@ -9,7 +10,7 @@ import {
 describe('employerJobStatusLabel', () => {
   it('labels a job awaiting operator approval instead of throwing', () => {
     expect(employerJobStatusLabel('pending_approval')).toBe(
-      'Awaiting approval',
+      m.employerJob_statusPendingApproval(),
     );
   });
 });
