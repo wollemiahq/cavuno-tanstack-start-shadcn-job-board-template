@@ -43,4 +43,15 @@ describe('clearAnalyticsCookies', () => {
 
     expect(cookieNames()).toEqual(['cavuno_cookie_consent', 'theme']);
   });
+
+  it('clears AdSense cookies but keeps its opt-out marker', () => {
+    document.cookie = '__gads=ID=1; Path=/; Domain=example.com';
+    document.cookie = '__gpi=UID=1; Path=/; Domain=jobs.example.com';
+    document.cookie = '__eoi=ID=1; Path=/';
+    document.cookie = '__gpi_optout=1; Path=/; Domain=example.com';
+
+    clearAnalyticsCookies('jobs.example.com');
+
+    expect(cookieNames()).toEqual(['__gpi_optout']);
+  });
 });

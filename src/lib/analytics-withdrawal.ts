@@ -1,7 +1,7 @@
 /**
  * Withdrawing analytics consent mid-visit. None of the loaded trackers
- * (Cavuno Analytics, GTM, GA4, Meta Pixel, LinkedIn Insight) has an off
- * switch: once their script runs it keeps beaconing for the life of the
+ * (Cavuno Analytics, GTM, GA4, Meta Pixel, LinkedIn Insight) nor AdSense
+ * has an off switch: once their script runs it keeps beaconing for the life of the
  * document. So withdrawal clears the first-party cookies they set and
  * reloads into a document that never loads them.
  *
@@ -16,6 +16,11 @@ const ANALYTICS_COOKIE_NAMES = new Set([
   'session-id',
   // LinkedIn Insight first-party click id.
   'li_fat_id',
+  // AdSense on the publisher's domain (Google's ad-cookie list). Exact
+  // names: `__gpi_optout` records an ad opt-out and must survive.
+  '__gads',
+  '__gpi',
+  '__eoi',
 ]);
 
 /**

@@ -15,7 +15,7 @@ export function BoardAdsBoot({
   hasMobileBottomBar?: boolean;
 }) {
   const ads = useBoardAds();
-  const { required, choice } = useCookieConsent();
+  const { required, choice, markAnalyticsLoaded } = useCookieConsent();
   const { previewAds } = useBoardAdPreview();
   const eligibleViewport = useAdMedia(
     hasMobileBottomBar ? '(min-width: 1024px)' : '(min-width: 320px)',
@@ -29,7 +29,7 @@ export function BoardAdsBoot({
       !ads.clientId
     )
       return;
-    ensureAdSenseScript(ads.clientId);
+    if (ensureAdSenseScript(ads.clientId)) markAnalyticsLoaded();
   }, [
     eligibleViewport,
     previewAds,
@@ -37,6 +37,7 @@ export function BoardAdsBoot({
     choice,
     ads.enabled,
     ads.clientId,
+    markAnalyticsLoaded,
   ]);
   return null;
 }
