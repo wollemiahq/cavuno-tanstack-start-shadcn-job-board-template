@@ -136,6 +136,12 @@ export function CookieConsentProvider({
   const markAnalyticsLoaded = useCallback(() => {
     analyticsLoaded.current = true;
   }, []);
+  // Stop trackers this document loaded; the choice is already persisted.
+  const withdrawIfLoaded = useCallback(() => {
+    if (!analyticsLoaded.current) return;
+    analyticsLoaded.current = false;
+    withdrawAnalytics();
+  }, [withdrawAnalytics]);
 
   useEffect(() => {
     const fromCookie = parseCookieConsent(document.cookie);
@@ -155,6 +161,21 @@ export function CookieConsentProvider({
     }
     setChoice(null);
   }, []);
+
+  // A choice made in another tab applies here too: a decline there must
+  // stop the trackers this tab loaded, not leave them beaconing.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      if (event.newValue === 'accepted') setChoice('accepted');
+      if (event.newValue === 'denied') {
+        setChoice('denied');
+        withdrawIfLoaded();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [withdrawIfLoaded]);
 
   // A declined visitor carries no analytics cookies. Swept on every load,
   // not only at withdrawal: trackers rewrite some cookies as the withdrawn
@@ -177,10 +198,7 @@ export function CookieConsentProvider({
       deny: () => {
         persistChoice('denied');
         setChoice('denied');
-        if (analyticsLoaded.current) {
-          analyticsLoaded.current = false;
-          withdrawAnalytics();
-        }
+        withdrawIfLoaded();
       },
       reopenBanner: () => {
         clearPersistedChoice();
@@ -188,7 +206,7 @@ export function CookieConsentProvider({
       },
       markAnalyticsLoaded,
     }),
-    [required, choice, withdrawAnalytics, markAnalyticsLoaded],
+    [required, choice, withdrawIfLoaded, markAnalyticsLoaded],
   );
 
   return (

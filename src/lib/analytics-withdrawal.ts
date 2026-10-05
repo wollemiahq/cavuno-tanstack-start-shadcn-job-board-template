@@ -1,13 +1,22 @@
 /**
- * Withdrawing analytics consent mid-visit. None of the loaded trackers
- * (Cavuno Analytics, GTM, GA4, Meta Pixel, LinkedIn Insight) nor AdSense
- * has an off switch: once their script runs it keeps beaconing for the life of the
- * document. So withdrawal clears the first-party cookies they set and
- * reloads into a document that never loads them.
+ * Withdrawing analytics consent mid-visit. The trackers this board loads
+ * directly (Cavuno Analytics, GTM, GA4, Meta Pixel, LinkedIn Insight) and
+ * AdSense have no off switch: once their script runs it keeps beaconing for
+ * the life of the document. So withdrawal stops them by clearing their
+ * host-only first-party cookies and reloading into a document that never
+ * loads them.
  *
- * Only first-party cookies can be cleared here. Cookies those vendors set on
- * their own domains (facebook.com, linkedin.com, doubleclick.net) are out
- * of reach of page JavaScript.
+ * Only host-only cookies are cleared. This code never writes a `Domain=`
+ * cookie (ADR-0085): boards on `*.cavuno.app` share a parent domain that is
+ * not on the public suffix list, so a `Domain=cavuno.app` write from one
+ * board would delete other boards' and Cavuno's cookies. The starter's
+ * direct GA4 config pins `cookie_domain` to the host, so its `_ga*` cookies
+ * are host-only and cleared here. Cookies a vendor scopes to a parent
+ * domain (Meta `_fbp`, AdSense `__gads` on a custom domain, GA loaded by
+ * the owner's own GTM container with `cookie_domain: auto`), cookies from
+ * tags an owner adds inside their GTM container, and cookies vendors set on
+ * their own domains (facebook.com, linkedin.com, doubleclick.net) cannot be
+ * cleared from the board, by design.
  */
 
 /** Exact first-party cookie names set by the trackers this board loads. */
@@ -24,64 +33,43 @@ const ANALYTICS_COOKIE_NAMES = new Set([
 ]);
 
 /**
- * Name prefixes, so per-property variants match too (GA4's
- * `_ga_<MEASUREMENT_ID>`, `_gat_<ID>`, `_gcl_au`, `_gac_<ID>`).
+ * Exact patterns, so a fork's own cookies (`_gallery_view`) never match.
+ * Per-property variants: GA4's `_ga_<MEASUREMENT_ID>`, `_gac_<ID>`,
+ * `_gat_<ID>`, and the conversion linker's `_gcl_au` / `_gcl_aw`.
  */
-const ANALYTICS_COOKIE_PREFIXES = [
-  // Google Analytics / GTM: _ga, _ga_<ID>, _gac_<ID>, _gat, _gat_<ID>.
-  '_ga',
-  '_gid',
-  // Google conversion linker: _gcl_au, _gcl_aw, _gcl_dc.
-  '_gcl_',
+const ANALYTICS_COOKIE_PATTERNS = [
+  // Google Analytics / GTM.
+  /^_ga$/,
+  /^_ga_.+/,
+  /^_gac_.+/,
+  /^_gat($|_.+)/,
+  /^_gid$/,
+  // Google conversion linker.
+  /^_gcl_/,
   // Meta Pixel browser and click ids.
-  '_fbp',
-  '_fbc',
+  /^_fbp$/,
+  /^_fbc$/,
 ];
 
 function isAnalyticsCookie(name: string): boolean {
   return (
     ANALYTICS_COOKIE_NAMES.has(name) ||
-    ANALYTICS_COOKIE_PREFIXES.some((prefix) => name.startsWith(prefix))
+    ANALYTICS_COOKIE_PATTERNS.some((pattern) => pattern.test(name))
   );
 }
 
 /**
- * Domains a tracker may have scoped a cookie to: the host itself and each
- * parent domain, stopping before the bare TLD. Without the public suffix
- * list some candidates are public suffixes (`co.uk`); the browser ignores
- * a write to one, so trying them is harmless.
+ * Expire every host-only first-party analytics cookie visible to this
+ * document (Path=/, where all of these trackers set them). The consent
+ * cookie and unrelated cookies are left alone.
  */
-function cookieDomains(hostname: string): string[] {
-  // IP addresses and single-label hosts (localhost) only take host-only cookies.
-  if (/^[\d.]+$/.test(hostname) || hostname.includes(':')) return [];
-  const labels = hostname.split('.');
-  const domains: string[] = [];
-  for (let i = 0; i < labels.length - 1; i += 1) {
-    domains.push(labels.slice(i).join('.'));
-  }
-  return domains;
-}
-
-/**
- * Expire every first-party analytics cookie visible to this document.
- * A cookie is only removed by a write with its own domain and path, so each
- * name is expired host-only and on every candidate parent domain (Path=/,
- * which is where all of these trackers set them). The consent cookie and
- * unrelated cookies are left alone.
- */
-export function clearAnalyticsCookies(
-  hostname: string = window.location.hostname,
-): void {
+export function clearAnalyticsCookies(): void {
   const names = document.cookie
     .split(';')
     .map((part) => part.split('=')[0]?.trim() ?? '')
     .filter((name) => name !== '' && isAnalyticsCookie(name));
-  const domains = cookieDomains(hostname);
   for (const name of new Set(names)) {
     document.cookie = `${name}=; Path=/; Max-Age=0`;
-    for (const domain of domains) {
-      document.cookie = `${name}=; Path=/; Domain=${domain}; Max-Age=0`;
-    }
   }
 }
 

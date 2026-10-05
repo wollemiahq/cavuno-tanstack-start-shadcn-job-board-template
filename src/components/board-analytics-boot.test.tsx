@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { BoardAnalyticsBoot } from './board-analytics-boot';
@@ -129,6 +129,23 @@ describe('Cavuno Analytics consent', () => {
     fireEvent.click(screen.getByText('Reopen'));
     fireEvent.click(screen.getByText('Deny'));
     fireEvent.click(screen.getByText('Deny'));
+    expect(withdraw).toHaveBeenCalledTimes(1);
+  });
+
+  it('withdraws once when another tab declines', () => {
+    document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
+    const { withdraw } = renderWithConsent(true);
+    const declineElsewhere = () =>
+      act(() => {
+        window.dispatchEvent(
+          new StorageEvent('storage', {
+            key: 'cavuno:cookie-consent',
+            newValue: 'denied',
+          }),
+        );
+      });
+    declineElsewhere();
+    declineElsewhere();
     expect(withdraw).toHaveBeenCalledTimes(1);
   });
 
