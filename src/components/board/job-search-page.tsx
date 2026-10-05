@@ -16,7 +16,10 @@ import {
   JobsFilterControls,
   type JobsCustomFilters,
 } from '@/components/board/jobs-filter-controls';
-import { JobsResultsBar } from '@/components/board/jobs-results-bar';
+import {
+  JobsResultsBar,
+  type ResultsRange,
+} from '@/components/board/jobs-results-bar';
 import {
   useListingAdRails,
   type AdPlacement,
@@ -135,8 +138,8 @@ export function JobSearchPage({
   jobForm?: JobFormSource | null;
   language: string;
   heading?: string;
-  /** Rendered under the result count; see `JobsResultsBar` `scope`. */
-  resultsScope?: React.ReactNode;
+  /** Replaces the results range line; see `JobsResultsBar` `scope`. */
+  resultsScope?: (range: ResultsRange | null) => React.ReactNode;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: JobsFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;

@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { formatDistance } from '@cavuno/board/format';
 import {
   cleanup,
   fireEvent,
@@ -11,111 +10,94 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { m } from '../../paraglide/messages';
-import { getLocale } from '../../paraglide/runtime';
 import { SearchRadiusScope } from './search-radius-scope';
 
 afterEach(cleanup);
 
-const distance = (value: number, unit: 'mi' | 'km') =>
-  formatDistance(value, unit, getLocale());
+type Props = Parameters<typeof SearchRadiusScope>[0];
+
+const houston: Props = {
+  place: 'Houston',
+  unit: 'mi',
+  within: 25,
+  defaultWithin: 25,
+  range: { from: 1, to: 20, count: 93 },
+  onWithinChange: () => {},
+};
+
+function line(props: Partial<Props> = {}) {
+  const { container } = render(<SearchRadiusScope {...houston} {...props} />);
+  return container.querySelector('[data-slot="search-radius-scope"]');
+}
 
 describe('SearchRadiusScope', () => {
-  it('names the place itself until a distance is chosen', () => {
-    render(
-      <SearchRadiusScope
-        place="Austin"
-        unit="mi"
-        within={undefined}
-        onWithinChange={vi.fn()}
-      />,
+  it('says the range, distance and place in one line; only the distance opens the menu', () => {
+    expect(line()?.textContent).toBe(
+      'Showing 1–20 jobs within 25 mi of Houston',
     );
+    expect(screen.getByRole('button').textContent).toBe('25 mi');
+  });
 
-    expect(
-      screen.getByRole('button', {
-        name: m.searchRadius_exactScope({ place: 'Austin' }),
-      }),
-    ).toBeInTheDocument();
+  it('names the place itself at the exact place, the menu still there', () => {
+    expect(line({ within: null })?.textContent).toBe(
+      'Showing 1–20 jobs in Houston only',
+    );
+    expect(screen.getByRole('button').textContent).toBe('Houston only');
+  });
+
+  it('says one job in the singular', () => {
+    expect(line({ range: { from: 1, to: 1, count: 1 } })?.textContent).toBe(
+      'Showing 1 job within 25 mi of Houston',
+    );
+  });
+
+  it('keeps the menu with no results', () => {
+    expect(line({ range: { from: 0, to: 0, count: 0 } })?.textContent).toBe(
+      'No jobs within 25 mi of Houston',
+    );
+    expect(screen.getByRole('button').textContent).toBe('25 mi');
+  });
+
+  it('leaves the range out when the count is unknown', () => {
+    expect(line({ unit: 'km', within: 10, range: null })?.textContent).toBe(
+      'Showing jobs within 10 km of Houston',
+    );
   });
 
   it('offers the exact place and the presets in the place unit', async () => {
-    const onWithinChange = vi.fn();
-    render(
-      <SearchRadiusScope
-        place="Austin"
-        unit="mi"
-        within={undefined}
-        onWithinChange={onWithinChange}
-      />,
-    );
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.searchRadius_exactScope({ place: 'Austin' }),
-      }),
-    );
+    line();
+    fireEvent.click(screen.getByRole('button', { name: '25 mi' }));
     const options = await screen.findAllByRole('menuitemradio');
     expect(options.map((option) => option.textContent)).toEqual([
-      m.searchRadius_exactOption(),
-      ...[5, 10, 25, 50, 100].map((value) =>
-        m.searchRadius_withinOption({ distance: distance(value, 'mi') }),
-      ),
+      'Exact location only',
+      'Within 5 mi',
+      'Within 10 mi',
+      'Within 25 mi',
+      'Within 50 mi',
+      'Within 100 mi',
     ]);
-
-    fireEvent.click(
-      screen.getByRole('menuitemradio', {
-        name: m.searchRadius_withinOption({ distance: distance(25, 'mi') }),
-      }),
-    );
-    expect(onWithinChange).toHaveBeenCalledWith(25);
   });
 
-  it('labels a widened listing and returns it to the exact place', async () => {
+  it.each([
+    ['Exact location only', 0],
+    ['Within 10 mi', 10],
+    // The default distance is the plain URL: no `within`.
+    ['Within 25 mi', undefined],
+  ])('picking %s sets within to %s', async (option, expected) => {
     const onWithinChange = vi.fn();
-    render(
-      <SearchRadiusScope
-        place="Berlin"
-        unit="km"
-        within={10}
-        onWithinChange={onWithinChange}
-      />,
-    );
+    line({ within: 50, onWithinChange });
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.searchRadius_withinScope({
-          distance: distance(10, 'km'),
-          place: 'Berlin',
-        }),
-      }),
-    );
-    fireEvent.click(
-      await screen.findByRole('menuitemradio', {
-        name: m.searchRadius_exactOption(),
-      }),
-    );
-    expect(onWithinChange).toHaveBeenCalledWith(undefined);
+    fireEvent.click(screen.getByRole('button', { name: '50 mi' }));
+    fireEvent.click(await screen.findByRole('menuitemradio', { name: option }));
+    expect(onWithinChange).toHaveBeenCalledWith(expected);
   });
 
   it('closes the menu once a distance is picked', async () => {
-    render(
-      <SearchRadiusScope
-        place="Houston"
-        unit="mi"
-        within={undefined}
-        onWithinChange={vi.fn()}
-      />,
-    );
+    line();
 
+    fireEvent.click(screen.getByRole('button', { name: '25 mi' }));
     fireEvent.click(
-      screen.getByRole('button', {
-        name: m.searchRadius_exactScope({ place: 'Houston' }),
-      }),
-    );
-    fireEvent.click(
-      await screen.findByRole('menuitemradio', {
-        name: m.searchRadius_withinOption({ distance: distance(25, 'mi') }),
-      }),
+      await screen.findByRole('menuitemradio', { name: 'Within 10 mi' }),
     );
 
     await waitFor(() =>

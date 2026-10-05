@@ -175,15 +175,16 @@ function trailJsonLd(trail: { name: string; href?: string }[]) {
 }
 
 /**
- * A location page widened by `within` is a filtered view of the plain
- * location page, which stays the canonical URL: keep it out of the index
- * while its job links are still followed.
+ * A location page with a chosen distance (`within`, the exact place included)
+ * is a filtered view of the plain location page, which stays the canonical
+ * URL and shows the default distance: keep it out of the index while its job
+ * links are still followed.
  */
-function noindexWhenWidened<T extends { meta: object[] }>(
+function noindexWhenDistanceChosen<T extends { meta: object[] }>(
   head: T,
-  widened: boolean,
+  chosen: boolean,
 ): T {
-  if (!widened) return head;
+  if (!chosen) return head;
   return {
     ...head,
     meta: [...head.meta, { name: 'robots', content: 'noindex, follow' }],
@@ -191,16 +192,15 @@ function noindexWhenWidened<T extends { meta: object[] }>(
 }
 
 /**
- * The `radius` (km) a location listing asks for. Only a `within` URL waits
- * for the place first: its unit and level decide the kilometres, and a
- * region or country ignores it. Every other request keeps the place resolve
- * in the same batch as the listing.
+ * The `radius` (km) a location listing asks for: the URL's `within`, or the
+ * market default for a city or locality with a point; none (exact) for
+ * `within=0`, a region or a country. The API keeps an omitted radius exact,
+ * so the place resolves first: its level and unit decide the kilometres.
  */
 async function listingRadiusKm(
   placeRead: Promise<TaxonomyResolution | null>,
   within: number | undefined,
 ): Promise<number | undefined> {
-  if (within === undefined) return undefined;
   return placeSearchRadius(await placeRead, within)?.selected?.km;
 }
 
@@ -568,7 +568,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place),
       ];
-      const head = noindexWhenWidened(
+      const head = noindexWhenDistanceChosen(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -584,7 +584,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        Boolean(searchRadius?.selected),
+        Boolean(searchRadius?.explicit),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
@@ -685,7 +685,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         }),
         { name: category.displayName },
       ];
-      const head = noindexWhenWidened(
+      const head = noindexWhenDistanceChosen(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -703,7 +703,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        Boolean(searchRadius?.selected),
+        Boolean(searchRadius?.explicit),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
@@ -801,7 +801,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         }),
         { name: skill.displayName },
       ];
-      const head = noindexWhenWidened(
+      const head = noindexWhenDistanceChosen(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -819,7 +819,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        Boolean(searchRadius?.selected),
+        Boolean(searchRadius?.explicit),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({

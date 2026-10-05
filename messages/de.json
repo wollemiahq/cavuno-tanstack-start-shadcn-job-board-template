@@ -1481,8 +1481,46 @@
   "locationCombobox_searchingText": "Wird gesucht…",
   "locationPage_jobsHeading": "Jobs in {place}",
   "locationPage_notFoundText": "Standort nicht gefunden.",
-  "searchRadius_exactScope": "Angezeigt: Jobs in {place}",
-  "searchRadius_withinScope": "Angezeigt: Jobs im Umkreis von {distance} um {place}",
+  "searchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Job {exactPlace}",
+        "countPlural=*": "Zeige {from}–{to} Jobs {exactPlace}"
+      }
+    }
+  ],
+  "searchRadius_exactScopeUncounted": "Angezeigt: Jobs {exactPlace}",
+  "searchRadius_exactPlace": "nur in {place}",
+  "searchRadius_exactEmpty": "Keine Jobs {exactPlace}",
+  "searchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Job im Umkreis von {distance} um {place}",
+        "countPlural=*": "Zeige {from}–{to} Jobs im Umkreis von {distance} um {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeUncounted": "Angezeigt: Jobs im Umkreis von {distance} um {place}",
+  "searchRadius_withinEmpty": "Keine Jobs im Umkreis von {distance} um {place}",
   "searchRadius_exactOption": "Nur genauer Ort",
   "searchRadius_withinOption": "Im Umkreis von {distance}",
   "searchRadius_menuLabel": "Entfernung",

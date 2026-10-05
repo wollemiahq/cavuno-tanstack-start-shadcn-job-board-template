@@ -69,7 +69,8 @@ export function parseJobsIndexSearch(search: UrlSearchInput): JobsIndexSearch {
 
 /**
  * Location listings also take `within`: a search distance in the place's
- * unit. A value that is not one of the presets is dropped (exact place).
+ * unit, or `0` for the exact place. Anything else is dropped, so the page
+ * uses the default distance.
  */
 export type LocationJobsSearch = JobsSearch & { within?: number };
 

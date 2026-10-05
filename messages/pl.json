@@ -1531,8 +1531,46 @@
   "locationCombobox_searchingText": "Wyszukiwanie…",
   "locationPage_jobsHeading": "Oferty pracy: {place}",
   "locationPage_notFoundText": "Nie znaleziono lokalizacji.",
-  "searchRadius_exactScope": "Wyświetlane oferty pracy: {place}",
-  "searchRadius_withinScope": "Wyświetlane oferty pracy w promieniu {distance}: {place}",
+  "searchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} oferty {exactPlace}",
+        "countPlural=*": "Wyświetlanie ofert {from}–{to} {exactPlace}"
+      }
+    }
+  ],
+  "searchRadius_exactScopeUncounted": "Wyświetlane oferty pracy {exactPlace}",
+  "searchRadius_exactPlace": "tylko w {place}",
+  "searchRadius_exactEmpty": "Brak ofert {exactPlace}",
+  "searchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} oferty w promieniu {distance} od {place}",
+        "countPlural=*": "Wyświetlanie ofert {from}–{to} w promieniu {distance} od {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeUncounted": "Wyświetlane oferty pracy w promieniu {distance} od {place}",
+  "searchRadius_withinEmpty": "Brak ofert w promieniu {distance} od {place}",
   "searchRadius_exactOption": "Tylko dokładna lokalizacja",
   "searchRadius_withinOption": "W promieniu {distance}",
   "searchRadius_menuLabel": "Odległość",

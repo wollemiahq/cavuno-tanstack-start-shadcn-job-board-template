@@ -1481,8 +1481,46 @@
   "locationCombobox_searchingText": "Recherche…",
   "locationPage_jobsHeading": "Offres à {place}",
   "locationPage_notFoundText": "Lieu introuvable.",
-  "searchRadius_exactScope": "Affichage des offres à {place}",
-  "searchRadius_withinScope": "Affichage des offres dans un rayon de {distance} autour de {place}",
+  "searchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Affichage de {countLabel} offre {exactPlace}",
+        "countPlural=*": "Affichage de {from}–{to} offres {exactPlace}"
+      }
+    }
+  ],
+  "searchRadius_exactScopeUncounted": "Affichage des offres {exactPlace}",
+  "searchRadius_exactPlace": "uniquement à {place}",
+  "searchRadius_exactEmpty": "Aucune offre {exactPlace}",
+  "searchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Affichage de {countLabel} offre dans un rayon de {distance} autour de {place}",
+        "countPlural=*": "Affichage de {from}–{to} offres dans un rayon de {distance} autour de {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeUncounted": "Affichage des offres dans un rayon de {distance} autour de {place}",
+  "searchRadius_withinEmpty": "Aucune offre dans un rayon de {distance} autour de {place}",
   "searchRadius_exactOption": "Lieu exact uniquement",
   "searchRadius_withinOption": "Dans un rayon de {distance}",
   "searchRadius_menuLabel": "Distance",

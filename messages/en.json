@@ -1481,8 +1481,46 @@
   "locationCombobox_searchingText": "Searching…",
   "locationPage_jobsHeading": "Jobs in {place}",
   "locationPage_notFoundText": "Location not found.",
-  "searchRadius_exactScope": "Showing jobs in {place}",
-  "searchRadius_withinScope": "Showing jobs within {distance} of {place}",
+  "searchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {countLabel} job in {exactPlace}",
+        "countPlural=*": "Showing {from}–{to} jobs in {exactPlace}"
+      }
+    }
+  ],
+  "searchRadius_exactScopeUncounted": "Showing jobs in {exactPlace}",
+  "searchRadius_exactPlace": "{place} only",
+  "searchRadius_exactEmpty": "No jobs in {exactPlace}",
+  "searchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {countLabel} job within {distance} of {place}",
+        "countPlural=*": "Showing {from}–{to} jobs within {distance} of {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeUncounted": "Showing jobs within {distance} of {place}",
+  "searchRadius_withinEmpty": "No jobs within {distance} of {place}",
   "searchRadius_exactOption": "Exact location only",
   "searchRadius_withinOption": "Within {distance}",
   "searchRadius_menuLabel": "Distance",

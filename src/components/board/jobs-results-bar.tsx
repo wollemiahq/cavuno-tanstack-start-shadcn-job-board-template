@@ -9,6 +9,9 @@ import { entityCount } from '@/lib/entity-count';
 import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 
+/** The page's place in the results: 1–20 of 93; all `0` when empty. */
+export type ResultsRange = { from: number; to: number; count: number };
+
 function finiteNumber(value: number | undefined): number | undefined {
   if (value === undefined || !Number.isFinite(value)) return undefined;
   return value;
@@ -33,8 +36,12 @@ export function JobsResultsBar({
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
   language: string;
-  /** What the results cover, such as the location search distance. */
-  scope?: React.ReactNode;
+  /**
+   * A results line that says what the results cover (such as the location
+   * search distance), in place of the "Showing X–Y of Z" range. Gets the
+   * range, or `null` when the count is unknown.
+   */
+  scope?: (range: ResultsRange | null) => React.ReactNode;
   className?: string;
 }) {
   // Viewer chrome locale for number/plural formatting (prop kept for call-site
@@ -62,6 +69,14 @@ export function JobsResultsBar({
             plural: chromeEntity().jobPlural,
           })
       : (heading ?? jobSearchCopy().headingJobs);
+  const range: ResultsRange | null =
+    totalCount === undefined
+      ? null
+      : {
+          from: span?.from ?? 0,
+          to: span?.to ?? 0,
+          count: span ? totalCount : 0,
+        };
   const rangeLabel =
     span && totalCount !== undefined
       ? m.jobSearch_resultsShowingRange({
@@ -81,8 +96,9 @@ export function JobsResultsBar({
         <h1 className="text-foreground text-lg font-semibold tracking-tight">
           {totalLabel}
         </h1>
-        {scope}
-        {rangeLabel ? (
+        {scope ? (
+          scope(range)
+        ) : rangeLabel ? (
           <p className="text-muted-foreground text-xs">{rangeLabel}</p>
         ) : null}
       </div>

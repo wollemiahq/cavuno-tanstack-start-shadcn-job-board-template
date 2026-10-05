@@ -17,6 +17,7 @@ import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { createJobsLocationCategoryLoader } from './-jobs-taxonomy-loaders';
 
+import { shortPlaceName } from '@/board/search-radius';
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { SearchRadiusScope } from '@/components/board/search-radius-scope';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -49,23 +50,27 @@ function LocationCategoryPage() {
         place: place.displayName,
       })}
       resultsScope={
-        searchRadius ? (
-          <SearchRadiusScope
-            place={place.displayName}
-            unit={searchRadius.unit}
-            within={searchRadius.selected?.value}
-            onWithinChange={(within) =>
-              navigate({
-                search: (prev) => ({
-                  ...prev,
-                  within,
-                  page: undefined,
-                  selectedJob: undefined,
-                }),
-              })
-            }
-          />
-        ) : undefined
+        searchRadius
+          ? (range) => (
+              <SearchRadiusScope
+                place={shortPlaceName(place)}
+                unit={searchRadius.unit}
+                within={searchRadius.selected?.value ?? null}
+                defaultWithin={searchRadius.defaultOption.value}
+                range={range}
+                onWithinChange={(within) =>
+                  navigate({
+                    search: (prev) => ({
+                      ...prev,
+                      within,
+                      page: undefined,
+                      selectedJob: undefined,
+                    }),
+                  })
+                }
+              />
+            )
+          : undefined
       }
       count={list.count}
       gatedCount={list.gatedCount}

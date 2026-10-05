@@ -1481,8 +1481,46 @@
   "locationCombobox_searchingText": "Buscando…",
   "locationPage_jobsHeading": "Ofertas en {place}",
   "locationPage_notFoundText": "Ubicación no encontrada.",
-  "searchRadius_exactScope": "Mostrando ofertas en {place}",
-  "searchRadius_withinScope": "Mostrando ofertas a menos de {distance} de {place}",
+  "searchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {countLabel} oferta {exactPlace}",
+        "countPlural=*": "Mostrando {from}–{to} ofertas {exactPlace}"
+      }
+    }
+  ],
+  "searchRadius_exactScopeUncounted": "Mostrando ofertas {exactPlace}",
+  "searchRadius_exactPlace": "solo en {place}",
+  "searchRadius_exactEmpty": "No hay ofertas {exactPlace}",
+  "searchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {countLabel} oferta a menos de {distance} de {place}",
+        "countPlural=*": "Mostrando {from}–{to} ofertas a menos de {distance} de {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeUncounted": "Mostrando ofertas a menos de {distance} de {place}",
+  "searchRadius_withinEmpty": "No hay ofertas a menos de {distance} de {place}",
   "searchRadius_exactOption": "Solo la ubicación exacta",
   "searchRadius_withinOption": "A menos de {distance}",
   "searchRadius_menuLabel": "Distancia",

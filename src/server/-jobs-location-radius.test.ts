@@ -102,21 +102,42 @@ beforeEach(() => {
 });
 
 describe('location listing search distance', () => {
-  it('lists the exact place, indexable, when the URL has no `within`', async () => {
+  it('lists a city within the market default, indexable, when the URL has no `within`', async () => {
     mocks.resolve.mockResolvedValue(resolution('city', 'AU'));
 
     const result = await getJobsLocationPage({ data: page });
 
     expect(mocks.list).toHaveBeenCalledWith(
-      expect.not.objectContaining({ radius: expect.anything() }),
+      expect.objectContaining({ location: 'fixture-place', radius: 50 }),
       expect.anything(),
     );
     expect(result).toMatchObject({
       kind: 'ok',
-      searchRadius: { unit: 'km', selected: null },
+      searchRadius: {
+        unit: 'km',
+        selected: { value: 50 },
+        explicit: false,
+      },
     });
     if (result.kind !== 'ok') throw new Error('expected a listing');
     expect(robots(result.head)).toBeUndefined();
+  });
+
+  it('lists the exact place for `within=0`, noindexed', async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+
+    const result = await getJobsLocationPage({ data: { ...page, within: 0 } });
+
+    expect(mocks.list).toHaveBeenCalledWith(
+      expect.not.objectContaining({ radius: expect.anything() }),
+      expect.anything(),
+    );
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(result.searchRadius).toMatchObject({
+      selected: null,
+      explicit: true,
+    });
+    expect(robots(result.head)?.content).toBe('noindex, follow');
   });
 
   it('widens a US city by `within` miles, sent as kilometres, and noindexes it', async () => {
@@ -159,15 +180,15 @@ describe('location listing search distance', () => {
     );
   });
 
-  it('ignores `within` on a region page', async () => {
+  it('ignores `within` and the default on a region page', async () => {
     mocks.resolve.mockResolvedValue(resolution('region', 'US'));
 
+    await getJobsLocationPage({ data: page });
     const result = await getJobsLocationPage({ data: { ...page, within: 25 } });
 
-    expect(mocks.list).toHaveBeenCalledWith(
-      expect.not.objectContaining({ radius: expect.anything() }),
-      expect.anything(),
-    );
+    for (const [query] of mocks.list.mock.calls) {
+      expect(query.radius).toBeUndefined();
+    }
     if (result.kind !== 'ok') throw new Error('expected a listing');
     expect(result.searchRadius).toBeNull();
     expect(robots(result.head)).toBeUndefined();
