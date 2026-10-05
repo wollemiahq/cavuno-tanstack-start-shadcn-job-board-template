@@ -954,6 +954,7 @@
   "employerJob_statusArchived": "Gearchiveerd",
   "employerJob_statusDraft": "Concept",
   "employerJob_statusExpired": "Verlopen",
+  "employerJob_statusPendingApproval": "Wacht op goedkeuring",
   "employerJob_statusPublished": "Gepubliceerd",
   "employerJobs_actionsColumn": "Acties",
   "employerJobs_actionsMenuLabel": "Acties voor {title}",

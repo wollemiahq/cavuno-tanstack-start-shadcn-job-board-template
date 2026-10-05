@@ -8,6 +8,7 @@ const statusLabels = {
   published: m.employerJob_statusPublished,
   expired: m.employerJob_statusExpired,
   archived: m.employerJob_statusArchived,
+  pending_approval: m.employerJob_statusPendingApproval,
 } satisfies Record<EmployerJob['status'], () => string>;
 
 export function employerJobStatusLabel(status: string) {

@@ -954,6 +954,7 @@
   "employerJob_statusArchived": "Archived",
   "employerJob_statusDraft": "Draft",
   "employerJob_statusExpired": "Expired",
+  "employerJob_statusPendingApproval": "Awaiting approval",
   "employerJob_statusPublished": "Published",
   "employerJobs_actionsColumn": "Actions",
   "employerJobs_actionsMenuLabel": "Actions for {title}",

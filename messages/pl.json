@@ -988,6 +988,7 @@
   "employerJob_statusArchived": "Zarchiwizowana",
   "employerJob_statusDraft": "Wersja robocza",
   "employerJob_statusExpired": "Wygasła",
+  "employerJob_statusPendingApproval": "Oczekuje na zatwierdzenie",
   "employerJob_statusPublished": "Opublikowana",
   "employerJobs_actionsColumn": "Działania",
   "employerJobs_actionsMenuLabel": "Działania dla oferty {title}",
