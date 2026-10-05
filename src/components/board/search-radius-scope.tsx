@@ -70,19 +70,22 @@ export function SearchRadiusScope({
       <DropdownMenuContent align="start" className="min-w-48">
         <DropdownMenuGroup>
           <DropdownMenuLabel>{m.searchRadius_menuLabel()}</DropdownMenuLabel>
+          {/* Radio items keep the menu open by default; picking a distance
+              is a one-shot choice, so each item closes it. */}
           <DropdownMenuRadioGroup
             value={within === undefined ? EXACT : String(within)}
             onValueChange={(value: string) =>
               onWithinChange(value === EXACT ? undefined : Number(value))
             }
           >
-            <DropdownMenuRadioItem value={EXACT}>
+            <DropdownMenuRadioItem value={EXACT} closeOnClick>
               {m.searchRadius_exactOption()}
             </DropdownMenuRadioItem>
             {options.map((option) => (
               <DropdownMenuRadioItem
                 key={option.value}
                 value={String(option.value)}
+                closeOnClick
               >
                 {m.searchRadius_withinOption({
                   distance: formatDistance(option.value, unit, locale),

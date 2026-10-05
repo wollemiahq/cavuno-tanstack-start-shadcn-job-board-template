@@ -2,7 +2,13 @@
 
 import '@testing-library/jest-dom/vitest';
 import { formatDistance } from '@cavuno/board/format';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
@@ -89,5 +95,31 @@ describe('SearchRadiusScope', () => {
       }),
     );
     expect(onWithinChange).toHaveBeenCalledWith(undefined);
+  });
+
+  it('closes the menu once a distance is picked', async () => {
+    render(
+      <SearchRadiusScope
+        place="Houston"
+        unit="mi"
+        within={undefined}
+        onWithinChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.searchRadius_exactScope({ place: 'Houston' }),
+      }),
+    );
+    fireEvent.click(
+      await screen.findByRole('menuitemradio', {
+        name: m.searchRadius_withinOption({ distance: distance(25, 'mi') }),
+      }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument(),
+    );
   });
 });
