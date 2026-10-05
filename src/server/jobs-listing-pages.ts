@@ -44,7 +44,11 @@ import {
 } from '@/board/custom-field-labels';
 import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
-import { placeSearchRadius } from '@/board/search-radius';
+import {
+  isSearchRadiusViewNoindex,
+  placeJobCount,
+  placeSearchRadius,
+} from '@/board/search-radius';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import {
@@ -177,14 +181,15 @@ function trailJsonLd(trail: { name: string; href?: string }[]) {
 /**
  * A location page with a chosen distance (`within`, the exact place included)
  * is a filtered view of the plain location page, which stays the canonical
- * URL and shows the default distance: keep it out of the index while its job
- * links are still followed.
+ * URL and shows the default distance; a place with no jobs of its own lists
+ * only nearby jobs. Keep either out of the index while its job links are
+ * still followed (see `isSearchRadiusViewNoindex`).
  */
-function noindexWhenDistanceChosen<T extends { meta: object[] }>(
+function noindexSearchRadiusView<T extends { meta: object[] }>(
   head: T,
-  chosen: boolean,
+  noindex: boolean,
 ): T {
-  if (!chosen) return head;
+  if (!noindex) return head;
   return {
     ...head,
     meta: [...head.meta, { name: 'robots', content: 'noindex, follow' }],
@@ -568,7 +573,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place),
       ];
-      const head = noindexWhenDistanceChosen(
+      const head = noindexSearchRadiusView(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -584,7 +589,10 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        Boolean(searchRadius?.explicit),
+        isSearchRadiusViewNoindex(
+          searchRadius,
+          placeJobCount(placeTree?.data, place),
+        ),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
@@ -685,7 +693,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         }),
         { name: category.displayName },
       ];
-      const head = noindexWhenDistanceChosen(
+      const head = noindexSearchRadiusView(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -703,7 +711,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        Boolean(searchRadius?.explicit),
+        isSearchRadiusViewNoindex(
+          searchRadius,
+          placeJobCount(placeTree?.data, place),
+        ),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
@@ -801,7 +812,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         }),
         { name: skill.displayName },
       ];
-      const head = noindexWhenDistanceChosen(
+      const head = noindexSearchRadiusView(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -819,7 +830,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        Boolean(searchRadius?.explicit),
+        isSearchRadiusViewNoindex(
+          searchRadius,
+          placeJobCount(placeTree?.data, place),
+        ),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({

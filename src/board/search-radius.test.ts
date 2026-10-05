@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isSearchRadiusViewNoindex,
   parseSearchRadiusWithin,
+  placeJobCount,
   placeSearchRadius,
   shortPlaceName,
 } from './search-radius';
@@ -112,5 +114,64 @@ describe('shortPlaceName', () => {
     expect(
       shortPlaceName({ ...place('city', 'DE'), displayName: 'Wien' }),
     ).toBe('Wien');
+  });
+});
+
+describe('placeJobCount', () => {
+  const houston = { sourceSlug: 'houston', canonicalSlug: 'houston' };
+
+  it("reads the place's own count by source or canonical slug", () => {
+    expect(placeJobCount([{ slug: 'houston', jobCount: 12 }], houston)).toBe(
+      12,
+    );
+    expect(
+      placeJobCount([{ slug: 'wien', jobCount: 4 }], {
+        sourceSlug: 'vienna',
+        canonicalSlug: 'wien',
+      }),
+    ).toBe(4);
+  });
+
+  it('is 0 for a place missing from the directory, null without one', () => {
+    expect(placeJobCount([{ slug: 'pasadena', jobCount: 2 }], houston)).toBe(0);
+    expect(placeJobCount(null, houston)).toBeNull();
+  });
+});
+
+describe('isSearchRadiusViewNoindex', () => {
+  const city = place('city', 'US');
+
+  it('indexes the default distance on a place with its own jobs', () => {
+    expect(
+      isSearchRadiusViewNoindex(placeSearchRadius(city, undefined), 3),
+    ).toBe(false);
+  });
+
+  it('noindexes the default distance on a place with no jobs of its own', () => {
+    expect(
+      isSearchRadiusViewNoindex(placeSearchRadius(city, undefined), 0),
+    ).toBe(true);
+  });
+
+  it('keeps an unknown count indexable', () => {
+    expect(
+      isSearchRadiusViewNoindex(placeSearchRadius(city, undefined), null),
+    ).toBe(false);
+  });
+
+  it('noindexes any explicit `within`', () => {
+    expect(isSearchRadiusViewNoindex(placeSearchRadius(city, 0), 3)).toBe(true);
+    expect(isSearchRadiusViewNoindex(placeSearchRadius(city, 25), 3)).toBe(
+      true,
+    );
+  });
+
+  it('leaves a region without a distance to its own rules', () => {
+    expect(
+      isSearchRadiusViewNoindex(
+        placeSearchRadius(place('region', 'US'), undefined),
+        0,
+      ),
+    ).toBe(false);
   });
 });

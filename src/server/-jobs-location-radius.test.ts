@@ -96,7 +96,10 @@ function robots(head: { meta: HeadMeta[] }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.tree.mockResolvedValue({ data: [] });
+  // The place directory: the fixture place has jobs of its own.
+  mocks.tree.mockResolvedValue({
+    data: [{ slug: 'fixture-place', jobCount: 3 }],
+  });
   mocks.list.mockResolvedValue(emptyList);
   mocks.search.mockResolvedValue({ ...emptyList, object: 'search_result' });
 });
@@ -242,5 +245,54 @@ describe('location listing search distance', () => {
       selected: { value: 10 },
     });
     expect(robots(result.head)?.content).toBe('noindex, follow');
+  });
+
+  it('noindexes the default distance on a city with no jobs of its own', async () => {
+    // Pasadena, TX: viewable through nearby Houston jobs, not indexable.
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+    mocks.tree.mockResolvedValue({
+      data: [{ slug: 'houston-tx-united-states', jobCount: 12 }],
+    });
+
+    const result = await getJobsLocationPage({ data: page });
+
+    expect(result.kind).toBe('ok');
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(result.searchRadius).toMatchObject({ explicit: false });
+    expect(robots(result.head)?.content).toBe('noindex, follow');
+    expect(result.head.links).toEqual([
+      {
+        rel: 'canonical',
+        href: 'https://fixture.example/jobs/locations/fixture-place',
+      },
+    ]);
+  });
+
+  it('noindexes the location + category and + skill pages on such a city', async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+    mocks.tree.mockResolvedValue({ data: [] });
+
+    const category = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing' },
+    });
+    const skill = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'react' },
+    });
+
+    if (category.kind !== 'ok' || skill.kind !== 'ok') {
+      throw new Error('expected listings');
+    }
+    expect(robots(category.head)?.content).toBe('noindex, follow');
+    expect(robots(skill.head)?.content).toBe('noindex, follow');
+  });
+
+  it('keeps the default distance indexable when the place directory is unreadable', async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+    mocks.tree.mockRejectedValue(new Error('directory down'));
+
+    const result = await getJobsLocationPage({ data: page });
+
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(robots(result.head)).toBeUndefined();
   });
 });

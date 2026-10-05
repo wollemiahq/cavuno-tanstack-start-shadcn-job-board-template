@@ -6,7 +6,7 @@ import {
   type SearchRadiusOption,
 } from '@cavuno/board/format';
 
-import type { TaxonomyResolution } from '@cavuno/board';
+import type { PublicPlace, TaxonomyResolution } from '@cavuno/board';
 
 /**
  * The "within" distance on a location listing. The URL carries `within` in
@@ -81,4 +81,38 @@ export function placeSearchRadius(
  */
 export function shortPlaceName(place: TaxonomyResolution): string {
   return place.displayName.split(',')[0]?.trim() || place.displayName;
+}
+
+/**
+ * The place's own job count from the board's place directory (the list of
+ * places with published jobs), matched by slug: `0` when the place is not in
+ * it, `null` when the directory could not be read. Jobs within a search
+ * distance are not counted.
+ */
+export function placeJobCount(
+  places: readonly Pick<PublicPlace, 'slug' | 'jobCount'>[] | null | undefined,
+  place: Pick<TaxonomyResolution, 'sourceSlug' | 'canonicalSlug'>,
+): number | null {
+  if (!places) return null;
+  const entry = places.find(
+    (node) =>
+      node.slug === place.sourceSlug || node.slug === place.canonicalSlug,
+  );
+  return entry?.jobCount ?? 0;
+}
+
+/**
+ * Whether a location listing with `radius` is `noindex, follow` (the plain
+ * URL stays canonical): a distance the URL chose, or the default distance on
+ * a place with no jobs of its own, which lists only nearby jobs. Index
+ * eligibility counts only jobs in the place, as the sitemap does, so the
+ * page stays viewable without ranking on nearby jobs. An unknown count
+ * (`null`) keeps the page indexable.
+ */
+export function isSearchRadiusViewNoindex(
+  radius: PlaceSearchRadius | null,
+  inPlaceJobCount: number | null,
+): boolean {
+  if (!radius) return false;
+  return radius.explicit || inPlaceJobCount === 0;
 }
