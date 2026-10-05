@@ -14,7 +14,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
  * clears them.
  */
 import {
-  Link,
   RouterProvider,
   createMemoryHistory,
   createRootRoute,
@@ -73,7 +72,6 @@ function renderWithRouter(ui: () => ReactNode) {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   render(<RouterProvider router={router} />);
-  return router;
 }
 
 const bannerRegion = () =>
@@ -322,28 +320,23 @@ describe('floating-stack slot handover', () => {
 });
 
 describe('a choice made in another tab', () => {
-  /** A tracker that has run in this document, plus an in-app link. */
+  /** A tracker that has run in this document. */
   function LoadedTracker() {
     const { markAnalyticsLoaded } = useCookieConsent();
     useEffect(markAnalyticsLoaded, [markAnalyticsLoaded]);
-    return <Link to="/cookie-policy">Policy</Link>;
+    return <p>Tracker</p>;
   }
 
   function renderLoaded() {
     document.cookie = serializeCookieConsent('accepted');
     const withdraw = vi.fn();
-    const loadDocument = vi.fn();
-    const router = renderWithRouter(() => (
-      <CookieConsentProvider
-        required
-        withdrawAnalytics={withdraw}
-        loadDocument={loadDocument}
-      >
+    renderWithRouter(() => (
+      <CookieConsentProvider required withdrawAnalytics={withdraw}>
         <LoadedTracker />
         <CookiePreferencesFooterAction />
       </CookieConsentProvider>
     ));
-    return { withdraw, loadDocument, router };
+    return { withdraw };
   }
 
   const otherTab = (newValue: string | null) =>
@@ -353,28 +346,23 @@ describe('a choice made in another tab', () => {
       );
     });
 
-  it('a decline silences trackers now and full-loads the next navigation', async () => {
-    const { withdraw, loadDocument, router } = renderLoaded();
-    await screen.findByText('Policy');
+  it('a decline stops Cavuno Analytics and clears cookies without a reload', async () => {
+    const { withdraw } = renderLoaded();
+    await screen.findByText('Tracker');
     document.cookie = '_ga=GA1.1.1; Path=/';
 
     otherTab('denied');
 
     expect(withdraw).not.toHaveBeenCalled();
-    expect(loadDocument).not.toHaveBeenCalled();
     expect(window.__cavunoAnalyticsOff).toBe(true);
     expect(document.cookie).not.toContain('_ga=');
-
-    fireEvent.click(screen.getByText('Policy'));
-    await waitFor(() =>
-      expect(loadDocument).toHaveBeenCalledWith('/cookie-policy'),
-    );
-    expect(router.state.location.pathname).toBe('/');
   });
 
   it('a reopen leaves this tab alone', async () => {
-    const { withdraw, loadDocument, router } = renderLoaded();
-    await screen.findByText('Policy');
+    const { withdraw } = renderLoaded();
+    await screen.findByRole('button', {
+      name: m.cookieConsent_preferencesLabel(),
+    });
 
     otherTab(null);
 
@@ -382,11 +370,6 @@ describe('a choice made in another tab', () => {
     expect(
       screen.getByRole('button', { name: m.cookieConsent_preferencesLabel() }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Policy'));
-    await waitFor(() =>
-      expect(router.state.location.pathname).toBe('/cookie-policy'),
-    );
     expect(withdraw).not.toHaveBeenCalled();
-    expect(loadDocument).not.toHaveBeenCalled();
   });
 });

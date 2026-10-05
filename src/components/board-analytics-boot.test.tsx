@@ -133,21 +133,33 @@ describe('Cavuno Analytics consent', () => {
     expect(withdraw).toHaveBeenCalledTimes(1);
   });
 
-  it('silences, but does not reload, when another tab declines', () => {
-    document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
-    const { withdraw } = renderWithConsent(true);
-    document.cookie = 'session-id=abc; Path=/';
+  function otherTab(newValue: string | null) {
     act(() => {
       window.dispatchEvent(
-        new StorageEvent('storage', {
-          key: 'cavuno:cookie-consent',
-          newValue: 'denied',
-        }),
+        new StorageEvent('storage', { key: 'cavuno:cookie-consent', newValue }),
       );
     });
+  }
+
+  it('stops, but does not reload, when another tab declines', () => {
+    document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
+    const { install, withdraw } = renderWithConsent(true);
+    expect(install).toHaveBeenCalledTimes(1);
+    document.cookie = 'session-id=abc; Path=/';
+    otherTab('denied');
     expect(withdraw).not.toHaveBeenCalled();
     expect(window.__cavunoAnalyticsOff).toBe(true);
     expect(document.cookie).not.toContain('session-id');
+  });
+
+  it('ignores a reopen in another tab', () => {
+    document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
+    const { withdraw } = renderWithConsent(true);
+    document.cookie = 'session-id=abc; Path=/';
+    otherTab(null);
+    expect(withdraw).not.toHaveBeenCalled();
+    expect(window.__cavunoAnalyticsOff).toBeUndefined();
+    expect(document.cookie).toContain('session-id');
   });
 
   it('never withdraws what was never installed', () => {

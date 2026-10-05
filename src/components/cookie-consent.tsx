@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { Link, useRouter } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { CookieIcon } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
@@ -97,10 +97,6 @@ export function useCookieConsent(): CookieConsentState {
   return useContext(CookieConsentContext);
 }
 
-function loadFullPage(href: string) {
-  window.location.assign(href);
-}
-
 function persistChoice(choice: CookieConsentChoice) {
   document.cookie = serializeCookieConsent(choice);
   try {
@@ -134,18 +130,13 @@ function clearPersistedChoice() {
 export function CookieConsentProvider({
   required,
   withdrawAnalytics = withdrawLoadedAnalytics,
-  loadDocument = loadFullPage,
   children,
 }: {
   required: boolean;
   /** Test seam; runtime clears analytics cookies and reloads. */
   withdrawAnalytics?: () => void;
-  /** Test seam; runtime does a full page load of `href`. */
-  loadDocument?: (href: string) => void;
   children: ReactNode;
 }) {
-  // Absent only in isolated tests that render no router.
-  const router = useRouter({ warn: false });
   const [choice, setChoice] = useState<CookieConsentChoice | null | undefined>(
     undefined,
   );
@@ -162,8 +153,6 @@ export function CookieConsentProvider({
     analyticsLoaded.current = false;
     withdrawAnalytics();
   }, [withdrawAnalytics]);
-  // Set when another tab declined after this one loaded trackers.
-  const [reloadOnNavigate, setReloadOnNavigate] = useState(false);
 
   useEffect(() => {
     const fromCookie = parseCookieConsent(document.cookie);
@@ -184,42 +173,25 @@ export function CookieConsentProvider({
     setChoice(null);
   }, []);
 
-  // A choice made in another tab applies here too. A decline there must
-  // stop the trackers this tab loaded, but reloading a background tab now
-  // would lose what the visitor typed: silence the Cavuno tracker, clear the
-  // cookies, and swap in a tracker-free document on the next navigation.
-  // (`null` is a reopen elsewhere: the earlier choice stands here.)
+  // A choice made in another tab applies here too. On a decline there,
+  // Cavuno Analytics in this tab stops at once (kill switch) and the
+  // analytics cookies are cleared. Third-party tags already loaded in this
+  // tab keep running until its next full page load: no reload, so nothing
+  // the visitor typed is lost. (`null` is a reopen elsewhere: the earlier
+  // choice stands here.)
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY) return;
       if (event.newValue === 'accepted') setChoice('accepted');
       if (event.newValue === 'denied') {
         setChoice('denied');
-        if (!analyticsLoaded.current) return;
-        analyticsLoaded.current = false;
         window.__cavunoAnalyticsOff = true;
         clearAnalyticsCookies();
-        setReloadOnNavigate(true);
       }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
-
-  // A history blocker runs before the router commits a navigation, so the
-  // client render (and any tracker pageview) never happens: load the target
-  // as a full page instead. Back/forward has already moved the URL; loading
-  // it then replaces the current entry.
-  useEffect(() => {
-    if (!reloadOnNavigate || !router) return;
-    return router.history.block({
-      blockerFn: ({ nextLocation, action }) => {
-        loadDocument(nextLocation.href);
-        return action === 'PUSH' || action === 'REPLACE';
-      },
-      enableBeforeUnload: false,
-    });
-  }, [reloadOnNavigate, router, loadDocument]);
 
   // A declined visitor carries no analytics cookies. Swept on every load,
   // not only at withdrawal: trackers rewrite some cookies as the withdrawn
