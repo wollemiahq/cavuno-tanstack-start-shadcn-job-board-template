@@ -752,77 +752,91 @@ export function ProfileForm({
     </Field>
   );
 
-  // The commute distance and the relocation switch sit under the location
-  // (or on their own when the layout hides it); both read the home place. The
-  // country follows them: it is an eligibility answer, not the home place.
+  // The commute distance sits beside the location (stacked on phones), with
+  // its description and error under the pair; the relocation switch follows.
+  // Without a location field (the layout hides it) the commute field stands
+  // alone. The country follows them: it is an eligibility answer, not the
+  // home place.
   const homePlaceName = homePlace?.city || homePlace?.name || '';
+  const commuteControl = showsCommuteRadius ? (
+    <Field
+      className="shrink-0 gap-1.5 sm:w-auto"
+      data-invalid={commuteError || undefined}
+    >
+      <FieldLabel htmlFor="profile-commute-radius">
+        {m.profileForm_commuteRadiusLabel()}
+      </FieldLabel>
+      <InputGroup>
+        <InputGroupInput
+          ref={commuteInput}
+          id="profile-commute-radius"
+          type="number"
+          inputMode="numeric"
+          min={commuteBounds.min}
+          max={commuteBounds.max}
+          step={1}
+          value={commuteText}
+          placeholder={commuteDefaultText}
+          aria-invalid={commuteError || undefined}
+          aria-describedby={
+            commuteError
+              ? 'profile-commute-radius-description profile-commute-radius-error'
+              : 'profile-commute-radius-description'
+          }
+          onChange={(event) => {
+            setCommuteDraft({
+              text: event.target.value,
+              unit: commuteUnit,
+            });
+            setCommuteError(false);
+            setStatus('idle');
+          }}
+        />
+        <InputGroupAddon align="inline-end">
+          {unitLabel(commuteUnit)}
+        </InputGroupAddon>
+      </InputGroup>
+    </Field>
+  ) : null;
+  const commuteNotes = showsCommuteRadius ? (
+    <>
+      <FieldDescription id="profile-commute-radius-description">
+        {m.profileForm_commuteRadiusDescription({ place: homePlaceName })}
+      </FieldDescription>
+      {commuteError ? (
+        <FieldError id="profile-commute-radius-error">
+          {commuteRangeMessage}
+        </FieldError>
+      ) : null}
+    </>
+  ) : null;
+  const relocationField = (
+    <Field orientation="horizontal">
+      <FieldContent>
+        <FieldLabel htmlFor="profile-open-to-relocate">
+          {m.profileForm_openToRelocatingLabel()}
+        </FieldLabel>
+        <FieldDescription id="profile-open-to-relocate-description">
+          {m.profileForm_openToRelocateDescription()}
+        </FieldDescription>
+      </FieldContent>
+      <Switch
+        id="profile-open-to-relocate"
+        aria-describedby="profile-open-to-relocate-description"
+        checked={form.openToRelocate}
+        onCheckedChange={(checked) => set('openToRelocate', checked)}
+      />
+    </Field>
+  );
   const locationSettings = (
     <div className="flex flex-col gap-4 sm:col-span-2">
       {showsCommuteRadius ? (
-        <Field className="gap-1.5" data-invalid={commuteError || undefined}>
-          <FieldLabel htmlFor="profile-commute-radius">
-            {m.profileForm_commuteRadiusLabel()}
-          </FieldLabel>
-          {/* A vertical Field stretches its direct children; the wrapper takes
-              that width so the short numeric field keeps its own. */}
-          <div>
-            <InputGroup className="w-32">
-              <InputGroupInput
-                ref={commuteInput}
-                id="profile-commute-radius"
-                type="number"
-                inputMode="numeric"
-                min={commuteBounds.min}
-                max={commuteBounds.max}
-                step={1}
-                value={commuteText}
-                placeholder={commuteDefaultText}
-                aria-invalid={commuteError || undefined}
-                aria-describedby={
-                  commuteError
-                    ? 'profile-commute-radius-description profile-commute-radius-error'
-                    : 'profile-commute-radius-description'
-                }
-                onChange={(event) => {
-                  setCommuteDraft({
-                    text: event.target.value,
-                    unit: commuteUnit,
-                  });
-                  setCommuteError(false);
-                  setStatus('idle');
-                }}
-              />
-              <InputGroupAddon align="inline-end">
-                {unitLabel(commuteUnit)}
-              </InputGroupAddon>
-            </InputGroup>
-          </div>
-          <FieldDescription id="profile-commute-radius-description">
-            {m.profileForm_commuteRadiusDescription({ place: homePlaceName })}
-          </FieldDescription>
-          {commuteError ? (
-            <FieldError id="profile-commute-radius-error">
-              {commuteRangeMessage}
-            </FieldError>
-          ) : null}
-        </Field>
+        <div className="flex flex-col gap-1.5">
+          {commuteControl}
+          {commuteNotes}
+        </div>
       ) : null}
-      <Field orientation="horizontal">
-        <FieldContent>
-          <FieldLabel htmlFor="profile-open-to-relocate">
-            {m.profileForm_openToRelocatingLabel()}
-          </FieldLabel>
-          <FieldDescription id="profile-open-to-relocate-description">
-            {m.profileForm_openToRelocateDescription()}
-          </FieldDescription>
-        </FieldContent>
-        <Switch
-          id="profile-open-to-relocate"
-          aria-describedby="profile-open-to-relocate-description"
-          checked={form.openToRelocate}
-          onCheckedChange={(checked) => set('openToRelocate', checked)}
-        />
-      </Field>
+      {relocationField}
     </div>
   );
 
@@ -930,63 +944,69 @@ export function ProfileForm({
       case 'location':
         return (
           <>
-            <Field
-              className="gap-1.5"
-              data-invalid={
-                locationPickError || Boolean(locationSaveError) || undefined
-              }
-            >
-              <FieldLabel htmlFor="profile-location">
-                {m.profileForm_locationLabel()}
-              </FieldLabel>
-              <LocationSuggestField
-                id="profile-location"
-                inputRef={locationInput}
-                value={form.location}
-                placeholder={m.profileForm_locationPlaceholder()}
-                searchingText={m.locationCombobox_searchingText()}
-                invalid={locationPickError || Boolean(locationSaveError)}
-                describedBy={
-                  locationPickError || locationSaveError
-                    ? 'profile-location-error'
-                    : undefined
-                }
-                onValueChange={(location) => {
-                  set('location', location);
-                  setLocationUnpicked(location.trim() !== '');
-                  setLocationPickError(false);
-                  setLocationSaveError(null);
-                  setHomePlace(null);
-                }}
-                onPick={(place) => {
-                  set('location', place.fullName ?? place.name);
-                  setLocationUnpicked(false);
-                  setLocationPickError(false);
-                  setLocationSaveError(null);
-                  setHomePlace(
-                    place.id === storedHomePlaceId
-                      ? toHomePlace(profile.locationPlace)
-                      : {
-                          id: place.id,
-                          countryCode: place.countryCode,
-                          placeType: place.placeType ?? null,
-                          name: place.name,
-                        },
-                  );
-                }}
-                {...locationSuggestions}
-              />
-              {locationPickError ? (
-                <FieldError id="profile-location-error">
-                  {m.locationField_pickRequiredError()}
-                </FieldError>
-              ) : locationSaveError ? (
-                <FieldError id="profile-location-error">
-                  {locationSaveError}
-                </FieldError>
-              ) : null}
-            </Field>
-            {locationSettings}
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <Field
+                  className="min-w-0 flex-1 gap-1.5"
+                  data-invalid={
+                    locationPickError || Boolean(locationSaveError) || undefined
+                  }
+                >
+                  <FieldLabel htmlFor="profile-location">
+                    {m.profileForm_locationLabel()}
+                  </FieldLabel>
+                  <LocationSuggestField
+                    id="profile-location"
+                    inputRef={locationInput}
+                    value={form.location}
+                    placeholder={m.profileForm_locationPlaceholder()}
+                    searchingText={m.locationCombobox_searchingText()}
+                    invalid={locationPickError || Boolean(locationSaveError)}
+                    describedBy={
+                      locationPickError || locationSaveError
+                        ? 'profile-location-error'
+                        : undefined
+                    }
+                    onValueChange={(location) => {
+                      set('location', location);
+                      setLocationUnpicked(location.trim() !== '');
+                      setLocationPickError(false);
+                      setLocationSaveError(null);
+                      setHomePlace(null);
+                    }}
+                    onPick={(place) => {
+                      set('location', place.fullName ?? place.name);
+                      setLocationUnpicked(false);
+                      setLocationPickError(false);
+                      setLocationSaveError(null);
+                      setHomePlace(
+                        place.id === storedHomePlaceId
+                          ? toHomePlace(profile.locationPlace)
+                          : {
+                              id: place.id,
+                              countryCode: place.countryCode,
+                              placeType: place.placeType ?? null,
+                              name: place.name,
+                            },
+                      );
+                    }}
+                    {...locationSuggestions}
+                  />
+                  {locationPickError ? (
+                    <FieldError id="profile-location-error">
+                      {m.locationField_pickRequiredError()}
+                    </FieldError>
+                  ) : locationSaveError ? (
+                    <FieldError id="profile-location-error">
+                      {locationSaveError}
+                    </FieldError>
+                  ) : null}
+                </Field>
+                {commuteControl}
+              </div>
+              {commuteNotes}
+            </div>
+            {relocationField}
             {countryField}
           </>
         );
