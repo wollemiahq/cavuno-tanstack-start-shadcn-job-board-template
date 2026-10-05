@@ -66,12 +66,8 @@ describe('Cavuno Analytics consent', () => {
     const install = vi.fn();
     const withdraw = vi.fn();
     const screen = render(
-      <CookieConsentProvider required={required}>
-        <BoardAnalyticsBoot
-          publishableKey="pk_test_board"
-          install={install}
-          withdraw={withdraw}
-        />
+      <CookieConsentProvider required={required} withdrawAnalytics={withdraw}>
+        <BoardAnalyticsBoot publishableKey="pk_test_board" install={install} />
         <ConsentButtons />
       </CookieConsentProvider>,
     );
@@ -103,16 +99,36 @@ describe('Cavuno Analytics consent', () => {
   it('installs when the visitor accepts later, and withdraws on deny', () => {
     const { install, withdraw, screen } = renderWithConsent(true);
     fireEvent.click(screen.getByText('Accept'));
+    document.cookie = 'session-id=abc; Path=/';
     expect(install).toHaveBeenCalledTimes(1);
     expect(withdraw).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText('Deny'));
     expect(withdraw).toHaveBeenCalledTimes(1);
+    expect(document.cookie).not.toContain('session-id');
   });
 
-  it('withdraws when the banner is reopened after acceptance', () => {
+  it('sweeps analytics cookies left behind when the page reloads denied', () => {
+    document.cookie = 'cavuno_cookie_consent=denied; Path=/';
+    document.cookie = '_ga_ABC123=GS2.1; Path=/';
+    const { withdraw } = renderWithConsent(true);
+    expect(document.cookie).not.toContain('_ga_ABC123');
+    expect(withdraw).not.toHaveBeenCalled();
+  });
+
+  it('keeps running when the banner is reopened after acceptance', () => {
     document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
     const { withdraw, screen } = renderWithConsent(true);
     fireEvent.click(screen.getByText('Reopen'));
+    fireEvent.click(screen.getByText('Accept'));
+    expect(withdraw).not.toHaveBeenCalled();
+  });
+
+  it('withdraws once on a decline after reopening', () => {
+    document.cookie = 'cavuno_cookie_consent=accepted; Path=/';
+    const { withdraw, screen } = renderWithConsent(true);
+    fireEvent.click(screen.getByText('Reopen'));
+    fireEvent.click(screen.getByText('Deny'));
+    fireEvent.click(screen.getByText('Deny'));
     expect(withdraw).toHaveBeenCalledTimes(1);
   });
 
@@ -127,12 +143,8 @@ describe('audience capture consent', () => {
   it('captures the original landing page after consent and clears on revoke', () => {
     window.history.replaceState({}, '', '/?utm_medium=email');
     const screen = render(
-      <CookieConsentProvider required>
-        <BoardAnalyticsBoot
-          publishableKey="pk_test_board"
-          install={vi.fn()}
-          withdraw={vi.fn()}
-        />
+      <CookieConsentProvider required withdrawAnalytics={vi.fn()}>
+        <BoardAnalyticsBoot publishableKey="pk_test_board" install={vi.fn()} />
         <ConsentButtons />
       </CookieConsentProvider>,
     );

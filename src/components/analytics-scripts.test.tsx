@@ -107,6 +107,15 @@ function AcceptButton() {
   );
 }
 
+function DenyButton() {
+  const { deny } = useCookieConsent();
+  return (
+    <button type="button" onClick={deny}>
+      decline consent
+    </button>
+  );
+}
+
 describe('AnalyticsScripts', () => {
   it('injects every configured tracker when consent is not required', () => {
     render(
@@ -245,5 +254,48 @@ describe('AnalyticsScripts', () => {
 
     expect(injectedKeys()).toEqual([]);
     expect(startWebVitalsReporting).not.toHaveBeenCalled();
+  });
+
+  it('withdraws loaded trackers once when the visitor declines', () => {
+    const withdraw = vi.fn();
+    render(
+      <CookieConsentProvider required withdrawAnalytics={withdraw}>
+        <AnalyticsScripts
+          analytics={analytics}
+          reportWebVitals={startWebVitalsReporting}
+        />
+        <AcceptButton />
+        <DenyButton />
+      </CookieConsentProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'grant consent' }));
+    expect(withdraw).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'decline consent' }));
+    fireEvent.click(screen.getByRole('button', { name: 'decline consent' }));
+    expect(withdraw).toHaveBeenCalledOnce();
+  });
+
+  it('has nothing to withdraw when no tracker is configured', () => {
+    const withdraw = vi.fn();
+    render(
+      <CookieConsentProvider required withdrawAnalytics={withdraw}>
+        <AnalyticsScripts
+          analytics={{
+            ga4MeasurementId: null,
+            gtmId: null,
+            metaPixelId: null,
+            linkedInPartnerId: null,
+          }}
+          reportWebVitals={startWebVitalsReporting}
+        />
+        <AcceptButton />
+        <DenyButton />
+      </CookieConsentProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'grant consent' }));
+    fireEvent.click(screen.getByRole('button', { name: 'decline consent' }));
+    expect(withdraw).not.toHaveBeenCalled();
   });
 });
