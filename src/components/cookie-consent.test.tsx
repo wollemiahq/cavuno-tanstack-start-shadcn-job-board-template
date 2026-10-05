@@ -358,6 +358,16 @@ describe('a choice made in another tab', () => {
     expect(document.cookie).not.toContain('_ga=');
   });
 
+  it('an accept after a decline lifts the kill switch', async () => {
+    renderLoaded();
+    await screen.findByText('Tracker');
+
+    otherTab('denied');
+    otherTab('accepted');
+
+    expect(window.__cavunoAnalyticsOff).toBe(false);
+  });
+
   it('a reopen leaves this tab alone', async () => {
     const { withdraw } = renderLoaded();
     await screen.findByRole('button', {

@@ -174,7 +174,8 @@ export function CookieConsentProvider({
   }, []);
 
   // A choice made in another tab applies here too. On a decline there,
-  // Cavuno Analytics in this tab stops at once (kill switch) and the
+  // Cavuno Analytics in this tab stops at once (kill switch, lifted again
+  // by an accept) and the
   // analytics cookies are cleared. Third-party tags already loaded in this
   // tab keep running until its next full page load: no reload, so nothing
   // the visitor typed is lost. (`null` is a reopen elsewhere: the earlier
@@ -182,7 +183,10 @@ export function CookieConsentProvider({
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY) return;
-      if (event.newValue === 'accepted') setChoice('accepted');
+      if (event.newValue === 'accepted') {
+        window.__cavunoAnalyticsOff = false;
+        setChoice('accepted');
+      }
       if (event.newValue === 'denied') {
         setChoice('denied');
         window.__cavunoAnalyticsOff = true;
@@ -208,6 +212,7 @@ export function CookieConsentProvider({
       // Undetermined (`undefined`) must match SSR: no banner until mount.
       bannerOpen: required && choice === null,
       accept: () => {
+        window.__cavunoAnalyticsOff = false;
         persistChoice('accepted');
         setChoice('accepted');
       },

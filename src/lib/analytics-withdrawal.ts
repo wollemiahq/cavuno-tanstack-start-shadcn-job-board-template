@@ -73,8 +73,12 @@ export function clearAnalyticsCookies(): void {
   }
 }
 
-/** Clear the trackers' cookies and reload into a tracker-free document. */
+/**
+ * Clear the trackers' cookies and reload into a tracker-free document. The
+ * kill switch stops Cavuno Analytics flushing beacons as this page unloads.
+ */
 export function withdrawAnalytics(): void {
+  window.__cavunoAnalyticsOff = true;
   clearAnalyticsCookies();
   window.location.reload();
 }
