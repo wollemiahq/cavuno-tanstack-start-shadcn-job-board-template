@@ -113,6 +113,11 @@ export async function loadAcceptInvite(
   let result: AcceptResult;
   try {
     result = await actions.acceptCompanyInvite({ data: { token } });
+    // The API rejected the session the cookie still holds: treat it like any
+    // other dead session below (refresh once, else signed out).
+    if (!result.ok && result.code === 'auth_unauthenticated') {
+      throw new Error('UNAUTHENTICATED');
+    }
   } catch (error) {
     if (isRedirect(error)) throw error;
     const failure =
@@ -163,5 +168,8 @@ export async function loadAcceptInvite(
     };
     return { seo, token, state };
   }
+  // The invite is still valid, so this accept failed for another reason (rate
+  // limit, outage): report it rather than call the invite no longer valid.
+  if (preview?.status === 'pending') throw new Error(result.message);
   return { seo, token, state: unavailable(preview) };
 }

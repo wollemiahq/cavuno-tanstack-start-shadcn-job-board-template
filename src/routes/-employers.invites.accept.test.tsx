@@ -313,6 +313,34 @@ describe('/employers/invites/accept loader', () => {
     });
   });
 
+  it('treats a session the API rejects as signed out', async () => {
+    mocks.acceptCompanyInvite.mockResolvedValue({
+      ok: false,
+      code: 'auth_unauthenticated',
+      message: 'unauthenticated',
+    });
+    mocks.previewCompanyInvite.mockResolvedValue(pendingPreview('employer'));
+
+    expect(await runInviteLoader()).toMatchObject({
+      state: { mode: 'sign-in', company, email: 'ada@acme.test' },
+    });
+    expect(mocks.refreshSession).toHaveBeenCalledOnce();
+  });
+
+  it('reports a failed accept of a still-pending invite instead of calling it invalid', async () => {
+    mocks.acceptCompanyInvite.mockResolvedValue({
+      ok: false,
+      code: 'rate_limited',
+      message: 'Too many requests',
+    });
+    mocks.previewCompanyInvite.mockResolvedValue(pendingPreview('employer'));
+
+    const result = await settle(runInviteLoader());
+
+    expect(result).toBeInstanceOf(Error);
+    expect(isRedirect(result)).toBe(false);
+  });
+
   it('tells a signed-in visitor their invite expired', async () => {
     mocks.acceptCompanyInvite.mockResolvedValue({
       ok: false,
