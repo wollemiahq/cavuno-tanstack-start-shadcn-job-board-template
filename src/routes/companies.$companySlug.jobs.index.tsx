@@ -32,7 +32,6 @@ import {
   searchString,
   type UrlSearchInput,
 } from '../lib/pagination';
-import { resultsShowingLine } from '../lib/results-showing';
 import { chromeEntity } from '../lib/site-chrome';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -47,6 +46,7 @@ import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
+import { jobsResultsShowingLine } from '@/components/board/jobs-results-bar';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -97,11 +97,7 @@ function CompanyJobsPage() {
       : null;
 
   const countLabel = span
-    ? resultsShowingLine(
-        'jobs',
-        { from: span.from, to: span.to, count },
-        locale,
-      )
+    ? jobsResultsShowingLine({ from: span.from, to: span.to, count }, locale)
     : entityCount(count, locale, m.count_jobs, {
         singular: chromeEntity().jobSingular,
         plural: chromeEntity().jobPlural,

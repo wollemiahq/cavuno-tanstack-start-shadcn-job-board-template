@@ -7,7 +7,7 @@ import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
 import type { CountedHeading } from '@/lib/listing-description';
-import { resultsShowingLine } from '@/lib/results-showing';
+import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
 import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 
@@ -89,8 +89,7 @@ export function JobsResultsBar({
         };
   const rangeLabel =
     span && totalCount !== undefined
-      ? resultsShowingLine(
-          'jobs',
+      ? jobsResultsShowingLine(
           { from: span.from, to: span.to, count: totalCount },
           locale,
         )
@@ -113,4 +112,19 @@ export function JobsResultsBar({
       </div>
     </div>
   );
+}
+
+/** The "Showing …" line under a jobs results heading. */
+export function jobsResultsShowingLine(
+  span: ResultsSpan,
+  locale: string,
+): string {
+  return resultsShowingLine(span, locale, {
+    single: ({ count, countLabel }) =>
+      m.jobSearch_resultsShowingCount({ count, countLabel }),
+    lastPage: ({ to, count, countLabel }) =>
+      m.jobSearch_resultsShowingLast({ to, count, countLabel }),
+    range: ({ from, to, count, countLabel }) =>
+      m.jobSearch_resultsShowingRange({ from, to, count, countLabel }),
+  });
 }

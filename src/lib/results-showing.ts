@@ -1,5 +1,3 @@
-import { m } from '../paraglide/messages';
-
 /** A page's place in the results: `from`–`to` of `count`, 1-based. */
 export type ResultsSpan = { from: number; to: number; count: number };
 
@@ -16,40 +14,28 @@ export function resultsLineKind(span: ResultsSpan): ResultsLineKind {
   return 'range';
 }
 
-type Listing = 'jobs' | 'companies' | 'talent';
+/** The formatted values a "Showing …" message receives. */
+export type ResultsLabels = {
+  count: number;
+  countLabel: string;
+  from: string;
+  to: string;
+};
 
-/** The "Showing …" line under a jobs, companies or talent results heading. */
+/**
+ * The "Showing …" line under a results heading, picked from one listing's
+ * three messages. Each listing passes its own messages (rather than this
+ * module importing every listing's) so a route bundles only its own copy.
+ */
 export function resultsShowingLine(
-  listing: Listing,
   span: ResultsSpan,
   locale: string,
+  lines: Record<ResultsLineKind, (labels: ResultsLabels) => string>,
 ): string {
-  const count = span.count;
-  const countLabel = count.toLocaleString(locale);
-  const from = span.from.toLocaleString(locale);
-  const to = span.to.toLocaleString(locale);
-
-  switch (resultsLineKind(span)) {
-    case 'single':
-      return {
-        jobs: m.jobSearch_resultsShowingCount,
-        companies: m.companySearch_resultsShowingCount,
-        talent: m.talentSearch_resultsShowingCount,
-      }[listing]({ count, countLabel });
-    case 'lastPage':
-      return {
-        jobs: m.jobSearch_resultsShowingLast,
-        companies: m.companySearch_resultsShowingLast,
-        talent: m.talentSearch_resultsShowingLast,
-      }[listing]({ to, count, countLabel });
-    case 'range':
-      if (listing === 'jobs') {
-        return m.jobSearch_resultsShowingRange({ from, to, count, countLabel });
-      }
-      return (
-        listing === 'companies'
-          ? m.companySearch_resultsShowingRange
-          : m.talentSearch_resultsShowingRange
-      )({ from, to, count: countLabel });
-  }
+  return lines[resultsLineKind(span)]({
+    count: span.count,
+    countLabel: span.count.toLocaleString(locale),
+    from: span.from.toLocaleString(locale),
+    to: span.to.toLocaleString(locale),
+  });
 }

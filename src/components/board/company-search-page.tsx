@@ -42,7 +42,7 @@ import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import { entityCount } from '@/lib/entity-count';
 import { clampPage, listingPageHref } from '@/lib/pagination';
-import { resultsShowingLine } from '@/lib/results-showing';
+import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
 import { chromeEntity } from '@/lib/site-chrome';
 
 export function CompanySearchPage({
@@ -111,8 +111,7 @@ export function CompanySearchPage({
   // the same honest range as the jobs results header.
   const resultDescription =
     count > 0
-      ? resultsShowingLine(
-          'companies',
+      ? companiesResultsShowingLine(
           {
             from: (page - 1) * pageSize + 1,
             to: Math.min(page * pageSize, count),
@@ -270,4 +269,19 @@ export function CompanySearchPage({
       </main>
     </Page>
   );
+}
+
+/** The "Showing …" line under a companies results heading. */
+export function companiesResultsShowingLine(
+  span: ResultsSpan,
+  locale: string,
+): string {
+  return resultsShowingLine(span, locale, {
+    single: ({ count, countLabel }) =>
+      m.companySearch_resultsShowingCount({ count, countLabel }),
+    lastPage: ({ to, count, countLabel }) =>
+      m.companySearch_resultsShowingLast({ to, count, countLabel }),
+    range: ({ from, to, countLabel }) =>
+      m.companySearch_resultsShowingRange({ from, to, count: countLabel }),
+  });
 }
