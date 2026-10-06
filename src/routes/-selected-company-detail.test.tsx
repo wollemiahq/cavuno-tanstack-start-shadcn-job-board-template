@@ -49,6 +49,7 @@ const jobs = {
     description: '<p>Build useful tools.</p>',
     publishedAt: null,
     employmentType: 'full_time',
+    customEmploymentType: null,
     remoteOption: 'hybrid',
     remoteLocationLabel: null,
     remoteWorldwide: false,

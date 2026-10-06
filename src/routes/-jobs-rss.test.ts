@@ -30,6 +30,7 @@ const olderJob: PublicJobCard = {
   description: '<p>Build durable systems.</p>',
   publishedAt: '2026-06-01T00:00:00.000Z',
   employmentType: 'full_time',
+  customEmploymentType: null,
   remoteOption: null,
   remoteLocationLabel: null,
   remoteWorldwide: false,

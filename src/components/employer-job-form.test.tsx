@@ -109,6 +109,7 @@ const draftJob: EmployerJob = {
   status: 'draft',
   companyId: 'c1',
   employmentType: 'full_time',
+  customEmploymentType: null,
   remoteOption: 'hybrid',
   seniority: 'senior',
   salaryMin: 100000,
