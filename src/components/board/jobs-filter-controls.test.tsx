@@ -266,4 +266,77 @@ describe('JobsFilterControls', () => {
       }),
     );
   });
+
+  it('keeps a custom type the board no longer offers visible and clearable', () => {
+    const onChange = vi.fn();
+
+    render(
+      <JobsFilterControls
+        filters={{ customEmploymentType: 'fifo' }}
+        jobForm={jobForm}
+        language="en"
+        onChange={onChange}
+      />,
+    );
+
+    const type = screen.getByRole('combobox', {
+      name: m.jobSearch_typePlaceholder(),
+    });
+    expect(type).toHaveTextContent('Fly-in fly-out');
+
+    fireEvent.click(type);
+    expect(
+      screen.getAllByRole('option').map((option) => option.textContent),
+    ).toEqual([
+      m.jobSearch_anyTypeLabel(),
+      m.label_employmentContract(),
+      'Casual',
+      m.label_employmentFullTime(),
+      'Fly-in fly-out',
+    ]);
+    const any = screen.getByRole('option', {
+      name: m.jobSearch_anyTypeLabel(),
+    });
+    fireEvent.pointerDown(any, { pointerType: 'mouse' });
+    fireEvent.click(any);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employmentType: undefined,
+        customEmploymentType: undefined,
+      }),
+    );
+  });
+
+  it('labels an unknown custom key and a built-in the board disallows', () => {
+    const { unmount } = render(
+      <JobsFilterControls
+        filters={{ customEmploymentType: 'seasonal' }}
+        jobForm={jobForm}
+        language="en"
+        onChange={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole('combobox', { name: m.jobSearch_typePlaceholder() }),
+    ).toHaveTextContent('seasonal');
+    unmount();
+
+    render(
+      <JobsFilterControls
+        filters={{ employmentType: 'internship' }}
+        jobForm={jobForm}
+        language="en"
+        onChange={vi.fn()}
+      />,
+    );
+    const type = screen.getByRole('combobox', {
+      name: m.jobSearch_typePlaceholder(),
+    });
+    expect(type).toHaveTextContent(m.label_employmentInternship());
+    fireEvent.click(type);
+    expect(
+      screen.getByRole('option', { name: m.label_employmentInternship() }),
+    ).toHaveAttribute('aria-selected', 'true');
+  });
 });

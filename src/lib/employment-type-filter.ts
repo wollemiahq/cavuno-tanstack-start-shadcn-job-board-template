@@ -14,6 +14,7 @@ import {
   resolveJobFormConstraints,
   type JobFormSource,
 } from '@/board/job-form';
+import { enumLabel } from '@/lib/enum-labels';
 import { parseCustomEmploymentType, type JobsFilters } from '@/lib/jobs-search';
 
 /**
@@ -28,6 +29,35 @@ export function employmentTypeFilterChoices(
     resolveJobFormConstraints(source).employmentType,
     EMPLOYMENT_TYPES,
   ).choices;
+}
+
+/**
+ * The Type filter's options: the board's offered types in its order, plus
+ * the active filter when the board no longer offers it (a retired custom
+ * type, a built-in it now disallows), labelled, so the filter stays visible
+ * and clearable rather than showing a raw value. A built-in outside the
+ * listing filter vocabulary is never an option.
+ */
+export function employmentTypeFilterOptions(
+  source: JobFormSource | null | undefined,
+  filters: { employmentType?: string; customEmploymentType?: string },
+): { value: string; label: string }[] {
+  const options = employmentTypeFilterChoices(source).map(
+    ({ value, label }) => ({ value, label }),
+  );
+  const { customEmploymentType: key, employmentType } = filters;
+  const active = key
+    ? `${CUSTOM_EMPLOYMENT_TYPE_PREFIX}${key}`
+    : EMPLOYMENT_TYPES.find((type) => type === employmentType);
+  if (!active || options.some((option) => option.value === active)) {
+    return options;
+  }
+  const label = key
+    ? (resolveJobFormConstraints(source).employmentType.customTypes.find(
+        (type) => type.key === key,
+      )?.label ?? key)
+    : (enumLabel(active) ?? active);
+  return [...options, { value: active, label }];
 }
 
 /**

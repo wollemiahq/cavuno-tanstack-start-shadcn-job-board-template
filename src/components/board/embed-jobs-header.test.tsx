@@ -315,14 +315,31 @@ describe('EmbedJobsHeader', () => {
     });
   });
 
-  it('does not stage a custom employment type the board no longer offers', async () => {
+  it('stages a custom employment type the board no longer offers, labelled', async () => {
+    // The embed's own list is filtered by it, and /jobs shows it as a
+    // labelled, clearable Type option, so Search carries it there too.
     await renderHeader(
       { customEmploymentType: 'fifo' },
       locationSuggestions,
       jobForm,
     );
 
-    expect(searchLink().getAttribute('href')).toBe('/jobs');
+    const query = Object.fromEntries(
+      new URLSearchParams(searchLink().getAttribute('href')?.split('?')[1]),
+    );
+    expect(parseJobsSearch(query)).toMatchObject({
+      customEmploymentType: 'fifo',
+    });
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: containing(m.jobSearch_allFiltersLabel()),
+      }),
+    );
+    expect(
+      await screen.findByRole('combobox', {
+        name: m.jobSearch_typePlaceholder(),
+      }),
+    ).toHaveTextContent('Fly-in fly-out');
   });
 
   it('routes a picked taxonomy term to its programmatic page', async () => {

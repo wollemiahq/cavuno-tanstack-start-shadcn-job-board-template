@@ -27,7 +27,7 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import {
-  employmentTypeFilterChoices,
+  employmentTypeFilterOptions,
   employmentTypeFilterFromValue,
   employmentTypeFilterValue,
 } from '@/lib/employment-type-filter';
@@ -99,27 +99,17 @@ export function EmbedJobsHeader({
       ? { slug: initialSearch.location, name: initialSearch.location }
       : null,
   );
-  const employmentTypeOptions = employmentTypeFilterChoices(jobForm).map(
-    ({ value, label }) => ({ value, label }),
-  );
-  const [filters, setFilters] = useState<JobsSearchFilters>(() => {
+  const [filters, setFilters] = useState<JobsSearchFilters>(() => ({
+    remoteOption: initialSearch.remoteOption,
     // `volunteer` and `other` are wire values the embed's own list can filter
     // on, but they are NOT in the listing filter vocabulary, so the /jobs
-    // destination drops them; nor is a type the board does not offer a Type
-    // option. Staging one would light the badge and populate no Type option,
-    // over a Search that opens the unfiltered board — the exact thing this
-    // header promises not to do.
-    const employmentType = employmentTypeFilterValue(initialSearch);
-    return {
-      remoteOption: initialSearch.remoteOption,
-      ...employmentTypeFilterFromValue(
-        employmentTypeOptions.some((option) => option.value === employmentType)
-          ? employmentType
-          : undefined,
-      ),
-      seniority: initialSearch.seniority,
-    };
-  });
+    // destination drops them and they are never a Type option; this drops
+    // them too. Staging one would light the badge over a Search that opens
+    // the unfiltered board — the exact thing this header promises not to do.
+    // A type the board no longer offers is staged and shown, as on /jobs.
+    ...employmentTypeFilterFromValue(employmentTypeFilterValue(initialSearch)),
+    seniority: initialSearch.seniority,
+  }));
   const copy = { jobSearch: jobSearchCopy() };
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
   const searchRef = useRef<HTMLAnchorElement>(null);
@@ -261,7 +251,9 @@ export function EmbedJobsHeader({
                 value: option,
                 label: enumLabel(option) ?? option,
               })),
-              employmentType: employmentTypeOptions,
+              // A type the board no longer offers stays a labelled option
+              // while staged, as on /jobs, so it is visible and clearable.
+              employmentType: employmentTypeFilterOptions(jobForm, filters),
               seniority: SENIORITIES.map((seniority) => ({
                 value: seniority,
                 label: seniorityLabel[seniority],

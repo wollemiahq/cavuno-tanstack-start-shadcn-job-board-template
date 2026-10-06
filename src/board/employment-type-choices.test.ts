@@ -86,11 +86,23 @@ describe('employmentTypeChoices', () => {
     });
   });
 
-  it('keeps the long-standing five built-ins for a pre-custom-type payload', () => {
+  it('offers every built-in on a board with no restriction', () => {
+    const unrestricted = resolveJobFormConstraints(undefined).employmentType;
+
     expect(
-      employmentTypeChoices(
-        resolveJobFormConstraints(undefined).employmentType,
-      ).choices.map(({ value }) => value),
+      employmentTypeChoices(unrestricted).choices.map(({ value }) => value),
+    ).toEqual([
+      'full_time',
+      'part_time',
+      'contract',
+      'internship',
+      'temporary',
+      'volunteer',
+      'other',
+    ]);
+    // The search filter stays within the listing vocabulary.
+    expect(
+      employmentTypeFilterChoices(undefined).map(({ value }) => value),
     ).toEqual([
       'full_time',
       'part_time',

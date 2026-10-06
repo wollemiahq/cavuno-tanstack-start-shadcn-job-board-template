@@ -1210,6 +1210,46 @@ describe('EmployerJobForm — narrowing applied AFTER a job was posted', () => {
   });
 });
 
+describe('EmployerJobForm — unrestricted employment types', () => {
+  it('saves an edit to a volunteer job on a board with no restriction', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    mocks.checkoutJob.mockResolvedValue({
+      ok: true,
+      data: { status: 'published', checkoutUrl: null },
+    });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'draft' }}
+        job={{ ...draftJob, employmentType: 'volunteer' }}
+        jobForm={{ object: 'public_board', jobForm: {} }}
+      />,
+    );
+
+    expect(
+      screen.getByRole('combobox', { name: m.postJob_employmentTypeLabel() }),
+    ).toHaveTextContent(m.label_employmentVolunteer());
+    fireEvent.change(screen.getByLabelText(m.postJob_jobTitleLabel()), {
+      target: { value: 'Community Garden Volunteer' },
+    });
+    fireEvent.click(screen.getByRole('radio', { name: /Growth/ }));
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.updateJob.mock.calls[0]?.[0].data.body).toMatchObject({
+      title: 'Community Garden Volunteer',
+      employmentType: 'volunteer',
+      customEmploymentType: null,
+    });
+  });
+});
+
 describe('EmployerJobForm — custom employment types', () => {
   const casual = {
     key: 'casual',

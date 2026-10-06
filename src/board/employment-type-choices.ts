@@ -11,7 +11,10 @@ import { enumLabel } from '@/lib/enum-labels';
 /** Prefix marking a custom employment type key in a picker value. */
 export const CUSTOM_EMPLOYMENT_TYPE_PREFIX = 'custom:';
 
-/** Every built-in employment type on the wire. */
+/**
+ * Every built-in employment type on the wire: what a board with no
+ * restriction allows, so a stored `volunteer` or `other` job stays editable.
+ */
 const BUILTIN_EMPLOYMENT_TYPES: readonly string[] = [
   'full_time',
   'part_time',
@@ -20,18 +23,6 @@ const BUILTIN_EMPLOYMENT_TYPES: readonly string[] = [
   'temporary',
   'volunteer',
   'other',
-];
-
-/**
- * The built-ins a form offers when the board context predates allow-lists
- * (the posting picker's long-standing set).
- */
-const DEFAULT_EMPLOYMENT_TYPES: readonly string[] = [
-  'full_time',
-  'part_time',
-  'contract',
-  'internship',
-  'temporary',
 ];
 
 /** A board's employment-type picker: its choices, and the pinned one. */
@@ -70,7 +61,8 @@ export function employmentTypeChoiceValue(job: {
  * form collapses the field and submits that value.
  *
  * Leans permissive like `narrowOptions`: when nothing at all would be
- * offered, the vocabulary's defaults are, and the server stays the judge.
+ * offered, every built-in in the vocabulary is, and the server stays the
+ * judge.
  */
 export function employmentTypeChoices(
   employmentType: JobFormConstraints['employmentType'],
@@ -82,10 +74,10 @@ export function employmentTypeChoices(
     (type) => type.offered,
   );
   let builtins = inVocabulary(
-    employmentType.allowedOptions ?? DEFAULT_EMPLOYMENT_TYPES,
+    employmentType.allowedOptions ?? BUILTIN_EMPLOYMENT_TYPES,
   );
   if (builtins.length === 0 && offeredCustom.length === 0) {
-    builtins = inVocabulary(DEFAULT_EMPLOYMENT_TYPES);
+    builtins = inVocabulary(BUILTIN_EMPLOYMENT_TYPES);
   }
   const ranked = [
     ...builtins.map((value): EmploymentTypeChoice & { id: string } => ({

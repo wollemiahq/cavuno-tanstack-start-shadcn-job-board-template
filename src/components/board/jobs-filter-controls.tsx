@@ -28,7 +28,7 @@ import {
   type CustomFilterField,
 } from '@/lib/custom-field-filters';
 import {
-  employmentTypeFilterChoices,
+  employmentTypeFilterOptions,
   employmentTypeFilterFromValue,
   employmentTypeFilterValue,
 } from '@/lib/employment-type-filter';
@@ -90,9 +90,7 @@ export function JobsFilterControls({
             value: option,
             label: enumLabel(option) ?? option,
           })),
-          employmentType: employmentTypeFilterChoices(jobForm).map(
-            ({ value, label }) => ({ value, label }),
-          ),
+          employmentType: employmentTypeFilterOptions(jobForm, filters),
           seniority: SENIORITIES.map((seniority) => ({
             value: seniority,
             label: seniorityLabel[seniority],
