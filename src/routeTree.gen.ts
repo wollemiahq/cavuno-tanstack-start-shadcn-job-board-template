@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdsDottxtRouteImport } from './routes/ads[.]txt'
 import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as ComingSoonGateRouteImport } from './routes/coming-soon-gate'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ImpressumRouteImport } from './routes/impressum'
@@ -140,6 +141,11 @@ const AdsDottxtRoute = AdsDottxtRouteImport.update({
 const ApplyRoute = ApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComingSoonGateRoute = ComingSoonGateRouteImport.update({
+  id: '/coming-soon-gate',
+  path: '/coming-soon-gate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -655,6 +661,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
@@ -759,6 +766,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
@@ -864,6 +872,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
   '/impressum': typeof ImpressumRoute
@@ -970,6 +979,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
     | '/impressum'
@@ -1074,6 +1084,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
     | '/impressum'
@@ -1178,6 +1189,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
     | '/impressum'
@@ -1283,6 +1295,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdsDottxtRoute: typeof AdsDottxtRoute
   ApplyRoute: typeof ApplyRoute
+  ComingSoonGateRoute: typeof ComingSoonGateRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
   ImpressumRoute: typeof ImpressumRoute
@@ -1420,6 +1433,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coming-soon-gate': {
+      id: '/coming-soon-gate'
+      path: '/coming-soon-gate'
+      fullPath: '/coming-soon-gate'
+      preLoaderRoute: typeof ComingSoonGateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -2143,6 +2163,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdsDottxtRoute: AdsDottxtRoute,
   ApplyRoute: ApplyRoute,
+  ComingSoonGateRoute: ComingSoonGateRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
   ImpressumRoute: ImpressumRoute,

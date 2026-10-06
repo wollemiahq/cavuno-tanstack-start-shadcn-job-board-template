@@ -16,6 +16,11 @@ mappers, server functions, and components as needed.
   model changes.
 - src/server/ and server-only helpers in src/lib/ own Board API access,
   authentication, sessions, paths, SEO, and other correctness helpers.
+- src/routes/coming-soon-gate.tsx is the page visitors see while the board
+  is password protected before launch. It is published as static HTML: no
+  JavaScript runs on it, though CSS animation works. Keep the
+  `data-cavuno-slot="password"` element; the platform puts the password
+  entry there.
 
 Use typed shared components when an interaction or visual treatment recurs.
 Keep ordinary page composition local. Use the Base UI-backed shadcn components

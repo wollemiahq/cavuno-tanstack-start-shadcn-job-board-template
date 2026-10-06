@@ -232,6 +232,11 @@ function RootLayout() {
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith('/embed'),
   });
+  // The coming-soon gate is captured as a standalone static page at publish
+  // (see src/routes/coming-soon-gate.tsx): no site chrome or session island.
+  const isComingSoonGate = useRouterState({
+    select: (s) => s.location.pathname === '/coming-soon-gate',
+  });
   if (isEmbed) {
     return (
       <MainContentTarget>
@@ -241,6 +246,8 @@ function RootLayout() {
       </MainContentTarget>
     );
   }
+
+  if (isComingSoonGate) return <Outlet />;
 
   return (
     <RootSessionProvider candidatePaywall={board.features.candidatePaywall}>
