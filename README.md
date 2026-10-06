@@ -300,12 +300,11 @@ within 3 seconds, gets the board's banner as before. A decline in Google's
 message also stops Cavuno Analytics in the visitor's other open tabs. See
 `src/lib/google-tcf.ts`.
 
-The tag then also loads on mobile job pages with the Apply bar and on routes
-without ad units (account, sign-in, private messages, posting a job and
-payment, employer dashboards, legal pages). AdSense page exclusions for those
-routes are mandatory in this mode before you turn on Auto ads or anchors;
-otherwise Google can place them there. See
-[placement decisions](docs/advertising.md#policy-and-geometry).
+In this mode the AdSense tag loads on every route so Google's consent message
+works everywhere; manual ad slots still render only on ad pages. With Auto ads
+or anchor ads on, Google may place ads on any page. If you want to keep ads off
+pages such as sign-in or checkout, you can add AdSense page exclusions (optional).
+See [placement decisions](docs/advertising.md#policy-and-geometry).
 
 ## Analytics & conversion tracking
 

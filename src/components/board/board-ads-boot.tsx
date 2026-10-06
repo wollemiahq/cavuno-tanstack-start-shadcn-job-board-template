@@ -15,11 +15,11 @@ import { useCookieConsent } from '@/components/cookie-consent';
  * With Google's consent message (`ads.googleConsentMessage`) the tag loads
  * on page load on every route (ad page or not), for every visitor and
  * viewport, without waiting for the board's banner, so Google's CMP can ask
- * EEA/UK/CH visitors wherever they land. That includes mobile job pages
- * with the Apply bar and non-ad routes (account, forms): AdSense page
- * exclusions for those routes are mandatory then (docs/advertising.md). Google's
- * message governs AdSense then, so a decline on the board's banner does
- * not withdraw it.
+ * EEA/UK/CH visitors wherever they land. Manual ad slots still
+ * render only on ad pages; with Auto ads or anchors on, Google may place ads
+ * on any page, and owners can add AdSense page exclusions if they want
+ * (docs/advertising.md). Google's message governs AdSense then, so a decline
+ * on the board's banner does not withdraw it.
  */
 export function BoardAdsBoot({
   adPage = true,

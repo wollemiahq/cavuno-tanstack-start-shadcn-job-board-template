@@ -1,8 +1,8 @@
-/** Public reading/browsing surfaces only. Account, forms and private messages
- * must not mount the starter's shared AdSense loader. AdSense page
- * exclusions are also required once its script has loaded during SPA navigation.
- * With Google's consent message the tag loads on every route, so those
- * exclusions are mandatory then (docs/advertising.md). */
+/** Public reading/browsing surfaces only. Outside Google's consent-message
+ * mode, the starter's shared AdSense loader mounts only on these pages (not on
+ * account, forms or private messages); once loaded, the script stays active
+ * during SPA navigation. In Google mode the tag loads on every route, and
+ * manual ad slots still render only on these pages (docs/advertising.md). */
 export function isBoardAdPage(pathname: string): boolean {
   return (
     pathname === '/' ||
