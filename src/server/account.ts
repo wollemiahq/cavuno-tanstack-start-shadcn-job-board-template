@@ -36,11 +36,6 @@ import type {
   UpdateExperienceBody,
 } from '@cavuno/board';
 
-/** Additive profile field until the starter's pinned SDK publishes it. */
-type UpdateCandidateProfileWithCountryBody = UpdateCandidateProfileBody & {
-  countryCode?: string | null;
-};
-
 /** `PATCH /me/profile` refusal: another candidate on the board has the handle. */
 const CANDIDATE_HANDLE_TAKEN = 'candidate_handle_taken';
 
@@ -155,25 +150,13 @@ export const getRecommendedJobs = createServerFn({ method: 'GET' })
   );
 
 export const updateProfile = createServerFn({ method: 'POST' })
-  .validator((input: UpdateCandidateProfileWithCountryBody) => input)
+  .validator((input: UpdateCandidateProfileBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
     try {
-      // The field is already part of Cavuno's additive HTTP contract. The
-      // current starter SDK predates its generated type, so keep the one
-      // narrow compatibility cast at the server boundary rather than
-      // dropping it.
-      // SAFETY: `data` was accepted as UpdateCandidateProfileWithCountryBody,
-      // which is UpdateCandidateProfileBody plus an additive countryCode field.
-      await getBoard().me.profile.update(
-        data as UpdateCandidateProfileBody,
-        undefined,
-        {
-          headers,
-        },
-      );
+      await getBoard().me.profile.update(data, undefined, { headers });
     } catch (error) {
       // The BoardApiError does not survive the server-fn RPC boundary, so a
       // taken handle comes back as a result the form can show on the field.
