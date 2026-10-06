@@ -22,6 +22,13 @@ export type CookieConsentChoice = 'accepted' | 'denied';
 export const COOKIE_CONSENT_COOKIE = 'cavuno_cookie_consent';
 
 /** ~13 months in seconds — long-lived preference, not a session token. */
+/**
+ * Cross-tab signal of a decline in Google's consent message (its value
+ * changes on each one, so other tabs get a `storage` event). Separate from
+ * the banner's mirror, which holds the board's own banner choice.
+ */
+export const GOOGLE_DECLINE_STORAGE_KEY = 'cavuno:google-consent-declined';
+
 export const COOKIE_CONSENT_MAX_AGE = 13 * 30 * 24 * 60 * 60;
 
 const COOKIE_CONSENT_CHOICES = ['accepted', 'denied'] as const;

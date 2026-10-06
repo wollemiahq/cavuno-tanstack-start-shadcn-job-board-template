@@ -23,6 +23,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../paraglide/messages';
 import { AnalyticsScripts } from './analytics-scripts';
+import { BoardAdsBoot } from './board/board-ads-boot';
 import { BoardAdsProvider } from './board/board-ads-provider';
 import {
   CookieConsentBanner,
@@ -30,7 +31,10 @@ import {
   CookiePreferencesFooterAction,
 } from './cookie-consent';
 
-import { COOKIE_CONSENT_COOKIE } from '@/lib/cookie-consent';
+import {
+  COOKIE_CONSENT_COOKIE,
+  GOOGLE_DECLINE_STORAGE_KEY,
+} from '@/lib/cookie-consent';
 import { GOOGLE_CONSENT_TIMEOUT_MS, type TcData } from '@/lib/google-tcf';
 import type { RecordConsentInput } from '@cavuno/board/analytics';
 
@@ -91,12 +95,20 @@ afterEach(() => {
     document.cookie = `${name}=; Path=/; Max-Age=0`;
   }
   document.getElementById('cavuno-analytics-ga4')?.remove();
+  document.getElementById('cavuno-adsense-loader')?.remove();
+  localStorage.clear();
 });
 
 async function renderBoard({
   googleConsentMessage = true,
   required = true,
-}: { googleConsentMessage?: boolean; required?: boolean } = {}) {
+  nonAdRoute = false,
+}: {
+  googleConsentMessage?: boolean;
+  required?: boolean;
+  /** Mount the AdSense boot as the root does on a route without ads. */
+  nonAdRoute?: boolean;
+} = {}) {
   const withdraw = vi.fn();
   const recordConsent = vi.fn<(input: RecordConsentInput) => void>();
   const ui = () => (
@@ -122,6 +134,7 @@ async function renderBoard({
           }}
           reportWebVitals={async () => {}}
         />
+        {nonAdRoute && <BoardAdsBoot adPage={false} />}
         <CookieConsentBanner />
         <CookiePreferencesFooterAction />
         <span data-testid="mounted" />
@@ -233,6 +246,74 @@ describe('Google’s consent message in charge (gdprApplies true)', () => {
     expect(recordConsent.mock.invocationCallOrder[0]).toBeLessThan(
       withdraw.mock.invocationCallOrder[0]!,
     );
+  });
+
+  it('loads the tag on a route without ads and waits for the CMP there', async () => {
+    const cmp = installFakeCmp();
+    await renderBoard({ nonAdRoute: true });
+    await vi.waitFor(() =>
+      expect(document.getElementById('cavuno-adsense-loader')).not.toBeNull(),
+    );
+    expect(bannerRegion()).not.toBeInTheDocument();
+    expect(ga4Loaded()).toBeNull();
+
+    cmp.emit({ gdprApplies: true, eventStatus: 'cmpuishown' });
+    expect(ga4Loaded()).toBeNull();
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'useractioncomplete',
+      publisher: { consents: granted },
+    });
+
+    expect(ga4Loaded()).not.toBeNull();
+    expect(bannerRegion()).not.toBeInTheDocument();
+  });
+
+  it('records a withdrawal when trackers the fallback loaded are declined', async () => {
+    const timeout = captureConsentTimeout();
+    const cmp = installFakeCmp();
+    const { withdraw, recordConsent } = await renderBoard({ required: false });
+    timeout();
+    expect(ga4Loaded()).not.toBeNull();
+
+    cmp.emit({ gdprApplies: true, eventStatus: 'cmpuishown' });
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'useractioncomplete',
+      publisher: { consents: refused },
+    });
+
+    expect(recordConsent).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ choice: 'withdrawn' }),
+    );
+    expect(withdraw).toHaveBeenCalledExactlyOnceWith({ keepAdSense: true });
+  });
+
+  it('tells other tabs about a decline, and stops analytics on one from another tab', async () => {
+    const cmp = installFakeCmp();
+    await renderBoard();
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'useractioncomplete',
+      publisher: { consents: refused },
+    });
+    expect(localStorage.getItem(GOOGLE_DECLINE_STORAGE_KEY)).not.toBeNull();
+
+    document.cookie = 'session-id=abc; Path=/';
+    document.cookie = '__gads=ad; Path=/';
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: GOOGLE_DECLINE_STORAGE_KEY,
+          newValue: String(Date.now()),
+        }),
+      );
+    });
+
+    expect(window.__cavunoAnalyticsOff).toBe(true);
+    expect(document.cookie).not.toContain('session-id=');
+    expect(document.cookie).toContain('__gads=ad');
+    document.cookie = '__gads=; Path=/; Max-Age=0';
   });
 
   it('records answers only on useractioncomplete, with a Google version', async () => {

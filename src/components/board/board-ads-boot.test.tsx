@@ -64,7 +64,7 @@ function ConsentButtons() {
     </>
   );
 }
-function setup(config = ads, hasMobileBottomBar = false) {
+function setup(config = ads, hasMobileBottomBar = false, adPage = true) {
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: state.width >= Number(query.match(/\d+/)?.[0]),
     addEventListener: vi.fn(),
@@ -73,7 +73,7 @@ function setup(config = ads, hasMobileBottomBar = false) {
   state.ads = config;
   return render(
     <>
-      <BoardAdsBoot hasMobileBottomBar={hasMobileBottomBar} />
+      <BoardAdsBoot adPage={adPage} hasMobileBottomBar={hasMobileBottomBar} />
       {state.required && <ConsentButtons />}
     </>,
   );
@@ -124,6 +124,10 @@ describe('public AdSense loader', () => {
     expect(loader()).toBeNull();
     expect(view.container).toBeEmptyDOMElement();
   });
+  it('does not load on routes without ads', () => {
+    setup(ads, false, false);
+    expect(loader()).toBeNull();
+  });
   it('withdraws on decline once AdSense has loaded', () => {
     state.required = true;
     setup();
@@ -154,6 +158,11 @@ describe('with Google’s consent message', () => {
   it('loads on mobile job pages so Google’s CMP can ask there too', () => {
     state.width = 390;
     setup(googleAds, true);
+    expect(loader()).not.toBeNull();
+  });
+
+  it('loads on routes without ads so Google’s CMP can ask there too', () => {
+    setup(googleAds, false, false);
     expect(loader()).not.toBeNull();
   });
 

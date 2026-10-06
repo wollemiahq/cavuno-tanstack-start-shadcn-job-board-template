@@ -36,6 +36,7 @@ import {
 import {
   clearCookieConsent,
   cookieBannerVersion,
+  GOOGLE_DECLINE_STORAGE_KEY,
   readCookieConsent,
   serializeCookieConsent,
   serializeReopenedCookieConsent,
@@ -227,7 +228,8 @@ function clearPersistedChoice(
  * recording can never block it.
  *
  * Google's consent message (`ads.googleConsentMessage`, from the
- * surrounding `BoardAdsProvider`): AdSense loads on page load and the
+ * surrounding `BoardAdsProvider`): AdSense loads on page load on every
+ * route and the
  * source starts `pending` (no banner, no trackers). Google's CMP reporting
  * `gdprApplies: true` puts Google in charge: the board's banner never
  * shows, the trackers follow `trackersAllowedFromTcData`, and "Cookie
@@ -236,9 +238,10 @@ function clearPersistedChoice(
  * as usual. A late `gdprApplies: true` still takes over while the visitor
  * has not answered the board's banner. Each answer in Google's message
  * (`useractioncomplete`, never page load) is recorded as accepted, denied
- * or withdrawn (a decline after trackers were allowed), under a consent id
+ * or withdrawn (a decline after trackers were allowed or ran), under a consent id
  * kept in its own cookie, with `googleConsentMessageVersion`. A decline
- * after trackers ran withdraws them like a decline on the board's banner.
+ * after trackers ran withdraws them like a decline on the board's banner,
+ * and other tabs stop Cavuno Analytics as for a cross-tab decline.
  */
 export function CookieConsentProvider({
   required,
@@ -330,6 +333,11 @@ export function CookieConsentProvider({
   // choice stands here.)
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
+      // A decline in Google's message in another tab.
+      if (event.key === GOOGLE_DECLINE_STORAGE_KEY) {
+        window.__cavunoAnalyticsOff = true;
+        clearAnalyticsCookies({ keepAdSense: googleMode });
+      }
       if (event.key !== STORAGE_KEY) return;
       if (event.newValue === 'accepted') {
         window.__cavunoAnalyticsOff = false;
@@ -409,9 +417,10 @@ export function CookieConsentProvider({
 
   const onGoogleConsent = useCallback(
     (update: GoogleConsentUpdate, tcf: GoogleTcf | null) => {
+      // Trackers the fallback banner let run make a decline a withdrawal.
       const step = tcf?.googleConsentStep(
         update,
-        googleDecisionRef.current,
+        googleDecisionRef.current || analyticsLoaded.current,
         trackers,
       );
       if (!tcf || !step || step.kind === 'fallback') {
@@ -446,6 +455,7 @@ export function CookieConsentProvider({
       if (step.allowed) {
         window.__cavunoAnalyticsOff = false;
       } else {
+        tcf.broadcastGoogleDecline();
         withdrawIfLoaded();
       }
     },

@@ -9,18 +9,23 @@ import { useBoardAds } from './board-ads-provider';
 import { useCookieConsent } from '@/components/cookie-consent';
 
 /**
- * Load AdSense on public pages without requesting or simulating anchor ads.
+ * Load AdSense on public ad pages (`adPage`) without requesting or
+ * simulating anchor ads.
  *
  * With Google's consent message (`ads.googleConsentMessage`) the tag loads
- * on page load for every visitor and viewport, without waiting for the
- * board's banner, so Google's CMP can ask EEA/UK/CH visitors. That includes
- * mobile job pages with the Apply bar: keep bottom anchors off there in
- * AdSense (see the README). Google's message governs AdSense then, so a
- * decline on the board's banner does not withdraw it.
+ * on page load on every route (ad page or not), for every visitor and
+ * viewport, without waiting for the board's banner, so Google's CMP can ask
+ * EEA/UK/CH visitors wherever they land. That includes mobile job pages
+ * with the Apply bar and non-ad routes (account, forms): keep bottom
+ * anchors and Auto ads off there in AdSense (see the README). Google's
+ * message governs AdSense then, so a decline on the board's banner does
+ * not withdraw it.
  */
 export function BoardAdsBoot({
+  adPage = true,
   hasMobileBottomBar = false,
 }: {
+  adPage?: boolean;
   hasMobileBottomBar?: boolean;
 }) {
   const ads = useBoardAds();
@@ -36,6 +41,7 @@ export function BoardAdsBoot({
   );
   useEffect(() => {
     if (
+      (!adPage && !googleMode) ||
       !eligibleViewport ||
       previewAds ||
       !adsAllowed ||
@@ -47,6 +53,7 @@ export function BoardAdsBoot({
       markAnalyticsLoaded();
     }
   }, [
+    adPage,
     eligibleViewport,
     previewAds,
     adsAllowed,

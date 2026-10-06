@@ -252,7 +252,7 @@ manual placements stay off until the updated API is deployed.
 - Blog articles: 300×250 desktop sidebar (1024px+).
 - Salary pages retain their full-width content layout; no added ad sidebar.
 - Jobs, companies, and talent search: one 160×600 outer rail at 1600px+ width and 900px+ height.
-- Public browsing/reading pages load AdSense after consent (on page load with Google's consent message, below), without forcing any Auto ads format.
+- Public browsing/reading pages load AdSense after consent (with Google's consent message, below: on page load on every route), without forcing any Auto ads format.
 
 See [placement decisions](docs/advertising.md) for the size and UX rationale.
 
@@ -287,18 +287,23 @@ Preview does not remove third-party scripts already loaded before it was enabled
 
 When `board.context().ads.googleConsentMessage` is true (AdSense on with a
 valid publisher id, and the owner has not turned it off), AdSense loads on page
-load for every visitor and viewport, so Google's certified consent message
+load on every public route (ad pages or not) for every visitor and viewport, so
+Google's certified consent message
 (AdSense → Privacy & messaging → European regulations) can ask visitors in the
 EEA, UK and Switzerland. For those visitors (`gdprApplies: true` from
 `__tcfapi`) the board's banner never shows; GA4, GTM, Meta, LinkedIn and Cavuno
 Analytics load only when the visitor consents to all of the owner's own-use
 purposes 1, 7, 8 and 9 (set them to **Consent** under "Add purposes for your
 own use"), and **Cookie preferences** reopens Google's message. Everyone else,
-and anyone whose browser blocks AdSense or whose CMP has not answered within 3
-seconds, gets the board's banner as before. See `src/lib/google-tcf.ts`.
+and anyone whose browser blocks AdSense (at once) or whose CMP has not answered
+within 3 seconds, gets the board's banner as before. A decline in Google's
+message also stops Cavuno Analytics in the visitor's other open tabs. See
+`src/lib/google-tcf.ts`.
 
-The tag then also loads on mobile job pages with the Apply bar: keep bottom
-anchor ads off for those pages in AdSense (anchor settings or page exclusions).
+The tag then also loads on mobile job pages with the Apply bar and on routes
+without ad units (pricing, posting a job, sign-in, account): keep Auto ads and
+bottom anchors off for those pages in AdSense (anchor settings or page
+exclusions).
 
 ## Analytics & conversion tracking
 

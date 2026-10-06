@@ -14,6 +14,8 @@ import {
   type TcData,
 } from './google-tcf';
 
+import { ensureAdSenseScript } from '@/components/board/adsense-script';
+
 const granted = { 1: true, 7: true, 8: true, 9: true };
 
 describe('trackersAllowedFromTcData', () => {
@@ -99,6 +101,18 @@ describe('subscribeGoogleConsent', () => {
     script.id = 'cavuno-adsense-loader';
     document.head.appendChild(script);
     script.dispatchEvent(new Event('error'));
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith({ kind: 'unavailable' });
+    vi.advanceTimersByTime(GOOGLE_CONSENT_TIMEOUT_MS);
+    expect(onUpdate).toHaveBeenCalledOnce();
+  });
+
+  it('gives up at once when the loader failed before it subscribed', () => {
+    ensureAdSenseScript('ca-pub-1234567890123456');
+    document
+      .getElementById('cavuno-adsense-loader')!
+      .dispatchEvent(new Event('error'));
+    const onUpdate = vi.fn();
+    subscribeGoogleConsent(onUpdate);
     expect(onUpdate).toHaveBeenCalledExactlyOnceWith({ kind: 'unavailable' });
     vi.advanceTimersByTime(GOOGLE_CONSENT_TIMEOUT_MS);
     expect(onUpdate).toHaveBeenCalledOnce();

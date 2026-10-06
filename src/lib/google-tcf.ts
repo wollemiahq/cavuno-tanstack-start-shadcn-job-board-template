@@ -14,6 +14,7 @@
 import {
   COOKIE_CONSENT_MAX_AGE,
   CONSENT_ID_RE,
+  GOOGLE_DECLINE_STORAGE_KEY,
   fnv1a,
   readCookieConsent,
   type CookieBannerTrackers,
@@ -143,6 +144,10 @@ export function subscribeGoogleConsent(
       if (active) window.__tcfapi?.('addEventListener', 2.2, onTcData);
     },
   });
+  // The loader failed before this subscribed (`ensureAdSenseScript` marks it).
+  if (document.getElementById(ADSENSE_SCRIPT_ID)?.hasAttribute('data-failed')) {
+    giveUp();
+  }
 
   return () => {
     active = false;
@@ -281,4 +286,16 @@ export function googleConsentId(
   const consentId = known ?? newId();
   document.cookie = serializeConsentId(consentId);
   return consentId;
+}
+
+/**
+ * Tell the visitor's other tabs about a decline in Google's message: they
+ * stop Cavuno Analytics and clear analytics cookies (no reload).
+ */
+export function broadcastGoogleDecline(): void {
+  try {
+    localStorage.setItem(GOOGLE_DECLINE_STORAGE_KEY, String(Date.now()));
+  } catch {
+    // localStorage may be blocked; this tab's own decline still applies.
+  }
 }

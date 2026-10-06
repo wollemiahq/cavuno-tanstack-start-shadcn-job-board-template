@@ -578,14 +578,13 @@ function RootChrome({
                 />
               </Suspense>
               <CookieConsentBanner />
-              {isBoardAdPage(location.pathname) && (
-                <BoardAdsBoot
-                  key={location.pathname}
-                  hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$/.test(
-                    location.pathname,
-                  )}
-                />
-              )}
+              <BoardAdsBoot
+                key={location.pathname}
+                adPage={isBoardAdPage(location.pathname)}
+                hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$/.test(
+                  location.pathname,
+                )}
+              />
               {user &&
               user.emailVerified &&
               board.features.messaging &&

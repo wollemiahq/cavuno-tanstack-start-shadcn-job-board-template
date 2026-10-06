@@ -12,6 +12,8 @@ export function ensureAdSenseScript(clientId: string): boolean {
   script.id = SCRIPT_ID;
   script.async = true;
   script.crossOrigin = 'anonymous';
+  // Read by the Google CMP bridge, which may subscribe after the error.
+  script.onerror = () => script.setAttribute('data-failed', '');
   script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
   document.head.appendChild(script);
   return true;
