@@ -28,6 +28,11 @@ export interface ResolveJobsSearchTargetInput {
  */
 export type JobsSearchTarget =
   | {
+      to: '/companies/$companySlug/jobs';
+      params: { companySlug: string };
+      search: { location?: string; locationName?: string };
+    }
+  | {
       to: '/jobs/locations/$location/skills/$skill';
       params: { location: string; skill: string };
       search?: JobsSearchFilters;
@@ -88,6 +93,18 @@ export function resolveJobsSearchTarget({
   term,
   filters,
 }: ResolveJobsSearchTargetInput): JobsSearchTarget {
+  // A picked company opens that company's jobs. The /jobs listing has no
+  // company filter, and listing filters other than location do not apply.
+  if (term?.type === 'company') {
+    return {
+      to: '/companies/$companySlug/jobs',
+      params: { companySlug: term.slug },
+      search: location
+        ? { location: location.slug, locationName: location.name }
+        : {},
+    };
+  }
+
   const extra = compactFilters(filters);
   const hasFilters = Object.keys(extra).length > 0;
   const jobsTerm =

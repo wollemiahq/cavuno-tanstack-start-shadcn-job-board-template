@@ -84,6 +84,47 @@ describe('useKeywordSuggestions', () => {
     ]);
   });
 
+  it('keeps a company row with its logo beside a same-named term', async () => {
+    searchTaxonomySuggestions.mockResolvedValue({
+      data: [
+        {
+          object: 'company_suggestion',
+          id: 'company-1',
+          type: 'company',
+          slug: 'acme',
+          name: 'Acme',
+          logoUrl: 'https://cdn.example/acme.png',
+        },
+        {
+          object: 'taxonomy_term',
+          id: 'skill-acme',
+          type: 'skill',
+          sourceSlug: 'acme',
+          canonicalSlug: 'acme',
+          displayName: 'Acme',
+        },
+      ],
+    });
+
+    const { result } = renderHook(() =>
+      useKeywordSuggestions(true, dependencies),
+    );
+
+    act(() => result.current.onQueryChange('acm'));
+    await act(async () => vi.advanceTimersByTimeAsync(210));
+
+    expect(result.current.suggestions).toEqual([
+      {
+        id: 'company:acme',
+        type: 'company',
+        slug: 'acme',
+        name: 'Acme',
+        logoUrl: 'https://cdn.example/acme.png',
+      },
+      { id: 'skill:acme', type: 'skill', slug: 'acme', name: 'Acme' },
+    ]);
+  });
+
   it('does not request job taxonomy suggestions in another search scope', async () => {
     const { result } = renderHook(() =>
       useKeywordSuggestions(false, dependencies),

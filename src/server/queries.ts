@@ -309,7 +309,29 @@ export const getRemotePermits = createServerFn({ method: 'GET' })
     ),
   );
 
-/** Category/skill autocomplete for the shared Jobs keyword field. */
+type KeywordSuggestionItem =
+  | {
+      object: 'company_suggestion';
+      id: string;
+      type: 'company';
+      slug: string;
+      name: string;
+      logoUrl: string | null;
+    }
+  | {
+      object: 'taxonomy_term';
+      id: string;
+      type: 'category' | 'skill';
+      sourceSlug: string;
+      canonicalSlug: string;
+      displayName: string;
+    };
+
+/**
+ * Company + category/skill autocomplete for the shared Jobs keyword field.
+ * Items keep the API's server order (ADR-0036: display name, company-first
+ * on ties), so a typed company name surfaces the company itself.
+ */
 export const searchTaxonomySuggestions = createServerFn({ method: 'GET' })
   .validator((input: { q?: string; limit?: number }) => input)
   .middleware([boardAccessMiddleware])
@@ -319,30 +341,40 @@ export const searchTaxonomySuggestions = createServerFn({ method: 'GET' })
         {
           q: data.q,
           limit: data.limit,
-          types: ['category', 'skill'],
+          types: ['company', 'category', 'skill'],
         },
         { headers: h },
       );
-      // Preserve the prior `{ data: TaxonomyTerm[] }` shape the keyword
-      // combobox mapper expects (type + displayName + canonicalSlug).
       return {
-        data: result.items
-          .filter(
-            (
-              item,
-            ): item is Extract<
-              typeof item,
-              { type: 'term'; termType: 'category' | 'skill' }
-            > => item.type === 'term',
-          )
-          .map((item) => ({
-            object: 'taxonomy_term' as const,
-            id: item.id,
-            type: item.termType,
-            sourceSlug: item.sourceSlug,
-            canonicalSlug: item.canonicalSlug,
-            displayName: item.displayName,
-          })),
+        data: result.items.flatMap((item): KeywordSuggestionItem[] => {
+          if (item.type === 'company') {
+            return [
+              {
+                object: 'company_suggestion' as const,
+                id: item.id,
+                type: 'company' as const,
+                slug: item.slug,
+                name: item.name,
+                logoUrl: item.logoUrl,
+              },
+            ];
+          }
+          if (item.type === 'term') {
+            // Keep the `{ type, displayName, canonicalSlug }` taxonomy-term
+            // shape the keyword combobox mapper reads.
+            return [
+              {
+                object: 'taxonomy_term' as const,
+                id: item.id,
+                type: item.termType,
+                sourceSlug: item.sourceSlug,
+                canonicalSlug: item.canonicalSlug,
+                displayName: item.displayName,
+              },
+            ];
+          }
+          return [];
+        }),
       };
     }),
   );

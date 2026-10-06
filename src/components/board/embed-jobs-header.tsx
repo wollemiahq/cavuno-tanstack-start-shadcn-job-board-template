@@ -202,7 +202,9 @@ export function EmbedJobsHeader({
             onSelect={(suggestion) => {
               setQuery(suggestion.name);
               setTerm(
-                suggestion.type === 'skill' || suggestion.type === 'category'
+                suggestion.type === 'company' ||
+                  suggestion.type === 'skill' ||
+                  suggestion.type === 'category'
                   ? {
                       type: suggestion.type,
                       slug: suggestion.slug,

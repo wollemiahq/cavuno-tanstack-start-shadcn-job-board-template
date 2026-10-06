@@ -23,7 +23,7 @@ const keywordSuggestionDependencies: KeywordSuggestionDependencies = {
   searchTaxonomySuggestions,
 };
 
-/** Route-owned controller for the Jobs category/skill autocomplete. */
+/** Route-owned controller for the Jobs company/category/skill autocomplete. */
 export function useKeywordSuggestions(
   enabled: boolean,
   dependencies: KeywordSuggestionDependencies = keywordSuggestionDependencies,

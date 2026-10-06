@@ -2,9 +2,19 @@ import type { PublicTaxonomyTerm } from '@cavuno/board';
 
 export interface KeywordSuggestionVM {
   id: string;
-  type: 'category' | 'skill' | 'post' | 'tag';
+  type: 'company' | 'category' | 'skill' | 'post' | 'tag';
   slug: string;
   name: string;
+  /** Company rows only. */
+  logoUrl?: string | null;
+}
+
+/** A company row from the Jobs keyword suggest server function. */
+export interface CompanySuggestionItem {
+  type: 'company';
+  slug: string;
+  name: string;
+  logoUrl: string | null;
 }
 
 /**
@@ -15,8 +25,19 @@ export interface KeywordSuggestionVM {
  * suggest endpoint's terms do not, and the combobox wants neither.
  */
 export function toKeywordSuggestionVM(
-  term: Pick<PublicTaxonomyTerm, 'type' | 'canonicalSlug' | 'displayName'>,
+  term:
+    | Pick<PublicTaxonomyTerm, 'type' | 'canonicalSlug' | 'displayName'>
+    | CompanySuggestionItem,
 ): KeywordSuggestionVM {
+  if (term.type === 'company') {
+    return {
+      id: `company:${term.slug}`,
+      type: 'company',
+      slug: term.slug,
+      name: term.name,
+      logoUrl: term.logoUrl,
+    };
+  }
   return {
     id: `${term.type}:${term.canonicalSlug}`,
     type: term.type,
@@ -82,7 +103,11 @@ export function dedupeKeywordSuggestions(
   const byName = new Map<string, KeywordSuggestionVM>();
 
   for (const suggestion of suggestions) {
-    const key = suggestion.name.trim().toLowerCase();
+    // A company shows its logo and opens its own jobs page, so it never
+    // collapses into a same-named term.
+    const key = `${
+      suggestion.type === 'company' ? 'company' : 'term'
+    }:${suggestion.name.trim().toLowerCase()}`;
     const kept = byName.get(key);
 
     // Map preserves first-insertion order even when the value is replaced,

@@ -13,7 +13,7 @@ export interface HeaderSearchLocation {
 }
 
 export interface HeaderSearchTerm {
-  type: 'category' | 'skill' | 'post' | 'tag';
+  type: 'company' | 'category' | 'skill' | 'post' | 'tag';
   slug: string;
   name: string;
 }

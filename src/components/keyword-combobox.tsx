@@ -7,6 +7,7 @@ import { Search, X } from 'lucide-react';
 import { m } from '../paraglide/messages';
 
 import type { KeywordSuggestionVM } from '@/board/keyword-suggestion';
+import { CompanyAvatar } from '@/components/board/company-avatar';
 import {
   Combobox,
   ComboboxContent,
@@ -34,7 +35,7 @@ interface KeywordComboboxProps extends KeywordSuggestionState {
   className?: string;
 }
 
-/** Jobs keyword autocomplete: canonical terms plus an unrestricted text value. */
+/** Jobs keyword autocomplete: companies and canonical terms plus an unrestricted text value. */
 export function KeywordCombobox({
   value,
   placeholder,
@@ -132,6 +133,17 @@ export function KeywordCombobox({
           <ComboboxList>
             {(term: KeywordSuggestionVM) => (
               <ComboboxItem key={term.id} value={term}>
+                {term.type === 'company' ? (
+                  // The row text already names the company; hide the logo's
+                  // alt so the option is not announced twice.
+                  <span aria-hidden="true" className="contents">
+                    <CompanyAvatar
+                      name={term.name}
+                      logoUrl={term.logoUrl}
+                      size="sm"
+                    />
+                  </span>
+                ) : null}
                 <span className="min-w-0 flex-1 truncate">{term.name}</span>
                 {/* Only the blog scope earns a kind badge, because posts and
                     tags are genuinely different things sitting in one list.

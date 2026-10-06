@@ -11,6 +11,25 @@ const engineering = {
 };
 
 describe('resolveJobsSearchTarget', () => {
+  it('routes a company to its jobs page, keeping the location', () => {
+    const acme = { type: 'company' as const, slug: 'acme', name: 'Acme' };
+
+    expect(
+      resolveJobsSearchTarget({ query: 'Acme', location: london, term: acme }),
+    ).toEqual({
+      to: '/companies/$companySlug/jobs',
+      params: { companySlug: 'acme' },
+      search: { location: 'london', locationName: 'London' },
+    });
+    expect(
+      resolveJobsSearchTarget({ query: 'Acme', location: null, term: acme }),
+    ).toEqual({
+      to: '/companies/$companySlug/jobs',
+      params: { companySlug: 'acme' },
+      search: {},
+    });
+  });
+
   it('routes a skill and a location to the location+skill page', () => {
     expect(
       resolveJobsSearchTarget({
