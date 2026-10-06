@@ -268,9 +268,42 @@ describe('location listing search distance', () => {
     ]);
   });
 
-  it('noindexes the location + category and + skill pages on such a city', async () => {
+  it('noindexes a combination with no jobs of its own in a place that has jobs', async () => {
+    // Houston has jobs, but its nursing jobs are all nearby (Pasadena).
     mocks.resolve.mockResolvedValue(resolution('city', 'US'));
-    mocks.tree.mockResolvedValue({ data: [] });
+    mocks.list.mockImplementation(async (query: { radius?: number }) => ({
+      ...emptyList,
+      count: query.radius === undefined ? 0 : 8,
+    }));
+
+    const category = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing' },
+    });
+    const skill = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'react' },
+    });
+
+    expect(mocks.list).toHaveBeenCalledWith(
+      expect.objectContaining({
+        location: 'fixture-place',
+        category: 'nursing',
+        limit: 1,
+      }),
+      expect.anything(),
+    );
+    if (category.kind !== 'ok' || skill.kind !== 'ok') {
+      throw new Error('expected listings');
+    }
+    expect(robots(category.head)?.content).toBe('noindex, follow');
+    expect(robots(skill.head)?.content).toBe('noindex, follow');
+  });
+
+  it('keeps a combination with jobs of its own in the place indexable', async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+    mocks.list.mockImplementation(async (query: { radius?: number }) => ({
+      ...emptyList,
+      count: query.radius === undefined ? 2 : 8,
+    }));
 
     const category = await getJobsLocationCategoryPage({
       data: { ...page, categorySlug: 'nursing' },
@@ -282,8 +315,8 @@ describe('location listing search distance', () => {
     if (category.kind !== 'ok' || skill.kind !== 'ok') {
       throw new Error('expected listings');
     }
-    expect(robots(category.head)?.content).toBe('noindex, follow');
-    expect(robots(skill.head)?.content).toBe('noindex, follow');
+    expect(robots(category.head)).toBeUndefined();
+    expect(robots(skill.head)).toBeUndefined();
   });
 
   it('keeps the default distance indexable when the place directory is unreadable', async () => {

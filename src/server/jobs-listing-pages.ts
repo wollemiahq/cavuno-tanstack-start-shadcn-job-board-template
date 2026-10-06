@@ -209,6 +209,31 @@ async function listingRadiusKm(
   return placeSearchRadius(await placeRead, within)?.selected?.km;
 }
 
+/**
+ * A location combination's own jobs in the place (`within=0`), which its
+ * default-distance view's noindex turns on, as the sitemap does: with none
+ * in the place the listing shows only nearby jobs. Read (one row, total
+ * only) only for that view; `null` otherwise or when the read fails, which
+ * keeps the page indexable.
+ */
+async function combinationInPlaceJobCount(
+  query: JobsListQuery,
+  radius: number | undefined,
+  within: number | undefined,
+  headers: Record<string, string>,
+): Promise<number | null> {
+  if (radius === undefined || within !== undefined) return null;
+  try {
+    const exact = await getBoard().jobs.list(
+      { ...query, offset: 0, limit: 1 },
+      { headers },
+    );
+    return catalogJobCount(exact.count, exact.gatedCount) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** The board's job custom fields as "All filters" controls. */
 async function jobCustomFilterFields() {
   const boardContext = await readBoardContext();
@@ -643,27 +668,38 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
       const radius = await listingRadiusKm(placeRead, data.within);
-      const [place, category, listResult, seo, placeTree] = await Promise.all([
-        placeRead,
-        resolveOrNull(
-          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
-        ),
-        settled(
-          board.jobs.list(
+      const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
+        await Promise.all([
+          placeRead,
+          resolveOrNull(
+            board.taxonomy.categories.resolve(data.categorySlug, { headers }),
+          ),
+          settled(
+            board.jobs.list(
+              {
+                ...filters,
+                location: data.locationSlug,
+                radius,
+                category: data.categorySlug,
+              },
+              { headers },
+            ),
+          ),
+          seoBase(),
+          // Breadcrumb enrichment only: the place directory carries the
+          // ancestor chain; on failure the trail degrades to the place itself.
+          board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+          combinationInPlaceJobCount(
             {
               ...filters,
               location: data.locationSlug,
-              radius,
               category: data.categorySlug,
             },
-            { headers },
+            radius,
+            data.within,
+            headers,
           ),
-        ),
-        seoBase(),
-        // Breadcrumb enrichment only: the place directory carries the
-        // ancestor chain; on failure the trail degrades to the place itself.
-        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
-      ]);
+        ]);
       if (!place || !category) return { kind: 'not_found' as const };
       if (place.redirectTo || category.redirectTo) {
         return {
@@ -711,10 +747,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        isSearchRadiusViewNoindex(
-          searchRadius,
-          placeJobCount(placeTree?.data, place),
-        ),
+        isSearchRadiusViewNoindex(searchRadius, inPlaceJobCount),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
@@ -762,27 +795,34 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
       const radius = await listingRadiusKm(placeRead, data.within);
-      const [place, skill, listResult, seo, placeTree] = await Promise.all([
-        placeRead,
-        resolveOrNull(
-          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
-        ),
-        settled(
-          board.jobs.list(
-            {
-              ...filters,
-              location: data.locationSlug,
-              radius,
-              skill: data.skillSlug,
-            },
-            { headers },
+      const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
+        await Promise.all([
+          placeRead,
+          resolveOrNull(
+            board.taxonomy.skills.resolve(data.skillSlug, { headers }),
           ),
-        ),
-        seoBase(),
-        // Breadcrumb enrichment only: the place directory carries the
-        // ancestor chain; on failure the trail degrades to the place itself.
-        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
-      ]);
+          settled(
+            board.jobs.list(
+              {
+                ...filters,
+                location: data.locationSlug,
+                radius,
+                skill: data.skillSlug,
+              },
+              { headers },
+            ),
+          ),
+          seoBase(),
+          // Breadcrumb enrichment only: the place directory carries the
+          // ancestor chain; on failure the trail degrades to the place itself.
+          board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+          combinationInPlaceJobCount(
+            { ...filters, location: data.locationSlug, skill: data.skillSlug },
+            radius,
+            data.within,
+            headers,
+          ),
+        ]);
       if (!place || !skill) return { kind: 'not_found' as const };
       if (place.redirectTo || skill.redirectTo) {
         return {
@@ -830,10 +870,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        isSearchRadiusViewNoindex(
-          searchRadius,
-          placeJobCount(placeTree?.data, place),
-        ),
+        isSearchRadiusViewNoindex(searchRadius, inPlaceJobCount),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
