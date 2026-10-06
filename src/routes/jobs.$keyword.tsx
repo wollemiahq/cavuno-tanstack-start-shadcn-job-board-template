@@ -39,6 +39,12 @@ function CategoryPage() {
   return (
     <ProgrammaticJobsView
       heading={m.categoryPage_jobsHeading({ category: category.displayName })}
+      countedHeading={(counted) =>
+        m.categoryPage_jobsCountHeading({
+          ...counted,
+          category: category.displayName,
+        })
+      }
       count={list.count}
       gatedCount={list.gatedCount}
       jobs={list.data}

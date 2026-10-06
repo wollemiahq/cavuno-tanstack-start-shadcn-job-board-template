@@ -517,6 +517,23 @@
   "candidatePaywallLock_noOffersText": "Obecnie nie ma dostępnych płatnych planów. Możesz nadal przeglądać oferty pracy.",
   "candidatePaywallLock_checkoutTerms": "Przed zapłatą sprawdź pełne warunki płatności podczas finalizacji zakupu.",
   "categoryPage_jobsHeading": "Oferty: {category}",
+  "categoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty: {category} ({countLabel})",
+        "countPlural=few": "Oferty: {category} ({countLabel})",
+        "countPlural=many": "Oferty: {category} ({countLabel})",
+        "countPlural=*": "Oferty: {category} ({countLabel})"
+      }
+    }
+  ],
   "categoryPage_notFoundText": "Nie znaleziono kategorii.",
   "commandDialog_searchPlaceholder": "Wyszukaj polecenie do uruchomienia...",
   "commandDialog_title": "Paleta poleceń",
@@ -1590,12 +1607,47 @@
   "listing_metaDescription": "Przeglądaj: {heading} na {boardName}.",
   "listing_metaDescriptionWithCount": "Przeglądaj: {heading} na {boardName}. Liczba ofert: {count}.",
   "locationCategoryPage_jobsHeading": "Oferty: {category} — {place}",
+  "locationCategoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty: {category} — {place} ({countLabel})",
+        "countPlural=few": "Oferty: {category} — {place} ({countLabel})",
+        "countPlural=many": "Oferty: {category} — {place} ({countLabel})",
+        "countPlural=*": "Oferty: {category} — {place} ({countLabel})"
+      }
+    }
+  ],
   "locationCombobox_clearAriaLabel": "wyczyść lokalizację",
   "locationCombobox_locationAriaLabel": "lokalizacja",
   "locationCombobox_noMatchText": "Brak ofert pracy w lokalizacji {location}",
   "locationCombobox_placeholderText": "Lokalizacja…",
   "locationCombobox_searchingText": "Wyszukiwanie…",
   "locationPage_jobsHeading": "Oferty pracy: {place}",
+  "locationPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy: {place} ({countLabel})",
+        "countPlural=few": "Oferty pracy: {place} ({countLabel})",
+        "countPlural=many": "Oferty pracy: {place} ({countLabel})",
+        "countPlural=*": "Oferty pracy: {place} ({countLabel})"
+      }
+    }
+  ],
   "locationPage_notFoundText": "Nie znaleziono lokalizacji.",
   "searchRadius_exactScope": [
     {
@@ -1678,6 +1730,24 @@
   "searchRadius_withinOption": "W promieniu {distance}",
   "searchRadius_menuLabel": "Odległość",
   "locationSkillPage_jobsHeading": "Oferty: {skill} — {place}",
+  "locationSkillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty: {skill} — {place} ({countLabel})",
+        "countPlural=few": "Oferty: {skill} — {place} ({countLabel})",
+        "countPlural=many": "Oferty: {skill} — {place} ({countLabel})",
+        "countPlural=*": "Oferty: {skill} — {place} ({countLabel})"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Zmień logo",
   "logoUpload_uploadErrorText": "Przesyłanie nie powiodło się — spróbuj mniejszego obrazu.",
   "logoUpload_uploadingLabel": "Przesyłanie…",
@@ -2361,6 +2431,23 @@
   "siteHeader_signUpLabel": "Zarejestruj się",
   "siteHeader_skipToContentLabel": "Przejdź do treści głównej",
   "skillPage_jobsHeading": "Oferty: {skill}",
+  "skillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty: {skill} ({countLabel})",
+        "countPlural=few": "Oferty: {skill} ({countLabel})",
+        "countPlural=many": "Oferty: {skill} ({countLabel})",
+        "countPlural=*": "Oferty: {skill} ({countLabel})"
+      }
+    }
+  ],
   "skillPage_notFoundText": "Nie znaleziono umiejętności.",
   "skillsSection_addLabel": "Dodaj umiejętność",
   "skillsSection_addSkillLabel": "Umiejętność",

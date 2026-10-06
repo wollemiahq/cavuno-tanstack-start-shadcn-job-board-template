@@ -509,6 +509,21 @@
   "candidatePaywallLock_noOffersText": "No hay planes de pago disponibles ahora. Puedes seguir buscando empleos.",
   "candidatePaywallLock_checkoutTerms": "Revisa las condiciones de facturación completas en el pago antes de pagar.",
   "categoryPage_jobsHeading": "Ofertas de {category}",
+  "categoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {category}",
+        "countPlural=*": "{countLabel} ofertas de {category}"
+      }
+    }
+  ],
   "categoryPage_notFoundText": "Categoría no encontrada.",
   "commandDialog_searchPlaceholder": "Busca un comando para ejecutar...",
   "commandDialog_title": "Paleta de comandos",
@@ -1532,12 +1547,43 @@
   "listing_metaDescription": "Explora {heading} en {boardName}.",
   "listing_metaDescriptionWithCount": "Explora {count} {heading} en {boardName}.",
   "locationCategoryPage_jobsHeading": "Ofertas de {category} en {place}",
+  "locationCategoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {category} en {place}",
+        "countPlural=*": "{countLabel} ofertas de {category} en {place}"
+      }
+    }
+  ],
   "locationCombobox_clearAriaLabel": "borrar la ubicación",
   "locationCombobox_locationAriaLabel": "ubicación",
   "locationCombobox_noMatchText": "No hay empleos en {location}",
   "locationCombobox_placeholderText": "Ubicación…",
   "locationCombobox_searchingText": "Buscando…",
   "locationPage_jobsHeading": "Ofertas en {place}",
+  "locationPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta en {place}",
+        "countPlural=*": "{countLabel} ofertas en {place}"
+      }
+    }
+  ],
   "locationPage_notFoundText": "Ubicación no encontrada.",
   "searchRadius_exactScope": [
     {
@@ -1616,6 +1662,22 @@
   "searchRadius_withinOption": "A menos de {distance}",
   "searchRadius_menuLabel": "Distancia",
   "locationSkillPage_jobsHeading": "Ofertas de {skill} en {place}",
+  "locationSkillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {skill} en {place}",
+        "countPlural=*": "{countLabel} ofertas de {skill} en {place}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Cambiar logotipo",
   "logoUpload_uploadErrorText": "Error al subir: prueba con una imagen más pequeña.",
   "logoUpload_uploadingLabel": "Subiendo…",
@@ -2279,6 +2341,21 @@
   "siteHeader_signUpLabel": "Registrarse",
   "siteHeader_skipToContentLabel": "Saltar al contenido principal",
   "skillPage_jobsHeading": "Ofertas de {skill}",
+  "skillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {skill}",
+        "countPlural=*": "{countLabel} ofertas de {skill}"
+      }
+    }
+  ],
   "skillPage_notFoundText": "Competencia no encontrada.",
   "skillsSection_addLabel": "Añadir competencia",
   "skillsSection_addSkillLabel": "Competencia",

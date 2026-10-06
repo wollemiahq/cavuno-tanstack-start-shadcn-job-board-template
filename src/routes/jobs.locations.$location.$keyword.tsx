@@ -49,6 +49,13 @@ function LocationCategoryPage() {
         category: category.displayName,
         place: place.displayName,
       })}
+      countedHeading={(counted) =>
+        m.locationCategoryPage_jobsCountHeading({
+          ...counted,
+          category: category.displayName,
+          place: place.displayName,
+        })
+      }
       resultsScope={
         searchRadius
           ? (range) => (

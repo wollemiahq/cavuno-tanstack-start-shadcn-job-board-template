@@ -509,6 +509,21 @@
   "candidatePaywallLock_noOffersText": "Aucune offre payante n’est disponible pour le moment. Vous pouvez continuer à consulter les emplois.",
   "candidatePaywallLock_checkoutTerms": "Consultez toutes les conditions de facturation lors du paiement avant de payer.",
   "categoryPage_jobsHeading": "Offres {category}",
+  "categoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category}",
+        "countPlural=*": "{countLabel} offres {category}"
+      }
+    }
+  ],
   "categoryPage_notFoundText": "Catégorie introuvable.",
   "commandDialog_searchPlaceholder": "Rechercher une commande…",
   "commandDialog_title": "Palette de commandes",
@@ -1532,12 +1547,43 @@
   "listing_metaDescription": "Parcourez {heading} sur {boardName}.",
   "listing_metaDescriptionWithCount": "Parcourez {count} {heading} sur {boardName}.",
   "locationCategoryPage_jobsHeading": "Offres {category} à {place}",
+  "locationCategoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} à {place}",
+        "countPlural=*": "{countLabel} offres {category} à {place}"
+      }
+    }
+  ],
   "locationCombobox_clearAriaLabel": "effacer le lieu",
   "locationCombobox_locationAriaLabel": "lieu",
   "locationCombobox_noMatchText": "Aucune offre à {location}",
   "locationCombobox_placeholderText": "Lieu…",
   "locationCombobox_searchingText": "Recherche…",
   "locationPage_jobsHeading": "Offres à {place}",
+  "locationPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre à {place}",
+        "countPlural=*": "{countLabel} offres à {place}"
+      }
+    }
+  ],
   "locationPage_notFoundText": "Lieu introuvable.",
   "searchRadius_exactScope": [
     {
@@ -1616,6 +1662,22 @@
   "searchRadius_withinOption": "Dans un rayon de {distance}",
   "searchRadius_menuLabel": "Distance",
   "locationSkillPage_jobsHeading": "Offres {skill} à {place}",
+  "locationSkillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} à {place}",
+        "countPlural=*": "{countLabel} offres {skill} à {place}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Changer le logo",
   "logoUpload_uploadErrorText": "Échec de l’envoi — essayez une image plus petite.",
   "logoUpload_uploadingLabel": "Envoi en cours…",
@@ -2279,6 +2341,21 @@
   "siteHeader_signUpLabel": "S’inscrire",
   "siteHeader_skipToContentLabel": "Aller au contenu principal",
   "skillPage_jobsHeading": "Offres {skill}",
+  "skillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill}",
+        "countPlural=*": "{countLabel} offres {skill}"
+      }
+    }
+  ],
   "skillPage_notFoundText": "Compétence introuvable.",
   "skillsSection_addLabel": "Ajouter une compétence",
   "skillsSection_addSkillLabel": "Compétence",

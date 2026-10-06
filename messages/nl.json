@@ -509,6 +509,21 @@
   "candidatePaywallLock_noOffersText": "Er zijn momenteel geen betaalde opties beschikbaar. Je kunt vacatures blijven bekijken.",
   "candidatePaywallLock_checkoutTerms": "Bekijk alle betalingsvoorwaarden bij het afrekenen voordat je betaalt.",
   "categoryPage_jobsHeading": "Vacatures in {category}",
+  "categoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature in {category}",
+        "countPlural=*": "{countLabel} vacatures in {category}"
+      }
+    }
+  ],
   "categoryPage_notFoundText": "Categorie niet gevonden.",
   "commandDialog_searchPlaceholder": "Zoek een opdracht om uit te voeren…",
   "commandDialog_title": "Opdrachtpalet",
@@ -1532,12 +1547,43 @@
   "listing_metaDescription": "Bekijk {heading} op {boardName}.",
   "listing_metaDescriptionWithCount": "Bekijk {count} {heading} op {boardName}.",
   "locationCategoryPage_jobsHeading": "Vacatures in {category} in {place}",
+  "locationCategoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature in {category} in {place}",
+        "countPlural=*": "{countLabel} vacatures in {category} in {place}"
+      }
+    }
+  ],
   "locationCombobox_clearAriaLabel": "Locatie wissen",
   "locationCombobox_locationAriaLabel": "locatie",
   "locationCombobox_noMatchText": "Geen vacatures in {location}",
   "locationCombobox_placeholderText": "Locatie…",
   "locationCombobox_searchingText": "Zoeken…",
   "locationPage_jobsHeading": "Vacatures in {place}",
+  "locationPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature in {place}",
+        "countPlural=*": "{countLabel} vacatures in {place}"
+      }
+    }
+  ],
   "locationPage_notFoundText": "Locatie niet gevonden.",
   "searchRadius_exactScope": [
     {
@@ -1616,6 +1662,22 @@
   "searchRadius_withinOption": "Binnen {distance}",
   "searchRadius_menuLabel": "Afstand",
   "locationSkillPage_jobsHeading": "Vacatures voor {skill} in {place}",
+  "locationSkillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature voor {skill} in {place}",
+        "countPlural=*": "{countLabel} vacatures voor {skill} in {place}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Logo wijzigen",
   "logoUpload_uploadErrorText": "Uploaden mislukt. Probeer een kleinere afbeelding.",
   "logoUpload_uploadingLabel": "Uploaden…",
@@ -2279,6 +2341,21 @@
   "siteHeader_signUpLabel": "Registreren",
   "siteHeader_skipToContentLabel": "Naar de hoofdinhoud",
   "skillPage_jobsHeading": "Vacatures voor {skill}",
+  "skillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature voor {skill}",
+        "countPlural=*": "{countLabel} vacatures voor {skill}"
+      }
+    }
+  ],
   "skillPage_notFoundText": "Vaardigheid niet gevonden.",
   "skillsSection_addLabel": "Vaardigheid toevoegen",
   "skillsSection_addSkillLabel": "Vaardigheid",

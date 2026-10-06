@@ -38,6 +38,9 @@ function SkillPage() {
   return (
     <ProgrammaticJobsView
       heading={m.skillPage_jobsHeading({ skill: skill.displayName })}
+      countedHeading={(counted) =>
+        m.skillPage_jobsCountHeading({ ...counted, skill: skill.displayName })
+      }
       count={list.count}
       gatedCount={list.gatedCount}
       jobs={list.data}

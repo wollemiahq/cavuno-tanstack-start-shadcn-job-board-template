@@ -509,6 +509,21 @@
   "candidatePaywallLock_noOffersText": "No paid plans are available right now. You can keep browsing jobs.",
   "candidatePaywallLock_checkoutTerms": "Review the full billing terms in checkout before paying.",
   "categoryPage_jobsHeading": "{category} jobs",
+  "categoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} {category} job",
+        "countPlural=*": "{countLabel} {category} jobs"
+      }
+    }
+  ],
   "categoryPage_notFoundText": "Category not found.",
   "commandDialog_searchPlaceholder": "Search for a command to run...",
   "commandDialog_title": "Command Palette",
@@ -1532,12 +1547,43 @@
   "listing_metaDescription": "Browse {heading} on {boardName}.",
   "listing_metaDescriptionWithCount": "Browse {count} {heading} on {boardName}.",
   "locationCategoryPage_jobsHeading": "{category} jobs in {place}",
+  "locationCategoryPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} {category} job in {place}",
+        "countPlural=*": "{countLabel} {category} jobs in {place}"
+      }
+    }
+  ],
   "locationCombobox_clearAriaLabel": "clear location",
   "locationCombobox_locationAriaLabel": "location",
   "locationCombobox_noMatchText": "No jobs in {location}",
   "locationCombobox_placeholderText": "Location…",
   "locationCombobox_searchingText": "Searching…",
   "locationPage_jobsHeading": "Jobs in {place}",
+  "locationPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} job in {place}",
+        "countPlural=*": "{countLabel} jobs in {place}"
+      }
+    }
+  ],
   "locationPage_notFoundText": "Location not found.",
   "searchRadius_exactScope": [
     {
@@ -1616,6 +1662,22 @@
   "searchRadius_withinOption": "Within {distance}",
   "searchRadius_menuLabel": "Distance",
   "locationSkillPage_jobsHeading": "{skill} jobs in {place}",
+  "locationSkillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} {skill} job in {place}",
+        "countPlural=*": "{countLabel} {skill} jobs in {place}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Change logo",
   "logoUpload_uploadErrorText": "Upload failed — try a smaller image.",
   "logoUpload_uploadingLabel": "Uploading…",
@@ -2279,6 +2341,21 @@
   "siteHeader_signUpLabel": "Sign up",
   "siteHeader_skipToContentLabel": "Skip to main content",
   "skillPage_jobsHeading": "{skill} jobs",
+  "skillPage_jobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} {skill} job",
+        "countPlural=*": "{countLabel} {skill} jobs"
+      }
+    }
+  ],
   "skillPage_notFoundText": "Skill not found.",
   "skillsSection_addLabel": "Add skill",
   "skillsSection_addSkillLabel": "Skill",

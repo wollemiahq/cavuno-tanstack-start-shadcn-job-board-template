@@ -12,6 +12,7 @@ import { JobSearchPage } from '@/components/board/job-search-page';
 import type { ResultsRange } from '@/components/board/jobs-results-bar';
 import { useRootSession } from '@/components/root-session';
 import type { JobsSearch } from '@/lib/jobs-search';
+import type { CountedHeading } from '@/lib/listing-description';
 import type { UrlSearchInput } from '@/lib/pagination';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
@@ -27,6 +28,7 @@ type LooseNavigate = (opts: {
 
 export function ProgrammaticJobsView({
   heading,
+  countedHeading,
   resultsScope,
   count,
   gatedCount,
@@ -39,6 +41,8 @@ export function ProgrammaticJobsView({
   onSaveJob,
 }: {
   heading: string;
+  /** `heading` with the result count, inflected for it. */
+  countedHeading: CountedHeading;
   /** Replaces the results range line, such as the location search distance. */
   resultsScope?: (range: ResultsRange | null) => React.ReactNode;
   count?: number;
@@ -74,6 +78,7 @@ export function ProgrammaticJobsView({
       <JobSearchPage
         ads={board.ads}
         heading={heading}
+        countedHeading={countedHeading}
         resultsScope={resultsScope}
         count={count}
         gatedCount={gatedCount}

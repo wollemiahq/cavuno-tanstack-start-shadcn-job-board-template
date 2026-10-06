@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../paraglide/messages';
-import { jobsIndexPageTitle } from './listing-description';
+import {
+  jobsIndexPageTitle,
+  listingMetaDescription,
+  listingPageTitle,
+} from './listing-description';
 import {
   headTitle,
   jobTitleAtCompany,
@@ -83,4 +87,32 @@ describe('route-owned document titles', () => {
     expect(heading).toHaveBeenCalledWith({}, { locale: 'en' });
     expect(count).not.toHaveBeenCalled();
   });
+
+  it.each([1, 1225])(
+    'titles and describes a listing with its counted heading for %s',
+    (count) => {
+      const countedHeading = vi.fn(
+        ({ count: raw, countLabel }: { count: number; countLabel: string }) =>
+          `counted:${raw}:${countLabel}`,
+      );
+      const label = new Intl.NumberFormat('en').format(count);
+      expect(
+        listingPageTitle({
+          heading: 'Fixture heading',
+          countedHeading,
+          boardName: 'Fixture board',
+          language: 'en',
+          count,
+        }),
+      ).toContain(`counted:${count}:${label}`);
+      expect(
+        listingMetaDescription({
+          heading: 'Fixture heading',
+          countedHeading,
+          boardName: 'Fixture board',
+          count,
+        }),
+      ).toContain(`counted:${count}:`);
+    },
+  );
 });

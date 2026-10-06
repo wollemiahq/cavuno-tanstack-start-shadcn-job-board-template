@@ -72,6 +72,24 @@ describe('JobsResultsBar data', () => {
     ).toBeVisible();
     expect(screen.getByText('range:1:12;total:12')).toBeVisible();
   });
+  it('prefers the counted heading, given the raw count for plural selection', () => {
+    const countedHeading = vi.fn(
+      ({ count, countLabel }: { count: number; countLabel: string }) =>
+        `counted:${count}:${countLabel}`,
+    );
+    render(
+      <JobsResultsBar
+        visibleCount={1}
+        page={1}
+        pageSize={20}
+        heading="Fixture discipline"
+        countedHeading={countedHeading}
+        language="en"
+      />,
+    );
+    expect(screen.getByText('counted:1:1')).toBeVisible();
+    expect(screen.queryByText(/^context:/)).toBeNull();
+  });
   it('includes withheld jobs in the total while bounding the range by visible jobs', () => {
     render(
       <JobsResultsBar

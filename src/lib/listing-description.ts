@@ -12,20 +12,38 @@ function finiteCount(count: number | undefined): number | undefined {
 }
 
 /**
+ * A listing heading with its count, inflected for it: "1 Ansible job in Fort
+ * Meade", "93 Ansible jobs in Fort Meade". `countLabel` is `count` formatted
+ * for the locale.
+ */
+export type CountedHeading = (counted: {
+  count: number;
+  countLabel: string;
+}) => string;
+
+/**
  * Document title for a jobs listing page. Application owns counters, the
  * heading, separator, and board name — same pipe format as `pageTitle`.
  */
 export function listingPageTitle(options: {
   heading: string;
+  /** The heading with the count; without it the count is prefixed as is. */
+  countedHeading?: CountedHeading;
   boardName: string;
   language: string;
   count?: number;
 }): string {
   const count = finiteCount(options.count);
-  const page =
+  const countLabel =
     count !== undefined
-      ? `${new Intl.NumberFormat(options.language).format(count)} ${options.heading}`
-      : options.heading;
+      ? new Intl.NumberFormat(options.language).format(count)
+      : undefined;
+  const page =
+    count === undefined || countLabel === undefined
+      ? options.heading
+      : options.countedHeading
+        ? options.countedHeading({ count, countLabel })
+        : `${countLabel} ${options.heading}`;
   return pageTitle([page], options.boardName);
 }
 
@@ -55,10 +73,18 @@ export function jobsIndexPageTitle(options: {
 /** Meta description for a jobs listing page. */
 export function listingMetaDescription(options: {
   heading: string;
+  /** The heading with the count, so one result reads in the singular. */
+  countedHeading?: CountedHeading;
   boardName: string;
   count?: number;
 }): string {
   const count = finiteCount(options.count);
+  if (count !== undefined && options.countedHeading) {
+    return m.listing_metaDescription({
+      heading: options.countedHeading({ count, countLabel: String(count) }),
+      boardName: options.boardName,
+    });
+  }
   if (count !== undefined) {
     return m.listing_metaDescriptionWithCount({
       count,

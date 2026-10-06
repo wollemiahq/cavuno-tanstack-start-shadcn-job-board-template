@@ -46,6 +46,12 @@ function LocationPage() {
   return (
     <ProgrammaticJobsView
       heading={m.locationPage_jobsHeading({ place: place.displayName })}
+      countedHeading={(counted) =>
+        m.locationPage_jobsCountHeading({
+          ...counted,
+          place: place.displayName,
+        })
+      }
       resultsScope={
         searchRadius
           ? (range) => (

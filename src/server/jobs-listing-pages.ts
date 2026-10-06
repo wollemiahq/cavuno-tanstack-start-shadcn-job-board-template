@@ -62,6 +62,7 @@ import {
   jobsIndexPageTitle,
   listingMetaDescription,
   listingPageTitle,
+  type CountedHeading,
 } from '@/lib/listing-description';
 import type {
   EmploymentType,
@@ -296,6 +297,8 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
       const relatedSearches =
         'relatedSearches' in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy().headingJobs;
+      const countedHeading: CountedHeading = (counted) =>
+        m.jobSearch_resultsCount(counted);
       const head = listingHead({
         title: jobsIndexPageTitle({
           boardName: seo.boardName,
@@ -306,6 +309,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         path: localizePath('/jobs'),
         description: listingMetaDescription({
           heading: heading,
+          countedHeading,
           boardName: seo.boardName,
           count: catalogJobCount(page.count, page.gatedCount),
         }),
@@ -372,9 +376,15 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       const heading = m.categoryPage_jobsHeading({
         category: category.displayName,
       });
+      const countedHeading: CountedHeading = (counted) =>
+        m.categoryPage_jobsCountHeading({
+          ...counted,
+          category: category.displayName,
+        });
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
+          countedHeading,
           boardName: seo.boardName,
           language: seo.language,
           count: catalogJobCount(list.count, list.gatedCount),
@@ -383,6 +393,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         path: localizePath(jobsCategoryPath(data.categorySlug)),
         description: listingMetaDescription({
           heading: heading,
+          countedHeading,
           boardName: seo.boardName,
           count: catalogJobCount(list.count, list.gatedCount),
         }),
@@ -441,9 +452,12 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
       const heading = m.skillPage_jobsHeading({ skill: skill.displayName });
+      const countedHeading: CountedHeading = (counted) =>
+        m.skillPage_jobsCountHeading({ ...counted, skill: skill.displayName });
       const head = listingHead({
         title: listingPageTitle({
           heading: heading,
+          countedHeading,
           boardName: seo.boardName,
           language: seo.language,
           count: catalogJobCount(list.count, list.gatedCount),
@@ -452,6 +466,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
         path: localizePath(jobsSkillPath(data.skillSlug)),
         description: listingMetaDescription({
           heading: heading,
+          countedHeading,
           boardName: seo.boardName,
           count: catalogJobCount(list.count, list.gatedCount),
         }),
@@ -591,6 +606,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const searchRadius = placeSearchRadius(place, data.within);
       const heading = m.locationPage_jobsHeading({ place: place.displayName });
+      const countedHeading: CountedHeading = (counted) =>
+        m.locationPage_jobsCountHeading({
+          ...counted,
+          place: place.displayName,
+        });
       // Hosted parity: Home > Jobs > country > … > current place (terminal).
       const crumbs = breadcrumbsCopy();
       const breadcrumbTrail = [
@@ -602,6 +622,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         listingHead({
           title: listingPageTitle({
             heading: heading,
+            countedHeading,
             boardName: seo.boardName,
             language: seo.language,
             count: catalogJobCount(list.count, list.gatedCount),
@@ -610,6 +631,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           path: localizePath(`/jobs/locations/${data.locationSlug}`),
           description: listingMetaDescription({
             heading: heading,
+            countedHeading,
             boardName: seo.boardName,
             count: catalogJobCount(list.count, list.gatedCount),
           }),
@@ -715,6 +737,12 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         category: category.displayName,
         place: place.displayName,
       });
+      const countedHeading: CountedHeading = (counted) =>
+        m.locationCategoryPage_jobsCountHeading({
+          ...counted,
+          category: category.displayName,
+          place: place.displayName,
+        });
       // Hosted parity: Home > Jobs > country > … > place (linked) > category,
       // with facet-relaxation links — ancestors keep the category scope (same
       // jobs, wider area) while the current place links its bare listing.
@@ -733,6 +761,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         listingHead({
           title: listingPageTitle({
             heading: heading,
+            countedHeading,
             boardName: seo.boardName,
             language: seo.language,
             count: catalogJobCount(list.count, list.gatedCount),
@@ -743,6 +772,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           ),
           description: listingMetaDescription({
             heading: heading,
+            countedHeading,
             boardName: seo.boardName,
             count: catalogJobCount(list.count, list.gatedCount),
           }),
@@ -838,6 +868,12 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         skill: skill.displayName,
         place: place.displayName,
       });
+      const countedHeading: CountedHeading = (counted) =>
+        m.locationSkillPage_jobsCountHeading({
+          ...counted,
+          skill: skill.displayName,
+          place: place.displayName,
+        });
       // Hosted parity: Home > Jobs > country > … > place (linked) > skill,
       // with the same facet-relaxation trail — ancestors keep the skill
       // scope, the current place links its bare listing.
@@ -856,6 +892,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         listingHead({
           title: listingPageTitle({
             heading: heading,
+            countedHeading,
             boardName: seo.boardName,
             language: seo.language,
             count: catalogJobCount(list.count, list.gatedCount),
@@ -866,6 +903,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           ),
           description: listingMetaDescription({
             heading: heading,
+            countedHeading,
             boardName: seo.boardName,
             count: catalogJobCount(list.count, list.gatedCount),
           }),

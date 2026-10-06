@@ -52,6 +52,13 @@ function LocationSkillPage() {
         skill: skill.displayName,
         place: place.displayName,
       })}
+      countedHeading={(counted) =>
+        m.locationSkillPage_jobsCountHeading({
+          ...counted,
+          skill: skill.displayName,
+          place: place.displayName,
+        })
+      }
       resultsScope={
         searchRadius
           ? (range) => (

@@ -6,6 +6,7 @@ import { getLocale } from '../../paraglide/runtime';
 import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
+import type { CountedHeading } from '@/lib/listing-description';
 import { resultsShowingLine } from '@/lib/results-showing';
 import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ export function JobsResultsBar({
   page,
   pageSize,
   heading,
+  countedHeading,
   language,
   scope,
   className,
@@ -36,6 +38,8 @@ export function JobsResultsBar({
   pageSize?: number;
   /** Route context, such as “Engineering jobs” or “Jobs in Sydney”. */
   heading?: string;
+  /** `heading` with the count, inflected for it (“1 Ansible job”). */
+  countedHeading?: CountedHeading;
   language: string;
   /**
    * A results line that says what the results cover (such as the location
@@ -60,15 +64,20 @@ export function JobsResultsBar({
       : null;
   const totalLabel =
     totalCount !== undefined
-      ? heading
-        ? m.jobSearch_contextualResultsHeading({
-            count: totalCount.toLocaleString(locale),
-            heading,
+      ? countedHeading
+        ? countedHeading({
+            count: totalCount,
+            countLabel: totalCount.toLocaleString(locale),
           })
-        : entityCount(totalCount, locale, m.count_jobs, {
-            singular: chromeEntity().jobSingular,
-            plural: chromeEntity().jobPlural,
-          })
+        : heading
+          ? m.jobSearch_contextualResultsHeading({
+              count: totalCount.toLocaleString(locale),
+              heading,
+            })
+          : entityCount(totalCount, locale, m.count_jobs, {
+              singular: chromeEntity().jobSingular,
+              plural: chromeEntity().jobPlural,
+            })
       : (heading ?? jobSearchCopy().headingJobs);
   const range: ResultsRange | null =
     totalCount === undefined

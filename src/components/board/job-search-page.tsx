@@ -50,6 +50,7 @@ import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import type { JobsFilters } from '@/lib/jobs-search';
+import type { CountedHeading } from '@/lib/listing-description';
 import { localizePath } from '@/lib/localized-path';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import type { RelatedSearch } from '@cavuno/board';
@@ -111,6 +112,7 @@ export function JobSearchPage({
   jobForm,
   language,
   heading,
+  countedHeading,
   resultsScope,
   relatedSearches,
   onFiltersChange,
@@ -138,6 +140,8 @@ export function JobSearchPage({
   jobForm?: JobFormSource | null;
   language: string;
   heading?: string;
+  /** See `JobsResultsBar` `countedHeading`. */
+  countedHeading?: CountedHeading;
   /** Replaces the results range line; see `JobsResultsBar` `scope`. */
   resultsScope?: (range: ResultsRange | null) => React.ReactNode;
   relatedSearches?: RelatedSearch[];
@@ -181,6 +185,7 @@ export function JobSearchPage({
       page={page}
       pageSize={pageSize}
       heading={heading}
+      countedHeading={countedHeading}
       language={language}
       scope={resultsScope}
     />
