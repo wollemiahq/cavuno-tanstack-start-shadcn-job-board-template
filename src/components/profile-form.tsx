@@ -532,6 +532,8 @@ export function ProfileForm({
   }
 
   const showsCommuteRadius = takesCommuteRadius(homePlace);
+  // A home place (saved or picked) decides the country on the server.
+  const showsCountry = homePlace === null;
   const commuteUnit = distanceUnitForCountry(homePlace?.countryCode);
   const commuteBounds = commuteRadiusBounds(commuteUnit);
   const unitLabel = (unit: CommuteDraft['unit']) =>
@@ -613,13 +615,14 @@ export function ProfileForm({
       // A merge-patch: a built-in the layout hides is not sent, so the value
       // already stored on the profile is kept.
       const data: Parameters<typeof updateProfile>[0]['data'] = {
-        // This is deliberately independent of the free-text location:
-        // no locale parsing or backfill can turn an ambiguous historic
-        // location into an eligibility decision.
-        countryCode: form.countryCode,
         profileVisibility: form.profileVisibility,
         openToRelocate: form.openToRelocate,
       };
+      // With a home place the API sets the country from it, so the hidden
+      // field sends nothing. Without one the candidate picks it: no locale
+      // parsing can turn an ambiguous free-text location into an
+      // eligibility decision.
+      if (showsCountry) data.countryCode = form.countryCode;
       if (shows('name')) data.displayName = form.displayName.trim();
       data.handle = handle;
       if (shows('headline')) data.headline = form.headline.trim();
@@ -701,30 +704,35 @@ export function ProfileForm({
 
   // Neither the country nor the profile visibility is a layout field: they
   // ride with the location and the job search status, and keep a place of
-  // their own when those are hidden.
-  const countryField = (
-    <Field className="gap-1.5">
-      <FieldLabel htmlFor="profile-country">
-        {m.profileForm_countryLabel()}
-      </FieldLabel>
-      <NativeSelect
-        id="profile-country"
-        className="w-full"
-        value={form.countryCode ?? ''}
-        onChange={(event) => set('countryCode', event.target.value || null)}
-      >
-        <NativeSelectOption value="">
-          {m.profileForm_countryNotSpecified()}
-        </NativeSelectOption>
-        {countries.map((country) => (
-          <NativeSelectOption key={country.code} value={country.code}>
-            {country.name}
+  // their own when those are hidden. The country shows only without a home
+  // place, half width under the relocation switch.
+  const countryField = showsCountry ? (
+    <div className="grid gap-4 sm:col-span-2 sm:grid-cols-2">
+      <Field className="gap-1.5">
+        <FieldLabel htmlFor="profile-country">
+          {m.profileForm_countryLabel()}
+        </FieldLabel>
+        <NativeSelect
+          id="profile-country"
+          className="w-full"
+          value={form.countryCode ?? ''}
+          onChange={(event) => set('countryCode', event.target.value || null)}
+        >
+          <NativeSelectOption value="">
+            {m.profileForm_countryNotSpecified()}
           </NativeSelectOption>
-        ))}
-      </NativeSelect>
-      <FieldDescription>{m.profileForm_countryDescription()}</FieldDescription>
-    </Field>
-  );
+          {countries.map((country) => (
+            <NativeSelectOption key={country.code} value={country.code}>
+              {country.name}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+        <FieldDescription>
+          {m.profileForm_countryDescription()}
+        </FieldDescription>
+      </Field>
+    </div>
+  ) : null;
   const visibilityField = (
     <Field className="gap-1.5">
       <FieldLabel htmlFor="profile-visibility">
@@ -755,8 +763,7 @@ export function ProfileForm({
   // The commute distance sits beside the location (stacked on phones), with
   // its description and error under the pair; the relocation switch follows.
   // Without a location field (the layout hides it) the commute field stands
-  // alone. The country follows them: it is an eligibility answer, not the
-  // home place.
+  // alone. The country follows them, only when there is no home place.
   const homePlaceName = homePlace?.city || homePlace?.name || '';
   const commuteControl = showsCommuteRadius ? (
     <Field
@@ -811,7 +818,7 @@ export function ProfileForm({
     </>
   ) : null;
   const relocationField = (
-    <Field orientation="horizontal">
+    <Field orientation="horizontal" className="sm:col-span-2">
       <FieldContent>
         <FieldLabel htmlFor="profile-open-to-relocate">
           {m.profileForm_openToRelocatingLabel()}
@@ -928,7 +935,7 @@ export function ProfileForm({
         );
       case 'headline':
         return (
-          <Field className="gap-1.5">
+          <Field className="gap-1.5 sm:col-span-2">
             <FieldLabel htmlFor="profile-headline">
               {m.profileForm_headlineLabel()}
             </FieldLabel>
@@ -1166,7 +1173,7 @@ export function ProfileForm({
         {shows('location') ? null : (
           <>
             {locationSettings}
-            <div className="grid gap-4 sm:grid-cols-2">{countryField}</div>
+            {countryField}
           </>
         )}
         {shows('jobSearchStatus') ? null : (

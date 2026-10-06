@@ -728,7 +728,7 @@ describe('ProfileForm — home place and commute distance', () => {
     );
   });
 
-  it('orders location, commute, relocation, then country', async () => {
+  it('orders name, handle, headline, location, commute, then relocation', async () => {
     await renderForm({
       location: houston.name,
       locationPlace: houston,
@@ -736,10 +736,13 @@ describe('ProfileForm — home place and commute distance', () => {
     });
 
     const order = [
+      'profile-display-name',
+      'profile-handle',
+      'profile-headline',
       'profile-location',
       'profile-commute-radius',
       'profile-open-to-relocate',
-      'profile-country',
+      'profile-visibility',
     ].map((id) => document.getElementById(id));
     for (const [index, element] of order.slice(1).entries()) {
       expect(
@@ -747,6 +750,39 @@ describe('ProfileForm — home place and commute distance', () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     }
+  });
+
+  it('hides the country with a saved home place and does not send it', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      countryCode: 'US',
+    });
+    expect(document.getElementById('profile-country')).toBeNull();
+
+    submit();
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).not.toHaveProperty('countryCode');
+  });
+
+  it('hides the country once a place is picked, and shows it after relocation without one', async () => {
+    await renderForm({ countryCode: 'FR' });
+    const relocate = document.getElementById('profile-open-to-relocate');
+    const country = document.getElementById('profile-country');
+    expect(country).not.toBeNull();
+    expect(
+      relocate!.compareDocumentPosition(country!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    pick(/Lyon/);
+    expect(document.getElementById('profile-country')).toBeNull();
+    submit();
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    expect(sent()).toMatchObject({ locationId: 'loc-lyon' });
+    expect(sent()).not.toHaveProperty('countryCode');
   });
 
   it('saves the relocation switch, with no home place', async () => {
