@@ -287,6 +287,19 @@ function RootChrome({
   });
   const navigate = useNavigate();
   const router = useRouter();
+  // What an accept switches on, for the recorded banner version: the same
+  // conditions BoardAnalyticsBoot, AnalyticsScripts and BoardAdsBoot load on.
+  const consentTrackers = useMemo(
+    () => ({
+      cavunoAnalytics: publishableKey.startsWith('pk_'),
+      ga4: Boolean(board.analytics.ga4MeasurementId),
+      gtm: Boolean(board.analytics.gtmId),
+      metaPixel: Boolean(board.analytics.metaPixelId),
+      linkedInInsight: Boolean(board.analytics.linkedInPartnerId),
+      adsense: board.ads.enabled && Boolean(board.ads.clientId),
+    }),
+    [publishableKey, board.analytics, board.ads],
+  );
   const conversionAnalytics = useMemo(
     () => resolveBoardConversionAnalytics(board.analytics),
     [board.analytics],
@@ -492,7 +505,11 @@ function RootChrome({
   );
 
   return (
-    <CookieConsentProvider required={board.analytics.cookieConsentRequired}>
+    <CookieConsentProvider
+      required={board.analytics.cookieConsentRequired}
+      publishableKey={publishableKey}
+      trackers={consentTrackers}
+    >
       <BoardAdsProvider ads={board.ads}>
         <BoardAdPreviewProvider
           enabled={Boolean(

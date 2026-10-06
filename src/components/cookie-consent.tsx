@@ -11,10 +11,12 @@ import {
   type ReactNode,
 } from 'react';
 
+import { analytics, type RecordConsentInput } from '@cavuno/board/analytics';
 import { Link } from '@tanstack/react-router';
 import { CookieIcon } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
+import { isWorkingPreviewHostname } from './analytics-preview';
 
 import { FloatingStackItem } from '@/components/floating-stack';
 import { Button } from '@/components/ui/button';
@@ -32,8 +34,12 @@ import {
 } from '@/lib/analytics-withdrawal';
 import {
   clearCookieConsent,
-  parseCookieConsent,
+  cookieBannerVersion,
+  readCookieConsent,
   serializeCookieConsent,
+  serializeReopenedCookieConsent,
+  type CookieBannerCopy,
+  type CookieBannerTrackers,
   type CookieConsentChoice,
 } from '@/lib/cookie-consent';
 import { chromeCookieConsent } from '@/lib/site-chrome';
@@ -97,8 +103,57 @@ export function useCookieConsent(): CookieConsentState {
   return useContext(CookieConsentContext);
 }
 
-function persistChoice(choice: CookieConsentChoice) {
-  document.cookie = serializeCookieConsent(choice);
+/** The banner text as shown: operator wording, else the message catalog. */
+function cookieBannerCopy(): CookieBannerCopy {
+  // Operator wording baked at migration wins over the catalog; the gate itself
+  // (`analytics.cookieConsentRequired`) still comes from the board API.
+  const copy = chromeCookieConsent();
+  return {
+    title: copy.title ?? m.cookieConsent_title(),
+    description: copy.description ?? m.cookieConsent_description(),
+    acceptLabel: copy.acceptLabel ?? m.cookieConsent_acceptLabel(),
+    denyLabel: copy.denyLabel ?? m.cookieConsent_denyLabel(),
+  };
+}
+
+/** UUID v4 from raw random bytes (RFC 9562 version and variant bits). */
+function uuidFromRandomBytes(): string {
+  const hex = Array.from(
+    crypto.getRandomValues(new Uint8Array(16)),
+    (byte, i) =>
+      (i === 6 ? (byte & 0x0f) | 0x40 : i === 8 ? (byte & 0x3f) | 0x80 : byte)
+        .toString(16)
+        .padStart(2, '0'),
+  ).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+/** `crypto.randomUUID` is missing outside secure contexts (plain-http dev). */
+function newConsentId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return uuidFromRandomBytes();
+  }
+}
+
+type RecordConsent = (input: RecordConsentInput) => void;
+
+function recordBoardConsent(input: RecordConsentInput) {
+  analytics.recordConsent(input);
+}
+
+const NO_TRACKERS: CookieBannerTrackers = {
+  cavunoAnalytics: false,
+  ga4: false,
+  gtm: false,
+  metaPixel: false,
+  linkedInInsight: false,
+  adsense: false,
+};
+
+function persistChoice(choice: CookieConsentChoice, consentId: string) {
+  document.cookie = serializeCookieConsent(choice, consentId);
   try {
     localStorage.setItem(STORAGE_KEY, choice);
   } catch {
@@ -106,8 +161,14 @@ function persistChoice(choice: CookieConsentChoice) {
   }
 }
 
-function clearPersistedChoice() {
-  document.cookie = clearCookieConsent();
+/** Reopen: no choice in force; the id and last choice stay in the cookie. */
+function clearPersistedChoice(
+  lastChoice: CookieConsentChoice | null,
+  consentId: string | null,
+) {
+  document.cookie = lastChoice
+    ? serializeReopenedCookieConsent(lastChoice, consentId)
+    : clearCookieConsent();
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch {
@@ -124,22 +185,47 @@ function clearPersistedChoice() {
  * post-hydration pop-in is accepted and standard for consent UIs. The
  * public document can then be edge-cached without varying on the cookie.
  *
- * On mount: `document.cookie` via `parseCookieConsent`, then the
+ * On mount: `document.cookie` via `readCookieConsent`, then the
  * localStorage mirror (migrated to the cookie), else `null` (undecided).
+ *
+ * Proof of consent: each Accept / Decline made in this tab is recorded with
+ * `analytics.recordConsent` under a random consent id kept in the consent
+ * cookie (created on the first choice, kept across reopens), with the
+ * banner version (copy + trackers) the visitor saw. A Decline whose
+ * previous choice was Accept records `withdrawn`, otherwise `denied`.
+ * Nothing is recorded on page load, for choices made in another tab, on
+ * working-preview hosts, or without a `pk_` key. The choice is saved first;
+ * recording can never block it.
  */
 export function CookieConsentProvider({
   required,
+  publishableKey = '',
+  trackers = NO_TRACKERS,
   withdrawAnalytics = withdrawLoadedAnalytics,
+  recordConsent = recordBoardConsent,
+  hostname,
   children,
 }: {
   required: boolean;
+  /** Board publishable key (`pk_…`), the one Cavuno Analytics uses. */
+  publishableKey?: string;
+  /** Trackers an accept turns on; part of the recorded banner version. */
+  trackers?: CookieBannerTrackers;
   /** Test seam; runtime clears analytics cookies and reloads. */
   withdrawAnalytics?: () => void;
+  /** Test seam; runtime is `analytics.recordConsent`. */
+  recordConsent?: RecordConsent;
+  /** Test seam; runtime defaults to the current document host. */
+  hostname?: string;
   children: ReactNode;
 }) {
   const [choice, setChoice] = useState<CookieConsentChoice | null | undefined>(
     undefined,
   );
+  // Fallbacks for when the cookie cannot be written (blocked cookies): the
+  // cookie stays the source of truth whenever it holds a value.
+  const consentIdRef = useRef<string | null>(null);
+  const lastChoiceRef = useRef<CookieConsentChoice | null>(null);
   // Whether any tracker (Cavuno Analytics or a third-party tag) has run in
   // this document. Loaded trackers cannot be unloaded, so a decline after
   // one ran withdraws: clear their cookies and reload without them.
@@ -155,15 +241,18 @@ export function CookieConsentProvider({
   }, [withdrawAnalytics]);
 
   useEffect(() => {
-    const fromCookie = parseCookieConsent(document.cookie);
+    const fromCookie = readCookieConsent(document.cookie);
     if (fromCookie !== null) {
-      setChoice(fromCookie);
+      consentIdRef.current = fromCookie.consentId;
+      lastChoiceRef.current = fromCookie.lastChoice;
+      setChoice(fromCookie.choice);
       return;
     }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === 'accepted' || stored === 'denied') {
         document.cookie = serializeCookieConsent(stored);
+        lastChoiceRef.current = stored;
         setChoice(stored);
         return;
       }
@@ -205,6 +294,40 @@ export function CookieConsentProvider({
     if (required && choice === 'denied') clearAnalyticsCookies();
   }, [required, choice]);
 
+  // Save a choice made in this tab; returns the previous choice and the id.
+  const saveChoice = useCallback((next: CookieConsentChoice) => {
+    const stored = readCookieConsent(document.cookie);
+    const previous = stored?.lastChoice ?? lastChoiceRef.current;
+    const consentId =
+      stored?.consentId ?? consentIdRef.current ?? newConsentId();
+    consentIdRef.current = consentId;
+    lastChoiceRef.current = next;
+    persistChoice(next, consentId);
+    setChoice(next);
+    return { previous, consentId };
+  }, []);
+
+  // Proof of consent, after the choice is saved. Never throws.
+  const record = useCallback(
+    (consentChoice: RecordConsentInput['choice'], consentId: string) => {
+      if (!required || !publishableKey.startsWith('pk_')) return;
+      if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) {
+        return;
+      }
+      try {
+        recordConsent({
+          publishableKey,
+          consentId,
+          choice: consentChoice,
+          bannerVersion: cookieBannerVersion(cookieBannerCopy(), trackers),
+        });
+      } catch (error) {
+        console.warn('Could not record the cookie-consent choice', error);
+      }
+    },
+    [required, publishableKey, hostname, recordConsent, trackers],
+  );
+
   const value = useMemo<CookieConsentState>(
     () => ({
       required,
@@ -213,21 +336,34 @@ export function CookieConsentProvider({
       bannerOpen: required && choice === null,
       accept: () => {
         window.__cavunoAnalyticsOff = false;
-        persistChoice('accepted');
-        setChoice('accepted');
+        const { consentId } = saveChoice('accepted');
+        record('accepted', consentId);
       },
       deny: () => {
-        persistChoice('denied');
-        setChoice('denied');
+        const { previous, consentId } = saveChoice('denied');
+        // Issued before the withdrawal reload; the SDK sends it with
+        // `keepalive`, so the request outlives this document.
+        record(previous === 'accepted' ? 'withdrawn' : 'denied', consentId);
         withdrawIfLoaded();
       },
       reopenBanner: () => {
-        clearPersistedChoice();
+        const stored = readCookieConsent(document.cookie);
+        clearPersistedChoice(
+          stored?.lastChoice ?? lastChoiceRef.current,
+          stored?.consentId ?? consentIdRef.current,
+        );
         setChoice(null);
       },
       markAnalyticsLoaded,
     }),
-    [required, choice, withdrawIfLoaded, markAnalyticsLoaded],
+    [
+      required,
+      choice,
+      saveChoice,
+      record,
+      withdrawIfLoaded,
+      markAnalyticsLoaded,
+    ],
   );
 
   return (
@@ -245,9 +381,7 @@ export function CookieConsentProvider({
  */
 export function CookieConsentBanner() {
   const { bannerOpen, accept, deny } = useCookieConsent();
-  // Operator wording baked at migration wins over the catalog; the gate itself
-  // (`analytics.cookieConsentRequired`) still comes from the board API.
-  const copy = chromeCookieConsent();
+  const copy = cookieBannerCopy();
 
   if (!bannerOpen) return null;
 
@@ -265,11 +399,11 @@ export function CookieConsentBanner() {
                   className="text-primary size-4"
                   aria-hidden="true"
                 />
-                {copy.title ?? m.cookieConsent_title()}
+                {copy.title}
               </h2>
             </CardTitle>
             <CardDescription>
-              {copy.description ?? m.cookieConsent_description()}{' '}
+              {copy.description}{' '}
               <Link
                 to="/cookie-policy"
                 className="text-foreground underline underline-offset-4"
@@ -281,7 +415,7 @@ export function CookieConsentBanner() {
           <CardContent>
             <div className="flex gap-2">
               <Button type="button" className="flex-1" onClick={accept}>
-                {copy.acceptLabel ?? m.cookieConsent_acceptLabel()}
+                {copy.acceptLabel}
               </Button>
               <Button
                 type="button"
@@ -289,7 +423,7 @@ export function CookieConsentBanner() {
                 className="flex-1"
                 onClick={deny}
               >
-                {copy.denyLabel ?? m.cookieConsent_denyLabel()}
+                {copy.denyLabel}
               </Button>
             </div>
           </CardContent>
