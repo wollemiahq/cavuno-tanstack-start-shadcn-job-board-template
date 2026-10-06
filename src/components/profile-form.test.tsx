@@ -500,6 +500,7 @@ describe('ProfileForm — home place and commute distance', () => {
     name: 'Texas, United States',
     countryCode: 'US',
     region: 'Texas',
+    city: null,
     placeType: 'region',
   } as const;
 
