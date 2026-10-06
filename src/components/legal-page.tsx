@@ -1,6 +1,5 @@
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
-import { resolveLegalContent } from '@/content/legal';
 import type { LegalPageViewModel } from '@/lib/legal';
 
 /**
@@ -8,13 +7,11 @@ import type { LegalPageViewModel } from '@/lib/legal';
  * the prose (`src/content/legal/`). Head meta + JSON-LD are computed in
  * `getLegalPageView` and emitted via route `head()` scripts — not here.
  *
- * Bodies are real React elements from the content module — not HTML strings —
- * so this view never uses `dangerouslySetInnerHTML` (a security simplification
- * vs. pre-sanitized API portable HTML).
+ * The body is `page.html`, which `getLegalPageView` resolved and sanitized
+ * on the server (`src/content/legal/render.ts`). Render no other string as
+ * HTML here.
  */
 export function LegalPageView({ page }: { page: LegalPageViewModel }) {
-  const { Body } = resolveLegalContent(page.type);
-
   return (
     // Keep the shared page geometry, but constrain
     // the content column (title + prose) to a readable measure — matching the
@@ -46,9 +43,7 @@ export function LegalPageView({ page }: { page: LegalPageViewModel }) {
               ) : null}
             </section>
           ) : null}
-          <div dir="auto">
-            <Body />
-          </div>
+          <div dir="auto" dangerouslySetInnerHTML={{ __html: page.html }} />
         </Prose>
       </div>
     </PageLayout>

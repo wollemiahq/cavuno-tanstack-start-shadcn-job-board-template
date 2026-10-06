@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { impressumAvailable } from '../content/legal/impressum-availability';
 import { readBoardContext } from '../lib/board-context-cache';
 import { createWellKnownRouteHandler } from './-well-known-handler';
 
@@ -23,7 +24,7 @@ import type { TanStackRouteNode } from '@cavuno/board/well-known';
 // route-node contract; the assertion bridges their independently named types.
 const wellKnownHandler = createWellKnownRouteHandler(
   async () => (await import('../routeTree.gen')).routeTree as TanStackRouteNode,
-  async () => (await readBoardContext()).features.impressum,
+  async () => impressumAvailable((await readBoardContext()).features),
 );
 
 export const Route = createFileRoute('/.well-known/cavuno.json')({

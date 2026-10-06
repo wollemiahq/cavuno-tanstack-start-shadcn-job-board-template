@@ -2,11 +2,9 @@ import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
-import {
-  isLegalPlaceholder,
-  resolveLegalContent,
-  resolveLegalEntity,
-} from '../content/legal';
+import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
+import { impressumAvailable } from '../content/legal/impressum-availability';
+import { renderLegalHtml, renderLegalText } from '../content/legal/render';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { LEGAL_PAGES, type LegalPageViewModel } from '../lib/legal';
@@ -54,16 +52,23 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
       const meta = LEGAL_PAGES[data.type];
-      const content = resolveLegalContent(data.type);
       const boardContext = await readBoardContext();
 
       // The Impressum gate. Hosted hides the footer link AND does not serve
       // the page; the starter only hid the link (Footer.tsx), so a disabled
       // Impressum still rendered — and stayed indexable — on a direct hit.
       // Prose moved to `src/content/legal/`, so no API 404 gates it any more.
-      if (data.type === 'impressum' && !boardContext.features.impressum) {
+      // The starter ships no impressum text, so an enabled one also needs the
+      // operator's own content.
+      if (
+        data.type === 'impressum' &&
+        !impressumAvailable(boardContext.features)
+      ) {
         throw notFound();
       }
+      // A page with no content in any language is not published.
+      const content = resolveLegalContent(data.type);
+      if (content === null) throw notFound();
 
       const origin = await readPublicOrigin();
       const seo = {
@@ -72,23 +77,17 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
         origin,
       };
 
-      const description = content.description;
-      // Template scaffolding must not be indexed under the operator's brand.
-      // The pages ship saying "Do not ship it as a real policy", the footer
-      // links them from every page, and marketing.xml submits them — noindex
-      // is the one signal that outranks a sitemap entry.
+      const title = renderLegalText(content.title, seo.boardName);
+      const description = renderLegalText(content.description, seo.boardName);
       const head = {
         meta: [
           {
-            title: headTitle(seo.boardName, content.title),
+            title: headTitle(seo.boardName, title),
           },
           {
             name: 'description',
             content: description,
           },
-          ...(isLegalPlaceholder(data.type)
-            ? [{ name: 'robots', content: 'noindex' }]
-            : []),
         ],
         links: [{ rel: 'canonical', href: selfUrl(seo.origin, meta.path) }],
       };
@@ -100,7 +99,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
           {
             '@context': 'https://schema.org',
             '@type': meta.jsonLdType,
-            name: content.title,
+            name: title,
             description,
             url,
           },
@@ -113,7 +112,8 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
 
       const page: LegalPageViewModel = {
         type: data.type,
-        title: content.title,
+        title,
+        html: renderLegalHtml(content.html, seo.boardName),
         legalEntity:
           data.type === 'impressum'
             ? resolveLegalEntity(boardContext.contact?.legalName)

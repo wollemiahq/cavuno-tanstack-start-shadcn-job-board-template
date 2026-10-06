@@ -1,0 +1,35 @@
+{
+  "sourceLanguage": "en",
+  "locales": {
+    "en": {
+      "title": "About",
+      "description": "{{board_name}} is a job board that helps candidates find the right roles and helps employers reach the right people.",
+      "html": "<p>{{board_name}} is a job board dedicated to helping candidates find the right roles and helping employers reach the right people.</p>\n\n<h3><strong>For job seekers</strong></h3>\n<p>Browse open positions, filter by role and location, and set up alerts to get notified when new opportunities are posted.</p>\n\n<h3><strong>For employers</strong></h3>\n<p>Post open roles to reach candidates actively looking for their next opportunity. Every listing is displayed with company details so candidates can make informed decisions.</p>"
+    },
+    "de": {
+      "title": "Über uns",
+      "description": "{{board_name}} ist eine Jobbörse, die Bewerberinnen und Bewerbern hilft, die passenden Stellen zu finden, und Arbeitgeber dabei unterstützt, die richtigen Menschen zu erreichen.",
+      "html": "<p>{{board_name}} ist eine Jobbörse, die sich dem Ziel verschrieben hat, Bewerberinnen und Bewerbern bei der Suche nach den passenden Stellen zu helfen und Arbeitgeber dabei zu unterstützen, die richtigen Menschen zu erreichen.</p>\n\n<h3><strong>Für Jobsuchende</strong></h3>\n<p>Durchsuchen Sie offene Stellen, filtern Sie nach Position und Standort und richten Sie Jobbenachrichtigungen ein, um informiert zu werden, sobald neue Angebote veröffentlicht werden.</p>\n\n<h3><strong>Für Arbeitgeber</strong></h3>\n<p>Veröffentlichen Sie offene Stellen, um Kandidatinnen und Kandidaten zu erreichen, die aktiv nach ihrer nächsten beruflichen Chance suchen. Jede Anzeige wird mit Angaben zum Unternehmen angezeigt, damit Bewerbende fundierte Entscheidungen treffen können.</p>"
+    },
+    "fr": {
+      "title": "À propos",
+      "description": "{{board_name}} est un site d'offres d'emploi qui aide les candidats à trouver les postes qui leur correspondent et les employeurs à atteindre les bons profils.",
+      "html": "<p>{{board_name}} est un site d'offres d'emploi qui a pour mission d'aider les candidats à trouver les postes qui leur correspondent et les employeurs à atteindre les bons profils.</p>\n\n<h3><strong>Pour les candidats</strong></h3>\n<p>Parcourez les postes à pourvoir, filtrez-les par métier et par lieu, et créez des alertes pour être averti dès la publication de nouvelles opportunités.</p>\n\n<h3><strong>Pour les employeurs</strong></h3>\n<p>Publiez vos postes à pourvoir pour toucher des candidats activement à la recherche de leur prochaine opportunité. Chaque offre est présentée avec les informations relatives à l'entreprise afin que les candidats puissent prendre des décisions éclairées.</p>"
+    },
+    "es": {
+      "title": "Sobre nosotros",
+      "description": "{{board_name}} es una bolsa de empleo que ayuda a los candidatos a encontrar los puestos adecuados y a los empleadores a llegar a las personas adecuadas.",
+      "html": "<p>{{board_name}} es una bolsa de empleo dedicada a ayudar a los candidatos a encontrar los puestos adecuados y a los empleadores a llegar a las personas adecuadas.</p>\n\n<h3><strong>Para quienes buscan empleo</strong></h3>\n<p>Explore las ofertas disponibles, filtre por puesto y ubicación, y configure alertas para recibir avisos cuando se publiquen nuevas oportunidades.</p>\n\n<h3><strong>Para empleadores</strong></h3>\n<p>Publique sus vacantes para llegar a candidatos que buscan activamente su próxima oportunidad. Cada oferta se muestra con los datos de la empresa para que los candidatos puedan tomar decisiones informadas.</p>"
+    },
+    "pl": {
+      "title": "O nas",
+      "description": "Serwis {{board_name}} to portal z ofertami pracy, który pomaga kandydatom znaleźć odpowiednie stanowiska, a pracodawcom dotrzeć do właściwych osób.",
+      "html": "<p>Serwis {{board_name}} to portal z ofertami pracy, którego celem jest pomaganie kandydatom w znalezieniu odpowiednich stanowisk, a pracodawcom w dotarciu do właściwych osób.</p>\n\n<h3><strong>Dla osób szukających pracy</strong></h3>\n<p>Przeglądaj aktualne oferty pracy, filtruj je według stanowiska i lokalizacji oraz ustaw powiadomienia, aby otrzymywać informacje o nowo opublikowanych ofertach.</p>\n\n<h3><strong>Dla pracodawców</strong></h3>\n<p>Publikuj oferty pracy, aby dotrzeć do kandydatów aktywnie poszukujących nowych możliwości zawodowych. Każde ogłoszenie jest wyświetlane wraz z informacjami o firmie, dzięki czemu kandydaci mogą podejmować świadome decyzje.</p>"
+    },
+    "nl": {
+      "title": "Over ons",
+      "description": "{{board_name}} is een vacaturesite die kandidaten helpt de juiste functies te vinden en werkgevers helpt de juiste mensen te bereiken.",
+      "html": "<p>{{board_name}} is een vacaturesite die zich inzet om kandidaten te helpen de juiste functies te vinden en werkgevers te helpen de juiste mensen te bereiken.</p>\n\n<h3><strong>Voor werkzoekenden</strong></h3>\n<p>Bekijk openstaande vacatures, filter op functie en locatie, en stel meldingen in zodat u bericht krijgt wanneer er nieuwe vacatures worden geplaatst.</p>\n\n<h3><strong>Voor werkgevers</strong></h3>\n<p>Plaats openstaande vacatures om kandidaten te bereiken die actief op zoek zijn naar hun volgende baan. Elke vacature wordt weergegeven met bedrijfsgegevens, zodat kandidaten weloverwogen beslissingen kunnen nemen.</p>"
+    }
+  }
+}

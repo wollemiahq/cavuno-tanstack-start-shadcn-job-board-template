@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 /** App-owned legal page keys (also the URL path segments). */
 export type LegalPageType =
   | 'about'
@@ -8,36 +6,54 @@ export type LegalPageType =
   | 'cookie-policy'
   | 'impressum';
 
-/** Viewer chrome locales the legal scaffolds ship with. */
+/** Viewer chrome locales the starter ships legal text for. */
 export type LegalLocale = 'en' | 'de' | 'fr' | 'es' | 'pl' | 'nl';
 
 /**
- * Application-owned legal/about page content.
+ * One legal/about page in one language.
  *
- * `title` + `description` are serializable (server head / JSON-LD).
- * `Body` is a real React component — never an HTML string — so the legal
- * view can compose elements without `dangerouslySetInnerHTML`.
+ * `title` + `description` are plain text (head meta, JSON-LD). `html` is the
+ * page body as an HTML string. It is data, so tools can read, translate and
+ * write it without parsing code. `{{board_name}}` in any field is replaced
+ * with the board name at request time; the body is sanitized before render
+ * (`renderLegalHtml`).
  */
 export type LegalPageContent = {
-  /** Template scaffold: omit or set false when replacing this locale's content. */
-  placeholder?: boolean;
   title: string;
-  /** Plain-text meta description + JSON-LD `description` (do not derive from JSX). */
   description: string;
-  Body: () => ReactNode;
+  html: string;
 };
 
 /**
- * Structured impressum legal-entity facts. Fill in before enabling impressum
- * on a board that needs them. Leave `null` (or both fields null) so the
- * impressum facts card does not render an empty box.
+ * A page module (`src/content/legal/<page>.json`).
  *
- * OPERATOR: replace with your legal name and address when required.
+ * `sourceLanguage` is the language the page was written in. Every other
+ * entry in `locales` is a translation of it. A locale with no entry falls back
+ * to the source entry. A page with no entries at all is not published.
+ */
+export type LegalPageData = {
+  sourceLanguage: string;
+  locales: Partial<Record<string, LegalPageContent>>;
+};
+
+/**
+ * Translations for one extra locale
+ * (`src/content/legal/translations/<locale>.json`), keyed by page. An entry
+ * here takes precedence over the page module's own entry for that locale.
+ */
+export type LegalTranslations = Partial<
+  Record<LegalPageType, LegalPageContent>
+>;
+
+/**
+ * Structured impressum legal-entity facts for a hand-run board. Leave `null`
+ * (or both fields null) so the impressum facts card does not render an empty
+ * box. Boards connected to Cavuno get the legal name from the board context.
  */
 export type LegalEntityConfig = {
   legalName: string | null;
   address: string | null;
 } | null;
 
-/** Unset by default — impressum facts card stays hidden until filled in. */
+/** Unset by default: the impressum facts card stays hidden until filled in. */
 export const legalEntity: LegalEntityConfig = null;

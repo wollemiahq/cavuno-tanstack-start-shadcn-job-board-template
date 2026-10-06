@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 
 import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
+import { impressumAvailable } from '../content/legal/impressum-availability';
 import { m } from '../paraglide/messages';
 
 import {
@@ -361,7 +362,7 @@ export default function Footer({
     { href: '/terms-of-service', label: copy.footer.termsOfServiceLabel },
     { href: '/privacy-policy', label: copy.footer.privacyPolicyLabel },
     { href: '/cookie-policy', label: copy.footer.cookiePolicyLabel },
-    ...(features.impressum
+    ...(impressumAvailable(features)
       ? [{ href: '/impressum', label: copy.footer.impressumLabel }]
       : []),
   ];

@@ -1,5 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ board: vi.fn(), origin: vi.fn() }));
+type ImpressumFixture = {
+  sourceLanguage: string;
+  locales: Record<string, { title: string; description: string; html: string }>;
+};
+const mocks = vi.hoisted(() => {
+  const impressum: ImpressumFixture = { sourceLanguage: 'en', locales: {} };
+  return { board: vi.fn(), origin: vi.fn(), impressum };
+});
+vi.mock('../content/legal/impressum.json', () => ({
+  default: mocks.impressum,
+}));
 vi.mock('@tanstack/react-start', () => ({
   createServerFn: () => {
     const chain = {
@@ -30,8 +40,14 @@ vi.mock('./board-access', () => ({
     read(),
 }));
 import { getLegalPageView } from './legal-pages';
+const OPERATOR_IMPRESSUM = {
+  title: 'Impressum',
+  description: 'Operator legal notice',
+  html: '<p>Operator GmbH</p>',
+};
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.impressum.locales = { en: OPERATOR_IMPRESSUM };
   mocks.origin.mockResolvedValue('https://fixture.example');
 });
 describe('direct legal page feature gate', () => {
@@ -44,6 +60,19 @@ describe('direct legal page feature gate', () => {
     });
     expect(mocks.origin).not.toHaveBeenCalled();
   });
+  it('enabled Impressum without operator content is not published', async () => {
+    mocks.impressum.locales = {};
+    mocks.board.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      features: { impressum: true },
+    });
+    await expect(
+      getLegalPageView({ data: { type: 'impressum' } }),
+    ).rejects.toMatchObject({
+      isNotFound: true,
+    });
+  });
   it('enabled Impressum returns page and metadata', async () => {
     mocks.board.mockResolvedValue({
       name: 'Fixture',
@@ -53,7 +82,7 @@ describe('direct legal page feature gate', () => {
     expect(
       await getLegalPageView({ data: { type: 'impressum' } }),
     ).toMatchObject({
-      page: { type: 'impressum' },
+      page: { type: 'impressum', html: '<p>Operator GmbH</p>' },
       head: expect.any(Object),
     });
   });

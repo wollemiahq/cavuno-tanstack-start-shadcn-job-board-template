@@ -74,6 +74,9 @@ by the SDK or dependency tests.
 Use a browser for responsive or visual changes, and relevant subsystem guidance
 when a change touches that area.
 
-Legal/about content marks unfinished scaffolds with `placeholder: true` in each
-locale's content entry. Remove that flag when replacing the scaffold with owned
-content; indexing follows the resolved locale, including its fallback.
+Legal/about pages are data: `src/content/legal/<page>.json` holds `title`,
+`description` and an `html` body per locale, plus the `sourceLanguage` the page
+was written in. Edit the text there; `{{board_name}}` is filled in at request
+time and the body is sanitized by `src/content/legal/render.ts`. The shipped
+text is a standard sample the operator adapts. The impressum ships empty and
+stays unpublished until the operator writes one.

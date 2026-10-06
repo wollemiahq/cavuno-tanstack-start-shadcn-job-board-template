@@ -1,108 +1,68 @@
 import { getLocale } from '../../paraglide/runtime';
-import { aboutContent } from './about';
-import { cookiePolicyContent } from './cookie-policy';
-import { impressumContent } from './impressum';
-import { privacyPolicyContent } from './privacy-policy';
-import { termsOfServiceContent } from './terms-of-service';
+import about from './about.json';
+import cookiePolicy from './cookie-policy.json';
+import impressum from './impressum.json';
+import privacyPolicy from './privacy-policy.json';
+import termsOfService from './terms-of-service.json';
 import { legalEntity } from './types';
 
-import type { LegalLocale, LegalPageContent, LegalPageType } from './types';
+import type {
+  LegalPageContent,
+  LegalPageData,
+  LegalPageType,
+  LegalTranslations,
+} from './types';
 
 export { legalEntity } from './types';
 export type {
   LegalEntityConfig,
   LegalLocale,
   LegalPageContent,
+  LegalPageData,
   LegalPageType,
+  LegalTranslations,
 } from './types';
 
 /**
- * Application-owned legal/about content, keyed by chrome locale then
- * `LegalPageType` (also the URL path segment). Resolved via `getLocale()` with
- * an English fallback. Server code reads title/description only; the view
- * renders each entry's `Body` as real elements.
+ * Application-owned legal/about content: one JSON module per page
+ * (`src/content/legal/<page>.json`). Each holds the page in its source
+ * language plus the starter's built-in translations. Edit the JSON in place;
+ * there is no code to change.
  *
- * Edit the per-locale scaffolds in the sibling modules — plain TSX, in place.
+ * The impressum ships empty. It is a legal notice only the operator can
+ * write, so the page and its footer link stay off until it has content.
  */
-export const LEGAL_CONTENT = {
-  en: {
-    about: aboutContent.en,
-    'privacy-policy': privacyPolicyContent.en,
-    'terms-of-service': termsOfServiceContent.en,
-    'cookie-policy': cookiePolicyContent.en,
-    impressum: impressumContent.en,
-  },
-  de: {
-    about: aboutContent.de,
-    'privacy-policy': privacyPolicyContent.de,
-    'terms-of-service': termsOfServiceContent.de,
-    'cookie-policy': cookiePolicyContent.de,
-    impressum: impressumContent.de,
-  },
-  fr: {
-    about: aboutContent.fr,
-    'privacy-policy': privacyPolicyContent.fr,
-    'terms-of-service': termsOfServiceContent.fr,
-    'cookie-policy': cookiePolicyContent.fr,
-    impressum: impressumContent.fr,
-  },
-  es: {
-    about: aboutContent.es,
-    'privacy-policy': privacyPolicyContent.es,
-    'terms-of-service': termsOfServiceContent.es,
-    'cookie-policy': cookiePolicyContent.es,
-    impressum: impressumContent.es,
-  },
-  pl: {
-    about: aboutContent.pl,
-    'privacy-policy': privacyPolicyContent.pl,
-    'terms-of-service': termsOfServiceContent.pl,
-    'cookie-policy': cookiePolicyContent.pl,
-    impressum: impressumContent.pl,
-  },
-  nl: {
-    about: aboutContent.nl,
-    'privacy-policy': privacyPolicyContent.nl,
-    'terms-of-service': termsOfServiceContent.nl,
-    'cookie-policy': cookiePolicyContent.nl,
-    impressum: impressumContent.nl,
-  },
-} satisfies Record<LegalLocale, Record<LegalPageType, LegalPageContent>>;
+export const LEGAL_PAGES_CONTENT = {
+  about,
+  'privacy-policy': privacyPolicy,
+  'terms-of-service': termsOfService,
+  'cookie-policy': cookiePolicy,
+  impressum,
+} satisfies Record<LegalPageType, LegalPageData>;
 
 /**
- * Page types with a scaffold in at least one locale. Kept for consumers that
- * need an inventory; request-time indexing uses the resolved locale below.
+ * Translations into extra locales, one JSON file per locale
+ * (`src/content/legal/translations/<locale>.json`). They are found by file
+ * name, so adding a locale needs no registration here.
  */
-export const LEGAL_PLACEHOLDER_PAGES: ReadonlySet<LegalPageType> = new Set(
-  Object.values(LEGAL_CONTENT).flatMap((pages) =>
-    // SAFETY: LEGAL_CONTENT is checked above against every LegalPageType.
-    (Object.entries(pages) as [LegalPageType, LegalPageContent][])
-      .filter(([, content]) => content.placeholder === true)
-      .map(([type]) => type),
-  ),
+const TRANSLATIONS = import.meta.glob<LegalTranslations>(
+  './translations/*.json',
+  { eager: true, import: 'default' },
 );
 
-/** Indexing follows the same content and locale fallback as the page body. */
-export function isLegalPlaceholder(type: LegalPageType): boolean {
-  return resolveLegalContent(type).placeholder === true;
-}
-
-const LEGAL_LOCALES = [
-  'en',
-  'de',
-  'fr',
-  'es',
-  'pl',
-  'nl',
-] as const satisfies readonly LegalLocale[];
-
-function resolveLegalLocale(locale: string): LegalLocale {
-  return LEGAL_LOCALES.find((candidate) => candidate === locale) ?? 'en';
-}
-
-/** Resolve legal page content for the current chrome locale (en fallback). */
-export function resolveLegalContent(type: LegalPageType): LegalPageContent {
-  return LEGAL_CONTENT[resolveLegalLocale(getLocale())][type];
+/**
+ * Resolve a page for a locale: an extra-locale translation, else the page's
+ * own entry for that locale, else its source-language entry. `null` means
+ * the page has no content and must not be published.
+ */
+export function resolveLegalContent(
+  type: LegalPageType,
+  locale: string = getLocale(),
+): LegalPageContent | null {
+  const translated = TRANSLATIONS[`./translations/${locale}.json`]?.[type];
+  if (translated) return translated;
+  const page: LegalPageData = LEGAL_PAGES_CONTENT[type];
+  return page.locales[locale] ?? page.locales[page.sourceLanguage] ?? null;
 }
 
 /**

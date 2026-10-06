@@ -65,7 +65,6 @@
         "src/components/messages/message-bubble.tsx",
         "src/components/messages/thread-view.tsx",
         "src/components/post-job-form.tsx",
-        "src/content/legal/placeholder-callout.tsx",
         "src/routes/-alerts.manage.tsx",
         "src/routes/-auth.sign-in.tsx",
         "src/routes/-auth.verify-email-required.tsx",

@@ -15,13 +15,14 @@ export interface LegalPageMeta {
 }
 
 /**
- * Serializable page payload for LegalPageView. JSX bodies live in
- * `src/content/legal/` and are resolved by `type` — React elements are not
- * server-fn serializable.
+ * Serializable page payload for LegalPageView. Content lives in
+ * `src/content/legal/`; `html` is the resolved body, already sanitized and
+ * with the board name filled in (`renderLegalHtml`).
  */
 export type LegalPageViewModel = {
   type: LegalPageType;
   title: string;
+  html: string;
   legalEntity: {
     legalName: string | null;
     address: string | null;
