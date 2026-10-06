@@ -67,6 +67,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { onToasterRequested } from '@/lib/deferred-toaster';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -125,9 +126,11 @@ function DeferredToaster() {
       capture: true,
     });
     window.addEventListener('keydown', request, { once: true, capture: true });
+    const stopListening = onToasterRequested(request);
     return () => {
       window.removeEventListener('pointerdown', request, { capture: true });
       window.removeEventListener('keydown', request, { capture: true });
+      stopListening();
     };
   }, []);
 

@@ -9,6 +9,7 @@ import {
   createCompanyJobsLoader,
 } from './-employers.company-jobs';
 
+import { requestToaster } from '@/lib/deferred-toaster';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
@@ -55,7 +56,11 @@ function CompanyJobsPage() {
             replace: true,
           }),
         toastError: toast.error,
-        toastSuccess: toast.success,
+        toastSuccess: (message) => {
+          // The joined greeting fires on page load, before any click.
+          requestToaster();
+          toast.success(message);
+        },
       }}
     />
   );
