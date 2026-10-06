@@ -241,7 +241,9 @@ function clearPersistedChoice(
  * or withdrawn (a decline after trackers were allowed or ran), under a consent id
  * kept in its own cookie, with `googleConsentMessageVersion`. A decline
  * after trackers ran withdraws them like a decline on the board's banner,
- * and other tabs stop Cavuno Analytics as for a cross-tab decline.
+ * and other tabs stop Cavuno Analytics as for a cross-tab decline. A late
+ * takeover whose stored answer (`tcloaded`) refuses trackers the fallback
+ * already ran withdraws them too, unrecorded (never two reloads in a row).
  */
 export function CookieConsentProvider({
   required,
@@ -447,7 +449,19 @@ export function CookieConsentProvider({
       }
       googleDecisionRef.current = step.allowed;
       setGoogleAllowed(step.allowed);
-      if (!step.record) return;
+      if (!step.record) {
+        // A stored refusal reported after the fallback let trackers run:
+        // withdraw them as for a decline, but record nothing (no action).
+        if (!step.allowed && analyticsLoaded.current) {
+          if (tcf.claimLateWithdrawalReload()) {
+            withdrawIfLoaded();
+          } else {
+            window.__cavunoAnalyticsOff = true;
+            clearAnalyticsCookies({ keepAdSense: googleMode });
+          }
+        }
+        return;
+      }
       // Its own id cookie: the consent cookie may not exist.
       const consentId = tcf.googleConsentId(consentIdRef.current, newConsentId);
       consentIdRef.current = consentId;
@@ -459,7 +473,7 @@ export function CookieConsentProvider({
         withdrawIfLoaded();
       }
     },
-    [send, trackers, withdrawIfLoaded],
+    [send, trackers, withdrawIfLoaded, googleMode],
   );
 
   // Subscribed once per document; the handler is read through a ref.

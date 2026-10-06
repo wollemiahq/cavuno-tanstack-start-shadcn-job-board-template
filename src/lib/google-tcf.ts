@@ -299,3 +299,25 @@ export function broadcastGoogleDecline(): void {
     // localStorage may be blocked; this tab's own decline still applies.
   }
 }
+
+const LATE_WITHDRAWAL_RELOAD_KEY = 'cavuno:google-late-withdrawal';
+
+/**
+ * Whether a late Google takeover may reload to withdraw trackers the
+ * fallback let run. Never twice in a row in one tab (a CMP slower than the
+ * fallback on every load would otherwise reload forever): the reloaded
+ * document that hits it again stops without a reload and re-arms the next.
+ * Blocked sessionStorage: no reload.
+ */
+export function claimLateWithdrawalReload(): boolean {
+  try {
+    if (sessionStorage.getItem(LATE_WITHDRAWAL_RELOAD_KEY)) {
+      sessionStorage.removeItem(LATE_WITHDRAWAL_RELOAD_KEY);
+      return false;
+    }
+    sessionStorage.setItem(LATE_WITHDRAWAL_RELOAD_KEY, '1');
+    return true;
+  } catch {
+    return false;
+  }
+}

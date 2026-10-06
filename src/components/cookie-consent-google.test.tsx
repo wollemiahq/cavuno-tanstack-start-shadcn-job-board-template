@@ -97,6 +97,7 @@ afterEach(() => {
   document.getElementById('cavuno-analytics-ga4')?.remove();
   document.getElementById('cavuno-adsense-loader')?.remove();
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 async function renderBoard({
@@ -287,6 +288,63 @@ describe('Google’s consent message in charge (gdprApplies true)', () => {
       expect.objectContaining({ choice: 'withdrawn' }),
     );
     expect(withdraw).toHaveBeenCalledExactlyOnceWith({ keepAdSense: true });
+  });
+
+  it('withdraws trackers the fallback loaded on a late stored refusal, unrecorded', async () => {
+    const timeout = captureConsentTimeout();
+    const cmp = installFakeCmp();
+    const { withdraw, recordConsent } = await renderBoard({ required: false });
+    timeout();
+    expect(ga4Loaded()).not.toBeNull();
+
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'tcloaded',
+      publisher: { consents: refused },
+    });
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'tcloaded',
+      publisher: { consents: refused },
+    });
+
+    expect(withdraw).toHaveBeenCalledExactlyOnceWith({ keepAdSense: true });
+    expect(recordConsent).not.toHaveBeenCalled();
+  });
+
+  it('does not reload twice in a row for a late stored refusal', async () => {
+    sessionStorage.setItem('cavuno:google-late-withdrawal', '1');
+    const timeout = captureConsentTimeout();
+    const cmp = installFakeCmp();
+    const { withdraw } = await renderBoard({ required: false });
+    timeout();
+    document.cookie = 'session-id=abc; Path=/';
+
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'tcloaded',
+      publisher: { consents: refused },
+    });
+
+    expect(withdraw).not.toHaveBeenCalled();
+    expect(window.__cavunoAnalyticsOff).toBe(true);
+    expect(document.cookie).not.toContain('session-id=');
+    expect(sessionStorage.getItem('cavuno:google-late-withdrawal')).toBeNull();
+  });
+
+  it('withdraws nothing on a stored refusal when no tracker ran', async () => {
+    const cmp = installFakeCmp();
+    const { withdraw, recordConsent } = await renderBoard({ required: false });
+
+    cmp.emit({
+      gdprApplies: true,
+      eventStatus: 'tcloaded',
+      publisher: { consents: refused },
+    });
+
+    expect(ga4Loaded()).toBeNull();
+    expect(withdraw).not.toHaveBeenCalled();
+    expect(recordConsent).not.toHaveBeenCalled();
   });
 
   it('tells other tabs about a decline, and stops analytics on one from another tab', async () => {
