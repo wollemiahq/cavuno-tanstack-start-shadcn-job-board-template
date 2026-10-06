@@ -1166,6 +1166,8 @@ describe('employer company workspace', () => {
           timeline: [],
         },
       ],
+      hasMore: false,
+      nextCursor: null,
       seo: {
         boardName: 'Acme Board',
       },

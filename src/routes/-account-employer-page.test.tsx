@@ -47,6 +47,9 @@ const profile = {
   jobSearchStatus: 'not_looking',
   jobSearchStatusVisibleTo: 'everyone',
   openToRelocate: false,
+  locationPlace: null,
+  commuteRadiusKm: null,
+  commuteRadiusDefaultKm: 50,
 } satisfies CandidateProfile;
 
 function renderPage() {

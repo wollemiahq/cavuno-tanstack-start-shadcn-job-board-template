@@ -55,6 +55,8 @@ const pipeline = (
   job: { id: 'job-1', title: 'Role', status: 'published', expiresAt: null },
   stages,
   applicants,
+  hasMore: false,
+  nextCursor: null,
 });
 
 describe('toPipelineBoardVM', () => {

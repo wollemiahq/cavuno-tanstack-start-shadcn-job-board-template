@@ -75,6 +75,9 @@ const profile = {
   jobSearchStatus: 'open_to_offers',
   jobSearchStatusVisibleTo: 'everyone',
   openToRelocate: false,
+  locationPlace: null,
+  commuteRadiusKm: null,
+  commuteRadiusDefaultKm: 50,
 } satisfies CandidateProfile;
 
 afterEach(() => {
