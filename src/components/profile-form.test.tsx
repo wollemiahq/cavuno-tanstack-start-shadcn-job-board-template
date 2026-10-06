@@ -544,7 +544,7 @@ describe('ProfileForm — home place and commute distance', () => {
 
     pick(/Lyon/);
 
-    expect(commuteInput()).toHaveValue(50);
+    expect(commuteInput()).toHaveValue('50');
     expect(
       screen.getByText(m.profileForm_commuteRadiusKilometresUnit()),
     ).toBeInTheDocument();
@@ -577,7 +577,7 @@ describe('ProfileForm — home place and commute distance', () => {
       commuteRadiusKm: 48.3,
       commuteRadiusDefaultKm: 40,
     });
-    expect(commuteInput()).toHaveValue(30);
+    expect(commuteInput()).toHaveValue('30');
     expect(
       screen.getByText(m.profileForm_commuteRadiusMilesUnit()),
     ).toBeInTheDocument();
@@ -591,6 +591,22 @@ describe('ProfileForm — home place and commute distance', () => {
     expect(sent()).not.toHaveProperty('locationId');
   });
 
+  it('saves a decimal distance', async () => {
+    await renderForm({
+      location: houston.name,
+      locationPlace: houston,
+      commuteRadiusDefaultKm: 40,
+    });
+
+    fireEvent.change(commuteInput()!, { target: { value: '12.5' } });
+    expect(commuteInput()).toBeValid();
+    submit();
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
+    // 12.5 mi, to one decimal.
+    expect(sent()).toMatchObject({ commuteRadiusKm: 20.1 });
+  });
+
   it('prefills the default in miles for a home place without a saved distance', async () => {
     await renderForm({
       location: houston.name,
@@ -598,7 +614,7 @@ describe('ProfileForm — home place and commute distance', () => {
       commuteRadiusDefaultKm: 40,
     });
 
-    expect(commuteInput()).toHaveValue(25);
+    expect(commuteInput()).toHaveValue('25');
   });
 
   it('blocks a distance outside the bounds with an inline error', async () => {
@@ -609,6 +625,8 @@ describe('ProfileForm — home place and commute distance', () => {
     });
 
     fireEvent.change(commuteInput()!, { target: { value: '200' } });
+    // The browser's own range check never pre-empts the inline error.
+    expect(commuteInput()).toBeValid();
     submit();
 
     expect(
@@ -635,7 +653,7 @@ describe('ProfileForm — home place and commute distance', () => {
 
     pick(/Lyon/);
 
-    expect(commuteInput()).toHaveValue(80);
+    expect(commuteInput()).toHaveValue('80');
     submit();
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
     expect(sent()).not.toHaveProperty('commuteRadiusKm');
@@ -654,7 +672,7 @@ describe('ProfileForm — home place and commute distance', () => {
 
     pick(/Houston/);
 
-    expect(commuteInput()).toHaveValue(50);
+    expect(commuteInput()).toHaveValue('50');
   });
 
   it('re-expresses an untouched saved distance in the new unit', async () => {
@@ -664,11 +682,11 @@ describe('ProfileForm — home place and commute distance', () => {
       commuteRadiusKm: 80,
       commuteRadiusDefaultKm: 40,
     });
-    expect(commuteInput()).toHaveValue(50);
+    expect(commuteInput()).toHaveValue('50');
 
     pick(/Lyon/);
 
-    expect(commuteInput()).toHaveValue(80);
+    expect(commuteInput()).toHaveValue('80');
   });
 
   it('converts a typed distance when the unit changes', async () => {
@@ -682,7 +700,7 @@ describe('ProfileForm — home place and commute distance', () => {
 
     pick(/Lyon/);
 
-    expect(commuteInput()).toHaveValue(48);
+    expect(commuteInput()).toHaveValue('48');
     submit();
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));
     expect(sent()).toMatchObject({ commuteRadiusKm: 48 });
@@ -698,7 +716,7 @@ describe('ProfileForm — home place and commute distance', () => {
 
     fireEvent.change(commuteInput()!, { target: { value: '' } });
 
-    expect(commuteInput()).toHaveValue(null);
+    expect(commuteInput()).toHaveValue('');
     expect(commuteInput()).toHaveAttribute('placeholder', '25');
     submit();
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(1));

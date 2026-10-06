@@ -777,11 +777,10 @@ export function ProfileForm({
         <InputGroupInput
           ref={commuteInput}
           id="profile-commute-radius"
-          type="number"
-          inputMode="numeric"
-          min={commuteBounds.min}
-          max={commuteBounds.max}
-          step={1}
+          // Text, not number: the range is checked on submit with a
+          // translated inline error, and a decimal distance is valid.
+          type="text"
+          inputMode="decimal"
           value={commuteText}
           placeholder={commuteDefaultText}
           aria-invalid={commuteError || undefined}
