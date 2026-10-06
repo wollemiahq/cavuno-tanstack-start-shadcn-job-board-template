@@ -1,13 +1,23 @@
 /**
  * Bridge to Google's certified consent message (AdSense Privacy &
  * messaging), which the AdSense tag shows to EEA, UK and Swiss visitors
- * when the board turns on `ads.googleConsentMessage`.
+ * when the board turns on `ads.googleConsentMessage`. Loaded on demand by
+ * `CookieConsentProvider`, only on those boards, to keep it out of the
+ * shared shell.
  *
  * Reads the visitor's answer through the IAB TCF v2.2 CMP API
  * (`__tcfapi`), registered once Google's Funding Choices queue reports
  * `CONSENT_DATA_READY`. Browser-only; every global is read off `window`,
  * so tests install a fake `googlefc` / `__tcfapi` there.
  */
+
+import {
+  COOKIE_CONSENT_MAX_AGE,
+  CONSENT_ID_RE,
+  fnv1a,
+  readCookieConsent,
+  type CookieBannerTrackers,
+} from './cookie-consent';
 
 /** The TCData fields this board reads (IAB CMP API v2). */
 export interface TcData {
@@ -152,4 +162,123 @@ export function showGoogleConsentMessage(): void {
   googleFcQueue().push({
     CONSENT_API_READY: () => window.googlefc?.showRevocationMessage?.(),
   });
+}
+
+/**
+ * Banner version for an answer given in Google's consent message. Its
+ * wording lives in AdSense, so the version names the CMP build that showed
+ * it (`cmpId`, `cmpVersion` from the TCData) and hashes that with the TCF
+ * policy version and the trackers the answer governs. Deterministic,
+ * `g1-cmp<id>v<version>-` + 8 hex digits.
+ */
+export function googleConsentMessageVersion(
+  tcData: TcData,
+  trackers: CookieBannerTrackers,
+): string {
+  const tags = Object.entries(trackers)
+    .filter(([, on]) => on)
+    .map(([tag]) => tag)
+    .sort();
+  const cmpId = tcData.cmpId ?? 0;
+  const cmpVersion = tcData.cmpVersion ?? 0;
+  return `g1-cmp${cmpId}v${cmpVersion}-${fnv1a(
+    JSON.stringify([
+      'google',
+      cmpId,
+      cmpVersion,
+      tcData.tcfPolicyVersion ?? 0,
+      tags,
+    ]),
+  )}`;
+}
+
+/**
+ * Cookie holding the consent id while Google's message, not the board's
+ * banner, records the visitor's answers (the consent cookie only exists
+ * once the board's banner has a choice).
+ */
+export const CONSENT_ID_COOKIE = 'cavuno_consent_id';
+
+/** The consent id from a Cookie header: the consent cookie's, else ours. */
+export function readConsentId(
+  cookieHeader: string | null | undefined,
+): string | null {
+  const fromConsent = readCookieConsent(cookieHeader)?.consentId;
+  if (fromConsent) return fromConsent;
+  const pair = (cookieHeader ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${CONSENT_ID_COOKIE}=`));
+  const value = pair?.slice(CONSENT_ID_COOKIE.length + 1) ?? '';
+  return CONSENT_ID_RE.test(value) ? value : null;
+}
+
+/** Serialize the consent-id cookie (same lifetime as the consent cookie). */
+export function serializeConsentId(consentId: string): string {
+  return `${CONSENT_ID_COOKIE}=${consentId}; Path=/; Max-Age=${COOKIE_CONSENT_MAX_AGE}; SameSite=Lax`;
+}
+
+/** What one CMP report means for the board's consent state. */
+export type GoogleConsentStep =
+  /** No CMP answer, or GDPR does not apply: the board's banner. */
+  | { kind: 'fallback' }
+  /** Google's message is showing; the earlier answer stands meanwhile. */
+  | { kind: 'shown' }
+  /** An answer; `record` only for a visitor action (`useractioncomplete`). */
+  | {
+      kind: 'answer';
+      allowed: boolean;
+      record: {
+        choice: 'accepted' | 'denied' | 'withdrawn';
+        bannerVersion: string;
+      } | null;
+    };
+
+/**
+ * Read one CMP report. `previous` is the last answer's tracker gate in this
+ * document: a refusal after an allowed answer is a withdrawal. The banner
+ * version covers the trackers the answer governs (not AdSense, which
+ * Google's message governs itself).
+ */
+export function googleConsentStep(
+  update: GoogleConsentUpdate,
+  previous: boolean | undefined,
+  trackers: CookieBannerTrackers,
+): GoogleConsentStep {
+  if (update.kind === 'unavailable' || update.tcData.gdprApplies !== true) {
+    return { kind: 'fallback' };
+  }
+  const { tcData } = update;
+  if (tcData.eventStatus === 'cmpuishown') return { kind: 'shown' };
+  const allowed = trackersAllowedFromTcData(tcData);
+  if (tcData.eventStatus !== 'useractioncomplete') {
+    return { kind: 'answer', allowed, record: null };
+  }
+  return {
+    kind: 'answer',
+    allowed,
+    record: {
+      choice: allowed ? 'accepted' : previous ? 'withdrawn' : 'denied',
+      bannerVersion: googleConsentMessageVersion(tcData, {
+        ...trackers,
+        adsense: false,
+      }),
+    },
+  };
+}
+
+/**
+ * The consent id answers in Google's message are recorded under: the
+ * consent cookie's, else the consent-id cookie's, else `known`, else a new
+ * one (written to the consent-id cookie).
+ */
+export function googleConsentId(
+  known: string | null,
+  newId: () => string,
+): string {
+  const stored = readConsentId(document.cookie);
+  if (stored) return stored;
+  const consentId = known ?? newId();
+  document.cookie = serializeConsentId(consentId);
+  return consentId;
 }

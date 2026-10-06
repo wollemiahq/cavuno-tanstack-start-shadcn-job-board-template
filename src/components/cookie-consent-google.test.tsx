@@ -37,9 +37,11 @@ import type { RecordConsentInput } from '@cavuno/board/analytics';
 const granted = { 1: true, 7: true, 8: true, 9: true };
 const refused = { 1: true, 7: false, 8: false, 9: false };
 
+/** TCF listeners the provider registered with the fake CMP. */
+const listeners: Array<(tcData: TcData, success: boolean) => void> = [];
+
 /** Google's queue as Funding Choices installs it: runs items at once. */
 function installFakeCmp() {
-  const listeners: Array<(tcData: TcData, success: boolean) => void> = [];
   const showRevocationMessage = vi.fn();
   window.googlefc = {
     callbackQueue: {
@@ -81,6 +83,7 @@ function captureConsentTimeout() {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  listeners.length = 0;
   delete window.googlefc;
   delete window.__tcfapi;
   delete window.__cavunoAnalyticsOff;
@@ -134,6 +137,10 @@ async function renderBoard({
   });
   render(<RouterProvider router={router} />);
   await screen.findByTestId('mounted');
+  // The bridge loads on demand; wait until it listens to the CMP.
+  if (googleConsentMessage && window.__tcfapi) {
+    await vi.waitFor(() => expect(listeners).not.toHaveLength(0));
+  }
   return { withdraw, recordConsent };
 }
 

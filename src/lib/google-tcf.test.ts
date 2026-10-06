@@ -2,8 +2,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { serializeCookieConsent } from './cookie-consent';
 import {
   GOOGLE_CONSENT_TIMEOUT_MS,
+  googleConsentMessageVersion,
+  readConsentId,
+  serializeConsentId,
   showGoogleConsentMessage,
   subscribeGoogleConsent,
   trackersAllowedFromTcData,
@@ -115,5 +119,53 @@ describe('showGoogleConsentMessage', () => {
     const cmp = installFakeCmp();
     showGoogleConsentMessage();
     expect(cmp.showRevocationMessage).toHaveBeenCalledOnce();
+  });
+});
+
+const ID = '0b0e7c3a-5d1f-4a2b-9c3d-4e5f6a7b8c9d';
+const header = (setCookie: string) => setCookie.split(';')[0];
+
+describe('googleConsentMessageVersion', () => {
+  const trackers = {
+    cavunoAnalytics: true,
+    ga4: true,
+    gtm: false,
+    metaPixel: false,
+    linkedInInsight: false,
+    adsense: false,
+  };
+  const cmp = { cmpId: 300, cmpVersion: 7, tcfPolicyVersion: 5 };
+
+  it('names the CMP build and is stable', () => {
+    const version = googleConsentMessageVersion(cmp, trackers);
+    expect(version).toMatch(/^g1-cmp300v7-[0-9a-f]{8}$/);
+    expect(googleConsentMessageVersion({ ...cmp }, { ...trackers })).toBe(
+      version,
+    );
+  });
+
+  it('changes with the CMP build or the trackers', () => {
+    const version = googleConsentMessageVersion(cmp, trackers);
+    expect(
+      googleConsentMessageVersion({ ...cmp, cmpVersion: 8 }, trackers),
+    ).not.toBe(version);
+    expect(
+      googleConsentMessageVersion(cmp, { ...trackers, metaPixel: true }),
+    ).not.toBe(version);
+  });
+});
+
+describe('readConsentId', () => {
+  it('prefers the consent cookie’s id, else the consent-id cookie', () => {
+    const own = header(serializeConsentId(ID));
+    const other = '1c1e7c3a-5d1f-4a2b-9c3d-4e5f6a7b8c9d';
+    expect(readConsentId(own)).toBe(ID);
+    expect(
+      readConsentId(
+        `${own}; ${header(serializeCookieConsent('denied', other))}`,
+      ),
+    ).toBe(other);
+    expect(readConsentId('cavuno_consent_id=not-a-uuid')).toBeNull();
+    expect(readConsentId('')).toBeNull();
   });
 });

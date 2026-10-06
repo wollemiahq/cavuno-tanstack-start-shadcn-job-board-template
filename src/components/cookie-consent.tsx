@@ -36,23 +36,17 @@ import {
 import {
   clearCookieConsent,
   cookieBannerVersion,
-  googleConsentMessageVersion,
-  readConsentId,
   readCookieConsent,
-  serializeConsentId,
   serializeCookieConsent,
   serializeReopenedCookieConsent,
   type CookieBannerCopy,
   type CookieBannerTrackers,
   type CookieConsentChoice,
 } from '@/lib/cookie-consent';
-import {
-  showGoogleConsentMessage,
-  subscribeGoogleConsent,
-  trackersAllowedFromTcData,
-  type GoogleConsentUpdate,
-  type TcData,
-} from '@/lib/google-tcf';
+import type { GoogleConsentUpdate } from '@/lib/google-tcf';
+
+/** The Google CMP bridge, loaded only on boards that use Google's message. */
+type GoogleTcf = typeof import('@/lib/google-tcf');
 import { chromeCookieConsent } from '@/lib/site-chrome';
 
 /**
@@ -381,7 +375,7 @@ export function CookieConsentProvider({
     (
       consentChoice: RecordConsentInput['choice'],
       consentId: string,
-      bannerVersion: () => string,
+      bannerVersion: string,
     ) => {
       if (!publishableKey.startsWith('pk_')) return;
       if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) {
@@ -392,7 +386,7 @@ export function CookieConsentProvider({
           publishableKey,
           consentId,
           choice: consentChoice,
-          bannerVersion: bannerVersion(),
+          bannerVersion,
         });
       } catch (error) {
         console.warn('Could not record the cookie-consent choice', error);
@@ -404,41 +398,29 @@ export function CookieConsentProvider({
   const record = useCallback(
     (consentChoice: RecordConsentInput['choice'], consentId: string) => {
       if (!required) return;
-      send(consentChoice, consentId, () =>
+      send(
+        consentChoice,
+        consentId,
         cookieBannerVersion(cookieBannerCopy(), trackers),
       );
     },
     [required, send, trackers],
   );
 
-  // An answer in Google's message: its own id cookie, its own version.
-  // AdSense is governed by Google's message, not by this answer.
-  const recordGoogle = useCallback(
-    (consentChoice: RecordConsentInput['choice'], tcData: TcData) => {
-      let consentId = readConsentId(document.cookie) ?? consentIdRef.current;
-      if (!consentId) {
-        consentId = newConsentId();
-        document.cookie = serializeConsentId(consentId);
-      }
-      consentIdRef.current = consentId;
-      send(consentChoice, consentId, () =>
-        googleConsentMessageVersion(tcData, { ...trackers, adsense: false }),
-      );
-    },
-    [send, trackers],
-  );
-
   const onGoogleConsent = useCallback(
-    (update: GoogleConsentUpdate) => {
-      const setSource = (next: ConsentSource) => {
-        sourceRef.current = next;
-        setConsentSource(next);
-      };
-      if (update.kind === 'unavailable' || !update.tcData.gdprApplies) {
-        if (sourceRef.current === 'pending') setSource('cavuno');
+    (update: GoogleConsentUpdate, tcf: GoogleTcf | null) => {
+      const step = tcf?.googleConsentStep(
+        update,
+        googleDecisionRef.current,
+        trackers,
+      );
+      if (!tcf || !step || step.kind === 'fallback') {
+        if (sourceRef.current === 'pending') {
+          sourceRef.current = 'cavuno';
+          setConsentSource('cavuno');
+        }
         return;
       }
-      const { tcData } = update;
       // Fell back and the visitor already answered the board's banner:
       // that answer stands for this document.
       const ownChoice = choiceRef.current;
@@ -448,29 +430,26 @@ export function CookieConsentProvider({
       ) {
         return;
       }
-      setSource('google');
-      // The message is showing: no answer yet, or the earlier one stands
-      // until the visitor confirms a new one.
-      if (tcData.eventStatus === 'cmpuishown') {
+      sourceRef.current = 'google';
+      setConsentSource('google');
+      if (step.kind === 'shown') {
         setGoogleAllowed(googleDecisionRef.current ?? false);
         return;
       }
-      const allowed = trackersAllowedFromTcData(tcData);
-      const previous = googleDecisionRef.current;
-      googleDecisionRef.current = allowed;
-      setGoogleAllowed(allowed);
-      if (tcData.eventStatus !== 'useractioncomplete') return;
-      recordGoogle(
-        allowed ? 'accepted' : previous === true ? 'withdrawn' : 'denied',
-        tcData,
-      );
-      if (allowed) {
+      googleDecisionRef.current = step.allowed;
+      setGoogleAllowed(step.allowed);
+      if (!step.record) return;
+      // Its own id cookie: the consent cookie may not exist.
+      const consentId = tcf.googleConsentId(consentIdRef.current, newConsentId);
+      consentIdRef.current = consentId;
+      send(step.record.choice, consentId, step.record.bannerVersion);
+      if (step.allowed) {
         window.__cavunoAnalyticsOff = false;
       } else {
         withdrawIfLoaded();
       }
     },
-    [recordGoogle, withdrawIfLoaded],
+    [send, trackers, withdrawIfLoaded],
   );
 
   // Subscribed once per document; the handler is read through a ref.
@@ -478,17 +457,34 @@ export function CookieConsentProvider({
   useEffect(() => {
     onGoogleConsentRef.current = onGoogleConsent;
   }, [onGoogleConsent]);
+  const googleTcfRef = useRef<GoogleTcf | null>(null);
   useEffect(() => {
     if (!googleMode) return;
+    const unavailable = () =>
+      onGoogleConsentRef.current({ kind: 'unavailable' }, null);
     // Working previews never load AdSense, so Google's CMP never comes.
     if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) {
-      sourceRef.current = 'cavuno';
-      setConsentSource('cavuno');
+      unavailable();
       return;
     }
-    return subscribeGoogleConsent((update) =>
-      onGoogleConsentRef.current(update),
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    import('@/lib/google-tcf').then(
+      (tcf) => {
+        if (!active) return;
+        googleTcfRef.current = tcf;
+        unsubscribe = tcf.subscribeGoogleConsent((update) =>
+          onGoogleConsentRef.current(update, tcf),
+        );
+      },
+      () => {
+        if (active) unavailable();
+      },
     );
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
   }, [googleMode, hostname]);
 
   const ownAllowed = !required || choice === 'accepted';
@@ -520,7 +516,7 @@ export function CookieConsentProvider({
       },
       reopenBanner: () => {
         if (consentSource === 'google') {
-          showGoogleConsentMessage();
+          googleTcfRef.current?.showGoogleConsentMessage();
           return;
         }
         const stored = readCookieConsent(document.cookie);

@@ -28,7 +28,7 @@ const COOKIE_CONSENT_CHOICES = ['accepted', 'denied'] as const;
 
 const REOPENED = 'reopened';
 
-const CONSENT_ID_RE =
+export const CONSENT_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 function cookieConsentChoice(value: string): CookieConsentChoice | null {
@@ -124,7 +124,7 @@ export interface CookieBannerTrackers {
 }
 
 /** 32-bit FNV-1a over UTF-16 code units, as 8 hex digits. */
-function fnv1a(input: string): string {
+export function fnv1a(input: string): string {
   let hash = 0x811c9dc5;
   for (let index = 0; index < input.length; index += 1) {
     hash ^= input.charCodeAt(index);
@@ -156,65 +156,4 @@ export function cookieBannerVersion(
       tags,
     ]),
   )}`;
-}
-
-/** What a recorded answer to Google's consent message was given to. */
-export interface GoogleConsentMessageVersionInput {
-  cmpId?: number;
-  cmpVersion?: number;
-  tcfPolicyVersion?: number;
-}
-
-/**
- * Banner version for an answer given in Google's consent message. Its
- * wording lives in AdSense, so the version names the CMP build that showed
- * it (`cmpId`, `cmpVersion` from the TCData) and hashes that with the TCF
- * policy version and the trackers the answer governs. Deterministic,
- * `g1-cmp<id>v<version>-` + 8 hex digits.
- */
-export function googleConsentMessageVersion(
-  tcData: GoogleConsentMessageVersionInput,
-  trackers: CookieBannerTrackers,
-): string {
-  const tags = Object.entries(trackers)
-    .filter(([, on]) => on)
-    .map(([tag]) => tag)
-    .sort();
-  const cmpId = tcData.cmpId ?? 0;
-  const cmpVersion = tcData.cmpVersion ?? 0;
-  return `g1-cmp${cmpId}v${cmpVersion}-${fnv1a(
-    JSON.stringify([
-      'google',
-      cmpId,
-      cmpVersion,
-      tcData.tcfPolicyVersion ?? 0,
-      tags,
-    ]),
-  )}`;
-}
-
-/**
- * Cookie holding the consent id while Google's message, not the board's
- * banner, records the visitor's answers (the consent cookie only exists
- * once the board's banner has a choice).
- */
-export const CONSENT_ID_COOKIE = 'cavuno_consent_id';
-
-/** The consent id from a Cookie header: the consent cookie's, else ours. */
-export function readConsentId(
-  cookieHeader: string | null | undefined,
-): string | null {
-  const fromConsent = readCookieConsent(cookieHeader)?.consentId;
-  if (fromConsent) return fromConsent;
-  const pair = (cookieHeader ?? '')
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${CONSENT_ID_COOKIE}=`));
-  const value = pair?.slice(CONSENT_ID_COOKIE.length + 1) ?? '';
-  return CONSENT_ID_RE.test(value) ? value : null;
-}
-
-/** Serialize the consent-id cookie (same lifetime as the consent cookie). */
-export function serializeConsentId(consentId: string): string {
-  return `${CONSENT_ID_COOKIE}=${consentId}; Path=/; Max-Age=${COOKIE_CONSENT_MAX_AGE}; SameSite=Lax`;
 }

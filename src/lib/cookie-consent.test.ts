@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   cookieBannerVersion,
-  googleConsentMessageVersion,
   parseCookieConsent,
-  readConsentId,
   readCookieConsent,
-  serializeConsentId,
   serializeCookieConsent,
   serializeReopenedCookieConsent,
 } from './cookie-consent';
@@ -80,50 +77,5 @@ describe('cookieBannerVersion', () => {
     expect(cookieBannerVersion(copy, { ...trackers, ga4: true })).not.toBe(
       version,
     );
-  });
-});
-
-describe('googleConsentMessageVersion', () => {
-  const trackers = {
-    cavunoAnalytics: true,
-    ga4: true,
-    gtm: false,
-    metaPixel: false,
-    linkedInInsight: false,
-    adsense: false,
-  };
-  const cmp = { cmpId: 300, cmpVersion: 7, tcfPolicyVersion: 5 };
-
-  it('names the CMP build and is stable', () => {
-    const version = googleConsentMessageVersion(cmp, trackers);
-    expect(version).toMatch(/^g1-cmp300v7-[0-9a-f]{8}$/);
-    expect(googleConsentMessageVersion({ ...cmp }, { ...trackers })).toBe(
-      version,
-    );
-  });
-
-  it('changes with the CMP build or the trackers', () => {
-    const version = googleConsentMessageVersion(cmp, trackers);
-    expect(
-      googleConsentMessageVersion({ ...cmp, cmpVersion: 8 }, trackers),
-    ).not.toBe(version);
-    expect(
-      googleConsentMessageVersion(cmp, { ...trackers, metaPixel: true }),
-    ).not.toBe(version);
-  });
-});
-
-describe('readConsentId', () => {
-  it('prefers the consent cookie’s id, else the consent-id cookie', () => {
-    const own = header(serializeConsentId(ID));
-    const other = '1c1e7c3a-5d1f-4a2b-9c3d-4e5f6a7b8c9d';
-    expect(readConsentId(own)).toBe(ID);
-    expect(
-      readConsentId(
-        `${own}; ${header(serializeCookieConsent('denied', other))}`,
-      ),
-    ).toBe(other);
-    expect(readConsentId('cavuno_consent_id=not-a-uuid')).toBeNull();
-    expect(readConsentId('')).toBeNull();
   });
 });
