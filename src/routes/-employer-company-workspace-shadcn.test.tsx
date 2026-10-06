@@ -101,6 +101,7 @@ const jobsActions = {
   unpublishJob: vi.fn<CompanyJobsViewActions['unpublishJob']>(),
   invalidate: vi.fn(),
   navigateToEdit: vi.fn(),
+  dismissJoined: vi.fn(),
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
 } satisfies CompanyJobsViewActions;
@@ -285,6 +286,7 @@ afterEach(() => {
   vi.clearAllMocks();
   jobsActions.invalidate.mockResolvedValue(undefined);
   jobsActions.navigateToEdit.mockResolvedValue(undefined);
+  jobsActions.dismissJoined.mockResolvedValue(undefined);
   membersActions.invalidate.mockResolvedValue(undefined);
   membersActions.navigateToDashboard.mockResolvedValue(undefined);
   membersActions.navigateToMembers.mockResolvedValue(undefined);
@@ -499,6 +501,16 @@ describe('employer company workspace', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       m.employerJobs_postedMissingBody(),
     );
+  });
+
+  it('greets a member who just joined from an invite, once', async () => {
+    await renderJobs([draftJob], { search: { joined: '1' } });
+
+    expect(jobsActions.toastSuccess).toHaveBeenCalledTimes(1);
+    expect(jobsActions.toastSuccess).toHaveBeenCalledWith(
+      m.employerCompany_joinedToast({ company: 'Northstar Labs' }),
+    );
+    expect(jobsActions.dismissJoined).toHaveBeenCalledWith('northstar-labs');
   });
 
   it('hides Post a job when the board has no posting SKU', async () => {

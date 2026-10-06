@@ -4,7 +4,8 @@
  * after a same-origin save so the list can point at the new row. A board that
  * requires job approval holds the post as a draft instead of publishing it,
  * which arrives as `posted=1&review=1`: the same new row, but awaiting the
- * operator's review rather than live.
+ * operator's review rather than live. Accepting a company member invite lands
+ * here with `joined=1`, which greets the new member once.
  */
 import { searchString, type UrlSearchInput } from './pagination';
 
@@ -13,6 +14,7 @@ export type CompanyJobsSearch = {
   posted?: '1';
   review?: '1';
   job_id?: string;
+  joined?: '1';
 };
 
 function flagEnabled(value: UrlSearchInput[string]): boolean {
@@ -28,5 +30,6 @@ export function parseCompanyJobsSearch(
   if (flagEnabled(search.posted)) result.posted = '1';
   if (flagEnabled(search.review)) result.review = '1';
   if (jobId) result.job_id = jobId;
+  if (flagEnabled(search.joined)) result.joined = '1';
   return result;
 }

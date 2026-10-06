@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { formatDate } from '@cavuno/board/format';
 import { Await, Link } from '@tanstack/react-router';
@@ -188,6 +188,8 @@ export type CompanyJobsViewActions = {
   >;
   invalidate: () => Promise<void>;
   navigateToEdit: (slug: string, jobId: string) => Promise<void>;
+  /** Drop the one-shot `joined=1` flag from the URL after greeting. */
+  dismissJoined: (slug: string) => Promise<void>;
   toastError: (message: string) => void;
   toastSuccess: (message: string) => void;
 };
@@ -213,6 +215,32 @@ function activeJobsSubtitle(count: number) {
     count,
     countLabel: count.toLocaleString(locale),
   });
+}
+
+/** Greets a member who just accepted an invite, once, then clears the flag. */
+function JoinedToast({
+  joined,
+  slug,
+  companyName,
+  actions,
+}: {
+  joined: boolean;
+  slug: string;
+  companyName: string;
+  actions: CompanyJobsViewActions;
+}) {
+  const shown = useRef(false);
+
+  useEffect(() => {
+    if (!joined || shown.current) return;
+    shown.current = true;
+    actions.toastSuccess(
+      m.employerCompany_joinedToast({ company: companyName }),
+    );
+    void actions.dismissJoined(slug);
+  }, [actions, companyName, joined, slug]);
+
+  return null;
 }
 
 export function CompanyJobsPageView({
@@ -251,6 +279,12 @@ export function CompanyJobsPageView({
   return (
     <Page width="content">
       <PageContent>
+        <JoinedToast
+          joined={search.joined === '1'}
+          slug={slug}
+          companyName={companyName}
+          actions={actions}
+        />
         <div className="space-y-6">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">

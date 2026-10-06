@@ -27,11 +27,14 @@ export function AuthPageCard({
   title,
   supportingText,
   announceTitle = false,
+  mark,
   children,
 }: {
   title: string;
   supportingText?: React.ReactNode;
   announceTitle?: boolean;
+  /** Replaces the default briefcase mark above the heading (decorative). */
+  mark?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -41,12 +44,14 @@ export function AuthPageCard({
             (vertical) — `justify-items-center` is what centres the mark and
             heading horizontally. */}
         <CardHeader className="items-center justify-items-center gap-5 text-center">
-          <div
-            aria-hidden
-            className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-2xl shadow-sm"
-          >
-            <BriefcaseBusiness className="size-5" />
-          </div>
+          {mark ?? (
+            <div
+              aria-hidden
+              className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-2xl shadow-sm"
+            >
+              <BriefcaseBusiness className="size-5" />
+            </div>
+          )}
           <div
             className="grid gap-2"
             role={announceTitle ? 'status' : undefined}

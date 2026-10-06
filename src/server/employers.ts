@@ -1,11 +1,13 @@
 import {
   isBoardApiError,
+  isNotFound,
   type AcceptCompanyMemberInviteBody,
   type ConfirmWorkEmailBody,
   type CreateCompanyBody,
   type CreateCompanyMemberInviteBody,
   type CreateEmployerJobBody,
   type CreateTalentListBody,
+  type CompanyMemberInvitePreview,
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
   type SendWorkEmailBody,
@@ -321,9 +323,16 @@ export const revokeCompanyInvite = createServerFn({ method: 'POST' })
     ),
   );
 
+/**
+ * Accept a company member invite as the signed-in user. Session-gated but NOT
+ * behind the verified-email gate: the API accepts for an unverified session
+ * (the invite link proves the inbox, so accepting marks the email verified),
+ * which is what lets an invitee who just registered from the join page land
+ * in the company without a verification round trip.
+ */
 export const acceptCompanyInvite = createServerFn({ method: 'POST' })
   .validator((input: AcceptCompanyMemberInviteBody) => input)
-  .middleware([verifiedBoardUserMiddleware])
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     try {
       return {
@@ -352,6 +361,30 @@ export const acceptCompanyInvite = createServerFn({ method: 'POST' })
       };
     }
   });
+
+/**
+ * The invite behind a `/employers/invites/accept?token=…` link, read before
+ * sign-in so the page can show who is inviting whom (`board.invites.preview`).
+ * No session needed. `null` when the token matches no invite; any other
+ * failure propagates to the route's error boundary. The token rides in the
+ * POST body and is never logged.
+ */
+export const previewCompanyInvite = createServerFn({ method: 'POST' })
+  .validator((input: { token: string }) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(
+    async ({ data, context }): Promise<CompanyMemberInvitePreview | null> => {
+      try {
+        return await getBoard().invites.preview(
+          { token: data.token },
+          { headers: context.boardAccessHeaders },
+        );
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        throw error;
+      }
+    },
+  );
 
 /**
  * Company logo upload — the client posts FormData with a `slug` and a `logo`

@@ -113,6 +113,38 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
   });
 
 /**
+ * Employer sign-up from a company invite link (`/employers/invites/accept`).
+ * Passing the invite token lets the API skip the verification email when the
+ * address matches the pending invite: accepting the invite, which the join
+ * page does right after, marks the address verified. Registering never
+ * accepts the invite by itself.
+ */
+export const signUpInvitedEmployer = createServerFn({ method: 'POST' })
+  .validator(
+    (input: {
+      email: string;
+      password: string;
+      displayName: string;
+      inviteToken: string;
+      /** Same-origin path the verification email link returns to. */
+      returnTo?: string;
+    }) => input,
+  )
+  .handler(async ({ data }) => {
+    try {
+      const session = await getBoard().auth.register({
+        role: 'employer',
+        method: 'emailpass',
+        ...data,
+      });
+      persistAuthSession(session);
+      return { ok: true as const, boardUser: session.boardUser };
+    } catch (error) {
+      return authError(error);
+    }
+  });
+
+/**
  * Force one bearer-pair rotation from the current session cookie. Unlike the
  * session middleware (which only rotates inside the `isExpiringSoon` window),
  * this always attempts a refresh — the recovery path when the API rejects an

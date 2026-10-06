@@ -1,15 +1,21 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import {
-  AcceptInviteView,
-  acceptReturnTo,
-  loadAcceptInvite,
-} from './-employers.invites.accept';
+  getOAuthAuthorizationUrl,
+  requestMagicLink,
+  signIn,
+  signOut,
+  signUpInvitedEmployer,
+} from '../server/auth';
+import { acceptCompanyInvite } from '../server/employers';
+import { loadAcceptInvite } from './-employers.invites.accept';
 
-import { buttonVariants } from '@/components/ui/button';
+import { InviteJoinView } from '@/components/employer/invite-join';
 import { headTitle } from '@/lib/page-title';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
+
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/invites/accept')({
   validateSearch: (search: UrlSearchInput) => ({
@@ -28,25 +34,28 @@ export const Route = createFileRoute('/employers/invites/accept')({
       { name: 'robots', content: 'noindex' },
     ],
   }),
-  staticData: { ownsMain: true },
   component: AcceptInvitePage,
 });
 
 function AcceptInvitePage() {
   const { state, token } = Route.useLoaderData();
-  const returnTo = acceptReturnTo(token);
+  const { board, contactEnabled } = rootApi.useLoaderData();
   return (
-    <AcceptInviteView
+    <InviteJoinView
+      // A new token (or a reload into another state) starts the card fresh.
+      key={`${token}:${state.mode}`}
       state={state}
-      signInLink={
-        <Link
-          to="/auth/sign-in"
-          search={{ returnTo }}
-          className={buttonVariants({ variant: 'outline' })}
-        >
-          {m.employerInviteAccept_signInLabel()}
-        </Link>
-      }
+      token={token}
+      board={{ name: board.name, logoUrl: board.logoUrl, contactEnabled }}
+      actions={{
+        signUp: signUpInvitedEmployer,
+        signIn,
+        requestMagicLink,
+        getOAuthAuthorizationUrl,
+        acceptInvite: acceptCompanyInvite,
+        signOut,
+        assignLocation: (url) => window.location.assign(url),
+      }}
     />
   );
 }

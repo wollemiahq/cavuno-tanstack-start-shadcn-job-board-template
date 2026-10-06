@@ -8,6 +8,8 @@ import {
   AuthDivider,
   Field,
   FormError,
+  OAuthProviderButtons,
+  SignInMethodTabs,
 } from '../components/auth-form';
 import {
   candidateAuthSearch,
@@ -15,11 +17,9 @@ import {
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 
-import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { textActionClass, textLinkClass } from '@/lib/text-link';
@@ -141,39 +141,14 @@ export function SignInView({
           </AlertDescription>
         </Alert>
       ) : null}
-      <RadioGroup
-        name="sign-in-method"
+      <SignInMethodTabs
         value={mode}
-        onValueChange={(next: 'password' | 'magic') => {
+        onValueChange={(next) => {
           setMode(next);
           setError(null);
         }}
-        className="bg-muted grid grid-cols-2 gap-1 rounded-2xl p-1"
-        aria-label={m.authSignIn_title()}
-      >
-        <label
-          className={cn(
-            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
-            mode === 'password'
-              ? 'bg-background text-foreground shadow-xs'
-              : 'text-muted-foreground',
-          )}
-        >
-          <RadioGroupItem value="password" className="sr-only" />
-          {m.authSignIn_passwordTabLabel()}
-        </label>
-        <label
-          className={cn(
-            'has-focus-visible:ring-ring/30 flex h-9 cursor-pointer items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors outline-none has-focus-visible:ring-3',
-            mode === 'magic'
-              ? 'bg-background text-foreground shadow-xs'
-              : 'text-muted-foreground',
-          )}
-        >
-          <RadioGroupItem value="magic" className="sr-only" />
-          {m.authSignIn_magicLinkTabLabel()}
-        </label>
-      </RadioGroup>
+        ariaLabel={m.authSignIn_title()}
+      />
 
       <form
         method="post"
@@ -265,30 +240,10 @@ export function SignInView({
 
       <AuthDivider label={m.authOrDividerLabel()} />
 
-      <div className="flex flex-col gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          disabled={pending}
-          onClick={() => void startOAuth('google')}
-        >
-          <GoogleIcon />
-          {m.authSignIn_continueWithGoogleLabel()}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          disabled={pending}
-          onClick={() => void startOAuth('linkedin')}
-        >
-          <LinkedInIcon className="size-4 text-[#0A66C2]" />
-          {m.authSignIn_continueWithLinkedinLabel()}
-        </Button>
-      </div>
+      <OAuthProviderButtons
+        disabled={pending}
+        onStart={(provider) => void startOAuth(provider)}
+      />
 
       {/* Mirrors the sign-up card's prompt+link footer, so the two entry
           points read as one pair rather than two conventions. */}

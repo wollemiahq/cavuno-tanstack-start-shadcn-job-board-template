@@ -47,6 +47,13 @@ function CompanyJobsPage() {
             to: '/employers/companies/$slug/jobs/$jobId/edit',
             params: { slug, jobId },
           }),
+        dismissJoined: (slug) =>
+          router.navigate({
+            to: '/employers/companies/$slug',
+            params: { slug },
+            search: ({ joined: _joined, ...rest }) => rest,
+            replace: true,
+          }),
         toastError: toast.error,
         toastSuccess: toast.success,
       }}
