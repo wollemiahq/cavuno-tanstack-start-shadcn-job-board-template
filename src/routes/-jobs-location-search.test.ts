@@ -1,9 +1,18 @@
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createJobsLocationLoader } from './-jobs-taxonomy-loaders';
+import { PROGRAMMATIC_JOBS_PAGE_SIZE } from './-programmatic-jobs-constants';
+import { Route as LocationRoute } from './jobs.locations.$location.index';
 
 import type { getJobsLocationPage as GetJobsLocationPage } from '../server/jobs-listing-pages';
 import { jobsListingLoaderDeps, parseJobsSearch } from '@/lib/jobs-search';
+import { listingPageHref } from '@/lib/pagination';
 
 const getJobsLocationPage = vi.fn<typeof GetJobsLocationPage>();
 const loadLocationJobs = createJobsLocationLoader(getJobsLocationPage);
@@ -102,5 +111,62 @@ describe('location jobs route — search distance', () => {
     expect(getJobsLocationPage).toHaveBeenCalledWith({
       data: expect.objectContaining({ locationSlug: 'sydney', within: 25 }),
     });
+  });
+});
+
+describe('location jobs route — `within` in the URL', () => {
+  /** The real location route's search handling, loaded as the server does. */
+  async function serverLoad(href: string) {
+    const loadPage = vi.fn<typeof GetJobsLocationPage>();
+    loadPage.mockResolvedValue({ kind: 'not_found' });
+    const rootRoute = createRootRoute();
+    const locationRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/jobs/locations/$location',
+      validateSearch: LocationRoute.options.validateSearch,
+      loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
+      loader: createJobsLocationLoader(loadPage),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([locationRoute]),
+      history: createMemoryHistory({ initialEntries: [href] }),
+      isServer: true,
+    });
+    await router.load();
+    return { router, loadPage };
+  }
+
+  it('redirects an invalid `within` to the plain location URL', async () => {
+    const { router, loadPage } = await serverLoad(
+      '/jobs/locations/houston?within=7',
+    );
+
+    // What the SSR handler answers with: a redirect to the plain URL.
+    const result = router._serverResult;
+    expect(result?.type).toBe('redirect');
+    if (result?.type !== 'redirect') return;
+    expect(result.redirect.options.href).toBe('/jobs/locations/houston');
+    expect(loadPage).not.toHaveBeenCalled();
+  });
+
+  it('keeps `within` on a later page and in its page links', async () => {
+    const { router, loadPage } = await serverLoad(
+      '/jobs/locations/houston?page=2&within=10',
+    );
+
+    expect(router._serverResult?.type).not.toBe('redirect');
+    expect(loadPage).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        locationSlug: 'houston',
+        within: 10,
+        offset: PROGRAMMATIC_JOBS_PAGE_SIZE,
+      }),
+    });
+    const next = new URL(
+      listingPageHref(router.state.location.href, 3, ['selectedJob']),
+      'https://board.local',
+    );
+    expect(next.searchParams.get('within')).toBe('10');
+    expect(next.searchParams.get('page')).toBe('3');
   });
 });
