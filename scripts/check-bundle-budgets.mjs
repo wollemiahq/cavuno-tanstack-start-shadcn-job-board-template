@@ -61,7 +61,7 @@ const BUDGETS = {
   // Google's consent message on AdSense boards (#246) charges the measured
   // provider + gate cost only: 246.0 -> 246.6 KiB gzip, with the TCF bridge
   // itself (~1 KiB gzip) lazy-loaded on those boards. Headroom is unchanged;
-  // pending operator acceptance on that PR.
+  // accepted by the operator on 2026-10-06.
   shell: { raw: 760_000, gzip: 252_700 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
