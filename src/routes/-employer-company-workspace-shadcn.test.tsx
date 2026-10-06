@@ -25,8 +25,10 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DeferredToaster } from '../components/deferred-toaster';
 import { ApplicantPipelineBoard } from '../components/employer/applicant-pipeline-board';
 import { CompanyMembersTable } from '../components/employer/company-members-table';
+import { toastActionSuccess } from '../lib/action-toast';
 import { handleEmployerLoaderErrorUsing } from '../lib/employer-loader-auth';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -1503,6 +1505,27 @@ describe('employer company workspace', () => {
   function renderMembers(data: CompanyMembersViewData = membersLoaderData) {
     render(<CompanyMembersPageView data={data} actions={membersActions} />);
   }
+
+  // The root mounts the Toaster on the first click; a greeting raised as the
+  // page loads must still be seen without one.
+  it('shows the joined greeting on page load without a click', async () => {
+    render(
+      <>
+        <DeferredToaster />
+        <CompanyMembersPageView
+          data={{ ...membersLoaderData, joined: true }}
+          actions={{
+            ...membersActions,
+            toastSuccess: (message) => void toastActionSuccess(message),
+          }}
+        />
+      </>,
+    );
+
+    expect(
+      await screen.findByText(m.employerMembers_joinedToast()),
+    ).toBeInTheDocument();
+  });
 
   it('lets admins remove members and surfaces last_admin inline', async () => {
     membersActions.removeCompanyMember.mockResolvedValue({

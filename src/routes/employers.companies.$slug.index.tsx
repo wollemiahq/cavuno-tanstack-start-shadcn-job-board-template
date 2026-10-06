@@ -1,5 +1,4 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { toast } from 'sonner';
 
 import { parseCompanyJobsSearch } from '../lib/company-jobs-search';
 import { m } from '../paraglide/messages';
@@ -9,7 +8,7 @@ import {
   createCompanyJobsLoader,
 } from './-employers.company-jobs';
 
-import { requestToaster } from '@/lib/deferred-toaster';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
 
@@ -55,12 +54,8 @@ function CompanyJobsPage() {
             search: ({ joined: _joined, ...rest }) => rest,
             replace: true,
           }),
-        toastError: toast.error,
-        toastSuccess: (message) => {
-          // The joined greeting fires on page load, before any click.
-          requestToaster();
-          toast.success(message);
-        },
+        toastError: (message) => void toastActionError(message),
+        toastSuccess: (message) => void toastActionSuccess(message),
       }}
     />
   );

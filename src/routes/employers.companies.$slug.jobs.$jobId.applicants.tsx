@@ -1,5 +1,4 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { toast } from 'sonner';
 
 import { m } from '../paraglide/messages';
 import {
@@ -15,6 +14,7 @@ import {
   createApplicantsLoader,
 } from './-employers.applicants';
 
+import { toastActionError } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute(
@@ -51,7 +51,7 @@ function ApplicantsPage() {
         renameStage,
         removeStage,
         invalidate: () => router.invalidate(),
-        toastError: toast.error,
+        toastError: (message) => void toastActionError(message),
       }}
     />
   );

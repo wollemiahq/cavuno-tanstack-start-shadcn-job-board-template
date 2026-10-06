@@ -1,27 +1,36 @@
 import { m } from '../paraglide/messages';
+import { requestToaster } from './deferred-toaster';
 
 /**
- * The canonical save-outcome toasts. A single-line confirmation belongs in a
+ * The app's toast entry point. A single-line confirmation belongs in a
  * transient toast rather than a box that shifts the page. Success is polite;
  * failure is destructive.
  *
- * sonner is imported dynamically so the toast module stays out of the SSR
- * bundle — these only ever fire from client event handlers (matching the
- * applicants kanban's convention). Callers fire-and-forget: `void
- * toastActionSuccess()`.
+ * Every toast goes through here because the root mounts the Toaster lazily
+ * (see deferred-toaster.ts): each call asks for it, so a toast raised as a
+ * page loads (a greeting after a redirect, a failure while polling a Stripe
+ * return) shows straight away instead of waiting for the visitor's first
+ * click. sonner is imported dynamically so it stays out of the SSR bundle and
+ * the first paint. Callers fire-and-forget: `void toastActionSuccess()`.
  */
-export async function toastActionSuccess(message?: string): Promise<void> {
+async function loadToast() {
+  requestToaster();
   const { toast } = await import('sonner');
+  return toast;
+}
+
+export async function toastActionSuccess(message?: string): Promise<void> {
+  const toast = await loadToast();
   toast.success(message ?? m.candidateAction_successText());
 }
 
 export async function toastActionError(message?: string): Promise<void> {
-  const { toast } = await import('sonner');
+  const toast = await loadToast();
   toast.error(message ?? m.candidateAction_errorText());
 }
 
 export async function toastActionReconciliationError(): Promise<void> {
-  const { toast } = await import('sonner');
+  const toast = await loadToast();
   toast.warning(m.candidateAction_reconciliationError());
 }
 

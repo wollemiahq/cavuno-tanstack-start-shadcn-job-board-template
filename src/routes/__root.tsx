@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 
 /**
  * Root: loads the PUBLIC board shell once (identity, features, SEO)
@@ -53,6 +53,7 @@ import {
   CookieConsentProvider,
   CookiePreferencesFooterAction,
 } from '@/components/cookie-consent';
+import { DeferredToaster } from '@/components/deferred-toaster';
 import { FloatingStackProvider } from '@/components/floating-stack';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
@@ -67,7 +68,6 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
-import { onToasterRequested } from '@/lib/deferred-toaster';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -108,38 +108,7 @@ const LazyMessagesNavController = lazy(() =>
   })),
 );
 
-const LazyToaster = lazy(() =>
-  import('@/components/ui/sonner').then(({ Toaster }) => ({
-    default: Toaster,
-  })),
-);
 const PSEUDO_LOCALES = new Set(['en-XA', 'ar-XB']);
-
-function DeferredToaster() {
-  const [requested, setRequested] = useState(false);
-
-  useEffect(() => {
-    const request = () => setRequested(true);
-    window.addEventListener('pointerdown', request, {
-      once: true,
-      passive: true,
-      capture: true,
-    });
-    window.addEventListener('keydown', request, { once: true, capture: true });
-    const stopListening = onToasterRequested(request);
-    return () => {
-      window.removeEventListener('pointerdown', request, { capture: true });
-      window.removeEventListener('keydown', request, { capture: true });
-      stopListening();
-    };
-  }, []);
-
-  return requested ? (
-    <Suspense fallback={null}>
-      <LazyToaster />
-    </Suspense>
-  ) : null;
-}
 
 const LazyPreviewToolbar = lazy(() =>
   import('@/components/preview/preview-toolbar').then(({ PreviewToolbar }) => ({

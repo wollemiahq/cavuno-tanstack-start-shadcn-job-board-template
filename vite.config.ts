@@ -82,7 +82,32 @@ const antiSlopLint = {
     'anti-slop/no-unsafe-dictionary-type': 'error',
     'anti-slop/no-widen-then-assert': 'error',
     'anti-slop/require-safety-comment-for-type-assertion': 'error',
+    // The root mounts the Toaster lazily; src/lib/action-toast.ts asks for it
+    // before each toast, so a toast fired as a page loads is not left unseen.
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: [
+          {
+            name: 'sonner',
+            message:
+              'Show toasts through src/lib/action-toast.ts so the lazily mounted Toaster is requested.',
+          },
+        ],
+      },
+    ],
   },
+  overrides: [
+    {
+      files: [
+        'src/lib/action-toast.ts',
+        'src/components/ui/sonner.tsx',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+      ],
+      rules: { 'no-restricted-imports': 'off' },
+    },
+  ],
 } satisfies OxlintConfig;
 
 const INLANG_PROJECT = './project.inlang';
