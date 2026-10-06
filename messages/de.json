@@ -653,6 +653,35 @@
   ],
   "companySearch_resultsRegionLabel": "Unternehmensergebnisse",
   "companySearch_resultsShowingRange": "Zeige {from}–{to} von {count} Unternehmen",
+  "companySearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Unternehmen",
+        "countPlural=*": "Zeige {countLabel} Unternehmen"
+      }
+    }
+  ],
+  "companySearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Unternehmen",
+        "countPlural=*": "Zeige {to} von {countLabel} Unternehmen"
+      }
+    }
+  ],
   "companySearch_retryLabel": "Erneut versuchen",
   "companySearch_searchLabel": "Suchen",
   "companySearch_selectedCompanyRegionLabel": "Ausgewähltes Unternehmen",
@@ -1416,6 +1445,35 @@
       }
     }
   ],
+  "jobSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Job",
+        "countPlural=*": "Zeige {countLabel} Jobs"
+      }
+    }
+  ],
+  "jobSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Job",
+        "countPlural=*": "Zeige {to} von {countLabel} Jobs"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Erneut versuchen",
   "jobSearch_searchButtonLabel": "Suchen",
   "jobSearch_selectedJobRegionLabel": "Ausgewählter Job",
@@ -1498,6 +1556,22 @@
       }
     }
   ],
+  "searchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Job {exactPlace}",
+        "countPlural=*": "Zeige {to} von {countLabel} Jobs {exactPlace}"
+      }
+    }
+  ],
   "searchRadius_exactScopeUncounted": "Angezeigt: Jobs {exactPlace}",
   "searchRadius_exactPlace": "nur in {place}",
   "searchRadius_exactEmpty": "Keine Jobs {exactPlace}",
@@ -1516,6 +1590,23 @@
       "match": {
         "countPlural=one": "Zeige {countLabel} Job im Umkreis von {distance} um {place}",
         "countPlural=*": "Zeige {from}–{to} Jobs im Umkreis von {distance} um {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Job im Umkreis von {distance} um {place}",
+        "countPlural=*": "Zeige {to} von {countLabel} Jobs im Umkreis von {distance} um {place}"
       }
     }
   ],
@@ -2288,6 +2379,35 @@
   "talentSearch_resultsHeading": "Kandidaten",
   "talentSearch_resultsRegionLabel": "Talentergebnisse",
   "talentSearch_resultsShowingRange": "Zeige {from}–{to} von {count} Kandidaten",
+  "talentSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Kandidaten",
+        "countPlural=*": "Zeige {countLabel} Kandidaten"
+      }
+    }
+  ],
+  "talentSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Kandidaten",
+        "countPlural=*": "Zeige {to} von {countLabel} Kandidaten"
+      }
+    }
+  ],
   "talentSearch_retryLabel": "Erneut versuchen",
   "talentSearch_selectedProfileRegionLabel": "Ausgewähltes Profil",
   "talentSearch_skillLabel": "Fähigkeit",

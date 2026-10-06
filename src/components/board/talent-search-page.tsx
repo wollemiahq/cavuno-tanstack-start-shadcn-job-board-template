@@ -58,6 +58,7 @@ import {
   type CustomFilterField,
 } from '@/lib/custom-field-filters';
 import { clampPage, listingPageHref } from '@/lib/pagination';
+import { resultsShowingLine } from '@/lib/results-showing';
 import type { TalentSearch } from '@/lib/talent-search';
 import {
   talentListFiltersEqual,
@@ -331,15 +332,15 @@ export function TalentSearchPage({
     : pageSize;
   const resultDescription =
     resultCount > 0
-      ? m.talentSearch_resultsShowingRange({
-          from: ((resultPage - 1) * resultPageSize + 1).toLocaleString(
-            language,
-          ),
-          to: Math.min(resultPage * resultPageSize, resultCount).toLocaleString(
-            language,
-          ),
-          count: resultCount.toLocaleString(language),
-        })
+      ? resultsShowingLine(
+          'talent',
+          {
+            from: (resultPage - 1) * resultPageSize + 1,
+            to: Math.min(resultPage * resultPageSize, resultCount),
+            count: resultCount,
+          },
+          language,
+        )
       : null;
   const resultsBar = (
     <div data-slot="talent-results-bar" className="pb-3">

@@ -653,6 +653,35 @@
   ],
   "companySearch_resultsRegionLabel": "Company results",
   "companySearch_resultsShowingRange": "Showing {from}–{to} of {count} companies",
+  "companySearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {countLabel} company",
+        "countPlural=*": "Showing {countLabel} companies"
+      }
+    }
+  ],
+  "companySearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {to} of {countLabel} company",
+        "countPlural=*": "Showing {to} of {countLabel} companies"
+      }
+    }
+  ],
   "companySearch_retryLabel": "Retry",
   "companySearch_searchLabel": "Search",
   "companySearch_selectedCompanyRegionLabel": "Selected company",
@@ -1416,6 +1445,35 @@
       }
     }
   ],
+  "jobSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {countLabel} job",
+        "countPlural=*": "Showing {countLabel} jobs"
+      }
+    }
+  ],
+  "jobSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {to} of {countLabel} job",
+        "countPlural=*": "Showing {to} of {countLabel} jobs"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Retry",
   "jobSearch_searchButtonLabel": "Search",
   "jobSearch_selectedJobRegionLabel": "Selected job",
@@ -1498,6 +1556,22 @@
       }
     }
   ],
+  "searchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {to} of {countLabel} job in {exactPlace}",
+        "countPlural=*": "Showing {to} of {countLabel} jobs in {exactPlace}"
+      }
+    }
+  ],
   "searchRadius_exactScopeUncounted": "Showing jobs in {exactPlace}",
   "searchRadius_exactPlace": "{place} only",
   "searchRadius_exactEmpty": "No jobs in {exactPlace}",
@@ -1516,6 +1590,23 @@
       "match": {
         "countPlural=one": "Showing {countLabel} job within {distance} of {place}",
         "countPlural=*": "Showing {from}–{to} jobs within {distance} of {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {to} of {countLabel} job within {distance} of {place}",
+        "countPlural=*": "Showing {to} of {countLabel} jobs within {distance} of {place}"
       }
     }
   ],
@@ -2288,6 +2379,35 @@
   "talentSearch_resultsHeading": "Candidates",
   "talentSearch_resultsRegionLabel": "Talent results",
   "talentSearch_resultsShowingRange": "Showing {from}–{to} of {count} candidates",
+  "talentSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {countLabel} candidate",
+        "countPlural=*": "Showing {countLabel} candidates"
+      }
+    }
+  ],
+  "talentSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Showing {to} of {countLabel} candidate",
+        "countPlural=*": "Showing {to} of {countLabel} candidates"
+      }
+    }
+  ],
   "talentSearch_retryLabel": "Retry",
   "talentSearch_selectedProfileRegionLabel": "Selected profile",
   "talentSearch_skillLabel": "Skill",

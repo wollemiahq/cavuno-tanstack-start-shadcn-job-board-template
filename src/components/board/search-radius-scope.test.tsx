@@ -51,6 +51,24 @@ describe('SearchRadiusScope', () => {
     );
   });
 
+  it('says the one job at the exact place in the singular', () => {
+    expect(
+      line({ within: null, range: { from: 1, to: 1, count: 1 } })?.textContent,
+    ).toBe('Showing 1 job in Houston only');
+  });
+
+  it('says the position of a last page holding one job, not a range', () => {
+    const range = { from: 21, to: 21, count: 21 };
+
+    expect(line({ range })?.textContent).toBe(
+      'Showing 21 of 21 jobs within 25 mi of Houston',
+    );
+    cleanup();
+    expect(line({ within: null, range })?.textContent).toBe(
+      'Showing 21 of 21 jobs in Houston only',
+    );
+  });
+
   it('keeps the menu with no results', () => {
     expect(line({ range: { from: 0, to: 0, count: 0 } })?.textContent).toBe(
       'No jobs within 25 mi of Houston',

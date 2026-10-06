@@ -673,6 +673,39 @@
   ],
   "companySearch_resultsRegionLabel": "Wyniki wyszukiwania firm",
   "companySearch_resultsShowingRange": "Wyświetlanie {from}–{to} z {count}",
+  "companySearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} firmy",
+        "countPlural=few": "Wyświetlanie {countLabel} firm",
+        "countPlural=many": "Wyświetlanie {countLabel} firm",
+        "countPlural=*": "Wyświetlanie {countLabel} firmy"
+      }
+    }
+  ],
+  "companySearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} firmy",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} firm",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} firm",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} firmy"
+      }
+    }
+  ],
   "companySearch_retryLabel": "Ponów",
   "companySearch_searchLabel": "Szukaj",
   "companySearch_selectedCompanyRegionLabel": "Wybrana firma",
@@ -1466,6 +1499,39 @@
       }
     }
   ],
+  "jobSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} oferty",
+        "countPlural=few": "Wyświetlanie {countLabel} ofert",
+        "countPlural=many": "Wyświetlanie {countLabel} ofert",
+        "countPlural=*": "Wyświetlanie {countLabel} oferty"
+      }
+    }
+  ],
+  "jobSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} oferty",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} ofert",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} ofert",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} oferty"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Ponów",
   "jobSearch_searchButtonLabel": "Szukaj",
   "jobSearch_selectedJobRegionLabel": "Wybrana oferta",
@@ -1548,6 +1614,24 @@
       }
     }
   ],
+  "searchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} oferty {exactPlace}",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} ofert {exactPlace}",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} ofert {exactPlace}",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} oferty {exactPlace}"
+      }
+    }
+  ],
   "searchRadius_exactScopeUncounted": "Wyświetlane oferty pracy {exactPlace}",
   "searchRadius_exactPlace": "tylko w {place}",
   "searchRadius_exactEmpty": "Brak ofert {exactPlace}",
@@ -1566,6 +1650,25 @@
       "match": {
         "countPlural=one": "Wyświetlanie {countLabel} oferty w promieniu {distance} od {place}",
         "countPlural=*": "Wyświetlanie ofert {from}–{to} w promieniu {distance} od {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} oferty w promieniu {distance} od {place}",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} ofert w promieniu {distance} od {place}",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} ofert w promieniu {distance} od {place}",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} oferty w promieniu {distance} od {place}"
       }
     }
   ],
@@ -2358,6 +2461,39 @@
   "talentSearch_resultsHeading": "Kandydaci",
   "talentSearch_resultsRegionLabel": "Wyniki wyszukiwania kandydatów",
   "talentSearch_resultsShowingRange": "Wyświetlanie {from}–{to} z {count}",
+  "talentSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} kandydata",
+        "countPlural=few": "Wyświetlanie {countLabel} kandydatów",
+        "countPlural=many": "Wyświetlanie {countLabel} kandydatów",
+        "countPlural=*": "Wyświetlanie {countLabel} kandydata"
+      }
+    }
+  ],
+  "talentSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} kandydata",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} kandydatów",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} kandydatów",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} kandydata"
+      }
+    }
+  ],
   "talentSearch_retryLabel": "Ponów",
   "talentSearch_selectedProfileRegionLabel": "Wybrany profil",
   "talentSearch_skillLabel": "Umiejętność",

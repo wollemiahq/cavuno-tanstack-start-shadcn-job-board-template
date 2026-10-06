@@ -22,6 +22,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { resultsLineKind } from '@/lib/results-showing';
 
 /** Stands in for the menu while the message is formatted, then split on. */
 const MENU_SLOT = '\u0000';
@@ -149,6 +150,14 @@ function sentence({
     if (range.count === 0) {
       return m.searchRadius_exactEmpty({ exactPlace: MENU_SLOT });
     }
+    if (resultsLineKind(range) === 'lastPage') {
+      return m.searchRadius_exactScopeLast({
+        to: range.to.toLocaleString(locale),
+        count: range.count,
+        countLabel: range.count.toLocaleString(locale),
+        exactPlace: MENU_SLOT,
+      });
+    }
     return m.searchRadius_exactScope({
       from: range.from.toLocaleString(locale),
       to: range.to.toLocaleString(locale),
@@ -162,6 +171,15 @@ function sentence({
   }
   if (range.count === 0) {
     return m.searchRadius_withinEmpty({ distance: MENU_SLOT, place });
+  }
+  if (resultsLineKind(range) === 'lastPage') {
+    return m.searchRadius_withinScopeLast({
+      to: range.to.toLocaleString(locale),
+      count: range.count,
+      countLabel: range.count.toLocaleString(locale),
+      distance: MENU_SLOT,
+      place,
+    });
   }
   return m.searchRadius_withinScope({
     from: range.from.toLocaleString(locale),

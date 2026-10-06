@@ -653,6 +653,35 @@
   ],
   "companySearch_resultsRegionLabel": "Bedrijfsresultaten",
   "companySearch_resultsShowingRange": "{from}–{to} van {count} bedrijven weergegeven",
+  "companySearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} bedrijf weergegeven",
+        "countPlural=*": "{countLabel} bedrijven weergegeven"
+      }
+    }
+  ],
+  "companySearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} bedrijf weergegeven",
+        "countPlural=*": "{to} van {countLabel} bedrijven weergegeven"
+      }
+    }
+  ],
   "companySearch_retryLabel": "Opnieuw proberen",
   "companySearch_searchLabel": "Zoeken",
   "companySearch_selectedCompanyRegionLabel": "Geselecteerd bedrijf",
@@ -1416,6 +1445,35 @@
       }
     }
   ],
+  "jobSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature weergegeven",
+        "countPlural=*": "{countLabel} vacatures weergegeven"
+      }
+    }
+  ],
+  "jobSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} vacature weergegeven",
+        "countPlural=*": "{to} van {countLabel} vacatures weergegeven"
+      }
+    }
+  ],
   "jobSearch_retryLabel": "Opnieuw proberen",
   "jobSearch_searchButtonLabel": "Zoeken",
   "jobSearch_selectedJobRegionLabel": "Geselecteerde vacature",
@@ -1498,6 +1556,22 @@
       }
     }
   ],
+  "searchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} vacature {exactPlace}",
+        "countPlural=*": "{to} van {countLabel} vacatures {exactPlace}"
+      }
+    }
+  ],
   "searchRadius_exactScopeUncounted": "Je ziet vacatures {exactPlace}",
   "searchRadius_exactPlace": "alleen in {place}",
   "searchRadius_exactEmpty": "Geen vacatures {exactPlace}",
@@ -1516,6 +1590,23 @@
       "match": {
         "countPlural=one": "{countLabel} vacature binnen {distance} van {place}",
         "countPlural=*": "{from}–{to} vacatures binnen {distance} van {place}"
+      }
+    }
+  ],
+  "searchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} vacature binnen {distance} van {place}",
+        "countPlural=*": "{to} van {countLabel} vacatures binnen {distance} van {place}"
       }
     }
   ],
@@ -2288,6 +2379,35 @@
   "talentSearch_resultsHeading": "Kandidaten",
   "talentSearch_resultsRegionLabel": "Gevonden kandidaten",
   "talentSearch_resultsShowingRange": "{from}–{to} van {count} kandidaten",
+  "talentSearch_resultsShowingCount": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} kandidaat",
+        "countPlural=*": "{countLabel} kandidaten"
+      }
+    }
+  ],
+  "talentSearch_resultsShowingLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} kandidaat",
+        "countPlural=*": "{to} van {countLabel} kandidaten"
+      }
+    }
+  ],
   "talentSearch_retryLabel": "Opnieuw proberen",
   "talentSearch_selectedProfileRegionLabel": "Geselecteerd profiel",
   "talentSearch_skillLabel": "Vaardigheid",

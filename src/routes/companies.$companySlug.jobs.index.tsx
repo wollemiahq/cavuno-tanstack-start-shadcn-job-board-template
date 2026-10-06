@@ -32,6 +32,7 @@ import {
   searchString,
   type UrlSearchInput,
 } from '../lib/pagination';
+import { resultsShowingLine } from '../lib/results-showing';
 import { chromeEntity } from '../lib/site-chrome';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -96,12 +97,11 @@ function CompanyJobsPage() {
       : null;
 
   const countLabel = span
-    ? m.jobSearch_resultsShowingRange({
-        from: span.from.toLocaleString(locale),
-        to: span.to.toLocaleString(locale),
-        count: count,
-        countLabel: count.toLocaleString(locale),
-      })
+    ? resultsShowingLine(
+        'jobs',
+        { from: span.from, to: span.to, count },
+        locale,
+      )
     : entityCount(count, locale, m.count_jobs, {
         singular: chromeEntity().jobSingular,
         plural: chromeEntity().jobPlural,

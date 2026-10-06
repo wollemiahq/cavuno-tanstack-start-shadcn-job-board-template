@@ -6,6 +6,7 @@ import { getLocale } from '../../paraglide/runtime';
 import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
+import { resultsShowingLine } from '@/lib/results-showing';
 import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
 
@@ -79,12 +80,11 @@ export function JobsResultsBar({
         };
   const rangeLabel =
     span && totalCount !== undefined
-      ? m.jobSearch_resultsShowingRange({
-          from: span.from.toLocaleString(locale),
-          to: span.to.toLocaleString(locale),
-          count: totalCount,
-          countLabel: totalCount.toLocaleString(locale),
-        })
+      ? resultsShowingLine(
+          'jobs',
+          { from: span.from, to: span.to, count: totalCount },
+          locale,
+        )
       : null;
 
   return (
