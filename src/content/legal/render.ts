@@ -76,7 +76,7 @@ const DROPPED_WITH_CONTENT = new Set([
 const TOKEN =
   /<!--|<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:=\s*(?:"[^"]*"|'[^']*')|=(?!\s*["'])|[^<>=])*)>/g;
 const ATTRIBUTE =
-  /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/g;
+  /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'<>]+))/g;
 const LINK_ATTRIBUTES = new Set(['href', 'title', 'target', 'rel']);
 // Protocol-relative (`//host`, `/\host`, `\\host`) is rejected: browsers read
 // `\` as `/`.

@@ -84,6 +84,15 @@ describe('renderLegalHtml', () => {
     expect(renderLegalHtml('<p>A</br></p>', 'Board')).toBe('<p>A</p>');
   });
 
+  it('keeps an unquoted link whose value contains =', () => {
+    expect(
+      renderLegalHtml(
+        '<a href=https://x.com/?a=b&c=d title=a=b>x</a>',
+        'Board',
+      ),
+    ).toBe('<a href="https://x.com/?a=b&amp;c=d" title="a=b">x</a>');
+  });
+
   it('keeps an escaped query string in a link', () => {
     expect(
       renderLegalHtml('<a href="/jobs?a=1&amp;b=2">jobs</a>', 'Board'),
