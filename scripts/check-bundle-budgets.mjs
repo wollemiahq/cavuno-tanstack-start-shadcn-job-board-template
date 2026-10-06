@@ -58,7 +58,11 @@ const BUDGETS = {
   // bundler splits the shell into 88 chunks instead of 43 (+3.9 KiB gzip for
   // the same raw bytes). Measured 726.8 KiB raw / 242.3 KiB gzip; rebaselined
   // with the same ~4 KiB gzip headroom.
-  shell: { raw: 760_000, gzip: 252_000 },
+  // Google's consent message on AdSense boards (#246) charges the measured
+  // provider + gate cost only: 246.0 -> 246.6 KiB gzip, with the TCF bridge
+  // itself (~1 KiB gzip) lazy-loaded on those boards. Headroom is unchanged;
+  // pending operator acceptance on that PR.
+  shell: { raw: 760_000, gzip: 252_700 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
