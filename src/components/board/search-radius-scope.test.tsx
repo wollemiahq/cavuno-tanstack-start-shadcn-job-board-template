@@ -24,6 +24,11 @@ const n = (value: number) => value.toLocaleString(getLocale());
 const mi = (value: number) => formatDistance(value, 'mi', getLocale());
 const km = (value: number) => formatDistance(value, 'km', getLocale());
 const houstonOnly = () => m.searchRadius_exactPlace({ place: 'Houston' });
+/** The menu button's accessible name for the distance it shows. */
+const trigger = (distance: string) =>
+  screen.getByRole('button', {
+    name: m.searchRadius_triggerLabel({ distance }),
+  });
 
 type Props = Parameters<typeof SearchRadiusScope>[0];
 
@@ -54,6 +59,15 @@ describe('SearchRadiusScope', () => {
       }),
     );
     expect(screen.getByRole('button').textContent).toBe(mi(25));
+  });
+
+  it('names the menu button with what it chooses', () => {
+    line();
+
+    expect(trigger(mi(25)).textContent).toBe(mi(25));
+    cleanup();
+    line({ within: null });
+    expect(trigger(houstonOnly())).toBeInTheDocument();
   });
 
   it('names the place itself at the exact place, the menu still there', () => {
@@ -137,7 +151,7 @@ describe('SearchRadiusScope', () => {
 
   it('offers the exact place and the presets in the place unit', async () => {
     line();
-    fireEvent.click(screen.getByRole('button', { name: mi(25) }));
+    fireEvent.click(trigger(mi(25)));
     const options = await screen.findAllByRole('menuitemradio');
     expect(options.map((option) => option.textContent)).toEqual([
       m.searchRadius_exactOption(),
@@ -164,7 +178,7 @@ describe('SearchRadiusScope', () => {
     const onWithinChange = vi.fn();
     line({ within: 50, onWithinChange });
 
-    fireEvent.click(screen.getByRole('button', { name: mi(50) }));
+    fireEvent.click(trigger(mi(50)));
     fireEvent.click(
       await screen.findByRole('menuitemradio', { name: option() }),
     );
@@ -174,7 +188,7 @@ describe('SearchRadiusScope', () => {
   it('closes the menu once a distance is picked', async () => {
     line();
 
-    fireEvent.click(screen.getByRole('button', { name: mi(25) }));
+    fireEvent.click(trigger(mi(25)));
     fireEvent.click(
       await screen.findByRole('menuitemradio', {
         name: m.searchRadius_withinOption({ distance: mi(10) }),

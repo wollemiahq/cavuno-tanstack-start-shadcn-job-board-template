@@ -1661,6 +1661,7 @@
   "searchRadius_exactOption": "Lieu exact uniquement",
   "searchRadius_withinOption": "Dans un rayon de {distance}",
   "searchRadius_menuLabel": "Distance",
+  "searchRadius_triggerLabel": "Distance : {distance}",
   "locationSkillPage_jobsHeading": "Offres {skill} à {place}",
   "locationSkillPage_jobsCountHeading": [
     {

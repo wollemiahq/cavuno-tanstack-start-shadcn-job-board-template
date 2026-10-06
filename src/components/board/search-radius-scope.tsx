@@ -80,9 +80,11 @@ export function SearchRadiusScope({
             render={
               <Button
                 type="button"
-                variant="ghost"
-                size="xs"
-                className="text-foreground px-1 font-semibold"
+                variant="inline"
+                size="inline"
+                aria-label={m.searchRadius_triggerLabel({
+                  distance: triggerText,
+                })}
                 data-test="search-radius-trigger"
               />
             }

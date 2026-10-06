@@ -1729,6 +1729,7 @@
   "searchRadius_exactOption": "Tylko dokładna lokalizacja",
   "searchRadius_withinOption": "W promieniu {distance}",
   "searchRadius_menuLabel": "Odległość",
+  "searchRadius_triggerLabel": "Odległość: {distance}",
   "locationSkillPage_jobsHeading": "Oferty: {skill} — {place}",
   "locationSkillPage_jobsCountHeading": [
     {

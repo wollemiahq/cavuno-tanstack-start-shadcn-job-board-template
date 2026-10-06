@@ -1661,6 +1661,7 @@
   "searchRadius_exactOption": "Alleen exacte locatie",
   "searchRadius_withinOption": "Binnen {distance}",
   "searchRadius_menuLabel": "Afstand",
+  "searchRadius_triggerLabel": "Afstand: {distance}",
   "locationSkillPage_jobsHeading": "Vacatures voor {skill} in {place}",
   "locationSkillPage_jobsCountHeading": [
     {
