@@ -154,9 +154,8 @@ export function AnalyticsScripts({
   /** Test seam; runtime defaults to the current document host. */
   hostname?: string;
 }) {
-  const { required, choice, markAnalyticsLoaded } = useCookieConsent();
-  // Unresolved (`undefined`) and denied/undecided are not allowed yet.
-  const allowed = !required || choice === 'accepted';
+  // Unresolved and denied/undecided are not allowed yet.
+  const { allowed, markAnalyticsLoaded } = useCookieConsent();
 
   useEffect(() => {
     if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) return;

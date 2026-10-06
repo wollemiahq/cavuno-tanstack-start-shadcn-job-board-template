@@ -18,18 +18,28 @@ import {
   CookieConsentProvider,
   useCookieConsent,
 } from '@/components/cookie-consent';
+import type { BoardAdsConfig } from '@/lib/board-ads';
 
 const withdraw = vi.fn();
-const state = { previewAds: false, required: false, width: 1280 };
+const CLIENT_ID = 'ca-pub-1234567890123456';
+const ads: BoardAdsConfig = {
+  enabled: true,
+  clientId: CLIENT_ID,
+  defaultSlotId: '1234567890',
+};
+const state = { previewAds: false, required: false, width: 1280, ads };
+// Same order as the root: the consent provider reads the ads config.
 function TestProviders({ children }: { children: ReactNode }) {
   return (
     <BoardAdPreviewProvider enabled={state.previewAds}>
-      <CookieConsentProvider
-        required={state.required}
-        withdrawAnalytics={withdraw}
-      >
-        {children}
-      </CookieConsentProvider>
+      <BoardAdsProvider ads={state.ads}>
+        <CookieConsentProvider
+          required={state.required}
+          withdrawAnalytics={withdraw}
+        >
+          {children}
+        </CookieConsentProvider>
+      </BoardAdsProvider>
     </BoardAdPreviewProvider>
   );
 }
@@ -40,11 +50,6 @@ function render(element: ReactElement) {
   );
   return renderUI(element, { wrapper: TestProviders });
 }
-const ads = {
-  enabled: true,
-  clientId: 'ca-pub-1234567890123456',
-  defaultSlotId: '1234567890',
-};
 const loader = () => document.getElementById('cavuno-adsense-loader');
 function ConsentButtons() {
   const { accept, deny } = useCookieConsent();
@@ -65,11 +70,12 @@ function setup(config = ads, hasMobileBottomBar = false) {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   }));
+  state.ads = config;
   return render(
-    <BoardAdsProvider ads={config}>
+    <>
       <BoardAdsBoot hasMobileBottomBar={hasMobileBottomBar} />
       {state.required && <ConsentButtons />}
-    </BoardAdsProvider>,
+    </>,
   );
 }
 afterEach(() => {
@@ -84,15 +90,13 @@ afterEach(() => {
     previewAds: false,
     required: false,
     width: 1280,
+    ads,
   });
 });
 describe('public AdSense loader', () => {
   it('loads AdSense without forcing anchors or rendering a unit', () => {
     const view = setup();
-    expect(loader()).toHaveAttribute(
-      'src',
-      expect.stringContaining(ads.clientId),
-    );
+    expect(loader()).toHaveAttribute('src', expect.stringContaining(CLIENT_ID));
     expect(loader()).not.toHaveAttribute('data-overlays');
     expect(view.container.querySelector('ins')).toBeNull();
     expect(
@@ -134,6 +138,30 @@ describe('public AdSense loader', () => {
     fireEvent.click(screen.getByRole('button', { name: 'accept' }));
     fireEvent.click(screen.getByRole('button', { name: 'decline' }));
     expect(loader()).toBeNull();
+    expect(withdraw).not.toHaveBeenCalled();
+  });
+});
+
+describe('with Google’s consent message', () => {
+  const googleAds = { ...ads, googleConsentMessage: true };
+
+  it('loads on page load without waiting for the board’s banner', () => {
+    state.required = true;
+    setup(googleAds);
+    expect(loader()).not.toBeNull();
+  });
+
+  it('loads on mobile job pages so Google’s CMP can ask there too', () => {
+    state.width = 390;
+    setup(googleAds, true);
+    expect(loader()).not.toBeNull();
+  });
+
+  it('is not withdrawn by a decline on the board’s banner', () => {
+    state.required = true;
+    setup(googleAds);
+    fireEvent.click(screen.getByRole('button', { name: 'decline' }));
+    expect(loader()).not.toBeNull();
     expect(withdraw).not.toHaveBeenCalled();
   });
 });

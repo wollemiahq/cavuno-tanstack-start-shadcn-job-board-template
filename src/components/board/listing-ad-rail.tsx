@@ -71,8 +71,8 @@ export function useListingAdRails(
   const wide = useMediaMatch(RAIL_MIN_WIDTH);
   const dualWide = useMediaMatch(DUAL_RAIL_MIN_WIDTH);
   const { previewAds } = useBoardAdPreview();
-  const { required, choice } = useCookieConsent();
-  const allowed = previewAds || !required || choice === 'accepted';
+  const { adsAllowed } = useCookieConsent();
+  const allowed = previewAds || adsAllowed;
   return {
     startAd: listingAdRail(
       startOverride,

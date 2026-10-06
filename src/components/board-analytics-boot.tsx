@@ -35,10 +35,9 @@ export function BoardAnalyticsBoot({
   /** Test seam; runtime defaults to the current document host. */
   hostname?: string;
 }) {
-  const { required, choice, markAnalyticsLoaded } = useCookieConsent();
+  const { required, choice, consentSource, allowed, markAnalyticsLoaded } =
+    useCookieConsent();
   const entry = useRef<{ href: string; referrer: string } | null>(null);
-  // Unresolved (`undefined`) and denied/undecided are not allowed yet.
-  const allowed = !required || choice === 'accepted';
   useEffect(() => {
     if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) return;
     if (!publishableKey.startsWith('pk_')) return;
@@ -47,13 +46,19 @@ export function BoardAnalyticsBoot({
       href: window.location.href,
       referrer: document.referrer,
     };
-    if (choice === undefined) return;
-    if (choice === 'denied' || (required && choice !== 'accepted')) {
+    // Not known yet: our choice unresolved, or waiting for Google's CMP.
+    if (consentSource === 'pending') return;
+    if (consentSource === 'cavuno' && choice === undefined) return;
+    const declined =
+      consentSource === 'google'
+        ? !allowed
+        : choice === 'denied' || (required && choice !== 'accepted');
+    if (declined) {
       clearBrowserAudienceAttribution(publishableKey);
       return;
     }
     captureBrowserAudienceAttribution(publishableKey, entry.current);
-  }, [publishableKey, hostname, required, choice]);
+  }, [publishableKey, hostname, required, choice, consentSource, allowed]);
 
   useEffect(() => {
     if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) return;

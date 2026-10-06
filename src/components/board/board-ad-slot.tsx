@@ -33,10 +33,9 @@ export function BoardAdSlot({
   const contextAds = useBoardAds();
   const ads = suppliedAds ?? contextAds;
   const { previewAds } = useBoardAdPreview();
-  const { required, choice } = useCookieConsent();
+  const { adsAllowed: allowed } = useCookieConsent();
   const visible = useAdMedia(media);
   const slot = resolveAdsSlot(placement, ads.defaultSlotId, overrideSlotId);
-  const allowed = !required || choice === 'accepted';
   if (!visible) return null;
   if (previewAds) {
     return (

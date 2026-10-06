@@ -7,12 +7,19 @@ export type BoardAdsConfig = {
   enabled: boolean;
   clientId: string | null;
   defaultSlotId?: string | null;
+  /**
+   * Google's consent message is in charge for EEA/UK/CH visitors: AdSense
+   * loads on page load so its CMP can ask. Only true with ads on and a
+   * valid client id.
+   */
+  googleConsentMessage?: boolean;
 };
 
 export const ADS_OFF: BoardAdsConfig = {
   enabled: false,
   clientId: null,
   defaultSlotId: null,
+  googleConsentMessage: false,
 };
 
 /**
@@ -39,5 +46,8 @@ export function resolveBoardAds(context: BoardAdsSource): BoardAdsConfig {
     enabled,
     clientId: enabled ? clientId : null,
     defaultSlotId: enabled && SLOT_ID_RE.test(slot) ? slot : null,
+    // Missing on older SDK builds: off.
+    googleConsentMessage:
+      enabled && clientId !== null && ads.googleConsentMessage === true,
   };
 }

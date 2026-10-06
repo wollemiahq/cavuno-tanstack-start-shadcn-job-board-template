@@ -50,4 +50,13 @@ describe('clearAnalyticsCookies', () => {
 
     expect(cookieNames()).toEqual(['__gpi_optout']);
   });
+
+  it('keeps AdSense cookies when Google’s consent message governs ads', () => {
+    document.cookie = '__gads=ID=1; Path=/';
+    document.cookie = '_ga=GA1.2.1; Path=/';
+
+    clearAnalyticsCookies({ keepAdSense: true });
+
+    expect(cookieNames()).toEqual(['__gads']);
+  });
 });

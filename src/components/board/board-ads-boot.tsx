@@ -8,33 +8,49 @@ import { useBoardAds } from './board-ads-provider';
 
 import { useCookieConsent } from '@/components/cookie-consent';
 
-/** Load AdSense on public pages without requesting or simulating anchor ads. */
+/**
+ * Load AdSense on public pages without requesting or simulating anchor ads.
+ *
+ * With Google's consent message (`ads.googleConsentMessage`) the tag loads
+ * on page load for every visitor and viewport, without waiting for the
+ * board's banner, so Google's CMP can ask EEA/UK/CH visitors. That includes
+ * mobile job pages with the Apply bar: keep bottom anchors off there in
+ * AdSense (see the README). Google's message governs AdSense then, so a
+ * decline on the board's banner does not withdraw it.
+ */
 export function BoardAdsBoot({
   hasMobileBottomBar = false,
 }: {
   hasMobileBottomBar?: boolean;
 }) {
   const ads = useBoardAds();
-  const { required, choice, markAnalyticsLoaded } = useCookieConsent();
+  const googleMode = ads.googleConsentMessage === true;
+  const { adsAllowed, markAnalyticsLoaded } = useCookieConsent();
   const { previewAds } = useBoardAdPreview();
   const eligibleViewport = useAdMedia(
-    hasMobileBottomBar ? '(min-width: 1024px)' : '(min-width: 320px)',
+    googleMode
+      ? undefined
+      : hasMobileBottomBar
+        ? '(min-width: 1024px)'
+        : '(min-width: 320px)',
   );
   useEffect(() => {
     if (
       !eligibleViewport ||
       previewAds ||
-      (required && choice !== 'accepted') ||
+      !adsAllowed ||
       !ads.enabled ||
       !ads.clientId
     )
       return;
-    if (ensureAdSenseScript(ads.clientId)) markAnalyticsLoaded();
+    if (ensureAdSenseScript(ads.clientId) && !googleMode) {
+      markAnalyticsLoaded();
+    }
   }, [
     eligibleViewport,
     previewAds,
-    required,
-    choice,
+    adsAllowed,
+    googleMode,
     ads.enabled,
     ads.clientId,
     markAnalyticsLoaded,

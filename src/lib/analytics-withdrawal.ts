@@ -25,12 +25,19 @@ const ANALYTICS_COOKIE_NAMES = new Set([
   'session-id',
   // LinkedIn Insight first-party click id.
   'li_fat_id',
-  // AdSense on the publisher's domain (Google's ad-cookie list). Exact
-  // names: `__gpi_optout` records an ad opt-out and must survive.
-  '__gads',
-  '__gpi',
-  '__eoi',
 ]);
+
+/**
+ * AdSense on the publisher's domain (Google's ad-cookie list). Exact names:
+ * `__gpi_optout` records an ad opt-out and must survive. Left alone when
+ * Google's consent message governs ads (`keepAdSense`).
+ */
+const ADSENSE_COOKIE_NAMES = new Set(['__gads', '__gpi', '__eoi']);
+
+export interface ClearAnalyticsCookiesOptions {
+  /** Google's consent message governs AdSense: keep its cookies. */
+  keepAdSense?: boolean;
+}
 
 /**
  * Anchored patterns, so a fork's own cookies (`_gallery_view`) never match.
@@ -51,9 +58,10 @@ const ANALYTICS_COOKIE_PATTERNS = [
   /^_fbc$/,
 ];
 
-function isAnalyticsCookie(name: string): boolean {
+function isAnalyticsCookie(name: string, keepAdSense: boolean): boolean {
   return (
     ANALYTICS_COOKIE_NAMES.has(name) ||
+    (!keepAdSense && ADSENSE_COOKIE_NAMES.has(name)) ||
     ANALYTICS_COOKIE_PATTERNS.some((pattern) => pattern.test(name))
   );
 }
@@ -63,11 +71,13 @@ function isAnalyticsCookie(name: string): boolean {
  * document (Path=/, where all of these trackers set them). The consent
  * cookie and unrelated cookies are left alone.
  */
-export function clearAnalyticsCookies(): void {
+export function clearAnalyticsCookies({
+  keepAdSense = false,
+}: ClearAnalyticsCookiesOptions = {}): void {
   const names = document.cookie
     .split(';')
     .map((part) => part.split('=')[0]?.trim() ?? '')
-    .filter((name) => name !== '' && isAnalyticsCookie(name));
+    .filter((name) => name !== '' && isAnalyticsCookie(name, keepAdSense));
   for (const name of new Set(names)) {
     document.cookie = `${name}=; Path=/; Max-Age=0`;
   }
@@ -77,8 +87,10 @@ export function clearAnalyticsCookies(): void {
  * Clear the trackers' cookies and reload into a tracker-free document. The
  * kill switch stops Cavuno Analytics flushing beacons as this page unloads.
  */
-export function withdrawAnalytics(): void {
+export function withdrawAnalytics(
+  options: ClearAnalyticsCookiesOptions = {},
+): void {
   window.__cavunoAnalyticsOff = true;
-  clearAnalyticsCookies();
+  clearAnalyticsCookies(options);
   window.location.reload();
 }

@@ -6,6 +6,7 @@ const ads = {
   enabled: true,
   clientId: 'ca-pub-1234567890123456',
   defaultSlotId: '1234567890',
+  googleConsentMessage: false,
 };
 
 describe('resolveBoardAds', () => {
@@ -49,6 +50,22 @@ describe('resolveBoardAds', () => {
         object: 'public_board',
         ads: { ...ads, clientId: 'ca-pub-short', defaultSlotId: 'short' },
       }),
-    ).toEqual({ enabled: true, clientId: null, defaultSlotId: null });
+    ).toEqual({
+      enabled: true,
+      clientId: null,
+      defaultSlotId: null,
+      googleConsentMessage: false,
+    });
+  });
+  it('uses the Google consent message only with ads on and a valid publisher', () => {
+    const resolve = (overrides: Partial<typeof ads>) =>
+      resolveBoardAds({
+        object: 'public_board',
+        ads: { ...ads, googleConsentMessage: true, ...overrides },
+      }).googleConsentMessage;
+    expect(resolve({})).toBe(true);
+    expect(resolve({ enabled: false })).toBe(false);
+    expect(resolve({ clientId: 'ca-pub-short' })).toBe(false);
+    expect(resolve({ googleConsentMessage: false })).toBe(false);
   });
 });
