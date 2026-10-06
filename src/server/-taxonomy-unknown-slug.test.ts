@@ -29,6 +29,9 @@ vi.mock('../lib/board-access-middleware', () => ({
 vi.mock('../lib/board-context-cache', () => ({
   readBoardContext: async () => ({ name: 'Fixture', language: 'en' }),
 }));
+vi.mock('../lib/data-source.server', () => ({
+  getDataSource: () => 'board',
+}));
 vi.mock('../lib/public-origin', () => ({
   readPublicOrigin: async () => 'https://fixture.example',
 }));

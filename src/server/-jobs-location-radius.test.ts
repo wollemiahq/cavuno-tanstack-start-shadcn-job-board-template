@@ -33,6 +33,9 @@ vi.mock('../lib/board-context-cache', () => ({
 vi.mock('../lib/public-origin', () => ({
   readPublicOrigin: async () => 'https://fixture.example',
 }));
+vi.mock('../lib/data-source.server', () => ({
+  getDataSource: () => 'board',
+}));
 vi.mock('./board-access', () => ({
   gatedRead: <TResult>(
     _context: Record<string, never>,
@@ -55,6 +58,10 @@ import {
   getJobsLocationPage,
   getJobsLocationSkillPage,
 } from './jobs-listing-pages';
+import {
+  combinationInPlaceCountCache,
+  placeRadiusGeoCache,
+} from './listing-place-cache';
 
 function resolution(placeType: string, countryCode: string) {
   return {
@@ -77,6 +84,8 @@ function resolution(placeType: string, countryCode: string) {
   };
 }
 
+type Place = ReturnType<typeof resolution>;
+
 const emptyList = {
   object: 'list',
   url: '/v1/jobs',
@@ -96,6 +105,8 @@ function robots(head: { meta: HeadMeta[] }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  placeRadiusGeoCache.clear();
+  combinationInPlaceCountCache.clear();
   // The place directory: the fixture place has jobs of its own.
   mocks.tree.mockResolvedValue({
     data: [{ slug: 'fixture-place', jobCount: 3 }],
@@ -327,5 +338,60 @@ describe('location listing search distance', () => {
 
     if (result.kind !== 'ok') throw new Error('expected a listing');
     expect(robots(result.head)).toBeUndefined();
+  });
+  it('starts the exact-place list without waiting for the place', async () => {
+    let settle: (place: Place) => void = () => {};
+    mocks.resolve.mockReturnValue(
+      new Promise<Place>((resolve) => {
+        settle = resolve;
+      }),
+    );
+
+    const pending = getJobsLocationPage({ data: { ...page, within: 0 } });
+    await vi.waitFor(() => expect(mocks.list).toHaveBeenCalledTimes(1));
+    settle(resolution('city', 'US'));
+
+    expect((await pending).kind).toBe('ok');
+  });
+
+  it("starts a warm place's default-distance list without waiting for the place", async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+    await getJobsLocationPage({ data: page });
+    mocks.list.mockClear();
+
+    let settle: (place: Place) => void = () => {};
+    mocks.resolve.mockReturnValue(
+      new Promise<Place>((resolve) => {
+        settle = resolve;
+      }),
+    );
+    const pending = getJobsLocationPage({ data: page });
+    await vi.waitFor(() => expect(mocks.list).toHaveBeenCalledTimes(1));
+    // 25 mi, the US default, as kilometres.
+    expect(mocks.list.mock.calls[0]?.[0].radius).toBeCloseTo(40.23, 2);
+    settle(resolution('city', 'US'));
+
+    expect((await pending).kind).toBe('ok');
+  });
+
+  it("reads a combination's own count only for its plain first page, once", async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
+    const countReads = () =>
+      mocks.list.mock.calls.filter(([query]) => query.limit === 1).length;
+
+    await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing' },
+    });
+    await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing' },
+    });
+    await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing', offset: 24 },
+    });
+    await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing', remoteOption: 'remote' },
+    });
+
+    expect(countReads()).toBe(1);
   });
 });

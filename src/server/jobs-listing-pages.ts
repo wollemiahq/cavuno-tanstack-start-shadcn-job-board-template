@@ -37,6 +37,11 @@ import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
+import {
+  combinationInPlaceCountCache,
+  listingCacheKey,
+  placeRadiusGeoCache,
+} from './listing-place-cache';
 
 import {
   customFieldLabel,
@@ -47,7 +52,9 @@ import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import {
   isSearchRadiusViewNoindex,
   placeJobCount,
+  placeRadiusGeo,
   placeSearchRadius,
+  SEARCH_RADIUS_EXACT,
 } from '@/board/search-radius';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
@@ -201,35 +208,77 @@ function noindexSearchRadiusView<T extends { meta: object[] }>(
  * The `radius` (km) a location listing asks for: the URL's `within`, or the
  * market default for a city or locality with a point; none (exact) for
  * `within=0`, a region or a country. The API keeps an omitted radius exact,
- * so the place resolves first: its level and unit decide the kilometres.
+ * so the place's level and unit decide the kilometres: `within=0` needs
+ * neither, a place this isolate resolved before reuses its cached geo, and
+ * only a cold slug waits for `placeRead` before the job list starts.
  */
 async function listingRadiusKm(
+  locationSlug: string,
   placeRead: Promise<TaxonomyResolution | null>,
   within: number | undefined,
 ): Promise<number | undefined> {
-  return placeSearchRadius(await placeRead, within)?.selected?.km;
+  if (within === SEARCH_RADIUS_EXACT) return undefined;
+  const key = listingCacheKey(locationSlug);
+  const cached = placeRadiusGeoCache.get(key);
+  if (cached !== undefined) {
+    return placeSearchRadius({ geo: cached }, within)?.selected?.km;
+  }
+  const readAt = Date.now();
+  const place = await placeRead;
+  if (place) placeRadiusGeoCache.set(key, placeRadiusGeo(place.geo), readAt);
+  return placeSearchRadius(place, within)?.selected?.km;
+}
+
+/**
+ * The plain URL's own view: first page, no filter, sort, query or chosen
+ * distance. Other views canonicalize to it, so only it decides indexing.
+ */
+function isPlainListingView(
+  data: JobsListingFiltersInput & { within?: number },
+): boolean {
+  return (
+    data.offset === 0 &&
+    data.within === undefined &&
+    !data.q &&
+    !data.remoteOption &&
+    !data.employmentType &&
+    !data.customEmploymentType &&
+    !data.seniority?.length &&
+    !data.sort
+  );
 }
 
 /**
  * A location combination's own jobs in the place (`within=0`), which its
  * default-distance view's noindex turns on, as the sitemap does: with none
  * in the place the listing shows only nearby jobs. Read (one row, total
- * only) only for that view; `null` otherwise or when the read fails, which
+ * only) only for the plain view of a widened place, and reused per place and
+ * facet for a few minutes; `null` otherwise or when the read fails, which
  * keeps the page indexable.
  */
 async function combinationInPlaceJobCount(
-  query: JobsListQuery,
+  data: JobsListingFiltersInput & { locationSlug: string; within?: number },
+  facet: { category: string } | { skill: string },
   radius: number | undefined,
-  within: number | undefined,
   headers: Record<string, string>,
 ): Promise<number | null> {
-  if (radius === undefined || within !== undefined) return null;
+  if (radius === undefined || !isPlainListingView(data)) return null;
+  const key = listingCacheKey(
+    data.locationSlug,
+    'category' in facet ? `category:${facet.category}` : `skill:${facet.skill}`,
+  );
+  const cached = combinationInPlaceCountCache.get(key);
+  if (cached !== undefined) return cached;
   try {
+    const readAt = Date.now();
     const exact = await getBoard().jobs.list(
-      { ...query, offset: 0, limit: 1 },
+      { location: data.locationSlug, ...facet, offset: 0, limit: 1 },
       { headers },
     );
-    return catalogJobCount(exact.count, exact.gatedCount) ?? null;
+    const count = catalogJobCount(exact.count, exact.gatedCount);
+    if (count === undefined) return null;
+    combinationInPlaceCountCache.set(key, count, readAt);
+    return count;
   } catch {
     return null;
   }
@@ -557,7 +606,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
-      const radius = await listingRadiusKm(placeRead, data.within);
+      const radius = await listingRadiusKm(
+        data.locationSlug,
+        placeRead,
+        data.within,
+      );
       const [place, listResult, seo, placeTree] = await Promise.all([
         placeRead,
         data.q
@@ -689,7 +742,11 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
-      const radius = await listingRadiusKm(placeRead, data.within);
+      const radius = await listingRadiusKm(
+        data.locationSlug,
+        placeRead,
+        data.within,
+      );
       const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
           placeRead,
@@ -712,13 +769,9 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           // ancestor chain; on failure the trail degrades to the place itself.
           board.taxonomy.places.list(undefined, { headers }).catch(() => null),
           combinationInPlaceJobCount(
-            {
-              ...filters,
-              location: data.locationSlug,
-              category: data.categorySlug,
-            },
+            data,
+            { category: data.categorySlug },
             radius,
-            data.within,
             headers,
           ),
         ]);
@@ -824,7 +877,11 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
-      const radius = await listingRadiusKm(placeRead, data.within);
+      const radius = await listingRadiusKm(
+        data.locationSlug,
+        placeRead,
+        data.within,
+      );
       const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
           placeRead,
@@ -847,9 +904,9 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           // ancestor chain; on failure the trail degrades to the place itself.
           board.taxonomy.places.list(undefined, { headers }).catch(() => null),
           combinationInPlaceJobCount(
-            { ...filters, location: data.locationSlug, skill: data.skillSlug },
+            data,
+            { skill: data.skillSlug },
             radius,
-            data.within,
             headers,
           ),
         ]);

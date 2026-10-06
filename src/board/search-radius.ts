@@ -6,7 +6,11 @@ import {
   type SearchRadiusOption,
 } from '@cavuno/board/format';
 
-import type { PublicPlace, TaxonomyResolution } from '@cavuno/board';
+import type {
+  PublicPlace,
+  TaxonomyGeo,
+  TaxonomyResolution,
+} from '@cavuno/board';
 
 /**
  * The "within" distance on a location listing. The URL carries `within` in
@@ -51,6 +55,21 @@ export type PlaceSearchRadius = {
   explicit: boolean;
 };
 
+/** The part of a resolved place the search distance depends on. */
+export type PlaceRadiusGeo = Pick<
+  NonNullable<TaxonomyGeo>,
+  'placeType' | 'lat' | 'lng' | 'countryCode'
+>;
+
+/** `geo` reduced to what `placeSearchRadius` reads, for caching. */
+export function placeRadiusGeo(
+  geo: TaxonomyGeo | undefined,
+): PlaceRadiusGeo | null {
+  if (!geo) return null;
+  const { placeType, lat, lng, countryCode } = geo;
+  return { placeType, lat, lng, countryCode };
+}
+
 /**
  * The radius control `place` takes, with `within` applied (the default
  * preset when `within` is `undefined`); `null` for a region, a country or a
@@ -58,7 +77,7 @@ export type PlaceSearchRadius = {
  * or locality around its point.
  */
 export function placeSearchRadius(
-  place: TaxonomyResolution | null,
+  place: { geo?: PlaceRadiusGeo | null } | null,
   within: number | undefined,
 ): PlaceSearchRadius | null {
   const placeType = place?.geo?.placeType;
