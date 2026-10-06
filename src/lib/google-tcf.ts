@@ -98,6 +98,8 @@ function googleFcQueue(): NonNullable<GoogleFc['callbackQueue']> {
   return (googlefc.callbackQueue ??= pending);
 }
 
+const LATE_WITHDRAWAL_RELOAD_KEY = 'cavuno:google-late-withdrawal';
+
 /**
  * Listen for the visitor's TCF consent. `onUpdate` gets every TCData the
  * CMP reports (first `tcloaded` or `cmpuishown`, then `useractioncomplete`
@@ -136,6 +138,12 @@ export function subscribeGoogleConsent(
       heard = true;
       window.clearTimeout(timer);
       window.removeEventListener('error', onScriptError, true);
+      // An on-time answer: re-arm the late-withdrawal reload.
+      try {
+        sessionStorage.removeItem(LATE_WITHDRAWAL_RELOAD_KEY);
+      } catch {
+        // Blocked sessionStorage: nothing stored.
+      }
     }
     onUpdate({ kind: 'tcdata', tcData });
   };
@@ -299,8 +307,6 @@ export function broadcastGoogleDecline(): void {
     // localStorage may be blocked; this tab's own decline still applies.
   }
 }
-
-const LATE_WITHDRAWAL_RELOAD_KEY = 'cavuno:google-late-withdrawal';
 
 /**
  * Whether a late Google takeover may reload to withdraw trackers the

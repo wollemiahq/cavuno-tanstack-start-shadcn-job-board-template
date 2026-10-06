@@ -62,6 +62,7 @@ afterEach(() => {
   delete window.googlefc;
   delete window.__tcfapi;
   document.getElementById('cavuno-adsense-loader')?.remove();
+  sessionStorage.clear();
 });
 
 describe('subscribeGoogleConsent', () => {
@@ -80,6 +81,20 @@ describe('subscribeGoogleConsent', () => {
     cmp.emit(tcData);
     vi.advanceTimersByTime(GOOGLE_CONSENT_TIMEOUT_MS);
     expect(onUpdate.mock.calls).toEqual([[{ kind: 'tcdata', tcData }]]);
+  });
+
+  it('clears the late-withdrawal guard on an on-time answer only', () => {
+    const cmp = installFakeCmp();
+    sessionStorage.setItem('cavuno:google-late-withdrawal', '1');
+    subscribeGoogleConsent(vi.fn());
+    vi.advanceTimersByTime(GOOGLE_CONSENT_TIMEOUT_MS);
+    cmp.emit({ gdprApplies: true, eventStatus: 'tcloaded' });
+    expect(sessionStorage.getItem('cavuno:google-late-withdrawal')).toBe('1');
+
+    const onTime = installFakeCmp();
+    subscribeGoogleConsent(vi.fn());
+    onTime.emit({ gdprApplies: true, eventStatus: 'tcloaded' });
+    expect(sessionStorage.getItem('cavuno:google-late-withdrawal')).toBeNull();
   });
 
   it('gives up after the timeout and still reports a late TCData', () => {

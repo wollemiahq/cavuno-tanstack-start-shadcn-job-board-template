@@ -12,7 +12,7 @@ Google-issued slot. The SDK provides one default unit, not a placement map.
 | Blog article, author/sidebar column                                             | 300×250 after author information                     | Uses the existing reading layout without interrupting paragraphs. A medium rectangle is a reasonable initial inventory choice; a half-page unit is an experiment for long articles, not the default for every post. Mobile omits the sidebar unit.                                             |
 | Salary index/detail, blog archives, homepage, about                             | No manual unit                                       | Preserve full-width charts, tables and cards. Do not invent a sidebar just to hold advertising.                                                                                                                                                                                                |
 | Public bottom edge                                                              | Optional Google-managed anchor configured in AdSense | The starter loads the normal script but does not force anchors or simulate their size.                                                                                                                                                                                                         |
-| Account, authentication, private messages, posting/payment, legal pages, embeds | No public AdSense boot                               | Configure AdSense page exclusions too, because a script loaded on a public page remains active during client navigation.                                                                                                                                                                       |
+| Account, authentication, private messages, posting/payment, legal pages, embeds | No public AdSense boot (except with Google's consent message) | Configure AdSense page exclusions too, because a script loaded on a public page remains active during client navigation. With Google's consent message the tag loads on these routes as well, so the exclusions are mandatory then (see below). |
 
 ## Policy and geometry
 
@@ -28,6 +28,16 @@ select **Bottom only**, turn **Allow dynamic anchors** off, and allow desktop
 anchors. Leave intent-driven, automatic in-page, side rail and vignette formats
 off unless explicitly wanted. Verify real serving on the deployed domain.
 Use page exclusions for utility/private routes and mobile Apply conflicts.
+
+With Google's consent message on (`ads.googleConsentMessage`), the tag loads
+on every route so Google's message can ask EEA/UK/CH visitors wherever they
+land, and Auto ads (anchors included) could then serve on account,
+authentication, private messages, posting/payment (`/post*`), employer
+dashboards and legal pages. Page exclusions for those routes are then
+mandatory, not belt-and-braces: add them under AdSense → Ads → your site →
+Page exclusions before enabling Auto ads or anchors. The starter does not
+pause ad requests there itself, because Google does not document that its
+consent message keeps working while `pauseAdRequests` is set.
 The shared loader intentionally has no `data-overlays`: that attribute can enable
 anchors even when disabled in the dashboard. Do not assume a local route guard
 unloads Google.

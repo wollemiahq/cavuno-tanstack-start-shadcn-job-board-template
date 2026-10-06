@@ -301,9 +301,11 @@ message also stops Cavuno Analytics in the visitor's other open tabs. See
 `src/lib/google-tcf.ts`.
 
 The tag then also loads on mobile job pages with the Apply bar and on routes
-without ad units (pricing, posting a job, sign-in, account): keep Auto ads and
-bottom anchors off for those pages in AdSense (anchor settings or page
-exclusions).
+without ad units (account, sign-in, private messages, posting a job and
+payment, employer dashboards, legal pages). AdSense page exclusions for those
+routes are mandatory in this mode before you turn on Auto ads or anchors;
+otherwise Google can place them there. See
+[placement decisions](docs/advertising.md#policy-and-geometry).
 
 ## Analytics & conversion tracking
 

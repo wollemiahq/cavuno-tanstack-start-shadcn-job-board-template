@@ -16,8 +16,8 @@ import { useCookieConsent } from '@/components/cookie-consent';
  * on page load on every route (ad page or not), for every visitor and
  * viewport, without waiting for the board's banner, so Google's CMP can ask
  * EEA/UK/CH visitors wherever they land. That includes mobile job pages
- * with the Apply bar and non-ad routes (account, forms): keep bottom
- * anchors and Auto ads off there in AdSense (see the README). Google's
+ * with the Apply bar and non-ad routes (account, forms): AdSense page
+ * exclusions for those routes are mandatory then (docs/advertising.md). Google's
  * message governs AdSense then, so a decline on the board's banner does
  * not withdraw it.
  */
