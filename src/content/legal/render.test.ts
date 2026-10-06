@@ -101,8 +101,47 @@ describe('renderLegalHtml', () => {
       '&#106;avascript:alert(1)',
       '<a href="&amp;#106;avascript:alert(1)">x</a>',
     ],
+    ['//evil.test', '<a>x</a>'],
+    ['/\\evil.test', '<a>x</a>'],
+    ['\\\\evil.test', '<a>x</a>'],
+    ['/\t/evil.test', '<a>x</a>'],
+    ['?page=2', '<a href="?page=2">x</a>'],
   ])('neutralises the link %s', (href, expected) => {
     expect(renderLegalHtml(`<a href="${href}">x</a>`, 'Board')).toBe(expected);
+  });
+
+  it('reads a quote as quoting only after `=`', () => {
+    expect(
+      renderLegalHtml(
+        '<p><a href="https://x.com"">link</a> then "a quote"</p>',
+        'Board',
+      ),
+    ).toBe('<p><a href="https://x.com">link</a> then "a quote"</p>');
+    expect(
+      renderLegalHtml("<p class=a'b>text</p><p>it's here</p>", 'Board'),
+    ).toBe("<p>text</p><p>it's here</p>");
+  });
+
+  it.each(['<a ', '<a "'])(
+    'renders 100 KB of unclosed %j tags in linear time',
+    (unit) => {
+      const html = unit.repeat(Math.ceil(100_000 / unit.length));
+      const start = performance.now();
+      renderLegalHtml(html, 'Board');
+      expect(performance.now() - start).toBeLessThan(250);
+    },
+  );
+
+  it('keeps a `/` that ends an unquoted href inside the link', () => {
+    expect(
+      renderLegalHtml('<a href=https://example.com/>Example</a>', 'Board'),
+    ).toBe('<a href="https://example.com/">Example</a>');
+  });
+
+  it('closes `<!-->` and `<!--->` at once', () => {
+    expect(renderLegalHtml('<p>a<!-->b<!--->c</p>', 'Board')).toBe(
+      '<p>abc</p>',
+    );
   });
 });
 

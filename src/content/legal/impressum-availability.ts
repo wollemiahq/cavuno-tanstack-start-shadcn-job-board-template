@@ -34,10 +34,8 @@ export function impressumHasContent(): boolean {
  * has written one. The starter never ships impressum text, because its facts
  * (registered address, register entry, VAT ID) can only come from the
  * operator. The page, footer link, sitemap and well-known manifest all use
- * this rule.
- *
- * Kept apart from `./index` so the footer does not bundle every legal page
- * (only extra-locale translation files, which the starter does not ship).
+ * this rule. Call it on the server only (the root loader passes the footer a
+ * boolean): it reads every translation file.
  */
 export function impressumAvailable(features: { impressum: boolean }): boolean {
   return features.impressum && impressumHasContent();

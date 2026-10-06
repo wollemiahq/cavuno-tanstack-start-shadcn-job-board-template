@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     grant: vi.fn(),
     companies: vi.fn(),
     preview: vi.fn(),
+    impressum: vi.fn(() => false),
   };
 });
 vi.mock('@tanstack/react-start', () => ({
@@ -56,9 +57,13 @@ vi.mock('./queries', () => ({
   getEmployerOfferGate: mocks.offer,
 }));
 vi.mock('./talent-access', () => ({ EMPTY_GRANT: {} }));
+vi.mock('../content/legal/impressum-availability', () => ({
+  impressumAvailable: mocks.impressum,
+}));
 import { getRootShellData, getRootSessionShellData } from './root-shell';
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.impressum.mockReturnValue(false);
   mocks.context = { session: null, boardAccessHeaders: {} };
   mocks.fresh.mockResolvedValue({
     name: 'Fixture board',
@@ -81,6 +86,7 @@ describe('public and session shells', () => {
       seo: { canonicalBase: 'https://fixture.example' },
       offerGate: { visible: true },
       contactEnabled: true,
+      impressumAvailable: false,
     });
     expect(mocks.me).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();
@@ -94,6 +100,13 @@ describe('public and session shells', () => {
     });
     expect(await getRootShellData()).toMatchObject({ contactEnabled: false });
     expect(mocks.contact).not.toHaveBeenCalled();
+  });
+  it('decides the footer impressum link on the server', async () => {
+    mocks.impressum.mockReturnValue(true);
+    expect(await getRootShellData()).toMatchObject({
+      impressumAvailable: true,
+    });
+    expect(mocks.impressum).toHaveBeenCalledWith({ contactPage: true });
   });
   it('a context without the Contact flag falls back to one /contact read', async () => {
     mocks.fresh.mockResolvedValue({ name: 'Fixture board', features: {} });

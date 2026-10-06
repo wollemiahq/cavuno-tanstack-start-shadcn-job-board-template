@@ -69,14 +69,19 @@ const DROPPED_WITH_CONTENT = new Set([
   'textarea',
   'select',
 ]);
-// A comment opener, or a whole tag whose quoted attribute values may hold `>`.
+// A comment opener, or a whole tag. As in HTML, a quote opens a value only
+// after `=` (a stray quote elsewhere is just a character), and a quoted value
+// may hold `>`. Unquoted parts cannot cross `<`, so a tag that never closes
+// costs a scan to the next `<`, not to the end of the body.
 const TOKEN =
-  /<!--|<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:"[^"]*"|'[^']*'|[^'">])*)>/g;
+  /<!--|<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:=\s*(?:"[^"]*"|'[^']*')|=(?!\s*["'])|[^<>=])*)>/g;
 const ATTRIBUTE =
   /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/g;
 const LINK_ATTRIBUTES = new Set(['href', 'title', 'target', 'rel']);
+// Protocol-relative (`//host`, `/\host`, `\\host`) is rejected: browsers read
+// `\` as `/`.
 const SAFE_HREF =
-  /^(?:https?:|mailto:|tel:|#|\/(?!\/)|\.{0,2}\/|[^:/?#]+(?:[/?#]|$))/i;
+  /^(?:https?:|mailto:|tel:|[#?]|\/(?![/\\])|\.{1,2}\/|[^:/?#\\]+(?:[/?#]|$))/i;
 const NAMED_ENTITIES = new Map([
   ['&amp;', '&'],
   ['&quot;', '"'],
@@ -121,7 +126,12 @@ function linkAttributes(raw: string, boardName: string): string {
     // Numeric references (`java&#115;cript:`) are not decoded, and
     // `escapeHtml` turns their `&` into `&amp;`, so the browser reads them
     // literally: a relative path, never a scheme.
-    if (name === 'href' && !SAFE_HREF.test(value.trim())) continue;
+    // Browsers drop tabs and newlines inside a URL before reading it.
+    if (
+      name === 'href' &&
+      !SAFE_HREF.test(value.trim().replace(/[\t\n\r]/g, ''))
+    )
+      continue;
     kept.push(`${name}="${escapeHtml(value)}"`);
   }
   return kept.length > 0 ? ` ${kept.join(' ')}` : '';
@@ -145,9 +155,16 @@ export function renderLegalHtml(html: string, boardName: string): string {
     out += renderText(html.slice(position, match.index), boardName);
     position = token.lastIndex;
     if (match[0] === '<!--') {
-      // An unclosed comment drops the rest of the body.
-      const end = html.indexOf('-->', position);
-      position = end === -1 ? html.length : end + 3;
+      // `<!-->` and `<!--->` close at once; an unclosed comment drops the
+      // rest of the body.
+      const abrupt = /-?>/y;
+      abrupt.lastIndex = position;
+      if (abrupt.test(html)) {
+        position = abrupt.lastIndex;
+      } else {
+        const end = html.indexOf('-->', position);
+        position = end === -1 ? html.length : end + 3;
+      }
       token.lastIndex = position;
       continue;
     }
@@ -174,8 +191,9 @@ export function renderLegalHtml(html: string, boardName: string): string {
     }
     const attributes = name === 'a' ? linkAttributes(rest!, boardName) : '';
     out += `<${name}${attributes}>`;
-    // `<div/>` is an empty element, not an open one.
-    if (/\/\s*$/.test(rest!)) out += `</${name}>`;
+    // `<div/>` is an empty element, not an open one. A `/` that ends an
+    // unquoted value (`href=https://x.com/`) belongs to the value.
+    if (/(?:^|[\s"'])\/\s*$/.test(rest!)) out += `</${name}>`;
     else open.push(name);
   }
   out += renderText(html.slice(position), boardName);

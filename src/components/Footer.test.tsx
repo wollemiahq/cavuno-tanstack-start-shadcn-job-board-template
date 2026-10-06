@@ -53,10 +53,10 @@ function renderFooter(
         blog: false,
         talentDirectory: 'off',
         publicJobSubmission: false,
-        impressum: false,
       }}
       footer={footer}
       contactEnabled={false}
+      impressumAvailable={false}
       talentDirectoryVisibility="off"
       hasEmployerOfferPage={false}
       {...membership}

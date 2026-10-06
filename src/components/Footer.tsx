@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 
 import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
-import { impressumAvailable } from '../content/legal/impressum-availability';
 import { m } from '../paraglide/messages';
 
 import {
@@ -172,6 +171,7 @@ export default function Footer({
   features,
   footer,
   contactEnabled,
+  impressumAvailable,
   connected = false,
   talentDirectoryVisibility,
   hasEmployerOfferPage,
@@ -201,10 +201,15 @@ export default function Footer({
     blog: boolean;
     talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     publicJobSubmission: boolean;
-    impressum: boolean;
   };
   footer: BoardContextFooter | null;
   contactEnabled: boolean;
+  /**
+   * Whether /impressum is published (`impressumAvailable`, resolved by the
+   * root loader on the server so legal content stays out of the client
+   * bundle).
+   */
+  impressumAvailable: boolean;
   connected?: boolean;
   /**
    * The tri-state behind `features.talentDirectory` — hosted chrome links
@@ -362,7 +367,7 @@ export default function Footer({
     { href: '/terms-of-service', label: copy.footer.termsOfServiceLabel },
     { href: '/privacy-policy', label: copy.footer.privacyPolicyLabel },
     { href: '/cookie-policy', label: copy.footer.cookiePolicyLabel },
-    ...(impressumAvailable(features)
+    ...(impressumAvailable
       ? [{ href: '/impressum', label: copy.footer.impressumLabel }]
       : []),
   ];
