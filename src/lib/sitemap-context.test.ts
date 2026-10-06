@@ -17,6 +17,11 @@ import {
 
 import type { BoardSdk } from '@cavuno/board';
 
+const impressum = vi.hoisted(() => ({ hasContent: vi.fn(() => false) }));
+vi.mock('../content/legal/impressum-availability', () => ({
+  impressumHasContent: impressum.hasContent,
+}));
+
 const ORIGIN = 'https://jobs.example';
 
 /**
@@ -395,5 +400,24 @@ describe('hosted-shaped sitemap context', () => {
         entry.url.endsWith('/jobs-details.xml'),
       )?.lastModified,
     ).toBe('2026-09-05T18:00:37.956Z');
+  });
+});
+
+describe('impressum in the sitemap', () => {
+  const build = async () => [`${ORIGIN}/about`, `${ORIGIN}/impressum`];
+
+  it('omits /impressum while the operator has written none', async () => {
+    impressum.hasContent.mockReturnValue(false);
+    const context = await buildSitemapContext(board, ORIGIN, source({ build }));
+    const urls = findSitemapChunk(context, 'marketing', 0)!.map((e) => e.url);
+    expect(urls).toContain(`${ORIGIN}/about`);
+    expect(urls).not.toContain(`${ORIGIN}/impressum`);
+  });
+
+  it('lists /impressum once it has content', async () => {
+    impressum.hasContent.mockReturnValue(true);
+    const context = await buildSitemapContext(board, ORIGIN, source({ build }));
+    const urls = findSitemapChunk(context, 'marketing', 0)!.map((e) => e.url);
+    expect(urls).toContain(`${ORIGIN}/impressum`);
   });
 });

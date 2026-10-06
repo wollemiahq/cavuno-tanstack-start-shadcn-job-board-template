@@ -39,6 +39,7 @@ vi.mock('./board-access', () => ({
   gatedRead: <TResult>(_context: Record<string, never>, read: () => TResult) =>
     read(),
 }));
+import { impressumAvailable } from '../content/legal/impressum-availability';
 import { getLegalPageView } from './legal-pages';
 const OPERATOR_IMPRESSUM = {
   title: 'Impressum',
@@ -96,6 +97,20 @@ describe('direct legal page feature gate', () => {
       await getLegalPageView({ data: { type: 'privacy-policy' } }),
     ).toMatchObject({
       page: { type: 'privacy-policy' },
+    });
+  });
+  it('publishes an impressum written only in another language', async () => {
+    mocks.impressum.locales = { de: OPERATOR_IMPRESSUM };
+    mocks.board.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      features: { impressum: true },
+    });
+    expect(impressumAvailable({ impressum: true })).toBe(true);
+    expect(
+      await getLegalPageView({ data: { type: 'impressum' } }),
+    ).toMatchObject({
+      page: { type: 'impressum', html: '<p>Operator GmbH</p>' },
     });
   });
 });

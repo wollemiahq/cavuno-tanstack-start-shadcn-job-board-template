@@ -1,3 +1,4 @@
+import { BOARD_PATHS } from '@cavuno/board/paths';
 import {
   SITEMAP_CHUNK_SIZE,
   bucketFilename,
@@ -9,6 +10,7 @@ import {
   type SitemapUrlEntry,
 } from '@cavuno/board/sitemap';
 
+import { impressumHasContent } from '../content/legal/impressum-availability';
 import { createSettledCache } from './settled-cache';
 
 import type { SettledCache } from './settled-cache';
@@ -213,9 +215,15 @@ function withLocalMarketingPages(
   entries: SitemapEntry[],
 ): SitemapEntry[] {
   if (bucket !== 'marketing') return entries;
-  const urls = new Set(entries.map((entry) => entry.url));
+  // The SDK lists `/impressum` whenever the feature is on; the page itself
+  // also needs the operator's text (`impressumAvailable`).
+  const impressumUrl = `${origin}${BOARD_PATHS.impressum}`;
+  const listed = impressumHasContent()
+    ? entries
+    : entries.filter((entry) => entry.url !== impressumUrl);
+  const urls = new Set(listed.map((entry) => entry.url));
   return [
-    ...entries,
+    ...listed,
     ...LOCAL_MARKETING_PATHS.flatMap((path) => {
       const url = `${origin}${path}`;
       return urls.has(url) ? [] : [{ url }];

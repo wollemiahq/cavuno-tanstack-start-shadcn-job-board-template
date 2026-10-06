@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { LEGAL_PAGES_CONTENT, resolveLegalContent } from './index';
+import { impressumAvailable } from './impressum-availability';
+import { resolveLegalContent } from './index';
 
 import type { LegalLocale, LegalPageType } from './types';
+
+// Holds for any valid legal content, shipped or operator-written, so a board
+// that edits or translates its pages keeps passing.
 
 const BUILT_IN_LOCALES = [
   'en',
@@ -20,27 +24,18 @@ const PUBLISHED_PAGES = [
   'cookie-policy',
 ] as const satisfies readonly LegalPageType[];
 
-// Scaffold wording in the shipped languages. A real sample policy never
-// tells the reader it is a placeholder or that its facts are examples.
+// Scaffold wording in the shipped languages. A real policy never tells the
+// reader it is a placeholder or that its facts are examples.
 const SCAFFOLD_WORDING =
   /placeholder|platzhalter|espace réservé|contenido de ejemplo|treść przykładowa|tijdelijke tekst|replace (this|the|every)|lorem ipsum|example\.com|example street|hrb 123456/i;
 
-function tagNames(html: string): string[] {
-  return Array.from(html.matchAll(/<\/?([a-z0-9]+)/gi), (match) =>
-    match[0]!.toLowerCase(),
-  );
-}
-
-describe('shipped legal content', () => {
+describe('legal content', () => {
   it.each(PUBLISHED_PAGES)(
     '%s has real text in every built-in locale',
     (type) => {
-      const page = LEGAL_PAGES_CONTENT[type];
-      expect(page.sourceLanguage).toBe('en');
-      const english = page.locales.en!;
       for (const locale of BUILT_IN_LOCALES) {
-        const content = page.locales[locale];
-        expect(content, locale).toBeDefined();
+        const content = resolveLegalContent(type, locale);
+        expect(content, locale).not.toBeNull();
         expect(content!.title.trim(), locale).not.toBe('');
         expect(content!.description.trim(), locale).not.toBe('');
         expect(content!.description, locale).not.toMatch(/[<>]/);
@@ -48,28 +43,18 @@ describe('shipped legal content', () => {
           `${content!.title} ${content!.description} ${content!.html}`,
           locale,
         ).not.toMatch(SCAFFOLD_WORDING);
-        // Same document structure as the source: nothing added or dropped.
-        expect(tagNames(content!.html), locale).toEqual(tagNames(english.html));
-        expect(content!.html.match(/{{board_name}}/g)?.length, locale).toBe(
-          english.html.match(/{{board_name}}/g)?.length,
-        );
       }
     },
   );
 
-  it('ships no impressum, so the page stays unpublished', () => {
-    expect(LEGAL_PAGES_CONTENT.impressum.locales).toEqual({});
+  it('publishes the impressum exactly when it has content', () => {
+    const hasContent = resolveLegalContent('impressum', 'en') !== null;
+    expect(impressumAvailable({ impressum: true })).toBe(hasContent);
+    expect(impressumAvailable({ impressum: false })).toBe(false);
     for (const locale of BUILT_IN_LOCALES) {
-      expect(resolveLegalContent('impressum', locale)).toBeNull();
+      expect(resolveLegalContent('impressum', locale) !== null, locale).toBe(
+        hasContent,
+      );
     }
-  });
-
-  it('falls back to the source language for a locale without text', () => {
-    expect(resolveLegalContent('privacy-policy', 'nb')).toBe(
-      LEGAL_PAGES_CONTENT['privacy-policy'].locales.en,
-    );
-    expect(resolveLegalContent('privacy-policy', 'de')).toBe(
-      LEGAL_PAGES_CONTENT['privacy-policy'].locales.de,
-    );
   });
 });

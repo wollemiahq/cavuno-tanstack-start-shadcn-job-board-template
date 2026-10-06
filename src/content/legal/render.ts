@@ -55,15 +55,35 @@ const ALLOWED_TAGS = new Set([
   'ul',
 ]);
 
-const DROPPED_WITH_CONTENT =
-  /<(script|style|iframe|object|embed|template|noscript|svg|math|textarea|select)\b[\s\S]*?<\/\1\s*>/gi;
-const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/g;
-const COMMENT = /<!--[\s\S]*?-->/g;
+const VOID_TAGS = new Set(['br', 'hr']);
+const DROPPED_WITH_CONTENT = new Set([
+  'script',
+  'style',
+  'iframe',
+  'object',
+  'embed',
+  'template',
+  'noscript',
+  'svg',
+  'math',
+  'textarea',
+  'select',
+]);
+// A comment opener, or a whole tag whose quoted attribute values may hold `>`.
+const TOKEN =
+  /<!--|<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:"[^"]*"|'[^']*'|[^'">])*)>/g;
 const ATTRIBUTE =
   /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/g;
 const LINK_ATTRIBUTES = new Set(['href', 'title', 'target', 'rel']);
 const SAFE_HREF =
   /^(?:https?:|mailto:|tel:|#|\/(?!\/)|\.{0,2}\/|[^:/?#]+(?:[/?#]|$))/i;
+const NAMED_ENTITIES = new Map([
+  ['&amp;', '&'],
+  ['&quot;', '"'],
+  ['&#39;', "'"],
+  ['&lt;', '<'],
+  ['&gt;', '>'],
+]);
 
 export function escapeHtml(value: string): string {
   return value
@@ -74,33 +94,93 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function linkAttributes(raw: string): string {
+/**
+ * Text between tags. Only `<` and `>` are escaped, so a stray `<` can never
+ * start a tag and the source's own entities (`&amp;`) are kept as written.
+ * The board name is escaped in full.
+ */
+function renderText(text: string, boardName: string): string {
+  return text
+    .split(BOARD_NAME_TOKEN)
+    .map((part) => part.replace(/</g, '&lt;').replace(/>/g, '&gt;'))
+    .join(escapeHtml(boardName));
+}
+
+function linkAttributes(raw: string, boardName: string): string {
   const kept: string[] = [];
   for (const match of raw.matchAll(ATTRIBUTE)) {
     const name = match[1]!.toLowerCase();
-    const value = match[3] ?? match[4] ?? match[5] ?? '';
     if (!LINK_ATTRIBUTES.has(name)) continue;
-    // Entity-encoded schemes (`java&#115;cript:`) never pass the allowlist,
-    // because the decoded character is not part of a permitted prefix.
+    // Validate and re-escape the value as the browser will read it.
+    const value = (match[3] ?? match[4] ?? match[5] ?? '')
+      .replace(
+        /&(?:amp|quot|#39|lt|gt);/g,
+        (entity) => NAMED_ENTITIES.get(entity) ?? entity,
+      )
+      .replace(BOARD_NAME_TOKEN, () => boardName);
+    // Numeric references (`java&#115;cript:`) are not decoded, and
+    // `escapeHtml` turns their `&` into `&amp;`, so the browser reads them
+    // literally: a relative path, never a scheme.
     if (name === 'href' && !SAFE_HREF.test(value.trim())) continue;
     kept.push(`${name}="${escapeHtml(value)}"`);
   }
   return kept.length > 0 ? ` ${kept.join(' ')}` : '';
 }
 
-/** Sanitize a legal body and fill in the board name. */
+/**
+ * Sanitize a legal body and fill in the board name.
+ *
+ * One pass over the input: allowed tags are rebuilt from scratch, every other
+ * tag and comment is dropped, and text is escaped, so nothing removed can
+ * leave a tag behind. Tags are balanced against a stack: a closer with no
+ * open tag is dropped and tags still open at the end are closed, so a body
+ * cannot swallow the page around it.
+ */
 export function renderLegalHtml(html: string, boardName: string): string {
-  return html
-    .replace(COMMENT, '')
-    .replace(DROPPED_WITH_CONTENT, '')
-    .replace(TAG, (_tag, closing: string, rawName: string, rest: string) => {
-      const name = rawName.toLowerCase();
-      if (!ALLOWED_TAGS.has(name)) return '';
-      if (closing) return `</${name}>`;
-      const attributes = name === 'a' ? linkAttributes(rest) : '';
-      return `<${name}${attributes}${/\/\s*$/.test(rest) ? ' /' : ''}>`;
-    })
-    .replace(BOARD_NAME_TOKEN, () => escapeHtml(boardName));
+  let out = '';
+  let position = 0;
+  const open: string[] = [];
+  const token = new RegExp(TOKEN);
+  for (let match = token.exec(html); match; match = token.exec(html)) {
+    out += renderText(html.slice(position, match.index), boardName);
+    position = token.lastIndex;
+    if (match[0] === '<!--') {
+      // An unclosed comment drops the rest of the body.
+      const end = html.indexOf('-->', position);
+      position = end === -1 ? html.length : end + 3;
+      token.lastIndex = position;
+      continue;
+    }
+    const [, closing, rawName, rest] = match;
+    const name = rawName!.toLowerCase();
+    if (DROPPED_WITH_CONTENT.has(name)) {
+      if (closing) continue;
+      const closer = new RegExp(`</${name}\\s*>`, 'gi');
+      closer.lastIndex = position;
+      position = closer.exec(html) ? closer.lastIndex : html.length;
+      token.lastIndex = position;
+      continue;
+    }
+    if (!ALLOWED_TAGS.has(name)) continue;
+    if (VOID_TAGS.has(name)) {
+      if (!closing) out += `<${name}>`;
+      continue;
+    }
+    if (closing) {
+      const index = open.lastIndexOf(name);
+      if (index === -1) continue;
+      for (const tag of open.splice(index).reverse()) out += `</${tag}>`;
+      continue;
+    }
+    const attributes = name === 'a' ? linkAttributes(rest!, boardName) : '';
+    out += `<${name}${attributes}>`;
+    // `<div/>` is an empty element, not an open one.
+    if (/\/\s*$/.test(rest!)) out += `</${name}>`;
+    else open.push(name);
+  }
+  out += renderText(html.slice(position), boardName);
+  for (const tag of open.reverse()) out += `</${tag}>`;
+  return out;
 }
 
 /** Fill in the board name in plain-text fields (title, description). */

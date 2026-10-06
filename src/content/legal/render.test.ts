@@ -36,6 +36,74 @@ describe('renderLegalHtml', () => {
       '<a href="mailto:privacy@board.test">mail</a><a href="/cookie-policy">cookies</a>',
     );
   });
+  it('does not let a removed tag reassemble another tag', () => {
+    expect(renderLegalHtml('<<x>img src=x onerror=alert(1)>', 'Board')).toBe(
+      '&lt;img src=x onerror=alert(1)&gt;',
+    );
+    expect(renderLegalHtml('<<x>script>alert(1)<<x>/script>', 'Board')).toBe(
+      '&lt;script&gt;alert(1)&lt;/script&gt;',
+    );
+  });
+
+  it('cannot open a tag with the board name', () => {
+    const html = renderLegalHtml(
+      '<p>Hi <{{board_name}}</p>',
+      'img src=x onerror=alert(1) ',
+    );
+    expect(html).toBe('<p>Hi &lt;img src=x onerror=alert(1) </p>');
+    expect(
+      renderLegalHtml('<a href="{{board_name}}">x</a>', 'javascript:alert(1)'),
+    ).toBe('<a>x</a>');
+  });
+
+  it('drops an unclosed comment and everything after it', () => {
+    expect(renderLegalHtml('<p>Kept</p><!-- <p>lost</p>', 'Board')).toBe(
+      '<p>Kept</p>',
+    );
+    expect(renderLegalHtml('<p>A<!-- note -->B</p>', 'Board')).toBe(
+      '<p>AB</p>',
+    );
+  });
+
+  it('balances tags so the body cannot break the page around it', () => {
+    expect(renderLegalHtml('</div><p>Text</p></div>', 'Board')).toBe(
+      '<p>Text</p>',
+    );
+    expect(renderLegalHtml('<table><tr><td>Cell', 'Board')).toBe(
+      '<table><tr><td>Cell</td></tr></table>',
+    );
+    expect(renderLegalHtml('<p><b>Bold</p>', 'Board')).toBe(
+      '<p><b>Bold</b></p>',
+    );
+  });
+
+  it('writes void and self-closing tags as complete elements', () => {
+    expect(renderLegalHtml('<p>A<br/>B<hr /></p><div/>C', 'Board')).toBe(
+      '<p>A<br>B<hr></p><div></div>C',
+    );
+    expect(renderLegalHtml('<p>A</br></p>', 'Board')).toBe('<p>A</p>');
+  });
+
+  it('keeps an escaped query string in a link', () => {
+    expect(
+      renderLegalHtml('<a href="/jobs?a=1&amp;b=2">jobs</a>', 'Board'),
+    ).toBe('<a href="/jobs?a=1&amp;b=2">jobs</a>');
+  });
+
+  it.each([
+    ['javascript:alert(1)', '<a>x</a>'],
+    ['JaVaScRiPt:alert(1)', '<a>x</a>'],
+    [
+      'java&#115;cript:alert(1)',
+      '<a href="java&amp;#115;cript:alert(1)">x</a>',
+    ],
+    [
+      '&#106;avascript:alert(1)',
+      '<a href="&amp;#106;avascript:alert(1)">x</a>',
+    ],
+  ])('neutralises the link %s', (href, expected) => {
+    expect(renderLegalHtml(`<a href="${href}">x</a>`, 'Board')).toBe(expected);
+  });
 });
 
 describe('renderLegalText', () => {

@@ -3,6 +3,7 @@ import about from './about.json';
 import cookiePolicy from './cookie-policy.json';
 import impressum from './impressum.json';
 import privacyPolicy from './privacy-policy.json';
+import { resolvePageContent, translationLocale } from './resolve';
 import termsOfService from './terms-of-service.json';
 import { legalEntity } from './types';
 
@@ -51,18 +52,21 @@ const TRANSLATIONS = import.meta.glob<LegalTranslations>(
 );
 
 /**
- * Resolve a page for a locale: an extra-locale translation, else the page's
- * own entry for that locale, else its source-language entry. `null` means
- * the page has no content and must not be published.
+ * Resolve a page for a locale (see `resolvePageContent` for the order).
+ * `null` means the page has no content and must not be published.
  */
 export function resolveLegalContent(
   type: LegalPageType,
   locale: string = getLocale(),
 ): LegalPageContent | null {
-  const translated = TRANSLATIONS[`./translations/${locale}.json`]?.[type];
-  if (translated) return translated;
+  const translations = Object.fromEntries(
+    Object.entries(TRANSLATIONS).map(([path, file]) => [
+      translationLocale(path),
+      file[type],
+    ]),
+  );
   const page: LegalPageData = LEGAL_PAGES_CONTENT[type];
-  return page.locales[locale] ?? page.locales[page.sourceLanguage] ?? null;
+  return resolvePageContent(page, translations, locale);
 }
 
 /**
