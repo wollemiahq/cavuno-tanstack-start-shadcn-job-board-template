@@ -10,10 +10,7 @@ import { ArrowUpDown } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import {
-  employmentTypeFilterChoices,
-  type JobFormSource,
-} from '@/board/job-form';
+import type { JobFormSource } from '@/board/job-form';
 import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
 import {
   Select,
@@ -30,12 +27,13 @@ import {
   type CustomFieldSearch,
   type CustomFilterField,
 } from '@/lib/custom-field-filters';
-import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
 import {
+  employmentTypeFilterChoices,
   employmentTypeFilterFromValue,
   employmentTypeFilterValue,
-  type JobsFilters,
-} from '@/lib/jobs-search';
+} from '@/lib/employment-type-filter';
+import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
+import type { JobsFilters } from '@/lib/jobs-search';
 import { searchString } from '@/lib/pagination';
 import type { CustomFieldFilter } from '@cavuno/board';
 

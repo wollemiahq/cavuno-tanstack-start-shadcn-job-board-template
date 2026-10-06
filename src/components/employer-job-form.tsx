@@ -31,6 +31,10 @@ import { getJobCollectionChoices } from '../server/form-fields';
 
 import { customFieldLabel } from '@/board/custom-field-labels';
 import {
+  employmentTypeChoiceValue,
+  employmentTypeChoices,
+} from '@/board/employment-type-choices';
+import {
   formEntryKey,
   jobFormConstraintsForLayout,
   jobLayoutCollectionFields,
@@ -44,8 +48,6 @@ import {
   type JobFormLayoutSource,
 } from '@/board/form-layout';
 import {
-  employmentTypeChoiceValue,
-  employmentTypeChoices,
   narrowOptions,
   type JobFormConstraints,
   type JobFormViolation,

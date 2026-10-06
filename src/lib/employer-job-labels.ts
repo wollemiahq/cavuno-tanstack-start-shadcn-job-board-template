@@ -1,5 +1,5 @@
 import { m } from '../paraglide/messages';
-import { jobEmploymentTypeLabel } from './enum-labels';
+import { jobEmploymentTypeLabel } from './job-employment-type-label';
 
 import type { EmployerJob } from '@cavuno/board';
 

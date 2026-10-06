@@ -2,7 +2,7 @@ import { jobDetailPath } from '@cavuno/board/paths';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '@/lib/board';
-import { jobEmploymentTypeLabel } from '@/lib/enum-labels';
+import { jobEmploymentTypeLabel } from '@/lib/job-employment-type-label';
 import { jobTitleAtCompany } from '@/lib/page-title';
 import { readPublicOrigin } from '@/lib/public-origin';
 import { m } from '@/paraglide/messages';

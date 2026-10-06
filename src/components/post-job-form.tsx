@@ -84,6 +84,7 @@ import type {
   SubmitJobInput,
   SubmitJobResult,
 } from '../server/post';
+import { employmentTypeChoices } from '@/board/employment-type-choices';
 import {
   formEntryKey,
   jobFormConstraintsForLayout,
@@ -94,7 +95,7 @@ import {
   type JobFormEntry,
   type JobFormLayoutSource,
 } from '@/board/form-layout';
-import { employmentTypeChoices, narrowOptions } from '@/board/job-form';
+import { narrowOptions } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines } from '@/board/plan-view-model';

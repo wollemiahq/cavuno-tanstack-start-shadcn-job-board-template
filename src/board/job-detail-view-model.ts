@@ -28,8 +28,9 @@ import {
 } from '@/board/custom-field-labels';
 import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
-import { enumLabel, jobEmploymentTypeLabel } from '@/lib/enum-labels';
+import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
+import { jobEmploymentTypeLabel } from '@/lib/job-employment-type-label';
 import { searchString } from '@/lib/pagination';
 import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';

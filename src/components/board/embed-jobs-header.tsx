@@ -13,10 +13,7 @@ import { Search } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
 
-import {
-  employmentTypeFilterChoices,
-  type JobFormSource,
-} from '@/board/job-form';
+import type { JobFormSource } from '@/board/job-form';
 import { JobsFilterToolbar } from '@/components/board/jobs-filter-toolbar';
 import {
   KeywordCombobox,
@@ -29,16 +26,17 @@ import {
 } from '@/components/location-combobox';
 import { buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
+import {
+  employmentTypeFilterChoices,
+  employmentTypeFilterFromValue,
+  employmentTypeFilterValue,
+} from '@/lib/employment-type-filter';
 import { enumLabel, seniorityLabelMap } from '@/lib/enum-labels';
 import type {
   HeaderSearchLocation,
   HeaderSearchTerm,
 } from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
-import {
-  employmentTypeFilterFromValue,
-  employmentTypeFilterValue,
-} from '@/lib/jobs-search';
 import {
   resolveJobsSearchTarget,
   type JobsSearchFilters,
