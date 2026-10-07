@@ -1619,7 +1619,7 @@
     }
   ],
   "searchRadius_exactScopeUncounted": "Showing jobs in {exactPlace}",
-  "searchRadius_exactPlace": "{place} only",
+  "searchRadius_exactPlace": "{place}",
   "searchRadius_exactEmpty": "No jobs in {exactPlace}",
   "searchRadius_withinScope": [
     {

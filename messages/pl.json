@@ -1685,7 +1685,7 @@
     }
   ],
   "searchRadius_exactScopeUncounted": "Wyświetlane oferty pracy {exactPlace}",
-  "searchRadius_exactPlace": "tylko w {place}",
+  "searchRadius_exactPlace": "w {place}",
   "searchRadius_exactEmpty": "Brak ofert {exactPlace}",
   "searchRadius_withinScope": [
     {

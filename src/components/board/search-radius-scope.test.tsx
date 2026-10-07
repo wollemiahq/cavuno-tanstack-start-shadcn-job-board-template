@@ -23,7 +23,7 @@ afterEach(cleanup);
 const n = (value: number) => value.toLocaleString(getLocale());
 const mi = (value: number) => formatDistance(value, 'mi', getLocale());
 const km = (value: number) => formatDistance(value, 'km', getLocale());
-const houstonOnly = () => m.searchRadius_exactPlace({ place: 'Houston' });
+const exactHouston = () => m.searchRadius_exactPlace({ place: 'Houston' });
 /** The menu button's accessible name for the distance it shows. */
 const trigger = (distance: string) =>
   screen.getByRole('button', {
@@ -67,7 +67,7 @@ describe('SearchRadiusScope', () => {
     expect(trigger(mi(25)).textContent).toBe(mi(25));
     cleanup();
     line({ within: null });
-    expect(trigger(houstonOnly())).toBeInTheDocument();
+    expect(trigger(exactHouston())).toBeInTheDocument();
   });
 
   it('names the place itself at the exact place, the menu still there', () => {
@@ -77,10 +77,10 @@ describe('SearchRadiusScope', () => {
         to: n(20),
         count: 93,
         countLabel: n(93),
-        exactPlace: houstonOnly(),
+        exactPlace: exactHouston(),
       }),
     );
-    expect(screen.getByRole('button').textContent).toBe(houstonOnly());
+    expect(screen.getByRole('button').textContent).toBe(exactHouston());
   });
 
   it('says one job in the singular', () => {
@@ -105,7 +105,7 @@ describe('SearchRadiusScope', () => {
         to: n(1),
         count: 1,
         countLabel: n(1),
-        exactPlace: houstonOnly(),
+        exactPlace: exactHouston(),
       }),
     );
   });
@@ -128,7 +128,7 @@ describe('SearchRadiusScope', () => {
         to: n(21),
         count: 21,
         countLabel: n(21),
-        exactPlace: houstonOnly(),
+        exactPlace: exactHouston(),
       }),
     );
   });

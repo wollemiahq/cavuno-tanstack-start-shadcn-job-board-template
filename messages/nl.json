@@ -1619,7 +1619,7 @@
     }
   ],
   "searchRadius_exactScopeUncounted": "Je ziet vacatures {exactPlace}",
-  "searchRadius_exactPlace": "alleen in {place}",
+  "searchRadius_exactPlace": "in {place}",
   "searchRadius_exactEmpty": "Geen vacatures {exactPlace}",
   "searchRadius_withinScope": [
     {

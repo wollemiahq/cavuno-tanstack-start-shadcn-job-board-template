@@ -1619,7 +1619,7 @@
     }
   ],
   "searchRadius_exactScopeUncounted": "Mostrando ofertas {exactPlace}",
-  "searchRadius_exactPlace": "solo en {place}",
+  "searchRadius_exactPlace": "en {place}",
   "searchRadius_exactEmpty": "No hay ofertas {exactPlace}",
   "searchRadius_withinScope": [
     {

@@ -31,7 +31,7 @@ const MENU_SLOT = '\u0000';
  * The results line of a city or locality listing, SEEK-style: "Showing 1–20
  * jobs within **25 mi ⌄** of Houston". Only the distance opens the menu,
  * which picks a preset distance or the place itself ("Showing 1–20 jobs in
- * **Houston only ⌄**").
+ * **Houston ⌄**").
  */
 export function SearchRadiusScope({
   place,
