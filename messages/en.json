@@ -1877,7 +1877,7 @@
   "passwordPage_incorrectPasswordError": "Incorrect password.",
   "passwordPage_passwordLabel": "Password",
   "passwordPage_title": "Enter password",
-  "comingSoonGate_heading": "{board} is opening soon.",
+  "comingSoonGate_heading": "{board} is coming soon.",
   "comingSoonGate_lede": "We're putting the finishing touches on it. Check back soon.",
   "comingSoonGate_enterPassword": "Enter using password",
   "placeTags_removeAriaLabel": "Remove {name}",

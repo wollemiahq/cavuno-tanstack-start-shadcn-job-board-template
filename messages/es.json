@@ -1877,7 +1877,7 @@
   "passwordPage_incorrectPasswordError": "Contraseña incorrecta.",
   "passwordPage_passwordLabel": "Contraseña",
   "passwordPage_title": "Introduce la contraseña",
-  "comingSoonGate_heading": "{board} abre pronto.",
+  "comingSoonGate_heading": "{board} llega pronto.",
   "comingSoonGate_lede": "Estamos dando los últimos retoques. Vuelve pronto.",
   "comingSoonGate_enterPassword": "Entrar con contraseña",
   "placeTags_removeAriaLabel": "Eliminar {name}",

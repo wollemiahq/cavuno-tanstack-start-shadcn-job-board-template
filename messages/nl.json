@@ -1877,7 +1877,7 @@
   "passwordPage_incorrectPasswordError": "Onjuist wachtwoord.",
   "passwordPage_passwordLabel": "Wachtwoord",
   "passwordPage_title": "Voer wachtwoord in",
-  "comingSoonGate_heading": "{board} opent binnenkort.",
+  "comingSoonGate_heading": "{board} komt binnenkort.",
   "comingSoonGate_lede": "We leggen de laatste hand eraan. Kom snel terug.",
   "comingSoonGate_enterPassword": "Openen met wachtwoord",
   "placeTags_removeAriaLabel": "{name} verwijderen",
