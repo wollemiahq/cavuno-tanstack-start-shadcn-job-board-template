@@ -153,10 +153,12 @@ export default function Header({
   );
   // Route changes used to remount the form via a key; with the state lifted
   // here, resync it when the URL-derived search identity changes instead
-  // (React's adjust-state-during-render pattern).
+  // (React's adjust-state-during-render pattern). The location NAME is part
+  // of the identity: a talent search commits `?place=` before its loader
+  // resolves the label, so the slug alone would pin the slug as the text.
   const searchKey = `${search.scope}:${search.query}:${
     search.location?.slug ?? ''
-  }:${search.term?.type ?? ''}:${search.term?.slug ?? ''}:${
+  }:${search.location?.name ?? ''}:${search.term?.type ?? ''}:${search.term?.slug ?? ''}:${
     search.market?.slug ?? ''
   }`;
   const [lastSearchKey, setLastSearchKey] = useState(searchKey);

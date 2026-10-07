@@ -138,6 +138,7 @@ beforeEach(() => {
   getTalentIndexPage.mockReset();
   getTalentIndexPage.mockResolvedValue({
     seo,
+    place: null,
     page: {
       object: 'list',
       url: '/v1/talent',
@@ -244,6 +245,7 @@ describe('talent directory route — query and capability contracts', () => {
   it('renders the restricted state for the employer-only directory code', async () => {
     getTalentIndexPage.mockResolvedValue({
       seo,
+      place: null,
       page: null,
       restricted: true,
       head: { meta: [], links: [] },
