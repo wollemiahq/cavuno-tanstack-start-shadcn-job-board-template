@@ -21,6 +21,7 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   createEvent,
   fireEvent,
@@ -84,6 +85,9 @@ function findAccountButton() {
 
 type TalentDirectoryVisibility = 'off' | 'public' | 'employers_only' | null;
 
+/** Stands in for the route loader resolving the current place's name. */
+let resolveLocationName: (name: string) => void = () => {};
+
 function renderHeader({
   initialEntry = '/',
   features = allFeatures,
@@ -135,6 +139,8 @@ function renderHeader({
   function HarnessHeader() {
     const navigate = useNavigate();
     const [viewer, setViewer] = useState(user);
+    const [locationName, setLocationName] = useState<string>();
+    resolveLocationName = setLocationName;
 
     function submitSearch({
       scope,
@@ -204,6 +210,10 @@ function renderHeader({
         hasMembershipPage={hasMembershipPage}
         search={{
           ...initialSearch,
+          location:
+            initialSearch.location && locationName
+              ? { ...initialSearch.location, name: locationName }
+              : initialSearch.location,
           onSubmit: submitSearch,
           locationSuggestions: {
             suggestions: locationSuggestions.map((place) => ({
@@ -1005,6 +1015,23 @@ describe('Header — pathname-scoped submit-only search', () => {
 
     expect(keyword.value).toBe('');
     expect(keyword).toHaveFocus();
+  });
+
+  it('shows a place name that resolves after its slug, keeping typed text', async () => {
+    renderHeader({ initialEntry: '/talent?place=berlin-germany' });
+    const keyword = await screen.findByLabelText<HTMLInputElement>(
+      m.searchBar_keywordAriaLabel(),
+    );
+    const location = await screen.findByRole<HTMLInputElement>('combobox', {
+      name: m.locationCombobox_locationAriaLabel(),
+    });
+    expect(location.value).toBe('berlin-germany');
+
+    fireEvent.change(keyword, { target: { value: 'robotics' } });
+    act(() => resolveLocationName('Berlin, Germany'));
+
+    expect(location.value).toBe('Berlin, Germany');
+    expect(keyword.value).toBe('robotics');
   });
 
   it('preserves an active place and submits keyword plus location together', async () => {
