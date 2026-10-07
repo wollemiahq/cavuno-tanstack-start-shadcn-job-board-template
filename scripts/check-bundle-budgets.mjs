@@ -63,7 +63,13 @@ const BUDGETS = {
   // bridge itself, ~1 KiB gzip, is lazy-loaded on those boards). Raised to
   // 255_000 for ~2.2 KiB of headroom rather than another just-enough raise;
   // accepted by the operator on 2026-10-06.
-  shell: { raw: 760_000, gzip: 255_000 },
+  // The coming-soon gate route (#250: its route entry plus the root
+  // layout's bare branch) measured 742.8 KiB raw (760,627 B) against the
+  // 760,000 raw budget, which main had ~0.1 KiB of headroom left on; gzip
+  // stayed inside (248.0 of 249.0 KiB). Trimming the route options did not
+  // move it past chunking noise (742.7–743.0 KiB). Accepted by the operator
+  // on 2026-10-07 as the feature's cost; raw rebaselined with ~7 KB headroom.
+  shell: { raw: 768_000, gzip: 255_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
