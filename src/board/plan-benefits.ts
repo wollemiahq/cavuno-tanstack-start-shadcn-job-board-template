@@ -171,6 +171,21 @@ function genericFeatureLines(plan: Pick<Plan, 'features'>): string[] {
     });
 }
 
+/**
+ * Only the operator's custom attributes (`custom.*` keys), for cards that
+ * already speak for the plan's built-in features in their own words — a
+ * priced posting or talent plan — so the attributes render there too.
+ */
+export function customAttributeLines(plan: Pick<Plan, 'features'>): string[] {
+  return genericFeatureLines({
+    features: Object.fromEntries(
+      Object.entries(plan.features ?? {}).filter(([key]) =>
+        key.startsWith('custom.'),
+      ),
+    ),
+  });
+}
+
 /** Whether the operator explicitly set this plan's concurrency cap to zero. */
 function zeroesPosting(plan: Pick<Plan, 'features'>): boolean {
   const cap = plan.features?.['jobs.max_active']?.value;

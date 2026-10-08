@@ -97,8 +97,9 @@ import {
 } from '@/board/form-layout';
 import { narrowOptions } from '@/board/job-form';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import { customAttributeLines } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
-import { planFeatureLines } from '@/board/plan-view-model';
+import { planFeatureLines, type PostPlan } from '@/board/plan-view-model';
 import {
   CustomFieldInput,
   missingRequiredCustomField,
@@ -109,11 +110,7 @@ import { PlaceTagsField } from '@/components/place-tags-field';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { searchString } from '@/lib/pagination';
-import type {
-  JobPostingPlan,
-  PublicBoard,
-  RemotePermitTaxonomyEntry,
-} from '@cavuno/board';
+import type { PublicBoard, RemotePermitTaxonomyEntry } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['remote', 'hybrid', 'on_site'] as const;
 
@@ -192,7 +189,7 @@ function salaryTimeframeChoice(
 
 export type PostJobFormProps = {
   locale: string;
-  plans: JobPostingPlan[];
+  plans: PostPlan[];
   officeLocationSuggestions: LocationSuggestionState;
   /** Board-defined custom field definitions, in operator-config order. */
   customFields: PublicBoard['customFields']['job'];
@@ -1206,7 +1203,10 @@ export function PostJobForm({
           {plans.map((plan) => {
             const price =
               plan.prices.find(({ isActive }) => isActive) ?? plan.prices[0];
-            const features = planFeatureLines(plan);
+            const features = [
+              ...planFeatureLines(plan),
+              ...customAttributeLines({ features: plan.catalogFeatures ?? {} }),
+            ];
             return (
               // The owned Field choice card — the SAME idiom as the join
               // page's RoleSelector, so every card-style radio picker reads

@@ -36,6 +36,7 @@ import {
 import { Route as OnboardingRoute } from './employers.onboarding.$slug';
 
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import { renderRouted } from '@/test/render-routed';
 import type { CompanyMembership, Plan } from '@cavuno/board';
 
@@ -404,6 +405,52 @@ describe('employer entry surfaces', () => {
         name: m.memberships_joinLabel(),
       }),
     ).toHaveAttribute('href', '/memberships');
+  });
+
+  it("lists a priced plan's custom attributes alongside its built-in features", () => {
+    render(
+      <EmployersPageView
+        plans={[
+          {
+            ...plan,
+            features: {
+              'custom.newsletter_feature': {
+                value: 'true',
+                name: 'Newsletter feature',
+                dataType: 'boolean',
+              },
+              'custom.social_posts': {
+                value: '2',
+                name: 'Social posts',
+                dataType: 'integer',
+              },
+            },
+          },
+        ]}
+        contactPlans={[]}
+        seo={{ boardName: 'Example Jobs' }}
+        dependencies={employersPageViewDependencies}
+      />,
+    );
+
+    const card = screen.getByText('Growth').closest('[data-slot="card"]');
+    if (!(card instanceof HTMLElement)) {
+      throw new Error('The Growth plan must render in a card');
+    }
+    expect(
+      within(card).getByText(
+        m.employerLanding_featureActiveJobs({ count: 5, countLabel: '5' }),
+      ),
+    ).toBeVisible();
+    expect(within(card).getByText('Newsletter feature')).toBeVisible();
+    expect(
+      within(card).getByText(
+        m.planFeature_countedValue({
+          name: 'Social posts',
+          value: (2).toLocaleString(getLocale()),
+        }),
+      ),
+    ).toBeVisible();
   });
 
   it('renders a quote-only tier as its price text and CTA, never as a price', () => {

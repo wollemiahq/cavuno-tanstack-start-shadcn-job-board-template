@@ -9,6 +9,7 @@ import { getLocale } from '../paraglide/runtime';
 import { candidatePlanBenefits } from '@/board/candidate-plan-benefits';
 import {
   configuredMembershipCapacitySentence,
+  customAttributeLines,
   planBenefitLines,
 } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
@@ -144,6 +145,7 @@ function planFeatures(plan: Plan) {
           countLabel: String(plan.talent.messagesPerPeriod),
         })
       : null,
+    ...customAttributeLines(plan),
   ].filter((feature) => feature !== null);
 }
 

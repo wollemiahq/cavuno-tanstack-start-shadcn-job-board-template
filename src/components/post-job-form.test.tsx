@@ -15,8 +15,8 @@ import { PostJobForm } from './post-job-form';
 import type { RichTextEditorProps } from './rich-text-editor';
 import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
+import type { PostPlan } from '@/board/plan-view-model';
 import { m } from '@/paraglide/messages';
-import type { JobPostingPlan } from '@cavuno/board';
 
 function DescriptionEditor({
   value,
@@ -32,7 +32,7 @@ function DescriptionEditor({
   );
 }
 
-const plans: JobPostingPlan[] = [
+const plans: PostPlan[] = [
   {
     object: 'job_posting_plan',
     id: 'plan-standard',
@@ -456,6 +456,44 @@ describe('PostJobForm', () => {
 
     expect(screen.getByText(/199/)).toBeVisible();
     expect(screen.queryByText(m.postJob_freeLabel())).toBeNull();
+  });
+
+  it("lists the plan's custom attributes from the plan catalogue", () => {
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[]}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={officeLocationSuggestions}
+        plans={[
+          {
+            ...plans[0]!,
+            catalogFeatures: {
+              'custom.newsletter_feature': {
+                value: 'true',
+                name: 'Newsletter feature',
+                dataType: 'boolean',
+              },
+              'jobs.duration_days': {
+                value: '30',
+                name: 'Duration days',
+                dataType: 'integer',
+              },
+            },
+          },
+        ]}
+        onSubmit={vi.fn()}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Newsletter feature')).toBeVisible();
+    // Built-in features keep their own wording; the catalogue adds only the
+    // operator's attributes.
+    expect(screen.queryByText(/Duration days/)).toBeNull();
   });
 
   it('hides salary, seniority, and office location when the job form says so', () => {
