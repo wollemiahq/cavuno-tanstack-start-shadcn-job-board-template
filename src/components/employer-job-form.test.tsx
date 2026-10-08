@@ -1083,6 +1083,79 @@ describe('EmployerJobForm', () => {
   });
 });
 
+describe('EmployerJobForm — external-applications-only board', () => {
+  const nativeJob: EmployerJob = {
+    ...draftJob,
+    remoteOption: 'remote',
+    applicationUrl: null,
+  };
+
+  it('offers no on-board option and requires an application URL on create', async () => {
+    mocks.createJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        job={nativeJob}
+        nativeApplications={false}
+      />,
+    );
+
+    expect(
+      screen.queryByText(m.employerPostJob_applyNativeLabel()),
+    ).not.toBeInTheDocument();
+    const saveDraft = screen.getByRole('button', {
+      name: m.employerCompany_createDraftLabel(),
+    });
+    fireEvent.click(saveDraft);
+    expect(
+      await screen.findAllByText(m.employerPostJob_applyTargetRequiredError()),
+    ).toHaveLength(2);
+    expect(mocks.createJob).not.toHaveBeenCalled();
+
+    fireEvent.change(container.querySelector('#job-application-target')!, {
+      target: { value: 'https://acme.example/apply' },
+    });
+    fireEvent.click(saveDraft);
+
+    await waitFor(() => expect(mocks.createJob).toHaveBeenCalledTimes(1));
+    expect(mocks.createJob.mock.calls[0][0].data.body.applicationUrl).toBe(
+      'https://acme.example/apply',
+    );
+  });
+
+  it('saves an edit of an on-board job without touching its destination', async () => {
+    mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'edit', jobId: 'job-1', status: 'published' }}
+        job={{ ...nativeJob, status: 'published' }}
+        nativeApplications={false}
+      />,
+    );
+
+    fireEvent.submit(container.querySelector('form')!);
+
+    await waitFor(() => expect(mocks.updateJob).toHaveBeenCalledTimes(1));
+    expect(mocks.updateJob.mock.calls[0][0].data.body).not.toHaveProperty(
+      'applicationUrl',
+    );
+  });
+});
+
 describe('EmployerJobForm — board job-form constraints', () => {
   it('surfaces a blocked save visibly, not just in state', async () => {
     // `message` renders only under `status === 'error'`; setting the text

@@ -97,6 +97,7 @@ function NewJobPage() {
             officeLocationSuggestions={officeLocationSuggestions}
             jobForm={board}
             customFields={board.customFields.job}
+            nativeApplications={board.features.nativeApplications}
             mode={{ kind: 'create' }}
             membershipGate={
               <MembershipPostGate

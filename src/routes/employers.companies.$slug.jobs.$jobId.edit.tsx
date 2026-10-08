@@ -108,6 +108,7 @@ function EditJobPage() {
             officeLocationSuggestions={officeLocationSuggestions}
             jobForm={board}
             customFields={board.customFields.job}
+            nativeApplications={board.features.nativeApplications}
             mode={{ kind: 'edit', jobId: job.id, status }}
             job={job}
           />

@@ -490,6 +490,12 @@ export type EmployerJobFormProps = {
    * renders, so the two forms collect the same answers.
    */
   customFields?: CustomFieldDefinition[];
+  /**
+   * Board flag `features.nativeApplications` (default-on). `false` makes the
+   * board external-applications-only: the platform rejects a job without an
+   * application URL, so the form offers no on-board option.
+   */
+  nativeApplications?: boolean;
   /** Prefill for edit mode. */
   job?: EmployerJob;
   /**
@@ -671,6 +677,7 @@ export function EmployerJobForm({
   job,
   jobForm: jobFormSource,
   customFields = [],
+  nativeApplications = true,
   membershipGate,
   dependencies,
 }: EmployerJobFormProps) {
@@ -859,6 +866,16 @@ export function EmployerJobForm({
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  // An external-only board takes an application URL on every job. An edit of
+  // a job that already applies on-board may leave the field empty: the save
+  // then omits `applicationUrl`, which the platform accepts so the flag does
+  // not lock existing jobs out of edits.
+  const applyMethod: ApplyMethod = nativeApplications
+    ? form.applyMethod
+    : 'external';
+  const keepsNativeDestination =
+    !nativeApplications && mode.kind === 'edit' && !job?.applicationUrl;
 
   const employmentItems = employmentChoices.map(({ value, label }) => ({
     value,
@@ -1097,7 +1114,8 @@ export function EmployerJobForm({
     if (status === 'saving' || status === 'committed') return;
     const applyExternal =
       shows('applyMethod') &&
-      form.applyMethod === 'external' &&
+      applyMethod === 'external' &&
+      !keepsNativeDestination &&
       normalizeApplicationTarget(form.applicationTarget) === undefined;
     const publishing = intent === 'publish';
     const errors = {
@@ -1163,7 +1181,7 @@ export function EmployerJobForm({
     // Native apply clears the stored URL (create omits it; edit must send null
     // to switch a previously-external job back to on-board applications).
     const applicationUrl =
-      shows('applyMethod') && form.applyMethod === 'external'
+      shows('applyMethod') && applyMethod === 'external'
         ? normalizeApplicationTarget(form.applicationTarget)
         : undefined;
 
@@ -1216,11 +1234,10 @@ export function EmployerJobForm({
     // stored one; create still sends the default the body requires. A
     // built-in choice clears any custom type the job had.
     const { employmentType, customEmploymentType, ...built } = buildBody();
-    const body: UpdateEmployerJobBody = {
-      ...built,
-      ...salaryClear(),
-      applicationUrl: applicationUrl ?? null,
-    };
+    const body: UpdateEmployerJobBody = { ...built, ...salaryClear() };
+    if (applicationUrl || !keepsNativeDestination) {
+      body.applicationUrl = applicationUrl ?? null;
+    }
     if (shows('employmentType')) {
       body.employmentType = employmentType;
       body.customEmploymentType = customEmploymentType ?? null;
@@ -1591,35 +1608,40 @@ export function EmployerJobForm({
       case 'applyMethod':
         return (
           <>
-            <Field>
-              <FieldLabel>{m.employerPostJob_applyMethodLabel()}</FieldLabel>
-              <RadioGroup
-                value={form.applyMethod}
-                onValueChange={(value) =>
-                  set('applyMethod', value === 'native' ? 'native' : 'external')
-                }
-                className="gap-2"
-              >
-                <Label className="flex items-start gap-2 font-normal">
-                  <RadioGroupItem value="native" className="mt-0.5" />
-                  <span className="grid gap-0.5">
+            {nativeApplications ? (
+              <Field>
+                <FieldLabel>{m.employerPostJob_applyMethodLabel()}</FieldLabel>
+                <RadioGroup
+                  value={form.applyMethod}
+                  onValueChange={(value) =>
+                    set(
+                      'applyMethod',
+                      value === 'native' ? 'native' : 'external',
+                    )
+                  }
+                  className="gap-2"
+                >
+                  <Label className="flex items-start gap-2 font-normal">
+                    <RadioGroupItem value="native" className="mt-0.5" />
+                    <span className="grid gap-0.5">
+                      <span className="font-medium">
+                        {m.employerPostJob_applyNativeLabel()}
+                      </span>
+                      <span className="text-muted-foreground text-sm">
+                        {m.employerPostJob_applyNativeHint()}
+                      </span>
+                    </span>
+                  </Label>
+                  <Label className="flex items-start gap-2 font-normal">
+                    <RadioGroupItem value="external" className="mt-0.5" />
                     <span className="font-medium">
-                      {m.employerPostJob_applyNativeLabel()}
+                      {m.employerPostJob_applyExternalLabel()}
                     </span>
-                    <span className="text-muted-foreground text-sm">
-                      {m.employerPostJob_applyNativeHint()}
-                    </span>
-                  </span>
-                </Label>
-                <Label className="flex items-start gap-2 font-normal">
-                  <RadioGroupItem value="external" className="mt-0.5" />
-                  <span className="font-medium">
-                    {m.employerPostJob_applyExternalLabel()}
-                  </span>
-                </Label>
-              </RadioGroup>
-            </Field>
-            {form.applyMethod === 'external' ? (
+                  </Label>
+                </RadioGroup>
+              </Field>
+            ) : null}
+            {applyMethod === 'external' ? (
               <Field data-invalid={fieldErrors.applicationTarget || undefined}>
                 <FieldLabel htmlFor="job-application-target">
                   {m.employerCompany_applyUrlLabel()}
