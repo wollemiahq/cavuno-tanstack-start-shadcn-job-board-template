@@ -569,12 +569,10 @@ function initialCollections(job: EmployerJob | undefined) {
   return Object.fromEntries(
     Object.entries(job?.collectionValues ?? {}).map(([key, ids]) => [
       key,
-      ids.map(
-        (id): CollectionChoice => ({
-          id,
-          name: names[key]?.[id] ?? m.collectionField_unavailableEntryLabel(),
-        }),
-      ),
+      ids.map((id): CollectionChoice => ({
+        id,
+        name: names[key]?.[id] ?? m.collectionField_unavailableEntryLabel(),
+      })),
     ]),
   );
 }
