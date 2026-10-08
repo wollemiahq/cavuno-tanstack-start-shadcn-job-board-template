@@ -33,7 +33,7 @@ export const Route = createFileRoute('/jobs/skills/$skill')({
 });
 
 function SkillPage() {
-  const { skill, list, relatedSearches } = Route.useLoaderData();
+  const { skill, list, relatedSearches, countCapped } = Route.useLoaderData();
   const search = Route.useSearch();
   return (
     <ProgrammaticJobsView
@@ -43,6 +43,7 @@ function SkillPage() {
       }
       count={list.count}
       gatedCount={list.gatedCount}
+      countCapped={countCapped}
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}

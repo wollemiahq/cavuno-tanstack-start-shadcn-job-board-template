@@ -39,6 +39,7 @@ beforeEach(() => {
     hasSalaries: false,
     head: { meta: [], links: [] },
     jsonLd: [],
+    countCapped: false,
   });
 });
 

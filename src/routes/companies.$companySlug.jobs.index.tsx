@@ -23,6 +23,7 @@ import {
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import { entityCount } from '../lib/entity-count';
+import { jobCountLabel } from '../lib/job-count-label';
 import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
@@ -42,11 +43,14 @@ import {
 } from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
-import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
+import { displayedJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
-import { jobsResultsShowingLine } from '@/components/board/jobs-results-bar';
+import {
+  JobsCappedResultsHint,
+  jobsResultsShowingLine,
+} from '@/components/board/jobs-results-bar';
 import { ListingPagination } from '@/components/board/listing-pagination';
 import { PreviewUnlockAlert } from '@/components/board/preview-unlock-alert';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -79,7 +83,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
 const rootApi = getRouteApi('__root__');
 
 function CompanyJobsPage() {
-  const { company, page, q, location, locationName, hasSalaries } =
+  const { company, page, q, location, locationName, hasSalaries, countCapped } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
@@ -89,19 +93,32 @@ function CompanyJobsPage() {
 
   const currentPage = clampPage(search.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
   const visibleCount = page.count ?? 0;
-  const count = catalogJobCount(visibleCount, page.gatedCount) ?? visibleCount;
+  const count =
+    displayedJobCount(visibleCount, page.gatedCount, countCapped) ??
+    visibleCount;
   const locale = getLocale();
+  const totalLabel = jobCountLabel(count, locale, countCapped);
   const span =
     visibleCount > COMPANY_JOBS_PAGE_SIZE
       ? visiblePageSpan(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount)
       : null;
 
   const countLabel = span
-    ? jobsResultsShowingLine({ from: span.from, to: span.to, count }, locale)
-    : entityCount(count, locale, m.count_jobs, {
-        singular: chromeEntity().jobSingular,
-        plural: chromeEntity().jobPlural,
-      });
+    ? jobsResultsShowingLine(
+        { from: span.from, to: span.to, count },
+        locale,
+        totalLabel,
+      )
+    : entityCount(
+        count,
+        locale,
+        m.count_jobs,
+        {
+          singular: chromeEntity().jobSingular,
+          plural: chromeEntity().jobPlural,
+        },
+        totalLabel,
+      );
 
   return (
     <CompanySectionShell
@@ -129,6 +146,14 @@ function CompanyJobsPage() {
           language={getLocale()}
           variant="grid"
           compact
+        />
+
+        <JobsCappedResultsHint
+          visibleCount={visibleCount}
+          page={currentPage}
+          pageSize={COMPANY_JOBS_PAGE_SIZE}
+          countCapped={countCapped}
+          language={locale}
         />
 
         <PreviewUnlockAlert

@@ -31,10 +31,12 @@ export function resultsShowingLine(
   span: ResultsSpan,
   locale: string,
   lines: Record<ResultsLineKind, (labels: ResultsLabels) => string>,
+  /** The total as shown, such as "1,000+"; defaults to `count` formatted. */
+  countLabel: string = span.count.toLocaleString(locale),
 ): string {
   return lines[resultsLineKind(span)]({
     count: span.count,
-    countLabel: span.count.toLocaleString(locale),
+    countLabel,
     from: span.from.toLocaleString(locale),
     to: span.to.toLocaleString(locale),
   });

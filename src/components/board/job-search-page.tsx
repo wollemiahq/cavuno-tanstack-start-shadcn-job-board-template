@@ -17,6 +17,7 @@ import {
   type JobsCustomFilters,
 } from '@/components/board/jobs-filter-controls';
 import {
+  JobsCappedResultsHint,
   JobsResultsBar,
   type ResultsRange,
 } from '@/components/board/jobs-results-bar';
@@ -105,6 +106,7 @@ export function JobSearchPage({
   jobs,
   count,
   gatedCount,
+  countCapped,
   page: requestedPage,
   pageSize,
   filters,
@@ -131,6 +133,8 @@ export function JobSearchPage({
   count?: number;
   /** Honest count of paywalled results withheld from this viewer. */
   gatedCount?: number;
+  /** `count` is the Board API's ranking limit; see `JobsResultsBar`. */
+  countCapped?: boolean;
   page: number;
   pageSize: number;
   filters: JobsFilters;
@@ -188,6 +192,7 @@ export function JobSearchPage({
       countedHeading={countedHeading}
       language={language}
       scope={resultsScope}
+      countCapped={countCapped}
     />
   );
   return (
@@ -274,6 +279,14 @@ export function JobSearchPage({
                       ))}
                     </ListingAdResults>
                   </InPlaceListingSelect>
+
+                  <JobsCappedResultsHint
+                    visibleCount={count}
+                    page={page}
+                    pageSize={pageSize}
+                    countCapped={countCapped}
+                    language={language}
+                  />
 
                   <PreviewUnlockAlert
                     gatedCount={gatedCount}

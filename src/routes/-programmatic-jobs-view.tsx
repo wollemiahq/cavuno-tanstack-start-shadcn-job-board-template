@@ -32,6 +32,7 @@ export function ProgrammaticJobsView({
   resultsScope,
   count,
   gatedCount,
+  countCapped,
   jobs,
   page,
   pageSize,
@@ -47,6 +48,8 @@ export function ProgrammaticJobsView({
   resultsScope?: (range: ResultsRange | null) => React.ReactNode;
   count?: number;
   gatedCount?: number;
+  /** `count` is the Board API's ranking limit; see `JobsResultsBar`. */
+  countCapped?: boolean;
   jobs: PublicJobCard[];
   page: number;
   pageSize: number;
@@ -82,6 +85,7 @@ export function ProgrammaticJobsView({
         resultsScope={resultsScope}
         count={count}
         gatedCount={gatedCount}
+        countCapped={countCapped}
         jobs={jobs.map((job) => toJobCardVM(job, getLocale(), board))}
         page={page}
         pageSize={pageSize}

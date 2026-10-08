@@ -39,6 +39,7 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { profileCustomFilters } from './profile-filter-fields';
 
+import { isRelevanceCountCapped } from '@/board/job-catalog-count';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { searchNumber } from '@/lib/pagination';
@@ -554,7 +555,14 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { company, page, seo, hasSalaries, head, jsonLd };
+      // A keyword search here is relevance-ranked (no sort), so its count
+      // can stop at the ranking limit; see `isRelevanceCountCapped`.
+      const countCapped = isRelevanceCountCapped({
+        hasTextQuery: Boolean(data.q),
+        sort: undefined,
+        count: page.count,
+      });
+      return { company, page, seo, hasSalaries, head, jsonLd, countCapped };
     }),
   );
 

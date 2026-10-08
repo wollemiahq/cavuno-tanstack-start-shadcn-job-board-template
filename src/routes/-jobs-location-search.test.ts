@@ -64,6 +64,7 @@ describe('location jobs route — combined keyword and place filtering', () => {
       searchRadius: null,
       head: { meta: [], links: [] },
       jsonLd: [],
+      countCapped: false,
       breadcrumbTrail: [
         { name: 'Home', href: '/' },
         { name: 'Jobs', href: '/jobs' },

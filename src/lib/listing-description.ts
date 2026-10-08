@@ -4,6 +4,7 @@ import { isLocale } from '../paraglide/runtime';
  * Jobs-listing head copy — application-owned title and meta description for
  * `listingHead({ title, description })`. The SDK no longer composes either.
  */
+import { jobCountLabel } from './job-count-label';
 import { pageTitle } from './page-title';
 
 function finiteCount(count: number | undefined): number | undefined {
@@ -32,11 +33,13 @@ export function listingPageTitle(options: {
   boardName: string;
   language: string;
   count?: number;
+  /** `count` is the Board API's ranking limit: it reads "1,000+". */
+  countCapped?: boolean;
 }): string {
   const count = finiteCount(options.count);
   const countLabel =
     count !== undefined
-      ? new Intl.NumberFormat(options.language).format(count)
+      ? jobCountLabel(count, options.language, options.countCapped)
       : undefined;
   const page =
     count === undefined || countLabel === undefined
@@ -52,6 +55,8 @@ export function jobsIndexPageTitle(options: {
   boardName: string;
   language: string;
   count?: number;
+  /** `count` is the Board API's ranking limit: it reads "1,000+". */
+  countCapped?: boolean;
 }): string {
   const count = finiteCount(options.count);
   const locale = isLocale(options.language)
@@ -63,7 +68,11 @@ export function jobsIndexPageTitle(options: {
       : m.jobSearch_resultsCount(
           {
             count,
-            countLabel: new Intl.NumberFormat(options.language).format(count),
+            countLabel: jobCountLabel(
+              count,
+              options.language,
+              options.countCapped,
+            ),
           },
           locale,
         );
@@ -77,11 +86,16 @@ export function listingMetaDescription(options: {
   countedHeading?: CountedHeading;
   boardName: string;
   count?: number;
+  /** `count` is the Board API's ranking limit: it reads "1,000+". */
+  countCapped?: boolean;
 }): string {
   const count = finiteCount(options.count);
   if (count !== undefined && options.countedHeading) {
+    const countLabel = options.countCapped
+      ? m.jobSearch_cappedCountLabel({ count: String(count) })
+      : String(count);
     return m.listing_metaDescription({
-      heading: options.countedHeading({ count, countLabel: String(count) }),
+      heading: options.countedHeading({ count, countLabel }),
       boardName: options.boardName,
     });
   }
