@@ -281,14 +281,15 @@ describe('ApplyButton conversion tracking', () => {
       apply_type: 'external',
       board_slug: 'acme',
     });
+    // Cavuno's analytics contract uses snake_case payload keys.
     expect(track).toHaveBeenCalledWith('job_apply_click', {
-      jobId: 'job_test_1',
-      jobSlug: 'ordinary-role',
-      companySlug: 'acme',
+      job_id: 'job_test_1',
+      job_slug: 'ordinary-role',
+      company_slug: 'acme',
     });
   });
 
-  it('fires first-party job_apply_click when companySlug is empty', async () => {
+  it('fires first-party job_apply_click without company_slug when companySlug is empty', async () => {
     const track = vi
       .spyOn(boardAnalytics, 'track')
       .mockImplementation(() => undefined);
@@ -309,9 +310,8 @@ describe('ApplyButton conversion tracking', () => {
       }),
     );
     expect(track).toHaveBeenCalledWith('job_apply_click', {
-      jobId: 'job_test_1',
-      jobSlug: 'ordinary-role',
-      companySlug: '',
+      job_id: 'job_test_1',
+      job_slug: 'ordinary-role',
     });
     expect(pushes).not.toContainEqual(
       expect.objectContaining({ event: 'apply_click' }),

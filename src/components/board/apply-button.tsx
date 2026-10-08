@@ -73,6 +73,13 @@ export type ApplyButtonDependencies = {
   >;
 };
 
+/** Cavuno's `job_apply_click` analytics contract (snake_case keys). */
+type JobApplyClickPayload = {
+  job_id: string;
+  job_slug: string;
+  company_slug?: string;
+};
+
 /** File types Cavuno accepts for a per-application resume (hosted parity). */
 const APPLICATION_RESUME_ACCEPT =
   '.pdf,.doc,.docx,.odt,.rtf,.txt,application/pdf';
@@ -220,11 +227,12 @@ export function ApplyButton({
 
   function trackApplyClick(applyType: 'external' | 'native') {
     if (jobId && jobSlug) {
-      analytics.track('job_apply_click', {
-        jobId,
-        jobSlug,
-        companySlug,
-      });
+      const payload: JobApplyClickPayload = {
+        job_id: jobId,
+        job_slug: jobSlug,
+      };
+      if (companySlug) payload.company_slug = companySlug;
+      analytics.track('job_apply_click', payload);
     }
     if (conversion && jobId && jobSlug && companySlug) {
       pushBoardConversionEvent(conversion.analytics, {
