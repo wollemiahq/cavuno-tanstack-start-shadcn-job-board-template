@@ -39,6 +39,7 @@ import {
 
 import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
+import type { PostPlan } from '@/board/plan-view-model';
 import { m } from '@/paraglide/messages';
 import { containing, normalized } from '@/test/text';
 
@@ -466,7 +467,7 @@ describe('EmployerJobForm', () => {
     };
 
     async function renderDraftEdit(
-      plans: JobPostingPlan[],
+      plans: PostPlan[],
       billingOptions: EmployerBillingOption[] = [],
     ) {
       mocks.updateJob.mockResolvedValue({ ok: true, data: { id: 'job-1' } });
@@ -512,6 +513,23 @@ describe('EmployerJobForm', () => {
         billing: { type: 'new', planId: plan.id },
         isFeatured: true,
       });
+    });
+
+    it("lists the plan's custom attributes from the plan catalogue", async () => {
+      await renderDraftEdit([
+        {
+          ...plan,
+          catalogFeatures: {
+            'custom.newsletter_feature': {
+              value: 'true',
+              name: 'Newsletter feature',
+              dataType: 'boolean',
+            },
+          },
+        },
+      ]);
+
+      expect(screen.getByText(/Newsletter feature/)).toBeVisible();
     });
 
     it('omits isFeatured when the box stays unticked', async () => {

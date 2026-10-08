@@ -8,8 +8,8 @@ import {
   type JobPostingFormInput,
 } from '../lib/post-form';
 import { gatedRead } from './board-access';
+import { withCatalogFeatures } from './post-plans';
 
-import type { PostPlan } from '../board/plan-view-model';
 import type { JobPostingResult } from '@cavuno/board';
 
 /** The board's job-posting plans (for the wizard's plan step). */
@@ -17,26 +17,14 @@ export const getPostPlans = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (h) => {
-      const [postingPlans, catalog] = await Promise.all([
-        getBoard().jobPosting.plans(undefined, { headers: h }),
-        // Attribute lines are additive copy: a failed catalogue read must
-        // not take the posting wizard down with it.
-        getBoard()
-          .plans.list({}, { headers: h })
-          .catch(() => null),
-      ]);
-      const featuresById = new Map(
-        (catalog?.data ?? []).map((plan) => [plan.id, plan.features]),
+      const postingPlans = getBoard().jobPosting.plans(undefined, {
+        headers: h,
+      });
+      const data = await withCatalogFeatures(
+        postingPlans.then((result) => result.data),
+        h,
       );
-      return {
-        ...postingPlans,
-        data: postingPlans.data.map(
-          (plan): PostPlan => ({
-            ...plan,
-            catalogFeatures: featuresById.get(plan.id),
-          }),
-        ),
-      };
+      return { ...(await postingPlans), data };
     }),
   );
 
