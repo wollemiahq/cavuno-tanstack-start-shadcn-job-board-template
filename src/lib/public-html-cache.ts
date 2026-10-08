@@ -1,4 +1,4 @@
-import { delocalizeSegments } from './localized-path';
+import { delocalizeSegments, stripLocalePrefix } from './localized-path';
 import { talentProfileParam } from './talent-profile-path';
 
 /**
@@ -70,12 +70,9 @@ function pathnameWithoutLocale(pathname: string): string {
   // Localized section slugs (/fr/emplois, /de/gehaelter) must normalize to
   // their canonical sections BEFORE the locale prefix is stripped, or the
   // whole translated-slug surface silently loses the edge cache.
-  const canonicalSections = delocalizeSegments(pathname);
-  const stripped = canonicalSections.replace(
-    /^\/[a-z]{2,3}(?:-[A-Z]{2})?(?=\/|$)/,
-    '',
-  );
-  return stripped || '/';
+  // The prefix is matched against the compiled locales, not a tag shape:
+  // Paraglide keeps the tag as written, so `zh-cn` is as valid as `pt-BR`.
+  return stripLocalePrefix(delocalizeSegments(pathname)) || '/';
 }
 
 export function isPublicDocumentPath(pathname: string): boolean {

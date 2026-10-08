@@ -1,5 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// Compile two non-base locales whose tags the old shape regex missed.
+vi.mock('../paraglide/runtime', async (importOriginal) => {
+  const runtime = await importOriginal<typeof import('../paraglide/runtime')>();
+  const compiled = new Set<string>([...runtime.locales, 'zh-cn', 'pt-BR']);
+  return {
+    ...runtime,
+    isLocale: (locale: string): boolean => compiled.has(locale),
+  };
+});
+
 import {
   DOC_VARY_COOKIE_PREFIXES,
   isAnonymousPublicDocumentRequest,
@@ -159,6 +169,20 @@ describe('localized section slugs stay cacheable', () => {
     expect(isPublicDocumentPath('/de/unternehmen')).toBe(true);
     expect(isPublicDocumentPath('/fr/entreprises')).toBe(true);
     expect(isPublicDocumentPath('/de/talente')).toBe(true);
+  });
+});
+
+describe('every compiled locale prefix stays cacheable', () => {
+  it('strips lowercase-region and uppercase-region tags alike', () => {
+    expect(isPublicDocumentPath('/zh-cn')).toBe(true);
+    expect(isPublicDocumentPath('/zh-cn/companies')).toBe(true);
+    expect(isPublicDocumentPath('/zh-cn/jobs/engineering')).toBe(true);
+    expect(isPublicDocumentPath('/pt-BR/salaries')).toBe(true);
+    expect(isPublicDocumentPath('/zh-cn/employers/dashboard')).toBe(false);
+  });
+
+  it('does not strip a segment that is not a compiled locale', () => {
+    expect(isPublicDocumentPath('/xx/companies')).toBe(false);
   });
 });
 
