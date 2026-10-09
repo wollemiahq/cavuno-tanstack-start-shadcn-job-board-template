@@ -70,9 +70,10 @@ const BUDGETS = {
   // move it past chunking noise (742.7–743.0 KiB). Accepted by the operator
   // on 2026-10-07 as the feature's cost; raw rebaselined with ~7 KB headroom.
   // Localized URL segments: the client router needs the route-template list
-  // and the word lists to translate links, so they ride the shell. Measured
-  // 748.2 KiB raw / 249.9 KiB gzip; accepted by the operator on 2026-10-09
-  // and rebaselined with the usual ~4 KiB gzip and ~7 KB raw headroom.
+  // and the board's own word lists to translate links, so they ride the
+  // shell (other languages' words are filtered out at build time). Measured
+  // 746.7 KiB raw / 249.4 KiB gzip on an English board; accepted by the
+  // operator on 2026-10-09 and rebaselined with the usual headroom.
   shell: { raw: 775_000, gzip: 260_000 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
