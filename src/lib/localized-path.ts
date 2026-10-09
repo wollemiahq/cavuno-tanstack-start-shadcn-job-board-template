@@ -411,8 +411,10 @@ export function canonicalPathname(
 
 /** localizePath for a same-site path ("/jobs?q=x"); absolute, protocol-
  * relative and non-path hrefs (mailto:, #top) pass through. For raw <a>
- * hrefs and operator-configured links, which skip the router rewrite. */
+ * hrefs and operator-configured links, which skip the router rewrite.
+ * The board-language form ("/vacatures") is accepted too, so it also
+ * resolves on prefixed variants. */
 export function localizeHrefIfInternal(href: string): string {
   if (!href.startsWith('/') || href.startsWith('//')) return href;
-  return localizePath(href);
+  return localizePath(delocalizeSegments(href));
 }
