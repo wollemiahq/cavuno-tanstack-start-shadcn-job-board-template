@@ -65,4 +65,23 @@ describe('localized URL redirect', () => {
       localizedRedirectLocation(request('/jobs/locations'), ENGLISH_BOARD),
     ).toBeNull();
   });
+
+  it('sends URLs from a previous board language to the current one', () => {
+    const GERMAN_BOARD: LocaleRouting = {
+      baseLocale: 'de',
+      isLocale: (tag) => tag === 'de',
+    };
+    expect(
+      localizedRedirectLocation(request('/bedrijven?x=1'), GERMAN_BOARD),
+    ).toBe('/unternehmen?x=1');
+    expect(
+      localizedRedirectLocation(request('/vacatures/locaties'), ENGLISH_BOARD),
+    ).toBe('/jobs/locations');
+  });
+
+  it('never emits a protocol-relative Location', () => {
+    for (const path of ['//evil.example/jobs', '//evil.example/']) {
+      expect(localizedRedirectLocation(request(path), DUTCH_BOARD)).toBeNull();
+    }
+  });
 });

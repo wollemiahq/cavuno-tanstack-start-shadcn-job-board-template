@@ -24,12 +24,14 @@ export function localizedRedirectLocation(
 ): string | null {
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
   const url = new URL(request.url);
+  // "//host/..." would read as another origin in a Location header.
+  if (url.pathname.startsWith('//')) return null;
   if (isMachinePath(url.pathname, routing)) return null;
   const localized = localizeSegments(
     delocalizeSegments(url.pathname, routing),
     routing,
   );
-  if (localized === url.pathname) return null;
+  if (localized === url.pathname || localized.startsWith('//')) return null;
   return `${localized}${url.search}`;
 }
 
