@@ -1,9 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// Compile two non-base locales whose tags the old shape regex missed.
+// Compile two non-base locales whose tags the old shape regex missed, plus
+// the two with localized URL segments.
 vi.mock('../paraglide/runtime', async (importOriginal) => {
   const runtime = await importOriginal<typeof import('../paraglide/runtime')>();
-  const compiled = new Set<string>([...runtime.locales, 'zh-cn', 'pt-BR']);
+  const compiled = new Set<string>([
+    ...runtime.locales,
+    'zh-cn',
+    'pt-BR',
+    'de',
+    'fr',
+  ]);
   return {
     ...runtime,
     isLocale: (locale: string): boolean => compiled.has(locale),

@@ -31,6 +31,7 @@ import {
   type InviteJoinBoard,
   type InviteJoinState,
 } from '@/components/employer/invite-join';
+import { localizePath } from '@/lib/localized-path';
 import type { CompanyMemberInvitePreview } from '@cavuno/board';
 
 const mocks = {
@@ -471,7 +472,9 @@ describe('join page', () => {
       actions.assignLocation.mock.calls[0]![0],
       'https://board.example',
     );
-    expect(destination.pathname).toBe('/employers/companies/acme');
+    expect(destination.pathname).toBe(
+      localizePath('/employers/companies/acme'),
+    );
     expect(destination.searchParams.get('joined')).toBe('1');
   });
 
@@ -646,7 +649,7 @@ describe('join page', () => {
     expect(
       new URL(actions.assignLocation.mock.calls[0]![0], 'https://board.example')
         .pathname,
-    ).toBe('/employers/companies/acme');
+    ).toBe(localizePath('/employers/companies/acme'));
   });
 
   it('sends a magic link that returns to the invite', async () => {

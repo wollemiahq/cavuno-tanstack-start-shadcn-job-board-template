@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { localizePath } from '@/lib/localized-path';
+
 const mocks = vi.hoisted(() => ({
   resolve: vi.fn(),
   list: vi.fn(),
@@ -171,7 +173,7 @@ describe('location listing search distance', () => {
     expect(result.head.links).toEqual([
       {
         rel: 'canonical',
-        href: 'https://fixture.example/jobs/locations/fixture-place',
+        href: `https://fixture.example${localizePath('/jobs/locations/fixture-place')}`,
       },
     ]);
   });
@@ -274,7 +276,7 @@ describe('location listing search distance', () => {
     expect(result.head.links).toEqual([
       {
         rel: 'canonical',
-        href: 'https://fixture.example/jobs/locations/fixture-place',
+        href: `https://fixture.example${localizePath('/jobs/locations/fixture-place')}`,
       },
     ]);
   });

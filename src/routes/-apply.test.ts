@@ -9,6 +9,8 @@ import { describe, expect, it } from 'vitest';
 
 import { Route } from './apply';
 
+import { localizePath } from '@/lib/localized-path';
+
 function getHandler() {
   const handlers = Route.options.server?.handlers;
   if (!handlers || !('GET' in handlers) || !handlers.GET) {
@@ -38,7 +40,7 @@ describe('/apply GET', () => {
   it('redirects to the listing instead of serving the shell', async () => {
     const res = await getApply('/apply');
     expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe('/jobs');
+    expect(res.headers.get('location')).toBe(localizePath('/jobs'));
   });
 
   it('is never cached or indexed', async () => {
@@ -51,6 +53,6 @@ describe('/apply GET', () => {
     // The router matches /Apply case-insensitively; deriving the target from
     // the pathname redirected /Apply to itself forever.
     const res = await getApply('/Apply');
-    expect(res.headers.get('location')).toBe('/jobs');
+    expect(res.headers.get('location')).toBe(localizePath('/jobs'));
   });
 });

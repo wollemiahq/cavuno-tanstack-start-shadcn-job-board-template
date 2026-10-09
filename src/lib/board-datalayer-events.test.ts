@@ -1,6 +1,18 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it, afterEach } from 'vitest';
+import { describe, expect, it, afterEach, vi } from 'vitest';
+
+import { localizePath } from '@/lib/localized-path';
+
+// Compile German next to the board language so /de/ is a real prefix.
+vi.mock('../paraglide/runtime', async (importOriginal) => {
+  const runtime = await importOriginal<typeof import('../paraglide/runtime')>();
+  const compiled = new Set<string>([...runtime.locales, 'de']);
+  return {
+    ...runtime,
+    isLocale: (locale: string): boolean => compiled.has(locale),
+  };
+});
 
 import {
   appendAuthConversionQuery,
@@ -75,7 +87,7 @@ describe('board-datalayer-events', () => {
         fallbackMethod: 'google',
       }),
     ).toBe(
-      '/auth/verify-email-required?returnTo=%2Fjobs%3Fq%3Ddesign&cavuno_auth=sign_up&cavuno_auth_method=linkedin',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/jobs?q=design'))}&cavuno_auth=sign_up&cavuno_auth_method=linkedin`,
     );
   });
 

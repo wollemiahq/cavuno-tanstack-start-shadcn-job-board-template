@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { m } from '../paraglide/messages';
 
 import type { UrlSearchInput } from '../lib/pagination';
+import { localizePath } from '@/lib/localized-path';
 
 const mocks = {
   assignLocation: vi.fn(),
@@ -285,7 +286,7 @@ describe('/auth/sign-in search contract', () => {
       }),
     ).toHaveAttribute(
       'href',
-      `/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`,
+      `${localizePath('/auth/forgot-password')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
     );
     // Get started goes to the join gate, not straight to the candidate form —
     // the role is unknown here, so `/auth/join` resolves it. The destination
@@ -296,7 +297,7 @@ describe('/auth/sign-in search contract', () => {
       }),
     ).toHaveAttribute(
       'href',
-      `/auth/join?returnTo=${encodeURIComponent(returnTo)}`,
+      `${localizePath('/auth/join')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
     );
   });
 

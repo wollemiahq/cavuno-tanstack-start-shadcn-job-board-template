@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { m } from '../paraglide/messages';
 
 import type { UrlSearchInput } from '../lib/pagination';
+import { localizePath } from '@/lib/localized-path';
 
 const forgotPassword = vi.fn();
 
@@ -116,7 +117,7 @@ describe('/auth/forgot-password continuation', () => {
         }),
       ).toHaveAttribute(
         'href',
-        `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
+        `${localizePath('/auth/sign-in')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
       );
     });
   });

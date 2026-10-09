@@ -19,6 +19,7 @@ import {
 import { Route as MagicLinkRoute } from './auth.magic-link';
 
 import type { UrlSearchInput } from '../lib/pagination';
+import { localizePath } from '@/lib/localized-path';
 
 afterEach(() => {
   cleanup();
@@ -97,7 +98,7 @@ describe('auth callback continuation', () => {
         await screen.findByRole('link', { name: signInLabel() }),
       ).toHaveAttribute(
         'href',
-        `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`,
+        `${localizePath('/auth/sign-in')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
       );
     },
   );

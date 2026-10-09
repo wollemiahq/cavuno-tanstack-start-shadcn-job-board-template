@@ -69,25 +69,21 @@ describe('locale-resolution contract', () => {
  * is prefixed and uses its own section slug. Which locale is the base is a
  * board choice, so expectations follow `baseLocale` instead of assuming one.
  */
-function expectedHref(locale: string, canonical: string, prefixed: string) {
-  return locale === baseLocale ? canonical : prefixed;
+function expectedHref(locale: string, prefixed: string) {
+  if (locale !== baseLocale) return prefixed;
+  return prefixed.slice(locale.length + 1) || '/';
 }
 
 describe('buildLocaleOptions preserves the current path', () => {
   const extra = ['en', 'de', 'fr'] as const;
 
   it('re-localizes the active path per option, keeping the query', () => {
-    const options = buildLocaleOptions('en', '/jobs?q=react', extra);
+    const options = buildLocaleOptions('en', '/jobs?q=react', [...extra, 'nl']);
     const byLocale = Object.fromEntries(options.map((o) => [o.locale, o.href]));
-    expect(byLocale.en).toBe(
-      expectedHref('en', '/jobs?q=react', '/en/jobs?q=react'),
-    );
-    expect(byLocale.de).toBe(
-      expectedHref('de', '/jobs?q=react', '/de/jobs?q=react'),
-    );
-    expect(byLocale.fr).toBe(
-      expectedHref('fr', '/jobs?q=react', '/fr/emplois?q=react'),
-    );
+    expect(byLocale.en).toBe(expectedHref('en', '/en/jobs?q=react'));
+    expect(byLocale.de).toBe(expectedHref('de', '/de/jobs?q=react'));
+    expect(byLocale.fr).toBe(expectedHref('fr', '/fr/emplois?q=react'));
+    expect(byLocale.nl).toBe(expectedHref('nl', '/nl/vacatures?q=react'));
   });
 
   it('marks the active locale and nothing else', () => {
@@ -96,10 +92,10 @@ describe('buildLocaleOptions preserves the current path', () => {
       'de',
     ]);
     expect(options.find((o) => o.locale === 'de')?.href).toBe(
-      expectedHref('de', '/companies', '/de/unternehmen'),
+      expectedHref('de', '/de/unternehmen'),
     );
     expect(options.find((o) => o.locale === 'en')?.href).toBe(
-      expectedHref('en', '/companies', '/en/companies'),
+      expectedHref('en', '/en/companies'),
     );
   });
 });
@@ -167,13 +163,10 @@ describe('LanguageSwitcher rendering', () => {
       .getByText('Deutsch')
       .closest('[aria-current="true"]');
     expect(current).not.toBeNull();
-    expect(current).toHaveAttribute(
-      'href',
-      expectedHref('de', '/jobs', '/de/jobs'),
-    );
+    expect(current).toHaveAttribute('href', expectedHref('de', '/de/jobs'));
     expect(within(menu).getByText('English').closest('a')).toHaveAttribute(
       'href',
-      expectedHref('en', '/jobs', '/en/jobs'),
+      expectedHref('en', '/en/jobs'),
     );
   });
 });

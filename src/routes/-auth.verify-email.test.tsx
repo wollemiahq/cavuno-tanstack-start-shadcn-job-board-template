@@ -11,6 +11,8 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { localizePath } from '@/lib/localized-path';
+
 const mocks = {
   getSeoBase: vi.fn().mockResolvedValue({
     boardName: 'Acme Board',
@@ -131,7 +133,7 @@ describe('/auth/verify-email search contract', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/auth/verify-email-required?returnTo=%2Fjobs%3Fq%3Ddesign%26selectedJob%3Dproduct-designer',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/jobs?q=design&selectedJob=product-designer'))}`,
     );
   });
 

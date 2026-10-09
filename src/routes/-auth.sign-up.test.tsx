@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
@@ -137,7 +138,7 @@ describe('/auth/sign-up search contract', () => {
     );
     const url = new URL(action.getAttribute('href')!, 'https://board.example');
     expect(url.pathname).toBe('/auth/verify-email-required');
-    expect(url.searchParams.get('returnTo')).toBe(returnTo);
+    expect(url.searchParams.get('returnTo')).toBe(localizePath(returnTo));
     expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
     expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
   });
@@ -182,7 +183,7 @@ describe('/auth/sign-up search contract', () => {
       const { data } = mocks.signUp.mock.calls[0]![0];
       expect(data.email).toBe('ada@example.com');
       if (emailReturnTo) {
-        expect(data.returnTo).toBe(emailReturnTo);
+        expect(data.returnTo).toBe(localizePath(emailReturnTo));
       } else {
         expect(data).not.toHaveProperty('returnTo');
       }
