@@ -19,6 +19,7 @@ import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle, jobTitleAtCompany } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
+import { boardLanguageUrl } from '../lib/self-url';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
@@ -97,7 +98,11 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
           );
       // Canonical points at the hosted board (the source of truth for SEO);
       // og:image is the STARTER's own /og route (self-sufficient render).
-      const canonical = job.links.public;
+      // An on-origin links.public uses canonical route words; name the
+      // board language's localized URL so the canonical never redirects.
+      const canonical = job.links.public
+        ? boardLanguageUrl(job.links.public, origin)
+        : null;
       const ogImage =
         job.company?.slug && job.slug
           ? `${origin}${jobDetailPath(job.company.slug, job.slug)}/og`
@@ -136,7 +141,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
                   name: boardContext.name,
                   logoUrl: boardContext.logoUrl,
                 },
-                shareUrl: job.links.public,
+                shareUrl: canonical ?? job.links.public,
               })
             : null,
           ...listingJsonLd({

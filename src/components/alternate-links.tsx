@@ -23,7 +23,7 @@ import { useRouterState } from '@tanstack/react-router';
 
 import { localizePath } from '../lib/localized-path';
 import { publicLocales } from '../lib/public-locales';
-import { getLocale, locales } from '../paraglide/runtime';
+import { baseLocale, getLocale, locales } from '../paraglide/runtime';
 
 const EXCLUDED_PREFIXES = ['/embed', '/password'];
 
@@ -85,7 +85,11 @@ export function AlternateLinks({ origin }: { origin: string }) {
           ))
         : null}
       {alternates.length >= 2 ? (
-        <link rel="alternate" hrefLang="x-default" href={`${origin}${path}`} />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href={`${origin}${localizePath(path, { locale: baseLocale })}`}
+        />
       ) : null}
       <meta
         property="og:locale"

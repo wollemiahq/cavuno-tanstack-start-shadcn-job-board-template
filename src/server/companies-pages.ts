@@ -44,7 +44,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { searchNumber } from '@/lib/pagination';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
-import { selfUrl } from '@/lib/self-url';
+import { boardLanguageUrl, selfUrl } from '@/lib/self-url';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -406,8 +406,9 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
               name: company.name,
               board: seo.boardName,
             });
-      const canonical =
-        company.links.public ?? selfUrl(seo.origin, companyPath(company.slug));
+      const canonical = company.links.public
+        ? boardLanguageUrl(company.links.public, seo.origin)
+        : selfUrl(seo.origin, companyPath(company.slug));
       const head = {
         meta: [
           { title: headTitle(seo.boardName, company.name) },
@@ -444,7 +445,7 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
           },
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
-            { label: c.companies, href: `${seo.origin}/companies` },
+            { label: c.companies, href: selfUrl(seo.origin, '/companies') },
             { label: company.name },
           ]),
         ].filter((entry) => entry !== null),

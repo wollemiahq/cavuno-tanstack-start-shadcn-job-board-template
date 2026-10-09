@@ -10,8 +10,27 @@
  * ambient request locale. NOT for job-detail canonicals — those point at
  * `links.public` (the hosted board is that content's SEO source of truth).
  */
+import { baseLocale } from '../paraglide/runtime';
 import { localizePath } from './localized-path';
 
 export function selfUrl(origin: string, path: string): string {
   return `${origin}${localizePath(path)}`;
+}
+
+/**
+ * An absolute URL on `origin` rewritten to the board language's (unprefixed)
+ * localized URL — /jobs/x becomes /vacatures/x on a Dutch board — so it
+ * never names a URL that redirects. URLs on other origins pass through.
+ * For platform-composed URLs (job `links.public`, sitemap entries) that
+ * use canonical route words.
+ */
+export function boardLanguageUrl(url: string, origin: string): string {
+  const path =
+    url === origin
+      ? '/'
+      : url.startsWith(`${origin}/`)
+        ? url.slice(origin.length)
+        : null;
+  if (path === null) return url;
+  return `${origin}${localizePath(path, { locale: baseLocale })}`;
 }
