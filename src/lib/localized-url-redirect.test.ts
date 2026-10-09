@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { localizedRedirectLocation } from './localized-url-redirect';
+import {
+  localizedRedirectLocation,
+  localizedUrlRedirect,
+} from './localized-url-redirect';
 
 import type { LocaleRouting } from './localized-path';
 
@@ -66,22 +69,19 @@ describe('localized URL redirect', () => {
     ).toBeNull();
   });
 
-  it('sends URLs from a previous board language to the current one', () => {
-    const GERMAN_BOARD: LocaleRouting = {
-      baseLocale: 'de',
-      isLocale: (tag) => tag === 'de',
-    };
-    expect(
-      localizedRedirectLocation(request('/bedrijven?x=1'), GERMAN_BOARD),
-    ).toBe('/unternehmen?x=1');
-    expect(
-      localizedRedirectLocation(request('/vacatures/locaties'), ENGLISH_BOARD),
-    ).toBe('/jobs/locations');
-  });
-
   it('never emits a protocol-relative Location', () => {
     for (const path of ['//evil.example/jobs', '//evil.example/']) {
       expect(localizedRedirectLocation(request(path), DUTCH_BOARD)).toBeNull();
     }
+  });
+
+  it('lets browsers cache the 308 for a bounded time only', () => {
+    const response = localizedUrlRedirect(
+      new Request('https://board.example/jobs'),
+      DUTCH_BOARD,
+    );
+    expect(response?.status).toBe(308);
+    expect(response?.headers.get('Location')).toBe('/vacatures');
+    expect(response?.headers.get('Cache-Control')).toBe('max-age=86400');
   });
 });

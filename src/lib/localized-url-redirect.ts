@@ -35,8 +35,16 @@ export function localizedRedirectLocation(
   return `${localized}${url.search}`;
 }
 
-export function localizedUrlRedirect(request: Request): Response | null {
-  const location = localizedRedirectLocation(request);
+export function localizedUrlRedirect(
+  request: Request,
+  routing?: LocaleRouting,
+): Response | null {
+  const location = localizedRedirectLocation(request, routing);
   if (location === null) return null;
-  return new Response(null, { status: 308, headers: { Location: location } });
+  // Bounded: an uncached 308 is kept forever, so a later board-language
+  // change would strand returning visitors on the old word.
+  return new Response(null, {
+    status: 308,
+    headers: { Location: location, 'Cache-Control': 'max-age=86400' },
+  });
 }

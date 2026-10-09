@@ -235,22 +235,6 @@ const WORDS: ReadonlyMap<string, ReadonlyMap<string, string>> = new Map(
   ]),
 );
 
-/** Every list's word for each canonical segment. Input accepts any of
- * them, so a board that changes language still 308s its old URLs. */
-const ANY_LOCALE_WORDS: ReadonlyMap<string, ReadonlySet<string>> = (() => {
-  const byCanonical = new Map<string, Set<string>>();
-  for (const entries of Object.values(SEGMENT_TRANSLATIONS)) {
-    for (const [canonical, localized] of Object.entries(entries)) {
-      const words = byCanonical.get(canonical) ?? new Set<string>();
-      words.add(localized);
-      byCanonical.set(canonical, words);
-    }
-  }
-  return byCanonical;
-})();
-
-const NO_WORDS: ReadonlyMap<string, string> = new Map();
-
 const exactWord = (word: string, segment: string) => word === segment;
 
 function isMachineSegments(segments: readonly string[]): boolean {
@@ -264,25 +248,25 @@ function isMachineSegments(segments: readonly string[]): boolean {
 
 /**
  * Translate an unprefixed pathname's static segments into `locale`'s words
- * ('localized') or back to the canonical words ('canonical'). The canonical
- * word and every list's word are accepted on input, so both directions are
- * idempotent and a board that changes language still routes its old URLs.
+ * ('localized') or back to the canonical words ('canonical'). Either form
+ * is accepted on input, so both directions are idempotent.
  */
 function translatePathname(
   pathname: string,
   locale: string,
   to: 'localized' | 'canonical',
 ): string {
-  const words = WORDS.get(locale) ?? NO_WORDS;
-  if (!pathname.startsWith('/') || pathname === '/') return pathname;
+  const words = WORDS.get(locale);
+  if (!words || !pathname.startsWith('/') || pathname === '/') {
+    return pathname;
+  }
   const trailingSlash = pathname.endsWith('/');
   const segments = pathname.slice(1, trailingSlash ? -1 : undefined).split('/');
   if (isMachineSegments(segments)) return pathname;
   const template = bestTemplate(
     ROUTES,
     segments,
-    (word, segment) =>
-      segment === word || ANY_LOCALE_WORDS.get(word)?.has(segment) === true,
+    (word, segment) => segment === word || segment === words.get(word),
   );
   if (!template) return pathname;
   const translated = segments.map((segment, index) => {

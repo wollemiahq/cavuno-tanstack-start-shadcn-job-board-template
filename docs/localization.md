@@ -57,13 +57,9 @@ words collide at the same position.
 
 Links rendered through TanStack `Link`, `localizePath` and `selfUrl` come out
 localized. Canonicals, hreflang (including `x-default`), sitemap entries and
-feed item links use the same words. Incoming URLs accept the canonical word
-or any language's word, and the server entry answers a GET or HEAD for any
-other form of a document URL with a 308 to the board language's form,
-keeping the query string. A board that changes language therefore keeps its
-old URLs working: `/vacatures` on a board switched to German 308s to `/jobs`.
-Words in different lists must never give one word two meanings; a test
-enforces it.
+feed item links use the same words. Incoming URLs accept canonical or
+localized words, and the server entry answers a GET or HEAD for a canonical
+document URL with a 308 to the localized one, keeping the query string.
 
 Machine paths never translate or redirect: `/api`, `/_serverFn`, `/go`,
 `/.well-known` (including the route manifest), sitemaps, `robots.txt`,
@@ -73,4 +69,5 @@ the word lists.
 
 Words are part of public URLs. Changing one after launch is a URL migration:
 links and search results that use the old word stop resolving, so add a
-board redirect for them.
+board redirect for them. Switching the board language is the same event:
+English URLs keep redirecting, the previous language's words do not.

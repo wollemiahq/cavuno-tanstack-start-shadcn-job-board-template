@@ -226,30 +226,6 @@ describe('word lists', () => {
     expect(problems).toEqual([]);
   });
 
-  it('never gives one word two meanings across lists', () => {
-    // Input accepts every list's words, so a word must name the same
-    // canonical segment in every list and never be another route's word.
-    const problems: string[] = [];
-    for (const [depth, canonicalWords] of staticWordsByDepth()) {
-      const meaning = new Map<string, string>(
-        [...canonicalWords].map((word) => [word, word]),
-      );
-      for (const [locale, entries] of Object.entries(SEGMENT_TRANSLATIONS)) {
-        for (const [canonical, localized] of Object.entries(entries)) {
-          if (!canonicalWords.has(canonical)) continue;
-          const existing = meaning.get(localized);
-          if (existing !== undefined && existing !== canonical) {
-            problems.push(
-              `${locale}: "${localized}" means "${canonical}" but also "${existing}" at depth ${depth}`,
-            );
-          }
-          meaning.set(localized, canonical);
-        }
-      }
-    }
-    expect(problems).toEqual([]);
-  });
-
   it('only lists route segments, in URL-safe form', () => {
     const routeWords = new Set(
       [...staticWordsByDepth().values()].flatMap((words) => [...words]),

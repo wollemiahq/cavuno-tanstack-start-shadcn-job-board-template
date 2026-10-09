@@ -538,7 +538,7 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
         links: [
           {
             rel: 'canonical',
-            href: `${selfUrl(seo.origin, companyPath(data.companySlug))}/jobs`,
+            href: selfUrl(seo.origin, `${companyPath(data.companySlug)}/jobs`),
           },
         ],
       };
