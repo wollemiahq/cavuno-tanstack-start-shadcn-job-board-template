@@ -46,14 +46,41 @@ language's words. On a Dutch board `/jobs` is served as `/vacatures`,
 `/vacatures/locaties/amsterdam`. A prefixed locale uses its own words
 (`/fr/emplois`).
 
-It is automatic for any locale with a word list in
-`SEGMENT_TRANSLATIONS` (`src/lib/localized-path.ts`), whether it is the base
-locale or a prefixed one. A locale without a list, and English, keep the
-canonical URLs. Only static route segments translate: a path is matched
-against the route templates in `src/lib/route-templates.ts`, so slugs and
-other params stay as they are even when they spell a route word. Typecheck
-fails when a new route is missing from that list, and a test fails when two
-words collide at the same position.
+### Where the words live
+
+The words are in `src/url-words.json`, one object per language keyed by the
+canonical (English) segment:
+
+```json
+{ "nl": { "jobs": "vacatures", "companies": "bedrijven" } }
+```
+
+The file belongs to the board: edit a word, or add a language, there. The
+Cavuno platform reads the same file, together with `baseLocale` from
+`project.inlang/settings.json`, to build links to the board's pages, and `/.well-known/cavuno.json` publishes its role
+templates in the base language's words. Keep the path and shape as they are.
+
+It applies to any locale with an entry, whether it is the base locale or a
+prefixed one. A locale without an entry, and English, keep the canonical
+URLs; a segment a language does not list keeps its canonical word. Only the
+locales the board compiles (`locales` in `project.inlang/settings.json`)
+reach the app bundle; the build filters the rest out.
+
+Shipped languages: Dutch (`nl`), German (`de`), French (`fr`), Spanish
+(`es`), Portuguese (`pt`), Italian (`it`), Polish (`pl`), Czech (`cs`),
+Turkish (`tr`), Swedish (`sv`), Danish (`da`), Norwegian Bokmål (`nb`) and
+Finnish (`fi`). The words follow URLs on each country's job boards where
+one exists, and ASCII spelling (`gehaelter`, `tyopaikat`). Japanese,
+Korean, Chinese, Hindi and Russian intentionally have no list: their words
+would be percent-encoded in every URL, so those boards keep English paths.
+
+Only static route segments translate: a path is matched against the route
+templates in `src/lib/route-templates.ts`, so slugs and other params stay as
+they are even when they spell a route word. Typecheck fails when a new route
+is missing from that list. Tests check every language in the word file:
+each word is URL-safe (lowercase ASCII, hyphenated), each key is a real
+page route segment and not a machine path, and no two words collide at the
+same position.
 
 Links rendered through TanStack `Link`, `localizePath` and `selfUrl` come out
 localized. Canonicals, hreflang (including `x-default`), sitemap entries and
@@ -64,10 +91,11 @@ document URL with a 308 to the localized one, keeping the query string.
 Machine paths never translate or redirect: `/api`, `/_serverFn`, `/go`,
 `/.well-known` (including the route manifest), sitemaps, `robots.txt`,
 `ads.txt`, `indexnow-key.txt`, `/p/<handle>`, `/embed`, `/apply`, OG images
-and the RSS feeds (`/jobs/rss.xml`, `/blog/rss.xml`). The list lives next to
-the word lists.
+and the RSS feeds (`/jobs/rss.xml`, `/blog/rss.xml`). The list lives in
+`src/lib/localized-path.ts`.
 
-Words are part of public URLs. Changing one after launch is a URL migration:
-links and search results that use the old word stop resolving, so add a
-board redirect for them. Switching the board language is the same event:
-English URLs keep redirecting, the previous language's words do not.
+Words are part of public URLs. Once a board is live, editing or removing a
+word, or switching the board language, is a URL migration: links and search
+results that use the old word stop resolving, so add board redirects for
+them. Canonical English URLs keep redirecting to the current words; a
+previous language's words do not.
