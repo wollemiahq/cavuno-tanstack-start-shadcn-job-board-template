@@ -413,8 +413,12 @@ export function canonicalPathname(
  * relative and non-path hrefs (mailto:, #top) pass through. For raw <a>
  * hrefs and operator-configured links, which skip the router rewrite.
  * The board-language form ("/vacatures") is accepted too, so it also
- * resolves on prefixed variants. */
+ * resolves on prefixed variants. Machine paths and files pass through. */
 export function localizeHrefIfInternal(href: string): string {
   if (!href.startsWith('/') || href.startsWith('//')) return href;
+  // Machine paths and static files (/media-kit.pdf) are served unprefixed.
+  if (isMachinePath(href) || /\.[a-z0-9]+$/i.test(splitPath(href).pathname)) {
+    return href;
+  }
   return localizePath(delocalizeSegments(href));
 }
