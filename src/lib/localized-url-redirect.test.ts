@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import URL_WORDS from '../url-words.json';
 import {
   localizedRedirectLocation,
   localizedUrlRedirect,
@@ -10,11 +11,13 @@ import type { LocaleRouting } from './localized-path';
 const DUTCH_BOARD: LocaleRouting = {
   baseLocale: 'nl',
   isLocale: (tag) => ['nl', 'fr'].includes(tag),
+  words: URL_WORDS,
 };
 
 const ENGLISH_BOARD: LocaleRouting = {
   baseLocale: 'en',
   isLocale: (tag) => ['en', 'fr'].includes(tag),
+  words: URL_WORDS,
 };
 
 function request(path: string, method = 'GET') {

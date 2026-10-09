@@ -106,7 +106,7 @@ describe('/auth/reset-password continuation', () => {
       }),
     ).toHaveAttribute(
       'href',
-      `${localizePath('/auth/forgot-password')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
+      `/auth/forgot-password?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
     );
   });
 

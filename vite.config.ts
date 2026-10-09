@@ -11,6 +11,7 @@ import {
   paraglideInputsDigest,
   readParaglideStamp,
 } from './scripts/paraglide-dev-stamp.mjs';
+import { urlWordsPlugin } from './scripts/url-words-plugin.mjs';
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -433,6 +434,8 @@ function viteConfig(command: ConfigEnv['command']) {
       command === 'serve'
         ? paraglideSkipCompiledStart(paraglide, paraglideOptions)
         : paraglide,
+      // Localized URL words for the compiled locales only.
+      urlWordsPlugin(),
       devtoolsPlugins(),
       cloudflare({ viteEnvironment: { name: 'ssr' } }),
       tailwindcss(),

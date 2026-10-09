@@ -137,7 +137,7 @@ describe('/auth/sign-up search contract', () => {
       buildVerifyEmailRedirectPath(returnTo),
     );
     const url = new URL(action.getAttribute('href')!, 'https://board.example');
-    expect(url.pathname).toBe('/auth/verify-email-required');
+    expect(url.pathname).toBe(localizePath('/auth/verify-email-required'));
     expect(url.searchParams.get('returnTo')).toBe(localizePath(returnTo));
     expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
     expect(url.searchParams.get('cavuno_auth_method')).toBe('password');

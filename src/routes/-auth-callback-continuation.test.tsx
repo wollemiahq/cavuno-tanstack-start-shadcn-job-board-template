@@ -98,7 +98,7 @@ describe('auth callback continuation', () => {
         await screen.findByRole('link', { name: signInLabel() }),
       ).toHaveAttribute(
         'href',
-        `${localizePath('/auth/sign-in')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
+        `/auth/sign-in?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
       );
     },
   );

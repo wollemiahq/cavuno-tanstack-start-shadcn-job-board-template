@@ -23,6 +23,12 @@ vi.mock('../paraglide/runtime', async (importOriginal) => {
   };
 });
 
+// The build keeps only compiled locales' words: Dutch and French here.
+vi.mock('virtual:url-words', async () => {
+  const words = (await import('../url-words.json')).default;
+  return { default: { nl: words.nl, fr: words.fr } };
+});
+
 const ORIGIN = 'https://board.example';
 
 describe('sitemap URLs on a board with localized segments', () => {
@@ -36,7 +42,7 @@ describe('sitemap URLs on a board with localized segments', () => {
       `hreflang="x-default" href="${ORIGIN}/vacatures/locaties/amsterdam"`,
     );
     expect(xml).toContain(
-      `hreflang="fr" href="${ORIGIN}/fr/emplois/locations/amsterdam"`,
+      `hreflang="fr" href="${ORIGIN}/fr/emplois/lieux/amsterdam"`,
     );
     expect(xml).not.toContain(`${ORIGIN}/jobs/`);
   });

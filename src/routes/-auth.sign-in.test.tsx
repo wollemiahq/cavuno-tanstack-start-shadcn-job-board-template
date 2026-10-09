@@ -286,7 +286,7 @@ describe('/auth/sign-in search contract', () => {
       }),
     ).toHaveAttribute(
       'href',
-      `${localizePath('/auth/forgot-password')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
+      `/auth/forgot-password?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
     );
     // Get started goes to the join gate, not straight to the candidate form —
     // the role is unknown here, so `/auth/join` resolves it. The destination
@@ -297,7 +297,7 @@ describe('/auth/sign-in search contract', () => {
       }),
     ).toHaveAttribute(
       'href',
-      `${localizePath('/auth/join')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
+      `/auth/join?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
     );
   });
 

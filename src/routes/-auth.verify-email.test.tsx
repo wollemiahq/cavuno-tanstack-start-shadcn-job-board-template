@@ -173,7 +173,7 @@ describe('/auth/verify-email search contract', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/auth/verify-email-required?returnTo=%2Faccount',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}`,
     );
   });
 
@@ -193,7 +193,7 @@ describe('/auth/verify-email search contract', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/auth/verify-email-required?returnTo=%2Faccount',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}`,
     );
     expect(mocks.getSessionUser).toHaveBeenCalledOnce();
   });
@@ -211,7 +211,7 @@ describe('/auth/verify-email search contract', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/auth/verify-email-required?returnTo=%2Faccount',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}`,
     );
   });
 
@@ -250,7 +250,7 @@ describe('/auth/verify-email search contract', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/auth/verify-email-required?returnTo=%2Faccount',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}`,
     );
     expect(mocks.verifyEmail).toHaveBeenCalledOnce();
   });

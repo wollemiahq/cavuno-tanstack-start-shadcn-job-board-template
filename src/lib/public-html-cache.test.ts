@@ -17,6 +17,12 @@ vi.mock('../paraglide/runtime', async (importOriginal) => {
   };
 });
 
+// Their URL words, which the build keeps for compiled locales only.
+vi.mock('virtual:url-words', async () => {
+  const words = (await import('../url-words.json')).default;
+  return { default: { de: words.de, fr: words.fr } };
+});
+
 import {
   DOC_VARY_COOKIE_PREFIXES,
   isAnonymousPublicDocumentRequest,

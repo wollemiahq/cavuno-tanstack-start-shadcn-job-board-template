@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
+import '@testing-library/jest-dom/vitest';
 import { isNotFound as isRouteNotFound } from '@tanstack/react-router';
 import {
   cleanup,
@@ -24,6 +24,7 @@ import { TalentUnlockGate } from './-talent-unlock-gate';
 import { Route as ProfileRoute } from './p.$handle';
 import { Route as TalentRoute } from './talent.index';
 
+import { canonicalPathname } from '@/lib/localized-path';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
@@ -521,7 +522,7 @@ describe('canonical talent profile route', () => {
       name: m.talentSearch_messageLabel(),
     });
     const href = message.getAttribute('href') ?? '';
-    expect(href).toContain('/auth/sign-in');
+    expect(canonicalPathname(href)).toBe('/auth/sign-in');
     expect(href).toContain('returnTo');
   });
 

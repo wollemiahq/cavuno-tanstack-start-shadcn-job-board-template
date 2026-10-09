@@ -117,7 +117,7 @@ describe('/auth/forgot-password continuation', () => {
         }),
       ).toHaveAttribute(
         'href',
-        `${localizePath('/auth/sign-in')}?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
+        `/auth/sign-in?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
       );
     });
   });

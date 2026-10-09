@@ -110,7 +110,7 @@ describe('board-datalayer-events', () => {
         { isNewUser: true, fallbackMethod: 'google' },
       ),
     ).toBe(
-      '/auth/verify-email-required?returnTo=%2Faccount&cavuno_auth=sign_up&cavuno_auth_method=google',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}&cavuno_auth=sign_up&cavuno_auth_method=google`,
     );
   });
 

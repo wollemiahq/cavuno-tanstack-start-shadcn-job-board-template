@@ -1,8 +1,12 @@
 import { defineConfig } from 'vitest/config';
 
+import { urlWordsPlugin } from './scripts/url-words-plugin.mjs';
+
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
+  // The same filtered word lists the app compiles.
+  plugins: [urlWordsPlugin()],
   resolve: {
     tsconfigPaths: true,
     alias: {

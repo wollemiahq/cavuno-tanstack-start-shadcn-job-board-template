@@ -509,7 +509,9 @@ describe('join page', () => {
       actions.assignLocation.mock.calls[0]![0],
       'https://board.example',
     );
-    expect(destination.pathname).toBe('/employers/invites/accept');
+    expect(destination.pathname).toBe(
+      localizePath('/employers/invites/accept'),
+    );
     expect(destination.searchParams.get('token')).toBe('tok-1');
   });
 
@@ -574,7 +576,7 @@ describe('join page', () => {
     const request = actions.getOAuthAuthorizationUrl.mock.calls[0]![0].data;
     expect(request).toMatchObject({ provider: 'google', role: 'employer' });
     const returnTo = new URL(request.returnTo, 'https://board.example');
-    expect(returnTo.pathname).toBe('/employers/invites/accept');
+    expect(returnTo.pathname).toBe(localizePath('/employers/invites/accept'));
     expect(returnTo.searchParams.get('token')).toBe('tok-1');
   });
 
@@ -615,14 +617,14 @@ describe('join page', () => {
       name: m.authSignIn_forgotPasswordLink(),
     });
     expect(hrefSearch(forgot).searchParams.get('returnTo')).toBe(
-      '/employers/invites/accept?token=tok-1',
+      localizePath('/employers/invites/accept?token=tok-1'),
     );
     const otherAccount = screen.getByRole('link', {
       name: m.employerInviteJoin_differentAccountLink(),
     });
     expect(hrefSearch(otherAccount).pathname).toBe('/auth/sign-in');
     expect(hrefSearch(otherAccount).searchParams.get('returnTo')).toBe(
-      '/employers/invites/accept?token=tok-1',
+      localizePath('/employers/invites/accept?token=tok-1'),
     );
 
     fireEvent.change(
@@ -675,7 +677,7 @@ describe('join page', () => {
     expect(actions.requestMagicLink).toHaveBeenCalledWith({
       data: {
         email: 'ada@acme.test',
-        returnTo: '/employers/invites/accept?token=tok-1',
+        returnTo: localizePath('/employers/invites/accept?token=tok-1'),
         intent: 'sign_in',
       },
     });
@@ -711,7 +713,7 @@ describe('join page', () => {
 
     await waitFor(() =>
       expect(actions.assignLocation).toHaveBeenCalledWith(
-        '/employers/invites/accept?token=tok-1',
+        localizePath('/employers/invites/accept?token=tok-1'),
       ),
     );
     expect(actions.signOut).toHaveBeenCalledTimes(1);

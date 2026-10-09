@@ -13,8 +13,9 @@
  * plain word-for-word swap could not tell the two apart.
  *
  * Which locale: the base locale (unprefixed paths) and every prefixed
- * locale use their own word list. A locale without a list keeps canonical
- * URLs, so an English board, or any language not listed here, is unchanged.
+ * locale use their own word list from src/url-words.json. A locale without
+ * a list keeps canonical URLs, so an English board, or any language not in
+ * that file, is unchanged.
  *
  * Input accepts both forms at each static position (the localized word or
  * the canonical one), so old canonical links still resolve; the server
@@ -29,6 +30,10 @@
  *
  * Changing a word after launch changes public URLs: links that use the
  * old word stop resolving, so treat it as a URL migration.
+ *
+ * The well-known route manifest publishes role templates in the base
+ * locale's words (localizeRouteTemplate), the same mapping the platform
+ * applies when it reads src/url-words.json.
  */
 import {
   baseLocale,
@@ -37,95 +42,15 @@ import {
   localizeHref,
 } from '../paraglide/runtime';
 import { ROUTE_TEMPLATES } from './route-templates';
+import { BOARD_URL_WORDS } from './url-words';
+
+import type { UrlWords } from './url-words';
 
 type SplitPath = {
   pathname: string;
   search: string;
   hash: string;
 };
-
-/**
- * Per-locale words for static route segments. One word per canonical
- * segment, used at every position it appears. Lowercase ASCII,
- * hyphenated. Words for dormant locales stay here so enabling one with
- * `pnpm locale:add` brings its URLs along.
- */
-export const SEGMENT_TRANSLATIONS = {
-  fr: {
-    jobs: 'emplois',
-    companies: 'entreprises',
-    salaries: 'salaires',
-    talent: 'talents',
-  },
-  de: {
-    // 'jobs' stays: the anglicism is standard German job-board usage.
-    companies: 'unternehmen',
-    salaries: 'gehaelter',
-    talent: 'talente',
-  },
-  // Checked against Dutch job boards' URLs (Jobbird, StepStone, werk.nl,
-  // werkzoeken.nl, Jobat, Indeed NL); still needs native-speaker review.
-  nl: {
-    jobs: 'vacatures',
-    companies: 'bedrijven',
-    locations: 'locaties',
-    skills: 'vaardigheden',
-    salaries: 'salarissen',
-    markets: 'branches',
-    titles: 'functies',
-    talent: 'talent',
-    blog: 'blog',
-    tag: 'tag',
-    author: 'auteur',
-    about: 'over-ons',
-    contact: 'contact',
-    pricing: 'prijzen',
-    post: 'vacature-plaatsen',
-    'job-seekers': 'werkzoekenden',
-    employers: 'werkgevers',
-    employer: 'werkgever',
-    'privacy-policy': 'privacy',
-    'terms-of-service': 'algemene-voorwaarden',
-    'cookie-policy': 'cookies',
-    impressum: 'impressum',
-    'saved-jobs': 'opgeslagen-vacatures',
-    alerts: 'vacaturemail',
-    manage: 'beheren',
-    confirm: 'bevestigen',
-    me: 'mijn',
-    applications: 'sollicitaties',
-    profile: 'profiel',
-    memberships: 'lidmaatschappen',
-    messages: 'berichten',
-    matches: 'matches',
-    account: 'account',
-    access: 'toegang',
-    // 'auth' stays: 'account' is already the account page's word.
-    'sign-in': 'inloggen',
-    'sign-up': 'registreren',
-    'forgot-password': 'wachtwoord-vergeten',
-    'reset-password': 'wachtwoord-herstellen',
-    'verify-email': 'e-mail-bevestigen',
-    'verify-email-required': 'e-mail-bevestiging-vereist',
-    'verify-work-email': 'werkmail-bevestigen',
-    'magic-link': 'inloglink',
-    'confirm-email-change': 'e-mailwijziging-bevestigen',
-    join: 'aanmelden',
-    'oauth-complete': 'oauth-complete',
-    password: 'wachtwoord',
-    dashboard: 'dashboard',
-    invites: 'uitnodigingen',
-    accept: 'accepteren',
-    new: 'nieuw',
-    edit: 'bewerken',
-    applicants: 'sollicitanten',
-    members: 'leden',
-    onboarding: 'onboarding',
-    success: 'gelukt',
-    'checkout-canceled': 'betaling-geannuleerd',
-    settings: 'instellingen',
-  },
-} satisfies Record<string, Record<string, string>>;
 
 /**
  * Paths that are contracts with machines (crawlers, feed readers, the
@@ -229,12 +154,28 @@ const ROUTES: readonly Template[] = ROUTE_TEMPLATES.map(parseTemplate);
 const MACHINE_ROUTES: readonly Template[] =
   MACHINE_TEMPLATES.map(parseTemplate);
 
-const WORDS: ReadonlyMap<string, ReadonlyMap<string, string>> = new Map(
-  Object.entries(SEGMENT_TRANSLATIONS).map(([locale, entries]) => [
-    locale,
-    new Map(Object.entries(entries)),
-  ]),
-);
+/** Settled per-word-file lookup maps (no I/O, safe to keep). */
+const WORD_MAPS = new WeakMap<
+  UrlWords,
+  ReadonlyMap<string, ReadonlyMap<string, string>>
+>();
+
+function localeWords(
+  words: UrlWords,
+  locale: string,
+): ReadonlyMap<string, string> | undefined {
+  let maps = WORD_MAPS.get(words);
+  if (!maps) {
+    maps = new Map(
+      Object.entries(words).map(([tag, entries]) => [
+        tag,
+        new Map(Object.entries(entries)),
+      ]),
+    );
+    WORD_MAPS.set(words, maps);
+  }
+  return maps.get(locale);
+}
 
 const exactWord = (word: string, segment: string) => word === segment;
 
@@ -254,10 +195,9 @@ function isMachineSegments(segments: readonly string[]): boolean {
  */
 function translatePathname(
   pathname: string,
-  locale: string,
+  words: ReadonlyMap<string, string> | undefined,
   to: 'localized' | 'canonical',
 ): string {
-  const words = WORDS.get(locale);
   if (!words || !pathname.startsWith('/') || pathname === '/') {
     return pathname;
   }
@@ -279,14 +219,20 @@ function translatePathname(
 }
 
 /** The locale routing a pathname is read with: which tags are locale
- * prefixes and which locale owns unprefixed paths. Defaults to the
- * compiled Paraglide runtime; tests pass another board's setup. */
+ * prefixes, which locale owns unprefixed paths, and each locale's URL
+ * words. Defaults to the compiled Paraglide runtime and the board's word
+ * file; tests pass another board's setup. */
 export type LocaleRouting = {
   baseLocale: string;
   isLocale: (tag: string) => boolean;
+  words: UrlWords;
 };
 
-const RUNTIME_ROUTING: LocaleRouting = { baseLocale, isLocale };
+const RUNTIME_ROUTING: LocaleRouting = {
+  baseLocale,
+  isLocale,
+  words: BOARD_URL_WORDS,
+};
 
 function splitPath(path: string): SplitPath {
   const hashIndex = path.indexOf('#');
@@ -326,7 +272,8 @@ function translateHref(
 ): string {
   const { pathname, search, hash } = splitPath(path);
   const { prefix, locale, rest } = splitLocalePrefix(pathname, routing);
-  return `${prefix}${translatePathname(rest, locale, to)}${search}${hash}`;
+  const words = localeWords(routing.words, locale);
+  return `${prefix}${translatePathname(rest, words, to)}${search}${hash}`;
 }
 
 /** Prefix a path for a locale that is not (yet) in the compiled runtime. */
@@ -377,7 +324,11 @@ export function localizePath(
     locale !== baseLocale &&
     (pathname === prefix || pathname.startsWith(`${prefix}/`));
   const rest = prefixed ? pathname.slice(prefix.length) : pathname;
-  const translated = translatePathname(rest, locale, 'localized');
+  const translated = translatePathname(
+    rest,
+    localeWords(BOARD_URL_WORDS, locale),
+    'localized',
+  );
   return `${prefixed ? prefix : ''}${translated}${search}${hash}`;
 }
 
@@ -422,4 +373,27 @@ export function localizeHrefIfInternal(href: string): string {
     return href;
   }
   return localizePath(delocalizeSegments(href));
+}
+
+/** A manifest route template (`/companies/:companySlug/jobs/:jobSlug`)
+ * with each static segment in `words` (one locale's entries). Params and
+ * splats stay; machine paths stay canonical. */
+export function localizeRouteTemplate(
+  template: string,
+  words: Readonly<Record<string, string>> | undefined,
+): string {
+  if (!words) return template;
+  const segments = template.split('/').filter(Boolean);
+  if (isMachineSegments(segments)) return template;
+  return template
+    .split('/')
+    .map((segment) => {
+      if (segment === '' || segment.startsWith(':') || segment === '*') {
+        return segment;
+      }
+      return Object.hasOwn(words, segment)
+        ? (words[segment] ?? segment)
+        : segment;
+    })
+    .join('/');
 }

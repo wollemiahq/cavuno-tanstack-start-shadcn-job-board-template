@@ -39,6 +39,13 @@ vi.mock('@/paraglide/messages', () => ({
   m: { languageSwitcher_label: () => 'Fixture locale selector' },
 }));
 
+// The options below cover a board that compiles en, de, fr and nl; the
+// build keeps URL words for compiled locales only.
+vi.mock('virtual:url-words', async () => {
+  const words = (await import('../url-words.json')).default;
+  return { default: { de: words.de, fr: words.fr, nl: words.nl } };
+});
+
 // Delay the real lazy chunk by a macrotask so the Suspense fallback remains
 // observable without replacing the module under test.
 const delayedMenuLoader = async () => {
