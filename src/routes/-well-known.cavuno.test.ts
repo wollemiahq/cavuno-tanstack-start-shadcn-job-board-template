@@ -40,12 +40,19 @@ const starterRoleTree = {
   ],
 };
 
+import { baseLocale } from '../paraglide/runtime';
+import URL_WORDS from '../url-words.json';
 import { createWellKnownRouteHandler } from './-well-known-handler';
 
+/** No URL words: the canonical (English) templates. */
+const CANONICAL_WORDS = {};
+
 async function getWellKnown(request: Request): Promise<Response> {
-  const result = await createWellKnownRouteHandler(async () => starterRoleTree)(
-    request,
-  );
+  const result = await createWellKnownRouteHandler(
+    async () => starterRoleTree,
+    () => true,
+    CANONICAL_WORDS,
+  )(request);
   if (!(result instanceof Response)) {
     throw new Error('The well-known GET handler must return a response');
   }
@@ -121,6 +128,7 @@ describe('/.well-known/cavuno.json mount', () => {
     const handler = createWellKnownRouteHandler(
       () => starterRoleTree,
       async () => false,
+      CANONICAL_WORDS,
     );
     const response = await handler(
       new Request('https://board.example.com/.well-known/cavuno.json'),
@@ -134,6 +142,7 @@ describe('/.well-known/cavuno.json mount', () => {
     const handler = createWellKnownRouteHandler(
       () => starterRoleTree,
       async () => true,
+      CANONICAL_WORDS,
     );
     const response = await handler(
       new Request('https://board.example.com/.well-known/cavuno.json'),
@@ -141,5 +150,41 @@ describe('/.well-known/cavuno.json mount', () => {
     const parsed = validateManifest(await response.json());
     if (!parsed.ok) throw new Error('Expected a valid well-known manifest');
     expect(parsed.manifest.roles.impressum).toBe('/impressum');
+  });
+
+  async function rolesFor(words?: Readonly<Record<string, string>>) {
+    const handler =
+      words === undefined
+        ? createWellKnownRouteHandler(() => starterRoleTree)
+        : createWellKnownRouteHandler(
+            () => starterRoleTree,
+            () => true,
+            words,
+          );
+    const response = await handler(
+      new Request('https://board.example.com/.well-known/cavuno.json'),
+    );
+    const parsed = validateManifest(await response.json());
+    if (!parsed.ok) throw new Error('Expected a valid well-known manifest');
+    return parsed.manifest.roles;
+  }
+
+  it('publishes role templates in the board language URL words', async () => {
+    const roles = await rolesFor(URL_WORDS.nl);
+    expect(roles.jobDetail).toBe('/bedrijven/:companySlug/vacatures/:jobSlug');
+    expect(roles.jobs).toBe('/vacatures');
+    expect(roles.alertsManage).toBe('/vacaturemail/beheren');
+    expect(roles.impressum).toBe('/impressum');
+    expect(roles.home).toBe('/');
+  });
+
+  it('uses the compiled board language by default', async () => {
+    const expected = new Map([
+      ['nl', '/bedrijven/:companySlug/vacatures/:jobSlug'],
+      ['fr', '/entreprises/:companySlug/emplois/:jobSlug'],
+    ]);
+    expect((await rolesFor()).jobDetail).toBe(
+      expected.get(baseLocale) ?? '/companies/:companySlug/jobs/:jobSlug',
+    );
   });
 });
