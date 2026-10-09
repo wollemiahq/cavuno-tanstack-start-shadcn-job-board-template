@@ -188,7 +188,7 @@ describe('localizePath (compiled runtime)', () => {
       ),
     );
     expect(localizePath('/salaries?x=1#y', { locale: 'de' })).toBe(
-      wordsIfCompiled('de', '/de/gehaelter?x=1#y', '/de/salaries?x=1#y'),
+      wordsIfCompiled('de', '/de/gehalt?x=1#y', '/de/salaries?x=1#y'),
     );
     expect(localizePath('/companies/jobs', { locale: 'nl' })).toBe(
       wordsIfCompiled('nl', '/nl/bedrijven/jobs', '/nl/companies/jobs'),

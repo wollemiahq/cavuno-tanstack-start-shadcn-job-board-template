@@ -70,7 +70,7 @@ Shipped languages: Dutch (`nl`), German (`de`), French (`fr`), Spanish
 (`es`), Portuguese (`pt`), Italian (`it`), Polish (`pl`), Czech (`cs`),
 Turkish (`tr`), Swedish (`sv`), Danish (`da`), Norwegian Bokmål (`nb`) and
 Finnish (`fi`). The words follow URLs on each country's job boards where
-one exists, and ASCII spelling (`gehaelter`, `tyopaikat`). Japanese,
+one exists, and ASCII spelling (`loen`, `tyopaikat`). Japanese,
 Korean, Chinese, Hindi and Russian intentionally have no list: their words
 would be percent-encoded in every URL, so those boards keep English paths.
 
