@@ -1971,7 +1971,41 @@
   "planComposed_maxActiveJobs": "Do {count} aktywnych ofert",
   "planComposed_standardListing": "Standardowa oferta na {days} dni",
   "planComposed_standardName": "Publikacja oferty",
+  "planFeature_allFeatured": "Wszystkie wyróżnione",
+  "planFeature_bundleFeatured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 z nich może być wyróżniona",
+        "countPlural=few": "{countLabel} z nich mogą być wyróżnione",
+        "countPlural=many": "{countLabel} z nich może być wyróżnionych",
+        "countPlural=*": "{countLabel} z nich może być wyróżnionej"
+      }
+    }
+  ],
+  "planFeature_bundlePosts": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 oferta pracy",
+        "countPlural=few": "{countLabel} oferty pracy",
+        "countPlural=many": "{countLabel} ofert pracy",
+        "countPlural=*": "{countLabel} oferty pracy"
+      }
+    }
+  ],
   "planFeature_countedValue": "{value} {name}",
+  "planFeature_eachListedDays": "Każda aktywna przez {days} dni",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1988,7 +2022,42 @@
       }
     }
   ],
+  "planFeature_featuredAbove": "Wyświetlana nad standardowymi ofertami",
+  "planFeature_featuredAtATime": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 wyróżniona jednocześnie",
+        "countPlural=few": "{countLabel} wyróżnione jednocześnie",
+        "countPlural=many": "{countLabel} wyróżnionych jednocześnie",
+        "countPlural=*": "{countLabel} wyróżnionej jednocześnie"
+      }
+    }
+  ],
   "planFeature_featuredAuto": "Każda oferta jest wyróżniona",
+  "planFeature_featuredBadge": "Plakietka wyróżnienia przy Twojej ofercie",
+  "planFeature_listedDays": "Aktywna przez {days} dni",
+  "planFeature_liveAtOnce": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 aktywna oferta jednocześnie",
+        "countPlural=few": "Do {countLabel} aktywnych ofert jednocześnie",
+        "countPlural=many": "Do {countLabel} aktywnych ofert jednocześnie",
+        "countPlural=*": "Do {countLabel} aktywnych ofert jednocześnie"
+      }
+    }
+  ],
   "planFeature_liveDays": "Aktywna przez {days} dni",
   "planFeature_maxActive": [
     {
@@ -2007,6 +2076,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Nieograniczona liczba aktywnych ofert",
+  "planFeature_unlimitedLive": "Nieograniczona liczba ofert aktywnych jednocześnie",
   "planFeature_unlimitedValue": "{name} bez limitu",
   "plan_featuredListing_description": "Wyróżniona oferta na 30 dni — przypięta na górze portalu i wyeksponowana w cotygodniowym podsumowaniu alertów.",
   "plan_featuredListing_name": "Wyróżniona oferta",

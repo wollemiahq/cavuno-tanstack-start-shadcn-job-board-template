@@ -1891,7 +1891,37 @@
   "planComposed_maxActiveJobs": "Tot {count} actieve vacatures",
   "planComposed_standardListing": "Een standaardvacature van {days} dagen",
   "planComposed_standardName": "Vacatureplaatsing",
+  "planFeature_allFeatured": "Allemaal uitgelicht",
+  "planFeature_bundleFeatured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 daarvan kan worden uitgelicht",
+        "countPlural=*": "{countLabel} daarvan kunnen worden uitgelicht"
+      }
+    }
+  ],
+  "planFeature_bundlePosts": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 vacatureplaatsing",
+        "countPlural=*": "{countLabel} vacatureplaatsingen"
+      }
+    }
+  ],
   "planFeature_countedValue": "{value} {name}",
+  "planFeature_eachListedDays": "Elke vacature {days} dagen live",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1906,7 +1936,38 @@
       }
     }
   ],
+  "planFeature_featuredAbove": "Boven standaardvacatures geplaatst",
+  "planFeature_featuredAtATime": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 tegelijk uitgelicht",
+        "countPlural=*": "{countLabel} tegelijk uitgelicht"
+      }
+    }
+  ],
   "planFeature_featuredAuto": "Elke plaatsing wordt uitgelicht",
+  "planFeature_featuredBadge": "Uitgelicht-label bij je vacature",
+  "planFeature_listedDays": "{days} dagen live",
+  "planFeature_liveAtOnce": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 vacature tegelijk live",
+        "countPlural=*": "Tot {countLabel} vacatures tegelijk live"
+      }
+    }
+  ],
   "planFeature_liveDays": "{days} dagen live",
   "planFeature_maxActive": [
     {
@@ -1923,6 +1984,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Onbeperkt actieve vacatures",
+  "planFeature_unlimitedLive": "Onbeperkt vacatures tegelijk live",
   "planFeature_unlimitedValue": "Onbeperkt {name}",
   "plan_featuredListing_description": "Een uitgelichte vacature die 30 dagen zichtbaar is, bovenaan de vacaturelijst staat en extra aandacht krijgt in de wekelijkse vacaturemail.",
   "plan_featuredListing_name": "Uitgelichte vacature",

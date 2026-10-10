@@ -1891,7 +1891,37 @@
   "planComposed_maxActiveJobs": "Hasta {count} ofertas activas",
   "planComposed_standardListing": "Una oferta estándar durante {days} días",
   "planComposed_standardName": "Publicación de oferta",
+  "planFeature_allFeatured": "Todas destacadas",
+  "planFeature_bundleFeatured": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 de ellas puede destacarse",
+        "countPlural=*": "{countLabel} de ellas pueden destacarse"
+      }
+    }
+  ],
+  "planFeature_bundlePosts": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 oferta de empleo",
+        "countPlural=*": "{countLabel} ofertas de empleo"
+      }
+    }
+  ],
   "planFeature_countedValue": "{value} {name}",
+  "planFeature_eachListedDays": "Cada una publicada durante {days} días",
   "planFeature_featured": [
     {
       "declarations": [
@@ -1906,7 +1936,38 @@
       }
     }
   ],
+  "planFeature_featuredAbove": "Aparece por encima de las ofertas estándar",
+  "planFeature_featuredAtATime": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 destacada a la vez",
+        "countPlural=*": "{countLabel} destacadas a la vez"
+      }
+    }
+  ],
   "planFeature_featuredAuto": "Todas las ofertas son destacadas",
+  "planFeature_featuredBadge": "Insignia de destacada en tu oferta",
+  "planFeature_listedDays": "Publicada durante {days} días",
+  "planFeature_liveAtOnce": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "1 oferta publicada a la vez",
+        "countPlural=*": "Hasta {countLabel} ofertas publicadas a la vez"
+      }
+    }
+  ],
   "planFeature_liveDays": "Publicada durante {days} días",
   "planFeature_maxActive": [
     {
@@ -1923,6 +1984,7 @@
     }
   ],
   "planFeature_unlimitedActive": "Ofertas activas ilimitadas",
+  "planFeature_unlimitedLive": "Ofertas ilimitadas publicadas a la vez",
   "planFeature_unlimitedValue": "{name} ilimitados",
   "plan_featuredListing_description": "Una oferta destacada durante 30 días: fijada en la parte superior del portal y resaltada en el resumen semanal de alertas.",
   "plan_featuredListing_name": "Oferta destacada",
