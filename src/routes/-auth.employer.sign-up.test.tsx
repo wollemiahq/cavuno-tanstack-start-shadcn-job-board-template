@@ -1,6 +1,5 @@
-// @vitest-environment jsdom
-import '@testing-library/jest-dom/vitest';
 import { isRedirect } from '@tanstack/react-router';
+import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,6 +9,8 @@ import {
 } from './-auth.employer.sign-up';
 
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
+// @vitest-environment jsdom
+import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
@@ -111,8 +112,10 @@ describe('/auth/employer/sign-up continuation', () => {
       buildVerifyEmailRedirectPath('/employers/dashboard'),
     );
     const url = new URL(action.getAttribute('href')!, 'https://board.example');
-    expect(url.pathname).toBe('/auth/verify-email-required');
-    expect(url.searchParams.get('returnTo')).toBe('/employers/dashboard');
+    expect(url.pathname).toBe(localizePath('/auth/verify-email-required'));
+    expect(url.searchParams.get('returnTo')).toBe(
+      localizePath('/employers/dashboard'),
+    );
     expect(url.searchParams.get('cavuno_auth')).toBe('sign_up');
     expect(url.searchParams.get('cavuno_auth_method')).toBe('password');
     // The emailed link keeps the platform's employer landing: no returnTo.

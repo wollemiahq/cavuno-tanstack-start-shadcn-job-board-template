@@ -3,6 +3,7 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '@/lib/board';
 import { jobEmploymentTypeLabel } from '@/lib/job-employment-type-label';
+import { localizePath } from '@/lib/localized-path';
 import { jobTitleAtCompany } from '@/lib/page-title';
 import { readPublicOrigin } from '@/lib/public-origin';
 import { m } from '@/paraglide/messages';
@@ -82,7 +83,12 @@ export function createJobsRssHandler(
       .filter((job) => job.company)
       .map((job) => {
         const company = job.company!;
-        const url = `${origin}${jobDetailPath(company.slug, job.slug)}`;
+        // The feed address itself is a fixed machine URL; the pages it
+        // links to use the board language's localized segments.
+        const url = `${origin}${localizePath(
+          jobDetailPath(company.slug, job.slug),
+          { locale: baseLocale },
+        )}`;
         const title = jobTitleAtCompany(
           context.language,
           job.title,

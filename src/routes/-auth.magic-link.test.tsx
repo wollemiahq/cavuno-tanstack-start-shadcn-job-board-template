@@ -1,11 +1,12 @@
-// @vitest-environment jsdom
-import '@testing-library/jest-dom/vitest';
 import { isRedirect } from '@tanstack/react-router';
+import '@testing-library/jest-dom/vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadMagicLink } from './-auth.magic-link';
 
 import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
+// @vitest-environment jsdom
+import { localizePath } from '@/lib/localized-path';
 
 const mocks = {
   consumeMagicLink: vi.fn(),
@@ -61,7 +62,7 @@ describe('/auth/magic-link loader', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options.href).toBe(
-      '/auth/verify-email-required?returnTo=%2Faccount&cavuno_auth=sign_up&cavuno_auth_method=magic_link',
+      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}&cavuno_auth=sign_up&cavuno_auth_method=magic_link`,
     );
   });
 });

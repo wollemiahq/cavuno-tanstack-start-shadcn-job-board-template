@@ -221,7 +221,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         links: [{ rel: 'canonical', href: canonical }],
       };
       const permalink =
-        post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
+        post.canonicalUrl ?? selfUrl(seo.origin, blogPostPath(post.slug));
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [
@@ -233,7 +233,7 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
           }),
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
-            { label: c.blog, href: `${seo.origin}/blog` },
+            { label: c.blog, href: selfUrl(seo.origin, '/blog') },
             { label: post.title },
           ]),
         ].filter((e) => e !== null),

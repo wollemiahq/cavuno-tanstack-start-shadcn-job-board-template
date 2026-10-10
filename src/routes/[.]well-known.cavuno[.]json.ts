@@ -10,9 +10,12 @@ import { createWellKnownRouteHandler } from './-well-known-handler';
  * roles against this app's actual route tree.
  *
  * Routes are enumerated from the generated TanStack route tree via the
- * SDK's structural walker. Route files may name their role with
- * `export const cavunoPage = '<role>'` (the profile page does); the platform
- * reads those markers from the source files, not from this response.
+ * SDK's structural walker and classified on that canonical tree; each
+ * role's template is then published in the board language's URL words
+ * (src/url-words.json), the URLs the board serves. Route files may name
+ * their role with `export const cavunoPage = '<role>'` (the profile page
+ * does); the platform reads those markers from the source files, not from
+ * this response.
  *
  * Load the generated tree only inside the request handler. Importing it at
  * module scope creates a cycle through this route; concurrent dev-server

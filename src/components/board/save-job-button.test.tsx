@@ -18,6 +18,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SaveJobButton } from './save-job-button';
 
+import { localizePath } from '@/lib/localized-path';
+
 afterEach(cleanup);
 
 function renderSave(ui: React.ReactElement) {
@@ -71,7 +73,7 @@ describe('SaveJobButton candidate continuation', () => {
     expect(href).not.toBeNull();
     const signUpUrl = new URL(href!, 'https://board.example');
     expect(signUpUrl.pathname).toBe('/auth/sign-up');
-    expect(signUpUrl.searchParams.get('returnTo')).toBe(returnTo);
+    expect(signUpUrl.searchParams.get('returnTo')).toBe(localizePath(returnTo));
   });
 
   it('keeps the complete job destination through email verification', async () => {
@@ -97,7 +99,7 @@ describe('SaveJobButton candidate continuation', () => {
     expect(href).not.toBeNull();
     const verifyUrl = new URL(href!, 'https://board.example');
     expect(verifyUrl.pathname).toBe('/auth/verify-email-required');
-    expect(verifyUrl.searchParams.get('returnTo')).toBe(returnTo);
+    expect(verifyUrl.searchParams.get('returnTo')).toBe(localizePath(returnTo));
   });
 
   it('opens the canonical saved-jobs collection after saving', async () => {

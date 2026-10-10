@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { publicJobFixture } from '../routes/-route-test-fixtures';
 import { jobBreadcrumbItems, jobBreadcrumbJsonLd } from './job-breadcrumbs';
 
+import { localizePath } from '@/lib/localized-path';
 import type { PublicJob } from '@cavuno/board';
 
 function job(overrides: Partial<PublicJob> = {}): PublicJob {
@@ -86,9 +87,9 @@ describe('jobBreadcrumbJsonLd', () => {
       ),
     ).toEqual([
       { name: expect.any(String), path: '/' },
-      { name: expect.any(String), path: '/jobs' },
-      { name: 'Berlin', path: '/jobs/locations/berlin' },
-      { name: 'Acme Co', path: '/companies/acme-co' },
+      { name: expect.any(String), path: localizePath('/jobs') },
+      { name: 'Berlin', path: localizePath('/jobs/locations/berlin') },
+      { name: 'Acme Co', path: localizePath('/companies/acme-co') },
       { name: 'Senior Engineer' },
     ]);
   });

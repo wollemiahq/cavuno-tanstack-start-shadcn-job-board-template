@@ -17,6 +17,7 @@ import { PublicContentPending } from '@/components/board/public-content-pending'
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { selfUrl } from '@/lib/self-url';
 import { getBlogPostPage } from '@/server/blog-pages';
 
 export const Route = createFileRoute('/blog/$postSlug')({
@@ -83,7 +84,7 @@ function PostPage() {
   const { post, adjacent, related, seo } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const permalink =
-    post.canonicalUrl ?? `${seo.origin}${blogPostPath(post.slug)}`;
+    post.canonicalUrl ?? selfUrl(seo.origin, blogPostPath(post.slug));
   const crumbs = breadcrumbsCopy();
   const ariaLabel = resolveJobDetailBreadcrumbAriaLabel();
 

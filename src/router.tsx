@@ -52,9 +52,11 @@ export function getRouter() {
     // delocalized path (/de/jobs → /jobs), rendered hrefs re-localize for
     // the current locale. The base locale stays unprefixed.
     rewrite: {
-      // Localized section slugs (/fr/emplois) translate to canonical
-      // segments before Paraglide strips the prefix, and back after it
-      // re-applies one — see src/lib/localized-path.ts.
+      // Localized segments (/vacatures, /fr/emplois) translate to
+      // canonical ones before Paraglide strips the prefix, and back after
+      // it re-applies one — see src/lib/localized-path.ts. The server entry
+      // already 308s canonical document URLs; this keeps client
+      // navigations and rendered hrefs on the localized form.
       input: ({ url }) => {
         const incoming = new URL(url);
         incoming.pathname = delocalizeSegments(incoming.pathname);
