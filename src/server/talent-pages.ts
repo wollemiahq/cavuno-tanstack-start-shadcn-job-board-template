@@ -101,6 +101,15 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
         // accepts them. Drop when the SDK minor ships.
         return getBoard().talent.list(query as never, { headers });
       });
+      // The header location field reads `place.displayName` off the route's
+      // loader data; without it the field shows the raw `?place=` slug.
+      // Label only, so a missing or failed resolve falls back to the slug.
+      const place = data.place
+        ? getBoard()
+            .taxonomy.places.resolve(data.place, { headers })
+            .then((resolved) => ({ displayName: resolved.displayName }))
+            .catch(() => null)
+        : null;
       const seo = await seoBase();
       const head = {
         meta: [
@@ -127,13 +136,15 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       );
 
       try {
-        const [result, customFilterFields] = await Promise.all([
+        const [result, customFilterFields, resolvedPlace] = await Promise.all([
           directory,
           custom.fields,
+          place,
         ]);
         if (result.status === 'restricted') {
           return {
             seo,
+            place: resolvedPlace,
             page: null,
             restricted: true as const,
             head,
@@ -143,6 +154,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
         }
         return {
           seo,
+          place: resolvedPlace,
           page: result.page,
           restricted: false as const,
           head,

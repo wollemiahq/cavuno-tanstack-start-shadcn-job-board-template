@@ -167,6 +167,19 @@ export default function Header({
     setSearchTerm(search.term);
     setSearchMarket(search.market);
   }
+  // A talent search commits `?place=` before its loader resolves the place's
+  // name, so the label can arrive after the resync above. Rename only that
+  // place, and only while it is still the selected one.
+  const locationName = search.location?.name ?? '';
+  const [lastLocationName, setLastLocationName] = useState(locationName);
+  if (lastLocationName !== locationName) {
+    setLastLocationName(locationName);
+    setSearchLocation((current) =>
+      current && current.slug === search.location?.slug
+        ? search.location
+        : current,
+    );
+  }
   const searchFields = {
     value: searchValue,
     setValue: setSearchValue,

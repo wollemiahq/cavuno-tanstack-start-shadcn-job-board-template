@@ -129,6 +129,19 @@ describe('resolveHeaderSearchState', () => {
     ).toEqual({ slug: 'berlin', name: 'berlin' });
   });
 
+  it('names the talent place with the resolved label, keeping the slug', () => {
+    expect(
+      resolveHeaderSearchState(
+        '/talent',
+        { place: 'evansville-in-united-states' },
+        'Evansville, United States',
+      ).location,
+    ).toEqual({
+      slug: 'evansville-in-united-states',
+      name: 'Evansville, United States',
+    });
+  });
+
   it('prefills talent query from /talent?q=ada', () => {
     expect(resolveHeaderSearchState('/talent', { q: 'ada' }).query).toBe('ada');
   });
