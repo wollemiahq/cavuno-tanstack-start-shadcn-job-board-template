@@ -94,12 +94,6 @@ Machine paths never translate or redirect: `/api`, `/_serverFn`, `/go`,
 and the RSS feeds (`/jobs/rss.xml`, `/blog/rss.xml`). The list lives in
 `src/lib/localized-path.ts`.
 
-Analytics records both the real path and the canonical one, so stats count
-a job or company page in every language. Before the Cavuno Analytics script
-loads, the board defines `window.cavunoCanonicalPathname`
-(`src/lib/analytics-canonical-path.ts`), which maps any pathname to its
-canonical English form without the locale prefix (`/fr/emplois` → `/jobs`).
-
 Words are part of public URLs. Once a board is live, editing or removing a
 word, or switching the board language, is a URL migration: links and search
 results that use the old word stop resolving, so add board redirects for

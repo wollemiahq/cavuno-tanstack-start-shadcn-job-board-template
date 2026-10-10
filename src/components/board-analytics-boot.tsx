@@ -7,7 +7,6 @@ import { analytics } from '@cavuno/board/analytics';
 import { isWorkingPreviewHostname } from './analytics-preview';
 import { useCookieConsent } from './cookie-consent';
 
-import { exposeAnalyticsCanonicalPathname } from '@/lib/analytics-canonical-path';
 import {
   captureBrowserAudienceAttribution,
   clearBrowserAudienceAttribution,
@@ -65,9 +64,6 @@ export function BoardAnalyticsBoot({
     if (isWorkingPreviewHostname(hostname ?? window.location.hostname)) return;
     if (!publishableKey.startsWith('pk_')) return;
     if (!allowed) return;
-    // The analytics script only loads through `install`; defining the
-    // pathname mapper first means it exists before the script can send.
-    exposeAnalyticsCanonicalPathname();
     install({ publishableKey });
     markAnalyticsLoaded();
   }, [publishableKey, install, markAnalyticsLoaded, hostname, allowed]);

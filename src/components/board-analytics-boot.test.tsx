@@ -29,17 +29,6 @@ describe('BoardAnalyticsBoot', () => {
     expect(install).toHaveBeenCalledWith({ publishableKey: 'pk_test_board' });
   });
 
-  it('defines the canonical pathname mapper before the script installs', () => {
-    delete window.cavunoCanonicalPathname;
-    const install = vi.fn(() => {
-      expect(window.cavunoCanonicalPathname?.('/jobs')).toBe('/jobs');
-    });
-    render(
-      <BoardAnalyticsBoot publishableKey="pk_test_board" install={install} />,
-    );
-    expect(install).toHaveBeenCalledTimes(1);
-  });
-
   it('skips install when the key is not publishable', () => {
     const install = vi.fn();
     render(<BoardAnalyticsBoot publishableKey="not-a-pk" install={install} />);
