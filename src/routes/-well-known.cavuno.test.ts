@@ -174,7 +174,7 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(roles.jobDetail).toBe('/bedrijven/:companySlug/vacatures/:jobSlug');
     expect(roles.jobs).toBe('/vacatures');
     expect(roles.alertsManage).toBe('/vacaturemail/beheren');
-    expect(roles.impressum).toBe('/impressum');
+    expect(roles.impressum).toBe('/colofon');
     expect(roles.home).toBe('/');
   });
 
