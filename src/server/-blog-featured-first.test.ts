@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   postsList: vi.fn(),
   search: vi.fn(),
   tagsList: vi.fn(),
+  tagsRetrieve: vi.fn(),
+  authorsRetrieve: vi.fn(),
   jobsList: vi.fn(),
 }));
 vi.mock('@tanstack/react-start', () => ({
@@ -51,7 +53,8 @@ vi.mock('../lib/board', () => ({
     blog: {
       posts: { list: mocks.postsList },
       search: mocks.search,
-      tags: { list: mocks.tagsList },
+      tags: { list: mocks.tagsList, retrieve: mocks.tagsRetrieve },
+      authors: { retrieve: mocks.authorsRetrieve },
     },
     jobs: { list: mocks.jobsList },
     taxonomy: { categories: { list: async () => ({ data: [] }) } },
@@ -60,7 +63,11 @@ vi.mock('../lib/board', () => ({
 }));
 
 import { BLOG_PAGE_SIZE } from '../lib/blog';
-import { getBlogIndexPage } from './blog-pages';
+import {
+  getBlogAuthorPage,
+  getBlogIndexPage,
+  getBlogTagPage,
+} from './blog-pages';
 import { getHomePage } from './home-page';
 
 const post = (id: string, featured = false) => ({ id, featured });
@@ -95,6 +102,16 @@ const ids = (posts: { id: string }[] | null) => posts?.map((p) => p.id);
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.tagsList.mockResolvedValue({ data: [] });
+  mocks.tagsRetrieve.mockResolvedValue({
+    slug: 'hiring',
+    name: 'Hiring',
+    description: null,
+  });
+  mocks.authorsRetrieve.mockResolvedValue({
+    slug: 'priya',
+    name: 'Priya',
+    bio: null,
+  });
   mocks.jobsList.mockResolvedValue({
     object: 'list',
     url: '/v1/jobs',
@@ -152,6 +169,47 @@ describe('blog index: featured posts lead page one', () => {
     const result = await getBlogIndexPage({ data: {} });
 
     expect(ids(result.page.data)).toEqual(['c1', 'c2']);
+  });
+});
+
+describe('tag and author archives: featured posts lead page one', () => {
+  it("leads a tag page with that tag's featured posts", async () => {
+    serve(
+      [post('c1'), post('f1', true)],
+      [post('f1', true), post('f-old', true)],
+    );
+
+    const result = await getBlogTagPage({ data: { tagSlug: 'hiring' } });
+
+    expect(mocks.postsList).toHaveBeenCalledWith(
+      { tagSlug: 'hiring', featured: 'true', limit: BLOG_PAGE_SIZE },
+      { headers: {} },
+    );
+    expect(ids(result.posts.data)).toEqual(['f1', 'f-old', 'c1']);
+    expect(result.posts.nextCursor).toBe('next-page');
+  });
+
+  it("leads an author page with that author's featured posts", async () => {
+    serve([post('c1'), post('c2')], [post('f-old', true)]);
+
+    const result = await getBlogAuthorPage({ data: { authorSlug: 'priya' } });
+
+    expect(mocks.postsList).toHaveBeenCalledWith(
+      { authorSlug: 'priya', featured: 'true', limit: BLOG_PAGE_SIZE },
+      { headers: {} },
+    );
+    expect(ids(result.posts.data)).toEqual(['f-old', 'c1', 'c2']);
+  });
+
+  it('leaves later tag pages purely chronological', async () => {
+    serve([post('c13'), post('f-old', true)], [post('f-old', true)]);
+
+    const result = await getBlogTagPage({
+      data: { tagSlug: 'hiring', cursor: 'next-page' },
+    });
+
+    expect(ids(result.posts.data)).toEqual(['c13', 'f-old']);
+    expect(mocks.postsList).toHaveBeenCalledTimes(1);
   });
 });
 

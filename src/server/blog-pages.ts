@@ -77,24 +77,29 @@ const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
 };
 
 /**
- * One chronological archive page. Page one (no cursor) is led by the board's
- * featured posts; the cursor, `hasMore`, and count stay the chronological
- * page's, so later pages are untouched and a featured post also appears there
- * in its date position. A failed featured read falls back to the plain page.
+ * One chronological archive page: the whole blog, or one tag's or author's
+ * posts. Page one (no cursor) is led by that archive's featured posts; the
+ * cursor, `hasMore`, and count stay the chronological page's, so later pages
+ * are untouched and a featured post also appears there in its date position.
+ * A failed featured read falls back to the plain page.
  */
 async function readArchivePage(
+  filter: { tagSlug?: string; authorSlug?: string },
   cursor: string | undefined,
   headers: Record<string, string>,
 ) {
   const board = getBoard();
   const pageP = blogRead(() =>
-    board.blog.posts.list({ cursor, limit: BLOG_PAGE_SIZE }, { headers }),
+    board.blog.posts.list(
+      { ...filter, cursor, limit: BLOG_PAGE_SIZE },
+      { headers },
+    ),
   );
   if (cursor) return pageP;
   const [page, featured] = await Promise.all([
     pageP,
     board.blog.posts
-      .list({ featured: 'true', limit: BLOG_PAGE_SIZE }, { headers })
+      .list({ ...filter, featured: 'true', limit: BLOG_PAGE_SIZE }, { headers })
       .catch(() => null),
   ]);
   if (!featured) return page;
@@ -116,7 +121,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
                 { headers },
               ),
             )
-          : readArchivePage(data.cursor, headers),
+          : readArchivePage({}, data.cursor, headers),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
           () => null,
         ),
@@ -272,16 +277,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
         blogRead(() =>
           board.blog.tags.retrieve(data.tagSlug, undefined, { headers }),
         ),
-        blogRead(() =>
-          board.blog.posts.list(
-            {
-              tagSlug: data.tagSlug,
-              cursor: data.cursor,
-              limit: BLOG_PAGE_SIZE,
-            },
-            { headers },
-          ),
-        ),
+        readArchivePage({ tagSlug: data.tagSlug }, data.cursor, headers),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
           () => null,
         ),
@@ -342,16 +338,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
             headers,
           }),
         ),
-        blogRead(() =>
-          board.blog.posts.list(
-            {
-              authorSlug: data.authorSlug,
-              cursor: data.cursor,
-              limit: BLOG_PAGE_SIZE,
-            },
-            { headers },
-          ),
-        ),
+        readArchivePage({ authorSlug: data.authorSlug }, data.cursor, headers),
         seoBase(),
       ]);
       const description =
