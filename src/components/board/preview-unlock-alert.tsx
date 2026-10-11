@@ -13,6 +13,7 @@ export function PreviewUnlockAlert({
   page,
   pageSize,
   visibleCount,
+  reachableCount,
   returnTo,
   language,
 }: {
@@ -20,13 +21,14 @@ export function PreviewUnlockAlert({
   page: number;
   pageSize: number;
   visibleCount: number;
+  reachableCount?: number;
   returnTo: string;
   language: string;
 }) {
   if (
     gatedCount === undefined ||
     !(gatedCount > 0) ||
-    !isPreviewUnlockPage(page, pageSize, visibleCount)
+    !isPreviewUnlockPage(page, pageSize, visibleCount, reachableCount)
   ) {
     return null;
   }

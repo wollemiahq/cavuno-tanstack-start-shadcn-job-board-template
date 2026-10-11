@@ -47,11 +47,7 @@ import {
   customFieldLabel,
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
-import {
-  catalogJobCount,
-  displayedJobCount,
-  isRelevanceCountCapped,
-} from '@/board/job-catalog-count';
+import { catalogJobCount } from '@/board/job-catalog-count';
 import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import {
   isSearchRadiusViewNoindex,
@@ -75,6 +71,7 @@ import {
   listingPageTitle,
   type CountedHeading,
 } from '@/lib/listing-description';
+import { reachableCountOf, readReachablePage } from '@/lib/pagination';
 import type {
   EmploymentType,
   JobSort,
@@ -323,38 +320,32 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
       const [rawList, seo, customFilterFields] = await Promise.all([
         // `jobs.list` has no custom-field filter; search without a query
         // lists the same catalog with the clauses applied.
-        data.q || customFields
-          ? board.jobs.search(
-              {
-                query: data.q,
-                filters: {
-                  remoteOption: filters.remoteOption,
-                  employmentType: filters.employmentType,
-                  customEmploymentType: filters.customEmploymentType,
-                  seniority: filters.seniority,
-                  customFields,
-                },
-                sort: filters.sort,
-                offset: filters.offset,
-                limit: filters.limit,
-              } satisfies JobsSearchBody,
-              undefined,
-              { headers },
-            )
-          : // Card teaser is on `summary` — do not pull full HTML descriptions.
-            board.jobs.list(filters, { headers }),
+        readReachablePage(data.offset, data.limit, (offset) =>
+          data.q || customFields
+            ? board.jobs.search(
+                {
+                  query: data.q,
+                  filters: {
+                    remoteOption: filters.remoteOption,
+                    employmentType: filters.employmentType,
+                    customEmploymentType: filters.customEmploymentType,
+                    seniority: filters.seniority,
+                    customFields,
+                  },
+                  sort: filters.sort,
+                  offset,
+                  limit: filters.limit,
+                } satisfies JobsSearchBody,
+                undefined,
+                { headers },
+              )
+            : // Card teaser is on `summary` — do not pull full HTML descriptions.
+              board.jobs.list({ ...filters, offset }, { headers }),
+        ),
         seoBase(),
         fieldsRead,
       ]);
       const page = rawList;
-      // A text-query (or category/skill) listing ranked by relevance stops
-      // counting at the ranking limit; see `isRelevanceCountCapped`.
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: Boolean(data.q),
-        sort: data.sort,
-        count: page.count,
-      });
-      const count = displayedJobCount(page.count, page.gatedCount, countCapped);
       const relatedSearches =
         'relatedSearches' in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy().headingJobs;
@@ -364,8 +355,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         title: jobsIndexPageTitle({
           boardName: seo.boardName,
           language: seo.language,
-          count,
-          countCapped,
+          count: catalogJobCount(page.count, page.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath('/jobs'),
@@ -373,8 +363,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           heading: heading,
           countedHeading,
           boardName: seo.boardName,
-          count,
-          countCapped,
+          count: catalogJobCount(page.count, page.gatedCount),
         }),
       });
       const crumbs = breadcrumbsCopy();
@@ -395,7 +384,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         head,
         jsonLd,
         customFilterFields,
-        countCapped,
+        reachableCount: reachableCountOf(page),
       };
     }),
   );
@@ -424,9 +413,11 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           board.taxonomy.categories.resolve(data.categorySlug, { headers }),
         ),
         settled(
-          board.jobs.list(
-            { ...filters, category: data.categorySlug },
-            { headers },
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              { ...filters, offset, category: data.categorySlug },
+              { headers },
+            ),
           ),
         ),
         seoBase(),
@@ -437,12 +428,6 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: data.sort,
-        count: list.count,
-      });
-      const count = displayedJobCount(list.count, list.gatedCount, countCapped);
       const heading = m.categoryPage_jobsHeading({
         category: category.displayName,
       });
@@ -457,8 +442,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           countedHeading,
           boardName: seo.boardName,
           language: seo.language,
-          count,
-          countCapped,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(jobsCategoryPath(data.categorySlug)),
@@ -466,8 +450,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           heading: heading,
           countedHeading,
           boardName: seo.boardName,
-          count,
-          countCapped,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const crumbs = breadcrumbsCopy();
@@ -490,7 +473,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         relatedSearches: list.relatedSearches,
         head,
         jsonLd,
-        countCapped,
+        reachableCount: reachableCountOf(list),
       };
     }),
   );
@@ -514,7 +497,12 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           board.taxonomy.skills.resolve(data.skillSlug, { headers }),
         ),
         settled(
-          board.jobs.list({ ...filters, skill: data.skillSlug }, { headers }),
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              { ...filters, offset, skill: data.skillSlug },
+              { headers },
+            ),
+          ),
         ),
         seoBase(),
       ]);
@@ -524,12 +512,6 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: data.sort,
-        count: list.count,
-      });
-      const count = displayedJobCount(list.count, list.gatedCount, countCapped);
       const heading = m.skillPage_jobsHeading({ skill: skill.displayName });
       const countedHeading: CountedHeading = (counted) =>
         m.skillPage_jobsCountHeading({ ...counted, skill: skill.displayName });
@@ -539,8 +521,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           countedHeading,
           boardName: seo.boardName,
           language: seo.language,
-          count,
-          countCapped,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
         origin: seo.origin,
         path: localizePath(jobsSkillPath(data.skillSlug)),
@@ -548,8 +529,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
           heading: heading,
           countedHeading,
           boardName: seo.boardName,
-          count,
-          countCapped,
+          count: catalogJobCount(list.count, list.gatedCount),
         }),
       });
       const crumbs = breadcrumbsCopy();
@@ -572,7 +552,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
         relatedSearches: list.relatedSearches,
         head,
         jsonLd,
-        countCapped,
+        reachableCount: reachableCountOf(list),
       };
     }),
   );
@@ -646,37 +626,38 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       );
       const [place, listResult, seo, placeTree] = await Promise.all([
         placeRead,
-        data.q
-          ? settled(
-              board.jobs.search(
-                {
-                  query: data.q,
-                  filters: {
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            data.q
+              ? board.jobs.search(
+                  {
+                    query: data.q,
+                    filters: {
+                      location: data.locationSlug,
+                      radius,
+                      remoteOption: filters.remoteOption,
+                      employmentType: filters.employmentType,
+                      customEmploymentType: filters.customEmploymentType,
+                      seniority: filters.seniority,
+                    },
+                    sort: filters.sort,
+                    offset,
+                    limit: filters.limit,
+                  } satisfies JobsSearchBody,
+                  undefined,
+                  { headers },
+                )
+              : board.jobs.list(
+                  {
+                    ...filters,
+                    offset,
                     location: data.locationSlug,
                     radius,
-                    remoteOption: filters.remoteOption,
-                    employmentType: filters.employmentType,
-                    customEmploymentType: filters.customEmploymentType,
-                    seniority: filters.seniority,
                   },
-                  sort: filters.sort,
-                  offset: filters.offset,
-                  limit: filters.limit,
-                } satisfies JobsSearchBody,
-                undefined,
-                { headers },
-              ),
-            )
-          : settled(
-              board.jobs.list(
-                {
-                  ...filters,
-                  location: data.locationSlug,
-                  radius,
-                },
-                { headers },
-              ),
-            ),
+                  { headers },
+                ),
+          ),
+        ),
         seoBase(),
         // Breadcrumb enrichment only: the place directory carries the
         // ancestor chain; on failure the trail degrades to the place itself.
@@ -688,12 +669,6 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: Boolean(data.q),
-        sort: data.sort,
-        count: list.count,
-      });
-      const count = displayedJobCount(list.count, list.gatedCount, countCapped);
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const searchRadius = placeSearchRadius(place, data.within);
@@ -717,8 +692,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             countedHeading,
             boardName: seo.boardName,
             language: seo.language,
-            count,
-            countCapped,
+            count: catalogJobCount(list.count, list.gatedCount),
           }),
           origin: seo.origin,
           path: localizePath(`/jobs/locations/${data.locationSlug}`),
@@ -726,8 +700,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             heading: heading,
             countedHeading,
             boardName: seo.boardName,
-            count,
-            countCapped,
+            count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
         isSearchRadiusViewNoindex(
@@ -751,7 +724,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         searchRadius,
         head,
         jsonLd,
-        countCapped,
+        reachableCount: reachableCountOf(list),
         breadcrumbTrail,
       };
     }),
@@ -796,14 +769,17 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             board.taxonomy.categories.resolve(data.categorySlug, { headers }),
           ),
           settled(
-            board.jobs.list(
-              {
-                ...filters,
-                location: data.locationSlug,
-                radius,
-                category: data.categorySlug,
-              },
-              { headers },
+            readReachablePage(data.offset, data.limit, (offset) =>
+              board.jobs.list(
+                {
+                  ...filters,
+                  offset,
+                  location: data.locationSlug,
+                  radius,
+                  category: data.categorySlug,
+                },
+                { headers },
+              ),
             ),
           ),
           seoBase(),
@@ -827,12 +803,6 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: data.sort,
-        count: list.count,
-      });
-      const count = displayedJobCount(list.count, list.gatedCount, countCapped);
       const searchRadius = placeSearchRadius(place, data.within);
       const heading = m.locationCategoryPage_jobsHeading({
         category: category.displayName,
@@ -865,8 +835,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             countedHeading,
             boardName: seo.boardName,
             language: seo.language,
-            count,
-            countCapped,
+            count: catalogJobCount(list.count, list.gatedCount),
           }),
           origin: seo.origin,
           path: localizePath(
@@ -876,8 +845,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             heading: heading,
             countedHeading,
             boardName: seo.boardName,
-            count,
-            countCapped,
+            count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
         isSearchRadiusViewNoindex(searchRadius, inPlaceJobCount),
@@ -899,7 +867,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         searchRadius,
         head,
         jsonLd,
-        countCapped,
+        reachableCount: reachableCountOf(list),
         breadcrumbTrail,
       };
     }),
@@ -940,14 +908,17 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             board.taxonomy.skills.resolve(data.skillSlug, { headers }),
           ),
           settled(
-            board.jobs.list(
-              {
-                ...filters,
-                location: data.locationSlug,
-                radius,
-                skill: data.skillSlug,
-              },
-              { headers },
+            readReachablePage(data.offset, data.limit, (offset) =>
+              board.jobs.list(
+                {
+                  ...filters,
+                  offset,
+                  location: data.locationSlug,
+                  radius,
+                  skill: data.skillSlug,
+                },
+                { headers },
+              ),
             ),
           ),
           seoBase(),
@@ -971,12 +942,6 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: data.sort,
-        count: list.count,
-      });
-      const count = displayedJobCount(list.count, list.gatedCount, countCapped);
       const searchRadius = placeSearchRadius(place, data.within);
       const heading = m.locationSkillPage_jobsHeading({
         skill: skill.displayName,
@@ -1009,8 +974,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             countedHeading,
             boardName: seo.boardName,
             language: seo.language,
-            count,
-            countCapped,
+            count: catalogJobCount(list.count, list.gatedCount),
           }),
           origin: seo.origin,
           path: localizePath(
@@ -1020,8 +984,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             heading: heading,
             countedHeading,
             boardName: seo.boardName,
-            count,
-            countCapped,
+            count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
         isSearchRadiusViewNoindex(searchRadius, inPlaceJobCount),
@@ -1043,7 +1006,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         searchRadius,
         head,
         jsonLd,
-        countCapped,
+        reachableCount: reachableCountOf(list),
         breadcrumbTrail,
       };
     }),

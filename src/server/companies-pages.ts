@@ -39,10 +39,13 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { profileCustomFilters } from './profile-filter-fields';
 
-import { isRelevanceCountCapped } from '@/board/job-catalog-count';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
-import { searchNumber } from '@/lib/pagination';
+import {
+  reachableCountOf,
+  readReachablePage,
+  searchNumber,
+} from '@/lib/pagination';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { selfUrl } from '@/lib/self-url';
 
@@ -482,37 +485,39 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
       // salary sample and is free with retrieve.
       const [company, page, seo] = await Promise.all([
         board.companies.retrieve(data.companySlug, undefined, { headers }),
-        data.q
-          ? board.jobs.search(
-              {
-                query: data.q,
-                filters: data.location
+        readReachablePage(data.offset, data.limit, (offset) =>
+          data.q
+            ? board.jobs.search(
+                {
+                  query: data.q,
+                  filters: data.location
+                    ? {
+                        companySlug: [data.companySlug],
+                        location: data.location,
+                      }
+                    : { companySlug: [data.companySlug] },
+                  offset,
+                  limit: data.limit,
+                },
+                undefined,
+                { headers },
+              )
+            : board.jobs.list(
+                data.location
                   ? {
                       companySlug: [data.companySlug],
                       location: data.location,
+                      offset,
+                      limit: data.limit,
                     }
-                  : { companySlug: [data.companySlug] },
-                offset: data.offset,
-                limit: data.limit,
-              },
-              undefined,
-              { headers },
-            )
-          : board.jobs.list(
-              data.location
-                ? {
-                    companySlug: [data.companySlug],
-                    location: data.location,
-                    offset: data.offset,
-                    limit: data.limit,
-                  }
-                : {
-                    companySlug: [data.companySlug],
-                    offset: data.offset,
-                    limit: data.limit,
-                  },
-              { headers },
-            ),
+                  : {
+                      companySlug: [data.companySlug],
+                      offset,
+                      limit: data.limit,
+                    },
+                { headers },
+              ),
+        ),
         seoBase(),
       ]);
       // Prefer the dedicated sample count (API field). Fall back for older
@@ -555,14 +560,15 @@ export const getCompanyJobsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      // A keyword search here is relevance-ranked (no sort), so its count
-      // can stop at the ranking limit; see `isRelevanceCountCapped`.
-      const countCapped = isRelevanceCountCapped({
-        hasTextQuery: Boolean(data.q),
-        sort: undefined,
-        count: page.count,
-      });
-      return { company, page, seo, hasSalaries, head, jsonLd, countCapped };
+      return {
+        company,
+        page,
+        seo,
+        hasSalaries,
+        head,
+        jsonLd,
+        reachableCount: reachableCountOf(page),
+      };
     }),
   );
 

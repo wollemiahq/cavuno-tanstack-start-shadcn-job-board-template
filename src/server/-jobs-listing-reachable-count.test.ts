@@ -51,23 +51,23 @@ vi.mock('../lib/board', () => ({
   }),
 }));
 
-import { m } from '../paraglide/messages';
 import { baseLocale } from '../paraglide/runtime';
 import { getJobsCategoryPage, getJobsIndexPage } from './jobs-listing-pages';
 
-/** A Board API list holding the ranking limit's worth of matches. */
-const limitList = {
-  object: 'list',
-  url: '/v1/jobs',
-  data: [],
-  hasMore: true,
-  nextCursor: null,
-  count: 1000,
-};
+/** A keyword search matching more jobs than its deepest page reaches. */
+function cappedSearch(offset: number) {
+  return {
+    object: 'search_result',
+    url: '/v1/jobs/search',
+    data: [],
+    hasMore: offset + 20 < 1000,
+    nextCursor: null,
+    count: 4935,
+    reachableCount: 1000,
+  };
+}
 
-const cappedLabel = m.jobSearch_cappedCountLabel({
-  count: new Intl.NumberFormat(baseLocale).format(1000),
-});
+const fullCount = new Intl.NumberFormat(baseLocale).format(4935);
 
 function title(head: { meta: object[] }): string {
   const entry = head.meta.find(
@@ -78,33 +78,41 @@ function title(head: { meta: object[] }): string {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.list.mockResolvedValue(limitList);
-  mocks.search.mockResolvedValue({ ...limitList, object: 'search_result' });
+  mocks.search.mockImplementation(async (body: { offset: number }) =>
+    cappedSearch(body.offset),
+  );
+  mocks.list.mockResolvedValue({
+    object: 'list',
+    url: '/v1/jobs',
+    data: [],
+    hasMore: true,
+    nextCursor: null,
+    count: 4935,
+  });
 });
 
-describe('jobs listing count at the ranking limit', () => {
-  it('caps a relevance-ordered keyword search that reaches the limit', async () => {
+describe('jobs listing past the reachable depth of a keyword search', () => {
+  it('keeps the full match count and passes the reachable depth on', async () => {
     const page = await getJobsIndexPage({
       data: { q: 'engineer', offset: 0, limit: 20 },
     });
-    expect(page.countCapped).toBe(true);
-    expect(title(page.head)).toContain(cappedLabel);
+    expect(page.reachableCount).toBe(1000);
+    expect(page.page.count).toBe(4935);
+    expect(title(page.head)).toContain(fullCount);
+    expect(mocks.search).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps an exact count for a browse that holds exactly the limit', async () => {
-    const page = await getJobsIndexPage({ data: { offset: 0, limit: 20 } });
-    expect(page.countCapped).toBe(false);
-    expect(title(page.head)).not.toContain(cappedLabel);
-  });
-
-  it('keeps an exact count for a keyword search with an explicit sort', async () => {
+  it('serves the last reachable page for a page past the depth', async () => {
     const page = await getJobsIndexPage({
-      data: { q: 'engineer', sort: 'newest', offset: 0, limit: 20 },
+      data: { q: 'engineer', offset: 1180, limit: 20 },
     });
-    expect(page.countCapped).toBe(false);
+    expect(mocks.search.mock.calls.map((call) => call[0]?.offset)).toEqual([
+      1180, 980,
+    ]);
+    expect(page.reachableCount).toBe(1000);
   });
 
-  it('caps a category listing, which the API ranks as a text query', async () => {
+  it('leaves a listing without a reachable depth alone', async () => {
     mocks.resolve.mockResolvedValue({
       object: 'taxonomy_resolution',
       type: 'category',
@@ -115,8 +123,9 @@ describe('jobs listing count at the ranking limit', () => {
       geo: null,
     });
     const page = await getJobsCategoryPage({
-      data: { categorySlug: 'fixture-category', offset: 0, limit: 20 },
+      data: { categorySlug: 'fixture-category', offset: 1180, limit: 20 },
     });
-    expect(page.kind === 'ok' && page.countCapped).toBe(true);
+    expect(page.kind === 'ok' && page.reachableCount).toBeUndefined();
+    expect(mocks.list).toHaveBeenCalledTimes(1);
   });
 });

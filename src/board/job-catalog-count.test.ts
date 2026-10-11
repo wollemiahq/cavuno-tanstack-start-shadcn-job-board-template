@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  catalogJobCount,
-  displayedJobCount,
-  isRelevanceCountCapped,
-  visiblePageSpan,
-} from './job-catalog-count';
+import { catalogJobCount, visiblePageSpan } from './job-catalog-count';
 
 describe('catalogJobCount', () => {
   it('adds a positive withheld count to the visible preview', () => {
@@ -26,61 +21,5 @@ describe('visiblePageSpan', () => {
 
   it('returns nothing when the page starts past the preview', () => {
     expect(visiblePageSpan(3, 20, 30)).toBeNull();
-  });
-});
-
-describe('isRelevanceCountCapped', () => {
-  it('caps a relevance-ordered text query that reaches the limit', () => {
-    expect(
-      isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: undefined,
-        count: 1000,
-      }),
-    ).toBe(true);
-    expect(
-      isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: 'relevance',
-        count: 1000,
-      }),
-    ).toBe(true);
-  });
-
-  it('keeps a browse with exactly the limit exact', () => {
-    expect(
-      isRelevanceCountCapped({
-        hasTextQuery: false,
-        sort: undefined,
-        count: 1000,
-      }),
-    ).toBe(false);
-  });
-
-  it('keeps an explicitly sorted search exact', () => {
-    expect(
-      isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: 'newest',
-        count: 1000,
-      }),
-    ).toBe(false);
-  });
-
-  it('keeps a search below the limit exact', () => {
-    expect(
-      isRelevanceCountCapped({
-        hasTextQuery: true,
-        sort: undefined,
-        count: 999,
-      }),
-    ).toBe(false);
-  });
-});
-
-describe('displayedJobCount', () => {
-  it('shows the limit, not limit plus withheld jobs, when capped', () => {
-    expect(displayedJobCount(1000, 40, true)).toBe(1000);
-    expect(displayedJobCount(1000, 40, false)).toBe(1040);
   });
 });

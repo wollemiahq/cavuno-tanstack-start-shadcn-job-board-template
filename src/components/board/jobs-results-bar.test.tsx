@@ -14,8 +14,6 @@ vi.mock('@/paraglide/messages', async (importOriginal) => {
     m: {
       ...actual.m,
       count_jobs: ({ count }: { count: number }) => `total:${count}`,
-      jobSearch_cappedCountLabel: ({ count }: { count: string }) =>
-        `atLeast(${count})`,
       jobSearch_cappedResultsHint: ({
         from,
         to,
@@ -127,54 +125,55 @@ describe('JobsResultsBar data', () => {
     expect(screen.getByText('total:387')).toBeVisible();
     expect(screen.queryByText(/^range:/)).toBeNull();
   });
-  it('reads a capped count as a lower bound and leaves withheld jobs out', () => {
+  it('shows the full match count while the range stays within the reachable depth', () => {
     const countedHeading = vi.fn(
       ({ count, countLabel }: { count: number; countLabel: string }) =>
         `counted:${count}:${countLabel}`,
     );
     render(
       <JobsResultsBar
-        visibleCount={1000}
-        gatedCount={40}
-        page={1}
+        visibleCount={4935}
+        page={50}
         pageSize={20}
         countedHeading={countedHeading}
-        countCapped
         language="en"
       />,
     );
-    const capped = `atLeast(${(1000).toLocaleString('en')})`;
-    expect(screen.getByText(`counted:1000:${capped}`)).toBeVisible();
+    const total = (4935).toLocaleString('en');
+    expect(screen.getByText(`counted:4935:${total}`)).toBeVisible();
     expect(
-      screen.getByText(`range:1:20;total:1000;label:${capped}`),
+      screen.getByText(
+        `range:${(981).toLocaleString('en')}:${(1000).toLocaleString('en')};total:4935;label:${total}`,
+      ),
     ).toBeVisible();
   });
-  it('keeps an uncapped count of exactly 1,000 exact', () => {
+  it('ends the range at a reachable depth that is not page-aligned', () => {
     render(
       <JobsResultsBar
-        visibleCount={1000}
-        page={1}
+        visibleCount={5000}
+        reachableCount={995}
+        page={50}
         pageSize={20}
-        heading="Fixture discipline"
         language="en"
       />,
     );
     expect(
       screen.getByText(
-        `context:Fixture discipline;total:${(1000).toLocaleString('en')}`,
+        `range:${(981).toLocaleString('en')}:${(995).toLocaleString('en')};total:5000;label:${(5000).toLocaleString('en')}`,
       ),
     ).toBeVisible();
   });
 });
 
 describe('JobsCappedResultsHint', () => {
-  it('names the last page of a capped result set', () => {
+  it('names the matches on the last reachable page of a capped search', () => {
     render(
       <JobsCappedResultsHint
-        visibleCount={1000}
+        count={4935}
+        reachableCount={1000}
         page={50}
         pageSize={20}
-        countCapped
+        rows={20}
         language="en"
       />,
     );
@@ -184,22 +183,54 @@ describe('JobsCappedResultsHint', () => {
       ),
     ).toBeVisible();
   });
-  it('stays hidden before the last page and on uncapped results', () => {
+
+  it('counts the rows actually on a short last page', () => {
+    render(
+      <JobsCappedResultsHint
+        count={4935}
+        reachableCount={990}
+        page={50}
+        pageSize={20}
+        rows={10}
+        language="en"
+      />,
+    );
+    expect(
+      screen.getByText(
+        `hint:${(981).toLocaleString('en')}:${(990).toLocaleString('en')}`,
+      ),
+    ).toBeVisible();
+  });
+
+  it('stays hidden before the last reachable page and on uncapped results', () => {
     const { container, rerender } = render(
       <JobsCappedResultsHint
-        visibleCount={1000}
+        count={4935}
+        reachableCount={1000}
         page={49}
         pageSize={20}
-        countCapped
+        rows={20}
         language="en"
       />,
     );
     expect(container).toBeEmptyDOMElement();
     rerender(
       <JobsCappedResultsHint
-        visibleCount={1000}
+        count={1000}
         page={50}
         pageSize={20}
+        rows={20}
+        language="en"
+      />,
+    );
+    expect(container).toBeEmptyDOMElement();
+    rerender(
+      <JobsCappedResultsHint
+        count={1000}
+        reachableCount={1000}
+        page={50}
+        pageSize={20}
+        rows={20}
         language="en"
       />,
     );
