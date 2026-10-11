@@ -13,6 +13,7 @@
 import { listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 
+import { featuredPostsFirst } from '../lib/blog';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
@@ -47,6 +48,7 @@ function asJsonObjects<T>(value: T): JsonObject[] {
  * collection (live `jobCount`), not from `relatedSearches` on this page. */
 const HOME_JOB_RAIL_LIMIT = 8;
 const HOME_CATEGORY_LIMIT = 8;
+const HOME_POST_LIMIT = 3;
 
 export const getHomePage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
@@ -84,11 +86,28 @@ export const getHomePage = createServerFn({ method: 'GET' })
       // Blog/talent need feature flags from context, but must not wait for
       // jobs/companies. Chain them off boardContextP so they start as soon as
       // context resolves and overlap the rest of the fan-out.
-      const blogP = boardContextP.then((boardContext) =>
-        boardContext.features.blog
-          ? board.blog.posts.list({ limit: 3 }, { headers }).catch(() => null)
-          : null,
-      );
+      const blogP = boardContextP.then(async (boardContext) => {
+        if (!boardContext.features.blog) return null;
+        // Featured posts lead the strip; the newest others fill it. Both
+        // reads fail soft, and the count stays the chronological total.
+        const [latest, featured] = await Promise.all([
+          board.blog.posts
+            .list({ limit: HOME_POST_LIMIT }, { headers })
+            .catch(() => null),
+          board.blog.posts
+            .list({ featured: 'true', limit: HOME_POST_LIMIT }, { headers })
+            .catch(() => null),
+        ]);
+        if (!latest) return null;
+        return {
+          ...latest,
+          data: featuredPostsFirst(
+            featured?.data ?? [],
+            latest.data,
+            HOME_POST_LIMIT,
+          ),
+        };
+      });
       const talentP = boardContextP.then((boardContext) =>
         boardContext.features.talentDirectory !== 'off'
           ? readTalentDirectory(() =>

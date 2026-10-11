@@ -17,7 +17,7 @@ import {
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
-import { BLOG_PAGE_SIZE } from '../lib/blog';
+import { BLOG_PAGE_SIZE, featuredPostsFirst } from '../lib/blog';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
@@ -76,6 +76,31 @@ const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   }
 };
 
+/**
+ * One chronological archive page. Page one (no cursor) is led by the board's
+ * featured posts; the cursor, `hasMore`, and count stay the chronological
+ * page's, so later pages are untouched and a featured post also appears there
+ * in its date position. A failed featured read falls back to the plain page.
+ */
+async function readArchivePage(
+  cursor: string | undefined,
+  headers: Record<string, string>,
+) {
+  const board = getBoard();
+  const pageP = blogRead(() =>
+    board.blog.posts.list({ cursor, limit: BLOG_PAGE_SIZE }, { headers }),
+  );
+  if (cursor) return pageP;
+  const [page, featured] = await Promise.all([
+    pageP,
+    board.blog.posts
+      .list({ featured: 'true', limit: BLOG_PAGE_SIZE }, { headers })
+      .catch(() => null),
+  ]);
+  if (!featured) return page;
+  return { ...page, data: featuredPostsFirst(featured.data, page.data) };
+}
+
 export const getBlogIndexPage = createServerFn({ method: 'GET' })
   .validator((input: { cursor?: string; q?: string }) => input)
   .middleware([boardAccessMiddleware])
@@ -91,12 +116,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
                 { headers },
               ),
             )
-          : blogRead(() =>
-              board.blog.posts.list(
-                { cursor: data.cursor, limit: BLOG_PAGE_SIZE },
-                { headers },
-              ),
-            ),
+          : readArchivePage(data.cursor, headers),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
           () => null,
         ),

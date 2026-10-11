@@ -388,6 +388,7 @@
   "blogPost_authorWebsiteLabel": "Website",
   "blogPost_authorXLabel": "X",
   "blogPost_backToBlogLabel": "Back to blog",
+  "blogPost_featuredLabel": "Featured",
   "blogPost_inThisArticleHeading": "In this article",
   "blogPost_missingBodyDescription": "The article record exists, but its content is not available.",
   "blogPost_missingBodyTitle": "This article has no published body",

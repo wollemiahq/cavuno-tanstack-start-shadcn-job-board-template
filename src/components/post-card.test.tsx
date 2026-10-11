@@ -11,6 +11,7 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import { PostCard } from './post-card';
 
 import type { PublicBlogPostSummary } from '@cavuno/board';
@@ -58,14 +59,14 @@ const post = {
 
 afterEach(cleanup);
 
-function renderCard(priority = false) {
+function renderCard(priority = false, card: PublicBlogPostSummary = post) {
   const rootRoute = createRootRoute({
     loader: () => ({ board: { language: 'en' } }),
   });
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <PostCard post={post} priority={priority} />,
+    component: () => <PostCard post={card} priority={priority} />,
   });
   const route = (path: string) =>
     createRoute({
@@ -126,5 +127,21 @@ describe('PostCard — crawlable blog discovery', () => {
     });
     expect(cover).toHaveAttribute('loading', 'eager');
     expect(cover).toHaveAttribute('fetchpriority', 'high');
+  });
+
+  it('shows the featured badge only on a featured post', async () => {
+    renderCard(false, { ...post, featured: true });
+    expect(
+      await screen.findByText(m.blogPost_featuredLabel()),
+    ).toBeInTheDocument();
+    // The tag eyebrow stays a link next to the badge.
+    expect(
+      screen.getByRole('link', { name: post.tags[0]!.name }),
+    ).toHaveAttribute('href', '/blog/tag/design-systems');
+
+    cleanup();
+    renderCard();
+    await screen.findByRole('link', { name: new RegExp(post.title, 'i') });
+    expect(screen.queryByText(m.blogPost_featuredLabel())).toBeNull();
   });
 });

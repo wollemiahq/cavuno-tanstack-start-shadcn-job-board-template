@@ -260,6 +260,7 @@ export function BlogArticleContent({
   const bodyHtml = withHeadingAnchors(post.html);
   const links = shareLinks(permalink, post.title);
   const hasToc = headings.length >= 2;
+  const vm = toBlogArticleVM(post, language);
 
   return (
     <Page>
@@ -271,6 +272,9 @@ export function BlogArticleContent({
         // defeat first-strong there.
         header={
           <PageHeader
+            eyebrow={
+              vm.isFeatured ? <Badge>{vm.featuredLabel}</Badge> : undefined
+            }
             title={<span dir="auto">{post.title}</span>}
             description={
               post.customExcerpt ? (
