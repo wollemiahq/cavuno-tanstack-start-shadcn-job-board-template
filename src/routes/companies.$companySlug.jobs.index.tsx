@@ -27,6 +27,7 @@ import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
   clampPage,
+  pageableCount,
   pageSearchValue,
   parsePageParam,
   searchString,
@@ -107,7 +108,11 @@ function CompanyJobsPage() {
   const locale = getLocale();
   const span =
     visibleCount > COMPANY_JOBS_PAGE_SIZE
-      ? visiblePageSpan(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount)
+      ? visiblePageSpan(
+          currentPage,
+          COMPANY_JOBS_PAGE_SIZE,
+          pageableCount(visibleCount, reachableCount),
+        )
       : null;
 
   const countLabel = span

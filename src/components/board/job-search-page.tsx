@@ -189,6 +189,7 @@ export function JobSearchPage({
     <JobsResultsBar
       visibleCount={count}
       gatedCount={gatedCount}
+      reachableCount={reachableCount}
       page={page}
       pageSize={pageSize}
       heading={heading}

@@ -7,7 +7,7 @@ import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
 import type { CountedHeading } from '@/lib/listing-description';
-import { isLastReachablePage } from '@/lib/pagination';
+import { isLastReachablePage, pageableCount } from '@/lib/pagination';
 import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
 import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ function finiteNumber(value: number | undefined): number | undefined {
 export function JobsResultsBar({
   visibleCount,
   gatedCount,
+  reachableCount,
   page,
   pageSize,
   heading,
@@ -34,6 +35,8 @@ export function JobsResultsBar({
 }: {
   visibleCount?: number;
   gatedCount?: number;
+  /** Deepest result the search can page to; bounds the range, not the total. */
+  reachableCount?: number;
   /** Current 1-based page + page size — renders the honest "Showing X–Y of Z" range. */
   page?: number;
   pageSize?: number;
@@ -53,15 +56,19 @@ export function JobsResultsBar({
   // Viewer chrome locale for number/plural formatting (prop kept for call-site
   // compatibility; prefer getLocale() so a stale prop cannot drift).
   const locale = language || getLocale();
-  const pageableCount = finiteNumber(visibleCount);
-  const totalCount = catalogJobCount(pageableCount, gatedCount);
+  const visible = finiteNumber(visibleCount);
+  const totalCount = catalogJobCount(visible, gatedCount);
   const currentPage = finiteNumber(page);
   const currentPageSize = finiteNumber(pageSize);
   const span =
-    pageableCount !== undefined &&
+    visible !== undefined &&
     currentPage !== undefined &&
     currentPageSize !== undefined
-      ? visiblePageSpan(currentPage, currentPageSize, pageableCount)
+      ? visiblePageSpan(
+          currentPage,
+          currentPageSize,
+          pageableCount(visible, reachableCount),
+        )
       : null;
   const totalLabel =
     totalCount !== undefined

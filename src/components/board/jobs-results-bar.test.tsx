@@ -147,6 +147,22 @@ describe('JobsResultsBar data', () => {
       ),
     ).toBeVisible();
   });
+  it('ends the range at a reachable depth that is not page-aligned', () => {
+    render(
+      <JobsResultsBar
+        visibleCount={5000}
+        reachableCount={995}
+        page={50}
+        pageSize={20}
+        language="en"
+      />,
+    );
+    expect(
+      screen.getByText(
+        `range:${(981).toLocaleString('en')}:${(995).toLocaleString('en')};total:5000;label:${(5000).toLocaleString('en')}`,
+      ),
+    ).toBeVisible();
+  });
 });
 
 describe('JobsCappedResultsHint', () => {
