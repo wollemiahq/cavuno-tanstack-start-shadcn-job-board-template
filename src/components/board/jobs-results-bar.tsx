@@ -3,11 +3,11 @@
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
 
-import { displayedJobCount, visiblePageSpan } from '@/board/job-catalog-count';
+import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { entityCount } from '@/lib/entity-count';
-import { jobCountLabel } from '@/lib/job-count-label';
 import type { CountedHeading } from '@/lib/listing-description';
+import { isLastReachablePage } from '@/lib/pagination';
 import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
 import { chromeEntity } from '@/lib/site-chrome';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,6 @@ export function JobsResultsBar({
   countedHeading,
   language,
   scope,
-  countCapped = false,
   className,
 }: {
   visibleCount?: number;
@@ -49,23 +48,13 @@ export function JobsResultsBar({
    * range, or `null` when the count is unknown.
    */
   scope?: (range: ResultsRange | null) => React.ReactNode;
-  /**
-   * The count is the Board API's ranking limit, not the true total (see
-   * `isRelevanceCountCapped`): it reads "1,000+" and ignores withheld jobs.
-   */
-  countCapped?: boolean;
   className?: string;
 }) {
   // Viewer chrome locale for number/plural formatting (prop kept for call-site
   // compatibility; prefer getLocale() so a stale prop cannot drift).
   const locale = language || getLocale();
   const pageableCount = finiteNumber(visibleCount);
-  const capped = countCapped && pageableCount !== undefined;
-  const totalCount = displayedJobCount(pageableCount, gatedCount, capped);
-  const totalCountLabel =
-    totalCount !== undefined
-      ? jobCountLabel(totalCount, locale, capped)
-      : undefined;
+  const totalCount = catalogJobCount(pageableCount, gatedCount);
   const currentPage = finiteNumber(page);
   const currentPageSize = finiteNumber(pageSize);
   const span =
@@ -75,24 +64,21 @@ export function JobsResultsBar({
       ? visiblePageSpan(currentPage, currentPageSize, pageableCount)
       : null;
   const totalLabel =
-    totalCount !== undefined && totalCountLabel !== undefined
+    totalCount !== undefined
       ? countedHeading
-        ? countedHeading({ count: totalCount, countLabel: totalCountLabel })
+        ? countedHeading({
+            count: totalCount,
+            countLabel: totalCount.toLocaleString(locale),
+          })
         : heading
           ? m.jobSearch_contextualResultsHeading({
-              count: totalCountLabel,
+              count: totalCount.toLocaleString(locale),
               heading,
             })
-          : entityCount(
-              totalCount,
-              locale,
-              m.count_jobs,
-              {
-                singular: chromeEntity().jobSingular,
-                plural: chromeEntity().jobPlural,
-              },
-              totalCountLabel,
-            )
+          : entityCount(totalCount, locale, m.count_jobs, {
+              singular: chromeEntity().jobSingular,
+              plural: chromeEntity().jobPlural,
+            })
       : (heading ?? jobSearchCopy().headingJobs);
   const range: ResultsRange | null =
     totalCount === undefined
@@ -107,7 +93,6 @@ export function JobsResultsBar({
       ? jobsResultsShowingLine(
           { from: span.from, to: span.to, count: totalCount },
           locale,
-          totalCountLabel,
         )
       : null;
 
@@ -134,46 +119,48 @@ export function JobsResultsBar({
 export function jobsResultsShowingLine(
   span: ResultsSpan,
   locale: string,
-  /** The total as shown, such as "1,000+"; defaults to `count` formatted. */
-  countLabel?: string,
 ): string {
-  return resultsShowingLine(
-    span,
-    locale,
-    {
-      single: ({ count, countLabel }) =>
-        m.jobSearch_resultsShowingCount({ count, countLabel }),
-      lastPage: ({ to, count, countLabel }) =>
-        m.jobSearch_resultsShowingLast({ to, count, countLabel }),
-      range: ({ from, to, count, countLabel }) =>
-        m.jobSearch_resultsShowingRange({ from, to, count, countLabel }),
-    },
-    countLabel,
-  );
+  return resultsShowingLine(span, locale, {
+    single: ({ count, countLabel }) =>
+      m.jobSearch_resultsShowingCount({ count, countLabel }),
+    lastPage: ({ to, count, countLabel }) =>
+      m.jobSearch_resultsShowingLast({ to, count, countLabel }),
+    range: ({ from, to, count, countLabel }) =>
+      m.jobSearch_resultsShowingRange({ from, to, count, countLabel }),
+  });
 }
 
 /**
- * Under the last page of a capped result set (see `isRelevanceCountCapped`):
- * the API serves no matches past this page, so point the reader at narrowing
- * the search instead. Renders nothing on any other page.
+ * Under the last reachable page of a search whose matches run past its
+ * reachable depth (`reachableCount` below `count`): the API serves no results
+ * past this page, so name the matches shown and point the reader at narrowing
+ * the search. Renders nothing on any other page or listing.
  */
 export function JobsCappedResultsHint({
-  visibleCount,
+  count,
+  reachableCount,
   page,
   pageSize,
-  countCapped = false,
+  rows,
   language,
 }: {
-  visibleCount?: number;
+  count?: number;
+  reachableCount?: number;
   page: number;
   pageSize: number;
-  countCapped?: boolean;
+  /** Results on this page. */
+  rows: number;
   language: string;
 }) {
-  const count = finiteNumber(visibleCount);
-  if (!countCapped || count === undefined) return null;
-  const span = visiblePageSpan(page, pageSize, count);
-  if (!span || span.to < count) return null;
+  const total = finiteNumber(count);
+  if (
+    total === undefined ||
+    !(rows > 0) ||
+    !isLastReachablePage(page, pageSize, total, reachableCount)
+  ) {
+    return null;
+  }
+  const offset = (page - 1) * pageSize;
   const locale = language || getLocale();
   return (
     <p
@@ -181,8 +168,8 @@ export function JobsCappedResultsHint({
       className="text-muted-foreground text-sm"
     >
       {m.jobSearch_cappedResultsHint({
-        from: span.from.toLocaleString(locale),
-        to: span.to.toLocaleString(locale),
+        from: (offset + 1).toLocaleString(locale),
+        to: (offset + rows).toLocaleString(locale),
       })}
     </p>
   );

@@ -1408,7 +1408,6 @@
   "jobSearch_anyWorkplaceLabel": "Alle Arbeitsmodelle",
   "jobSearch_applyFiltersLabel": "Filter anwenden",
   "jobSearch_cancelLabel": "Abbrechen",
-  "jobSearch_cappedCountLabel": "{count}+",
   "jobSearch_cappedResultsHint": "Treffer {from} bis {to} werden angezeigt. Füge Filter hinzu oder versuche eine genauere Suche, um mehr zu finden.",
   "jobSearch_clearFiltersLabel": "Zurücksetzen",
   "jobSearch_contextualResultsHeading": "{count} {heading}",

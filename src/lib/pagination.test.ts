@@ -9,7 +9,7 @@ import {
   defaultParseSearch,
   defaultStringifySearch,
 } from '@tanstack/react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   clampPage,
@@ -21,7 +21,11 @@ import {
   pageSearchValue,
   pageToOffset,
   parsePageParam,
+  isLastReachablePage,
   isPreviewUnlockPage,
+  pageableCount,
+  reachableCountOf,
+  readReachablePage,
   shouldRenderPagination,
   totalPages,
 } from './pagination';
@@ -248,5 +252,68 @@ describe('shouldRenderPagination (only past the first page)', () => {
   it('shows the nav once a second page exists', () => {
     expect(shouldRenderPagination(21, 20)).toBe(true);
     expect(shouldRenderPagination(100, 24)).toBe(true);
+  });
+});
+
+describe('reachable depth (a keyword search that matches past its deepest page)', () => {
+  it('reads reachableCount defensively from a response', () => {
+    expect(reachableCountOf({ count: 4935, reachableCount: 1000 })).toBe(1000);
+    expect(reachableCountOf({ count: 40 })).toBeUndefined();
+    expect(reachableCountOf({ reachableCount: '1000' })).toBeUndefined();
+    expect(reachableCountOf({ reachableCount: Number.NaN })).toBeUndefined();
+    expect(reachableCountOf({ reachableCount: -1 })).toBeUndefined();
+    expect(reachableCountOf(null)).toBeUndefined();
+  });
+
+  it('pages the reachable matches while the count stays the full total', () => {
+    expect(pageableCount(4935, 1000)).toBe(1000);
+    expect(pageableCount(4935)).toBe(4935);
+    expect(totalPages(4935, 20, 1000)).toBe(50);
+    expect(shouldRenderPagination(4935, 20, 1000)).toBe(true);
+  });
+
+  it('leaves listings without a reachable depth unchanged', () => {
+    expect(totalPages(4935, 20)).toBe(247);
+    expect(totalPages(4935, 20, undefined)).toBe(247);
+    expect(clampPage(60, 20)).toBe(60);
+    expect(pageToOffset(60, 20)).toBe(1180);
+  });
+
+  it('clamps a page past the reachable depth onto the last reachable page', () => {
+    expect(clampPage(50, 20, 1000)).toBe(50);
+    expect(clampPage(60, 20, 1000)).toBe(50);
+    expect(pageToOffset(60, 20, 1000)).toBe(980);
+    expect(clampPage(3, 20, 0)).toBe(1);
+  });
+
+  it('marks only the last page of a capped search', () => {
+    expect(isLastReachablePage(50, 20, 4935, 1000)).toBe(true);
+    expect(isLastReachablePage(49, 20, 4935, 1000)).toBe(false);
+    expect(isLastReachablePage(50, 20, 1000, undefined)).toBe(false);
+    expect(isLastReachablePage(50, 20, 1000, 1000)).toBe(false);
+  });
+
+  it('re-reads the last reachable page for a page past the depth', async () => {
+    const read = vi.fn(async (offset: number) => ({
+      offset,
+      count: 4935,
+      reachableCount: 1000,
+    }));
+    const page = await readReachablePage(1180, 20, read);
+    expect(read.mock.calls.map(([offset]) => offset)).toEqual([1180, 980]);
+    expect(page.offset).toBe(980);
+  });
+
+  it('reads an in-range page once', async () => {
+    const read = vi.fn(async (offset: number) => ({
+      offset,
+      count: 4935,
+      reachableCount: 1000,
+    }));
+    await readReachablePage(980, 20, read);
+    const uncapped = vi.fn(async (offset: number) => ({ offset, count: 4935 }));
+    await readReachablePage(1180, 20, uncapped);
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(uncapped).toHaveBeenCalledTimes(1);
   });
 });

@@ -186,4 +186,29 @@ describe('ListingPagination — owned shadcn navigation', () => {
     ).not.toBeNull();
     expect(within(pagination).queryByRole('button')).toBeNull();
   });
+
+  it('ends at the reachable depth of a capped search, not the full count', async () => {
+    renderPagination(
+      <ListingPagination
+        page={50}
+        count={4935}
+        reachableCount={1000}
+        pageSize={20}
+        hrefForPage={(page) => `/jobs?page=${page}`}
+        onPageChange={vi.fn()}
+      />,
+    );
+
+    const pagination = await screen.findByRole('navigation', {
+      name: 'Pagination',
+    });
+    expect(
+      within(pagination).getByText('50').closest("[aria-current='page']"),
+    ).not.toBeNull();
+    expect(within(pagination).queryByText('247')).toBeNull();
+    expect(within(pagination).getByLabelText(/next page/i)).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
 });

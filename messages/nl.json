@@ -1408,7 +1408,6 @@
   "jobSearch_anyWorkplaceLabel": "Alle werkplekken",
   "jobSearch_applyFiltersLabel": "Filters toepassen",
   "jobSearch_cancelLabel": "Annuleren",
-  "jobSearch_cappedCountLabel": "{count}+",
   "jobSearch_cappedResultsHint": "Resultaten {from} tot en met {to} worden getoond. Voeg filters toe of probeer een specifiekere zoekopdracht om meer te vinden.",
   "jobSearch_clearFiltersLabel": "Wissen",
   "jobSearch_contextualResultsHeading": "{count} {heading}",

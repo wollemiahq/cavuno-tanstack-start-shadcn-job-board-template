@@ -47,6 +47,7 @@ function compactVisiblePages(page: number, total: number): PaginationPage[] {
 export function ListingPagination({
   page,
   count,
+  reachableCount,
   pageSize,
   hrefForPage,
   onPageChange,
@@ -54,14 +55,16 @@ export function ListingPagination({
 }: {
   page: number;
   count: number;
+  /** Stop the pages here when the search reports a reachable depth. */
+  reachableCount?: number;
   pageSize: number;
   hrefForPage: (page: number) => string;
   onPageChange: (page: number) => void;
   compact?: boolean;
 }) {
-  if (!shouldRenderPagination(count, pageSize)) return null;
+  if (!shouldRenderPagination(count, pageSize, reachableCount)) return null;
 
-  const total = totalPages(count, pageSize);
+  const total = totalPages(count, pageSize, reachableCount);
   const navigate =
     (nextPage: number) => (event: React.MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault();

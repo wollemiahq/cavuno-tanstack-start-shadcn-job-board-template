@@ -18,9 +18,8 @@ export function entityCount(
   locale: string,
   message: (args: { count: number; countLabel: string }) => string,
   override?: { singular?: string; plural?: string },
-  /** The count as shown, such as "1,000+"; defaults to `count` formatted. */
-  countLabel: string = count.toLocaleString(locale),
 ): string {
+  const countLabel = count.toLocaleString(locale);
   const singular = override?.singular;
   const plural = override?.plural;
   if (singular !== undefined && plural !== undefined) {

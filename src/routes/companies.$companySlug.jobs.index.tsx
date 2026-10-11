@@ -23,7 +23,6 @@ import {
 
 import { CompanyJobsSearchBar } from '../components/company-jobs-search-bar';
 import { entityCount } from '../lib/entity-count';
-import { jobCountLabel } from '../lib/job-count-label';
 import { localizePath } from '../lib/localized-path';
 import {
   listingPageHref,
@@ -43,7 +42,7 @@ import {
 } from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
-import { displayedJobCount, visiblePageSpan } from '@/board/job-catalog-count';
+import { catalogJobCount, visiblePageSpan } from '@/board/job-catalog-count';
 import { toJobCardVM } from '@/board/job-view-model';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobList } from '@/components/board/job-list';
@@ -83,42 +82,40 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
 const rootApi = getRouteApi('__root__');
 
 function CompanyJobsPage() {
-  const { company, page, q, location, locationName, hasSalaries, countCapped } =
-    Route.useLoaderData();
+  const {
+    company,
+    page,
+    q,
+    location,
+    locationName,
+    hasSalaries,
+    reachableCount,
+  } = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const locationSuggestions = useLocationSuggestions(getLocale());
   const navigate = Route.useNavigate();
   const currentHref = useLocation({ select: (loc) => loc.href });
 
-  const currentPage = clampPage(search.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
+  const currentPage = clampPage(
+    search.page ?? 1,
+    COMPANY_JOBS_PAGE_SIZE,
+    reachableCount,
+  );
   const visibleCount = page.count ?? 0;
-  const count =
-    displayedJobCount(visibleCount, page.gatedCount, countCapped) ??
-    visibleCount;
+  const count = catalogJobCount(visibleCount, page.gatedCount) ?? visibleCount;
   const locale = getLocale();
-  const totalLabel = jobCountLabel(count, locale, countCapped);
   const span =
     visibleCount > COMPANY_JOBS_PAGE_SIZE
       ? visiblePageSpan(currentPage, COMPANY_JOBS_PAGE_SIZE, visibleCount)
       : null;
 
   const countLabel = span
-    ? jobsResultsShowingLine(
-        { from: span.from, to: span.to, count },
-        locale,
-        totalLabel,
-      )
-    : entityCount(
-        count,
-        locale,
-        m.count_jobs,
-        {
-          singular: chromeEntity().jobSingular,
-          plural: chromeEntity().jobPlural,
-        },
-        totalLabel,
-      );
+    ? jobsResultsShowingLine({ from: span.from, to: span.to, count }, locale)
+    : entityCount(count, locale, m.count_jobs, {
+        singular: chromeEntity().jobSingular,
+        plural: chromeEntity().jobPlural,
+      });
 
   return (
     <CompanySectionShell
@@ -149,10 +146,11 @@ function CompanyJobsPage() {
         />
 
         <JobsCappedResultsHint
-          visibleCount={visibleCount}
+          count={visibleCount}
+          reachableCount={reachableCount}
           page={currentPage}
           pageSize={COMPANY_JOBS_PAGE_SIZE}
-          countCapped={countCapped}
+          rows={page.data.length}
           language={locale}
         />
 
@@ -161,6 +159,7 @@ function CompanyJobsPage() {
           page={currentPage}
           pageSize={COMPANY_JOBS_PAGE_SIZE}
           visibleCount={visibleCount}
+          reachableCount={reachableCount}
           returnTo={localizePath(currentHref)}
           language={locale}
         />
@@ -168,6 +167,7 @@ function CompanyJobsPage() {
         <ListingPagination
           page={currentPage}
           count={visibleCount}
+          reachableCount={reachableCount}
           pageSize={COMPANY_JOBS_PAGE_SIZE}
           hrefForPage={(nextPage) => listingPageHref(currentHref, nextPage)}
           onPageChange={(next) =>

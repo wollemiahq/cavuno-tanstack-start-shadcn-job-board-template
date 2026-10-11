@@ -18,7 +18,7 @@ const routeApi = getRouteApi('/jobs/');
 const rootApi = getRouteApi('__root__');
 
 export function JobsPage() {
-  const { page, relatedSearches, customFilterFields, countCapped } =
+  const { page, relatedSearches, customFilterFields, reachableCount } =
     routeApi.useLoaderData();
   const search = routeApi.useSearch();
   const { board } = rootApi.useLoaderData();
@@ -43,7 +43,7 @@ export function JobsPage() {
         jobs={page.data.map((job) => toJobCardVM(job, getLocale(), board))}
         count={page.count}
         gatedCount={page.gatedCount}
-        countCapped={countCapped}
+        reachableCount={reachableCount}
         page={search.page ?? 1}
         pageSize={JOBS_PAGE_SIZE}
         filters={search}

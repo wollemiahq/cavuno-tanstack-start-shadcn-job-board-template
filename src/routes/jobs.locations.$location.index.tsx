@@ -39,7 +39,7 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
 });
 
 function LocationPage() {
-  const { place, list, relatedSearches, searchRadius, countCapped } =
+  const { place, list, relatedSearches, searchRadius, reachableCount } =
     Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
@@ -78,7 +78,7 @@ function LocationPage() {
       }
       count={list.count}
       gatedCount={list.gatedCount}
-      countCapped={countCapped}
+      reachableCount={reachableCount}
       jobs={list.data}
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}

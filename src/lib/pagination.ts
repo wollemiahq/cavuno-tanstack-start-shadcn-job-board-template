@@ -163,40 +163,129 @@ export function lastReachablePage(pageSize: number): number {
   return Math.max(1, Math.floor(MAX_OFFSET_WINDOW / pageSize));
 }
 
-/** Clamp a 1-based page to the API-reachable range. */
-export function clampPage(page: number, pageSize: number): number {
-  return Math.min(page, lastReachablePage(pageSize));
+/**
+ * The deepest result a keyword-relevance search can page to, read from a
+ * job list or search response. The Board API adds an optional
+ * `reachableCount` envelope field only when the search matches more jobs than
+ * its deepest page reaches: `count` stays the full match count, while
+ * `hasMore`/`nextCursor` stop at `reachableCount`. The published SDK types do
+ * not carry the field yet, so it is decoded here, at the I/O seam; anything
+ * that is not a finite, non-negative number reads as absent (every match is
+ * reachable).
+ */
+export function reachableCountOf<T>(response: T): number | undefined {
+  if (valueTag(response) !== '[object Object]') return undefined;
+  const value = searchNumber(
+    Object.getOwnPropertyDescriptor(response, 'reachableCount')?.value,
+  );
+  return value !== undefined && value >= 0 ? value : undefined;
+}
+
+/**
+ * How many results the numbered pages can address: the full `count`, cut at
+ * `reachableCount` when the search reports one. Page math uses this; any
+ * displayed total keeps the full `count`.
+ */
+export function pageableCount(count: number, reachableCount?: number): number {
+  return reachableCount === undefined ? count : Math.min(count, reachableCount);
+}
+
+/**
+ * Clamp a 1-based page to the API-reachable range: the offset window, and,
+ * when the search reports one, the last page inside `reachableCount`.
+ */
+export function clampPage(
+  page: number,
+  pageSize: number,
+  reachableCount?: number,
+): number {
+  const clamped = Math.min(page, lastReachablePage(pageSize));
+  if (reachableCount === undefined) return clamped;
+  return Math.min(clamped, Math.max(1, Math.ceil(reachableCount / pageSize)));
 }
 
 /**
  * Zero-based API offset for a 1-based page. Clamped so `offset + pageSize`
- * never exceeds {@link MAX_OFFSET_WINDOW} — a deeper page serves the last
- * reachable one instead of crashing the loader.
+ * never exceeds {@link MAX_OFFSET_WINDOW} (or `reachableCount`, when known) —
+ * a deeper page serves the last reachable one instead of crashing the loader
+ * or rendering an empty page under a non-zero count.
  */
-export function pageToOffset(page: number, pageSize: number): number {
-  return (clampPage(page, pageSize) - 1) * pageSize;
+export function pageToOffset(
+  page: number,
+  pageSize: number,
+  reachableCount?: number,
+): number {
+  return (clampPage(page, pageSize, reachableCount) - 1) * pageSize;
+}
+
+/**
+ * Read one numbered page of a job list or search, serving the last reachable
+ * page for a `?page=` past the search's reachable depth — the same clamp
+ * {@link pageToOffset} applies to the offset window. The depth is only known
+ * from a response, so an out-of-range page costs one more read; an in-range
+ * page reads once.
+ */
+export async function readReachablePage<TRead extends Promise<unknown>>(
+  offset: number,
+  pageSize: number,
+  // A generic over the whole promise, so a read that picks between two
+  // endpoints (list or search) keeps the union of their response types.
+  read: (offset: number) => TRead,
+): Promise<Awaited<TRead>> {
+  const first = await read(offset);
+  const reachableCount = reachableCountOf(first);
+  if (reachableCount === undefined) return first;
+  const page = Math.floor(offset / pageSize) + 1;
+  const reachableOffset = pageToOffset(page, pageSize, reachableCount);
+  return reachableOffset < offset ? await read(reachableOffset) : first;
 }
 
 /**
  * Number of pages a result `count` spans at this page size, capped at the
- * last API-reachable page so the pagination nav never links into the 400.
+ * last API-reachable page and at `reachableCount` (when the search reports
+ * one) so the pagination nav never links past the results the API serves.
  */
-export function totalPages(count: number, pageSize: number): number {
-  return Math.min(Math.ceil(count / pageSize), lastReachablePage(pageSize));
+export function totalPages(
+  count: number,
+  pageSize: number,
+  reachableCount?: number,
+): number {
+  return Math.min(
+    Math.ceil(pageableCount(count, reachableCount) / pageSize),
+    lastReachablePage(pageSize),
+  );
 }
 
 /** Whether the pagination nav should render — only once a second page exists. */
 export function shouldRenderPagination(
   count: number,
   pageSize: number,
+  reachableCount?: number,
 ): boolean {
-  return totalPages(count, pageSize) > 1;
+  return totalPages(count, pageSize, reachableCount) > 1;
 }
 
 export function isPreviewUnlockPage(
   page: number,
   pageSize: number,
   visibleCount: number,
+  reachableCount?: number,
 ): boolean {
-  return page === totalPages(visibleCount, pageSize);
+  return page === totalPages(visibleCount, pageSize, reachableCount);
+}
+
+/**
+ * Whether this is the last page of a search whose matches run past its
+ * reachable depth (`reachableCount` below `count`): the page that should say
+ * where the results stop and suggest narrowing the search.
+ */
+export function isLastReachablePage(
+  page: number,
+  pageSize: number,
+  count: number,
+  reachableCount: number | undefined,
+): boolean {
+  if (reachableCount === undefined || !(reachableCount < count)) return false;
+  const total = totalPages(count, pageSize, reachableCount);
+  return total > 0 && page === total;
 }

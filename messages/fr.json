@@ -1408,7 +1408,6 @@
   "jobSearch_anyWorkplaceLabel": "Tous les modes de travail",
   "jobSearch_applyFiltersLabel": "Appliquer les filtres",
   "jobSearch_cancelLabel": "Annuler",
-  "jobSearch_cappedCountLabel": "{count}+",
   "jobSearch_cappedResultsHint": "Résultats {from} à {to} affichés. Ajoutez des filtres ou essayez une recherche plus précise pour en trouver davantage.",
   "jobSearch_clearFiltersLabel": "Effacer",
   "jobSearch_contextualResultsHeading": "{count} {heading}",

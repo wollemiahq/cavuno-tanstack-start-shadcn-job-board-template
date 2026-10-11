@@ -1460,7 +1460,6 @@
   "jobSearch_anyWorkplaceLabel": "Dowolny tryb pracy",
   "jobSearch_applyFiltersLabel": "Zastosuj filtry",
   "jobSearch_cancelLabel": "Anuluj",
-  "jobSearch_cappedCountLabel": "{count}+",
   "jobSearch_cappedResultsHint": "Wyświetlane wyniki od {from} do {to}. Dodaj filtry lub spróbuj bardziej szczegółowego wyszukiwania, aby znaleźć więcej.",
   "jobSearch_clearFiltersLabel": "Wyczyść",
   "jobSearch_contextualResultsHeading": "{heading} ({count})",

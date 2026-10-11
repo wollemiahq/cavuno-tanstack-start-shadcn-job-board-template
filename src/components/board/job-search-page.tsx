@@ -106,7 +106,7 @@ export function JobSearchPage({
   jobs,
   count,
   gatedCount,
-  countCapped,
+  reachableCount,
   page: requestedPage,
   pageSize,
   filters,
@@ -133,8 +133,11 @@ export function JobSearchPage({
   count?: number;
   /** Honest count of paywalled results withheld from this viewer. */
   gatedCount?: number;
-  /** `count` is the Board API's ranking limit; see `JobsResultsBar`. */
-  countCapped?: boolean;
+  /**
+   * The deepest result this search can page to, when below `count` (see
+   * `reachableCountOf`). Pages stop here; `count` stays the displayed total.
+   */
+  reachableCount?: number;
   page: number;
   pageSize: number;
   filters: JobsFilters;
@@ -163,7 +166,7 @@ export function JobSearchPage({
 }) {
   // The loader served the last API-reachable page for anything deeper, so
   // the range label, the active page and Next/Previous must agree with it.
-  const page = clampPage(requestedPage, pageSize);
+  const page = clampPage(requestedPage, pageSize, reachableCount);
   const rails = useListingAdRails(ads, startAd, endAd);
   // The EXTERNAL localized URL — post-auth redirects must land back on
   // /fr/emplois, not the delocalized router path.
@@ -192,7 +195,6 @@ export function JobSearchPage({
       countedHeading={countedHeading}
       language={language}
       scope={resultsScope}
-      countCapped={countCapped}
     />
   );
   return (
@@ -281,10 +283,11 @@ export function JobSearchPage({
                   </InPlaceListingSelect>
 
                   <JobsCappedResultsHint
-                    visibleCount={count}
+                    count={count}
+                    reachableCount={reachableCount}
                     page={page}
                     pageSize={pageSize}
-                    countCapped={countCapped}
+                    rows={jobVms.length}
                     language={language}
                   />
 
@@ -293,6 +296,7 @@ export function JobSearchPage({
                     page={page}
                     pageSize={pageSize}
                     visibleCount={count ?? 0}
+                    reachableCount={reachableCount}
                     returnTo={returnTo}
                     language={language}
                   />
@@ -301,6 +305,7 @@ export function JobSearchPage({
                     compact
                     page={page}
                     count={count ?? 0}
+                    reachableCount={reachableCount}
                     pageSize={pageSize}
                     hrefForPage={(nextPage) =>
                       listingPageHref(returnTo, nextPage, ['selectedJob'])
