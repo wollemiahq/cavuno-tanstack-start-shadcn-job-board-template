@@ -5,9 +5,16 @@
  * middleware for server fns. Registering an instance REPLACES that
  * default wholesale, so the same protection is re-added here explicitly —
  * removing it would silently expose every RPC to cross-site requests.
+ *
+ * Board API shedding: a page whose loaders hit a Board API 429/503 renders
+ * as 503 + Retry-After instead of 500 (see src/lib/board-api-shed.ts).
  */
 import { createCsrfMiddleware, createStart } from '@tanstack/react-start';
 
+import {
+  boardApiShedFunctionMiddleware,
+  boardApiShedRequestMiddleware,
+} from './lib/board-api-shed';
 import { localeHeaderMiddleware } from './lib/locale-middleware';
 
 const csrfMiddleware = createCsrfMiddleware({
@@ -15,6 +22,6 @@ const csrfMiddleware = createCsrfMiddleware({
 });
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [csrfMiddleware],
-  functionMiddleware: [localeHeaderMiddleware],
+  requestMiddleware: [csrfMiddleware, boardApiShedRequestMiddleware],
+  functionMiddleware: [localeHeaderMiddleware, boardApiShedFunctionMiddleware],
 }));
