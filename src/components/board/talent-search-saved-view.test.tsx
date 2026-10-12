@@ -214,7 +214,9 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
     });
     expect(
       screen.getByRole('combobox', { name: m.talentSaved_showLabel() }),
-    ).toHaveTextContent(m.talentSaved_savedOption({ count: '3' }));
+    ).toHaveTextContent(
+      m.talentSaved_savedOption({ count: 3, countLabel: '3' }),
+    );
 
     fireEvent.click(
       screen.getByRole('button', { name: m.talentSaved_showAllAction() }),
@@ -239,9 +241,9 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
       screen.getAllByRole('option').map((option) => option.textContent),
     ).toEqual([
       m.talentSaved_allCandidatesOption(),
-      m.talentSaved_savedCountOption({ count: '3' }),
+      m.talentSaved_savedCountOption({ count: 3, countLabel: '3' }),
     ]);
-    pickOption(m.talentSaved_savedCountOption({ count: '3' }));
+    pickOption(m.talentSaved_savedCountOption({ count: 3, countLabel: '3' }));
 
     await waitFor(() =>
       expect(router.state.location.search).toEqual({
@@ -252,7 +254,9 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
     );
     expect(
       screen.getByRole('combobox', { name: m.talentSaved_showLabel() }),
-    ).toHaveTextContent(m.talentSaved_savedOption({ count: '3' }));
+    ).toHaveTextContent(
+      m.talentSaved_savedOption({ count: 3, countLabel: '3' }),
+    );
     expect(server.updateTalentList).not.toHaveBeenCalled();
   });
 

@@ -2440,8 +2440,34 @@
   "talentSave_listsLabel": "Speichern in",
   "talentSaved_showLabel": "Anzeigen",
   "talentSaved_allCandidatesOption": "Alle Kandidaten",
-  "talentSaved_savedOption": "{count} gespeichert",
-  "talentSaved_savedCountOption": "{count} gespeichert",
+  "talentSaved_savedOption": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} gespeichert",
+        "countPlural=*": "{countLabel} gespeichert"
+      }
+    }
+  ],
+  "talentSaved_savedCountOption": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} gespeichert",
+        "countPlural=*": "{countLabel} gespeichert"
+      }
+    }
+  ],
   "talentSaved_stageLabel": "Phase",
   "talentSaved_anyStageOption": "Alle Phasen",
   "talentSaved_emptyTitle": "Noch niemand gespeichert",

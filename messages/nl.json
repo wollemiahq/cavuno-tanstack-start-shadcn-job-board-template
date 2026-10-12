@@ -2440,8 +2440,34 @@
   "talentSave_listsLabel": "Opslaan in",
   "talentSaved_showLabel": "Tonen",
   "talentSaved_allCandidatesOption": "Alle kandidaten",
-  "talentSaved_savedOption": "{count} opgeslagen",
-  "talentSaved_savedCountOption": "{count} opgeslagen",
+  "talentSaved_savedOption": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} opgeslagen",
+        "countPlural=*": "{countLabel} opgeslagen"
+      }
+    }
+  ],
+  "talentSaved_savedCountOption": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} opgeslagen",
+        "countPlural=*": "{countLabel} opgeslagen"
+      }
+    }
+  ],
   "talentSaved_stageLabel": "Fase",
   "talentSaved_anyStageOption": "Elke fase",
   "talentSaved_emptyTitle": "Nog niemand opgeslagen",

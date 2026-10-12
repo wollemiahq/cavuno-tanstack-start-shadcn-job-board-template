@@ -77,13 +77,16 @@ function ViewSelect({
   const { items, optionLabel } = useMemo(() => {
     const lookup = (value: string) =>
       value === SAVED
-        ? m.talentSaved_savedCountOption({ count })
+        ? m.talentSaved_savedCountOption({
+            count: savedCount,
+            countLabel: count,
+          })
         : m.talentSaved_allCandidatesOption();
     return {
       items: Object.fromEntries(VIEW_VALUES.map((id) => [id, lookup(id)])),
       optionLabel: lookup,
     };
-  }, [count]);
+  }, [count, savedCount]);
 
   return (
     <Field className="w-auto gap-0">
@@ -105,7 +108,10 @@ function ViewSelect({
           <SelectValue>
             {(value: string) =>
               value === SAVED
-                ? m.talentSaved_savedOption({ count })
+                ? m.talentSaved_savedOption({
+                    count: savedCount,
+                    countLabel: count,
+                  })
                 : m.talentSaved_allCandidatesOption()
             }
           </SelectValue>

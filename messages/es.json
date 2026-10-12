@@ -2440,8 +2440,34 @@
   "talentSave_listsLabel": "Guardar en",
   "talentSaved_showLabel": "Mostrar",
   "talentSaved_allCandidatesOption": "Todos los candidatos",
-  "talentSaved_savedOption": "Guardados: {count}",
-  "talentSaved_savedCountOption": "Guardados: {count}",
+  "talentSaved_savedOption": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} guardado",
+        "countPlural=*": "{countLabel} guardados"
+      }
+    }
+  ],
+  "talentSaved_savedCountOption": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} guardado",
+        "countPlural=*": "{countLabel} guardados"
+      }
+    }
+  ],
   "talentSaved_stageLabel": "Etapa",
   "talentSaved_anyStageOption": "Cualquier etapa",
   "talentSaved_emptyTitle": "Aún no hay nadie guardado",
