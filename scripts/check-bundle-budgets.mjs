@@ -131,7 +131,14 @@ const BUDGETS = {
     // module mocks with injected list/save seams on those controls;
     // measured 155.7 / 54.7 after that.
     // 2026-10 dependency refresh: measured 167.5 KiB raw / 59.0 KiB gzip.
-    '/talent/': { raw: 175_000, gzip: 62_000 },
+    // Saved people on saved searches (ADR-0142): the All / Saved switch
+    // (Base UI toggle group), the stage filter, the Saved view's paging and
+    // empty states, and the list-membership Save menu. Measured 182.2 KiB
+    // raw / 63.3 KiB gzip against 170.5 / 59.2 on main; the pipeline-stage
+    // join was split out of the kanban view-model so it does not drag the
+    // kanban's copy along. Pending operator acceptance; same ~3 KiB gzip
+    // headroom as before.
+    '/talent/': { raw: 195_000, gzip: 68_000 },
   },
 };
 
