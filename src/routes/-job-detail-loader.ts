@@ -34,12 +34,17 @@ export function createJobDetailLoader(
   }) => {
     const noSimilarJobs = (): SimilarJobsResult => ({ jobs: [] });
     try {
+      // The job read decides 404 vs page. Crawlers request many expired and
+      // invented job URLs, so the session, company and similar-jobs reads
+      // start only once the job exists — a miss costs one upstream read.
+      const page = await dependencies.getJobDetailPage({
+        data: { jobSlug: params.jobSlug },
+      });
       const similar = dependencies
         .getSimilarJobs({ data: { jobSlug: params.jobSlug } })
         .then((result) => ({ jobs: result.data }))
         .catch(noSimilarJobs);
-      const [page, session, company] = await Promise.all([
-        dependencies.getJobDetailPage({ data: { jobSlug: params.jobSlug } }),
+      const [session, company] = await Promise.all([
         dependencies.getSessionUser().then(async (user) => ({
           user,
           applicationState: user?.emailVerified

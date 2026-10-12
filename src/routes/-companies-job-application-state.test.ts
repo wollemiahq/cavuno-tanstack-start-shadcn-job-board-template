@@ -1,3 +1,5 @@
+import { BoardApiError } from '@cavuno/board';
+import { isNotFound } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -113,6 +115,26 @@ describe('full job application state', () => {
 
     expect(myApplicationForJob).not.toHaveBeenCalled();
     expect(data).toMatchObject({ applicationState: 'not-requested' });
+  });
+
+  it('404s a missing job without reading the session, company or similar jobs', async () => {
+    getJobDetailPage.mockRejectedValue(
+      new BoardApiError({
+        status: 404,
+        code: 'not_found',
+        message: 'Job not found',
+        raw: undefined,
+      }),
+    );
+
+    const error = await loadJobDetail(jobDetailLoaderInput()).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(isNotFound(error)).toBe(true);
+    expect(getSessionUser).not.toHaveBeenCalled();
+    expect(getCompany).not.toHaveBeenCalled();
+    expect(getSimilarJobs).not.toHaveBeenCalled();
   });
 
   it('keeps a valid public job available when private application state fails', async () => {
