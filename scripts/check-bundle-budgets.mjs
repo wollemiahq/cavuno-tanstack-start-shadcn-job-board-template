@@ -131,7 +131,10 @@ const BUDGETS = {
     // module mocks with injected list/save seams on those controls;
     // measured 155.7 / 54.7 after that.
     // 2026-10 dependency refresh: measured 167.5 KiB raw / 59.0 KiB gzip.
-    '/talent/': { raw: 175_000, gzip: 62_000 },
+    // Search distance on a place search: the shared SearchRadiusScope chunk
+    // (5.2 KiB raw, already loaded by the location job listings) is now
+    // charged here too. Measured 176.1 KiB raw / 60.7 KiB gzip.
+    '/talent/': { raw: 184_000, gzip: 64_000 },
   },
 };
 

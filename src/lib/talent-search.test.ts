@@ -85,6 +85,50 @@ describe('talentSearchFromHeader', () => {
   });
 });
 
+describe('talent search distance', () => {
+  it('keeps a preset or exact `within` and drops anything else', () => {
+    expect(parseTalentSearch({ place: 'houston', within: '10' }).within).toBe(
+      10,
+    );
+    expect(parseTalentSearch({ place: 'houston', within: '0' }).within).toBe(0);
+    expect(
+      parseTalentSearch({ place: 'houston', within: '7' }).within,
+    ).toBeUndefined();
+  });
+
+  it('sends `within` to the directory only with a place', () => {
+    expect(
+      talentListingLoaderDeps(
+        parseTalentSearch({ place: 'houston', within: '10' }),
+      ),
+    ).toMatchObject({ place: 'houston', within: 10 });
+    expect(
+      talentListingLoaderDeps(parseTalentSearch({ within: '10' })).within,
+    ).toBeUndefined();
+  });
+
+  it('keeps the distance for a new keyword and resets it for a new place', () => {
+    const current = { q: 'nurse', place: 'houston', within: '10' };
+
+    expect(
+      talentSearchFromHeader(current, { query: 'doctor', place: 'houston' })
+        .within,
+    ).toBe(10);
+    expect(
+      talentSearchFromHeader(current, { query: 'nurse', place: 'dallas' })
+        .within,
+    ).toBeUndefined();
+  });
+
+  it('leaves the distance out of a saved list predicate', () => {
+    expect(
+      talentSearchToListFilters(
+        parseTalentSearch({ place: 'houston', within: '10' }),
+      ),
+    ).toEqual({ place: 'houston' });
+  });
+});
+
 describe('talentListingLoaderDeps', () => {
   it('keeps listing inputs while excluding the selected detail pane', () => {
     const first = talentListingLoaderDeps(

@@ -2490,6 +2490,78 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {countLabel} candidato {exactPlace}",
+        "countPlural=*": "Mostrando {from}–{to} candidatos {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {to} de {countLabel} candidato {exactPlace}",
+        "countPlural=*": "Mostrando {to} de {countLabel} candidatos {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Mostrando candidatos {exactPlace}",
+  "talentSearchRadius_exactEmpty": "No hay candidatos {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {countLabel} candidato a menos de {distance} de {place}",
+        "countPlural=*": "Mostrando {from}–{to} candidatos a menos de {distance} de {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {to} de {countLabel} candidato a menos de {distance} de {place}",
+        "countPlural=*": "Mostrando {to} de {countLabel} candidatos a menos de {distance} de {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Mostrando candidatos a menos de {distance} de {place}",
+  "talentSearchRadius_withinEmpty": "No hay candidatos a menos de {distance} de {place}",
   "talentSearch_retryLabel": "Reintentar",
   "talentSearch_selectedProfileRegionLabel": "Perfil seleccionado",
   "talentSearch_skillLabel": "Competencia",

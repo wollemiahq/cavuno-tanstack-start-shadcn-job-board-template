@@ -2490,6 +2490,78 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Affichage de {countLabel} candidat {exactPlace}",
+        "countPlural=*": "Affichage de {from}–{to} candidats {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Affichage de {to} sur {countLabel} candidat {exactPlace}",
+        "countPlural=*": "Affichage de {to} sur {countLabel} candidats {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Affichage des candidats {exactPlace}",
+  "talentSearchRadius_exactEmpty": "Aucun candidat {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Affichage de {countLabel} candidat dans un rayon de {distance} autour de {place}",
+        "countPlural=*": "Affichage de {from}–{to} candidats dans un rayon de {distance} autour de {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Affichage de {to} sur {countLabel} candidat dans un rayon de {distance} autour de {place}",
+        "countPlural=*": "Affichage de {to} sur {countLabel} candidats dans un rayon de {distance} autour de {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Affichage des candidats dans un rayon de {distance} autour de {place}",
+  "talentSearchRadius_withinEmpty": "Aucun candidat dans un rayon de {distance} autour de {place}",
   "talentSearch_retryLabel": "Réessayer",
   "talentSearch_selectedProfileRegionLabel": "Profil sélectionné",
   "talentSearch_skillLabel": "Compétence",

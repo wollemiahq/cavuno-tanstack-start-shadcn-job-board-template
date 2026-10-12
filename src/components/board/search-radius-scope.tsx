@@ -28,6 +28,46 @@ import { resultsLineKind } from '@/lib/results-showing';
 const MENU_SLOT = '\u0000';
 
 /**
+ * The results-line wording around the distance menu, so one control serves
+ * any listing a place can widen (jobs, candidates). Each entry takes the same
+ * inputs as the job wording.
+ */
+export type SearchRadiusSentences = {
+  exactScope: typeof m.searchRadius_exactScope;
+  exactScopeLast: typeof m.searchRadius_exactScopeLast;
+  exactScopeUncounted: typeof m.searchRadius_exactScopeUncounted;
+  exactEmpty: typeof m.searchRadius_exactEmpty;
+  withinScope: typeof m.searchRadius_withinScope;
+  withinScopeLast: typeof m.searchRadius_withinScopeLast;
+  withinScopeUncounted: typeof m.searchRadius_withinScopeUncounted;
+  withinEmpty: typeof m.searchRadius_withinEmpty;
+};
+
+/** "Showing 1–20 jobs within 25 mi of Houston". */
+export const JOB_SEARCH_RADIUS_SENTENCES: SearchRadiusSentences = {
+  exactScope: m.searchRadius_exactScope,
+  exactScopeLast: m.searchRadius_exactScopeLast,
+  exactScopeUncounted: m.searchRadius_exactScopeUncounted,
+  exactEmpty: m.searchRadius_exactEmpty,
+  withinScope: m.searchRadius_withinScope,
+  withinScopeLast: m.searchRadius_withinScopeLast,
+  withinScopeUncounted: m.searchRadius_withinScopeUncounted,
+  withinEmpty: m.searchRadius_withinEmpty,
+};
+
+/** "Showing 1–24 candidates within 25 mi of Houston". */
+export const TALENT_SEARCH_RADIUS_SENTENCES: SearchRadiusSentences = {
+  exactScope: m.talentSearchRadius_exactScope,
+  exactScopeLast: m.talentSearchRadius_exactScopeLast,
+  exactScopeUncounted: m.talentSearchRadius_exactScopeUncounted,
+  exactEmpty: m.talentSearchRadius_exactEmpty,
+  withinScope: m.talentSearchRadius_withinScope,
+  withinScopeLast: m.talentSearchRadius_withinScopeLast,
+  withinScopeUncounted: m.talentSearchRadius_withinScopeUncounted,
+  withinEmpty: m.talentSearchRadius_withinEmpty,
+};
+
+/**
  * The results line of a city or locality listing, SEEK-style: "Showing 1–20
  * jobs within **25 mi ⌄** of Houston". Only the distance opens the menu,
  * which picks a preset distance or the place itself ("Showing 1–20 jobs in
@@ -39,6 +79,7 @@ export function SearchRadiusScope({
   within,
   defaultWithin,
   range,
+  sentences = JOB_SEARCH_RADIUS_SENTENCES,
   onWithinChange,
 }: {
   /** The place's short name, e.g. `Houston`. */
@@ -50,6 +91,8 @@ export function SearchRadiusScope({
   defaultWithin: number;
   /** The page's range, or `null` when the count is unknown. */
   range: ResultsRange | null;
+  /** The line's wording; job listings by default. */
+  sentences?: SearchRadiusSentences;
   /**
    * The new `within` URL value: a preset, `0` for the exact place, or
    * `undefined` for the default distance (the plain URL).
@@ -65,6 +108,7 @@ export function SearchRadiusScope({
     within,
     range,
     locale,
+    sentences,
   }).split(MENU_SLOT);
 
   return (
@@ -139,28 +183,30 @@ function sentence({
   within,
   range,
   locale,
+  sentences,
 }: {
   place: string;
   within: number | null;
   range: ResultsRange | null;
   locale: string;
+  sentences: SearchRadiusSentences;
 }): string {
   if (within === null) {
     if (range === null) {
-      return m.searchRadius_exactScopeUncounted({ exactPlace: MENU_SLOT });
+      return sentences.exactScopeUncounted({ exactPlace: MENU_SLOT });
     }
     if (range.count === 0) {
-      return m.searchRadius_exactEmpty({ exactPlace: MENU_SLOT });
+      return sentences.exactEmpty({ exactPlace: MENU_SLOT });
     }
     if (resultsLineKind(range) === 'lastPage') {
-      return m.searchRadius_exactScopeLast({
+      return sentences.exactScopeLast({
         to: range.to.toLocaleString(locale),
         count: range.count,
         countLabel: range.count.toLocaleString(locale),
         exactPlace: MENU_SLOT,
       });
     }
-    return m.searchRadius_exactScope({
+    return sentences.exactScope({
       from: range.from.toLocaleString(locale),
       to: range.to.toLocaleString(locale),
       count: range.count,
@@ -169,13 +215,13 @@ function sentence({
     });
   }
   if (range === null) {
-    return m.searchRadius_withinScopeUncounted({ distance: MENU_SLOT, place });
+    return sentences.withinScopeUncounted({ distance: MENU_SLOT, place });
   }
   if (range.count === 0) {
-    return m.searchRadius_withinEmpty({ distance: MENU_SLOT, place });
+    return sentences.withinEmpty({ distance: MENU_SLOT, place });
   }
   if (resultsLineKind(range) === 'lastPage') {
-    return m.searchRadius_withinScopeLast({
+    return sentences.withinScopeLast({
       to: range.to.toLocaleString(locale),
       count: range.count,
       countLabel: range.count.toLocaleString(locale),
@@ -183,7 +229,7 @@ function sentence({
       place,
     });
   }
-  return m.searchRadius_withinScope({
+  return sentences.withinScope({
     from: range.from.toLocaleString(locale),
     to: range.to.toLocaleString(locale),
     count: range.count,

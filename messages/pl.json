@@ -2586,6 +2586,82 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} kandydata {exactPlace}",
+        "countPlural=*": "Wyświetlanie kandydatów {from}–{to} {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} kandydata {exactPlace}",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} kandydatów {exactPlace}",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} kandydatów {exactPlace}",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} kandydata {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Wyświetlani kandydaci {exactPlace}",
+  "talentSearchRadius_exactEmpty": "Brak kandydatów {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {countLabel} kandydata w promieniu {distance} od {place}",
+        "countPlural=*": "Wyświetlanie kandydatów {from}–{to} w promieniu {distance} od {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Wyświetlanie {to} z {countLabel} kandydata w promieniu {distance} od {place}",
+        "countPlural=few": "Wyświetlanie {to} z {countLabel} kandydatów w promieniu {distance} od {place}",
+        "countPlural=many": "Wyświetlanie {to} z {countLabel} kandydatów w promieniu {distance} od {place}",
+        "countPlural=*": "Wyświetlanie {to} z {countLabel} kandydata w promieniu {distance} od {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Wyświetlani kandydaci w promieniu {distance} od {place}",
+  "talentSearchRadius_withinEmpty": "Brak kandydatów w promieniu {distance} od {place}",
   "talentSearch_retryLabel": "Ponów",
   "talentSearch_selectedProfileRegionLabel": "Wybrany profil",
   "talentSearch_skillLabel": "Umiejętność",

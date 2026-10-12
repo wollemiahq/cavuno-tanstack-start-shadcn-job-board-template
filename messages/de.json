@@ -2490,6 +2490,78 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Kandidat {exactPlace}",
+        "countPlural=*": "Zeige {from}–{to} Kandidaten {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Kandidat {exactPlace}",
+        "countPlural=*": "Zeige {to} von {countLabel} Kandidaten {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Angezeigt: Kandidaten {exactPlace}",
+  "talentSearchRadius_exactEmpty": "Keine Kandidaten {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {countLabel} Kandidat im Umkreis von {distance} um {place}",
+        "countPlural=*": "Zeige {from}–{to} Kandidaten im Umkreis von {distance} um {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zeige {to} von {countLabel} Kandidat im Umkreis von {distance} um {place}",
+        "countPlural=*": "Zeige {to} von {countLabel} Kandidaten im Umkreis von {distance} um {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Angezeigt: Kandidaten im Umkreis von {distance} um {place}",
+  "talentSearchRadius_withinEmpty": "Keine Kandidaten im Umkreis von {distance} um {place}",
   "talentSearch_retryLabel": "Erneut versuchen",
   "talentSearch_selectedProfileRegionLabel": "Ausgewähltes Profil",
   "talentSearch_skillLabel": "Fähigkeit",

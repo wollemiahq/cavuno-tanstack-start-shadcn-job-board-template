@@ -2490,6 +2490,78 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} kandidaat {exactPlace}",
+        "countPlural=*": "{from}–{to} kandidaten {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} kandidaat {exactPlace}",
+        "countPlural=*": "{to} van {countLabel} kandidaten {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Je ziet kandidaten {exactPlace}",
+  "talentSearchRadius_exactEmpty": "Geen kandidaten {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} kandidaat binnen {distance} van {place}",
+        "countPlural=*": "{from}–{to} kandidaten binnen {distance} van {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} kandidaat binnen {distance} van {place}",
+        "countPlural=*": "{to} van {countLabel} kandidaten binnen {distance} van {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Je ziet kandidaten binnen {distance} van {place}",
+  "talentSearchRadius_withinEmpty": "Geen kandidaten binnen {distance} van {place}",
   "talentSearch_retryLabel": "Opnieuw proberen",
   "talentSearch_selectedProfileRegionLabel": "Geselecteerd profiel",
   "talentSearch_skillLabel": "Vaardigheid",
