@@ -1,3 +1,4 @@
+import { BoardApiError } from '@cavuno/board';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -80,7 +81,6 @@ function envelope(
     object: 'list',
     url: '/v1/blog/posts',
     data,
-    count: 40,
     hasMore: true,
     nextCursor: 'next-page',
     ...extra,
@@ -90,8 +90,8 @@ function envelope(
 const ids = (posts: { id: string }[] | null) => posts?.map((p) => p.id);
 
 /** A Board API error as the SDK raises it. */
-function apiError(code: string) {
-  return Object.assign(new Error(code), { code });
+function apiError(code: string, status = 400) {
+  return new BoardApiError({ status, code, message: code, raw: null });
 }
 
 beforeEach(() => {
@@ -132,6 +132,7 @@ describe('blog archives list featured posts first (sort=featured)', () => {
     );
     expect(ids(first.page.data)).toEqual(['f1', 'c1', 'c2']);
     expect(first.page.nextCursor).toBe('next-page');
+    expect(first.page.restarted).toBe(false);
 
     await getBlogIndexPage({ data: { cursor: 'next-page' } });
     expect(mocks.postsList).toHaveBeenLastCalledWith(
@@ -184,6 +185,8 @@ describe('blog archives list featured posts first (sort=featured)', () => {
     const result = await getBlogIndexPage({ data: { cursor: 'stale' } });
 
     expect(ids(result.page.data)).toEqual(['f1', 'c1']);
+    // The page is page one, so the route offers no Previous.
+    expect(result.page.restarted).toBe(true);
     expect(mocks.postsList).toHaveBeenLastCalledWith(
       { cursor: undefined, limit: BLOG_PAGE_SIZE, sort: 'featured' },
       { headers: {} },
@@ -193,7 +196,7 @@ describe('blog archives list featured posts first (sort=featured)', () => {
 
 describe('the stale-cursor fallback only covers stale cursors', () => {
   it('lets any other error on a later page through, without a retry', async () => {
-    mocks.postsList.mockRejectedValue(apiError('rate_limited'));
+    mocks.postsList.mockRejectedValue(apiError('rate_limited', 429));
 
     await expect(
       getBlogIndexPage({ data: { cursor: 'next-page' } }),
@@ -225,6 +228,5 @@ describe('homepage blog strip: featured first, three posts', () => {
       { headers: {} },
     );
     expect(ids(result.posts)).toEqual(['f1', 'c1', 'c2']);
-    expect(result.postsCount).toBe(40);
   });
 });

@@ -180,7 +180,7 @@ function AuthorPage() {
         }}
         pagination={
           <CursorPagination
-            hasPrevious={Boolean(search.cursor)}
+            hasPrevious={Boolean(search.cursor) && !posts.restarted}
             hasNext={Boolean(posts.hasMore && posts.nextCursor)}
             nextHref={
               posts.nextCursor

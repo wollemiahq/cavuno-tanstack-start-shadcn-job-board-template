@@ -2,7 +2,7 @@
  * Route-family-owned server boundary for blog archive + post + tag + author.
  * Head meta + JSON-LD live here so route modules drop `@cavuno/board/seo`.
  */
-import { isNotFound } from '@cavuno/board';
+import { isBoardApiError, isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   blogAuthorPath,
@@ -54,32 +54,13 @@ async function seoBase() {
   };
 }
 
-type BoardErrorLike = {
-  code?: string;
-};
-
-function isBlogDisabled<T>(error: T): boolean {
-  if (error === null || error === undefined || Object(error) !== error) {
-    return false;
-  }
-  // SAFETY: Caught Board API errors may expose a string `code`; this guard
-  // only reads that optional field and treats all other shapes as non-blog errors.
-  return (error as BoardErrorLike).code === 'blog_disabled';
-}
-
-function isInvalidCursor<T>(error: T): boolean {
-  if (error === null || error === undefined || Object(error) !== error) {
-    return false;
-  }
-  // SAFETY: as in `isBlogDisabled`, only the optional string `code` is read.
-  return (error as BoardErrorLike).code === 'pagination_invalid_cursor';
-}
-
 const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   try {
     return await read();
   } catch (error) {
-    if (isBlogDisabled(error)) throw notFound();
+    if (isBoardApiError(error) && error.code === 'blog_disabled') {
+      throw notFound();
+    }
     throw error;
   }
 };
@@ -106,9 +87,16 @@ async function readArchivePage(
       ),
     );
   try {
-    return await read(cursor);
+    return { ...(await read(cursor)), restarted: false };
   } catch (error) {
-    if (cursor && isInvalidCursor(error)) return read(undefined);
+    if (
+      cursor &&
+      isBoardApiError(error) &&
+      error.code === 'pagination_invalid_cursor'
+    ) {
+      // Page one, so the route must not offer Previous.
+      return { ...(await read(undefined)), restarted: true };
+    }
     throw error;
   }
 }
@@ -127,7 +115,7 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
                 undefined,
                 { headers },
               ),
-            )
+            ).then((results) => ({ ...results, restarted: false }))
           : readArchivePage({}, data.cursor, headers),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
           () => null,
