@@ -378,6 +378,21 @@ these values.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template)
 
+### Use the Workers Paid plan
+
+Every uncached page is server-rendered, which takes roughly 10–30 ms of CPU
+per request, more on a freshly started Worker. Cached pages cost almost
+nothing, but crawlers mostly request pages that are not in the cache. The
+Workers Free plan allows
+[10 ms of CPU per request](https://developers.cloudflare.com/workers/platform/limits/#cpu-time),
+so on it many rendered pages fail with Cloudflare's error 1102 ("Worker
+exceeded resource limits"), shown as `Exceeded CPU Time Limits` under the
+Worker's **Metrics**. The
+[Workers Paid plan](https://developers.cloudflare.com/workers/platform/pricing/)
+($5/month) raises the limit to 30 seconds per request by default and includes
+30 million CPU milliseconds a month, enough for well over a million uncached
+pages.
+
 ---
 
 ## Verify
