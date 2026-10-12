@@ -4,19 +4,12 @@
  * target, else 404s. Lowest-priority route: only matches a path no other route
  * claims (the hosted catch-all behaves the same).
  */
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { resolveRedirect } from '../server/queries';
+import { createCatchAllLoader } from './-catch-all-loader';
 
 export const Route = createFileRoute('/$')({
-  loader: async ({ params }) => {
-    const path = `/${params._splat ?? ''}`;
-    const { target } = await resolveRedirect({ data: { path } });
-    if (target) {
-      // 308 permanent — matches the hosted `permanentRedirect(target)`.
-      throw redirect({ href: target, statusCode: 308 });
-    }
-    throw notFound();
-  },
+  loader: createCatchAllLoader(resolveRedirect),
   component: () => null,
 });
