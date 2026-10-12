@@ -136,8 +136,8 @@ const BUDGETS = {
     // paging and empty states, and the list-membership Save menu. Measured
     // 177.6 KiB raw / 61.3 KiB gzip (181,847 / 62,783 B) against 170.5 / 59.2
     // on main; the pipeline-stage join was split out of the kanban
-    // view-model so it does not drag the kanban's copy along. Pending
-    // operator acceptance; budget is the measurement plus ~3%.
+    // view-model so it does not drag the kanban's copy along. The operator
+    // accepted this cost (2026-10-12); budget is the measurement plus ~3%.
     '/talent/': { raw: 187_500, gzip: 64_700 },
   },
 };
