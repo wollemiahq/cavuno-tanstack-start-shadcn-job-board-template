@@ -82,6 +82,7 @@ export function TalentSaveToJob({
   candidateBoardUserId,
   memberListIds,
   savedHint = false,
+  membershipsFailed = false,
   currentFilters = {},
   presentation = 'default',
   onOpen,
@@ -101,6 +102,8 @@ export function TalentSaveToJob({
   memberListIds?: readonly string[];
   /** Fill the bookmark before memberships load (e.g. in a Saved view). */
   savedHint?: boolean;
+  /** Reading the person's memberships failed; reopening retries. */
+  membershipsFailed?: boolean;
   /** Filters a saved search started from here keeps. */
   currentFilters?: TalentListFilters;
   presentation?: 'default' | 'icon';
@@ -113,7 +116,10 @@ export function TalentSaveToJob({
   saveCandidate?: SaveSourcedCandidateFn;
   createList?: CreateTalentListFn;
 }) {
-  /** Optimistic ticks, by list id, until the server confirms. */
+  /**
+   * Optimistic ticks, by list id, until the server answers; then the
+   * parent's `memberListIds` is the only truth.
+   */
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const [pendingIds, setPendingIds] = useState<string[]>([]);
   const [shortlistedJobIds, setShortlistedJobIds] = useState<string[]>([]);
@@ -161,6 +167,14 @@ export function TalentSaveToJob({
       );
   }
 
+  function clearOverride(listId: string) {
+    setOverrides((current) => {
+      const next = { ...current };
+      delete next[listId];
+      return next;
+    });
+  }
+
   function toggleList(listId: string, saved: boolean) {
     if (pendingIds.includes(listId)) return;
     setOverrides((current) => ({ ...current, [listId]: saved }));
@@ -175,18 +189,15 @@ export function TalentSaveToJob({
     track(
       listId,
       request,
-      (outcome) =>
+      (outcome) => {
         onMembershipChange?.({
           listId,
           saved,
           created: outcome.ok ? outcome.created : undefined,
-        }),
-      () =>
-        setOverrides((current) => {
-          const next = { ...current };
-          delete next[listId];
-          return next;
-        }),
+        });
+        clearOverride(listId);
+      },
+      () => clearOverride(listId),
     );
   }
 
@@ -202,8 +213,19 @@ export function TalentSaveToJob({
     );
   }
 
-  const label = filled ? m.talentSave_savedLabel() : m.talentSave_saveLabel();
+  const label = hasLists
+    ? filled
+      ? m.talentSave_savedLabel()
+      : m.talentSave_saveLabel()
+    : filled
+      ? m.talentSave_shortlistedLabel()
+      : m.talentSave_shortlistLabel();
   const Icon = pending ? LoaderCircle : Bookmark;
+  const notice =
+    error ??
+    (hasLists && memberListIds === undefined && membershipsFailed
+      ? m.talentSave_membershipsError()
+      : null);
 
   return (
     <div
@@ -280,12 +302,12 @@ export function TalentSaveToJob({
               </DropdownMenuItem>
             </>
           )}
-          {error ? (
+          {notice ? (
             <p
               role="alert"
               className="text-destructive max-w-64 px-2 py-1.5 text-xs"
             >
-              {error}
+              {notice}
             </p>
           ) : null}
         </DropdownMenuContent>

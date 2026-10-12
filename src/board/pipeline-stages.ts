@@ -47,8 +47,11 @@ export function visibleStages(
     }));
 }
 
-export /** The visible stage an applicant's card sits in (review absorbs unknowns). */
-function columnFor(applicantStage: string, stages: PipelineStageVM[]): string {
+/** The visible stage an applicant's card sits in (review absorbs unknowns). */
+export function columnFor(
+  applicantStage: string,
+  stages: PipelineStageVM[],
+): string {
   return (
     stages.find((stage) => belongsToStage(applicantStage, stage))?.id ??
     stages.find((stage) => stage.systemStage === 'review')?.id ??
@@ -58,20 +61,24 @@ function columnFor(applicantStage: string, stages: PipelineStageVM[]): string {
 }
 
 /**
- * Which visible stage each candidate sits in on one job's pipeline, keyed by
- * board-user id — the join a talent list linked to the job filters by.
+ * The applicant `stage` tokens the API filters by to read one visible
+ * stage's applicants, matching `columnFor`: the column that absorbs unknowns
+ * (review, else the first) also takes `applied` and every hidden stage.
+ * `null` when the id is not a visible stage.
  */
-export function candidatePipelineStages(
-  pipeline: Pick<EmployerPipeline, 'stages' | 'applicants'>,
-) {
+export function stageFilterTokens(
+  pipeline: Pick<EmployerPipeline, 'stages'>,
+  stageId: string,
+): string[] | null {
   const stages = visibleStages(pipeline);
-  const stageByCandidate = new Map<string, string>();
-  for (const applicant of pipeline.applicants) {
-    if (!applicant.candidateBoardUserId) continue;
-    stageByCandidate.set(
-      applicant.candidateBoardUserId,
-      columnFor(applicant.stage, stages),
-    );
-  }
-  return { stages, stageByCandidate };
+  const target = stages.find((stage) => stage.id === stageId);
+  if (!target) return null;
+  const own = target.systemStage ?? target.id;
+  const absorber =
+    stages.find((stage) => stage.systemStage === 'review') ?? stages[0];
+  if (target !== absorber) return [own];
+  const hidden = pipeline.stages
+    .filter((stage) => stage.hidden)
+    .map((stage) => stage.systemStage ?? stage.id);
+  return [...new Set([own, 'applied', 'review', ...hidden])];
 }

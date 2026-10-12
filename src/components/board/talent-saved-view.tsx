@@ -4,6 +4,8 @@ import { useId, useMemo } from 'react';
 
 import { m } from '../../paraglide/messages';
 
+import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
@@ -13,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const ANY_STAGE = '__any__';
 
@@ -45,27 +46,30 @@ export function TalentSavedViewControls({
 }) {
   return (
     <div data-slot="talent-saved-view" className="flex items-center gap-2">
-      <ToggleGroup
-        variant="outline"
-        spacing={0}
-        aria-label={m.talentSaved_showLabel()}
-        value={[saved ? 'saved' : 'all']}
-        onValueChange={(values) => {
-          const next = values[0];
-          // Pressing the active option again would clear the group; keep it.
-          if (next === undefined || (next === 'saved') === saved) return;
-          onSavedChange(next === 'saved');
-        }}
-      >
-        <ToggleGroupItem value="all">
+      <ButtonGroup aria-label={m.talentSaved_showLabel()}>
+        <Button
+          type="button"
+          variant={saved ? 'outline' : 'default'}
+          aria-pressed={!saved}
+          onClick={() => {
+            if (saved) onSavedChange(false);
+          }}
+        >
           {m.talentSaved_allOption()}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="saved">
+        </Button>
+        <Button
+          type="button"
+          variant={saved ? 'default' : 'outline'}
+          aria-pressed={saved}
+          onClick={() => {
+            if (!saved) onSavedChange(true);
+          }}
+        >
           {m.talentSaved_savedOption({
             count: savedCount.toLocaleString(language),
           })}
-        </ToggleGroupItem>
-      </ToggleGroup>
+        </Button>
+      </ButtonGroup>
       {saved && stages.length > 0 ? (
         <StageSelect stages={stages} stage={stage} onChange={onStageChange} />
       ) : null}

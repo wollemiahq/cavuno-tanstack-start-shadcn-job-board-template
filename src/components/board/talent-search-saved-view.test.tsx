@@ -37,10 +37,26 @@ vi.mock('@/server/employers', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/employers')>()),
   ...server,
 }));
+/** The root-session fields the talent page reads. */
+type TestSession = {
+  ready: boolean;
+  user: { emailVerified: boolean } | null;
+  employerCompanies: Array<{
+    status: string;
+    company: { slug: string };
+  }> | null;
+};
+type SessionRef = { current: TestSession | null };
+const session = vi.hoisted((): SessionRef => ({
+  current: null,
+}));
+const employerSession: TestSession = {
+  ready: true,
+  user: { emailVerified: true },
+  employerCompanies: [{ status: 'approved', company: { slug: 'acme' } }],
+};
 vi.mock('@/components/root-session', () => ({
-  useRootSession: () => ({
-    employerCompanies: [{ status: 'approved', company: { slug: 'acme' } }],
-  }),
+  useRootSession: () => session.current,
 }));
 
 function candidate(id: string, name: string): TalentDirectoryEntry {
@@ -90,6 +106,7 @@ function member(entry: TalentDirectoryEntry) {
 const ada = candidate('bu_ada', 'Ada Lovelace');
 
 beforeEach(() => {
+  session.current = employerSession;
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn().mockReturnValue({
@@ -255,5 +272,65 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
     expect(
       screen.queryByRole('button', { name: m.talentSaved_showAllAction() }),
     ).toBeNull();
+  });
+
+  it('opens the directory when the saved search is not this viewer’s', async () => {
+    const router = renderSaved(
+      '/talent/?list=list_gone&saved=1&stage=stage_short',
+    );
+
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({ list: 'list_gone' }),
+    );
+    expect(
+      await screen.findByText(m.talentDirectory_emptyText()),
+    ).toBeVisible();
+    expect(server.listSavedPeople).not.toHaveBeenCalled();
+  });
+
+  it('opens the directory for a Saved link when the viewer is no employer', async () => {
+    session.current = { ready: true, user: null, employerCompanies: null };
+    const router = renderSaved('/talent/?list=list_berlin&saved=1');
+
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({ list: 'list_berlin' }),
+    );
+    expect(server.getEmployerTalentWorkspace).not.toHaveBeenCalled();
+  });
+
+  it('moves a page past the end back to the last page', async () => {
+    server.listSavedPeople.mockImplementation(({ data }) =>
+      Promise.resolve(
+        data.offset === 0
+          ? { data: [member(ada)], count: 1, total: 3 }
+          : { data: [], count: 1, total: 3 },
+      ),
+    );
+    const router = renderSaved('/talent/?list=list_berlin&saved=1&page=3');
+
+    expect(await screen.findByText('Ada Lovelace')).toBeVisible();
+    expect(router.state.location.search).toEqual({
+      list: 'list_berlin',
+      saved: true,
+    });
+    expect(screen.queryByText(m.talentSaved_noMatchTitle())).toBeNull();
+  });
+
+  it('drops a stage the linked job does not have', async () => {
+    const router = renderSaved(
+      '/talent/?list=list_berlin&saved=1&stage=stage_deleted',
+      'job_a',
+    );
+
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({
+        list: 'list_berlin',
+        saved: true,
+      }),
+    );
+    await screen.findByText('Ada Lovelace');
+    for (const [call] of server.listSavedPeople.mock.calls) {
+      expect(call.data.stage).toBeUndefined();
+    }
   });
 });

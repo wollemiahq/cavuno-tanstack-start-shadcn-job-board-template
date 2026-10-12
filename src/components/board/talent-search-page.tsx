@@ -3,6 +3,7 @@ import {
   cloneElement,
   isValidElement,
   useEffect,
+  useMemo,
   useState,
   type ReactElement,
   type ReactNode,
@@ -14,10 +15,7 @@ import { Bookmark, Users } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 import { ListingAdResults } from './listing-ad-results';
 
-import {
-  candidatePipelineStages,
-  type PipelineStageVM,
-} from '@/board/pipeline-stages';
+import { visibleStages, type PipelineStageVM } from '@/board/pipeline-stages';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   talentCardSelectionKey,
@@ -152,7 +150,10 @@ export function TalentSearchPage({
   const page = clampPage(requestedPage, pageSize);
   const rails = useListingAdRails(ads, startAd, endAd);
   const navigate = useNavigate({ from: '/talent/' });
-  const { employerCompanies } = useRootSession();
+  const { employerCompanies, ready: sessionReady, user } = useRootSession();
+  /** Whether the viewer's employer companies are known (none, or loaded). */
+  const employerKnown =
+    sessionReady && (!user?.emailVerified || employerCompanies !== null);
   const employerSlug = (employerCompanies ?? []).find(
     (row) => row.status === 'approved' && row.company.slug,
   )?.company.slug;
@@ -160,11 +161,16 @@ export function TalentSearchPage({
     slug: string;
     jobs: Array<{ id: string; title: string }>;
   }>();
+  const [workspaceFailed, setWorkspaceFailed] = useState(false);
   const [lists, setLists] = useState<TalentListRecord[]>([]);
   /** The lists each candidate is saved to, by board-user id, once read. */
   const [memberships, setMemberships] = useState<
     Record<string, readonly string[]>
   >({});
+  /** Candidates whose memberships could not be read (retried on reopen). */
+  const [membershipsFailed, setMembershipsFailed] = useState<readonly string[]>(
+    [],
+  );
   const [savedResult, setSavedResult] = useState<SavedResult | null>(null);
   const [savedReload, setSavedReload] = useState(0);
   const [linkedStages, setLinkedStages] = useState<{
@@ -185,7 +191,9 @@ export function TalentSearchPage({
         setWorkspace({ slug: employerSlug, jobs });
         setLists(result.lists.data ?? []);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setWorkspaceFailed(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -219,9 +227,69 @@ export function TalentSearchPage({
 
   // ── Saved view: the open list's saved people, filtered like /talent ──────
   const savedRequested = Boolean(search.saved && search.list);
+  /** The open lists are known (or never will be: no employer, or failed). */
+  const listsSettled =
+    employerKnown && (!employerSlug || Boolean(workspace) || workspaceFailed);
   const savedView = savedRequested && Boolean(selectedList);
+  /** `?saved=1` while the lists that could resolve it still load. */
+  const savedListPending = savedRequested && !listsSettled;
+  const savedMode = savedView || savedListPending;
+  useEffect(() => {
+    // A Saved view of a list this viewer cannot open is just the directory.
+    if (!savedRequested || !listsSettled || selectedList) return;
+    void navigate({
+      replace: true,
+      search: (previous) => ({
+        ...previous,
+        saved: undefined,
+        stage: undefined,
+      }),
+    });
+  }, [savedRequested, listsSettled, selectedList, navigate]);
+  const linkedJobForStages = savedView ? selectedList?.jobId : null;
+  useEffect(() => {
+    if (!workspace || !linkedJobForStages) return;
+    let cancelled = false;
+    void getPipeline({
+      data: { slug: workspace.slug, job: linkedJobForStages },
+    })
+      .then((pipeline) => {
+        if (cancelled) return;
+        setLinkedStages({
+          jobId: linkedJobForStages,
+          stages: visibleStages(pipeline),
+        });
+      })
+      .catch(() => {
+        // No stages to offer; a `?stage=` is then cleared below.
+        if (!cancelled) {
+          setLinkedStages({ jobId: linkedJobForStages, stages: [] });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [linkedJobForStages, workspace]);
+  const stagesLoaded =
+    !linkedJobForStages || linkedStages?.jobId === linkedJobForStages;
+  const stages =
+    linkedJobForStages && stagesLoaded && linkedStages
+      ? linkedStages.stages
+      : [];
+  const stage = stages.some((row) => row.id === search.stage)
+    ? search.stage
+    : undefined;
+  const staleStage =
+    savedView && stagesLoaded && Boolean(search.stage) && !stage;
+  useEffect(() => {
+    if (!staleStage) return;
+    void navigate({
+      replace: true,
+      search: (previous) => ({ ...previous, stage: undefined }),
+    });
+  }, [staleStage, navigate]);
   const savedRequestKey =
-    savedView && workspace && selectedList
+    savedView && workspace && selectedList && (!search.stage || stagesLoaded)
       ? JSON.stringify({
           slug: workspace.slug,
           listId: selectedList.id,
@@ -229,8 +297,8 @@ export function TalentSearchPage({
           offset: (page - 1) * pageSize,
           limit: pageSize,
           stage:
-            search.stage && selectedList.jobId
-              ? { job: selectedList.jobId, stageId: search.stage }
+            stage && selectedList.jobId
+              ? { job: selectedList.jobId, stageId: stage }
               : undefined,
           reload: savedReload,
         } satisfies SavedRequest & { reload: number })
@@ -265,29 +333,6 @@ export function TalentSearchPage({
       cancelled = true;
     };
   }, [savedRequestKey]);
-  const linkedJobForStages = savedView ? selectedList?.jobId : null;
-  useEffect(() => {
-    if (!workspace || !linkedJobForStages) return;
-    let cancelled = false;
-    void getPipeline({
-      data: { slug: workspace.slug, job: linkedJobForStages },
-    })
-      .then((pipeline) => {
-        if (cancelled) return;
-        setLinkedStages({
-          jobId: linkedJobForStages,
-          stages: candidatePipelineStages(pipeline).stages,
-        });
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [linkedJobForStages, workspace]);
-  const stages =
-    linkedJobForStages && linkedStages?.jobId === linkedJobForStages
-      ? linkedStages.stages
-      : [];
   // While the next page loads, keep the last one on screen rather than
   // flashing an empty state.
   const savedShown =
@@ -296,10 +341,31 @@ export function TalentSearchPage({
     (savedResult.status === 'ready' || savedResult.key === savedRequestKey)
       ? savedResult
       : null;
-  const savedLoading =
-    (savedRequested && !selectedList && Boolean(employerSlug) && !workspace) ||
-    (savedView && savedResult?.key !== savedRequestKey);
   const savedPage = savedShown?.status === 'ready' ? savedShown.result : null;
+  /** A page past the last one (people removed, or an old link). */
+  const savedLastPage =
+    savedView &&
+    savedShown?.key === savedRequestKey &&
+    savedPage &&
+    savedPage.count > 0 &&
+    savedPage.data.length === 0
+      ? Math.ceil(savedPage.count / pageSize)
+      : null;
+  useEffect(() => {
+    if (savedLastPage === null) return;
+    void navigate({
+      replace: true,
+      search: (previous) => ({
+        ...previous,
+        page: savedLastPage > 1 ? savedLastPage : undefined,
+        selectedTalent: undefined,
+      }),
+    });
+  }, [savedLastPage, navigate]);
+  const savedLoading =
+    savedListPending ||
+    savedLastPage !== null ||
+    (savedView && savedResult?.key !== savedRequestKey);
 
   function showSaved(nextSaved: boolean) {
     if (!selectedList) return;
@@ -355,6 +421,9 @@ export function TalentSearchPage({
 
   function loadMemberships(candidateBoardUserId: string) {
     if (!workspace || memberships[candidateBoardUserId]) return;
+    setMembershipsFailed((current) =>
+      current.filter((id) => id !== candidateBoardUserId),
+    );
     void listTalentListMemberships({
       data: { slug: workspace.slug, candidate: candidateBoardUserId },
     })
@@ -370,7 +439,9 @@ export function TalentSearchPage({
               },
         ),
       )
-      .catch(() => undefined);
+      .catch(() =>
+        setMembershipsFailed((current) => [...current, candidateBoardUserId]),
+      );
   }
 
   const currentHref = useLocation({ select: (location) => location.href });
@@ -390,13 +461,16 @@ export function TalentSearchPage({
       pickCustomFieldSearch(search),
     ).length > 0,
   );
-  const candidateVms = savedRequested
-    ? (savedPage?.data ?? []).map((member) =>
+  const savedVms = useMemo(
+    () =>
+      (savedPage?.data ?? []).map((member) =>
         toTalentCardVM(member.candidate, getTalentSearchLabels(), {
           profileUnlocks,
         }),
-      )
-    : candidates;
+      ),
+    [savedPage, profileUnlocks],
+  );
+  const candidateVms = savedMode ? savedVms : candidates;
   function saveControl(
     candidateBoardUserId: string,
     presentation: 'icon' | 'default',
@@ -404,12 +478,14 @@ export function TalentSearchPage({
     if (!workspace) return null;
     return (
       <TalentSaveToJob
+        key={candidateBoardUserId}
         presentation={presentation}
         slug={workspace.slug}
         jobs={workspace.jobs}
         lists={lists}
         candidateBoardUserId={candidateBoardUserId}
         memberListIds={memberships[candidateBoardUserId]}
+        membershipsFailed={membershipsFailed.includes(candidateBoardUserId)}
         savedHint={savedView}
         currentFilters={talentSearchToListFilters(search)}
         onOpen={() => loadMemberships(candidateBoardUserId)}
@@ -454,7 +530,7 @@ export function TalentSearchPage({
   // The talent directory is offset-paginated with a total `count`, so the
   // description line under the heading reports the exact "Showing X–Y of N"
   // range — the same honest range as Jobs and the companies browse index.
-  const resultCount = savedRequested ? (savedPage?.count ?? 0) : count;
+  const resultCount = savedMode ? (savedPage?.count ?? 0) : count;
   const resultPage = page;
   const resultPageSize = pageSize;
   const hiddenSaved =
@@ -529,7 +605,7 @@ export function TalentSearchPage({
                     savedCount={selectedList.memberCount}
                     language={language}
                     stages={stages}
-                    stage={search.stage}
+                    stage={stage}
                     onSavedChange={showSaved}
                     onStageChange={(stage) =>
                       void navigate({
@@ -583,11 +659,12 @@ export function TalentSearchPage({
               list={
                 <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
                   {resultsBar}
-                  {savedRequested && !savedShown && savedLoading ? (
+                  {savedMode &&
+                  ((!savedShown && savedLoading) || savedLastPage !== null) ? (
                     <SavedPeoplePending />
                   ) : (
                     <Empty className="min-h-[calc(100dvh-16rem)] border-0">
-                      {savedRequested ? (
+                      {savedMode ? (
                         <SavedPeopleEmpty
                           state={
                             savedShown?.status === 'error' || !savedPage
@@ -636,7 +713,7 @@ export function TalentSearchPage({
               list={
                 <SearchResultsList
                   ref={selection.listRef}
-                  aria-busy={savedRequested && savedLoading ? true : undefined}
+                  aria-busy={savedMode && savedLoading ? true : undefined}
                   label={m.talentSearch_resultsRegionLabel()}
                   scrollRestorationId="talent-search-results"
                 >
@@ -665,7 +742,7 @@ export function TalentSearchPage({
                     </ListingAdResults>
                   </InPlaceListingSelect>
 
-                  {savedRequested && !savedPage ? null : (
+                  {savedMode && !savedPage ? null : (
                     <ListingPagination
                       compact
                       page={page}

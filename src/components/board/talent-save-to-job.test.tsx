@@ -1,17 +1,23 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { m } from '../../paraglide/messages';
-import { TalentSaveToJob } from './talent-save-to-job';
+import {
+  TalentSaveToJob,
+  type TalentListMembershipChange,
+} from './talent-save-to-job';
 
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { TalentListRecord } from '@/server/employers';
@@ -185,6 +191,89 @@ describe('TalentSaveToJob', () => {
     ).toHaveAttribute('aria-checked', 'false');
   });
 
+  it('follows the parent’s memberships once a change is confirmed', async () => {
+    addMember.mockResolvedValue({
+      ok: true,
+      data: { id: 'tlm_1', object: 'talent_list_member', created: true },
+    });
+    removeMember.mockResolvedValue({ ok: true, data: null });
+    // A card and the profile pane: two bookmarks over one parent state.
+    function TwoBookmarks() {
+      const [memberListIds, setMemberListIds] = useState<readonly string[]>([]);
+      const onMembershipChange = (change: TalentListMembershipChange) =>
+        setMemberListIds((current) =>
+          change.saved
+            ? [...current, change.listId]
+            : current.filter((id) => id !== change.listId),
+        );
+      return (
+        <>
+          {['card', 'pane'].map((slot) => (
+            <div key={slot} data-testid={slot}>
+              <TalentSaveToJob
+                slug="acme"
+                jobs={jobs}
+                lists={lists}
+                candidateBoardUserId="bu_ada"
+                memberListIds={memberListIds}
+                onMembershipChange={onMembershipChange}
+                addMember={addMember}
+                removeMember={removeMember}
+              />
+            </div>
+          ))}
+        </>
+      );
+    }
+    render(<TwoBookmarks />);
+    const bookmark = (slot: string, state: 'save' | 'saved') =>
+      within(screen.getByTestId(slot)).getByRole('button', {
+        name:
+          state === 'saved'
+            ? m.talentSave_savedLabel()
+            : m.talentSave_saveLabel(),
+      });
+
+    fireEvent.click(bookmark('card', 'save'));
+    fireEvent.click(
+      await screen.findByRole('menuitemcheckbox', {
+        name: 'Backend engineers',
+      }),
+    );
+    await waitFor(() => expect(bookmark('pane', 'saved')).toBeVisible());
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: 'Escape',
+    });
+
+    fireEvent.click(bookmark('pane', 'saved'));
+    fireEvent.click(
+      await screen.findByRole('menuitemcheckbox', {
+        name: 'Backend engineers',
+      }),
+    );
+    await waitFor(() => expect(bookmark('card', 'save')).toBeVisible());
+    expect(removeMember).toHaveBeenCalledTimes(1);
+  });
+
+  it('says so when the person’s saved searches could not be read', async () => {
+    render(
+      <TalentSaveToJob
+        slug="acme"
+        jobs={jobs}
+        lists={lists}
+        candidateBoardUserId="bu_ada"
+        membershipsFailed
+        addMember={addMember}
+        removeMember={removeMember}
+      />,
+    );
+
+    openMenu();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.talentSave_membershipsError(),
+    );
+  });
+
   it('waits for memberships before letting a saved search be toggled', async () => {
     render(
       <TalentSaveToJob
@@ -222,7 +311,9 @@ describe('TalentSaveToJob', () => {
       />,
     );
 
-    openMenu();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentSave_shortlistLabel() }),
+    );
     expect(
       await screen.findByRole('menuitem', { name: m.talentLists_newList() }),
     ).toBeInTheDocument();
@@ -238,7 +329,7 @@ describe('TalentSaveToJob', () => {
     expect(addMember).not.toHaveBeenCalled();
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: m.talentSave_savedLabel() }),
+        screen.getByRole('button', { name: m.talentSave_shortlistedLabel() }),
       ).toBeInTheDocument(),
     );
   });

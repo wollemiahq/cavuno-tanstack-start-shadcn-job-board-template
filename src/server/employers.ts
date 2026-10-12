@@ -1,7 +1,6 @@
 import {
   isBoardApiError,
   isNotFound,
-  paginate,
   type AcceptCompanyMemberInviteBody,
   type ConfirmWorkEmailBody,
   type CreateCompanyBody,
@@ -12,8 +11,6 @@ import {
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
   type SendWorkEmailBody,
-  type TalentListMember,
-  type TalentListMembersQuery,
   type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
@@ -46,12 +43,15 @@ import {
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
 import { withCatalogFeatures } from './post-plans';
+import {
+  readSavedPeopleInStage,
+  type SavedPeoplePage,
+} from './saved-people-read';
 
 import {
   parseJobFormViolations,
   type JobFormViolation,
 } from '@/board/job-form';
-import { candidatePipelineStages } from '@/board/pipeline-stages';
 import { searchString } from '@/lib/pagination';
 import type {
   SavedPeopleFilters,
@@ -797,29 +797,11 @@ export const deleteTalentList = createServerFn({ method: 'POST' })
 
 // ── Saved people on a talent list (ADR-0142) ────────────────────────────────
 
-/** Directory filters a "Saved" view runs over a list's saved people. */
-export type SavedPeopleQuery = Omit<
-  TalentListMembersQuery,
-  'cursor' | 'offset' | 'limit'
->;
-
-/** A list holds at most 500 people; the API pages them 50 at a time. */
-const SAVED_PEOPLE_CAP = 500;
-const SAVED_PEOPLE_SCAN_PAGE = 50;
-
-export type SavedPeoplePage = {
-  data: TalentListMember[];
-  /** Saved people the filters (and stage) keep. */
-  count: number;
-  /** Every visible saved person, before filters. */
-  total: number;
-};
+export type { SavedPeoplePage };
 
 /**
  * One page of the people saved to a list, filtered like `/talent`. With a
- * `stage`, only those sitting in that stage of the linked job's pipeline:
- * the API cannot filter by stage, so every matching saved person (at most
- * 500) is read and joined to the pipeline here, then paged.
+ * `stage`, only those sitting in that stage of the linked job's pipeline.
  */
 export const listSavedPeople = createServerFn({ method: 'GET' })
   .validator(
@@ -851,33 +833,20 @@ export const listSavedPeople = createServerFn({ method: 'GET' })
           total: page.total,
         };
       }
-      let total = 0;
-      const [pipeline, matches] = await Promise.all([
-        getBoard().me.companies.applicants.list(
-          data.slug,
-          { job: stage.job },
-          { headers },
-        ),
-        paginate(
-          async (query?: TalentListMembersQuery) => {
-            const page = await members.list(data.slug, data.listId, query, {
-              headers,
-            });
-            total = page.total;
-            return page;
-          },
-          { ...data.query, limit: SAVED_PEOPLE_SCAN_PAGE },
-        ).toArray({ limit: SAVED_PEOPLE_CAP }),
-      ]);
-      const { stageByCandidate } = candidatePipelineStages(pipeline);
-      const inStage = matches.filter(
-        (member) => stageByCandidate.get(member.candidate.id) === stage.stageId,
-      );
-      return {
-        data: inStage.slice(data.offset, data.offset + data.limit),
-        count: inStage.length,
-        total,
-      };
+      return readSavedPeopleInStage({
+        readPipeline: (query) =>
+          getBoard().me.companies.applicants.list(
+            data.slug,
+            { ...query, job: stage.job },
+            { headers },
+          ),
+        readMembers: (query) =>
+          members.list(data.slug, data.listId, query, { headers }),
+        query: data.query,
+        stageId: stage.stageId,
+        offset: data.offset,
+        limit: data.limit,
+      });
     }),
   );
 
