@@ -1,6 +1,7 @@
 import {
   isBoardApiError,
   isNotFound,
+  paginate,
   type AcceptCompanyMemberInviteBody,
   type ConfirmWorkEmailBody,
   type CreateCompanyBody,
@@ -11,6 +12,8 @@ import {
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
   type SendWorkEmailBody,
+  type TalentListMember,
+  type TalentListMembersQuery,
   type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
@@ -48,8 +51,12 @@ import {
   parseJobFormViolations,
   type JobFormViolation,
 } from '@/board/job-form';
+import { candidatePipelineStages } from '@/board/pipeline-stages';
 import { searchString } from '@/lib/pagination';
-import type { TalentListFilters } from '@/lib/talent-search';
+import type {
+  SavedPeopleFilters,
+  TalentListFilters,
+} from '@/lib/talent-search';
 
 export type ActionResult<T> =
   | { ok: true; data: T }
@@ -657,16 +664,6 @@ export const getPipeline = createServerFn({ method: 'GET' })
     ),
   );
 
-export type SourcedRailItem = {
-  id: string;
-  sourcedAt: number;
-  candidate: {
-    id: string;
-    displayName: string | null;
-    headline: string | null;
-  };
-};
-
 export const listEmployerJobs = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([verifiedBoardUserMiddleware])
@@ -675,19 +672,6 @@ export const listEmployerJobs = createServerFn({ method: 'GET' })
       getBoard().me.companies.jobs.list(data.slug, undefined, {
         headers: authedHeaders(context),
       }),
-    ),
-  );
-
-export const listSourcedCandidates = createServerFn({ method: 'GET' })
-  .validator((input: { slug: string; job: string }) => input)
-  .middleware([verifiedBoardUserMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, () =>
-      getBoard().me.companies.sourcedCandidates.list(
-        data.slug,
-        { job: data.job },
-        { headers: authedHeaders(context) },
-      ),
     ),
   );
 
@@ -719,6 +703,8 @@ export type TalentListRecord = {
   createdBy: string;
   createdAt: number;
   updatedAt: number;
+  /** People saved to this list (at most 500). */
+  memberCount: number;
 };
 
 export const listTalentLists = createServerFn({ method: 'GET' })
@@ -805,6 +791,148 @@ export const deleteTalentList = createServerFn({ method: 'POST' })
         .me.companies.talentLists.remove(data.slug, data.listId, {
           headers: authedHeaders(context),
         })
+        .then(() => null),
+    ),
+  );
+
+// ── Saved people on a talent list (ADR-0142) ────────────────────────────────
+
+/** Directory filters a "Saved" view runs over a list's saved people. */
+export type SavedPeopleQuery = Omit<
+  TalentListMembersQuery,
+  'cursor' | 'offset' | 'limit'
+>;
+
+/** A list holds at most 500 people; the API pages them 50 at a time. */
+const SAVED_PEOPLE_CAP = 500;
+const SAVED_PEOPLE_SCAN_PAGE = 50;
+
+export type SavedPeoplePage = {
+  data: TalentListMember[];
+  /** Saved people the filters (and stage) keep. */
+  count: number;
+  /** Every visible saved person, before filters. */
+  total: number;
+};
+
+/**
+ * One page of the people saved to a list, filtered like `/talent`. With a
+ * `stage`, only those sitting in that stage of the linked job's pipeline:
+ * the API cannot filter by stage, so every matching saved person (at most
+ * 500) is read and joined to the pipeline here, then paged.
+ */
+export const listSavedPeople = createServerFn({ method: 'GET' })
+  .validator(
+    (input: {
+      slug: string;
+      listId: string;
+      query: SavedPeopleFilters;
+      offset: number;
+      limit: number;
+      stage?: { job: string; stageId: string };
+    }) => input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async (): Promise<SavedPeoplePage> => {
+      const headers = authedHeaders(context);
+      const members = getBoard().me.companies.talentLists.members;
+      const stage = data.stage;
+      if (!stage) {
+        const page = await members.list(
+          data.slug,
+          data.listId,
+          { ...data.query, offset: data.offset, limit: data.limit },
+          { headers },
+        );
+        return {
+          data: page.data,
+          count: page.count ?? page.data.length,
+          total: page.total,
+        };
+      }
+      let total = 0;
+      const [pipeline, matches] = await Promise.all([
+        getBoard().me.companies.applicants.list(
+          data.slug,
+          { job: stage.job },
+          { headers },
+        ),
+        paginate(
+          async (query?: TalentListMembersQuery) => {
+            const page = await members.list(data.slug, data.listId, query, {
+              headers,
+            });
+            total = page.total;
+            return page;
+          },
+          { ...data.query, limit: SAVED_PEOPLE_SCAN_PAGE },
+        ).toArray({ limit: SAVED_PEOPLE_CAP }),
+      ]);
+      const { stageByCandidate } = candidatePipelineStages(pipeline);
+      const inStage = matches.filter(
+        (member) => stageByCandidate.get(member.candidate.id) === stage.stageId,
+      );
+      return {
+        data: inStage.slice(data.offset, data.offset + data.limit),
+        count: inStage.length,
+        total,
+      };
+    }),
+  );
+
+/** The lists of the company one candidate is saved to. */
+export const listTalentListMemberships = createServerFn({ method: 'GET' })
+  .validator((input: { slug: string; candidate: string }) => input)
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, () =>
+      getBoard().me.companies.talentLists.memberships(
+        data.slug,
+        { candidate: data.candidate },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+/**
+ * Save a person to a list. Idempotent; a list linked to a job also
+ * shortlists them onto that job server-side. A full list is
+ * `talent_list_full` (409).
+ */
+export const addTalentListMember = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; listId: string; candidateBoardUserId: string }) =>
+      input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.talentLists.members.add(
+        data.slug,
+        data.listId,
+        { candidateBoardUserId: data.candidateBoardUserId },
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
+/** Remove a person from a list. Never touches a job pipeline. */
+export const removeTalentListMember = createServerFn({ method: 'POST' })
+  .validator(
+    (input: { slug: string; listId: string; candidateBoardUserId: string }) =>
+      input,
+  )
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard()
+        .me.companies.talentLists.members.remove(
+          data.slug,
+          data.listId,
+          data.candidateBoardUserId,
+          { headers: authedHeaders(context) },
+        )
         .then(() => null),
     ),
   );

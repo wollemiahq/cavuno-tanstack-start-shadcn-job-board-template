@@ -11,6 +11,7 @@ import {
   type UrlSearchInput,
   type UrlSearchValue,
 } from '@/lib/pagination';
+import type { TalentListMembersQuery } from '@cavuno/board';
 
 /** Frozen `/talent` query stored on a talent list. Matches the v1 wire. */
 export type TalentListFilters = {
@@ -46,8 +47,13 @@ export interface TalentSearch extends CustomFieldSearch {
   selectedTalent?: string;
   /** Active talent list id. Chrome only — not sent to GET /talent. */
   list?: string;
-  /** Active sourced job id. Chrome only — directory rows come from the sourced GET. */
-  sourced?: string;
+  /**
+   * "Saved" view of the open list: only its saved people, narrowed by the
+   * other filters. A view choice, never stored on the list. Chrome only.
+   */
+  saved?: true;
+  /** Pipeline stage id of the linked job, narrowing the Saved view. Chrome only. */
+  stage?: string;
 }
 
 export type TalentListingSearch = Omit<TalentSearch, 'selectedTalent'>;
@@ -81,6 +87,12 @@ function sortValue(value: UrlSearchValue): TalentSearch['sort'] {
   return undefined;
 }
 
+function savedValue(value: UrlSearchValue): true | undefined {
+  return value === true || value === 1 || value === 'true' || value === '1'
+    ? true
+    : undefined;
+}
+
 export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
   return {
     q: searchQueryString(search.q),
@@ -96,7 +108,8 @@ export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
     page: pageSearchValue(parsePageParam(search.page)),
     selectedTalent: stringSearchValue(search.selectedTalent),
     list: stringSearchValue(search.list),
-    sourced: stringSearchValue(search.sourced),
+    saved: savedValue(search.saved),
+    stage: stringSearchValue(search.stage),
     ...parseCustomFieldSearch(search),
   };
 }
@@ -104,7 +117,7 @@ export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
 /**
  * The `/talent` search a header keyword/place submission opens. The active
  * directory filters, `cf.*` profile-field filters included, carry over; the
- * page and a sourced-job view reset.
+ * page resets.
  */
 export function talentSearchFromHeader(
   current: UrlSearchInput,
@@ -115,11 +128,10 @@ export function talentSearchFromHeader(
     q: submission.query,
     place: submission.place,
     page: undefined,
-    sourced: undefined,
   });
 }
 
-/** Listing request inputs. `list` and `sourced` are chrome, not GET /talent. */
+/** Listing request inputs. `list`, `saved` and `stage` are chrome, not GET /talent. */
 export function talentListingLoaderDeps(
   search: TalentSearch,
 ): TalentListingSearch {
@@ -137,6 +149,41 @@ export function talentListingLoaderDeps(
     page: search.page,
     ...pickCustomFieldSearch(search),
   };
+}
+
+/** Directory filters a Saved view runs over a list's saved people. */
+export type SavedPeopleFilters = Omit<
+  TalentListMembersQuery,
+  'cursor' | 'offset' | 'limit'
+>;
+
+/**
+ * The Saved view's filters: the same directory filters as `/talent`, ANDed
+ * over the list's saved people. Profile-field (`cf.*`) filters are not part
+ * of the saved-people search.
+ */
+export function savedPeopleFilters(search: TalentSearch): SavedPeopleFilters {
+  return {
+    q: search.q,
+    skill: search.skill,
+    jobSearchStatus: search.jobSearchStatus,
+    languages: search.languages,
+    openToRelocate: search.openToRelocate,
+    place: search.place,
+    sort: search.sort,
+    seniority: search.seniority,
+    permitCountry: search.permitCountry,
+    interestedRole: search.interestedRole,
+  };
+}
+
+/** Whether any filter (sort aside) or a stage narrows the Saved view. */
+export function narrowsSavedPeople(search: TalentSearch): boolean {
+  const { sort: _sort, ...filters } = savedPeopleFilters(search);
+  return (
+    Object.values(filters).some((value) => value !== undefined) ||
+    Boolean(search.stage)
+  );
 }
 
 function languageNames(value: string | undefined): string[] | undefined {

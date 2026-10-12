@@ -170,6 +170,8 @@ type TalentFiltersProps = {
   /** Public candidate profile fields for the sheet; omit for none. */
   customFilterFields?: CustomFilterField[];
   lists?: ReactNode;
+  /** All / Saved switch (and stage) while a saved search is open. */
+  savedView?: ReactNode;
   linkJob?: ReactNode;
 };
 
@@ -188,6 +190,7 @@ function talentFiltersAreEqual(
     customFieldSearchKey(prev.search) === customFieldSearchKey(next.search) &&
     prev.customFilterFields === next.customFilterFields &&
     prev.lists === next.lists &&
+    prev.savedView === next.savedView &&
     prev.linkJob === next.linkJob
   );
 }
@@ -196,6 +199,7 @@ export const TalentFilters = memo(function TalentFilters({
   search,
   customFilterFields = NO_CUSTOM_FIELDS,
   lists,
+  savedView,
   linkJob,
 }: TalentFiltersProps) {
   const navigate = useNavigate({ from: '/talent/' });
@@ -217,7 +221,6 @@ export const TalentFilters = memo(function TalentFilters({
           ...previous,
           ...patch,
           page: undefined,
-          sourced: undefined,
         };
         return parseTalentSearch(
           customFields ? withCustomFieldFilters(next, customFields) : next,
@@ -336,8 +339,12 @@ export const TalentFilters = memo(function TalentFilters({
   );
 
   return (
-    <div data-slot="talent-filter-bar" className="flex items-center gap-2">
+    <div
+      data-slot="talent-filter-bar"
+      className="flex flex-wrap items-center gap-2"
+    >
       {lists}
+      {savedView}
       <div className="hidden items-center gap-2 md:flex">
         <FilterSelect
           label={m.talentFilters_statusLabel()}

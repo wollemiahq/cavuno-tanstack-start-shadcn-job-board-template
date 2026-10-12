@@ -459,6 +459,7 @@
   "boardError_sameEmailText": "Ese ya es tu correo.",
   "boardError_stripeNotConnectedText": "El pago no está disponible en este portal ahora mismo.",
   "boardError_talentAccessRequiredText": "Necesitas acceso al talento para hacer esto.",
+  "boardError_talentListFullText": "Esta búsqueda guardada está llena. Quita a alguien antes de guardar a más personas.",
   "boardError_talentAccessUnavailableText": "El acceso al talento no está disponible en este portal ahora mismo.",
   "boardError_unauthorizedText": "Inicia sesión primero.",
   "boardError_validationText": "Hay campos que necesitan atención. Revisa el formulario e inténtalo de nuevo.",
@@ -2417,6 +2418,8 @@
   "talentLists_kindLabel": "Start from",
   "talentLists_linkJobEmpty": "Link to a job",
   "talentLists_linkJobNone": "Not linked",
+  "talentLists_linkJobHint": "Todas las personas guardadas aquí se añaden a la columna Preseleccionados del empleo.",
+  "talentLists_linkedToast": "Todas las personas guardadas aquí se añaden a la columna Preseleccionados de {job}.",
   "talentLists_listsHeading": "Lists",
   "talentLists_nameLabel": "Name",
   "talentLists_namePlaceholder": "Berlin engineers…",
@@ -2427,8 +2430,35 @@
   "talentMessage_description": "Preséntate y explica por qué te pones en contacto.",
   "talentMessage_title": "Escribir a {name}",
   "talentSave_jobLabel": "Shortlist for",
-  "talentSave_saveLabel": "Shortlist",
-  "talentSave_savedLabel": "Shortlisted",
+  "talentSave_saveLabel": "Guardar",
+  "talentSave_savedLabel": "Guardado",
+  "talentSave_listsLabel": "Guardar en",
+  "talentSaved_showLabel": "Mostrar",
+  "talentSaved_allOption": "Todos",
+  "talentSaved_savedOption": "Guardados · {count}",
+  "talentSaved_stageLabel": "Etapa",
+  "talentSaved_anyStageOption": "Cualquier etapa",
+  "talentSaved_emptyTitle": "Aún no hay nadie guardado",
+  "talentSaved_emptyText": "Guarda candidatos en esta búsqueda con el marcador de su tarjeta.",
+  "talentSaved_noMatchTitle": "Ninguna persona guardada coincide",
+  "talentSaved_noMatchText": "Ninguna de las personas guardadas aquí coincide con estos filtros.",
+  "talentSaved_showAllAction": "Mostrar todas las personas guardadas",
+  "talentSaved_loadingLabel": "Cargando personas guardadas…",
+  "talentSaved_errorText": "No se pudieron cargar las personas guardadas aquí. Inténtalo de nuevo.",
+  "talentSaved_hiddenByFilters": [
+    {
+      "declarations": [
+        "input hidden",
+        "input hiddenLabel",
+        "local hiddenPlural = hidden: plural"
+      ],
+      "selectors": ["hiddenPlural"],
+      "match": {
+        "hiddenPlural=one": "{hiddenLabel} persona guardada queda oculta por estos filtros.",
+        "hiddenPlural=*": "{hiddenLabel} personas guardadas quedan ocultas por estos filtros."
+      }
+    }
+  ],
   "talentSearch_detailErrorTitle": "No se ha podido cargar el perfil",
   "talentSearch_detailLoadingLabel": "Cargando los datos del perfil…",
   "talentSearch_employmentApprenticeship": "Formación dual",

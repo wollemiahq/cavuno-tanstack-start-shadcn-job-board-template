@@ -86,8 +86,8 @@ function TalentDirectoryPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/talent/' });
   // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
-  // cold-message another candidate; eligible employers compose by public
-  // candidate handle (see resolveTalentDetailCta for the full matrix).
+  // cold-message another candidate; eligible employers compose by the
+  // candidate's board-user id (see resolveTalentDetailCta for the matrix).
   const viewer: TalentDetailViewer =
     user === null
       ? { kind: 'anonymous' }
@@ -106,7 +106,7 @@ function TalentDirectoryPage() {
       candidate.id === search.selectedTalent,
   );
   const selectedTalent = useSelectedTalent(
-    search.sourced || selectedOnPage ? search.selectedTalent : undefined,
+    search.saved || selectedOnPage ? search.selectedTalent : undefined,
   );
 
   if (restricted) {

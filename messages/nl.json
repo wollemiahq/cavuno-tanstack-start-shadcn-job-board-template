@@ -459,6 +459,7 @@
   "boardError_sameEmailText": "Dit is al je e-mailadres.",
   "boardError_stripeNotConnectedText": "Afrekenen is momenteel niet beschikbaar op dit vacatureplatform.",
   "boardError_talentAccessRequiredText": "Voor deze actie heb je toegang tot talent nodig.",
+  "boardError_talentListFullText": "Deze opgeslagen zoekopdracht is vol. Verwijder eerst iemand voordat je meer mensen opslaat.",
   "boardError_talentAccessUnavailableText": "Toegang tot talent is momenteel niet beschikbaar op dit vacatureplatform.",
   "boardError_unauthorizedText": "Log eerst in.",
   "boardError_validationText": "Sommige velden moeten worden gecontroleerd. Controleer het formulier en probeer het opnieuw.",
@@ -2417,6 +2418,8 @@
   "talentLists_kindLabel": "Beginnen met",
   "talentLists_linkJobEmpty": "Koppelen aan een vacature",
   "talentLists_linkJobNone": "Niet gekoppeld",
+  "talentLists_linkJobHint": "Iedereen die hier is opgeslagen, komt in de kolom Shortlist van de vacature.",
+  "talentLists_linkedToast": "Iedereen die hier is opgeslagen, komt in de kolom Shortlist van {job}.",
   "talentLists_listsHeading": "Lijsten",
   "talentLists_nameLabel": "Naam",
   "talentLists_namePlaceholder": "Engineers in Berlijn…",
@@ -2427,8 +2430,35 @@
   "talentMessage_description": "Stel jezelf voor en leg uit waarom je contact opneemt.",
   "talentMessage_title": "Bericht aan {name}",
   "talentSave_jobLabel": "Op shortlist zetten voor",
-  "talentSave_saveLabel": "Op shortlist zetten",
-  "talentSave_savedLabel": "Op shortlist",
+  "talentSave_saveLabel": "Opslaan",
+  "talentSave_savedLabel": "Opgeslagen",
+  "talentSave_listsLabel": "Opslaan in",
+  "talentSaved_showLabel": "Tonen",
+  "talentSaved_allOption": "Alle",
+  "talentSaved_savedOption": "Opgeslagen · {count}",
+  "talentSaved_stageLabel": "Fase",
+  "talentSaved_anyStageOption": "Elke fase",
+  "talentSaved_emptyTitle": "Nog niemand opgeslagen",
+  "talentSaved_emptyText": "Sla kandidaten op in deze zoekopdracht met de bladwijzer op hun kaart.",
+  "talentSaved_noMatchTitle": "Geen opgeslagen mensen gevonden",
+  "talentSaved_noMatchText": "Geen van de hier opgeslagen mensen past bij deze filters.",
+  "talentSaved_showAllAction": "Alle opgeslagen mensen tonen",
+  "talentSaved_loadingLabel": "Opgeslagen mensen laden…",
+  "talentSaved_errorText": "De hier opgeslagen mensen konden niet worden geladen. Probeer het opnieuw.",
+  "talentSaved_hiddenByFilters": [
+    {
+      "declarations": [
+        "input hidden",
+        "input hiddenLabel",
+        "local hiddenPlural = hidden: plural"
+      ],
+      "selectors": ["hiddenPlural"],
+      "match": {
+        "hiddenPlural=one": "{hiddenLabel} opgeslagen persoon wordt verborgen door deze filters.",
+        "hiddenPlural=*": "{hiddenLabel} opgeslagen mensen worden verborgen door deze filters."
+      }
+    }
+  ],
   "talentSearch_detailErrorTitle": "Het profiel kon niet worden geladen",
   "talentSearch_detailLoadingLabel": "Profielgegevens laden…",
   "talentSearch_employmentApprenticeship": "Leerwerkplek",

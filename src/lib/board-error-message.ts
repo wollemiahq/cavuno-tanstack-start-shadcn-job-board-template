@@ -42,6 +42,7 @@ export const CODE_MESSAGES = {
     m.boardError_messagingTalentAccessRequiredText,
   talent_access_required: m.boardError_talentAccessRequiredText,
   talent_access_unavailable: m.boardError_talentAccessUnavailableText,
+  talent_list_full: m.boardError_talentListFullText,
   company_required: m.boardError_companyRequiredText,
   already_on_plan: m.boardError_alreadyOnPlanText,
   stripe_not_connected: m.boardError_stripeNotConnectedText,

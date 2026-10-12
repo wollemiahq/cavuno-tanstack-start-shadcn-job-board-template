@@ -140,7 +140,7 @@ export function TalentListsPicker({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreateListDialog
+      <CreateTalentListDialog
         slug={slug}
         jobs={jobs}
         currentFilters={currentFilters}
@@ -156,7 +156,7 @@ export function TalentListsPicker({
   );
 }
 
-function CreateListDialog({
+export function CreateTalentListDialog({
   slug,
   jobs,
   currentFilters,

@@ -467,6 +467,7 @@
   "boardError_sameEmailText": "To już jest Twój adres e-mail.",
   "boardError_stripeNotConnectedText": "Płatności są teraz niedostępne na tym portalu.",
   "boardError_talentAccessRequiredText": "Ta czynność wymaga dostępu do kandydatów.",
+  "boardError_talentListFullText": "To zapisane wyszukiwanie jest pełne. Usuń kogoś, zanim zapiszesz więcej osób.",
   "boardError_talentAccessUnavailableText": "Dostęp do kandydatów jest teraz niedostępny na tym portalu.",
   "boardError_unauthorizedText": "Najpierw się zaloguj.",
   "boardError_validationText": "Niektóre pola wymagają poprawy. Sprawdź formularz i spróbuj ponownie.",
@@ -2509,6 +2510,8 @@
   "talentLists_kindLabel": "Start from",
   "talentLists_linkJobEmpty": "Link to a job",
   "talentLists_linkJobNone": "Not linked",
+  "talentLists_linkJobHint": "Wszystkie zapisane tu osoby trafiają do kolumny Krótka lista tej oferty.",
+  "talentLists_linkedToast": "Wszystkie zapisane tu osoby trafiają do kolumny Krótka lista oferty {job}.",
   "talentLists_listsHeading": "Lists",
   "talentLists_nameLabel": "Name",
   "talentLists_namePlaceholder": "Berlin engineers…",
@@ -2519,8 +2522,37 @@
   "talentMessage_description": "Przedstaw się i wyjaśnij, dlaczego się kontaktujesz.",
   "talentMessage_title": "Napisz do: {name}",
   "talentSave_jobLabel": "Shortlist for",
-  "talentSave_saveLabel": "Shortlist",
-  "talentSave_savedLabel": "Shortlisted",
+  "talentSave_saveLabel": "Zapisz",
+  "talentSave_savedLabel": "Zapisano",
+  "talentSave_listsLabel": "Zapisz w",
+  "talentSaved_showLabel": "Pokaż",
+  "talentSaved_allOption": "Wszyscy",
+  "talentSaved_savedOption": "Zapisani · {count}",
+  "talentSaved_stageLabel": "Etap",
+  "talentSaved_anyStageOption": "Dowolny etap",
+  "talentSaved_emptyTitle": "Nikt nie został jeszcze zapisany",
+  "talentSaved_emptyText": "Zapisuj kandydatów w tym wyszukiwaniu za pomocą zakładki na ich karcie.",
+  "talentSaved_noMatchTitle": "Brak pasujących zapisanych osób",
+  "talentSaved_noMatchText": "Żadna z zapisanych tu osób nie pasuje do tych filtrów.",
+  "talentSaved_showAllAction": "Pokaż wszystkie zapisane osoby",
+  "talentSaved_loadingLabel": "Wczytywanie zapisanych osób…",
+  "talentSaved_errorText": "Nie udało się wczytać zapisanych tu osób. Spróbuj ponownie.",
+  "talentSaved_hiddenByFilters": [
+    {
+      "declarations": [
+        "input hidden",
+        "input hiddenLabel",
+        "local hiddenPlural = hidden: plural"
+      ],
+      "selectors": ["hiddenPlural"],
+      "match": {
+        "hiddenPlural=one": "{hiddenLabel} zapisana osoba jest ukryta przez te filtry.",
+        "hiddenPlural=few": "{hiddenLabel} zapisane osoby są ukryte przez te filtry.",
+        "hiddenPlural=many": "{hiddenLabel} zapisanych osób jest ukrytych przez te filtry.",
+        "hiddenPlural=*": "{hiddenLabel} zapisanej osoby jest ukryte przez te filtry."
+      }
+    }
+  ],
   "talentSearch_detailErrorTitle": "Nie udało się wczytać profilu",
   "talentSearch_detailLoadingLabel": "Wczytywanie szczegółów profilu…",
   "talentSearch_employmentApprenticeship": "Praktyka zawodowa",

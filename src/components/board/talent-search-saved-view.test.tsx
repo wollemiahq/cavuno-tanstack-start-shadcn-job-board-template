@@ -1,0 +1,259 @@
+// @vitest-environment jsdom
+
+import '@testing-library/jest-dom/vitest';
+import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  useLocation,
+} from '@tanstack/react-router';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { TalentSearchPage } from './talent-search-page';
+
+import { parseTalentSearch } from '@/lib/talent-search';
+import { m } from '@/paraglide/messages';
+import type { TalentListRecord } from '@/server/employers';
+import type { TalentDirectoryEntry } from '@cavuno/board';
+
+const server = vi.hoisted(() => ({
+  getEmployerTalentWorkspace: vi.fn(),
+  getPipeline: vi.fn(),
+  listSavedPeople: vi.fn(),
+  listTalentListMemberships: vi.fn(),
+  updateTalentList: vi.fn(),
+}));
+
+vi.mock('@/server/employers', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/server/employers')>()),
+  ...server,
+}));
+vi.mock('@/components/root-session', () => ({
+  useRootSession: () => ({
+    employerCompanies: [{ status: 'approved', company: { slug: 'acme' } }],
+  }),
+}));
+
+function candidate(id: string, name: string): TalentDirectoryEntry {
+  return {
+    object: 'talent_directory_entry',
+    id,
+    handle: id.replace('bu_', ''),
+    displayName: name,
+    headline: 'Robotics engineer',
+    location: 'Berlin',
+    avatarUrl: null,
+    summary: null,
+    bio: null,
+    jobSearchStatus: 'open_to_offers',
+    skills: [],
+    experiences: [],
+    education: [],
+    customFieldValues: {},
+    objectReferences: [],
+  };
+}
+
+function savedSearch(jobId: string | null): TalentListRecord {
+  return {
+    id: 'list_berlin',
+    object: 'talent_list',
+    name: 'Berlin engineers',
+    filters: { place: 'berlin' },
+    jobId,
+    createdBy: 'bu_employer',
+    createdAt: 1,
+    updatedAt: 1,
+    memberCount: 3,
+  };
+}
+
+function member(entry: TalentDirectoryEntry) {
+  return {
+    id: `tlm_${entry.id}`,
+    object: 'talent_list_member',
+    candidate: entry,
+    addedAt: 1,
+    addedBy: 'bu_employer',
+  };
+}
+
+const ada = candidate('bu_ada', 'Ada Lovelace');
+
+beforeEach(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn().mockReturnValue({
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }),
+  });
+  server.getPipeline.mockResolvedValue({
+    stages: [
+      {
+        id: 'stage_short',
+        label: 'Shortlisted',
+        systemStage: 'shortlisted',
+        isProtected: true,
+        hidden: false,
+      },
+      {
+        id: 'stage_interview',
+        label: 'Interview',
+        systemStage: null,
+        isProtected: false,
+        hidden: false,
+      },
+    ],
+    applicants: [],
+  });
+  server.listSavedPeople.mockResolvedValue({
+    data: [member(ada)],
+    count: 1,
+    total: 3,
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+function renderSaved(initial: string, jobId: string | null = null) {
+  server.getEmployerTalentWorkspace.mockResolvedValue({
+    jobs: {
+      data: [{ id: 'job_a', title: 'Robotics lead', status: 'published' }],
+    },
+    lists: { data: [savedSearch(jobId)] },
+  });
+  const rootRoute = createRootRoute();
+  const talentRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/talent/',
+    validateSearch: parseTalentSearch,
+    component: function Talent() {
+      const search = parseTalentSearch(
+        useLocation({ select: (location) => location.search }),
+      );
+      return (
+        <TalentSearchPage
+          candidates={[]}
+          search={search}
+          count={0}
+          page={search.page ?? 1}
+          pageSize={24}
+          language="en"
+          onPageChange={vi.fn()}
+          onSelectedTalentReplace={vi.fn()}
+          onSelectedTalentPush={vi.fn()}
+          detail={null}
+        />
+      );
+    },
+  });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([talentRoute]),
+    history: createMemoryHistory({ initialEntries: [initial] }),
+  });
+  render(<RouterProvider router={router} />);
+  return router;
+}
+
+describe('TalentSearchPage — Saved view of a saved search', () => {
+  it('shows only the saved people the current filters keep', async () => {
+    const router = renderSaved(
+      '/talent/?list=list_berlin&saved=1&place=berlin',
+    );
+
+    expect(await screen.findByText('Ada Lovelace')).toBeVisible();
+    expect(server.listSavedPeople).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        slug: 'acme',
+        listId: 'list_berlin',
+        query: expect.objectContaining({ place: 'berlin' }),
+        offset: 0,
+        limit: 24,
+      }),
+    });
+    expect(
+      screen.getByRole('button', {
+        name: m.talentSaved_savedOption({ count: '3' }),
+      }),
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentSaved_showAllAction() }),
+    );
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({
+        list: 'list_berlin',
+        saved: true,
+      }),
+    );
+  });
+
+  it('switches from everyone the search finds to its saved people', async () => {
+    const router = renderSaved('/talent/?list=list_berlin&place=berlin');
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.talentSaved_savedOption({ count: '3' }),
+      }),
+    );
+
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        list: 'list_berlin',
+        place: 'berlin',
+        saved: true,
+      }),
+    );
+    expect(server.updateTalentList).not.toHaveBeenCalled();
+  });
+
+  it('offers no stage filter on a saved search without a job', async () => {
+    renderSaved('/talent/?list=list_berlin&saved=1');
+
+    await screen.findByText('Ada Lovelace');
+    expect(
+      screen.queryByRole('combobox', { name: m.talentSaved_stageLabel() }),
+    ).toBeNull();
+    expect(server.getPipeline).not.toHaveBeenCalled();
+  });
+
+  it('filters saved people by their stage on the linked job', async () => {
+    renderSaved(
+      '/talent/?list=list_berlin&saved=1&stage=stage_interview',
+      'job_a',
+    );
+
+    expect(
+      await screen.findByRole('combobox', { name: m.talentSaved_stageLabel() }),
+    ).toHaveTextContent('Interview');
+    expect(server.listSavedPeople).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        stage: { job: 'job_a', stageId: 'stage_interview' },
+      }),
+    });
+  });
+
+  it('says so when nobody is saved yet', async () => {
+    server.listSavedPeople.mockResolvedValue({ data: [], count: 0, total: 0 });
+    renderSaved('/talent/?list=list_berlin&saved=1');
+
+    expect(await screen.findByText(m.talentSaved_emptyTitle())).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: m.talentSaved_showAllAction() }),
+    ).toBeNull();
+  });
+});

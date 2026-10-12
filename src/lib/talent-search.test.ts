@@ -68,7 +68,6 @@ describe('talentSearchFromHeader', () => {
         'cf.open_to_mentoring': true,
         'cf.availability': 'now,month',
         page: '3',
-        sourced: 'job_1',
       },
       { query: 'researcher', place: 'berlin' },
     );
@@ -81,7 +80,6 @@ describe('talentSearchFromHeader', () => {
       'cf.availability': 'now,month',
     });
     expect(next.page).toBeUndefined();
-    expect(next.sourced).toBeUndefined();
   });
 });
 
@@ -133,12 +131,23 @@ describe('talentListingLoaderDeps', () => {
     ).not.toHaveProperty('list');
   });
 
-  it('keeps the sourced job id out of directory loader deps', () => {
-    expect(
-      talentListingLoaderDeps(
-        parseTalentSearch({ q: 'go', sourced: 'job_smoke' }),
-      ),
-    ).not.toHaveProperty('sourced');
+  it('keeps the Saved view and its stage out of directory loader deps', () => {
+    const deps = talentListingLoaderDeps(
+      parseTalentSearch({
+        q: 'go',
+        list: 'list_berlin',
+        saved: '1',
+        stage: 'stage_shortlisted',
+      }),
+    );
+    expect(deps).not.toHaveProperty('saved');
+    expect(deps).not.toHaveProperty('stage');
+  });
+
+  it('reads the Saved view flag from the URL', () => {
+    expect(parseTalentSearch({ saved: '1' }).saved).toBe(true);
+    expect(parseTalentSearch({ saved: true }).saved).toBe(true);
+    expect(parseTalentSearch({ saved: 'no' }).saved).toBeUndefined();
   });
 });
 

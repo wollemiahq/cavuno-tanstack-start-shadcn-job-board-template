@@ -15,7 +15,7 @@ import {
   ComboboxList,
   ComboboxTrigger,
 } from '@/components/ui/combobox';
-import { toastActionError } from '@/lib/action-toast';
+import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { cn } from '@/lib/utils';
 import {
   updateTalentList,
@@ -68,6 +68,13 @@ export function TalentListJobLink({
       .then((result) => {
         if (result.ok) {
           onUpdated(result.data);
+          // Linking shortlists everyone saved here onto the job server-side.
+          const linked = jobs.find((job) => job.id === result.data.jobId);
+          if (linked) {
+            void toastActionSuccess(
+              m.talentLists_linkedToast({ job: linked.title }),
+            );
+          }
           return;
         }
         void toastActionError(result.message);
@@ -118,6 +125,9 @@ export function TalentListJobLink({
         align="end"
         className="w-max max-w-[min(24rem,var(--available-width))] min-w-56"
       >
+        <p className="text-muted-foreground max-w-64 px-2 py-1.5 text-xs">
+          {m.talentLists_linkJobHint()}
+        </p>
         <ComboboxEmpty>{m.talentLists_linkJobEmpty()}</ComboboxEmpty>
         <ComboboxList>
           {(id: string) => (

@@ -459,6 +459,7 @@
   "boardError_sameEmailText": "That’s already your email.",
   "boardError_stripeNotConnectedText": "Checkout isn’t available on this board right now.",
   "boardError_talentAccessRequiredText": "Talent access is required for this action.",
+  "boardError_talentListFullText": "This saved search is full. Remove someone from it before saving more people.",
   "boardError_talentAccessUnavailableText": "Talent access isn’t available on this board right now.",
   "boardError_unauthorizedText": "Sign in first.",
   "boardError_validationText": "Some fields need attention. Check the form and try again.",
@@ -2417,6 +2418,8 @@
   "talentLists_kindLabel": "Start from",
   "talentLists_linkJobEmpty": "Link to a job",
   "talentLists_linkJobNone": "Not linked",
+  "talentLists_linkJobHint": "Everyone saved here is added to the job's Shortlisted column.",
+  "talentLists_linkedToast": "Everyone saved here is added to {job}'s Shortlisted column.",
   "talentLists_listsHeading": "Lists",
   "talentLists_nameLabel": "Name",
   "talentLists_namePlaceholder": "Berlin engineers…",
@@ -2427,8 +2430,35 @@
   "talentMessage_description": "Introduce yourself and explain why you’re reaching out.",
   "talentMessage_title": "Message {name}",
   "talentSave_jobLabel": "Shortlist for",
-  "talentSave_saveLabel": "Shortlist",
-  "talentSave_savedLabel": "Shortlisted",
+  "talentSave_saveLabel": "Save",
+  "talentSave_savedLabel": "Saved",
+  "talentSave_listsLabel": "Save to",
+  "talentSaved_showLabel": "Show",
+  "talentSaved_allOption": "All",
+  "talentSaved_savedOption": "Saved · {count}",
+  "talentSaved_stageLabel": "Stage",
+  "talentSaved_anyStageOption": "Any stage",
+  "talentSaved_emptyTitle": "No one saved yet",
+  "talentSaved_emptyText": "Save candidates to this search with the bookmark on their card.",
+  "talentSaved_noMatchTitle": "No saved people match",
+  "talentSaved_noMatchText": "None of the people saved here match these filters.",
+  "talentSaved_showAllAction": "Show all saved people",
+  "talentSaved_loadingLabel": "Loading saved people…",
+  "talentSaved_errorText": "Could not load the people saved here. Try again.",
+  "talentSaved_hiddenByFilters": [
+    {
+      "declarations": [
+        "input hidden",
+        "input hiddenLabel",
+        "local hiddenPlural = hidden: plural"
+      ],
+      "selectors": ["hiddenPlural"],
+      "match": {
+        "hiddenPlural=one": "{hiddenLabel} saved person is hidden by these filters.",
+        "hiddenPlural=*": "{hiddenLabel} saved people are hidden by these filters."
+      }
+    }
+  ],
   "talentSearch_detailErrorTitle": "Could not load profile",
   "talentSearch_detailLoadingLabel": "Loading profile details…",
   "talentSearch_employmentApprenticeship": "Apprenticeship",

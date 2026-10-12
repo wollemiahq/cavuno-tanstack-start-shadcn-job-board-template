@@ -459,6 +459,7 @@
   "boardError_sameEmailText": "C’est déjà votre e-mail.",
   "boardError_stripeNotConnectedText": "Le paiement n’est pas disponible sur ce site pour le moment.",
   "boardError_talentAccessRequiredText": "L’accès aux talents est requis pour cette action.",
+  "boardError_talentListFullText": "Cette recherche enregistrée est pleine. Retirez quelqu’un avant d’enregistrer d’autres personnes.",
   "boardError_talentAccessUnavailableText": "L’accès aux talents n’est pas disponible sur ce site pour le moment.",
   "boardError_unauthorizedText": "Connectez-vous d’abord.",
   "boardError_validationText": "Certains champs demandent votre attention. Vérifiez le formulaire et réessayez.",
@@ -2417,6 +2418,8 @@
   "talentLists_kindLabel": "Start from",
   "talentLists_linkJobEmpty": "Link to a job",
   "talentLists_linkJobNone": "Not linked",
+  "talentLists_linkJobHint": "Toutes les personnes enregistrées ici sont ajoutées à la colonne Présélection de l’offre.",
+  "talentLists_linkedToast": "Toutes les personnes enregistrées ici sont ajoutées à la colonne Présélection de {job}.",
   "talentLists_listsHeading": "Lists",
   "talentLists_nameLabel": "Name",
   "talentLists_namePlaceholder": "Berlin engineers…",
@@ -2427,8 +2430,35 @@
   "talentMessage_description": "Présentez-vous et expliquez la raison de votre prise de contact.",
   "talentMessage_title": "Contacter {name}",
   "talentSave_jobLabel": "Shortlist for",
-  "talentSave_saveLabel": "Shortlist",
-  "talentSave_savedLabel": "Shortlisted",
+  "talentSave_saveLabel": "Enregistrer",
+  "talentSave_savedLabel": "Enregistré",
+  "talentSave_listsLabel": "Enregistrer dans",
+  "talentSaved_showLabel": "Afficher",
+  "talentSaved_allOption": "Tous",
+  "talentSaved_savedOption": "Enregistrés · {count}",
+  "talentSaved_stageLabel": "Étape",
+  "talentSaved_anyStageOption": "Toutes les étapes",
+  "talentSaved_emptyTitle": "Personne n’est encore enregistré",
+  "talentSaved_emptyText": "Enregistrez des candidats dans cette recherche avec le signet de leur carte.",
+  "talentSaved_noMatchTitle": "Aucune personne enregistrée ne correspond",
+  "talentSaved_noMatchText": "Aucune des personnes enregistrées ici ne correspond à ces filtres.",
+  "talentSaved_showAllAction": "Afficher toutes les personnes enregistrées",
+  "talentSaved_loadingLabel": "Chargement des personnes enregistrées…",
+  "talentSaved_errorText": "Impossible de charger les personnes enregistrées ici. Réessayez.",
+  "talentSaved_hiddenByFilters": [
+    {
+      "declarations": [
+        "input hidden",
+        "input hiddenLabel",
+        "local hiddenPlural = hidden: plural"
+      ],
+      "selectors": ["hiddenPlural"],
+      "match": {
+        "hiddenPlural=one": "{hiddenLabel} personne enregistrée est masquée par ces filtres.",
+        "hiddenPlural=*": "{hiddenLabel} personnes enregistrées sont masquées par ces filtres."
+      }
+    }
+  ],
   "talentSearch_detailErrorTitle": "Impossible de charger le profil",
   "talentSearch_detailLoadingLabel": "Chargement du profil…",
   "talentSearch_employmentApprenticeship": "Apprentissage",

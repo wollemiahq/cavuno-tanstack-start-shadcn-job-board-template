@@ -39,6 +39,7 @@ const berlin: TalentListRecord = {
   createdBy: 'bu_employer',
   createdAt: 1,
   updatedAt: 1,
+  memberCount: 0,
 };
 
 const bound: TalentListRecord = {
@@ -50,6 +51,7 @@ const bound: TalentListRecord = {
   createdBy: 'bu_employer',
   createdAt: 1,
   updatedAt: 1,
+  memberCount: 0,
 };
 
 function renderPicker(

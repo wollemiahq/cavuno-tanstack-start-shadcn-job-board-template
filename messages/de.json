@@ -459,6 +459,7 @@
   "boardError_sameEmailText": "Das ist bereits deine E-Mail-Adresse.",
   "boardError_stripeNotConnectedText": "Der Bezahlvorgang ist auf diesem Board gerade nicht verfügbar.",
   "boardError_talentAccessRequiredText": "Für diese Aktion ist Talentzugang erforderlich.",
+  "boardError_talentListFullText": "Diese gespeicherte Suche ist voll. Entferne zuerst jemanden, bevor du weitere Personen speicherst.",
   "boardError_talentAccessUnavailableText": "Talentzugang ist auf diesem Board gerade nicht verfügbar.",
   "boardError_unauthorizedText": "Bitte melde dich zuerst an.",
   "boardError_validationText": "Einige Felder müssen korrigiert werden. Prüfe das Formular und versuche es erneut.",
@@ -2417,6 +2418,8 @@
   "talentLists_kindLabel": "Start from",
   "talentLists_linkJobEmpty": "Link to a job",
   "talentLists_linkJobNone": "Not linked",
+  "talentLists_linkJobHint": "Alle hier Gespeicherten kommen in die Spalte „Shortlist“ der Stelle.",
+  "talentLists_linkedToast": "Alle hier Gespeicherten kommen in die Spalte „Shortlist“ von {job}.",
   "talentLists_listsHeading": "Lists",
   "talentLists_nameLabel": "Name",
   "talentLists_namePlaceholder": "Berlin engineers…",
@@ -2427,8 +2430,35 @@
   "talentMessage_description": "Stelle dich kurz vor und erkläre, warum du Kontakt aufnimmst.",
   "talentMessage_title": "Nachricht an {name}",
   "talentSave_jobLabel": "Shortlist for",
-  "talentSave_saveLabel": "Shortlist",
-  "talentSave_savedLabel": "Shortlisted",
+  "talentSave_saveLabel": "Speichern",
+  "talentSave_savedLabel": "Gespeichert",
+  "talentSave_listsLabel": "Speichern in",
+  "talentSaved_showLabel": "Anzeigen",
+  "talentSaved_allOption": "Alle",
+  "talentSaved_savedOption": "Gespeichert · {count}",
+  "talentSaved_stageLabel": "Phase",
+  "talentSaved_anyStageOption": "Alle Phasen",
+  "talentSaved_emptyTitle": "Noch niemand gespeichert",
+  "talentSaved_emptyText": "Speichere Kandidaten mit dem Lesezeichen auf ihrer Karte in dieser Suche.",
+  "talentSaved_noMatchTitle": "Keine gespeicherten Personen passen",
+  "talentSaved_noMatchText": "Keine der hier gespeicherten Personen passt zu diesen Filtern.",
+  "talentSaved_showAllAction": "Alle gespeicherten Personen anzeigen",
+  "talentSaved_loadingLabel": "Gespeicherte Personen werden geladen…",
+  "talentSaved_errorText": "Die hier gespeicherten Personen konnten nicht geladen werden. Versuche es erneut.",
+  "talentSaved_hiddenByFilters": [
+    {
+      "declarations": [
+        "input hidden",
+        "input hiddenLabel",
+        "local hiddenPlural = hidden: plural"
+      ],
+      "selectors": ["hiddenPlural"],
+      "match": {
+        "hiddenPlural=one": "{hiddenLabel} gespeicherte Person wird durch diese Filter ausgeblendet.",
+        "hiddenPlural=*": "{hiddenLabel} gespeicherte Personen werden durch diese Filter ausgeblendet."
+      }
+    }
+  ],
   "talentSearch_detailErrorTitle": "Profil konnte nicht geladen werden",
   "talentSearch_detailLoadingLabel": "Profildetails werden geladen…",
   "talentSearch_employmentApprenticeship": "Ausbildung",
