@@ -1,7 +1,11 @@
 /**
  * Route-family-owned server boundary for talent directory + public profile.
  */
-import { isNotFound } from '@cavuno/board';
+import {
+  isNotFound,
+  type TalentDirectoryQuery,
+  type TaxonomyResolution,
+} from '@cavuno/board';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 
@@ -12,9 +16,15 @@ import { headTitle } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
+import { listingRadiusKm } from './listing-place-cache';
 import { profileCustomFilters } from './profile-filter-fields';
 import { readTalentDirectory } from './talent-directory-read';
 
+import {
+  placeSearchRadius,
+  shortPlaceName,
+  type PlaceSearchRadius,
+} from '@/board/search-radius';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import { selfUrl } from '@/lib/self-url';
@@ -37,6 +47,22 @@ function asJsonObjects<T>(value: T): JsonObject[] {
   // SAFETY: Structured data is composed from literal schema.org objects and
   // Board strings, then JSON round-tripped to erase readonly SDK helper types.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
+}
+
+/** The distance control for a `/talent` place search, when it can widen. */
+export type TalentPlaceRadius = {
+  /** The place's own name for the results line, e.g. `Houston`. */
+  placeName: string;
+  radius: PlaceSearchRadius;
+};
+
+function talentPlaceRadius(
+  place: TaxonomyResolution | null,
+  within: number | undefined,
+): TalentPlaceRadius | null {
+  if (!place) return null;
+  const radius = placeSearchRadius(place, within);
+  return radius ? { placeName: shortPlaceName(place), radius } : null;
 }
 
 async function seoBase() {
@@ -63,6 +89,8 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       languages?: string;
       openToRelocate?: 'true' | 'false';
       place?: string;
+      /** Search distance in the place's unit; see `@/board/search-radius`. */
+      within?: number;
       sort?: 'relevance' | 'newest';
       seniority?: string;
       permitCountry?: string;
@@ -78,6 +106,17 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
         data.customFields,
         headers,
       );
+      // A city or locality `place` widens to the distance control's radius,
+      // as on location job listings. The place only shapes the radius and the
+      // control, so a failed resolve lists the place as the API reads it.
+      const placeRead: Promise<TaxonomyResolution | null> = data.place
+        ? getBoard()
+            .taxonomy.places.resolve(data.place, { headers })
+            .catch(() => null)
+        : Promise.resolve(null);
+      const radius = data.place
+        ? await listingRadiusKm(data.place, placeRead, data.within)
+        : undefined;
       // The directory read does not depend on the SEO base, so it starts
       // first and is awaited below — these used to be two serial waves.
       const directory = readTalentDirectory(() => {
@@ -90,16 +129,14 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
           languages: data.languages,
           openToRelocate: data.openToRelocate,
           place: data.place,
+          radius,
           sort: data.sort,
           seniority: data.seniority,
           permitCountry: data.permitCountry,
           interestedRole: data.interestedRole,
           customFields: custom.clauses,
-        };
-        // SAFETY: Published @cavuno/board 4.13.0 talent.list query omits the
-        // frozen filter keys; the live /talent contract on this branch
-        // accepts them. Drop when the SDK minor ships.
-        return getBoard().talent.list(query as never, { headers });
+        } satisfies TalentDirectoryQuery;
+        return getBoard().talent.list(query, { headers });
       });
       const seo = await seoBase();
       const head = {
@@ -127,9 +164,10 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       );
 
       try {
-        const [result, customFilterFields] = await Promise.all([
+        const [result, customFilterFields, place] = await Promise.all([
           directory,
           custom.fields,
+          placeRead,
         ]);
         if (result.status === 'restricted') {
           return {
@@ -139,6 +177,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
             head,
             jsonLd,
             customFilterFields: [],
+            placeRadius: null,
           };
         }
         return {
@@ -148,6 +187,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
           head,
           jsonLd,
           customFilterFields,
+          placeRadius: talentPlaceRadius(place, data.within),
         };
       } catch (error) {
         if (isNotFound(error)) throw error;

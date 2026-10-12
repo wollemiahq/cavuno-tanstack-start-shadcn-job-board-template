@@ -8,9 +8,15 @@ import {
   handleEmployerLoaderErrorUsing,
   isReauthRetry,
 } from '../lib/employer-loader-auth';
+import { websiteDomain } from '../lib/website-domain';
 import { m } from '../paraglide/messages';
 import { refreshSession } from '../server/auth';
-import { cancelClaim, listCompanies, sendWorkEmail } from '../server/employers';
+import {
+  cancelClaim,
+  listCompanies,
+  sendWorkEmail,
+  type ActionResult,
+} from '../server/employers';
 import { getSeoBase } from '../server/queries';
 
 import { EmployerIdentityAvatar } from '@/components/account-shell';
@@ -176,7 +182,7 @@ function WorkEmailStep({
     }
     if (!result.ok) {
       setStatus('error');
-      setMessage(boardErrorMessage(result));
+      setMessage(workEmailErrorMessage(result, membership.company.website));
       return;
     }
     setStatus('committed');
@@ -292,6 +298,26 @@ function WorkEmailStep({
       </div>
     </form>
   );
+}
+
+/**
+ * A work email the API refused as off the company's domain names the domain
+ * to use; anything else (or a company without a website) keeps the mapped
+ * Board API copy.
+ */
+function workEmailErrorMessage(
+  failure: Extract<ActionResult<unknown>, { ok: false }>,
+  website: string | null,
+): string {
+  const domain = websiteDomain(website);
+  if (
+    domain &&
+    failure.code === 'validation_bad_request' &&
+    failure.fields?.includes('workEmail')
+  ) {
+    return m.employerOnboarding_workEmailDomainError({ domain });
+  }
+  return boardErrorMessage(failure);
 }
 
 function StepHeading({ title, body }: { title: string; body: string }) {

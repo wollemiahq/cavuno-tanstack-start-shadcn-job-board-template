@@ -40,7 +40,7 @@ import { gatedRead } from './board-access';
 import {
   combinationInPlaceCountCache,
   listingCacheKey,
-  placeRadiusGeoCache,
+  listingRadiusKm,
 } from './listing-place-cache';
 
 import {
@@ -52,9 +52,7 @@ import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import {
   isSearchRadiusViewNoindex,
   placeJobCount,
-  placeRadiusGeo,
   placeSearchRadius,
-  SEARCH_RADIUS_EXACT,
 } from '@/board/search-radius';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
@@ -203,31 +201,6 @@ function noindexSearchRadiusView<T extends { meta: object[] }>(
     ...head,
     meta: [...head.meta, { name: 'robots', content: 'noindex, follow' }],
   };
-}
-
-/**
- * The `radius` (km) a location listing asks for: the URL's `within`, or the
- * market default for a city or locality with a point; none (exact) for
- * `within=0`, a region or a country. The API keeps an omitted radius exact,
- * so the place's level and unit decide the kilometres: `within=0` needs
- * neither, a place this isolate resolved before reuses its cached geo, and
- * only a cold slug waits for `placeRead` before the job list starts.
- */
-async function listingRadiusKm(
-  locationSlug: string,
-  placeRead: Promise<TaxonomyResolution | null>,
-  within: number | undefined,
-): Promise<number | undefined> {
-  if (within === SEARCH_RADIUS_EXACT) return undefined;
-  const key = listingCacheKey(locationSlug);
-  const cached = placeRadiusGeoCache.get(key);
-  if (cached !== undefined) {
-    return placeSearchRadius({ geo: cached }, within)?.selected?.km;
-  }
-  const readAt = Date.now();
-  const place = await placeRead;
-  if (place) placeRadiusGeoCache.set(key, placeRadiusGeo(place.geo), readAt);
-  return placeSearchRadius(place, within)?.selected?.km;
 }
 
 /**

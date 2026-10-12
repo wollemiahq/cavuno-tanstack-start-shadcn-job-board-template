@@ -79,7 +79,8 @@ function TalentDirectoryNotFound() {
 }
 
 function TalentDirectoryPage() {
-  const { seo, page, restricted, customFilterFields } = Route.useLoaderData();
+  const { seo, page, restricted, customFilterFields, placeRadius } =
+    Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const { user, talentAccess } = useRootSession();
   const search = Route.useSearch();
@@ -140,6 +141,17 @@ function TalentDirectoryPage() {
         pageSize={TALENT_PAGE_SIZE}
         language={getLocale()}
         profileUnlocks={profileUnlocks}
+        placeRadius={placeRadius}
+        onWithinChange={(within) =>
+          navigate({
+            search: (previous) => ({
+              ...previous,
+              within,
+              page: undefined,
+              selectedTalent: undefined,
+            }),
+          })
+        }
         onPageChange={(next) =>
           navigate({
             search: (previous) => ({

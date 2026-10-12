@@ -67,7 +67,7 @@ function BlogPage() {
         }}
         pagination={
           <CursorPagination
-            hasPrevious={Boolean(search.cursor)}
+            hasPrevious={Boolean(search.cursor) && !page.restarted}
             hasNext={Boolean(page.hasMore && page.nextCursor)}
             nextHref={
               page.nextCursor

@@ -388,6 +388,7 @@
   "blogPost_authorWebsiteLabel": "Sitio web",
   "blogPost_authorXLabel": "X",
   "blogPost_backToBlogLabel": "Volver al blog",
+  "blogPost_featuredLabel": "Destacado",
   "blogPost_inThisArticleHeading": "En este artículo",
   "blogPost_missingBodyDescription": "El artículo existe, pero su contenido no está disponible.",
   "blogPost_missingBodyTitle": "Este artículo no tiene contenido publicado",
@@ -1231,6 +1232,7 @@
   "employerOnboarding_searchPlaceholder": "Buscar empresas por nombre...",
   "employerOnboarding_verifyBody": "Para confirmar que trabajas en {company}, introduce tu correo corporativo y te enviaremos un enlace de verificación.",
   "employerOnboarding_verifyTitle": "Verifica tu correo corporativo",
+  "employerOnboarding_workEmailDomainError": "Usa una dirección de correo del dominio del sitio web de tu empresa ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Gestiona tus vínculos con empresas",
   "employerOnboarding_yourCompaniesTitle": "Tus empresas",
   "employerPostJob_applyExternalLabel": "Enviar a los candidatos a una URL o correo externos",
@@ -2523,6 +2525,78 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {countLabel} candidato {exactPlace}",
+        "countPlural=*": "Mostrando {from}–{to} candidatos {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {to} de {countLabel} candidato {exactPlace}",
+        "countPlural=*": "Mostrando {to} de {countLabel} candidatos {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Mostrando candidatos {exactPlace}",
+  "talentSearchRadius_exactEmpty": "No hay candidatos {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {countLabel} candidato a menos de {distance} de {place}",
+        "countPlural=*": "Mostrando {from}–{to} candidatos a menos de {distance} de {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mostrando {to} de {countLabel} candidato a menos de {distance} de {place}",
+        "countPlural=*": "Mostrando {to} de {countLabel} candidatos a menos de {distance} de {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Mostrando candidatos a menos de {distance} de {place}",
+  "talentSearchRadius_withinEmpty": "No hay candidatos a menos de {distance} de {place}",
   "talentSearch_retryLabel": "Reintentar",
   "talentSearch_selectedProfileRegionLabel": "Perfil seleccionado",
   "talentSearch_skillLabel": "Competencia",

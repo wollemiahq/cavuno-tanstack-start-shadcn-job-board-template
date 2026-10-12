@@ -131,6 +131,9 @@ const BUDGETS = {
     // module mocks with injected list/save seams on those controls;
     // measured 155.7 / 54.7 after that.
     // 2026-10 dependency refresh: measured 167.5 KiB raw / 59.0 KiB gzip.
+    // Search distance on a place search (#266): the shared SearchRadiusScope
+    // chunk (5.2 KiB raw, already loaded by the location job listings) is
+    // now charged here too. Measured 176.1 KiB raw / 60.7 KiB gzip.
     // Saved people on saved searches (ADR-0142): the All / Saved switch
     // (two Buttons, no toggle group), the stage filter, the Saved view's
     // paging and empty states, and the list-membership Save menu. Measured
@@ -138,7 +141,10 @@ const BUDGETS = {
     // on main; the pipeline-stage join was split out of the kanban
     // view-model so it does not drag the kanban's copy along. The operator
     // accepted this cost (2026-10-12); budget is the measurement plus ~3%.
-    '/talent/': { raw: 187_500, gzip: 64_700 },
+    // With both, measured 183.6 KiB raw / 63.0 KiB gzip (187,958 / 64,506
+    // B); includes #266's radius control; Saved-people raise accepted by the
+    // operator 2026-10-12. Budget is the measurement plus ~3%.
+    '/talent/': { raw: 193_600, gzip: 66_400 },
   },
 };
 

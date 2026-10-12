@@ -150,6 +150,7 @@ beforeEach(() => {
     head: { meta: [], links: [] },
     jsonLd: [],
     customFilterFields: [],
+    placeRadius: null,
   });
   getTalentProfilePage.mockReset();
   getTalentProfilePage.mockResolvedValue({
@@ -252,6 +253,7 @@ describe('talent directory route — query and capability contracts', () => {
       head: { meta: [], links: [] },
       jsonLd: [],
       customFilterFields: [],
+      placeRadius: null,
     });
 
     await expect(talentLoader(talentLoaderContext({}))).resolves.toMatchObject({

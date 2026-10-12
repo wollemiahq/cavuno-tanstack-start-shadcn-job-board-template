@@ -15,6 +15,7 @@ import type { PublicBlogPostSummary } from '@cavuno/board';
  * One crawlable blog summary. The card keeps post, tag, and every author as
  * real links so a compact archive never throws away the blog's discovery
  * graph. Long editorial labels wrap instead of being replaced by ellipses.
+ * A post the operator featured carries a "Featured" badge beside its tag.
  *
  * `priority` — set on the likely LCP cover (first cover in the archive /
  * home strip). Skips `loading="lazy"` and sets `fetchPriority="high"` so
@@ -28,7 +29,8 @@ export function PostCard({
   post: PublicBlogPostSummary;
   priority?: boolean;
 }) {
-  const date = toBlogPostCardVM(post, getLocale()).publishedAtLabel;
+  const vm = toBlogPostCardVM(post, getLocale());
+  const date = vm.publishedAtLabel;
   const eyebrow = post.tags[0] ?? null;
   const firstAuthor = post.authors[0] ?? null;
 
@@ -56,19 +58,24 @@ export function PostCard({
         ) : null}
 
         <CardHeader className="gap-3">
-          {eyebrow ? (
-            <Link
-              to="/blog/tag/$tagSlug"
-              params={{ tagSlug: eyebrow.slug }}
-              className="focus-visible:ring-ring/50 relative z-10 w-fit rounded-2xl outline-none focus-visible:ring-2"
-            >
-              <Badge
-                variant="secondary"
-                className="h-auto max-w-full whitespace-normal"
-              >
-                {eyebrow.name}
-              </Badge>
-            </Link>
+          {vm.isFeatured || eyebrow ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {vm.isFeatured ? <Badge>{vm.featuredLabel}</Badge> : null}
+              {eyebrow ? (
+                <Link
+                  to="/blog/tag/$tagSlug"
+                  params={{ tagSlug: eyebrow.slug }}
+                  className="focus-visible:ring-ring/50 relative z-10 w-fit max-w-full rounded-2xl outline-none focus-visible:ring-2"
+                >
+                  <Badge
+                    variant="secondary"
+                    className="h-auto max-w-full whitespace-normal"
+                  >
+                    {eyebrow.name}
+                  </Badge>
+                </Link>
+              ) : null}
+            </div>
           ) : null}
 
           <CardTitle className="text-lg leading-snug">

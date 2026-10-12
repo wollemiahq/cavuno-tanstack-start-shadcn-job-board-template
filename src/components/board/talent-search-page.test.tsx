@@ -3,6 +3,7 @@
 import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 
+import { formatDistance } from '@cavuno/board/format';
 import {
   RouterProvider,
   createMemoryHistory,
@@ -24,6 +25,7 @@ import { TalentSearchPage } from './talent-search-page';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import { toTalentCardVM } from '@/board/talent-view-model';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import type { TalentDirectoryEntry } from '@cavuno/board';
 
 const showingRange = (from: number, to: number, count: number) =>
@@ -299,6 +301,60 @@ describe('TalentSearchPage — results description line', () => {
     });
 
     expect(await screen.findByText(showingRange(49, 50, 50))).toBeVisible();
+  });
+  const houstonRadius = {
+    placeName: 'Houston',
+    radius: {
+      unit: 'mi' as const,
+      selected: { value: 25, unit: 'mi' as const, km: 40.234 },
+      defaultOption: { value: 25, unit: 'mi' as const, km: 40.234 },
+      explicit: false,
+    },
+  };
+
+  it('says the search distance around a place in place of the range line', async () => {
+    const { container } = renderPage({
+      candidates: [candidateVm, candidateVm2],
+      count: 50,
+      placeRadius: houstonRadius,
+      onWithinChange: vi.fn(),
+    });
+
+    const locale = getLocale();
+    const distance = formatDistance(25, 'mi', locale);
+    await screen.findByRole('button', {
+      name: m.searchRadius_triggerLabel({ distance }),
+    });
+    expect(
+      container.querySelector('[data-slot="search-radius-scope"]')?.textContent,
+    ).toBe(
+      m.talentSearchRadius_withinScope({
+        from: (1).toLocaleString(locale),
+        to: (24).toLocaleString(locale),
+        count: 50,
+        countLabel: (50).toLocaleString(locale),
+        distance,
+        place: 'Houston',
+      }),
+    );
+    expect(screen.queryByText(showingRange(1, 24, 50))).toBeNull();
+  });
+
+  it('keeps the distance control when nobody is within it', async () => {
+    renderPage({
+      candidates: [],
+      count: 0,
+      search: { place: 'houston' },
+      placeRadius: houstonRadius,
+      onWithinChange: vi.fn(),
+    });
+
+    const distance = formatDistance(25, 'mi', getLocale());
+    expect(
+      await screen.findByRole('button', {
+        name: m.searchRadius_triggerLabel({ distance }),
+      }),
+    ).toBeVisible();
   });
 });
 

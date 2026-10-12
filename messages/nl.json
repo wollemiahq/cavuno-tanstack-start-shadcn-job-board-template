@@ -388,6 +388,7 @@
   "blogPost_authorWebsiteLabel": "Website",
   "blogPost_authorXLabel": "X",
   "blogPost_backToBlogLabel": "Terug naar het blog",
+  "blogPost_featuredLabel": "Uitgelicht",
   "blogPost_inThisArticleHeading": "In dit artikel",
   "blogPost_missingBodyDescription": "Het artikel bestaat, maar de inhoud is niet beschikbaar.",
   "blogPost_missingBodyTitle": "Dit artikel heeft geen gepubliceerde inhoud",
@@ -1231,6 +1232,7 @@
   "employerOnboarding_searchPlaceholder": "Bedrijven zoeken op naam…",
   "employerOnboarding_verifyBody": "Vul je zakelijke e-mailadres in om te bevestigen dat je bij {company} werkt. We sturen je daarna een verificatielink.",
   "employerOnboarding_verifyTitle": "Zakelijk e-mailadres verifiëren",
+  "employerOnboarding_workEmailDomainError": "Gebruik een e-mailadres op het websitedomein van je bedrijf ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Beheer de bedrijven waarmee je verbonden bent",
   "employerOnboarding_yourCompaniesTitle": "Jouw bedrijven",
   "employerPostJob_applyExternalLabel": "Kandidaten naar een externe URL of e-mailadres sturen",
@@ -2523,6 +2525,78 @@
       }
     }
   ],
+  "talentSearchRadius_exactScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} kandidaat {exactPlace}",
+        "countPlural=*": "{from}–{to} kandidaten {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input exactPlace",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} kandidaat {exactPlace}",
+        "countPlural=*": "{to} van {countLabel} kandidaten {exactPlace}"
+      }
+    }
+  ],
+  "talentSearchRadius_exactScopeUncounted": "Je ziet kandidaten {exactPlace}",
+  "talentSearchRadius_exactEmpty": "Geen kandidaten {exactPlace}",
+  "talentSearchRadius_withinScope": [
+    {
+      "declarations": [
+        "input from",
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} kandidaat binnen {distance} van {place}",
+        "countPlural=*": "{from}–{to} kandidaten binnen {distance} van {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeLast": [
+    {
+      "declarations": [
+        "input to",
+        "input count",
+        "input countLabel",
+        "input distance",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{to} van {countLabel} kandidaat binnen {distance} van {place}",
+        "countPlural=*": "{to} van {countLabel} kandidaten binnen {distance} van {place}"
+      }
+    }
+  ],
+  "talentSearchRadius_withinScopeUncounted": "Je ziet kandidaten binnen {distance} van {place}",
+  "talentSearchRadius_withinEmpty": "Geen kandidaten binnen {distance} van {place}",
   "talentSearch_retryLabel": "Opnieuw proberen",
   "talentSearch_selectedProfileRegionLabel": "Geselecteerd profiel",
   "talentSearch_skillLabel": "Vaardigheid",

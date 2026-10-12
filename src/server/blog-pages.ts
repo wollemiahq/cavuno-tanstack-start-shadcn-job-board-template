@@ -2,7 +2,7 @@
  * Route-family-owned server boundary for blog archive + post + tag + author.
  * Head meta + JSON-LD live here so route modules drop `@cavuno/board/seo`.
  */
-import { isNotFound } from '@cavuno/board';
+import { isBoardApiError, isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   blogAuthorPath,
@@ -54,27 +54,52 @@ async function seoBase() {
   };
 }
 
-type BoardErrorLike = {
-  code?: string;
-};
-
-function isBlogDisabled<T>(error: T): boolean {
-  if (error === null || error === undefined || Object(error) !== error) {
-    return false;
-  }
-  // SAFETY: Caught Board API errors may expose a string `code`; this guard
-  // only reads that optional field and treats all other shapes as non-blog errors.
-  return (error as BoardErrorLike).code === 'blog_disabled';
-}
-
 const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   try {
     return await read();
   } catch (error) {
-    if (isBlogDisabled(error)) throw notFound();
+    if (isBoardApiError(error) && error.code === 'blog_disabled') {
+      throw notFound();
+    }
     throw error;
   }
 };
+
+/**
+ * One archive page: the whole blog, or one tag's or author's posts, with the
+ * board's featured posts first (newest first), then the rest newest first, as
+ * one paginated list. A cursor only continues the list that minted it, so a
+ * cursor the API can no longer continue (an older Next link minted before
+ * this order, a tampered one, or one whose position is gone) gets the first
+ * page instead of an error. Any other error is left to the caller.
+ */
+async function readArchivePage(
+  filter: { tagSlug?: string; authorSlug?: string },
+  cursor: string | undefined,
+  headers: Record<string, string>,
+) {
+  const board = getBoard();
+  const read = (from: string | undefined) =>
+    blogRead(() =>
+      board.blog.posts.list(
+        { ...filter, cursor: from, limit: BLOG_PAGE_SIZE, sort: 'featured' },
+        { headers },
+      ),
+    );
+  try {
+    return { ...(await read(cursor)), restarted: false };
+  } catch (error) {
+    if (
+      cursor &&
+      isBoardApiError(error) &&
+      error.code === 'pagination_invalid_cursor'
+    ) {
+      // Page one, so the route must not offer Previous.
+      return { ...(await read(undefined)), restarted: true };
+    }
+    throw error;
+  }
+}
 
 export const getBlogIndexPage = createServerFn({ method: 'GET' })
   .validator((input: { cursor?: string; q?: string }) => input)
@@ -90,13 +115,8 @@ export const getBlogIndexPage = createServerFn({ method: 'GET' })
                 undefined,
                 { headers },
               ),
-            )
-          : blogRead(() =>
-              board.blog.posts.list(
-                { cursor: data.cursor, limit: BLOG_PAGE_SIZE },
-                { headers },
-              ),
-            ),
+            ).then((results) => ({ ...results, restarted: false }))
+          : readArchivePage({}, data.cursor, headers),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
           () => null,
         ),
@@ -252,16 +272,7 @@ export const getBlogTagPage = createServerFn({ method: 'GET' })
         blogRead(() =>
           board.blog.tags.retrieve(data.tagSlug, undefined, { headers }),
         ),
-        blogRead(() =>
-          board.blog.posts.list(
-            {
-              tagSlug: data.tagSlug,
-              cursor: data.cursor,
-              limit: BLOG_PAGE_SIZE,
-            },
-            { headers },
-          ),
-        ),
+        readArchivePage({ tagSlug: data.tagSlug }, data.cursor, headers),
         blogRead(() => board.blog.tags.list(undefined, { headers })).catch(
           () => null,
         ),
@@ -322,16 +333,7 @@ export const getBlogAuthorPage = createServerFn({ method: 'GET' })
             headers,
           }),
         ),
-        blogRead(() =>
-          board.blog.posts.list(
-            {
-              authorSlug: data.authorSlug,
-              cursor: data.cursor,
-              limit: BLOG_PAGE_SIZE,
-            },
-            { headers },
-          ),
-        ),
+        readArchivePage({ authorSlug: data.authorSlug }, data.cursor, headers),
         seoBase(),
       ]);
       const description =

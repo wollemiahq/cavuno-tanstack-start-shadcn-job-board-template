@@ -47,6 +47,7 @@ function asJsonObjects<T>(value: T): JsonObject[] {
  * collection (live `jobCount`), not from `relatedSearches` on this page. */
 const HOME_JOB_RAIL_LIMIT = 8;
 const HOME_CATEGORY_LIMIT = 8;
+const HOME_POST_LIMIT = 3;
 
 export const getHomePage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
@@ -84,9 +85,12 @@ export const getHomePage = createServerFn({ method: 'GET' })
       // Blog/talent need feature flags from context, but must not wait for
       // jobs/companies. Chain them off boardContextP so they start as soon as
       // context resolves and overlap the rest of the fan-out.
+      // Featured posts lead the strip, then the newest others.
       const blogP = boardContextP.then((boardContext) =>
         boardContext.features.blog
-          ? board.blog.posts.list({ limit: 3 }, { headers }).catch(() => null)
+          ? board.blog.posts
+              .list({ limit: HOME_POST_LIMIT, sort: 'featured' }, { headers })
+              .catch(() => null)
           : null,
       );
       const talentP = boardContextP.then((boardContext) =>

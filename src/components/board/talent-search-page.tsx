@@ -27,6 +27,10 @@ import {
   type AdPlacement,
 } from '@/components/board/listing-ad-rail';
 import { ListingPagination } from '@/components/board/listing-pagination';
+import {
+  SearchRadiusScope,
+  TALENT_SEARCH_RADIUS_SENTENCES,
+} from '@/components/board/search-radius-scope';
 import { TalentFilters } from '@/components/board/talent-filters';
 import { TalentListJobLink } from '@/components/board/talent-list-job-link';
 import { TalentListsPicker } from '@/components/board/talent-lists-picker';
@@ -84,6 +88,7 @@ import {
   type SavedPeopleRequest,
   type TalentListRecord,
 } from '@/server/employers';
+import type { TalentPlaceRadius } from '@/server/talent-pages';
 import { isReactComponent } from '@/utils/is-react-component';
 import type { EmployerPipeline } from '@cavuno/board';
 
@@ -110,6 +115,8 @@ export function TalentSearchPage({
   endAd,
   ads = ADS_OFF,
   profileUnlocks = false,
+  placeRadius = null,
+  onWithinChange,
 }: {
   candidates: TalentCardVM[];
   search?: TalentSearch;
@@ -136,6 +143,13 @@ export function TalentSearchPage({
   endAd?: AdPlacement;
   ads?: BoardAdsConfig;
   profileUnlocks?: boolean;
+  /**
+   * The distance control of a city or locality `place` search; it replaces
+   * the "Showing X–Y of N" line with "… within 25 mi of Houston".
+   */
+  placeRadius?: TalentPlaceRadius | null;
+  /** The new `within` URL value; see `SearchRadiusScope`. */
+  onWithinChange?: (within: number | undefined) => void;
 }) {
   // The loader served the last API-reachable page for anything deeper, so
   // the range label, the active page and Next/Previous must agree with it.
@@ -527,29 +541,40 @@ export function TalentSearchPage({
   const resultCount = savedMode ? (savedPage?.count ?? 0) : count;
   const resultPage = page;
   const resultPageSize = pageSize;
+  const resultRange = {
+    from: resultCount > 0 ? (resultPage - 1) * resultPageSize + 1 : 0,
+    to: Math.min(resultPage * resultPageSize, resultCount),
+    count: resultCount,
+  };
   const hiddenSaved =
     savedPage && narrowsSavedPeople(search)
       ? Math.max(0, savedPage.total - savedPage.count)
       : 0;
+  // The Saved view lists saved people, not the place search, so it keeps the
+  // plain range line.
+  const radiusScope =
+    placeRadius && onWithinChange && !savedMode ? (
+      <SearchRadiusScope
+        place={placeRadius.placeName}
+        unit={placeRadius.radius.unit}
+        within={placeRadius.radius.selected?.value ?? null}
+        defaultWithin={placeRadius.radius.defaultOption.value}
+        range={resultRange}
+        sentences={TALENT_SEARCH_RADIUS_SENTENCES}
+        onWithinChange={onWithinChange}
+      />
+    ) : null;
   const resultDescription =
-    resultCount > 0
-      ? talentResultsShowingLine(
-          {
-            from: (resultPage - 1) * resultPageSize + 1,
-            to: Math.min(resultPage * resultPageSize, resultCount),
-            count: resultCount,
-          },
-          language,
-        )
-      : null;
+    resultCount > 0 ? talentResultsShowingLine(resultRange, language) : null;
   const resultsBar = (
     <div data-slot="talent-results-bar" className="pb-3">
       <h1 className="text-foreground text-lg font-semibold tracking-tight">
         {m.talentSearch_resultsHeading()}
       </h1>
-      {resultDescription ? (
-        <p className="text-muted-foreground text-xs">{resultDescription}</p>
-      ) : null}
+      {radiusScope ??
+        (resultDescription ? (
+          <p className="text-muted-foreground text-xs">{resultDescription}</p>
+        ) : null)}
       {hiddenSaved > 0 && resultCount > 0 ? (
         <p className="text-muted-foreground text-xs">
           {m.talentSaved_hiddenByFilters({

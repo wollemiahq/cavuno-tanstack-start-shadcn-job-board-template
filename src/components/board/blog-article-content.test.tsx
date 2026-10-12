@@ -190,4 +190,18 @@ describe('BlogArticleContent — complete article presentation', () => {
     ).toHaveAttribute('href', '/blog');
     expect(screen.queryByLabelText(m.blogPost_articleBodyLabel())).toBeNull();
   });
+
+  it('marks a featured article in its header, and only a featured one', async () => {
+    renderArticle(post);
+    const header = (
+      await screen.findByRole('heading', { level: 1, name: post.title })
+    ).closest('header');
+    expect(header).not.toBeNull();
+    expect(header).toHaveTextContent(m.blogPost_featuredLabel());
+
+    cleanup();
+    renderArticle({ ...post, featured: false });
+    await screen.findByRole('heading', { level: 1, name: post.title });
+    expect(screen.queryByText(m.blogPost_featuredLabel())).toBeNull();
+  });
 });

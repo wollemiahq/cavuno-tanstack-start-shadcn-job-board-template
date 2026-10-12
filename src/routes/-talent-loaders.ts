@@ -60,6 +60,7 @@ export function createTalentDirectoryLoader(
           languages: deps.languages,
           openToRelocate: deps.openToRelocate,
           place: deps.place,
+          within: deps.within,
           sort: deps.sort,
           seniority: deps.seniority,
           permitCountry: deps.permitCountry,

@@ -60,6 +60,7 @@ beforeEach(() => {
       limit: 12,
       offset: 0,
       hasMore: true,
+      restarted: false,
       nextCursor: '3',
     },
     tags: [],

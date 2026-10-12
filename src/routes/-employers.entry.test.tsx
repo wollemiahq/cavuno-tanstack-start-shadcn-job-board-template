@@ -810,6 +810,89 @@ describe('employer entry surfaces', () => {
     expect(sendWorkEmail).not.toHaveBeenCalled();
   });
 
+  it("names the company's domain when the work email is off it", async () => {
+    sendWorkEmail.mockResolvedValue({
+      ok: false,
+      code: 'validation_bad_request',
+      message: 'wire text',
+      fields: ['workEmail'],
+    });
+    render(
+      <EmployerOnboardingPageView
+        membership={{
+          ...membership,
+          status: 'pending_work_email',
+          workEmail: null,
+          workEmailVerifiedAt: null,
+          // Stored before the Board API stripped trailing dots.
+          company: {
+            ...membership.company,
+            website: 'https://www.Acme.test./careers',
+          },
+        }}
+        slug="acme-ventures"
+        dependencies={onboardingViewDependencies}
+      />,
+    );
+    fireEvent.change(
+      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
+      { target: { value: 'owner@gmail.test' } },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerDashboard_sendLinkLabel(),
+      }),
+    );
+
+    expect(
+      await screen.findByText(
+        m.employerOnboarding_workEmailDomainError({ domain: 'acme.test' }),
+      ),
+    ).toBeVisible();
+    expect(sendWorkEmail).toHaveBeenCalledWith({
+      data: {
+        slug: 'acme-ventures',
+        body: { workEmail: 'owner@gmail.test' },
+      },
+    });
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the generic validation copy when the company has no website', async () => {
+    sendWorkEmail.mockResolvedValue({
+      ok: false,
+      code: 'validation_bad_request',
+      message: 'wire text',
+      fields: ['workEmail'],
+    });
+    render(
+      <EmployerOnboardingPageView
+        membership={{
+          ...membership,
+          status: 'pending_work_email',
+          workEmail: null,
+          workEmailVerifiedAt: null,
+          company: { ...membership.company, website: null },
+        }}
+        slug="acme-ventures"
+        dependencies={onboardingViewDependencies}
+      />,
+    );
+    fireEvent.change(
+      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
+      { target: { value: 'owner@gmail.test' } },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerDashboard_sendLinkLabel(),
+      }),
+    );
+
+    expect(
+      await screen.findByText(m.boardError_validationText()),
+    ).toBeVisible();
+  });
+
   it('keeps a failed cancellation visible without leaving onboarding', async () => {
     cancelClaim.mockResolvedValue({
       ok: false,
