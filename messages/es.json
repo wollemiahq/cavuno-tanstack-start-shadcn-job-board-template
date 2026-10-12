@@ -1230,6 +1230,7 @@
   "employerOnboarding_searchPlaceholder": "Buscar empresas por nombre...",
   "employerOnboarding_verifyBody": "Para confirmar que trabajas en {company}, introduce tu correo corporativo y te enviaremos un enlace de verificación.",
   "employerOnboarding_verifyTitle": "Verifica tu correo corporativo",
+  "employerOnboarding_workEmailDomainError": "Usa una dirección de correo del dominio del sitio web de tu empresa ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Gestiona tus vínculos con empresas",
   "employerOnboarding_yourCompaniesTitle": "Tus empresas",
   "employerPostJob_applyExternalLabel": "Enviar a los candidatos a una URL o correo externos",

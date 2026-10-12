@@ -59,6 +59,8 @@ export type ActionResult<T> =
       message: string;
       /** The broken Job form rules of a `jobs_constraint_violation`. */
       violations?: JobFormViolation[];
+      /** The body fields a `validation_bad_request` refused, by name. */
+      fields?: string[];
     };
 
 export async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
@@ -77,9 +79,37 @@ export async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
     };
     const violations = parseJobFormViolations(error.details);
     if (violations.length > 0) failure.violations = violations;
+    const fields = refusedFields(error.details);
+    if (error.code === 'validation_bad_request' && fields.length > 0) {
+      failure.fields = fields;
+    }
     return failure;
   }
 }
+
+/**
+ * A `validation_bad_request` from a domain rule (e.g. a work email off the
+ * company's domain) details its refusals as `{ [field]: string[] }`. Only the
+ * field names cross the server-fn boundary — the messages are wire English.
+ */
+function refusedFields<T>(details: T): string[] {
+  if (details === null || details === undefined || Object(details) !== details)
+    return [];
+  // SAFETY: Board API error details are object records; a field refusal is a
+  // non-empty message array, re-checked below before its key is reported.
+  const refusals = details as FieldRefusals;
+  return Object.keys(refusals).filter((field) => {
+    const messages = refusals[field];
+    return (
+      Array.isArray(messages) &&
+      messages.length > 0 &&
+      messages.every((message) => searchString(message) !== undefined)
+    );
+  });
+}
+
+/** The documented `details` of a domain-rule `validation_bad_request`. */
+type FieldRefusals = Record<string, ReadonlyArray<string> | undefined>;
 
 type ErrorDetails = { email?: string };
 function invitedEmailFromDetails<T>(details: T): string | undefined {

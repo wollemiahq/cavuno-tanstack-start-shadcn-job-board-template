@@ -1230,6 +1230,7 @@
   "employerOnboarding_searchPlaceholder": "Bedrijven zoeken op naam…",
   "employerOnboarding_verifyBody": "Vul je zakelijke e-mailadres in om te bevestigen dat je bij {company} werkt. We sturen je daarna een verificatielink.",
   "employerOnboarding_verifyTitle": "Zakelijk e-mailadres verifiëren",
+  "employerOnboarding_workEmailDomainError": "Gebruik een e-mailadres op het websitedomein van je bedrijf ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Beheer de bedrijven waarmee je verbonden bent",
   "employerOnboarding_yourCompaniesTitle": "Jouw bedrijven",
   "employerPostJob_applyExternalLabel": "Kandidaten naar een externe URL of e-mailadres sturen",

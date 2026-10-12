@@ -1230,6 +1230,7 @@
   "employerOnboarding_searchPlaceholder": "Unternehmen nach Namen suchen …",
   "employerOnboarding_verifyBody": "Um zu bestätigen, dass du bei {company} arbeitest, gib deine Arbeits-E-Mail ein — wir senden dir einen Bestätigungslink.",
   "employerOnboarding_verifyTitle": "Bestätige deine Arbeits-E-Mail",
+  "employerOnboarding_workEmailDomainError": "Verwende eine E-Mail-Adresse mit der Website-Domain deines Unternehmens ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Verwalte deine Unternehmensverbindungen",
   "employerOnboarding_yourCompaniesTitle": "Deine Unternehmen",
   "employerPostJob_applyExternalLabel": "Kandidat:innen an eine externe URL oder E-Mail weiterleiten",

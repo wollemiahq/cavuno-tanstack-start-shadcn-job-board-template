@@ -1230,6 +1230,7 @@
   "employerOnboarding_searchPlaceholder": "Search companies by name...",
   "employerOnboarding_verifyBody": "To confirm you work at {company}, enter your work email and we’ll send a verification link.",
   "employerOnboarding_verifyTitle": "Verify your work email",
+  "employerOnboarding_workEmailDomainError": "Use an email address on your company’s website domain ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Manage your company connections",
   "employerOnboarding_yourCompaniesTitle": "Your companies",
   "employerPostJob_applyExternalLabel": "Send candidates to an external URL or email",

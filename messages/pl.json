@@ -1282,6 +1282,7 @@
   "employerOnboarding_searchPlaceholder": "Szukaj firm po nazwie...",
   "employerOnboarding_verifyBody": "Aby potwierdzić, że pracujesz w firmie {company}, podaj swój służbowy e-mail, a wyślemy link weryfikacyjny.",
   "employerOnboarding_verifyTitle": "Zweryfikuj służbowy e-mail",
+  "employerOnboarding_workEmailDomainError": "Użyj adresu e-mail w domenie strony internetowej Twojej firmy ({domain}).",
   "employerOnboarding_yourCompaniesSubtitle": "Zarządzaj powiązaniami z firmami",
   "employerOnboarding_yourCompaniesTitle": "Twoje firmy",
   "employerPostJob_applyExternalLabel": "Kieruj kandydatów na zewnętrzny adres URL lub e-mail",
