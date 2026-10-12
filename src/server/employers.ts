@@ -800,27 +800,27 @@ export const deleteTalentList = createServerFn({ method: 'POST' })
 export type { SavedPeoplePage };
 
 /**
- * One page of the people saved to a list, filtered like `/talent`. With a
- * `stage`, only those sitting in that stage of the linked job's pipeline.
+ * The people saved to a list, filtered like `/talent`: one page of them, or,
+ * with a `stage`, all of them (at most 500) sitting in that stage of the
+ * linked job's pipeline, for the caller to page locally.
  */
+export type SavedPeopleRequest = {
+  slug: string;
+  listId: string;
+  query: SavedPeopleFilters;
+} & (
+  | { offset: number; limit: number; stage?: undefined }
+  | { stage: { job: string; stageId: string } }
+);
+
 export const listSavedPeople = createServerFn({ method: 'GET' })
-  .validator(
-    (input: {
-      slug: string;
-      listId: string;
-      query: SavedPeopleFilters;
-      offset: number;
-      limit: number;
-      stage?: { job: string; stageId: string };
-    }) => input,
-  )
+  .validator((input: SavedPeopleRequest) => input)
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (): Promise<SavedPeoplePage> => {
       const headers = authedHeaders(context);
       const members = getBoard().me.companies.talentLists.members;
-      const stage = data.stage;
-      if (!stage) {
+      if (!data.stage) {
         const page = await members.list(
           data.slug,
           data.listId,
@@ -833,6 +833,7 @@ export const listSavedPeople = createServerFn({ method: 'GET' })
           total: page.total,
         };
       }
+      const stage = data.stage;
       return readSavedPeopleInStage({
         readPipeline: (query) =>
           getBoard().me.companies.applicants.list(
@@ -844,8 +845,6 @@ export const listSavedPeople = createServerFn({ method: 'GET' })
           members.list(data.slug, data.listId, query, { headers }),
         query: data.query,
         stageId: stage.stageId,
-        offset: data.offset,
-        limit: data.limit,
       });
     }),
   );

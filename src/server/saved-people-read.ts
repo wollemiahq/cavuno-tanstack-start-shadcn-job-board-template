@@ -64,25 +64,22 @@ async function candidatesInStage(
 }
 
 /**
- * One page of a list's saved people that sit in one stage of the linked
- * job's pipeline. The members API cannot filter by stage, so every matching
- * saved person (at most 500) is read and joined to that stage's applicants,
- * read with the API's stage filter, then paged.
+ * Every one of a list's saved people that sit in one stage of the linked
+ * job's pipeline, in list order. The members API cannot filter by stage, so
+ * every matching saved person (at most 500) is read and joined to that
+ * stage's applicants, read with the API's stage filter. The whole result is
+ * returned so the caller pages it without reading it all again.
  */
 export async function readSavedPeopleInStage({
   readPipeline,
   readMembers,
   query,
   stageId,
-  offset,
-  limit,
 }: {
   readPipeline: ReadPipeline;
   readMembers: ReadMembers;
   query: SavedPeopleFilters;
   stageId: string;
-  offset: number;
-  limit: number;
 }): Promise<SavedPeoplePage> {
   let total = 0;
   const [inStageIds, matches] = await Promise.all([
@@ -100,7 +97,7 @@ export async function readSavedPeopleInStage({
     inStageIds.has(member.candidate.id),
   );
   return {
-    data: inStage.slice(offset, offset + limit),
+    data: inStage,
     count: inStage.length,
     total,
   };

@@ -72,7 +72,6 @@ import {
   savedPeopleFilters,
   talentListFiltersEqual,
   talentSearchToListFilters,
-  type SavedPeopleFilters,
   type TalentSearch,
 } from '@/lib/talent-search';
 import {
@@ -82,21 +81,20 @@ import {
   listTalentListMemberships,
   updateTalentList,
   type SavedPeoplePage,
+  type SavedPeopleRequest,
   type TalentListRecord,
 } from '@/server/employers';
 import { isReactComponent } from '@/utils/is-react-component';
 
-type SavedRequest = {
-  slug: string;
-  listId: string;
-  query: SavedPeopleFilters;
-  offset: number;
-  limit: number;
-  stage?: { job: string; stageId: string };
-};
-
 type SavedResult =
-  | { key: string; listId: string; status: 'ready'; result: SavedPeoplePage }
+  | {
+      key: string;
+      listId: string;
+      status: 'ready';
+      result: SavedPeoplePage;
+      /** Everyone in a stage, paged here rather than by the server. */
+      whole: boolean;
+    }
   | { key: string; listId: string; status: 'error' };
 
 export function TalentSearchPage({
@@ -294,21 +292,21 @@ export function TalentSearchPage({
           slug: workspace.slug,
           listId: selectedList.id,
           query: savedPeopleFilters(search),
-          offset: (page - 1) * pageSize,
-          limit: pageSize,
-          stage:
-            stage && selectedList.jobId
-              ? { job: selectedList.jobId, stageId: stage }
-              : undefined,
+          // A stage read returns everyone in it, paged here, so a page
+          // change rereads nothing.
+          ...(stage && selectedList.jobId
+            ? { stage: { job: selectedList.jobId, stageId: stage } }
+            : { offset: (page - 1) * pageSize, limit: pageSize }),
           reload: savedReload,
-        } satisfies SavedRequest & { reload: number })
+        } satisfies SavedPeopleRequest & { reload: number })
       : null;
   useEffect(() => {
     if (!savedRequestKey) return;
-    // SAFETY: the key is JSON.stringify of a SavedRequest built just above.
+    // SAFETY: the key is JSON.stringify of a SavedPeopleRequest built just
+    // above.
     const { reload: _reload, ...request } = JSON.parse(
       savedRequestKey,
-    ) as SavedRequest & { reload: number };
+    ) as SavedPeopleRequest & { reload: number };
     let cancelled = false;
     void listSavedPeople({ data: request })
       .then((result) => {
@@ -318,6 +316,7 @@ export function TalentSearchPage({
             listId: request.listId,
             status: 'ready',
             result,
+            whole: Boolean(request.stage),
           });
         }
       })
@@ -341,7 +340,22 @@ export function TalentSearchPage({
     (savedResult.status === 'ready' || savedResult.key === savedRequestKey)
       ? savedResult
       : null;
-  const savedPage = savedShown?.status === 'ready' ? savedShown.result : null;
+  const savedResultPage =
+    savedShown?.status === 'ready' ? savedShown.result : null;
+  const savedWhole = savedShown?.status === 'ready' && savedShown.whole;
+  const savedPage = useMemo(
+    () =>
+      savedResultPage && savedWhole
+        ? {
+            ...savedResultPage,
+            data: savedResultPage.data.slice(
+              (page - 1) * pageSize,
+              page * pageSize,
+            ),
+          }
+        : savedResultPage,
+    [savedResultPage, savedWhole, page, pageSize],
+  );
   /** A page past the last one (people removed, or an old link). */
   const savedLastPage =
     savedView &&

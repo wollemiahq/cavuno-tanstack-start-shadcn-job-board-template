@@ -71,15 +71,13 @@ function readMembers(ids: string[]) {
   });
 }
 
-async function inStage(stageId: string, saved: string[], page = 0) {
+async function inStage(stageId: string, saved: string[]) {
   // SAFETY: the fakes return only the fields the join reads.
   const result = await readSavedPeopleInStage({
     readPipeline: readPipeline() as never,
     readMembers: readMembers(saved) as never,
     query: {},
     stageId,
-    offset: page * 2,
-    limit: 2,
   });
   return {
     ids: result.data.map((member) => member.candidate.id),
@@ -105,10 +103,10 @@ describe('readSavedPeopleInStage', () => {
   it('puts applied and hidden-stage applicants in the review stage', async () => {
     const saved = ['bu_r1', 'bu_a1', 'bu_h1', 'bu_s1'];
 
-    const first = await inStage('stage_review', saved);
-    const second = await inStage('stage_review', saved, 1);
-    expect([...first.ids, ...second.ids]).toEqual(['bu_r1', 'bu_a1', 'bu_h1']);
-    expect(first.count).toBe(3);
+    await expect(inStage('stage_review', saved)).resolves.toMatchObject({
+      ids: ['bu_r1', 'bu_a1', 'bu_h1'],
+      count: 3,
+    });
     await expect(inStage('stage_interview', saved)).resolves.toMatchObject({
       ids: [],
       count: 0,

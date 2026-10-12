@@ -30,6 +30,7 @@ const server = vi.hoisted(() => ({
   getPipeline: vi.fn(),
   listSavedPeople: vi.fn(),
   listTalentListMemberships: vi.fn(),
+  removeTalentListMember: vi.fn(),
   updateTalentList: vi.fn(),
 }));
 
@@ -107,6 +108,8 @@ const ada = candidate('bu_ada', 'Ada Lovelace');
 
 beforeEach(() => {
   session.current = employerSession;
+  // jsdom has no scrolling; a page change scrolls the results to the top.
+  Element.prototype.scrollTo = vi.fn();
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn().mockReturnValue({
@@ -262,6 +265,94 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
         stage: { job: 'job_a', stageId: 'stage_interview' },
       }),
     });
+  });
+
+  it('pages a stage’s saved people without reading them again', async () => {
+    const people = Array.from({ length: 30 }, (_, index) =>
+      member(candidate(`bu_p${index}`, `Person ${index}`)),
+    );
+    server.listSavedPeople.mockResolvedValue({
+      data: people,
+      count: 30,
+      total: 40,
+    });
+    const router = renderSaved(
+      '/talent/?list=list_berlin&saved=1&stage=stage_interview',
+      'job_a',
+    );
+
+    expect(await screen.findByText('Person 0')).toBeVisible();
+    expect(screen.getByText('Person 23')).toBeVisible();
+    expect(screen.queryByText('Person 24')).toBeNull();
+    expect(server.listSavedPeople).toHaveBeenCalledTimes(1);
+    expect(server.listSavedPeople.mock.calls[0]?.[0].data).not.toHaveProperty(
+      'offset',
+    );
+
+    router.history.push(
+      '/talent/?list=list_berlin&saved=1&stage=stage_interview&page=2',
+    );
+    expect(await screen.findByText('Person 29')).toBeVisible();
+    expect(screen.getByText('Person 24')).toBeVisible();
+    expect(screen.queryByText('Person 23')).toBeNull();
+    expect(server.listSavedPeople).toHaveBeenCalledTimes(1);
+
+    router.history.push('/talent/?list=list_berlin&saved=1&stage=stage_short');
+    await waitFor(() =>
+      expect(server.listSavedPeople).toHaveBeenCalledTimes(2),
+    );
+    expect(server.listSavedPeople).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        stage: { job: 'job_a', stageId: 'stage_short' },
+      }),
+    });
+
+    router.history.push(
+      '/talent/?list=list_berlin&saved=1&stage=stage_short&seniority=senior',
+    );
+    await waitFor(() =>
+      expect(server.listSavedPeople).toHaveBeenCalledTimes(3),
+    );
+  });
+
+  it('rereads a stage’s saved people after an unsave', async () => {
+    server.listTalentListMemberships.mockResolvedValue({
+      data: [{ listId: 'list_berlin' }],
+    });
+    server.removeTalentListMember.mockResolvedValue({ ok: true, data: null });
+    renderSaved(
+      '/talent/?list=list_berlin&saved=1&stage=stage_interview',
+      'job_a',
+    );
+
+    await screen.findByText('Ada Lovelace');
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentSave_savedLabel() }),
+    );
+    const item = await screen.findByRole('menuitemcheckbox', {
+      name: 'Berlin engineers',
+    });
+    await waitFor(() => expect(item).toHaveAttribute('aria-checked', 'true'));
+    fireEvent.click(item);
+
+    await waitFor(() =>
+      expect(server.listSavedPeople).toHaveBeenCalledTimes(2),
+    );
+  });
+
+  it('moves a stage page past the end back to the last page', async () => {
+    const router = renderSaved(
+      '/talent/?list=list_berlin&saved=1&stage=stage_interview&page=3',
+      'job_a',
+    );
+
+    expect(await screen.findByText('Ada Lovelace')).toBeVisible();
+    expect(router.state.location.search).toEqual({
+      list: 'list_berlin',
+      saved: true,
+      stage: 'stage_interview',
+    });
+    expect(server.listSavedPeople).toHaveBeenCalledTimes(1);
   });
 
   it('says so when nobody is saved yet', async () => {
