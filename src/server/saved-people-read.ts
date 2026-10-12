@@ -13,8 +13,9 @@ import type { SavedPeopleFilters } from '@/lib/talent-search';
 /** A list holds at most 500 people; the API pages them 50 at a time. */
 const SAVED_PEOPLE_CAP = 500;
 const SAVED_PEOPLE_SCAN_PAGE = 50;
-/** Applicants per pipeline read while collecting one stage's people. */
-const PIPELINE_SCAN_PAGE = 500;
+/** Applicants per pipeline read while collecting one stage's people (the
+ *  API's maximum page). */
+const PIPELINE_SCAN_PAGE = 2000;
 
 export type SavedPeoplePage = {
   data: TalentListMember[];

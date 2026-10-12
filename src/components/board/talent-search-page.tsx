@@ -348,7 +348,8 @@ export function TalentSearchPage({
     savedShown?.key === savedRequestKey &&
     savedPage &&
     savedPage.count > 0 &&
-    savedPage.data.length === 0
+    savedPage.data.length === 0 &&
+    Math.ceil(savedPage.count / pageSize) < page
       ? Math.ceil(savedPage.count / pageSize)
       : null;
   useEffect(() => {
