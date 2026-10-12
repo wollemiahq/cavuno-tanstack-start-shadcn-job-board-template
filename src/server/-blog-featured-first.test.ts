@@ -87,17 +87,12 @@ function envelope(
   };
 }
 
-/** Chronological pages answer without `featured`; featured lists with it. */
-function serve(
-  chronological: ReturnType<typeof post>[],
-  featured: ReturnType<typeof post>[],
-) {
-  mocks.postsList.mockImplementation(async (query: { featured?: 'true' }) =>
-    query.featured === 'true' ? envelope(featured) : envelope(chronological),
-  );
-}
-
 const ids = (posts: { id: string }[] | null) => posts?.map((p) => p.id);
+
+/** A Board API error as the SDK raises it. */
+function apiError(code: string) {
+  return Object.assign(new Error(code), { code });
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -123,32 +118,26 @@ beforeEach(() => {
   });
 });
 
-describe('blog index: featured posts lead page one', () => {
-  it('puts featured posts first and keeps the chronological cursor', async () => {
-    serve(
-      [post('c1'), post('f1', true), post('c2')],
-      [post('f1', true), post('f-old', true)],
+describe('blog archives list featured posts first (sort=featured)', () => {
+  it('reads every /blog page in one sorted request and keeps its cursor', async () => {
+    mocks.postsList.mockResolvedValue(
+      envelope([post('f1', true), post('c1'), post('c2')]),
     );
 
-    const result = await getBlogIndexPage({ data: {} });
-
+    const first = await getBlogIndexPage({ data: {} });
+    expect(mocks.postsList).toHaveBeenCalledTimes(1);
     expect(mocks.postsList).toHaveBeenCalledWith(
-      { featured: 'true', limit: BLOG_PAGE_SIZE },
+      { cursor: undefined, limit: BLOG_PAGE_SIZE, sort: 'featured' },
       { headers: {} },
     );
-    expect(ids(result.page.data)).toEqual(['f1', 'f-old', 'c1', 'c2']);
-    expect(result.page.nextCursor).toBe('next-page');
-    expect(result.page.hasMore).toBe(true);
-    expect(result.page.count).toBe(40);
-  });
+    expect(ids(first.page.data)).toEqual(['f1', 'c1', 'c2']);
+    expect(first.page.nextCursor).toBe('next-page');
 
-  it('leaves later pages purely chronological', async () => {
-    serve([post('c13'), post('f-old', true)], [post('f-old', true)]);
-
-    const result = await getBlogIndexPage({ data: { cursor: 'next-page' } });
-
-    expect(ids(result.page.data)).toEqual(['c13', 'f-old']);
-    expect(mocks.postsList).toHaveBeenCalledTimes(1);
+    await getBlogIndexPage({ data: { cursor: 'next-page' } });
+    expect(mocks.postsList).toHaveBeenLastCalledWith(
+      { cursor: 'next-page', limit: BLOG_PAGE_SIZE, sort: 'featured' },
+      { headers: {} },
+    );
   });
 
   it('leaves search results in their own order', async () => {
@@ -160,70 +149,62 @@ describe('blog index: featured posts lead page one', () => {
     expect(mocks.postsList).not.toHaveBeenCalled();
   });
 
-  it('falls back to the chronological page when the featured read fails', async () => {
-    mocks.postsList.mockImplementation(async (query: { featured?: 'true' }) => {
-      if (query.featured === 'true') throw new Error('unavailable');
-      return envelope([post('c1'), post('c2')]);
-    });
+  it('scopes tag and author pages to their listing', async () => {
+    mocks.postsList.mockResolvedValue(envelope([post('f1', true)]));
 
-    const result = await getBlogIndexPage({ data: {} });
-
-    expect(ids(result.page.data)).toEqual(['c1', 'c2']);
-  });
-});
-
-describe('tag and author archives: featured posts lead page one', () => {
-  it("leads a tag page with that tag's featured posts", async () => {
-    serve(
-      [post('c1'), post('f1', true)],
-      [post('f1', true), post('f-old', true)],
-    );
-
-    const result = await getBlogTagPage({ data: { tagSlug: 'hiring' } });
-
-    expect(mocks.postsList).toHaveBeenCalledWith(
-      { tagSlug: 'hiring', featured: 'true', limit: BLOG_PAGE_SIZE },
+    await getBlogTagPage({ data: { tagSlug: 'hiring' } });
+    expect(mocks.postsList).toHaveBeenLastCalledWith(
+      {
+        tagSlug: 'hiring',
+        cursor: undefined,
+        limit: BLOG_PAGE_SIZE,
+        sort: 'featured',
+      },
       { headers: {} },
     );
-    expect(ids(result.posts.data)).toEqual(['f1', 'f-old', 'c1']);
-    expect(result.posts.nextCursor).toBe('next-page');
-  });
 
-  it("leads an author page with that author's featured posts", async () => {
-    serve([post('c1'), post('c2')], [post('f-old', true)]);
-
-    const result = await getBlogAuthorPage({ data: { authorSlug: 'priya' } });
-
-    expect(mocks.postsList).toHaveBeenCalledWith(
-      { authorSlug: 'priya', featured: 'true', limit: BLOG_PAGE_SIZE },
+    await getBlogAuthorPage({ data: { authorSlug: 'priya', cursor: 'c' } });
+    expect(mocks.postsList).toHaveBeenLastCalledWith(
+      {
+        authorSlug: 'priya',
+        cursor: 'c',
+        limit: BLOG_PAGE_SIZE,
+        sort: 'featured',
+      },
       { headers: {} },
     );
-    expect(ids(result.posts.data)).toEqual(['f-old', 'c1', 'c2']);
   });
 
-  it('leaves later tag pages purely chronological', async () => {
-    serve([post('c13'), post('f-old', true)], [post('f-old', true)]);
-
-    const result = await getBlogTagPage({
-      data: { tagSlug: 'hiring', cursor: 'next-page' },
+  it('serves page one for a cursor minted by another list (an old Next link)', async () => {
+    mocks.postsList.mockImplementation(async (query: { cursor?: string }) => {
+      if (query.cursor) throw apiError('pagination_invalid_cursor');
+      return envelope([post('f1', true), post('c1')]);
     });
 
-    expect(ids(result.posts.data)).toEqual(['c13', 'f-old']);
-    expect(mocks.postsList).toHaveBeenCalledTimes(1);
+    const result = await getBlogIndexPage({ data: { cursor: 'stale' } });
+
+    expect(ids(result.page.data)).toEqual(['f1', 'c1']);
+    expect(mocks.postsList).toHaveBeenLastCalledWith(
+      { cursor: undefined, limit: BLOG_PAGE_SIZE, sort: 'featured' },
+      { headers: {} },
+    );
   });
 });
 
 describe('homepage blog strip: featured first, three posts', () => {
-  it('shows featured posts, then the newest others, capped at three', async () => {
-    serve(
-      [post('c1'), post('f1', true), post('c2')],
-      [post('f1', true), post('f-old', true)],
+  it('reads one sorted request of three posts', async () => {
+    mocks.postsList.mockResolvedValue(
+      envelope([post('f1', true), post('c1'), post('c2')]),
     );
 
     const result = await getHomePage();
 
-    expect(ids(result.posts)).toEqual(['f1', 'f-old', 'c1']);
-    // The count eyebrow still reports every post, not the strip.
+    expect(mocks.postsList).toHaveBeenCalledTimes(1);
+    expect(mocks.postsList).toHaveBeenCalledWith(
+      { limit: 3, sort: 'featured' },
+      { headers: {} },
+    );
+    expect(ids(result.posts)).toEqual(['f1', 'c1', 'c2']);
     expect(result.postsCount).toBe(40);
   });
 });

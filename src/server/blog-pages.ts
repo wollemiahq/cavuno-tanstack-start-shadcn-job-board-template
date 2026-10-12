@@ -17,7 +17,7 @@ import {
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
-import { BLOG_PAGE_SIZE, featuredPostsFirst } from '../lib/blog';
+import { BLOG_PAGE_SIZE } from '../lib/blog';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
@@ -67,6 +67,14 @@ function isBlogDisabled<T>(error: T): boolean {
   return (error as BoardErrorLike).code === 'blog_disabled';
 }
 
+function isInvalidCursor<T>(error: T): boolean {
+  if (error === null || error === undefined || Object(error) !== error) {
+    return false;
+  }
+  // SAFETY: as in `isBlogDisabled`, only the optional string `code` is read.
+  return (error as BoardErrorLike).code === 'pagination_invalid_cursor';
+}
+
 const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
   try {
     return await read();
@@ -77,11 +85,11 @@ const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
 };
 
 /**
- * One chronological archive page: the whole blog, or one tag's or author's
- * posts. Page one (no cursor) is led by that archive's featured posts; the
- * cursor, `hasMore`, and count stay the chronological page's, so later pages
- * are untouched and a featured post also appears there in its date position.
- * A failed featured read falls back to the plain page.
+ * One archive page: the whole blog, or one tag's or author's posts, with the
+ * board's featured posts first (newest first), then the rest newest first, as
+ * one paginated list. A cursor only continues the list that minted it, so an
+ * older Next link (minted before this order, or tampered with) gets the first
+ * page instead of an error.
  */
 async function readArchivePage(
   filter: { tagSlug?: string; authorSlug?: string },
@@ -89,21 +97,19 @@ async function readArchivePage(
   headers: Record<string, string>,
 ) {
   const board = getBoard();
-  const pageP = blogRead(() =>
-    board.blog.posts.list(
-      { ...filter, cursor, limit: BLOG_PAGE_SIZE },
-      { headers },
-    ),
-  );
-  if (cursor) return pageP;
-  const [page, featured] = await Promise.all([
-    pageP,
-    board.blog.posts
-      .list({ ...filter, featured: 'true', limit: BLOG_PAGE_SIZE }, { headers })
-      .catch(() => null),
-  ]);
-  if (!featured) return page;
-  return { ...page, data: featuredPostsFirst(featured.data, page.data) };
+  const read = (from: string | undefined) =>
+    blogRead(() =>
+      board.blog.posts.list(
+        { ...filter, cursor: from, limit: BLOG_PAGE_SIZE, sort: 'featured' },
+        { headers },
+      ),
+    );
+  try {
+    return await read(cursor);
+  } catch (error) {
+    if (cursor && isInvalidCursor(error)) return read(undefined);
+    throw error;
+  }
 }
 
 export const getBlogIndexPage = createServerFn({ method: 'GET' })
