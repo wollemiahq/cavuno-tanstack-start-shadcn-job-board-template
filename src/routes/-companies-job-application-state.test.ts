@@ -127,11 +127,9 @@ describe('full job application state', () => {
       }),
     );
 
-    const error = await loadJobDetail(jobDetailLoaderInput()).catch(
-      (thrown: unknown) => thrown,
+    await expect(loadJobDetail(jobDetailLoaderInput())).rejects.toSatisfy(
+      isNotFound,
     );
-
-    expect(isNotFound(error)).toBe(true);
     expect(getSessionUser).not.toHaveBeenCalled();
     expect(getCompany).not.toHaveBeenCalled();
     expect(getSimilarJobs).not.toHaveBeenCalled();
