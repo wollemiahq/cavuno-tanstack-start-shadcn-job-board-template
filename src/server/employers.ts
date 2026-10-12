@@ -43,6 +43,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
+import { listingRadiusKm } from './listing-place-cache';
 import { withCatalogFeatures } from './post-plans';
 
 import {
@@ -851,16 +852,29 @@ export const listSavedPeople = createServerFn({ method: 'GET' })
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (): Promise<SavedPeoplePage> => {
+      const headers = authedHeaders(context);
+      const { within, ...query } = data.query;
+      // The search distance widens a city or locality place like `/talent`.
+      const radius = query.place
+        ? await listingRadiusKm(
+            query.place,
+            getBoard()
+              .taxonomy.places.resolve(query.place, { headers })
+              .catch(() => null),
+            within,
+          )
+        : undefined;
       const page = await getBoard().me.companies.talentLists.members.list(
         data.slug,
         data.listId,
         {
-          ...data.query,
+          ...query,
+          radius,
           stage: data.stage,
           offset: data.offset,
           limit: data.limit,
         },
-        { headers: authedHeaders(context) },
+        { headers },
       );
       return {
         data: page.data,

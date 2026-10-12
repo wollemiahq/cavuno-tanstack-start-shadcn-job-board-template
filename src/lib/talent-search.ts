@@ -167,11 +167,15 @@ export function talentListingLoaderDeps(
   };
 }
 
-/** Directory filters a Saved view runs over a list's saved people. */
+/**
+ * Directory filters a Saved view runs over a list's saved people. `within`
+ * is the URL's search distance, turned into the API's `radius` (km) on the
+ * server, as for `/talent`.
+ */
 export type SavedPeopleFilters = Omit<
   TalentListMembersQuery,
-  'cursor' | 'offset' | 'limit'
->;
+  'cursor' | 'offset' | 'limit' | 'radius' | 'stage'
+> & { within?: number };
 
 /**
  * The Saved view's filters: the same directory filters as `/talent`, ANDed
@@ -186,6 +190,7 @@ export function savedPeopleFilters(search: TalentSearch): SavedPeopleFilters {
     languages: search.languages,
     openToRelocate: search.openToRelocate,
     place: search.place,
+    within: search.place ? search.within : undefined,
     sort: search.sort,
     seniority: search.seniority,
     permitCountry: search.permitCountry,

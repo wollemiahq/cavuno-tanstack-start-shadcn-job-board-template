@@ -550,10 +550,9 @@ export function TalentSearchPage({
     savedPage && narrowsSavedPeople(search)
       ? Math.max(0, savedPage.total - savedPage.count)
       : 0;
-  // The Saved view lists saved people, not the place search, so it keeps the
-  // plain range line.
+  // The Saved view searches the same distance, so it keeps the control too.
   const radiusScope =
-    placeRadius && onWithinChange && !savedMode ? (
+    placeRadius && onWithinChange ? (
       <SearchRadiusScope
         place={placeRadius.placeName}
         unit={placeRadius.radius.unit}

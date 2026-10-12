@@ -192,7 +192,7 @@ function renderSaved(initial: string, jobId: string | null = null) {
 describe('TalentSearchPage — Saved view of a saved search', () => {
   it('shows only the saved people the current filters keep', async () => {
     const router = renderSaved(
-      '/talent/?list=list_berlin&saved=1&place=berlin',
+      '/talent/?list=list_berlin&saved=1&place=berlin&within=25',
     );
 
     expect(await screen.findByText('Ada Lovelace')).toBeVisible();
@@ -200,7 +200,8 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
       data: expect.objectContaining({
         slug: 'acme',
         listId: 'list_berlin',
-        query: expect.objectContaining({ place: 'berlin' }),
+        // The search distance goes along, as for `/talent`.
+        query: expect.objectContaining({ place: 'berlin', within: 25 }),
         offset: 0,
         limit: 24,
       }),
