@@ -15,7 +15,7 @@ import { Bookmark, Users } from 'lucide-react';
 import { m } from '../../paraglide/messages';
 import { ListingAdResults } from './listing-ad-results';
 
-import { visibleStages, type PipelineStageVM } from '@/board/pipeline-stages';
+import { stageFilterTokens, visibleStages } from '@/board/pipeline-stages';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   talentCardSelectionKey,
@@ -85,16 +85,10 @@ import {
   type TalentListRecord,
 } from '@/server/employers';
 import { isReactComponent } from '@/utils/is-react-component';
+import type { EmployerPipeline } from '@cavuno/board';
 
 type SavedResult =
-  | {
-      key: string;
-      listId: string;
-      status: 'ready';
-      result: SavedPeoplePage;
-      /** Everyone in a stage, paged here rather than by the server. */
-      whole: boolean;
-    }
+  | { key: string; listId: string; status: 'ready'; result: SavedPeoplePage }
   | { key: string; listId: string; status: 'error' };
 
 export function TalentSearchPage({
@@ -171,9 +165,9 @@ export function TalentSearchPage({
   );
   const [savedResult, setSavedResult] = useState<SavedResult | null>(null);
   const [savedReload, setSavedReload] = useState(0);
-  const [linkedStages, setLinkedStages] = useState<{
+  const [linkedPipeline, setLinkedPipeline] = useState<{
     jobId: string;
-    stages: PipelineStageVM[];
+    pipeline: Pick<EmployerPipeline, 'stages'>;
   } | null>(null);
   const selectedList = lists.find((list) => list.id === search.list);
   const boundJobId = selectedList?.jobId ?? undefined;
@@ -253,15 +247,15 @@ export function TalentSearchPage({
     })
       .then((pipeline) => {
         if (cancelled) return;
-        setLinkedStages({
-          jobId: linkedJobForStages,
-          stages: visibleStages(pipeline),
-        });
+        setLinkedPipeline({ jobId: linkedJobForStages, pipeline });
       })
       .catch(() => {
         // No stages to offer; a `?stage=` is then cleared below.
         if (!cancelled) {
-          setLinkedStages({ jobId: linkedJobForStages, stages: [] });
+          setLinkedPipeline({
+            jobId: linkedJobForStages,
+            pipeline: { stages: [] },
+          });
         }
       });
     return () => {
@@ -269,11 +263,12 @@ export function TalentSearchPage({
     };
   }, [linkedJobForStages, workspace]);
   const stagesLoaded =
-    !linkedJobForStages || linkedStages?.jobId === linkedJobForStages;
-  const stages =
-    linkedJobForStages && stagesLoaded && linkedStages
-      ? linkedStages.stages
-      : [];
+    !linkedJobForStages || linkedPipeline?.jobId === linkedJobForStages;
+  const pipeline =
+    linkedJobForStages && stagesLoaded && linkedPipeline
+      ? linkedPipeline.pipeline
+      : { stages: [] };
+  const stages = visibleStages(pipeline);
   const stage = stages.some((row) => row.id === search.stage)
     ? search.stage
     : undefined;
@@ -292,18 +287,18 @@ export function TalentSearchPage({
           slug: workspace.slug,
           listId: selectedList.id,
           query: savedPeopleFilters(search),
-          // A stage read returns everyone in it, paged here, so a page
-          // change rereads nothing.
-          ...(stage && selectedList.jobId
-            ? { stage: { job: selectedList.jobId, stageId: stage } }
-            : { offset: (page - 1) * pageSize, limit: pageSize }),
+          offset: (page - 1) * pageSize,
+          limit: pageSize,
+          // Every application stage the chosen column shows.
+          stage: stage
+            ? stageFilterTokens(pipeline, stage)?.join(',')
+            : undefined,
           reload: savedReload,
         } satisfies SavedPeopleRequest & { reload: number })
       : null;
   useEffect(() => {
     if (!savedRequestKey) return;
-    // SAFETY: the key is JSON.stringify of a SavedPeopleRequest built just
-    // above.
+    // SAFETY: the key is JSON.stringify of a SavedPeopleRequest built just above.
     const { reload: _reload, ...request } = JSON.parse(
       savedRequestKey,
     ) as SavedPeopleRequest & { reload: number };
@@ -316,7 +311,6 @@ export function TalentSearchPage({
             listId: request.listId,
             status: 'ready',
             result,
-            whole: Boolean(request.stage),
           });
         }
       })
@@ -340,22 +334,7 @@ export function TalentSearchPage({
     (savedResult.status === 'ready' || savedResult.key === savedRequestKey)
       ? savedResult
       : null;
-  const savedResultPage =
-    savedShown?.status === 'ready' ? savedShown.result : null;
-  const savedWhole = savedShown?.status === 'ready' && savedShown.whole;
-  const savedPage = useMemo(
-    () =>
-      savedResultPage && savedWhole
-        ? {
-            ...savedResultPage,
-            data: savedResultPage.data.slice(
-              (page - 1) * pageSize,
-              page * pageSize,
-            ),
-          }
-        : savedResultPage,
-    [savedResultPage, savedWhole, page, pageSize],
-  );
+  const savedPage = savedShown?.status === 'ready' ? savedShown.result : null;
   /** A page past the last one (people removed, or an old link). */
   const savedLastPage =
     savedView &&

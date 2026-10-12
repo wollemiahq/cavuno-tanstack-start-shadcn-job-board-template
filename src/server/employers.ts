@@ -11,6 +11,7 @@ import {
   type EmployerCheckoutBody,
   type EmployerCompanySearchQuery,
   type SendWorkEmailBody,
+  type TalentListMember,
   type UpdateCompanyMemberRoleBody,
   type UpdateEmployerCompanyBody,
   type UpdateEmployerJobBody,
@@ -43,10 +44,6 @@ import {
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
 import { withCatalogFeatures } from './post-plans';
-import {
-  readSavedPeopleInStage,
-  type SavedPeoplePage,
-} from './saved-people-read';
 
 import {
   parseJobFormViolations,
@@ -797,55 +794,49 @@ export const deleteTalentList = createServerFn({ method: 'POST' })
 
 // ── Saved people on a talent list (ADR-0142) ────────────────────────────────
 
-export type { SavedPeoplePage };
+export type SavedPeoplePage = {
+  data: TalentListMember[];
+  /** Saved people the filters (and stage) keep. */
+  count: number;
+  /** Every visible saved person, before filters. */
+  total: number;
+};
 
 /**
- * The people saved to a list, filtered like `/talent`: one page of them, or,
- * with a `stage`, all of them (at most 500) sitting in that stage of the
- * linked job's pipeline, for the caller to page locally.
+ * One page of the people saved to a list, filtered like `/talent`. `stage`
+ * (comma-separated application stages, on a list linked to a job) keeps
+ * those whose application on that job sits at one of them.
  */
 export type SavedPeopleRequest = {
   slug: string;
   listId: string;
   query: SavedPeopleFilters;
-} & (
-  | { offset: number; limit: number; stage?: undefined }
-  | { stage: { job: string; stageId: string } }
-);
+  offset: number;
+  limit: number;
+  stage?: string;
+};
 
 export const listSavedPeople = createServerFn({ method: 'GET' })
   .validator((input: SavedPeopleRequest) => input)
   .middleware([verifiedBoardUserMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (): Promise<SavedPeoplePage> => {
-      const headers = authedHeaders(context);
-      const members = getBoard().me.companies.talentLists.members;
-      if (!data.stage) {
-        const page = await members.list(
-          data.slug,
-          data.listId,
-          { ...data.query, offset: data.offset, limit: data.limit },
-          { headers },
-        );
-        return {
-          data: page.data,
-          count: page.count ?? page.data.length,
-          total: page.total,
-        };
-      }
-      const stage = data.stage;
-      return readSavedPeopleInStage({
-        readPipeline: (query) =>
-          getBoard().me.companies.applicants.list(
-            data.slug,
-            { ...query, job: stage.job },
-            { headers },
-          ),
-        readMembers: (query) =>
-          members.list(data.slug, data.listId, query, { headers }),
-        query: data.query,
-        stageId: stage.stageId,
-      });
+      const page = await getBoard().me.companies.talentLists.members.list(
+        data.slug,
+        data.listId,
+        {
+          ...data.query,
+          stage: data.stage,
+          offset: data.offset,
+          limit: data.limit,
+        },
+        { headers: authedHeaders(context) },
+      );
+      return {
+        data: page.data,
+        count: page.count ?? page.data.length,
+        total: page.total,
+      };
     }),
   );
 

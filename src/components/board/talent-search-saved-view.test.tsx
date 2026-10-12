@@ -262,57 +262,47 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
     ).toHaveTextContent('Interview');
     expect(server.listSavedPeople).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        stage: { job: 'job_a', stageId: 'stage_interview' },
+        stage: 'stage_interview',
+        offset: 0,
+        limit: 24,
       }),
     });
   });
 
-  it('pages a stage’s saved people without reading them again', async () => {
-    const people = Array.from({ length: 30 }, (_, index) =>
-      member(candidate(`bu_p${index}`, `Person ${index}`)),
-    );
-    server.listSavedPeople.mockResolvedValue({
-      data: people,
-      count: 30,
-      total: 40,
-    });
+  it('pages a stage’s saved people on the server', async () => {
     const router = renderSaved(
       '/talent/?list=list_berlin&saved=1&stage=stage_interview',
       'job_a',
     );
 
-    expect(await screen.findByText('Person 0')).toBeVisible();
-    expect(screen.getByText('Person 23')).toBeVisible();
-    expect(screen.queryByText('Person 24')).toBeNull();
+    await screen.findByText('Ada Lovelace');
     expect(server.listSavedPeople).toHaveBeenCalledTimes(1);
-    expect(server.listSavedPeople.mock.calls[0]?.[0].data).not.toHaveProperty(
-      'offset',
-    );
 
     router.history.push(
       '/talent/?list=list_berlin&saved=1&stage=stage_interview&page=2',
     );
-    expect(await screen.findByText('Person 29')).toBeVisible();
-    expect(screen.getByText('Person 24')).toBeVisible();
-    expect(screen.queryByText('Person 23')).toBeNull();
-    expect(server.listSavedPeople).toHaveBeenCalledTimes(1);
-
-    router.history.push('/talent/?list=list_berlin&saved=1&stage=stage_short');
     await waitFor(() =>
       expect(server.listSavedPeople).toHaveBeenCalledTimes(2),
     );
     expect(server.listSavedPeople).toHaveBeenLastCalledWith({
       data: expect.objectContaining({
-        stage: { job: 'job_a', stageId: 'stage_short' },
+        stage: 'stage_interview',
+        offset: 24,
+        limit: 24,
       }),
     });
 
-    router.history.push(
-      '/talent/?list=list_berlin&saved=1&stage=stage_short&seniority=senior',
-    );
+    // The first column also shows applications stored as applied or review.
+    router.history.push('/talent/?list=list_berlin&saved=1&stage=stage_short');
     await waitFor(() =>
       expect(server.listSavedPeople).toHaveBeenCalledTimes(3),
     );
+    expect(server.listSavedPeople).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        stage: 'shortlisted,applied,review',
+        offset: 0,
+      }),
+    });
   });
 
   it('rereads a stage’s saved people after an unsave', async () => {
@@ -341,6 +331,13 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
   });
 
   it('moves a stage page past the end back to the last page', async () => {
+    server.listSavedPeople.mockImplementation(({ data }) =>
+      Promise.resolve(
+        data.offset === 0
+          ? { data: [member(ada)], count: 1, total: 3 }
+          : { data: [], count: 1, total: 3 },
+      ),
+    );
     const router = renderSaved(
       '/talent/?list=list_berlin&saved=1&stage=stage_interview&page=3',
       'job_a',
@@ -352,7 +349,6 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
       saved: true,
       stage: 'stage_interview',
     });
-    expect(server.listSavedPeople).toHaveBeenCalledTimes(1);
   });
 
   it('says so when nobody is saved yet', async () => {
