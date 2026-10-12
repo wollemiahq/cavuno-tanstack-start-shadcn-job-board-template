@@ -17,9 +17,10 @@ function serializedBoardErrorCode<T>(error: T): string | null {
 
 /**
  * A user-facing string for an error caught from a messaging server function.
- * The `BoardApiError` does not survive the TanStack server-fn RPC boundary
- * (see `board-access.ts`), so the client sees a plain `Error` whose message
- * carries the server-side text — fall back to a generic line otherwise.
+ * A `BoardApiError` reaches the client intact (see
+ * `board-api-error-serialization.ts`); a server fn that throws its own plain
+ * `Error` carries the signal in its message — fall back to a generic line
+ * otherwise.
  */
 export function errorMessage<T>(error: T): string {
   if (isBoardApiError(error)) {

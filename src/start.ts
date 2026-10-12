@@ -9,9 +9,14 @@
  * Board API shedding: a page whose loaders, or a server route (sitemap,
  * feed, robots.txt, OG card, ...) whose handler, hit a Board API shed
  * answers 503 + Retry-After instead of 500 (see src/lib/board-api-shed.ts).
+ *
+ * Serialization: a `BoardApiError` thrown by a server fn reaches the client
+ * as a `BoardApiError`, so loaders' `isNotFound(error)` holds after a
+ * client-side navigation too (see src/lib/board-api-error-serialization.ts).
  */
 import { createCsrfMiddleware, createStart } from '@tanstack/react-start';
 
+import { boardApiErrorAdapter } from './lib/board-api-error-serialization';
 import {
   boardApiShedFunctionMiddleware,
   boardApiShedRequestMiddleware,
@@ -25,4 +30,5 @@ const csrfMiddleware = createCsrfMiddleware({
 export const startInstance = createStart(() => ({
   requestMiddleware: [csrfMiddleware, boardApiShedRequestMiddleware],
   functionMiddleware: [localeHeaderMiddleware, boardApiShedFunctionMiddleware],
+  serializationAdapters: [boardApiErrorAdapter],
 }));

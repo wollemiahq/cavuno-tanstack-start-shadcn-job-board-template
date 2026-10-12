@@ -158,8 +158,7 @@ export const updateProfile = createServerFn({ method: 'POST' })
     try {
       await getBoard().me.profile.update(data, undefined, { headers });
     } catch (error) {
-      // The BoardApiError does not survive the server-fn RPC boundary, so a
-      // taken handle comes back as a result the form can show on the field.
+      // A taken handle comes back as a result the form can show on the field.
       if (isBoardApiError(error) && error.code === CANDIDATE_HANDLE_TAKEN) {
         return { ok: false as const, code: CANDIDATE_HANDLE_TAKEN };
       }

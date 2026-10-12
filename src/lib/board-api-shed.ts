@@ -7,8 +7,7 @@
  * as a broken page; a 503 with `Retry-After` tells them to back off and
  * return.
  *
- * Two halves, because the `BoardApiError` does not survive the server-fn
- * RPC boundary and the router picks the page status (500 for any loader
+ * Two halves, because the router picks the page status (500 for any loader
  * error) after every server fn has returned:
  *
  *  1. `boardApiShedFunctionMiddleware` (global, every server fn) sees the
