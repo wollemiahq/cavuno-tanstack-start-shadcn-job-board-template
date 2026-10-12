@@ -64,7 +64,7 @@ const composerCta: TalentDetailCta = {
   message: {
     kind: 'compose',
     label: 'Message',
-    candidateHandle: 'ada-lovelace',
+    candidateBoardUserId: 'bu_ada-lovelace',
   },
   viewProfile: null,
 };
@@ -194,7 +194,7 @@ describe('TalentSearchResultDetail', () => {
 
     await waitFor(() =>
       expect(onStartConversation).toHaveBeenCalledWith({
-        candidateHandle: 'ada-lovelace',
+        candidateBoardUserId: 'bu_ada-lovelace',
         body: 'Your work looks like a great fit.',
       }),
     );

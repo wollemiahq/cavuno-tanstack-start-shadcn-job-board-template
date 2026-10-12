@@ -181,15 +181,17 @@ async function renderProfile({
   hasTalentAccess = false,
   canStartMessage,
   messagingEnabled = true,
+  shownProfile = profile,
 }: {
   user?: { role: 'employer' | 'candidate' } | null;
   hasTalentAccess?: boolean;
   canStartMessage?: boolean;
   messagingEnabled?: boolean;
+  shownProfile?: TalentProfilePageData['profile'];
 } = {}) {
   return await renderRouted(
     <TalentProfilePageView
-      profile={profile}
+      profile={shownProfile}
       user={user}
       hasTalentAccess={hasTalentAccess}
       canStartMessage={canStartMessage}
@@ -488,7 +490,7 @@ describe('canonical talent profile route', () => {
     ).toHaveAttribute('href', '/employers');
   });
 
-  it('lets an eligible employer message the candidate by public handle', async () => {
+  it('lets an eligible employer message the candidate by board-user id', async () => {
     await renderProfile({ user: { role: 'employer' }, hasTalentAccess: true });
 
     fireEvent.click(
@@ -508,11 +510,23 @@ describe('canonical talent profile route', () => {
 
     await waitFor(() =>
       expect(onStartConversation).toHaveBeenCalledWith({
-        candidateHandle: 'ada-lovelace',
+        candidateBoardUserId: 'bu_ada-lovelace',
         body: 'Hello Ada',
       }),
     );
     expect(onConversationStarted).toHaveBeenCalledWith('conversation-1');
+  });
+
+  it('keeps Message on a paywall-redacted profile with no public handle', async () => {
+    await renderProfile({
+      user: { role: 'employer' },
+      hasTalentAccess: true,
+      shownProfile: { ...profile, handle: null },
+    });
+
+    expect(
+      screen.getByRole('button', { name: m.talentSearch_messageLabel() }),
+    ).toBeVisible();
   });
 
   it('routes an anonymous viewer’s Message action to sign-in', async () => {

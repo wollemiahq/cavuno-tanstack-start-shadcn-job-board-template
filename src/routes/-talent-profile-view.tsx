@@ -55,7 +55,7 @@ export function TalentProfilePageView({
         : { kind: 'candidate' };
   const cta = resolveTalentDetailCta({
     viewer,
-    candidateHandle: vm.handle,
+    candidateBoardUserId: vm.id,
     detailHref: vm.detailHref,
     signInHref: candidateSignInHref(locationHref),
     pricingHref: PRICING_HREF,

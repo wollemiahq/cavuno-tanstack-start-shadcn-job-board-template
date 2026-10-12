@@ -364,7 +364,7 @@ describe('talent view models', () => {
 
 describe('resolveTalentDetailCta', () => {
   const base = {
-    candidateHandle: 'ada-lovelace',
+    candidateBoardUserId: 'bu_ada',
     detailHref: '/p/ada-lovelace',
     signInHref: '/auth/sign-in?returnTo=%2Ftalent',
     pricingHref: '/employers',
@@ -418,7 +418,7 @@ describe('resolveTalentDetailCta', () => {
     });
   });
 
-  it('opens a composer by public handle for an employer with talent access', () => {
+  it('opens a composer by board-user id for an employer with talent access', () => {
     expect(
       resolveTalentDetailCta({
         ...base,
@@ -428,7 +428,7 @@ describe('resolveTalentDetailCta', () => {
       message: {
         kind: 'compose',
         label: 'Message',
-        candidateHandle: 'ada-lovelace',
+        candidateBoardUserId: 'bu_ada',
       },
       viewProfile: {
         kind: 'link',
@@ -502,15 +502,21 @@ describe('resolveTalentDetailCta', () => {
     });
   });
 
-  it('renders no Message for an access-holding employer when the handle is missing', () => {
+  it('keeps Message on a redacted profile that has no public handle', () => {
     expect(
       resolveTalentDetailCta({
         ...base,
-        candidateHandle: null,
         detailHref: null,
         viewer: { kind: 'employer', hasTalentAccess: true },
       }),
-    ).toEqual({ message: null, viewProfile: null });
+    ).toEqual({
+      message: {
+        kind: 'compose',
+        label: 'Message',
+        candidateBoardUserId: 'bu_ada',
+      },
+      viewProfile: null,
+    });
   });
 
   it.each([

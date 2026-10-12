@@ -37,7 +37,7 @@ export function SelectedTalentDetail({
   messagingEnabled: boolean;
   /** Directory cards link to `/p/{id}` when the board sells profile unlocks. */
   profileUnlocks?: boolean;
-  /** Employer Save, next to Message. Bound list is one-click; else pick a job. */
+  /** Employer Save (the bookmark that saves to saved searches), next to Message. */
   saveSlot?: ReactNode;
   onStartConversation: StartTalentConversation;
   onConversationStarted: (conversationId: string) => void;
@@ -54,7 +54,7 @@ export function SelectedTalentDetail({
         );
         const cta = resolveTalentDetailCta({
           viewer,
-          candidateHandle: vm.handle,
+          candidateBoardUserId: vm.id,
           detailHref: vm.detailHref,
           signInHref,
           pricingHref: PRICING_HREF,

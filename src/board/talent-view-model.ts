@@ -392,7 +392,8 @@ export interface TalentDetailCtaLink {
 export interface TalentDetailCtaComposer {
   kind: 'compose';
   label: string;
-  candidateHandle: string;
+  /** The candidate's board-user id — present even on a redacted profile. */
+  candidateBoardUserId: string;
 }
 
 export interface TalentDetailCta {
@@ -412,15 +413,16 @@ export interface TalentDetailCta {
  *                              candidates); only the View-profile link.
  *  - employer, no access     → Message routes to pricing (`pricingHref`).
  *  - employer, access, no message credits → same pricing upsell (upgrade).
- *  - employer, has access    → composer targeting the public candidate handle.
+ *  - employer, has access    → composer targeting the candidate's board-user id.
  *
- * `conversations.start` accepts the public candidate handle and converges on
- * an existing employer↔candidate conversation, so the talent wire does not
- * need to expose the private board-user id used by `findExisting`.
+ * `conversations.start` accepts the candidate's board-user id and converges
+ * on an existing employer↔candidate conversation. A paywall-redacted profile
+ * has no public handle, so the id is what keeps Message available there.
  */
 export function resolveTalentDetailCta(input: {
   viewer: TalentDetailViewer;
-  candidateHandle: string | null;
+  /** The candidate's board-user id (the profile/card `id`). */
+  candidateBoardUserId: string;
   /** Canonical `/p/{handle}` link, or `null` when the handle is missing. */
   detailHref: string | null;
   signInHref: string;
@@ -457,13 +459,11 @@ export function resolveTalentDetailCta(input: {
   } else if (viewer.kind === 'employer') {
     const canStartMessage = viewer.canStartMessage ?? viewer.hasTalentAccess;
     if (viewer.hasTalentAccess && canStartMessage) {
-      message = input.candidateHandle
-        ? {
-            kind: 'compose',
-            label: labels.message,
-            candidateHandle: input.candidateHandle,
-          }
-        : null;
+      message = {
+        kind: 'compose',
+        label: labels.message,
+        candidateBoardUserId: input.candidateBoardUserId,
+      };
     } else {
       message = {
         kind: 'link',

@@ -21,7 +21,7 @@ import {
 import { m } from '@/paraglide/messages';
 
 export type StartTalentConversation = (input: {
-  candidateHandle: string;
+  candidateBoardUserId: string;
   body: string;
   job?: string;
 }) => Promise<
@@ -69,7 +69,7 @@ export function TalentMessageAction({
           hint={null}
           onSend={async (body) => {
             const result = await onStartConversation({
-              candidateHandle: action.candidateHandle,
+              candidateBoardUserId: action.candidateBoardUserId,
               body,
             });
             if (!result.ok) throw result;
