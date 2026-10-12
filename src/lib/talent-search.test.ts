@@ -214,11 +214,18 @@ describe('talent list filter round-trip', () => {
       languages: 'German,English',
       openToRelocate: 'true',
       place: undefined,
+      within: undefined,
       sort: 'newest',
       seniority: undefined,
       permitCountry: undefined,
       interestedRole: undefined,
     });
+  });
+
+  it('opens a saved list place as the place itself, not widened', () => {
+    expect(
+      listFiltersToTalentSearch({ place: 'houston-tx-united-states' }),
+    ).toMatchObject({ place: 'houston-tx-united-states', within: 0 });
   });
 
   it('maps a blank directory to an empty predicate', () => {

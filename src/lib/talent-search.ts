@@ -1,4 +1,7 @@
-import { parseSearchRadiusWithin } from '@/board/search-radius';
+import {
+  SEARCH_RADIUS_EXACT,
+  parseSearchRadiusWithin,
+} from '@/board/search-radius';
 import {
   parseCustomFieldSearch,
   pickCustomFieldSearch,
@@ -182,7 +185,11 @@ export function talentSearchToListFilters(
   return filters;
 }
 
-/** Hydrate a saved list back into `/talent` search params. */
+/**
+ * Hydrate a saved list back into `/talent` search params. Lists store no
+ * search distance, so a list's place opens as the place itself, as it was
+ * saved, not widened to the market default.
+ */
 export function listFiltersToTalentSearch(
   filters: TalentListFilters,
 ): TalentListingSearch {
@@ -198,6 +205,7 @@ export function listFiltersToTalentSearch(
           ? 'true'
           : 'false',
     place: filters.place,
+    within: filters.place ? SEARCH_RADIUS_EXACT : undefined,
     sort: filters.sort,
     seniority: filters.seniority,
     permitCountry: filters.permitCountry,
