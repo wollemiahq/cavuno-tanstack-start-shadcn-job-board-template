@@ -23,11 +23,11 @@ import handler from '@tanstack/react-start/server-entry';
 // starts, not inside the first request. Start's handler `import()`s these
 // lazily, so a fresh isolate's first visitor paid for evaluating the whole
 // graph as request CPU — 20-30 ms of a ~100 ms cold 404 (2026-10-12). Startup
-// is not request CPU and often overlaps the TLS handshake. Nothing here may
-// touch request state at module scope: it now runs with no request.
+// is not counted against the request's CPU limit. The start manifest and
+// plugin adapters stay lazy. Nothing in this graph may touch request state at
+// module scope: it now runs with no request.
 import './router';
 import './start';
-
 import { matchClientErrorIngest } from './lib/client-error-ingest';
 import { CLIENT_ERROR_PATH } from './lib/client-error-report';
 import { getServerEnv } from './lib/env';
