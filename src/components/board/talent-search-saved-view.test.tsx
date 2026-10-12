@@ -189,6 +189,12 @@ function renderSaved(initial: string, jobId: string | null = null) {
   return router;
 }
 
+function pickOption(name: string) {
+  const option = screen.getByRole('option', { name });
+  fireEvent.pointerDown(option, { pointerType: 'mouse' });
+  fireEvent.click(option);
+}
+
 describe('TalentSearchPage — Saved view of a saved search', () => {
   it('shows only the saved people the current filters keep', async () => {
     const router = renderSaved(
@@ -207,10 +213,8 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
       }),
     });
     expect(
-      screen.getByRole('button', {
-        name: m.talentSaved_savedOption({ count: '3' }),
-      }),
-    ).toHaveAttribute('aria-pressed', 'true');
+      screen.getByRole('combobox', { name: m.talentSaved_showLabel() }),
+    ).toHaveTextContent(m.talentSaved_savedOption({ count: '3' }));
 
     fireEvent.click(
       screen.getByRole('button', { name: m.talentSaved_showAllAction() }),
@@ -224,22 +228,53 @@ describe('TalentSearchPage — Saved view of a saved search', () => {
   });
 
   it('switches from everyone the search finds to its saved people', async () => {
-    const router = renderSaved('/talent/?list=list_berlin&place=berlin');
+    const router = renderSaved('/talent/?list=list_berlin&place=berlin&page=2');
 
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: m.talentSaved_savedOption({ count: '3' }),
-      }),
-    );
+    const view = await screen.findByRole('combobox', {
+      name: m.talentSaved_showLabel(),
+    });
+    expect(view).toHaveTextContent(m.talentSaved_allCandidatesOption());
+    fireEvent.click(view);
+    expect(
+      screen.getAllByRole('option').map((option) => option.textContent),
+    ).toEqual([
+      m.talentSaved_allCandidatesOption(),
+      m.talentSaved_savedCountOption({ count: '3' }),
+    ]);
+    pickOption(m.talentSaved_savedCountOption({ count: '3' }));
 
     await waitFor(() =>
-      expect(router.state.location.search).toMatchObject({
+      expect(router.state.location.search).toEqual({
         list: 'list_berlin',
         place: 'berlin',
         saved: true,
       }),
     );
+    expect(
+      screen.getByRole('combobox', { name: m.talentSaved_showLabel() }),
+    ).toHaveTextContent(m.talentSaved_savedOption({ count: '3' }));
     expect(server.updateTalentList).not.toHaveBeenCalled();
+  });
+
+  it('switches from its saved people back to everyone the search finds', async () => {
+    const router = renderSaved(
+      '/talent/?list=list_berlin&saved=1&stage=stage_interview',
+      'job_a',
+    );
+
+    fireEvent.click(
+      await screen.findByRole('combobox', { name: m.talentSaved_showLabel() }),
+    );
+    pickOption(m.talentSaved_allCandidatesOption());
+
+    await waitFor(() =>
+      expect(router.state.location.search).not.toHaveProperty('saved'),
+    );
+    expect(router.state.location.search).toMatchObject({ list: 'list_berlin' });
+    expect(router.state.location.search).not.toHaveProperty('stage');
+    expect(
+      screen.queryByRole('combobox', { name: m.talentSaved_stageLabel() }),
+    ).toBeNull();
   });
 
   it('offers no stage filter on a saved search without a job', async () => {

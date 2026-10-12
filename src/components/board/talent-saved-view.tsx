@@ -4,8 +4,6 @@ import { useId, useMemo } from 'react';
 
 import { m } from '../../paraglide/messages';
 
-import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
@@ -17,11 +15,14 @@ import {
 } from '@/components/ui/select';
 
 const ANY_STAGE = '__any__';
+const ALL = 'all';
+const SAVED = 'saved';
+const VIEW_VALUES = [ALL, SAVED];
 
 export type SavedViewStage = { id: string; label: string };
 
 /**
- * The open saved search's view switch: everyone the search finds, or only
+ * The open saved search's view filter: everyone the search finds, or only
  * the people saved to it. A list linked to a job also filters the saved
  * people by their stage on that job's pipeline.
  */
@@ -46,34 +47,80 @@ export function TalentSavedViewControls({
 }) {
   return (
     <div data-slot="talent-saved-view" className="flex items-center gap-2">
-      <ButtonGroup aria-label={m.talentSaved_showLabel()}>
-        <Button
-          type="button"
-          variant={saved ? 'outline' : 'default'}
-          aria-pressed={!saved}
-          onClick={() => {
-            if (saved) onSavedChange(false);
-          }}
-        >
-          {m.talentSaved_allOption()}
-        </Button>
-        <Button
-          type="button"
-          variant={saved ? 'default' : 'outline'}
-          aria-pressed={saved}
-          onClick={() => {
-            if (!saved) onSavedChange(true);
-          }}
-        >
-          {m.talentSaved_savedOption({
-            count: savedCount.toLocaleString(language),
-          })}
-        </Button>
-      </ButtonGroup>
+      <ViewSelect
+        saved={saved}
+        savedCount={savedCount}
+        language={language}
+        onChange={onSavedChange}
+      />
       {saved && stages.length > 0 ? (
         <StageSelect stages={stages} stage={stage} onChange={onStageChange} />
       ) : null}
     </div>
+  );
+}
+
+function ViewSelect({
+  saved,
+  savedCount,
+  language,
+  onChange,
+}: {
+  saved: boolean;
+  savedCount: number;
+  language: string;
+  onChange: (saved: boolean) => void;
+}) {
+  const controlId = useId();
+  const count = savedCount.toLocaleString(language);
+  // Stable items/label lookup, as for the stage select below.
+  const { items, optionLabel } = useMemo(() => {
+    const lookup = (value: string) =>
+      value === SAVED
+        ? m.talentSaved_savedCountOption({ count })
+        : m.talentSaved_allCandidatesOption();
+    return {
+      items: Object.fromEntries(VIEW_VALUES.map((id) => [id, lookup(id)])),
+      optionLabel: lookup,
+    };
+  }, [count]);
+
+  return (
+    <Field className="w-auto gap-0">
+      <FieldLabel htmlFor={controlId} className="sr-only">
+        {m.talentSaved_showLabel()}
+      </FieldLabel>
+      <Select
+        items={items}
+        value={saved ? SAVED : ALL}
+        itemToStringLabel={optionLabel}
+        onValueChange={(next) => {
+          const nextSaved = next === SAVED;
+          if (next == null || nextSaved === saved) return;
+          onChange(nextSaved);
+        }}
+      >
+        <SelectTrigger id={controlId} aria-label={m.talentSaved_showLabel()}>
+          {/* The trigger reads "Saved · N"; the menu option "Saved (N)". */}
+          <SelectValue>
+            {(value: string) =>
+              value === SAVED
+                ? m.talentSaved_savedOption({ count })
+                : m.talentSaved_allCandidatesOption()
+            }
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent align="start">
+          <SelectGroup>
+            {VIEW_VALUES.map((id) => (
+              <SelectItem key={id} value={id}>
+                {optionLabel(id)}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </Field>
   );
 }
 
