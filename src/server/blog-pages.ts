@@ -87,9 +87,10 @@ const blogRead = async <T>(read: () => Promise<T>): Promise<T> => {
 /**
  * One archive page: the whole blog, or one tag's or author's posts, with the
  * board's featured posts first (newest first), then the rest newest first, as
- * one paginated list. A cursor only continues the list that minted it, so an
- * older Next link (minted before this order, or tampered with) gets the first
- * page instead of an error.
+ * one paginated list. A cursor only continues the list that minted it, so a
+ * cursor the API can no longer continue (an older Next link minted before
+ * this order, a tampered one, or one whose position is gone) gets the first
+ * page instead of an error. Any other error is left to the caller.
  */
 async function readArchivePage(
   filter: { tagSlug?: string; authorSlug?: string },

@@ -191,6 +191,26 @@ describe('blog archives list featured posts first (sort=featured)', () => {
   });
 });
 
+describe('the stale-cursor fallback only covers stale cursors', () => {
+  it('lets any other error on a later page through, without a retry', async () => {
+    mocks.postsList.mockRejectedValue(apiError('rate_limited'));
+
+    await expect(
+      getBlogIndexPage({ data: { cursor: 'next-page' } }),
+    ).rejects.toMatchObject({ code: 'rate_limited' });
+    expect(mocks.postsList).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry an invalid-cursor error on page one', async () => {
+    mocks.postsList.mockRejectedValue(apiError('pagination_invalid_cursor'));
+
+    await expect(getBlogIndexPage({ data: {} })).rejects.toMatchObject({
+      code: 'pagination_invalid_cursor',
+    });
+    expect(mocks.postsList).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('homepage blog strip: featured first, three posts', () => {
   it('reads one sorted request of three posts', async () => {
     mocks.postsList.mockResolvedValue(
