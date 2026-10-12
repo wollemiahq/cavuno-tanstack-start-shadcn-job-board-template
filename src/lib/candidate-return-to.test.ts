@@ -6,6 +6,8 @@ import {
   candidateReturnTo,
 } from './candidate-return-to';
 
+import { localizePath } from '@/lib/localized-path';
+
 describe('candidateReturnTo', () => {
   it('preserves complete internal job destinations', () => {
     expect(
@@ -51,10 +53,12 @@ describe('candidateAuthSearch', () => {
         '/companies/acme/jobs/product-designer?ref=featured#apply',
       ),
     ).toEqual({
-      returnTo: '/companies/acme/jobs/product-designer?ref=featured#apply',
+      returnTo: localizePath(
+        '/companies/acme/jobs/product-designer?ref=featured#apply',
+      ),
     });
     expect(candidatePasswordResetSignInSearch('/jobs')).toEqual({
-      returnTo: '/jobs',
+      returnTo: localizePath('/jobs'),
       reset: 'password',
     });
   });

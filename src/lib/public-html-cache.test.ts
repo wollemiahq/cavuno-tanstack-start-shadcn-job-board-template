@@ -1,13 +1,26 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// Compile two non-base locales whose tags the old shape regex missed.
+// Compile two non-base locales whose tags the old shape regex missed, plus
+// the two with localized URL segments.
 vi.mock('../paraglide/runtime', async (importOriginal) => {
   const runtime = await importOriginal<typeof import('../paraglide/runtime')>();
-  const compiled = new Set<string>([...runtime.locales, 'zh-cn', 'pt-BR']);
+  const compiled = new Set<string>([
+    ...runtime.locales,
+    'zh-cn',
+    'pt-BR',
+    'de',
+    'fr',
+  ]);
   return {
     ...runtime,
     isLocale: (locale: string): boolean => compiled.has(locale),
   };
+});
+
+// Their URL words, which the build keeps for compiled locales only.
+vi.mock('virtual:url-words', async () => {
+  const words = (await import('../url-words.json')).default;
+  return { default: { de: words.de, fr: words.fr } };
 });
 
 import {
@@ -165,7 +178,7 @@ describe('localized section slugs stay cacheable', () => {
   it('normalizes translated slugs to canonical sections', () => {
     expect(isPublicDocumentPath('/fr/emplois')).toBe(true);
     expect(isPublicDocumentPath('/fr/emplois/skills/react')).toBe(true);
-    expect(isPublicDocumentPath('/de/gehaelter')).toBe(true);
+    expect(isPublicDocumentPath('/de/gehalt')).toBe(true);
     expect(isPublicDocumentPath('/de/unternehmen')).toBe(true);
     expect(isPublicDocumentPath('/fr/entreprises')).toBe(true);
     expect(isPublicDocumentPath('/de/talente')).toBe(true);

@@ -5,7 +5,7 @@ import {
   appendAuthIntentQuery,
   appendOAuthProviderHint,
 } from './board-datalayer-events';
-import { localizePath, stripLocalePrefix } from './localized-path';
+import { canonicalPathname, localizePath } from './localized-path';
 import { searchString } from './pagination';
 
 const DEFAULT_CANDIDATE_RETURN_TO = '/account';
@@ -16,7 +16,7 @@ export function candidateReturnTo<T>(value: T) {
     DEFAULT_CANDIDATE_RETURN_TO,
   );
 
-  const pathname = returnTo.split(/[?#]/, 1)[0];
+  const pathname = canonicalPathname(returnTo);
   if (pathname === '/auth' || pathname.startsWith('/auth/')) {
     return DEFAULT_CANDIDATE_RETURN_TO;
   }
@@ -75,7 +75,7 @@ export function buildVerifyEmailRedirectPath<T>(value: T) {
  */
 export function verificationEmailReturnTo<T>(value: T) {
   const returnTo = candidateReturnTo(value);
-  const canonical = stripLocalePrefix(returnTo);
+  const canonical = canonicalPathname(returnTo);
   const bare = !/[?#]/.test(returnTo);
   if (
     bare &&

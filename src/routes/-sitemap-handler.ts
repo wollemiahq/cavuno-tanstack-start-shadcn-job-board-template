@@ -8,6 +8,7 @@ import { getPrimaryBoard } from '../lib/board';
 import { readPublicOrigin } from '../lib/public-origin';
 import {
   LOCALIZED_BUCKETS,
+  localizeSitemapEntries,
   renderUrlsetWithAlternates,
 } from '../lib/sitemap-alternates';
 import {
@@ -80,7 +81,7 @@ export function createSitemapFileHandler(
     // page-level hreflang. External-canonical buckets stay plain.
     const xml = LOCALIZED_BUCKETS.includes(parsed.bucket)
       ? renderUrlsetWithAlternates(slice, origin)
-      : renderUrlset(slice);
+      : renderUrlset(localizeSitemapEntries(slice, origin));
     return sitemapXmlResponse(xml);
   };
 }

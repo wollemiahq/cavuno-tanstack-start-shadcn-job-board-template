@@ -18,6 +18,7 @@ import {
   vi,
 } from 'vitest';
 
+import { localizePath } from '@/lib/localized-path';
 import type { Resume } from '@cavuno/board';
 
 type AuthResult = { ok: true } | { ok: false; message: string };
@@ -356,7 +357,9 @@ describe('/auth/verify-email-required search contract', () => {
 
       await screen.findByRole('status');
       expect(mocks.resendOtp).toHaveBeenCalledWith({
-        data: { returnTo: emailReturnTo },
+        data: {
+          returnTo: emailReturnTo && localizePath(emailReturnTo),
+        },
       });
     },
   );

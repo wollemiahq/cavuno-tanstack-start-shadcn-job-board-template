@@ -218,7 +218,7 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
           },
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
-            { label: c.talent, href: `${seo.origin}/talent` },
+            { label: c.talent, href: selfUrl(seo.origin, '/talent') },
             { label: displayName },
           ]),
         ].filter((e) => e !== null),

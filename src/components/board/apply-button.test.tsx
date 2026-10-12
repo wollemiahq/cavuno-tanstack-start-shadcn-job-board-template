@@ -23,6 +23,7 @@ import { ApplyButton, type ApplyButtonDependencies } from './apply-button';
 
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
+import { localizePath } from '@/lib/localized-path';
 
 function captureDataLayer(): BoardDataLayerEvent[] {
   const pushes: BoardDataLayerEvent[] = [];
@@ -189,7 +190,7 @@ describe('ApplyButton authentication return paths', () => {
     expect(href).not.toBeNull();
     const signUpUrl = new URL(href!, 'https://board.example');
     expect(signUpUrl.pathname).toBe('/auth/sign-up');
-    expect(signUpUrl.searchParams.get('returnTo')).toBe(returnTo);
+    expect(signUpUrl.searchParams.get('returnTo')).toBe(localizePath(returnTo));
   });
 
   it('keeps the complete job destination through email verification', async () => {
@@ -211,7 +212,7 @@ describe('ApplyButton authentication return paths', () => {
     expect(href).not.toBeNull();
     const verifyUrl = new URL(href!, 'https://board.example');
     expect(verifyUrl.pathname).toBe('/auth/verify-email-required');
-    expect(verifyUrl.searchParams.get('returnTo')).toBe(returnTo);
+    expect(verifyUrl.searchParams.get('returnTo')).toBe(localizePath(returnTo));
   });
 });
 

@@ -23,6 +23,7 @@ import { matchClientErrorIngest } from './lib/client-error-ingest';
 import { CLIENT_ERROR_PATH } from './lib/client-error-report';
 import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
+import { localizedUrlRedirect } from './lib/localized-url-redirect';
 import {
   readPublicHtmlCache,
   withPublicHtmlCacheHeaders,
@@ -68,6 +69,14 @@ export default {
         executionContext?.waitUntil.bind(executionContext),
       );
       if (clientError) return withBaselineSecurityHeaders(clientError, request);
+    }
+
+    // Canonical (English) segments 308 to the board's localized URL before
+    // anything renders or reads the cache; the router rewrite stays the
+    // client-side safety net.
+    const localizedRedirect = localizedUrlRedirect(request);
+    if (localizedRedirect) {
+      return withBaselineSecurityHeaders(localizedRedirect, request);
     }
 
     const cached = await readPublicHtmlCache(request);

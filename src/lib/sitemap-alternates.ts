@@ -15,6 +15,7 @@ import { xmlEscape } from '@cavuno/board/sitemap';
 import { locales } from '../paraglide/runtime';
 import { localizePath } from './localized-path';
 import { publicLocales } from './public-locales';
+import { boardLanguageUrl } from './self-url';
 
 import type { SitemapBucket, SitemapUrlEntry } from '@cavuno/board/sitemap';
 
@@ -37,6 +38,27 @@ export const LOCALIZED_BUCKETS: readonly SitemapBucket[] = [
   'salaries',
 ];
 
+function onOriginPath(url: string, origin: string): string | null {
+  if (url === origin) return '/';
+  return url.startsWith(`${origin}/`) ? url.slice(origin.length) : null;
+}
+
+/**
+ * Entries with on-origin URLs rewritten to the board language's localized
+ * URL (/jobs → /vacatures on a Dutch board), so `<loc>` never lists a URL
+ * that redirects. Off-origin canonicals pass through. For buckets rendered
+ * by the SDK's plain `renderUrlset`.
+ */
+export function localizeSitemapEntries(
+  entries: readonly (string | SitemapUrlEntry)[],
+  origin: string,
+): SitemapUrlEntry[] {
+  return entries.map((raw) => {
+    const entry = sitemapEntry(raw);
+    return { ...entry, url: boardLanguageUrl(entry.url, origin) };
+  });
+}
+
 function alternateLinks(origin: string, path: string): string {
   const published = publicLocales(locales);
   if (published.length < 2) return '';
@@ -45,7 +67,7 @@ function alternateLinks(origin: string, path: string): string {
     const href = `${origin}${localizePath(path, { locale })}`;
     xml += `<xhtml:link rel="alternate" hreflang="${locale}" href="${xmlEscape(href)}"/>\n`;
   }
-  xml += `<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(`${origin}${path}`)}"/>\n`;
+  xml += `<xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(boardLanguageUrl(`${origin}${path}`, origin))}"/>\n`;
   return xml;
 }
 
@@ -63,12 +85,10 @@ export function renderUrlsetWithAlternates(
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     `<urlset xmlns="${SITEMAP_NS}" xmlns:xhtml="${XHTML_NS}">\n`;
   for (const entry of normalized) {
+    const path = onOriginPath(entry.url, origin);
     xml += '<url>\n';
-    xml += `<loc>${xmlEscape(entry.url)}</loc>\n`;
-    if (entry.url.startsWith(`${origin}/`) || entry.url === origin) {
-      const path = entry.url.slice(origin.length) || '/';
-      xml += alternateLinks(origin, path);
-    }
+    xml += `<loc>${xmlEscape(boardLanguageUrl(entry.url, origin))}</loc>\n`;
+    if (path !== null) xml += alternateLinks(origin, path);
     if (entry.lastModified) {
       const serialized =
         entry.lastModified instanceof Date

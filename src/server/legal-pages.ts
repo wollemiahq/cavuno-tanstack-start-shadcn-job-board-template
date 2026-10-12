@@ -93,7 +93,7 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
       };
 
       const crumbs = breadcrumbsCopy();
-      const url = `${origin}${meta.path}`;
+      const url = selfUrl(origin, meta.path);
       const jsonLd = asJsonObjects(
         [
           {

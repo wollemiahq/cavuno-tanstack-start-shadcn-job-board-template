@@ -8,6 +8,7 @@ import {
   type JobsRssDependencies,
 } from './-jobs-rss-handler';
 
+import { localizePath } from '@/lib/localized-path';
 import type { PublicJobCard } from '@cavuno/board';
 
 const context = vi.fn<JobsRssBoard['context']>();
@@ -94,7 +95,7 @@ describe('/jobs/rss.xml', () => {
       xml.indexOf('Design &amp; Research'),
     );
     expect(xml).toContain(
-      'https://board.example/companies/acme/jobs/newer-role',
+      `https://board.example${localizePath('/companies/acme/jobs/newer-role')}`,
     );
     expect(xml).toContain('<category>Design &amp; UX</category>');
   });

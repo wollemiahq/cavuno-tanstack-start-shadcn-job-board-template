@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { m } from '../paraglide/messages';
 
 import type { UrlSearchInput } from '../lib/pagination';
+import { localizePath } from '@/lib/localized-path';
 
 const mocks = {
   redirectToSignIn: vi.fn(),
@@ -105,7 +106,7 @@ describe('/auth/reset-password continuation', () => {
       }),
     ).toHaveAttribute(
       'href',
-      `/auth/forgot-password?returnTo=${encodeURIComponent(returnTo)}`,
+      `/auth/forgot-password?returnTo=${encodeURIComponent(localizePath(returnTo))}`,
     );
   });
 
@@ -132,7 +133,7 @@ describe('/auth/reset-password continuation', () => {
 
     await waitFor(() =>
       expect(mocks.redirectToSignIn).toHaveBeenCalledWith(
-        `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}&reset=password`,
+        `${localizePath('/auth/sign-in')}?returnTo=${encodeURIComponent(localizePath(returnTo))}&reset=password`,
       ),
     );
   });

@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { footerCopy } from '@/copy-groups/footer';
 import { navCopy } from '@/copy-groups/nav';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
+import { localizeHrefIfInternal } from '@/lib/localized-path';
 import { membershipNavVisible } from '@/lib/membership-nav';
 import {
   chromeFooter,
@@ -90,14 +91,19 @@ function buildNavigationLinks({
     } else if (entry.startsWith('custom:')) {
       const custom = customById.get(entry.slice('custom:'.length));
       if (custom) {
-        add(entry, { href: custom.url, label: custom.label, external: true });
+        add(entry, {
+          href: localizeHrefIfInternal(custom.url),
+          label: custom.label,
+          external: true,
+        });
       }
     }
   }
   for (const [id, item] of Object.entries(systemItems)) add(id, item);
   for (const custom of customLinks) {
     add(`custom:${custom.id}`, {
-      href: custom.url,
+      // Operators write canonical paths; render the board's localized URL.
+      href: localizeHrefIfInternal(custom.url),
       label: custom.label,
       external: true,
     });

@@ -23,6 +23,7 @@ import {
   type SettingsRouteDependencies,
 } from './-settings';
 
+import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 
 const requestEmailChange =
@@ -187,7 +188,7 @@ describe('settings unsubscribe recovery', () => {
       screen.getByRole('link', { name: m.settings_signInLabel() }),
     ).toHaveAttribute(
       'href',
-      `/auth/sign-in?returnTo=${encodeURIComponent('/settings')}`,
+      `/auth/sign-in?returnTo=${encodeURIComponent(localizePath('/settings'))}`,
     );
   });
 });

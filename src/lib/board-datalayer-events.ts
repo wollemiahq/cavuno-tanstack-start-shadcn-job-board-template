@@ -3,7 +3,7 @@
  * Field names match hosted boards so operator GTM containers port unchanged.
  */
 
-import { localizePath, stripLocalePrefix } from './localized-path';
+import { canonicalPathname, localizePath } from './localized-path';
 
 export const CAVUNO_AUTH_PARAM = 'cavuno_auth';
 export const CAVUNO_AUTH_METHOD_PARAM = 'cavuno_auth_method';
@@ -209,7 +209,7 @@ export function incomingAuthSearch(
 }
 
 function isEmployerReturnPath(pathname: string) {
-  const canonical = stripLocalePrefix(pathname);
+  const canonical = canonicalPathname(pathname);
   return (
     canonical.startsWith('/employers') ||
     canonical.startsWith('/account/connect')

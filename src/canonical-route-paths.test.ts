@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { localizePath } from '@/lib/localized-path';
+
 vi.mock('@tanstack/react-start', () => ({
   createServerFn: () => {
     const builder = {
@@ -68,7 +70,7 @@ describe('canonical board paths', () => {
     if (page.kind !== 'ok') throw new Error('Expected a listing page');
     expect(page.head.links).toContainEqual({
       rel: 'canonical',
-      href: 'https://fixture.example/jobs/locations/london/skills/typescript',
+      href: `https://fixture.example${localizePath('/jobs/locations/london/skills/typescript')}`,
     });
   });
 });

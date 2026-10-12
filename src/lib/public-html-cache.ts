@@ -1,4 +1,4 @@
-import { delocalizeSegments, stripLocalePrefix } from './localized-path';
+import { canonicalPathname } from './localized-path';
 import { talentProfileParam } from './talent-profile-path';
 
 /**
@@ -67,12 +67,12 @@ export const EDGE_CACHE_CONTROL =
 type EdgeCacheStorage = { default?: Cache };
 
 function pathnameWithoutLocale(pathname: string): string {
-  // Localized section slugs (/fr/emplois, /de/gehaelter) must normalize to
-  // their canonical sections BEFORE the locale prefix is stripped, or the
-  // whole translated-slug surface silently loses the edge cache.
+  // Localized segments (/vacatures, /fr/emplois) must normalize to their
+  // canonical route BEFORE the locale prefix is stripped, or the whole
+  // translated surface silently loses the edge cache.
   // The prefix is matched against the compiled locales, not a tag shape:
   // Paraglide keeps the tag as written, so `zh-cn` is as valid as `pt-BR`.
-  return stripLocalePrefix(delocalizeSegments(pathname)) || '/';
+  return canonicalPathname(pathname) || '/';
 }
 
 export function isPublicDocumentPath(pathname: string): boolean {

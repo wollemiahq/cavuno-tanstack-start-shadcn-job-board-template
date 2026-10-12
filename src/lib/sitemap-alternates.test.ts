@@ -5,6 +5,8 @@ import {
   renderUrlsetWithAlternates,
 } from './sitemap-alternates';
 
+import { localizePath } from '@/lib/localized-path';
+
 // Compile only the board language, whatever it is, so the single-locale
 // cases below hold for any base locale.
 vi.mock('../paraglide/runtime', async (importOriginal) => {
@@ -19,7 +21,7 @@ describe('sitemap locale alternates', () => {
     const xml = renderUrlsetWithAlternates([`${ORIGIN}/jobs`], ORIGIN);
     expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"');
     expect(xml).not.toContain('hreflang=');
-    expect(xml).toContain(`<loc>${ORIGIN}/jobs</loc>`);
+    expect(xml).toContain(`<loc>${ORIGIN}${localizePath('/jobs')}</loc>`);
   });
 
   it('keeps lastModified and passes foreign-origin URLs through plain', () => {

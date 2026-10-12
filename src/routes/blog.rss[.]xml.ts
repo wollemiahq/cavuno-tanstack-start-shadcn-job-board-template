@@ -5,6 +5,7 @@ import { getRequest } from '@tanstack/react-start/server';
 
 import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
 import { getBoard } from '../lib/board';
+import { localizePath } from '../lib/localized-path';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { baseLocale, getLocale, isLocale } from '../paraglide/runtime';
@@ -29,6 +30,12 @@ function rssDate(iso: string | null): string {
   return Number.isFinite(d.getTime()) ? d.toUTCString() : '';
 }
 
+/** A page path in the board language's URL words. The feed address
+ * itself (/blog/rss.xml) is a fixed machine URL and stays as is. */
+function boardPath(path: string): string {
+  return localizePath(path, { locale: baseLocale });
+}
+
 /** Canonical-aware post URL (mirrors the hosted feed's `resolvePostUrl`). */
 function postUrl(post: PublicBlogPostSummary, origin: string): string {
   const canonical = post.canonicalUrl?.trim();
@@ -36,9 +43,9 @@ function postUrl(post: PublicBlogPostSummary, origin: string): string {
     if (canonical.startsWith('http://') || canonical.startsWith('https://')) {
       return canonical;
     }
-    if (canonical.startsWith('/')) return `${origin}${canonical}`;
+    if (canonical.startsWith('/')) return `${origin}${boardPath(canonical)}`;
   }
-  return `${origin}${blogPostPath(post.slug)}`;
+  return `${origin}${boardPath(blogPostPath(post.slug))}`;
 }
 
 /** Description with the hosted fallback chain: excerpt → "title - authors" → title. */
@@ -106,7 +113,7 @@ export const Route = createFileRoute('/blog/rss.xml')({
           `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">` +
           `<channel>` +
           `<title>${xmlEscape(m.rssBlog_channelTitle({ name: context.name }, locale))}</title>` +
-          `<link>${xmlEscape(`${origin}/blog`)}</link>` +
+          `<link>${xmlEscape(`${origin}${boardPath('/blog')}`)}</link>` +
           `<description>${xmlEscape(m.rssBlog_channelDescription({ name: context.name }, locale))}</description>` +
           `<lastBuildDate>${lastBuildDate}</lastBuildDate>` +
           `<atom:link href="${xmlEscape(`${origin}/blog/rss.xml`)}" rel="self" type="application/rss+xml" />` +
