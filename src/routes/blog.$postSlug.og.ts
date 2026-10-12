@@ -14,6 +14,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
 import { buildBlogOgHtml, truncate } from '../lib/blog-og';
 import { getBoard } from '../lib/board';
+import { rethrowBoardApiShed } from '../lib/board-api-shed.server';
 import { readBoardContext } from '../lib/board-context-cache';
 import { loadOgFont, ogFontStack } from '../lib/og-font';
 import { ogNotFoundResponse, ogUnavailableResponse } from '../lib/og-http';
@@ -33,14 +34,23 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
     handlers: {
       GET: async ({ params }) => {
         // A blog-off board has no post pages, so it has no post share cards.
-        if (!(await isBlogEnabled().catch(() => false))) {
+        // A shed context read is a 503 + Retry-After (request middleware).
+        let blogEnabled;
+        try {
+          blogEnabled = await isBlogEnabled();
+        } catch (error) {
+          rethrowBoardApiShed(error);
+          blogEnabled = false;
+        }
+        if (!blogEnabled) {
           return blogDisabledResponse();
         }
 
         let post;
         try {
           post = await getBoard().blog.posts.retrieve(params.postSlug);
-        } catch {
+        } catch (error) {
+          rethrowBoardApiShed(error);
           return ogNotFoundResponse();
         }
 
@@ -50,6 +60,7 @@ export const Route = createFileRoute('/blog/$postSlug/og')({
         try {
           return await renderBlogOg(post);
         } catch (error) {
+          rethrowBoardApiShed(error);
           // Tenant Workers log to Cloudflare observability; without this line
           // a renderer fault is invisible (see og-render.ts).
           console.error('[og] blog card render failed', error);

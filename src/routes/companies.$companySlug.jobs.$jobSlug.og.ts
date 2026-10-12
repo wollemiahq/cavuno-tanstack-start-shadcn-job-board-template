@@ -2,6 +2,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { getBoard } from '../lib/board';
+import { rethrowBoardApiShed } from '../lib/board-api-shed.server';
 import { readBoardContext } from '../lib/board-context-cache';
 import { buildJobOgHtml } from '../lib/job-og';
 import { loadOgFont, ogFontStack } from '../lib/og-font';
@@ -24,9 +25,11 @@ export const Route = createFileRoute(
         let job;
         try {
           job = await getBoard().jobs.retrieve(params.jobSlug);
-        } catch {
-          // A miss must be HTTP 404 (not 200 `{isNotFound:true}` from
+        } catch (error) {
+          // A shed read is a 503 + Retry-After (request middleware), not a
+          // miss. A miss must be HTTP 404 (not 200 `{isNotFound:true}` from
           // `throw notFound()` in a server GET).
+          rethrowBoardApiShed(error);
           return ogNotFoundResponse();
         }
 
@@ -36,6 +39,7 @@ export const Route = createFileRoute(
         try {
           return await renderJobOg(job);
         } catch (error) {
+          rethrowBoardApiShed(error);
           // Tenant Workers log to Cloudflare observability; without this line
           // a renderer fault is invisible (see og-render.ts).
           console.error('[og] job card render failed', error);

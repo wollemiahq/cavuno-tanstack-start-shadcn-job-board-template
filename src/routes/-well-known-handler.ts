@@ -7,6 +7,7 @@ import {
   type TanStackRouteNode,
 } from '@cavuno/board/well-known';
 
+import { rethrowBoardApiShed } from '../lib/board-api-shed.server';
 import { localizeRouteTemplate } from '../lib/localized-path';
 import { BOARD_URL_WORDS } from '../lib/url-words';
 import { baseLocale } from '../paraglide/runtime';
@@ -58,7 +59,10 @@ export function createWellKnownRouteHandler(
           },
         },
       );
-    } catch {
+    } catch (error) {
+      // A shed board-context read is a 503 + Retry-After (request
+      // middleware), not a broken manifest.
+      rethrowBoardApiShed(error);
       return new Response('', { status: 500 });
     }
   };

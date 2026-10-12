@@ -19,12 +19,20 @@
  *     recorded a shed for the same request. Any other 500 stays a 500, and
  *     a page that degraded gracefully around a shed read (200) is untouched.
  *
+ * Server routes (sitemaps, feeds, robots.txt, OG cards, ...) call the SDK
+ * directly, not through server fns, and a handler error is not turned into
+ * a page: it propagates out of `next()` in the request middleware. So the
+ * same request middleware catches a shed thrown by a server route and
+ * answers `503` + `Retry-After` itself; any other error is rethrown and
+ * keeps today's behaviour. Routes that catch Board API errors themselves
+ * rethrow a shed first (`rethrowBoardApiShed`).
+ *
  * No retry and no timeout: the shed is surfaced, not hidden.
  */
 import { createMiddleware } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { noteBoardApiShed, shedAwareResponse } from './board-api-shed.server';
+import { noteBoardApiShed, serveShedAware } from './board-api-shed.server';
 
 /** Step 1: record a shed from any server fn, server-side, then rethrow. */
 export const boardApiShedFunctionMiddleware = createMiddleware({
@@ -38,15 +46,14 @@ export const boardApiShedFunctionMiddleware = createMiddleware({
   }
 });
 
-/** Step 2: turn a shed page render's 500 into 503 + Retry-After. */
+/**
+ * Step 2: turn a shed page render's 500 into 503 + Retry-After, and answer
+ * a server route that threw a shed with the same 503.
+ */
 export const boardApiShedRequestMiddleware = createMiddleware().server(
   async ({ next, handlerType }) => {
-    const result = await next();
     // Server-fn RPC responses keep their own status contract with the client.
-    if (handlerType !== 'router') return result;
-    return {
-      ...result,
-      response: shedAwareResponse(result.response, getRequest()),
-    };
+    if (handlerType !== 'router') return next();
+    return serveShedAware(next, getRequest());
   },
 );

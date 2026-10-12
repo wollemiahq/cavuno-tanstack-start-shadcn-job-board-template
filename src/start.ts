@@ -6,8 +6,9 @@
  * default wholesale, so the same protection is re-added here explicitly —
  * removing it would silently expose every RPC to cross-site requests.
  *
- * Board API shedding: a page whose loaders hit a Board API 429/503 renders
- * as 503 + Retry-After instead of 500 (see src/lib/board-api-shed.ts).
+ * Board API shedding: a page whose loaders, or a server route (sitemap,
+ * feed, robots.txt, OG card, ...) whose handler, hit a Board API shed
+ * answers 503 + Retry-After instead of 500 (see src/lib/board-api-shed.ts).
  */
 import { createCsrfMiddleware, createStart } from '@tanstack/react-start';
 
