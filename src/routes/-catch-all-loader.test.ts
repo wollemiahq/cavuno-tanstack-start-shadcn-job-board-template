@@ -13,18 +13,13 @@ function apiError(status: number) {
   return new BoardApiError({
     status,
     code: 'unknown_error',
-    message: 'Forbidden',
+    message: 'Refused',
     raw: undefined,
   });
 }
 
-async function thrownBy(path: string): Promise<unknown> {
-  try {
-    await loadCatchAll({ params: { _splat: path } });
-  } catch (error) {
-    return error;
-  }
-  throw new Error('loader resolved without throwing');
+function load(path: string) {
+  return loadCatchAll({ params: { _splat: path } });
 }
 
 beforeEach(() => {
@@ -39,14 +34,14 @@ describe('catch-all loader', () => {
       target: '/jobs',
     });
 
-    const error = await thrownBy('old-jobs');
+    const result = load('old-jobs');
 
+    await expect(result).rejects.toSatisfy(isRedirect);
+    await expect(result).rejects.toMatchObject({
+      options: { href: '/jobs', statusCode: 308 },
+    });
     expect(resolveRedirect).toHaveBeenCalledWith({
       data: { path: '/old-jobs' },
-    });
-    expect(isRedirect(error)).toBe(true);
-    expect(error).toMatchObject({
-      options: { href: '/jobs', statusCode: 308 },
     });
   });
 
@@ -57,28 +52,31 @@ describe('catch-all loader', () => {
       target: null,
     });
 
-    expect(isNotFound(await thrownBy('nope'))).toBe(true);
+    await expect(load('nope')).rejects.toSatisfy(isNotFound);
   });
 
   it('404s when the lookup for a scanner path is refused', async () => {
     resolveRedirect.mockRejectedValue(apiError(403));
 
-    expect(isNotFound(await thrownBy('.github/workflows/deploy.yml'))).toBe(
-      true,
+    await expect(load('.github/workflows/deploy.yml')).rejects.toSatisfy(
+      isNotFound,
     );
   });
 
-  it('rejects with the error when the Board API fails', async () => {
-    const outage = apiError(503);
-    resolveRedirect.mockRejectedValue(outage);
+  it.each([429, 503])(
+    'rejects with the error when the lookup fails with %i',
+    async (status) => {
+      const failure = apiError(status);
+      resolveRedirect.mockRejectedValue(failure);
 
-    expect(await thrownBy('nope')).toBe(outage);
-  });
+      await expect(load('old-jobs')).rejects.toBe(failure);
+    },
+  );
 
   it('passes the password-wall redirect through', async () => {
     const wall = redirect({ to: '/password' });
     resolveRedirect.mockRejectedValue(wall);
 
-    expect(await thrownBy('nope')).toBe(wall);
+    await expect(load('nope')).rejects.toBe(wall);
   });
 });
