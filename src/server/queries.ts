@@ -689,8 +689,7 @@ export const EMPTY_ADJACENT: PublicBlogAdjacentPosts = {
 
 // prev/next + related are progressive-enhancement rails: if the endpoint is
 // absent (a deployment that predates them → 404), degrade to empty rather than
-// failing the whole detail page. The BoardApiError is caught HERE (same process
-// as the SDK call) — it would not survive the server-fn RPC boundary.
+// failing the whole detail page.
 export const getBlogPostAdjacent = createServerFn({ method: 'GET' })
   .validator((input: { postSlug: string }) => input)
   .middleware([boardAccessMiddleware])
@@ -742,8 +741,6 @@ export const getBlogAuthor = createServerFn({ method: 'GET' })
 
 // ── Programmatic taxonomy pages ──────────────────────────────────────────────
 // resolve* return null on a 404 so the route loader can `throw notFound()`.
-// The BoardApiError instance is intact here (same process as the SDK call);
-// it would not survive the server-fn RPC boundary back to the loader.
 
 async function resolveOrNull(
   promise: Promise<TaxonomyResolution>,

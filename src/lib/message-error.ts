@@ -18,9 +18,9 @@ function serializedBoardErrorCode<T>(error: T): string | null {
 /**
  * A user-facing string for an error caught from a messaging server function.
  * A `BoardApiError` reaches the client intact (see
- * `board-api-error-serialization.ts`); a server fn that throws its own plain
- * `Error` carries the signal in its message — fall back to a generic line
- * otherwise.
+ * `board-api-error-serialization.ts`). A plain error that still carries a
+ * known Board API `code`, or a server fn's own `Error` with a signal in its
+ * message, is handled too; anything else gets a generic line.
  */
 export function errorMessage<T>(error: T): string {
   if (isBoardApiError(error)) {

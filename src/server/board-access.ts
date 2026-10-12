@@ -47,9 +47,9 @@ export const verifyBoardPassword = createServerFn({ method: 'POST' })
 /**
  * Run a gated content read with the grant header, converting the password wall
  * (401 `board_password_required`) into a redirect to the /password challenge.
- * The BoardApiError does NOT survive the server-fn RPC boundary, so the wall
- * MUST be caught here (server-side) and turned into a framework `redirect`,
- * which does survive. Anything else propagates unchanged.
+ * The wall is caught here (server-side) and turned into a framework
+ * `redirect`, which the router follows wherever the read ran. Anything else
+ * propagates unchanged.
  */
 export async function gatedRead<T>(
   context: BoardAccessContext,

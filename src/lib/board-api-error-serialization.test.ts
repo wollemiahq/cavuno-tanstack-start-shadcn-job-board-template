@@ -1,4 +1,4 @@
-import { BoardApiError, isBoardApiError, isNotFound } from '@cavuno/board';
+import { BoardApiError, isNotFound } from '@cavuno/board';
 import { describe, expect, it } from 'vitest';
 
 import { boardApiErrorAdapter } from './board-api-error-serialization';
@@ -52,15 +52,13 @@ describe('BoardApiError serialization', () => {
   it('claims only Board API errors', () => {
     expect(boardApiErrorAdapter.test(new Error('Job not found'))).toBe(false);
     expect(
-      isBoardApiError(
-        roundTrip(
-          new BoardApiError({
-            status: 500,
-            code: 'x',
-            message: 'x',
-            raw: undefined,
-          }),
-        ),
+      boardApiErrorAdapter.test(
+        new BoardApiError({
+          status: 500,
+          code: 'x',
+          message: 'x',
+          raw: undefined,
+        }),
       ),
     ).toBe(true);
   });

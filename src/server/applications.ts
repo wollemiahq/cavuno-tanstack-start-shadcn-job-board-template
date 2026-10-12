@@ -170,10 +170,8 @@ export const applyToJob = createServerFn({ method: 'POST' })
  * board's registration wall is on, so a starter that forced sign-in here
  * lost every application on the 129 wall-off boards.
  *
- * Returns a discriminated result instead of throwing: `BoardApiError` does
- * not survive the TanStack server-fn RPC boundary (see `message-error.ts`),
- * and the guest form needs to tell "this board requires an account" apart
- * from a generic failure.
+ * Returns a discriminated result instead of throwing: the guest form needs to
+ * tell "this board requires an account" apart from a generic failure.
  */
 export type GuestApplyResult =
   | { ok: true; applicationId: string }
