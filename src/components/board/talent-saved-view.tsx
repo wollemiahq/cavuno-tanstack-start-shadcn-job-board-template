@@ -101,7 +101,7 @@ function ViewSelect({
         }}
       >
         <SelectTrigger id={controlId} aria-label={m.talentSaved_showLabel()}>
-          {/* The trigger reads "Saved · N"; the menu option "Saved (N)". */}
+          {/* The trigger and the menu option both read "N saved". */}
           <SelectValue>
             {(value: string) =>
               value === SAVED
