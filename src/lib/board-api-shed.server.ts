@@ -6,8 +6,12 @@
 import { isBoardApiError, type BoardApiError } from '@cavuno/board';
 import { transferResponseBodyOwnership } from '@tanstack/react-start/server';
 
-/** Board API statuses that mean "shed / overloaded, retry later". */
-const SHED_STATUSES = new Set([429, 503]);
+/**
+ * Board API statuses that mean "shed / overloaded / briefly unreachable,
+ * retry later": 429 and 503 are load shedding; 502 and 504 are the API's
+ * proxy failing to reach a backend that is restarting or down.
+ */
+const SHED_STATUSES = new Set([429, 502, 503, 504]);
 
 /**
  * Seconds a client should wait before retrying a shed page. The SDK error

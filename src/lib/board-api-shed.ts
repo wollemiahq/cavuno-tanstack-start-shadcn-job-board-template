@@ -2,7 +2,7 @@
  * Board API load shedding → `503 Service Unavailable` for the page.
  *
  * Under load the Board API sheds overflow traffic with `429` (and can answer
- * `503` when overloaded). Those are "come back later", not bugs, yet a
+ * `503` when overloaded, `502`/`504` while a backend restarts). Those are "come back later", not bugs, yet a
  * loader that rethrows one renders the page as a `500`. Crawlers treat a 500
  * as a broken page; a 503 with `Retry-After` tells them to back off and
  * return.

@@ -60,6 +60,18 @@ describe('Board API shed → page status', () => {
     );
   });
 
+  it.each([502, 504])(
+    'turns an upstream %i into 503 with Retry-After',
+    (status) => {
+      const response = pageAfter(boardApiError(status, 'bad_gateway'));
+
+      expect(response.status).toBe(503);
+      expect(response.headers.get('Retry-After')).toBe(
+        String(SHED_RETRY_AFTER_SECONDS),
+      );
+    },
+  );
+
   it('keeps any other Board API 5xx a 500', () => {
     const response = pageAfter(boardApiError(500, 'internal_error'));
 
