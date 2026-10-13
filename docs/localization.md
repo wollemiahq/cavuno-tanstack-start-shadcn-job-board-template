@@ -118,8 +118,9 @@ The file is separate from `src/url-words.json` because the platform reads
 that file strictly. On boards built with the Cavuno builder the platform
 maintains `src/url-words-previous.json` itself when a word is renamed, so do
 not delete entries: removing one breaks every link, bookmark and search
-result that still uses the old word. A missing or malformed file reads as
-no retired words. Tests check that every retired word is URL-safe, belongs
+result that still uses the old word. If the file is missing or malformed,
+the site still builds and serves with no retired words, but keep it in the
+repo: the tests read it. Tests check that every retired word is URL-safe, belongs
 to a real page route segment, differs from that language's current word for
 the segment, and is listed once.
 
