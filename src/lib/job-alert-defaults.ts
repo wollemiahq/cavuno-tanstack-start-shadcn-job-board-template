@@ -27,14 +27,14 @@ function toRemoteOptions(
 
 /**
  * Scope a job-detail alert to "more jobs like this one". `jobFunctions` uses the
- * category/skill *names* — the digest matcher compares them against the job
- * doc's stored category strings (which are the source names). `placeSlugs` uses
- * the deepest (most specific) place in the hierarchy.
+ * category/skill *slugs*: the digest matcher compares them against each job's
+ * canonical category and skill slugs, so display names would never match.
+ * `placeSlugs` uses the deepest (most specific) place in the hierarchy.
  */
 export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
   const jobFunctions = dedupe([
-    ...job.categories.map((category) => category.name),
-    ...job.skills.map((skill) => skill.name),
+    ...job.categories.map((category) => category.slug),
+    ...job.skills.map((skill) => skill.slug),
   ]).slice(0, MAX_JOB_FUNCTIONS);
   const placeSlug = job.placeHierarchy.at(-1)?.slug;
 
@@ -57,16 +57,19 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
 /**
  * Scope a listing/search alert (the hosted `createJobAlertDefaultsFromFilters`):
  * the keyword becomes the job function and the active location slug the place.
+ * The keyword is sent as typed: the platform canonicalizes free-text job
+ * functions to taxonomy slugs, so the starter does not slugify it locally.
  */
 export function jobAlertDefaultsFromSearch(opts: {
   keyword?: string;
   locationSlug?: string;
   source?: string;
 }): JobAlertDefaults {
+  const jobFunction = opts.keyword?.trim() ?? '';
   return {
     label: opts.keyword,
     filters: {
-      jobFunctions: opts.keyword ? [opts.keyword] : undefined,
+      jobFunctions: jobFunction ? [jobFunction] : undefined,
       placeSlugs: opts.locationSlug ? [opts.locationSlug] : undefined,
     },
     context: { source: opts.source ?? 'jobs_list' },
