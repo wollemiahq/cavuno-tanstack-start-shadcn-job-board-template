@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { baseLocale, isLocale } from '../paraglide/runtime';
+import PREVIOUS_URL_WORDS from '../url-words-previous.json';
 import URL_WORDS from '../url-words.json';
 import {
   canonicalPathname,
@@ -17,7 +18,7 @@ import { ROUTE_TEMPLATES } from './route-templates';
 import { BOARD_URL_WORDS } from './url-words';
 
 import type { LocaleRouting } from './localized-path';
-import type { UrlWords } from './url-words';
+import type { PreviousUrlWords, UrlWords } from './url-words';
 
 /** A Dutch board with French and German variants. */
 const DUTCH_BOARD: LocaleRouting = {
@@ -173,6 +174,87 @@ describe('localized URL segments', () => {
   });
 });
 
+/** The Dutch board after two renames (vacatures → werk → banen, locaties
+ * → plaatsen) and a German one (gehalt → gehaelter). */
+const RENAMED_BOARD: LocaleRouting = {
+  ...DUTCH_BOARD,
+  words: {
+    ...URL_WORDS,
+    nl: { ...URL_WORDS.nl, jobs: 'banen', locations: 'plaatsen' },
+    de: { ...URL_WORDS.de, salaries: 'gehaelter' },
+  },
+  previousWords: {
+    nl: { jobs: ['vacatures', 'werk'], locations: ['locaties'] },
+    de: { salaries: ['gehalt'] },
+  },
+};
+
+describe('retired URL words', () => {
+  it('reads an old word as its segment and writes the current one', () => {
+    expect(delocalizeSegments('/vacatures', RENAMED_BOARD)).toBe('/jobs');
+    expect(localizeSegments('/vacatures?q=x', RENAMED_BOARD)).toBe(
+      '/banen?q=x',
+    );
+    expect(canonicalPathname('/vacatures/locaties', RENAMED_BOARD)).toBe(
+      '/jobs/locations',
+    );
+  });
+
+  it('translates a renamed segment in the middle of a path', () => {
+    expect(
+      localizeSegments('/bedrijven/acme/vacatures/designer', RENAMED_BOARD),
+    ).toBe('/bedrijven/acme/banen/designer');
+  });
+
+  it('prefers a retired word over a param at the same position', () => {
+    // Without the retired word, "locaties" would be a /jobs/$keyword slug.
+    expect(localizeSegments('/banen/locaties', RENAMED_BOARD)).toBe(
+      '/banen/plaatsen',
+    );
+    expect(localizeSegments('/banen/locaties/amsterdam', RENAMED_BOARD)).toBe(
+      '/banen/plaatsen/amsterdam',
+    );
+    // A slug that is no retired word stays a slug.
+    expect(localizeSegments('/banen/react', RENAMED_BOARD)).toBe(
+      '/banen/react',
+    );
+  });
+
+  it('lets a current word win over a retired word it collides with', () => {
+    const routing: LocaleRouting = {
+      ...DUTCH_BOARD,
+      previousWords: { nl: { jobs: ['bedrijven'] } },
+    };
+    expect(delocalizeSegments('/bedrijven/acme', routing)).toBe(
+      '/companies/acme',
+    );
+    expect(localizeSegments('/bedrijven', routing)).toBe('/bedrijven');
+  });
+
+  it('sends every word in a rename chain straight to the current one', () => {
+    for (const old of ['/vacatures', '/werk']) {
+      expect(localizeSegments(`${old}/locaties/x`, RENAMED_BOARD)).toBe(
+        '/banen/plaatsen/x',
+      );
+    }
+  });
+
+  it('uses each prefixed locale’s own retired words', () => {
+    expect(localizeSegments('/de/gehalt', RENAMED_BOARD)).toBe('/de/gehaelter');
+    // A Dutch retired word means nothing under /de.
+    expect(delocalizeSegments('/de/vacatures', RENAMED_BOARD)).toBe(
+      '/de/vacatures',
+    );
+    expect(localizeSegments('/fr/emplois', RENAMED_BOARD)).toBe('/fr/emplois');
+  });
+
+  it('leaves machine paths alone', () => {
+    for (const path of ['/jobs/rss.xml', '/api/jobs', '/sitemap.xml']) {
+      expect(localizeSegments(path, RENAMED_BOARD)).toBe(path);
+    }
+  });
+});
+
 describe('localizePath (compiled runtime)', () => {
   /** The compiled build only carries words for compiled locales. */
   function wordsIfCompiled(locale: string, localized: string, raw: string) {
@@ -308,6 +390,67 @@ describe('URL word file', () => {
     }
     return problems;
   }
+
+  /** Everything that would make a retired-word file unsafe to route with. */
+  function retiredWordProblems(
+    file: PreviousUrlWords,
+    current: UrlWords = URL_WORDS,
+  ): string[] {
+    const byDepth = pageWordsByDepth();
+    const pageWords = new Set(
+      [...byDepth.values()].flatMap((words) => [...words]),
+    );
+    const machine = machineSegments(pageWords);
+    const problems: string[] = [];
+    for (const [locale, entries] of Object.entries(file)) {
+      const owners = new Map<string, string>();
+      for (const [canonical, retired] of Object.entries(entries)) {
+        if (machine.has(canonical) || !pageWords.has(canonical)) {
+          problems.push(`${locale}: "${canonical}" is not a route segment`);
+        }
+        const word = current[locale]?.[canonical] ?? canonical;
+        for (const old of retired) {
+          if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(old)) {
+            problems.push(`${locale}: "${old}" is not URL-safe`);
+          }
+          if (old === word) {
+            problems.push(
+              `${locale}: "${old}" is "${canonical}"'s current word`,
+            );
+          }
+          const owner = owners.get(old);
+          if (owner !== undefined) {
+            problems.push(
+              `${locale}: "${old}" is listed twice ("${owner}" and "${canonical}")`,
+            );
+          }
+          owners.set(old, canonical);
+        }
+      }
+    }
+    return problems;
+  }
+
+  it('lists retired words that are URL-safe, unique and not current', () => {
+    expect(retiredWordProblems(PREVIOUS_URL_WORDS)).toEqual([]);
+    expect(
+      retiredWordProblems({
+        nl: {
+          careers: ['loopbaan'],
+          jobs: ['Vacatures!', 'vacatures', 'werk', 'werk'],
+          companies: ['werk'],
+          locations: ['locaties'],
+        },
+      }),
+    ).toEqual([
+      'nl: "careers" is not a route segment',
+      'nl: "Vacatures!" is not URL-safe',
+      'nl: "vacatures" is "jobs"\'s current word',
+      'nl: "werk" is listed twice ("jobs" and "jobs")',
+      'nl: "werk" is listed twice ("jobs" and "companies")',
+      'nl: "locaties" is "locations"\'s current word',
+    ]);
+  });
 
   it('maps every route position to a distinct, URL-safe word in every language', () => {
     expect(Object.keys(URL_WORDS).length).toBeGreaterThan(1);

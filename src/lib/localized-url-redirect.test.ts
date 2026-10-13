@@ -24,6 +24,16 @@ function request(path: string, method = 'GET') {
   return { method, url: `https://board.example${path}` };
 }
 
+/** The Dutch board after renaming vacatures → banen, locaties → plaatsen. */
+const RENAMED_BOARD: LocaleRouting = {
+  ...DUTCH_BOARD,
+  words: {
+    ...URL_WORDS,
+    nl: { ...URL_WORDS.nl, jobs: 'banen', locations: 'plaatsen' },
+  },
+  previousWords: { nl: { jobs: ['vacatures'], locations: ['locaties'] } },
+};
+
 describe('localized URL redirect', () => {
   it('sends canonical document URLs to the localized one, query intact', () => {
     expect(localizedRedirectLocation(request('/jobs'), DUTCH_BOARD)).toBe(
@@ -49,6 +59,26 @@ describe('localized URL redirect', () => {
       '/',
     ]) {
       expect(localizedRedirectLocation(request(path), DUTCH_BOARD)).toBeNull();
+    }
+  });
+
+  it('sends a retired word to the current one in one hop, query intact', () => {
+    expect(
+      localizedRedirectLocation(
+        request('/vacatures/locaties/amsterdam?x=1'),
+        RENAMED_BOARD,
+      ),
+    ).toBe('/banen/plaatsen/amsterdam?x=1');
+    const response = localizedUrlRedirect(
+      new Request('https://board.example/vacatures?q=react'),
+      RENAMED_BOARD,
+    );
+    expect(response?.status).toBe(308);
+    expect(response?.headers.get('Location')).toBe('/banen?q=react');
+    for (const path of ['/banen', '/banen/plaatsen/amsterdam?x=1']) {
+      expect(
+        localizedRedirectLocation(request(path), RENAMED_BOARD),
+      ).toBeNull();
     }
   });
 

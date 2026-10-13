@@ -28,8 +28,13 @@
  * vite plugin and the gen:paraglide CLI, and the CLI cannot express
  * urlPatterns — the two outputs would silently diverge.
  *
- * Changing a word after launch changes public URLs: links that use the
- * old word stop resolving, so treat it as a URL migration.
+ * Retired words: when a word is renamed, the old one goes in
+ * src/url-words-previous.json under the same locale and canonical segment.
+ * Input accepts it at that segment's positions, ranked below the current
+ * and canonical words but above params, so an old word is never read as a
+ * slug and a retired word that another segment now uses loses to it.
+ * Output always uses the current word, so the server entry 308s an old URL
+ * straight to the current one, however many renames ago it was.
  *
  * The well-known route manifest publishes role templates in the base
  * locale's words (localizeRouteTemplate), the same mapping the platform
@@ -42,9 +47,9 @@ import {
   localizeHref,
 } from '../paraglide/runtime';
 import { ROUTE_TEMPLATES } from './route-templates';
-import { BOARD_URL_WORDS } from './url-words';
+import { BOARD_PREVIOUS_URL_WORDS, BOARD_URL_WORDS } from './url-words';
 
-import type { UrlWords } from './url-words';
+import type { PreviousUrlWords, UrlWords } from './url-words';
 
 type SplitPath = {
   pathname: string;
@@ -100,14 +105,20 @@ function parseTemplate(template: string): Template {
     });
 }
 
-const RANK = { static: 2, param: 1, splat: 0 } as const;
+/** Per-position rank: a current (or canonical) static word beats a
+ * retired one, which beats a param, which beats a splat. */
+const RANK = { static: 3, retired: 2, param: 1, splat: 0 } as const;
+
+/** Rank of `segment` at a static position for canonical `word`, or null
+ * if the position does not accept it. */
+type StaticMatch = (word: string, segment: string) => number | null;
 
 /** Router-style rank of `template` for `segments`, or null if it does not
  * match. `accepts(word, segment)` decides a static position. */
 function matchRank(
   template: Template,
   segments: readonly string[],
-  accepts: (word: string, segment: string) => boolean,
+  accepts: StaticMatch,
 ): number[] | null {
   const rank: number[] = [];
   for (let index = 0; index < template.length; index += 1) {
@@ -118,8 +129,13 @@ function matchRank(
     }
     const segment = segments[index];
     if (segment === undefined) return null;
-    if (part.kind === 'static' && !accepts(part.word, segment)) return null;
-    rank.push(RANK[part.kind]);
+    if (part.kind === 'param') {
+      rank.push(RANK.param);
+      continue;
+    }
+    const staticRank = accepts(part.word, segment);
+    if (staticRank === null) return null;
+    rank.push(staticRank);
   }
   return template.length === segments.length ? rank : null;
 }
@@ -136,7 +152,7 @@ function outranks(a: readonly number[], b: readonly number[]): boolean {
 function bestTemplate(
   templates: readonly Template[],
   segments: readonly string[],
-  accepts: (word: string, segment: string) => boolean,
+  accepts: StaticMatch,
 ): Template | null {
   let best: Template | null = null;
   let bestRank: number[] | null = null;
@@ -154,16 +170,30 @@ const ROUTES: readonly Template[] = ROUTE_TEMPLATES.map(parseTemplate);
 const MACHINE_ROUTES: readonly Template[] =
   MACHINE_TEMPLATES.map(parseTemplate);
 
-/** Settled per-word-file lookup maps (no I/O, safe to keep). */
+/** One locale's lookup maps: canonical segment → current word, and
+ * canonical segment → its retired words. */
+type LocaleWords = {
+  current: ReadonlyMap<string, string>;
+  retired: ReadonlyMap<string, ReadonlySet<string>>;
+};
+
+/** Settled per-file lookup maps (no I/O, safe to keep). */
 const WORD_MAPS = new WeakMap<
   UrlWords,
   ReadonlyMap<string, ReadonlyMap<string, string>>
 >();
+const RETIRED_MAPS = new WeakMap<
+  PreviousUrlWords,
+  ReadonlyMap<string, ReadonlyMap<string, ReadonlySet<string>>>
+>();
+
+const NO_RETIRED_WORDS: ReadonlyMap<string, ReadonlySet<string>> = new Map();
 
 function localeWords(
   words: UrlWords,
+  previousWords: PreviousUrlWords,
   locale: string,
-): ReadonlyMap<string, string> | undefined {
+): LocaleWords | undefined {
   let maps = WORD_MAPS.get(words);
   if (!maps) {
     maps = new Map(
@@ -174,10 +204,28 @@ function localeWords(
     );
     WORD_MAPS.set(words, maps);
   }
-  return maps.get(locale);
+  const current = maps.get(locale);
+  if (!current) return undefined;
+  let retiredMaps = RETIRED_MAPS.get(previousWords);
+  if (!retiredMaps) {
+    retiredMaps = new Map(
+      Object.entries(previousWords).map(([tag, entries]) => [
+        tag,
+        new Map(
+          Object.entries(entries).map(([canonical, retired]) => [
+            canonical,
+            new Set(retired),
+          ]),
+        ),
+      ]),
+    );
+    RETIRED_MAPS.set(previousWords, retiredMaps);
+  }
+  return { current, retired: retiredMaps.get(locale) ?? NO_RETIRED_WORDS };
 }
 
-const exactWord = (word: string, segment: string) => word === segment;
+const exactWord: StaticMatch = (word, segment) =>
+  word === segment ? RANK.static : null;
 
 function isMachineSegments(segments: readonly string[]): boolean {
   const first = segments[0];
@@ -195,7 +243,7 @@ function isMachineSegments(segments: readonly string[]): boolean {
  */
 function translatePathname(
   pathname: string,
-  words: ReadonlyMap<string, string> | undefined,
+  words: LocaleWords | undefined,
   to: 'localized' | 'canonical',
 ): string {
   if (!words || !pathname.startsWith('/') || pathname === '/') {
@@ -204,35 +252,53 @@ function translatePathname(
   const trailingSlash = pathname.endsWith('/');
   const segments = pathname.slice(1, trailingSlash ? -1 : undefined).split('/');
   if (isMachineSegments(segments)) return pathname;
-  const template = bestTemplate(
-    ROUTES,
-    segments,
-    (word, segment) => segment === word || segment === words.get(word),
-  );
+  const { current, retired } = words;
+  const template = bestTemplate(ROUTES, segments, (word, segment) => {
+    if (segment === word || segment === current.get(word)) return RANK.static;
+    return retired.get(word)?.has(segment) ? RANK.retired : null;
+  });
   if (!template) return pathname;
   const translated = segments.map((segment, index) => {
     const part = template[index];
     if (part?.kind !== 'static') return segment;
-    return to === 'localized' ? (words.get(part.word) ?? part.word) : part.word;
+    return to === 'localized'
+      ? (current.get(part.word) ?? part.word)
+      : part.word;
   });
   return `/${translated.join('/')}${trailingSlash ? '/' : ''}`;
 }
 
 /** The locale routing a pathname is read with: which tags are locale
- * prefixes, which locale owns unprefixed paths, and each locale's URL
- * words. Defaults to the compiled Paraglide runtime and the board's word
- * file; tests pass another board's setup. */
+ * prefixes, which locale owns unprefixed paths, each locale's URL words
+ * and its retired words (none when omitted). Defaults to the compiled
+ * Paraglide runtime and the board's word files; tests pass another
+ * board's setup. */
 export type LocaleRouting = {
   baseLocale: string;
   isLocale: (tag: string) => boolean;
   words: UrlWords;
+  previousWords?: PreviousUrlWords;
 };
 
 const RUNTIME_ROUTING: LocaleRouting = {
   baseLocale,
   isLocale,
   words: BOARD_URL_WORDS,
+  previousWords: BOARD_PREVIOUS_URL_WORDS,
 };
+
+const NO_PREVIOUS_WORDS: PreviousUrlWords = {};
+
+function routingWords(
+  routing: LocaleRouting,
+  locale: string,
+): LocaleWords | undefined {
+  return localeWords(
+    routing.words,
+    routing.previousWords ?? NO_PREVIOUS_WORDS,
+    locale,
+  );
+}
 
 function splitPath(path: string): SplitPath {
   const hashIndex = path.indexOf('#');
@@ -272,7 +338,7 @@ function translateHref(
 ): string {
   const { pathname, search, hash } = splitPath(path);
   const { prefix, locale, rest } = splitLocalePrefix(pathname, routing);
-  const words = localeWords(routing.words, locale);
+  const words = routingWords(routing, locale);
   return `${prefix}${translatePathname(rest, words, to)}${search}${hash}`;
 }
 
@@ -326,7 +392,7 @@ export function localizePath(
   const rest = prefixed ? pathname.slice(prefix.length) : pathname;
   const translated = translatePathname(
     rest,
-    localeWords(BOARD_URL_WORDS, locale),
+    routingWords(RUNTIME_ROUTING, locale),
     'localized',
   );
   return `${prefixed ? prefix : ''}${translated}${search}${hash}`;

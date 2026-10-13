@@ -44,6 +44,25 @@ Use the installed framework and i18n guidance for routing, SSR locale detection,
 
 A compile-time i18n system can replace the seam's backing source. Keep the seam provider-free unless the chosen framework integration itself requires a provider.
 
+## Keep renamed URL words redirecting
+
+Static URL segments are localized from `src/url-words.json`
+(`{ "<locale>": { "<canonical segment>": "<word>" } }`, for example
+`nl` `jobs` → `vacatures`). Route files stay canonical. When you rename a
+word there, put the old word in `src/url-words-previous.json` under the same
+locale and canonical segment, so links that use it keep resolving and
+redirect to the current word in one hop:
+
+```json
+{ "nl": { "jobs": ["vacatures"] } }
+```
+
+1. Never add keys to `src/url-words.json` beyond locale and segment words; the platform reads it strictly.
+2. Append to a segment's list; a word renamed twice lists both earlier words.
+3. Do not delete entries. On builder boards the platform maintains this file automatically when a word is renamed, and removing an entry breaks old links and search results.
+
+This step is complete when the old URL answers with a 308 to the current one and the `URL word file` tests in `src/lib/localized-path.test.ts` pass.
+
 ## Own the five  obligations
 
 The SDK formats amounts, units, and relative dates with `Intl` and returns

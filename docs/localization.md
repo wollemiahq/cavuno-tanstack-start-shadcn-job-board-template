@@ -94,8 +94,35 @@ Machine paths never translate or redirect: `/api`, `/_serverFn`, `/go`,
 and the RSS feeds (`/jobs/rss.xml`, `/blog/rss.xml`). The list lives in
 `src/lib/localized-path.ts`.
 
-Words are part of public URLs. Once a board is live, editing or removing a
-word, or switching the board language, is a URL migration: links and search
-results that use the old word stop resolving, so add board redirects for
-them. Canonical English URLs keep redirecting to the current words; a
-previous language's words do not.
+### Renaming a word
+
+Words are part of public URLs, so a renamed word keeps working under its
+old name. When you change a word in `src/url-words.json`, add the old word
+to `src/url-words-previous.json` under the same language and canonical
+segment:
+
+```json
+{ "nl": { "jobs": ["vacatures"] } }
+```
+
+Each segment takes a list, so a word renamed twice lists both
+earlier words. Incoming URLs accept a retired word wherever its segment
+appears, and the server entry 308s them to the current word in one hop,
+keeping the query string: after renaming `vacatures` to `banen`,
+`/vacatures/locaties?q=x` redirects to `/banen/locaties?q=x`. A retired word
+is never read as a slug (`/banen/locaties` stays the locations page after
+`locaties` is renamed), and a current word wins over a retired one that
+spells the same thing at the same position.
+
+The file is separate from `src/url-words.json` because the platform reads
+that file strictly. On boards built with the Cavuno builder the platform
+maintains `src/url-words-previous.json` itself when a word is renamed, so do
+not delete entries: removing one breaks every link, bookmark and search
+result that still uses the old word. A missing or malformed file reads as
+no retired words. Tests check that every retired word is URL-safe, belongs
+to a real page route segment, differs from that language's current word for
+the segment, and is listed once.
+
+Canonical English URLs keep redirecting to the current words. Switching the
+board language is still a URL migration: the previous language's words do
+not redirect unless you list them as retired words of the new language.

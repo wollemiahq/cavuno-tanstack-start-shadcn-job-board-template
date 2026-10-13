@@ -3,7 +3,8 @@
  * differs (/jobs on a Dutch board, /fr/jobs for French) gets a permanent
  * 308 to the localized URL, query preserved. Runs in the server entry
  * before rendering, so crawlers and old links consolidate on the localized
- * URL in one hop.
+ * URL in one hop. A retired word (src/url-words-previous.json) reads as its
+ * segment, so an old URL lands on the current word in that same one hop.
  *
  * Never for non-GET/HEAD requests (a 308 would replay a POST body
  * elsewhere) or machine paths (feeds, sitemaps, APIs, OG images). A
