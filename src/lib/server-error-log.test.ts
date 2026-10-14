@@ -62,7 +62,8 @@ describe('serveWithServerErrorLog', () => {
 
   it('rethrows the original error even when logging it fails', async () => {
     const request = new Request('https://board.example/jobs');
-    const thrown = Object.create(null) as object;
+    // A prototype-less object: String(thrown) throws, so summarizing it fails.
+    const thrown: object = Object.create(null);
     error.mockImplementation(() => {
       throw new Error('console unavailable');
     });
