@@ -21,6 +21,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getJobsLocationsIndexPage } from '../server/jobs-listing-pages';
 
+import { placeLinkSlug } from '@/board/place-link';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -76,31 +77,36 @@ function buildHierarchy(places: PublicPlace[]): PlaceNode[] {
 function PlaceTree({ nodes }: { nodes: PlaceNode[] }) {
   return (
     <ul className="flex flex-col gap-1">
-      {nodes.map((node) => (
-        <li key={node.place.id}>
-          <div className="flex items-center gap-2">
-            {node.place.slug ? (
-              <Link
-                to="/jobs/locations/$location"
-                params={{ location: node.place.slug }}
-                className="text-foreground hover:text-primary focus-visible:ring-ring/30 rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:ring-3 focus-visible:outline-none"
-              >
-                {node.place.name}
-              </Link>
-            ) : (
-              <span className="text-muted-foreground">{node.place.name}</span>
-            )}
-            <Badge variant="secondary">
-              {node.place.jobCount.toLocaleString(getLocale())}
-            </Badge>
-          </div>
-          {node.children.length > 0 ? (
-            <div className="border-border ms-4 mt-1 border-s ps-3">
-              <PlaceTree nodes={node.children} />
+      {nodes.map((node) => {
+        const slug = placeLinkSlug(node.place);
+        return (
+          <li key={node.place.id}>
+            <div className="flex items-center gap-2">
+              {slug ? (
+                <Link
+                  to="/jobs/locations/$location"
+                  params={{ location: slug }}
+                  className="text-foreground hover:text-primary focus-visible:ring-ring/30 rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:ring-3 focus-visible:outline-none"
+                >
+                  {node.place.displayName}
+                </Link>
+              ) : (
+                <span className="text-muted-foreground">
+                  {node.place.displayName}
+                </span>
+              )}
+              <Badge variant="secondary">
+                {node.place.jobCount.toLocaleString(getLocale())}
+              </Badge>
             </div>
-          ) : null}
-        </li>
-      ))}
+            {node.children.length > 0 ? (
+              <div className="border-border ms-4 mt-1 border-s ps-3">
+                <PlaceTree nodes={node.children} />
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }

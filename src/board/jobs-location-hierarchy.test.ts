@@ -2,24 +2,32 @@ import { describe, expect, it } from 'vitest';
 
 import { toJobsLocationHierarchyCrumbs } from './jobs-location-hierarchy';
 
-const australia = {
+/** A directory place on an English board: board-language fields equal source. */
+const englishPlace = (place: {
+  id: string;
+  parentId: string | null;
+  slug: string | null;
+  name: string;
+}) => ({ ...place, canonicalSlug: place.slug, displayName: place.name });
+
+const australia = englishPlace({
   id: 'au',
   parentId: null,
   slug: 'australia',
   name: 'Australia',
-};
-const nsw = {
+});
+const nsw = englishPlace({
   id: 'nsw',
   parentId: 'au',
   slug: 'new-south-wales',
   name: 'New South Wales',
-};
-const sydney = {
+});
+const sydney = englishPlace({
   id: 'syd',
   parentId: 'nsw',
   slug: 'sydney',
   name: 'Sydney',
-};
+});
 
 const sydneyResolution = {
   sourceSlug: 'sydney',
@@ -100,13 +108,76 @@ describe('toJobsLocationHierarchyCrumbs', () => {
   });
 
   it('matches by canonicalSlug when the source slug is absent from the tree', () => {
-    const tree = [{ ...sydney, slug: 'sydney-de' }];
+    const tree = [{ ...sydney, slug: 'sydney-en', canonicalSlug: 'sydney-de' }];
     const crumbs = toJobsLocationHierarchyCrumbs(tree, {
       sourceSlug: 'sydney',
       canonicalSlug: 'sydney-de',
       displayName: 'Sydney',
     });
     expect(crumbs).toEqual([{ name: 'Sydney' }]);
+  });
+
+  describe('on a translated board', () => {
+    const netherlands = {
+      id: 'nl',
+      parentId: null,
+      slug: 'netherlands',
+      canonicalSlug: 'nederland',
+      name: 'Netherlands',
+      displayName: 'Nederland',
+    };
+    const northHolland = {
+      id: 'nh',
+      parentId: 'nl',
+      slug: 'north-holland',
+      canonicalSlug: 'noord-holland',
+      name: 'North Holland',
+      displayName: 'Noord-Holland',
+    };
+    const hague = {
+      id: 'dh',
+      parentId: 'nh',
+      slug: 'the-hague',
+      canonicalSlug: 'den-haag',
+      name: 'The Hague',
+      displayName: 'Den Haag',
+    };
+    const tree = [hague, northHolland, netherlands];
+    const expected = [
+      { name: 'Nederland', href: '/jobs/locations/nederland' },
+      { name: 'Noord-Holland', href: '/jobs/locations/noord-holland' },
+      { name: 'Den Haag' },
+    ];
+
+    it('names and links ancestors in the board language', () => {
+      expect(
+        toJobsLocationHierarchyCrumbs(tree, {
+          sourceSlug: 'the-hague',
+          canonicalSlug: 'den-haag',
+          displayName: 'Den Haag, Noord-Holland, Nederland',
+        }),
+      ).toEqual(expected);
+    });
+
+    it('finds the place when only the board-language slug matches', () => {
+      expect(
+        toJobsLocationHierarchyCrumbs(tree, {
+          sourceSlug: 'den-haag',
+          canonicalSlug: 'den-haag',
+          displayName: 'Den Haag',
+        }),
+      ).toEqual(expected);
+    });
+
+    it('finds the place when only the source slug matches', () => {
+      expect(
+        toJobsLocationHierarchyCrumbs(tree, {
+          sourceSlug: 'the-hague',
+          canonicalSlug: 'the-hague',
+          displayName: 'Den Haag',
+        }),
+      ).toEqual(expected);
+    });
   });
 
   it('falls back to a single terminal crumb when the place is not in the tree', () => {
@@ -127,7 +198,12 @@ describe('toJobsLocationHierarchyCrumbs', () => {
   });
 
   it('renders a slugless ancestor name-only rather than dropping it', () => {
-    const unslugged = { id: 'nsw', parentId: 'au', slug: null, name: 'NSW' };
+    const unslugged = englishPlace({
+      id: 'nsw',
+      parentId: 'au',
+      slug: null,
+      name: 'NSW',
+    });
     expect(
       toJobsLocationHierarchyCrumbs(
         [sydney, unslugged, australia],
@@ -141,8 +217,8 @@ describe('toJobsLocationHierarchyCrumbs', () => {
   });
 
   it('stops at a parent cycle instead of looping', () => {
-    const a = { id: 'a', parentId: 'b', slug: 'a', name: 'A' };
-    const b = { id: 'b', parentId: 'a', slug: 'b', name: 'B' };
+    const a = englishPlace({ id: 'a', parentId: 'b', slug: 'a', name: 'A' });
+    const b = englishPlace({ id: 'b', parentId: 'a', slug: 'b', name: 'B' });
     const crumbs = toJobsLocationHierarchyCrumbs([a, b], {
       sourceSlug: 'a',
       canonicalSlug: 'a',

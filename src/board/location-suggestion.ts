@@ -1,3 +1,5 @@
+import { placeLinkSlug } from './place-link';
+
 import type { PublicLocation, PublicPlace } from '@cavuno/board';
 
 export interface LocationSuggestionVM {
@@ -39,12 +41,15 @@ export function toLocationSuggestionVM(
   place: PublicPlace,
   locale: string,
 ): LocationSuggestionVM | null {
-  if (!place.slug) return null;
+  // Board-language slug and name: a pick opens the canonical location URL
+  // directly instead of an English slug that 308s to it.
+  const slug = placeLinkSlug(place);
+  if (!slug) return null;
 
   return {
     id: place.id,
-    slug: place.slug,
-    name: place.name,
+    slug,
+    name: place.displayName,
     contextLabel: contextLabel(place.countryCode, locale),
     countryCode: place.countryCode,
     regionCode: place.regionCode,

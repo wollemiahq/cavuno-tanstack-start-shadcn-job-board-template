@@ -9,7 +9,10 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { AlertManagerDependencies } from './alert-manager';
+import type {
+  AlertManagerDependencies,
+  AlertPlaceOption,
+} from './alert-manager';
 import type { Alert } from '@cavuno/board';
 
 const mocks = {
@@ -49,11 +52,16 @@ const secondAlert = {
   label: 'Design roles',
 } satisfies Alert;
 
-const berlin = { id: 'place-berlin', slug: 'berlin', name: 'Berlin' };
+const berlin = {
+  id: 'place-berlin',
+  slug: 'berlin',
+  name: 'Berlin',
+  displayName: 'Berlin',
+};
 
 interface RenderManagerOptions {
   alerts?: Alert[];
-  places?: Array<{ id: string; slug: string | null; name: string }>;
+  places?: AlertPlaceOption[];
 }
 
 function renderManager({

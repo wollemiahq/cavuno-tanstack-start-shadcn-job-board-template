@@ -72,6 +72,8 @@ export type AlertPlaceOption = {
   id: string;
   slug: string | null;
   name: string;
+  /** Board-language name; alerts stay keyed by `id`. */
+  displayName: string;
 };
 
 /** Resolved place-id → display-name map from the board places directory. */
@@ -155,7 +157,7 @@ function AlertForm({
       places.map((place) => ({
         id: place.id,
         slug: place.slug ?? place.id,
-        name: place.name,
+        name: place.displayName,
         contextLabel: null,
         countryCode: null,
         regionCode: null,
@@ -340,7 +342,8 @@ export function AlertManagerView({
   dependencies: AlertManagerDependencies;
 }) {
   const placeNames: PlaceNameMap = useMemo(
-    () => Object.fromEntries(places.map((place) => [place.id, place.name])),
+    () =>
+      Object.fromEntries(places.map((place) => [place.id, place.displayName])),
     [places],
   );
   const [editing, setEditing] = useState<string | null>(null);

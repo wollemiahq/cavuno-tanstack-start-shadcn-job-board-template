@@ -7,7 +7,9 @@ const place = {
   id: 'place_1',
   parentId: null,
   slug: 'london',
+  canonicalSlug: 'london',
   name: 'London',
+  displayName: 'London',
   placeType: 'city',
   countryCode: 'GB',
   regionCode: null,
@@ -26,8 +28,35 @@ describe('toLocationSuggestionVM', () => {
     });
   });
 
+  it('uses the board-language name and slug on a translated board', () => {
+    expect(
+      toLocationSuggestionVM(
+        {
+          ...place,
+          slug: 'the-hague',
+          canonicalSlug: 'den-haag',
+          name: 'The Hague',
+          displayName: 'Den Haag',
+          countryCode: 'NL',
+        },
+        'nl',
+      ),
+    ).toMatchObject({ slug: 'den-haag', name: 'Den Haag' });
+  });
+
+  it('falls back to the source slug when there is no board-language slug', () => {
+    expect(
+      toLocationSuggestionVM({ ...place, canonicalSlug: null }, 'en')?.slug,
+    ).toBe('london');
+  });
+
   it('drops places that cannot form a canonical location route', () => {
-    expect(toLocationSuggestionVM({ ...place, slug: null }, 'en')).toBeNull();
+    expect(
+      toLocationSuggestionVM(
+        { ...place, slug: null, canonicalSlug: null },
+        'en',
+      ),
+    ).toBeNull();
   });
 
   it('keeps the option usable when country metadata is absent or malformed', () => {

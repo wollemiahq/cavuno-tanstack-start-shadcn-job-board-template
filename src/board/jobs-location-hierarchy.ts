@@ -9,12 +9,15 @@
  * the chain from its internal places table, so the listing pages rebuild it
  * here the same way the salary pages do (`toLocationHierarchyCrumbs` in
  * `salary-view-model.ts`, which walks the `salaries.locations.list()` tree).
- * The tree's slugs are source-language; every crumb — leaf included — takes
- * the node's own short `name` (the qualified `displayName`, e.g. "Sydney, New
- * South Wales, Australia", is only the fallback when the place is absent from
- * the tree).
+ * Every crumb — leaf included — takes the node's own short board-language
+ * `displayName` from the directory (the resolution's qualified
+ * `displayName`, e.g. "Sydney, New South Wales, Australia", is only the
+ * fallback when the place is absent from the tree), and ancestors link by
+ * their board-language `canonicalSlug`.
  */
 import { jobsLocationPath } from '@cavuno/board/paths';
+
+import { placeLinkSlug } from './place-link';
 
 import type { PublicPlace } from '@cavuno/board';
 
@@ -29,7 +32,7 @@ export interface LocationHierarchyCrumb {
  * location page the current place is terminal; on `/:keyword` and
  * `/skills/:skill` combos it links to its own listing (the tag is terminal).
  * The leaf links by `canonicalSlug` (the 308 target the route already emits),
- * ancestors by their directory `slug`.
+ * ancestors by their directory `canonicalSlug` (falling back to `slug`).
  *
  * `ancestorPath` overrides the ancestor href builder for the combo pages:
  * ancestors ride the caller's axis (`{ancestor}/{keyword}` — facet
@@ -38,7 +41,10 @@ export interface LocationHierarchyCrumb {
  * keyword-scoped leaf link would be a self-link to the page being rendered).
  */
 export function toJobsLocationHierarchyCrumbs(
-  places: readonly Pick<PublicPlace, 'id' | 'parentId' | 'slug' | 'name'>[],
+  places: readonly Pick<
+    PublicPlace,
+    'id' | 'parentId' | 'slug' | 'canonicalSlug' | 'displayName'
+  >[],
   current: { sourceSlug: string; canonicalSlug: string; displayName: string },
   options?: {
     linkCurrent?: boolean;
@@ -49,8 +55,13 @@ export function toJobsLocationHierarchyCrumbs(
   const ancestorPath = options?.ancestorPath ?? jobsLocationPath;
   const leafHref = () => jobsLocationPath(current.canonicalSlug);
   const byId = new Map(places.map((node) => [node.id, node]));
+  // A resolution's source or canonical slug can match either directory slug.
   const bySlug = new Map(
-    places.flatMap((node) => (node.slug ? [[node.slug, node] as const] : [])),
+    places.flatMap((node) =>
+      [node.slug, node.canonicalSlug].flatMap((slug) =>
+        slug ? [[slug, node] as const] : [],
+      ),
+    ),
   );
   let node =
     bySlug.get(current.sourceSlug) ?? bySlug.get(current.canonicalSlug);
@@ -70,13 +81,16 @@ export function toJobsLocationHierarchyCrumbs(
   }
   return chain.map((entry, index) => {
     const isLeaf = index === chain.length - 1;
+    const ancestorSlug = placeLinkSlug(entry);
     const href = isLeaf
       ? linkCurrent
         ? leafHref()
         : undefined
-      : entry.slug
-        ? ancestorPath(entry.slug)
+      : ancestorSlug
+        ? ancestorPath(ancestorSlug)
         : undefined;
-    return href ? { name: entry.name, href } : { name: entry.name };
+    return href
+      ? { name: entry.displayName, href }
+      : { name: entry.displayName };
   });
 }
