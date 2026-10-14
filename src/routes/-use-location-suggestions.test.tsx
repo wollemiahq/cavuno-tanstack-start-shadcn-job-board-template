@@ -131,4 +131,43 @@ describe('useLocationSuggestions — route-owned place loading', () => {
     });
     expect(place).toEqual(expect.objectContaining({ slug: 'london-uk' }));
   });
+
+  it('falls back to job places by English slug when the talent list throws', async () => {
+    searchTalentPlaces.mockRejectedValue(new Error('restricted'));
+    searchPlaces.mockResolvedValue({
+      data: [{ ...london, slug: 'london-uk', canonicalSlug: 'londres' }],
+    });
+    const { result } = renderHook(() =>
+      useLocationSuggestions('fr', 'talent', dependencies),
+    );
+
+    act(() => result.current.onQueryChange('Lond'));
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({ slug: 'london-uk' }),
+    ]);
+
+    searchTalentPlaces.mockClear();
+    searchPlaces.mockClear();
+    const place = await result.current.resolve('Palo');
+
+    expect(searchTalentPlaces).toHaveBeenCalledTimes(1);
+    expect(searchPlaces).toHaveBeenCalledWith({
+      data: { q: 'Palo', limit: 10 },
+    });
+    expect(place).toEqual(expect.objectContaining({ slug: 'london-uk' }));
+  });
+
+  it('falls back to job places when no candidate place matches', async () => {
+    searchPlaces.mockResolvedValue({ data: [london] });
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', 'talent', dependencies),
+    );
+
+    const place = await result.current.resolve('Lond');
+
+    expect(searchTalentPlaces).toHaveBeenCalledTimes(1);
+    expect(searchPlaces).toHaveBeenCalledTimes(1);
+    expect(place).toEqual(expect.objectContaining({ slug: 'london-uk' }));
+  });
 });

@@ -178,6 +178,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
             jsonLd,
             customFilterFields: [],
             placeRadius: null,
+            place,
           };
         }
         return {
@@ -188,6 +189,8 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
           jsonLd,
           customFilterFields,
           placeRadius: talentPlaceRadius(place, data.within),
+          // The header location field labels `?place=` with its name.
+          place,
         };
       } catch (error) {
         if (isNotFound(error)) throw error;

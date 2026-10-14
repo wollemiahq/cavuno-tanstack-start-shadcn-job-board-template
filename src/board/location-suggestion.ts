@@ -57,12 +57,13 @@ export function toLocationSuggestionVM(
 }
 
 /**
- * A place the board's directory candidates live in, as a `/talent` location
- * option. Its value is the English `slug`, the talent directory's `place`
- * filter; never a job location page slug.
+ * A place as a `/talent` location option: one the board's directory
+ * candidates live in, or a job place when that list is unavailable. Its value
+ * is the English `slug`, the talent directory's `place` filter; never a job
+ * location page slug.
  */
 export function toTalentPlaceSuggestionVM(
-  place: TalentPlace,
+  place: TalentPlace | PublicPlace,
   locale: string,
 ): LocationSuggestionVM | null {
   if (!place.slug) return null;

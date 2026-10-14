@@ -57,16 +57,36 @@ export function useLocationSuggestions(
   const load = useCallback(
     async (q: string) => {
       const data = { q, limit: LIMIT };
-      const suggestions =
-        source === 'talent'
-          ? (await dependencies.searchTalentPlaces({ data })).data.map(
-              (place) => toTalentPlaceSuggestionVM(place, locale),
-            )
-          : (await dependencies.searchPlaces({ data })).data.map((place) =>
-              toLocationSuggestionVM(place, locale),
-            );
-      return suggestions.filter(
-        (suggestion): suggestion is LocationSuggestionVM => suggestion !== null,
+      const present = (
+        suggestions: (LocationSuggestionVM | null)[],
+      ): LocationSuggestionVM[] =>
+        suggestions.filter(
+          (suggestion): suggestion is LocationSuggestionVM =>
+            suggestion !== null,
+        );
+      if (source === 'jobs') {
+        return present(
+          (await dependencies.searchPlaces({ data })).data.map((place) =>
+            toLocationSuggestionVM(place, locale),
+          ),
+        );
+      }
+      // Candidate places first. A restricted directory rejects the list and
+      // one whose counts are not built yet returns none; job places (by their
+      // English slug, the `place` filter) then keep typed text resolvable and
+      // let a radius search start from a place with no candidates of its own.
+      const talentPlaces = await dependencies.searchTalentPlaces({ data }).then(
+        ({ data: places }) =>
+          present(
+            places.map((place) => toTalentPlaceSuggestionVM(place, locale)),
+          ),
+        () => [],
+      );
+      if (talentPlaces.length > 0) return talentPlaces;
+      return present(
+        (await dependencies.searchPlaces({ data })).data.map((place) =>
+          toTalentPlaceSuggestionVM(place, locale),
+        ),
       );
     },
     [dependencies, locale, source],
@@ -108,9 +128,9 @@ export function useLocationSuggestions(
   }, [load, query, source]);
 
   /**
-   * The top board place for typed text the visitor never picked: the
-   * current first suggestion when it answers exactly that text, else one
-   * request. `null` when the board has no jobs in any matching place.
+   * The top place for typed text the visitor never picked: the current
+   * first suggestion when it answers exactly that text, else one load.
+   * `null` when no listed place matches.
    */
   const resolve = useCallback(
     async (text: string) => {
