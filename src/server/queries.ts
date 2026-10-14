@@ -56,6 +56,7 @@ import type {
   PlansListQuery,
   PublicBlogAdjacentPosts,
   TalentDirectoryQuery,
+  TalentPlacesQuery,
   TaxonomyResolution,
 } from '@cavuno/board';
 
@@ -267,6 +268,22 @@ export const searchPlaces = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
       getBoard().taxonomy.places.list(data, { headers: h }),
+    ),
+  );
+
+/**
+ * Talent location autocomplete — `talent.places.list({ q, limit })` lists the
+ * places the board's directory candidates live in, so the `/talent` location
+ * field suggests places that have candidates rather than places with jobs.
+ * Sent with the viewer's session, since the list follows the directory's
+ * access rules (a restricted directory rejects it like `talent.list`).
+ */
+export const searchTalentPlaces = createServerFn({ method: 'GET' })
+  .validator((input: TalentPlacesQuery) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().talent.places.list(data, { headers: h }),
     ),
   );
 

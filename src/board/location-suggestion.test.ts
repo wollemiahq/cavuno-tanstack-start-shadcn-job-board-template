@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { toLocationSuggestionVM } from './location-suggestion';
+import {
+  toLocationSuggestionVM,
+  toTalentPlaceSuggestionVM,
+} from './location-suggestion';
 
 const place = {
   object: 'place' as const,
@@ -68,5 +71,33 @@ describe('toLocationSuggestionVM', () => {
       toLocationSuggestionVM({ ...place, countryCode: 'XXX' }, 'en')
         ?.contextLabel,
     ).toBe('XXX');
+  });
+});
+
+describe('toTalentPlaceSuggestionVM', () => {
+  const talentPlace = {
+    object: 'talent_place' as const,
+    id: 'place_1',
+    parentId: null,
+    slug: 'london',
+    canonicalSlug: 'londres',
+    name: 'London',
+    displayName: 'Londres',
+    placeType: 'city',
+    countryCode: 'GB',
+    regionCode: null,
+    candidateCount: 7,
+  };
+
+  it('filters by the English slug and labels with the board-language name', () => {
+    expect(toTalentPlaceSuggestionVM(talentPlace, 'fr')).toEqual(
+      expect.objectContaining({ slug: 'london', name: 'Londres' }),
+    );
+  });
+
+  it('drops places without a filter slug', () => {
+    expect(
+      toTalentPlaceSuggestionVM({ ...talentPlace, slug: null }, 'en'),
+    ).toBeNull();
   });
 });

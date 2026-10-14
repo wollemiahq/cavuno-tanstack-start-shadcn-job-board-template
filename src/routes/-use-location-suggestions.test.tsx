@@ -8,6 +8,8 @@ import {
 } from './-use-location-suggestions';
 
 const searchPlaces = vi.fn<LocationSuggestionDependencies['searchPlaces']>();
+const searchTalentPlaces =
+  vi.fn<LocationSuggestionDependencies['searchTalentPlaces']>();
 const london = {
   object: 'place' as const,
   id: 'place-london',
@@ -21,12 +23,17 @@ const london = {
   regionCode: null,
   jobCount: 4,
 };
-const dependencies: LocationSuggestionDependencies = { searchPlaces };
+const dependencies: LocationSuggestionDependencies = {
+  searchPlaces,
+  searchTalentPlaces,
+};
 
 beforeEach(() => {
   vi.useFakeTimers();
   searchPlaces.mockReset();
   searchPlaces.mockResolvedValue({ data: [] });
+  searchTalentPlaces.mockReset();
+  searchTalentPlaces.mockResolvedValue({ data: [] });
 });
 
 afterEach(() => {
@@ -38,7 +45,7 @@ afterEach(() => {
 describe('useLocationSuggestions — route-owned place loading', () => {
   it('waits for a meaningful query and debounces the Board request', async () => {
     const { result } = renderHook(() =>
-      useLocationSuggestions('en', dependencies),
+      useLocationSuggestions('en', 'jobs', dependencies),
     );
 
     act(() => result.current.onQueryChange('L'));
@@ -58,7 +65,7 @@ describe('useLocationSuggestions — route-owned place loading', () => {
   it('resolves typed text from the suggestions already shown for it', async () => {
     searchPlaces.mockResolvedValue({ data: [london] });
     const { result } = renderHook(() =>
-      useLocationSuggestions('en', dependencies),
+      useLocationSuggestions('en', 'jobs', dependencies),
     );
 
     act(() => result.current.onQueryChange('Lond'));
@@ -74,7 +81,7 @@ describe('useLocationSuggestions — route-owned place loading', () => {
   it('fetches once to resolve text the suggestions have not caught up with', async () => {
     searchPlaces.mockResolvedValue({ data: [london] });
     const { result } = renderHook(() =>
-      useLocationSuggestions('en', dependencies),
+      useLocationSuggestions('en', 'jobs', dependencies),
     );
 
     const place = await result.current.resolve(' Lond ');
@@ -88,10 +95,40 @@ describe('useLocationSuggestions — route-owned place loading', () => {
 
   it('resolves nothing when the board has no jobs in a matching place', async () => {
     const { result } = renderHook(() =>
-      useLocationSuggestions('en', dependencies),
+      useLocationSuggestions('en', 'jobs', dependencies),
     );
 
     await expect(result.current.resolve('Atlantis')).resolves.toBeNull();
     await expect(result.current.resolve('A')).resolves.toBeNull();
+  });
+  it('suggests the places candidates live in for the talent filter', async () => {
+    searchTalentPlaces.mockResolvedValue({
+      data: [
+        {
+          object: 'talent_place',
+          id: london.id,
+          parentId: null,
+          slug: london.slug,
+          canonicalSlug: london.canonicalSlug,
+          name: london.name,
+          displayName: london.displayName,
+          placeType: london.placeType,
+          countryCode: london.countryCode,
+          regionCode: null,
+          candidateCount: 3,
+        },
+      ],
+    });
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', 'talent', dependencies),
+    );
+
+    const place = await result.current.resolve('Lond');
+
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(searchTalentPlaces).toHaveBeenCalledWith({
+      data: { q: 'Lond', limit: 10 },
+    });
+    expect(place).toEqual(expect.objectContaining({ slug: 'london-uk' }));
   });
 });
