@@ -1,36 +1,13 @@
-/**
- * /alerts/manage?subscription=&token=… — the self-service page the digest
- * email's manage/unsubscribe links point to (the board's canonical domain, which
- * this starter serves). The subscription-wide token gates the read + unsubscribe
- * /resubscribe; each preference carries its own token for delete.
- *
- * The email's unsubscribe link is the manage link plus `unsubscribe=1`: the
- * page unsubscribes on arrival, then drops the param. It runs from the client,
- * not the loader, so link scanners that prefetch the email's links (they don't
- * run scripts) can't unsubscribe anyone.
- *
- * In-place filter editing is intentionally omitted: stored filters use place
- * IDs while the subscribe/update body uses place slugs (not reversible), so
- * editing would drop the location scope. Re-subscribe via the form to change
- * filters. Unsubscribe / resubscribe / delete are the full self-service set here.
- */
 import { useEffect, useRef, useState } from 'react';
-
-import {
-  createFileRoute,
-  useNavigate,
-  useRouter,
-} from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import {
-  getSeoBase,
-  deleteJobAlertPreference,
-  getJobAlertManageState,
-  resubscribeJobAlert,
-  unsubscribeJobAlert,
-} from '../server/queries';
+  alertManageDependencies,
+  type AlertManageDependencies,
+  type ManageData,
+  type ManageSearch,
+} from './-alerts.manage-loader';
 
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -50,107 +27,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { enumLabel } from '@/lib/enum-labels';
-import { headTitle } from '@/lib/page-title';
-import { searchString, type UrlSearchInput } from '@/lib/pagination';
-import type {
-  JobAlertDeletePreferenceInput,
-  JobAlertManageQuery,
-  JobAlertManageState,
-  JobAlertManageTokenInput,
-  JobAlertStoredFilters,
-} from '@cavuno/board';
-
-type AlertManageSeo = { boardName: string };
-// `empty`: the token is valid but no alerts remain (the last one was deleted).
-type ManageData =
-  | { state: JobAlertManageState }
-  | { empty: true }
-  | { error: true };
-type LoaderData = ManageData & { seo: AlertManageSeo };
-type ManageSearch = {
-  subscription?: string;
-  token?: string;
-  unsubscribe?: true;
-};
-
-export type AlertManageDependencies = {
-  deleteJobAlertPreference: (options: {
-    data: JobAlertDeletePreferenceInput;
-  }) => ReturnType<typeof deleteJobAlertPreference>;
-  getJobAlertManageState: (options: {
-    data: JobAlertManageQuery;
-  }) => Promise<JobAlertManageState | null>;
-  getSeoBase: () => Promise<AlertManageSeo>;
-  resubscribeJobAlert: (options: {
-    data: JobAlertManageTokenInput;
-  }) => ReturnType<typeof resubscribeJobAlert>;
-  unsubscribeJobAlert: (options: {
-    data: JobAlertManageTokenInput;
-  }) => ReturnType<typeof unsubscribeJobAlert>;
-};
-
-const alertManageDependencies: AlertManageDependencies = {
-  deleteJobAlertPreference,
-  getJobAlertManageState,
-  getSeoBase,
-  resubscribeJobAlert,
-  unsubscribeJobAlert,
-};
-
-export const Route = createFileRoute('/alerts/manage')({
-  staticData: { ownsMain: true },
-  validateSearch: (search: UrlSearchInput): ManageSearch => ({
-    subscription: searchString(search.subscription),
-    token: searchString(search.token),
-    unsubscribe:
-      searchString(search.unsubscribe) === '1' || search.unsubscribe === 1
-        ? true
-        : undefined,
-  }),
-  loaderDeps: ({ search }) => ({
-    subscription: search.subscription,
-    token: search.token,
-  }),
-  loader: createAlertManageLoader(),
-  head: ({ loaderData }) => alertManageHead(loaderData),
-  component: ManagePage,
-});
-
-export function createAlertManageLoader(
-  dependencies: AlertManageDependencies = alertManageDependencies,
-) {
-  return async ({
-    deps,
-  }: {
-    deps: Pick<ManageSearch, 'subscription' | 'token'>;
-  }): Promise<LoaderData> => {
-    // Started before the branch so it overlaps the manage-state read.
-    const seoPromise = dependencies.getSeoBase();
-    if (!deps.subscription || !deps.token) {
-      return { error: true, seo: await seoPromise };
-    }
-    try {
-      const [state, seo] = await Promise.all([
-        dependencies.getJobAlertManageState({
-          data: { subscription: deps.subscription, token: deps.token },
-        }),
-        seoPromise,
-      ]);
-      return state ? { state, seo } : { empty: true, seo };
-    } catch {
-      return { error: true, seo: await seoPromise };
-    }
-  };
-}
-
-export function alertManageHead(loaderData: LoaderData | undefined) {
-  return {
-    meta: [
-      { title: headTitle(loaderData?.seo.boardName, m.alertsManage_title()) },
-      { name: 'robots', content: 'noindex' },
-    ],
-  };
-}
+import type { JobAlertStoredFilters } from '@cavuno/board';
 
 function filtersSummary(filters: JobAlertStoredFilters): string {
   const parts = [
@@ -170,28 +47,6 @@ function filtersSummary(filters: JobAlertStoredFilters): string {
   } catch {
     return parts.join(', ');
   }
-}
-
-function ManagePage() {
-  const data = Route.useLoaderData();
-  const router = useRouter();
-  const navigate = useNavigate({ from: Route.fullPath });
-  return (
-    <ManagePageView
-      data={data}
-      search={Route.useSearch()}
-      invalidate={async () => {
-        await router.invalidate();
-      }}
-      clearUnsubscribeIntent={() => {
-        void navigate({
-          search: (prev) => ({ ...prev, unsubscribe: undefined }),
-          replace: true,
-          resetScroll: false,
-        });
-      }}
-    />
-  );
 }
 
 function ManageNotice({ title, body }: { title: string; body: string }) {

@@ -12,11 +12,11 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ApplicationsPageView } from './-me.applications';
 import {
-  ApplicationsPageView,
   createApplicationsLoader,
   type ApplicationsRouteDependencies,
-} from './-me.applications';
+} from './-me.applications-loader';
 
 import { m } from '@/paraglide/messages';
 import type { Application } from '@cavuno/board';

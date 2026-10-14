@@ -5,25 +5,16 @@
  */
 import { useState } from 'react';
 
-import {
-  createFileRoute,
-  isRedirect,
-  Link,
-  notFound,
-  redirect,
-  useRouter,
-} from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { Send } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getApplications, withdrawApplication } from '../server/applications';
-import { getBoardContext, getSeoBase } from '../server/queries';
-
 import {
-  CandidateRouteErrorPage,
-  CandidateRoutePendingPage,
-} from '@/components/candidate-route-state';
+  applicationsRouteDependencies,
+  type ApplicationsRouteDependencies,
+} from './-me.applications-loader';
+
 import { CandidateShell } from '@/components/candidate-shell';
 import { EmptyState } from '@/components/empty-state';
 import { Badge } from '@/components/ui/badge';
@@ -40,13 +31,7 @@ import {
   toastActionError,
   toastActionSuccess,
 } from '@/lib/action-toast';
-import {
-  incomingAuthSearch,
-  mergeAuthConversionSearch,
-} from '@/lib/board-datalayer-events';
-import { candidateLoaderError } from '@/lib/candidate-loader-error';
-import { headTitle } from '@/lib/page-title';
-import type { Application, ApplicationsListQuery } from '@cavuno/board';
+import type { Application } from '@cavuno/board';
 
 const STATUS_LABEL = {
   applied: m.meApplications_statusApplied,
@@ -55,101 +40,6 @@ const STATUS_LABEL = {
   hired: m.meApplications_statusHired,
   archived: m.meApplications_statusArchived,
 } satisfies Record<Application['status'], () => string>;
-
-export type ApplicationsRouteDependencies = {
-  getApplications: (options: {
-    data: ApplicationsListQuery | undefined;
-  }) => Promise<{ data: Application[] }>;
-  getBoardContext: () => Promise<{
-    features: { nativeApplications: boolean };
-  }>;
-  getSeoBase: () => Promise<{ boardName: string }>;
-  withdrawApplication: (options: {
-    data: { id: string };
-  }) => ReturnType<typeof withdrawApplication>;
-};
-
-const applicationsRouteDependencies: ApplicationsRouteDependencies = {
-  getApplications,
-  getBoardContext,
-  getSeoBase,
-  withdrawApplication,
-};
-
-export const Route = createFileRoute('/me/applications')({
-  staticData: { ownsMain: true },
-  pendingComponent: CandidateRoutePendingPage,
-  errorComponent: CandidateRouteErrorPage,
-  loader: createApplicationsLoader(),
-  head: ({ loaderData }) => applicationsHead(loaderData),
-  component: ApplicationsPage,
-});
-
-export function createApplicationsLoader(
-  dependencies: ApplicationsRouteDependencies = applicationsRouteDependencies,
-) {
-  return async (context?: {
-    location?: { href?: string; searchStr?: string; search?: unknown };
-  }) => {
-    // External-apply-only board (nativeApplications off): there is no
-    // applications surface — the platform 422s the read. Treat it as
-    // not-existing (404) rather than rendering an error state.
-    const board = await dependencies.getBoardContext();
-    if (!board.features.nativeApplications) throw notFound();
-    try {
-      const [applications, seo] = await Promise.all([
-        dependencies.getApplications({ data: undefined }),
-        dependencies.getSeoBase(),
-      ]);
-      return { ...applications, seo };
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      const authFailure = candidateLoaderError(error);
-      if (authFailure === 'email-unverified') {
-        throw redirect({
-          to: '/auth/verify-email-required',
-          search: mergeAuthConversionSearch(
-            { returnTo: '/me/applications' },
-            incomingAuthSearch(context?.location),
-          ),
-        });
-      }
-      if (authFailure === 'unauthenticated') {
-        throw redirect({
-          to: '/auth/sign-in',
-          search: { returnTo: '/me/applications' },
-        });
-      }
-      throw error;
-    }
-  };
-}
-
-export function applicationsHead(
-  loaderData: { seo: { boardName: string } } | undefined,
-) {
-  return {
-    meta: [
-      {
-        title: headTitle(loaderData?.seo.boardName, m.meApplications_title()),
-      },
-      { name: 'robots', content: 'noindex' },
-    ],
-  };
-}
-
-function ApplicationsPage() {
-  const applications = Route.useLoaderData();
-  const router = useRouter();
-  return (
-    <ApplicationsPageView
-      applications={applications}
-      invalidate={async () => {
-        await router.invalidate();
-      }}
-    />
-  );
-}
 
 export function ApplicationsPageView({
   applications,

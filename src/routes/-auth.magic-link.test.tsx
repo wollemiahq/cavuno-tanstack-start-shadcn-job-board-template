@@ -2,7 +2,7 @@ import { isRedirect } from '@tanstack/react-router';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { loadMagicLink } from './-auth.magic-link';
+import { loadMagicLink } from './auth.magic-link';
 
 import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
 // @vitest-environment jsdom

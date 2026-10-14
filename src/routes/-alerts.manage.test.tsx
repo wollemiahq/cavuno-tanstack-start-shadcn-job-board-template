@@ -9,11 +9,11 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ManagePageView } from './-alerts.manage';
 import {
-  ManagePageView,
   createAlertManageLoader,
   type AlertManageDependencies,
-} from './-alerts.manage';
+} from './-alerts.manage-loader';
 
 import { m } from '@/paraglide/messages';
 import type { JobAlertManageState } from '@cavuno/board';

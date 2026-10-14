@@ -12,11 +12,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { m } from '../paraglide/messages';
 import { MagicLinkView } from './-auth.magic-link';
-import {
-  OAuthCompleteView,
-  Route as OAuthCompleteRoute,
-} from './-auth.oauth-complete';
+import { OAuthCompleteView } from './-auth.oauth-complete';
 import { Route as MagicLinkRoute } from './auth.magic-link';
+import { Route as OAuthCompleteRoute } from './auth.oauth-complete';
 
 import type { UrlSearchInput } from '../lib/pagination';
 import { localizePath } from '@/lib/localized-path';

@@ -23,8 +23,8 @@ const mocks = {
   getSessionUser: vi.fn(),
 };
 
-import { loadVerifyEmail, VerifyEmailView } from './-auth.verify-email';
-import { Route } from './auth.verify-email';
+import { VerifyEmailView } from './-auth.verify-email';
+import { Route, loadVerifyEmail } from './auth.verify-email';
 
 import { m } from '@/paraglide/messages';
 

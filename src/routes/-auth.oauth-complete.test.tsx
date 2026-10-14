@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { isRedirect } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { loadOAuthComplete } from './-auth.oauth-complete';
+import { loadOAuthComplete } from './auth.oauth-complete';
 
 import {
   appendAuthIntentQuery,

@@ -1,55 +1,17 @@
 import { useState } from 'react';
 
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { AuthCard, Field, FormError } from '../components/auth-form';
 import { boardErrorMessage } from '../lib/board-error-message';
 import {
   candidateAuthSearch,
   candidatePasswordResetSignInHref,
-  candidateReturnTo,
 } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { resetPassword } from '../server/auth';
-/** Reset-password landing linked from reset emails. */
-import { getSeoBase } from '../server/queries';
 
 import { Button, buttonVariants } from '@/components/ui/button';
-import { headTitle } from '@/lib/page-title';
-import { searchString, type UrlSearchInput } from '@/lib/pagination';
 import { cn } from '@/lib/utils';
-
-interface ResetSearch {
-  token?: string;
-  returnTo: string;
-}
-
-export const Route = createFileRoute('/auth/reset-password')({
-  validateSearch: (search: UrlSearchInput): ResetSearch => ({
-    token: searchString(search.token),
-    returnTo: candidateReturnTo(search.returnTo),
-  }),
-  loader: () => getSeoBase(),
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: headTitle(loaderData?.boardName, m.authResetPassword_title()) },
-      { name: 'robots', content: 'noindex' },
-    ],
-  }),
-  component: ResetPasswordPage,
-});
-
-function ResetPasswordPage() {
-  const { token, returnTo } = Route.useSearch();
-  return (
-    <ResetPasswordView
-      token={token}
-      returnTo={returnTo}
-      resetPasswordAction={resetPassword}
-      redirectToSignIn={(href) => window.location.replace(href)}
-    />
-  );
-}
 
 export function ResetPasswordView({
   token,

@@ -1,45 +1,14 @@
 import { useState } from 'react';
 
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { AuthCard, Field, FormError } from '../components/auth-form';
-import {
-  candidateReturnTo,
-  candidateAuthSearch,
-} from '../lib/candidate-return-to';
+import { candidateAuthSearch } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { forgotPassword } from '../server/auth';
-import { getSeoBase } from '../server/queries';
 
 import { AuthMailAppLinks } from '@/components/mail-app-links';
 import { Button } from '@/components/ui/button';
-import { headTitle } from '@/lib/page-title';
-import type { UrlSearchInput } from '@/lib/pagination';
 import { textLinkClass } from '@/lib/text-link';
-
-export const Route = createFileRoute('/auth/forgot-password')({
-  validateSearch: (search: UrlSearchInput) => ({
-    returnTo: candidateReturnTo(search.returnTo),
-  }),
-  loader: () => getSeoBase(),
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: headTitle(loaderData?.boardName, m.authForgotPassword_title()) },
-      { name: 'robots', content: 'noindex' },
-    ],
-  }),
-  component: ForgotPasswordPage,
-});
-
-function ForgotPasswordPage() {
-  const returnTo = candidateReturnTo(Route.useSearch().returnTo);
-  return (
-    <ForgotPasswordView
-      returnTo={returnTo}
-      forgotPasswordAction={forgotPassword}
-    />
-  );
-}
 
 export function ForgotPasswordView({
   returnTo,

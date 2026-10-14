@@ -53,7 +53,8 @@ const mocks = {
   useSearch: vi.fn<() => AccessSearch>(),
 };
 
-import { AccessPageView, accessReturnPath, safeReturnTo } from './-access-page';
+import { AccessPageView } from './-access-page';
+import { accessReturnPath, safeReturnTo } from './-access-return';
 
 const grant = {
   object: 'access_grant',

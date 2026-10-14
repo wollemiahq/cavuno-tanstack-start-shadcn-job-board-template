@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { applicationsHead } from './-me.applications';
+import { applicationsHead } from './-me.applications-loader';
 import { settingsHead } from './-settings';
 import { Route as AccountRoute } from './account';
 import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';

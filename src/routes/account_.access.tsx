@@ -19,7 +19,8 @@ import {
 import { m } from '../paraglide/messages';
 import { getAccessGrant, getPaywallOffers } from '../server/paywall';
 import { getSeoBase } from '../server/queries';
-import { AccessPage, accessReturnPath, safeReturnTo } from './-access-page';
+import { AccessPage } from './-access-page';
+import { accessReturnPath, safeReturnTo } from './-access-return';
 
 import {
   CandidateRouteErrorPage,
