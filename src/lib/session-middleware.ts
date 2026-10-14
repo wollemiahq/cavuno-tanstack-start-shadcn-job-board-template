@@ -22,8 +22,8 @@
  */
 import { createMiddleware } from '@tanstack/react-start';
 import {
+  appendResponseHeader,
   getRequestHeader,
-  setResponseHeader,
 } from '@tanstack/react-start/server';
 
 import {
@@ -82,9 +82,9 @@ async function resolveSession(): Promise<SessionContext> {
   );
 
   if (setCookie === 'clear') {
-    setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
+    appendResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
   } else if (setCookie === 'rotate' && session) {
-    setResponseHeader(
+    appendResponseHeader(
       'Set-Cookie',
       serializeSessionForSource(session, dataSource),
     );

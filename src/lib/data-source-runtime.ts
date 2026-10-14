@@ -19,7 +19,8 @@ export interface DataSourceServerEnv {
 export interface DataSourceRuntimeDependencies {
   getServerEnv: () => DataSourceServerEnv;
   getRequestHeader: (name: string) => string | null | undefined;
-  setResponseHeader: (name: string, value: string) => void;
+  /** Adds one outgoing header; a `Set-Cookie` merges with the response's other cookies. */
+  appendResponseHeader: (name: string, value: string) => void;
 }
 
 type SessionCookieOptions = {
@@ -96,7 +97,7 @@ export function createDataSourceRuntime(
       refreshToken: session.refreshToken,
       expiresAt: session.expiresAt,
     };
-    dependencies.setResponseHeader(
+    dependencies.appendResponseHeader(
       'Set-Cookie',
       serializeSessionForSource(next, getDataSource()),
     );

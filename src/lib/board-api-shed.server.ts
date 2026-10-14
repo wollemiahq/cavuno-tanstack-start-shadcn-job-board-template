@@ -4,7 +4,6 @@
  * by the middlewares in `board-api-shed.ts`; import only from server code.
  */
 import { isBoardApiError, type BoardApiError } from '@cavuno/board';
-import { transferResponseBodyOwnership } from '@tanstack/react-start/server';
 
 /**
  * Board API statuses that mean "shed / overloaded / briefly unreachable,
@@ -50,16 +49,13 @@ export function shedAwareResponse(
 ): Response {
   if (response.status !== 500 || !shedRequests.has(request)) return response;
   const headers = withShedHeaders(new Headers(response.headers));
-  const rewritten = new Response(response.body, {
+  // Same body stream, returned directly: Start sees the derived response
+  // reads the SSR stream it owns and keeps disposing that stream itself.
+  return new Response(response.body, {
     status: 503,
     statusText: 'Service Unavailable',
     headers,
   });
-  // Same body stream: tell Start the new Response owns the SSR stream so it
-  // still disposes it correctly.
-  return response.body
-    ? transferResponseBodyOwnership(response, rewritten)
-    : rewritten;
 }
 
 /**

@@ -9,13 +9,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  */
 
 let request = new Request('https://board.example.test/');
-const setResponseHeader = vi.fn();
+const appendResponseHeader = vi.fn();
 
 vi.mock('@tanstack/react-start/server', () => ({
   getRequest: () => request,
   getRequestHeader: (name: string) => request.headers.get(name) ?? undefined,
-  setResponseHeader: (name: string, value: string) =>
-    setResponseHeader(name, value),
+  appendResponseHeader: (name: string, value: string) =>
+    appendResponseHeader(name, value),
 }));
 
 vi.mock('./env', () => ({
@@ -74,7 +74,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   fetchMock.mockClear();
-  setResponseHeader.mockClear();
+  appendResponseHeader.mockClear();
 });
 
 describe('board client session recovery wiring', () => {
@@ -86,8 +86,8 @@ describe('board client session recovery wiring', () => {
     expect(result).toMatchObject({ data: [] });
     const lastCall = fetchMock.mock.calls.at(-1)!;
     expect(new Headers(lastCall[1].headers).has('authorization')).toBe(false);
-    expect(setResponseHeader).toHaveBeenCalledTimes(1);
-    const [name, value] = setResponseHeader.mock.calls[0]!;
+    expect(appendResponseHeader).toHaveBeenCalledTimes(1);
+    const [name, value] = appendResponseHeader.mock.calls[0]!;
     expect(name).toBe('Set-Cookie');
     expect(value).toMatch(/^__Host-cavuno_board_session=;/);
     expect(value).toMatch(/Max-Age=0/);

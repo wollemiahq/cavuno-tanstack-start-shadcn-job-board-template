@@ -25,7 +25,7 @@ vi.mock('@tanstack/react-start/server', () => ({
   },
   getRequestHeader: (name: string) =>
     incoming.getStore()?.headers.get(name) ?? undefined,
-  setResponseHeader: () => {},
+  appendResponseHeader: () => {},
 }));
 
 vi.mock('@cavuno/board/server', async (importOriginal) => ({

@@ -25,7 +25,7 @@
 import { isNotFound, isUnauthorized } from '@cavuno/board';
 import { type BoardSession } from '@cavuno/board/server';
 import { createServerFn, createServerOnlyFn } from '@tanstack/react-start';
-import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
+import { appendResponseHeader, getRequest } from '@tanstack/react-start/server';
 
 import { getPreviewBoard } from '../lib/board';
 import {
@@ -133,7 +133,7 @@ function storeSession(session: BoardAuthSession): void {
     refreshToken: session.refreshToken,
     expiresAt: session.expiresAt,
   };
-  setResponseHeader(
+  appendResponseHeader(
     'Set-Cookie',
     serializeSessionForSource(next, previewSessionSource()),
   );

@@ -7,8 +7,8 @@ import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
  */
 import { createServerFn } from '@tanstack/react-start';
 import {
+  appendResponseHeader,
   getRequestHeader,
-  setResponseHeader,
 } from '@tanstack/react-start/server';
 import { waitUntil } from 'cloudflare:workers';
 
@@ -165,10 +165,10 @@ export const refreshSession = createServerFn({ method: 'POST' }).handler(
     try {
       const next = await getSessionRefresher()(session);
       if (!next) {
-        setResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
+        appendResponseHeader('Set-Cookie', clearSessionForSource(dataSource));
         return { ok: false as const };
       }
-      setResponseHeader(
+      appendResponseHeader(
         'Set-Cookie',
         serializeSessionForSource(next, dataSource),
       );
@@ -189,7 +189,7 @@ export const signOut = createServerFn({ method: 'POST' })
           .catch(() => undefined),
       );
     }
-    setResponseHeader(
+    appendResponseHeader(
       'Set-Cookie',
       clearSessionForSource(context.dataSource ?? getDataSource()),
     );

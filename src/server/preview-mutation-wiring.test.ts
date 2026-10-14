@@ -17,7 +17,7 @@ vi.mock('@tanstack/react-start', () => ({
 }));
 vi.mock('@tanstack/react-start/server', () => ({
   getRequest: () => new Request('https://fixture.example'),
-  setResponseHeader: vi.fn(),
+  appendResponseHeader: vi.fn(),
 }));
 vi.mock('../lib/board', () => ({
   getPreviewBoard: () => ({ client: { fetch: mocks.fetch } }),

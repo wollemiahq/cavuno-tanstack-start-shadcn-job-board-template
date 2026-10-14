@@ -6,8 +6,8 @@
  */
 
 import {
+  appendResponseHeader,
   getRequestHeader,
-  setResponseHeader,
 } from '@tanstack/react-start/server';
 
 import { createDataSourceRuntime } from './data-source-runtime';
@@ -22,7 +22,7 @@ import { getServerEnv } from './env';
 const runtime = createDataSourceRuntime({
   getServerEnv,
   getRequestHeader: (name) => getRequestHeader(name),
-  setResponseHeader: (name, value) => setResponseHeader(name, value),
+  appendResponseHeader: (name, value) => appendResponseHeader(name, value),
 });
 
 /** True when the builder (or operator) injected a demo tenant key. */

@@ -32,7 +32,7 @@ const {
 } = createDataSourceRuntime({
   getServerEnv: () => envState,
   getRequestHeader: () => null,
-  setResponseHeader: () => {},
+  appendResponseHeader: () => {},
 });
 
 beforeEach(() => {

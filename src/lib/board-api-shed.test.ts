@@ -2,9 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@tanstack/react-start/server', () => ({
   getRequest: vi.fn(),
-  // Start's ownership bookkeeping is out of scope here; pass the response on.
-  transferResponseBodyOwnership: (_source: Response, response: Response) =>
-    response,
 }));
 
 import {

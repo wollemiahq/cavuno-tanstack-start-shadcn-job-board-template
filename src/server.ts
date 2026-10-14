@@ -18,10 +18,21 @@
  * URL loops the redirect.
  *
  * An uncaught server error, or a 500 that Start rendered itself, logs one
- * `starter_server_error` line (src/lib/server-error-log.server.ts); the
- * visitor's response is unchanged.
+ * `starter_server_error` line (src/lib/server-error-log.server.ts).
+ *
+ * Error handling: the raw `createStartHandler` rethrows the original error
+ * (Start 1.0), so `serveWithServerErrorLog` sees and logs it. The whole
+ * entry runs inside `createServerEntry`, which turns the rethrown error into
+ * Start's generic 500 response (`handleStartError`) within the same request
+ * scope, so cookies and headers set through Start's helpers still apply. The
+ * built-in `@tanstack/react-start/server-entry` is not used because it
+ * converts the error itself, before this entry could log it.
  */
-import handler from '@tanstack/react-start/server-entry';
+import {
+  createServerEntry,
+  createStartHandler,
+  defaultStreamHandler,
+} from '@tanstack/react-start/server';
 
 import { matchClientErrorIngest } from './lib/client-error-ingest';
 import { CLIENT_ERROR_PATH } from './lib/client-error-report';
@@ -55,6 +66,8 @@ function localeDetectionRequest(request: Request): Request {
   return new Request(url, { method: 'GET', headers: request.headers });
 }
 
+const startHandler = createStartHandler(defaultStreamHandler);
+
 interface WorkerEnvironment {}
 
 type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
@@ -86,7 +99,7 @@ async function serve(
 
   const rendered = await paraglideMiddleware(
     localeDetectionRequest(request),
-    () => handler.fetch(request),
+    () => startHandler(request),
   );
   const response = withPublicHtmlCacheHeaders(
     request,
@@ -106,10 +119,14 @@ export default {
     _env?: WorkerEnvironment,
     executionContext?: ExecutionContext,
   ): Promise<Response> {
-    return serveWithServerErrorLog(
-      request,
-      () => serve(request, executionContext),
-      () => getServerEnv().board,
-    );
+    const entry = createServerEntry({
+      fetch: (incoming: Request) =>
+        serveWithServerErrorLog(
+          incoming,
+          () => serve(incoming, executionContext),
+          () => getServerEnv().board,
+        ),
+    });
+    return Promise.resolve(entry.fetch(request));
   },
 };

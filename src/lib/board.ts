@@ -24,9 +24,9 @@ import {
 } from '@cavuno/board';
 import { createSessionRefresher } from '@cavuno/board/server';
 import {
+  appendResponseHeader,
   getRequest,
   getRequestHeader,
-  setResponseHeader,
 } from '@tanstack/react-start/server';
 
 import { applyAudienceAttribution } from './audience-request';
@@ -68,7 +68,7 @@ const sessionRecovery = createSessionRecovery({
   refresherFor: (source) => getSessionRefresherFor(source),
   serializeSession: serializeSessionForSource,
   clearSession: clearSessionForSource,
-  setCookie: (value) => setResponseHeader('Set-Cookie', value),
+  setCookie: (value) => appendResponseHeader('Set-Cookie', value),
 });
 
 /**

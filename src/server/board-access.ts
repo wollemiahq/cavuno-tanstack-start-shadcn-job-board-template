@@ -6,7 +6,7 @@ import { isBoardApiError } from '@cavuno/board';
  */
 import { redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { setResponseHeader } from '@tanstack/react-start/server';
+import { appendResponseHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import {
@@ -33,7 +33,7 @@ export const verifyBoardPassword = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     try {
       const grant = await getBoard().password.verify(data.password);
-      setResponseHeader(
+      appendResponseHeader(
         'Set-Cookie',
         serializeGrantForSource(grant.token, getDataSource()),
       );

@@ -46,7 +46,7 @@ const {
   getServerEnv: () => envState,
   getRequestHeader: (name) =>
     name.toLowerCase() === 'cookie' ? requestState.cookie : null,
-  setResponseHeader: () => {},
+  appendResponseHeader: () => {},
 });
 
 beforeEach(() => {

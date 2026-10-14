@@ -8,8 +8,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@tanstack/react-start/server', () => ({
   getRequest: () => new Request('https://board.example/'),
-  transferResponseBodyOwnership: (_source: Response, response: Response) =>
-    response,
 }));
 
 const retrieveJob = vi.fn();
