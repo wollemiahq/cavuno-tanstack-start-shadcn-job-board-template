@@ -11,7 +11,7 @@ overrides:
 
 patchedDependencies:
   '@cloudflare/vite-plugin@1.62.2': 5582f91e640cee5bee578e4db9f5dc163bfe85054a906a0825beb2e9dd343566
-  sharp@0.35.5: 125106e60477c1f1bc599e77885de334d36ddebe1c910c055f7b09d74ed89929
+  sharp@0.35.5: 138e10363326be3489e08228a276d61679c2be5c278f9727e87a4aaaf306f7b2
 
 importers:
 
@@ -9734,7 +9734,7 @@ snapshots:
   miniflare@5.20260926.1-alpha(@types/node@24.13.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
-      sharp: 0.35.5(patch_hash=125106e60477c1f1bc599e77885de334d36ddebe1c910c055f7b09d74ed89929)(@types/node@24.13.3)
+      sharp: 0.35.5(patch_hash=138e10363326be3489e08228a276d61679c2be5c278f9727e87a4aaaf306f7b2)(@types/node@24.13.3)
       undici: 7.29.1
       workerd: 1.20260926.1
       ws: 8.21.1
@@ -10478,7 +10478,7 @@ snapshots:
       - supports-color
       - typescript
 
-  sharp@0.35.5(patch_hash=125106e60477c1f1bc599e77885de334d36ddebe1c910c055f7b09d74ed89929)(@types/node@24.13.3):
+  sharp@0.35.5(patch_hash=138e10363326be3489e08228a276d61679c2be5c278f9727e87a4aaaf306f7b2)(@types/node@24.13.3):
     dependencies:
       '@img/colour': 1.1.0
       detect-libc: 2.1.2

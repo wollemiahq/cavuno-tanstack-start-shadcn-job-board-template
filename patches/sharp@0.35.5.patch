@@ -4,7 +4,7 @@
  output(Sharp);
  utility(Sharp);
  
-+// Disable HEIC/HEIF/AVIF input until bundled libheif includes the 1.23.4 fixes.
++// Disable HEIC/HEIF/AVIF input until bundled libheif >= 1.23.6 (GHSA-h4h8-qgvc-m7r2, GHSA-q7mw-2fmm-5q94, GHSA-fcmw-5764-7rq8, GHSA-6fqc-p7r8-2g36; also check GHSA-vr5j-9r89-725x, unpatched)
 +// The base class also blocks file, buffer and stream loader descendants.
 +Sharp.block({ operation: ['VipsForeignLoadHeif'] });
 +
@@ -15,7 +15,7 @@
  output(Sharp);
  utility(Sharp);
  
-+// Disable HEIC/HEIF/AVIF input until bundled libheif includes the 1.23.4 fixes.
++// Disable HEIC/HEIF/AVIF input until bundled libheif >= 1.23.6 (GHSA-h4h8-qgvc-m7r2, GHSA-q7mw-2fmm-5q94, GHSA-fcmw-5764-7rq8, GHSA-6fqc-p7r8-2g36; also check GHSA-vr5j-9r89-725x, unpatched)
 +// The base class also blocks file, buffer and stream loader descendants.
 +Sharp.block({ operation: ['VipsForeignLoadHeif'] });
 +
