@@ -70,6 +70,30 @@ describe('stale-chunk reload', () => {
     expect(reload).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    'Mozilla/5.0 (compatible; Google-InspectionTool/1.0;)',
+    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36',
+  ])('never reloads for a crawler (%s)', (userAgent) => {
+    const { win, fire, reload, store } = fakeWindow();
+    win.navigator = { userAgent };
+    installStaleChunkReload(win);
+    fire();
+    expect(reload).not.toHaveBeenCalled();
+    expect(store.has(STALE_CHUNK_RELOAD_KEY)).toBe(false);
+  });
+
+  it('still reloads for a browser', () => {
+    const { win, fire, reload } = fakeWindow();
+    win.navigator = {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+    };
+    installStaleChunkReload(win);
+    fire();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   it('serialises to a self-contained inline script', () => {
     const script = staleChunkReloadScript();
     expect(script.startsWith('(function')).toBe(true);

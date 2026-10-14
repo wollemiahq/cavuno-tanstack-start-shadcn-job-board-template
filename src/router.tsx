@@ -2,6 +2,7 @@ import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 
 import { NotFound } from './components/app-not-found';
 import { AppRouteErrorPage } from './components/app-route-error';
+import { holdHydrationOnChunkFailure } from './lib/hydration-chunk-gate';
 import { delocalizeSegments, localizeSegments } from './lib/localized-path';
 import { deLocalizeUrl, localizeUrl } from './paraglide/runtime';
 import { routeTree } from './routeTree.gen';
@@ -68,6 +69,14 @@ export function getRouter() {
         return localized;
       },
     },
+  });
+  // Client only, before Start loads route chunks for hydration: a route
+  // chunk that fails to load must not swap a fully server-rendered page for
+  // that error page (see src/lib/hydration-chunk-gate.ts). Set after
+  // creation: referencing `router` in its own options makes its type circular.
+  router.update({
+    hydrate: () =>
+      holdHydrationOnChunkFailure(router, window.$_TSR?.router?.matches),
   });
 
   return router;

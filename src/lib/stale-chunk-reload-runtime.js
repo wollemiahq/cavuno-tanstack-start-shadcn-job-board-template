@@ -1,6 +1,18 @@
 /** @param {import('./stale-chunk-reload').StaleChunkReloadWindow} win */
 export default function installStaleChunkReload(win) {
   win.addEventListener('vite:preloadError', function () {
+    // Crawlers and page testers render one document and snapshot it. A
+    // reload there navigates away mid-render, and the snapshot is blank or
+    // whatever the next load shows. They keep the server-rendered page
+    // instead (src/lib/hydration-chunk-gate.ts).
+    var userAgent = (win.navigator && win.navigator.userAgent) || '';
+    if (
+      /bot\b|bot\/|crawler|spider|slurp|inspectiontool|lighthouse/i.test(
+        userAgent,
+      )
+    ) {
+      return;
+    }
     var key = 'cavuno:stale-chunk-reload';
     var cooldownMs = 60000;
     var now = Date.now();

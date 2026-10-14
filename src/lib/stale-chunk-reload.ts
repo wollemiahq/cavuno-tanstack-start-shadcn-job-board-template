@@ -12,6 +12,9 @@
  * Loop guard: a reload is allowed once per minute per tab. If the fresh
  * document fails the same way the error propagates normally — it is then
  * a real fault, and the error reporting sees it.
+ *
+ * Crawlers never reload: a fully server-rendered page keeps its server HTML
+ * instead (src/lib/hydration-chunk-gate.ts).
  */
 
 export const STALE_CHUNK_RELOAD_KEY = 'cavuno:stale-chunk-reload';
@@ -21,6 +24,7 @@ export interface StaleChunkReloadWindow {
   addEventListener: (type: string, listener: (event: Event) => void) => void;
   sessionStorage: Pick<Storage, 'getItem' | 'setItem'>;
   location: Pick<Location, 'reload'>;
+  navigator?: Pick<Navigator, 'userAgent'>;
 }
 
 // Import raw source so server/client transforms cannot change the inline HTML.
