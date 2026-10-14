@@ -14,13 +14,12 @@ import { createBoardSeoReader } from './board-seo-cache-core';
 import { getDataSource } from './data-source.server';
 
 /**
- * How long an isolate reuses `board.seo()`. Its fields (ads.txt, IndexNow
- * key, site verification, canonical base, manifest name) change only when an
- * operator edits SEO settings or connects a domain, and `READ_CACHE_TTL`
- * already classes them as board-global (5 min), so minutes of staleness is
- * acceptable. Carries no feature flag or access gate.
+ * How long an isolate reuses `board.seo()`. Kept at the board context's 30s
+ * because `canonicalBase` feeds canonical URLs, sitemaps and feeds: after a
+ * domain change a longer window would publish (and let caches keep) the old
+ * origin for minutes.
  */
-export const SEO_TTL_MS = 300_000;
+export const SEO_TTL_MS = 30_000;
 
 const reader = createBoardSeoReader(
   {

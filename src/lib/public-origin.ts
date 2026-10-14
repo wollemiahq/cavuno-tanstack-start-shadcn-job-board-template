@@ -11,7 +11,7 @@
  * the starter match it.
  *
  * The base comes from `board.seo().canonicalBase` (`GET /v1/boards/:id/seo`),
- * memoized per isolate (`SEO_TTL_MS`) so folding it into every page fn costs
+ * memoized per isolate (`SEO_TTL_MS`, 30s like the board context) so folding it into every page fn costs
  * at most one upstream round trip per isolate per window — NOT one extra call
  * per render.
  *

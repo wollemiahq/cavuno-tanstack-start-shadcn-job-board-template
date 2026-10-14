@@ -32,7 +32,7 @@ describe('createBoardSeoReader', () => {
     expect(b).toBe(a);
   });
 
-  it('holds a read for five minutes, then re-reads', async () => {
+  it('holds a read for 30 seconds, then re-reads', async () => {
     let clock = 0;
     const seo = vi.fn(async () => ({
       canonicalBase: 'https://careers.acme.com',
@@ -40,11 +40,11 @@ describe('createBoardSeoReader', () => {
     const readBoardSeo = reader(seo, () => clock);
 
     await readBoardSeo();
-    clock = 299_000;
+    clock = 29_000;
     await readBoardSeo();
     expect(seo).toHaveBeenCalledTimes(1);
 
-    clock = 300_000;
+    clock = 30_000;
     await readBoardSeo();
     expect(seo).toHaveBeenCalledTimes(2);
   });
