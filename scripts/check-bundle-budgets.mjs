@@ -90,7 +90,7 @@ const BUDGETS = {
     '/': { raw: 48_000, gzip: 20_000 },
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
-    '/employers/companies/$slug/profile': { raw: 820_000, gzip: 250_000 },
+    '/employers/companies/$slug/profile': { raw: 1_057_500, gzip: 342_000 },
     // @cavuno/board 3.2.0 splits its ESM entries, so the format helpers this
     // form needs are charged here instead of riding the shared shell. Public
     // routes all gained 2.2 KiB gzip; /post is the one surface that nets
@@ -98,12 +98,12 @@ const BUDGETS = {
     // duplication. Accepted deliberately: /post is an authenticated,
     // low-traffic form, not an indexed surface, and the shell win applies to
     // every public page. Measured 548.6 KiB raw / 178.4 KiB gzip.
-    '/post': { raw: 565_000, gzip: 183_000 },
+    '/post': { raw: 704_500, gzip: 240_000 },
     // Shell→route reassignment after salary SEO left main (job-detail /
     // resolve-copy-group no longer shell-shared). Total first load fell.
     // 2026-10 dependency refresh (Recharts 3.10, Vite+ 1.0 chunking): measured
     // 452.5 KiB raw / 135.4 KiB gzip.
-    '/employers/companies/$slug/': { raw: 470_000, gzip: 142_000 },
+    '/employers/companies/$slug/': { raw: 562_500, gzip: 178_500 },
     // React Aria's drag-and-drop/grid runtime belongs only to this private
     // workflow; it is intentionally charged here instead of every public URL.
     // Removing the leaked messaging/auth graph from the shell also reassigns
@@ -116,21 +116,21 @@ const BUDGETS = {
       // 2026-10 dependency refresh (Recharts 3.10 alone is +5.9 KiB gzip on
       // the analytics chart, plus Vite+ 1.0 chunking): measured 445.9 KiB raw
       // / 126.5 KiB gzip.
-      raw: 465_000,
+      raw: 510_000,
       // Sourced-rail convert-on-drop (GridList MIME + convert RPC) added
       // ~0.3 KiB gzip on top of the React Aria drag runtime already charged
       // here. 112 KiB was 109.4; CI measured 109.7.
-      gzip: 133_000,
+      gzip: 154_000,
     },
     // Desktop-only enhanced search is lazy shell work. Removing the shared
     // Base UI footer menu also made TanStack attribute more of the remaining
     // dynamic graph here, though this route's total first load still fell.
-    '/account': { raw: 210_000, gzip: 72_000 },
+    '/account': { raw: 290_000, gzip: 106_500 },
     // Pre-existing overflow on main after board-user self-service (#40):
     // this route used the default 80 KiB increment and landed at 113.7 /
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
     // members surface here instead of the default.
-    '/employers/companies/$slug/members': { raw: 115_000, gzip: 40_000 },
+    '/employers/companies/$slug/members': { raw: 194_000, gzip: 73_500 },
     // Talent lists picker + Save-to-job menu (#95/#96) are charged here with
     // the All-filters sheet, not the shared shell. Anti-slop replaced
     // module mocks with injected list/save seams on those controls;
@@ -154,7 +154,36 @@ const BUDGETS = {
     // KiB raw / 69.2 KiB gzip (205,282 / 70,822 B) while the route's total
     // first load fell from 313.3 to 279.3 KiB gzip. Budget is the
     // measurement plus ~3%.
-    '/talent/': { raw: 211_500, gzip: 73_000 },
+    '/talent/': { raw: 343_000, gzip: 126_000 },
+    // TanStack Start 1.0's manifest lists every chunk a route's lazy code
+    // imports; 1.168 left out transitive imports, so these routes were
+    // measured short and loaded the rest without a preload. The bytes did not
+    // change (checked by following every import in both builds). Every route
+    // budget below this line, and the values of the ones above that it
+    // exceeded, are the complete measurement plus ~3% (2026-10-15).
+    '/employers/companies/$slug/jobs/new': { raw: 708_500, gzip: 241_500 },
+    '/employers/companies/$slug/jobs/$jobId/edit': {
+      raw: 708_500,
+      gzip: 241_500,
+    },
+    '/jobs/locations/$location/$keyword': { raw: 290_000, gzip: 110_500 },
+    '/jobs/locations/$location/skills/$skill': { raw: 290_000, gzip: 110_500 },
+    '/jobs/locations/$location/': { raw: 290_000, gzip: 110_500 },
+    '/jobs/$keyword': { raw: 235_500, gzip: 92_500 },
+    '/jobs/skills/$skill': { raw: 235_500, gzip: 92_500 },
+    '/jobs/': { raw: 233_500, gzip: 91_000 },
+    '/messages': { raw: 244_000, gzip: 87_500 },
+    '/me/alerts': { raw: 182_000, gzip: 70_500 },
+    '/employers/dashboard': { raw: 172_000, gzip: 65_500 },
+    '/matches': { raw: 150_000, gzip: 58_000 },
+    '/companies/markets/$market': { raw: 121_500, gzip: 46_500 },
+    '/companies/': { raw: 121_000, gzip: 46_000 },
+    '/saved-jobs': { raw: 120_500, gzip: 44_500 },
+    '/companies/$companySlug/jobs/$jobSlug': { raw: 112_500, gzip: 44_500 },
+    '/p/$handle': { raw: 113_500, gzip: 43_000 },
+    '/settings': { raw: 100_500, gzip: 37_500 },
+    '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
+    '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },
   },
 };
 
