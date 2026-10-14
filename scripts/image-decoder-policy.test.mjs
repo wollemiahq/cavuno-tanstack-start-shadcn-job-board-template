@@ -28,7 +28,7 @@ for (const consumer of consumers) {
         const { Readable } = require('node:stream');
         (async () => {
           const sharp = MODE === 'esm' ? (await import(TARGET)).default : require(TARGET);
-          assert.equal(sharp.versions.sharp, '0.35.4');
+          assert.equal(sharp.versions.sharp, '0.35.5');
           const image = () => sharp({ create: { width: 8, height: 8, channels: 3,
             background: { r: 30, g: 90, b: 160 } } });
           for (const format of ['jpeg', 'png', 'webp', 'gif']) {
