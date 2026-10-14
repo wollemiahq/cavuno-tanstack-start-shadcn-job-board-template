@@ -491,11 +491,18 @@ function viteConfig(command: ConfigEnv['command']) {
             // Private/application routes are not part of the public landing
             // workload. Keep each route's loader beside its already-lazy UI so
             // those server-function stubs do not inflate every public entry.
+            // A grouping replaces the default one rather than extending it,
+            // so the error and not-found components keep their default lazy
+            // groups here; left out, they stayed in the shell every page loads.
             splitBehavior: ({ routeId }) =>
               /^\/(?:account(?:_|\/|$)|alerts(?:\/|$)|auth(?:\/|$)|employers(?:\/|$)|me(?:\/|$)|messages(?:\/|$)|post(?:\/|$)|settings(?:\/|$))/.test(
                 routeId,
               )
-                ? [['loader', 'component']]
+                ? [
+                    ['loader', 'component'],
+                    ['errorComponent'],
+                    ['notFoundComponent'],
+                  ]
                 : undefined,
           },
         },

@@ -74,7 +74,12 @@ const BUDGETS = {
   // shell (other languages' words are filtered out at build time). Measured
   // 746.7 KiB raw / 249.4 KiB gzip on an English board; accepted by the
   // operator on 2026-10-09 and rebaselined with the usual headroom.
-  shell: { raw: 775_000, gzip: 260_000 },
+  // One shell chunk (vite.config.ts `shellChunk`) instead of 87, and private
+  // routes' page, error and not-found components moved out of the shell:
+  // measured 659.8 KiB raw / 210.1 KiB gzip (675,619 / 215,164 B) against
+  // 749.3 / 250.2 before (2026-10-15). Lowered to the measurement plus the
+  // usual ~4 KiB gzip headroom so the code cannot drift back unnoticed.
+  shell: { raw: 690_000, gzip: 219_500 },
   styles: { raw: 260_000, gzip: 40_000 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
@@ -144,7 +149,12 @@ const BUDGETS = {
     // With both, measured 183.6 KiB raw / 63.0 KiB gzip (187,958 / 64,506
     // B); includes #266's radius control; Saved-people raise accepted by the
     // operator 2026-10-12. Budget is the measurement plus ~3%.
-    '/talent/': { raw: 193_600, gzip: 66_400 },
+    // The one-chunk shell (2026-10-15) moved code only private routes and
+    // /talent/ share out of the shell, so it is charged here: measured 200.5
+    // KiB raw / 69.2 KiB gzip (205,282 / 70,822 B) while the route's total
+    // first load fell from 313.3 to 279.3 KiB gzip. Budget is the
+    // measurement plus ~3%.
+    '/talent/': { raw: 211_500, gzip: 73_000 },
   },
 };
 
