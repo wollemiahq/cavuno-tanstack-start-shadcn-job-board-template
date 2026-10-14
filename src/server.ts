@@ -16,6 +16,10 @@
  * handler, not the delocalized one the middleware offers — the router's
  * `rewrite.input` owns delocalization; feeding it an already-delocalized
  * URL loops the redirect.
+ *
+ * An uncaught server error, or a 500 that Start rendered itself, logs one
+ * `starter_server_error` line (src/lib/server-error-log.server.ts); the
+ * visitor's response is unchanged.
  */
 import handler from '@tanstack/react-start/server-entry';
 
@@ -30,6 +34,7 @@ import {
   writePublicHtmlCache,
 } from './lib/public-html-cache';
 import { withBaselineSecurityHeaders } from './lib/security-headers';
+import { serveWithServerErrorLog } from './lib/server-error-log.server';
 import { isLocale } from './paraglide/runtime';
 import { paraglideMiddleware } from './paraglide/server';
 
@@ -52,49 +57,59 @@ function localeDetectionRequest(request: Request): Request {
 
 interface WorkerEnvironment {}
 
+type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
+
+async function serve(
+  request: Request,
+  executionContext?: ExecutionContext,
+): Promise<Response> {
+  const pathname = new URL(request.url).pathname;
+  if (pathname === CLIENT_ERROR_PATH || pathname === `${CLIENT_ERROR_PATH}/`) {
+    const clientError = await matchClientErrorIngest(
+      request,
+      getServerEnv(),
+      executionContext?.waitUntil.bind(executionContext),
+    );
+    if (clientError) return withBaselineSecurityHeaders(clientError, request);
+  }
+
+  // Canonical (English) segments 308 to the board's localized URL before
+  // anything renders or reads the cache; the router rewrite stays the
+  // client-side safety net.
+  const localizedRedirect = localizedUrlRedirect(request);
+  if (localizedRedirect) {
+    return withBaselineSecurityHeaders(localizedRedirect, request);
+  }
+
+  const cached = await readPublicHtmlCache(request);
+  if (cached) return cached;
+
+  const rendered = await paraglideMiddleware(
+    localeDetectionRequest(request),
+    () => handler.fetch(request),
+  );
+  const response = withPublicHtmlCacheHeaders(
+    request,
+    withBaselineSecurityHeaders(rendered, request),
+  );
+  // Always a promise now, and one that never rejects — a cache the
+  // runtime refuses must not turn a rendered page into an error.
+  const cacheWrite = writePublicHtmlCache(request, response);
+  if (executionContext) executionContext.waitUntil(cacheWrite);
+  else void cacheWrite;
+  return response;
+}
+
 export default {
-  async fetch(
+  fetch(
     request: Request,
     _env?: WorkerEnvironment,
-    executionContext?: { waitUntil(promise: Promise<unknown>): void },
+    executionContext?: ExecutionContext,
   ): Promise<Response> {
-    const pathname = new URL(request.url).pathname;
-    if (
-      pathname === CLIENT_ERROR_PATH ||
-      pathname === `${CLIENT_ERROR_PATH}/`
-    ) {
-      const clientError = await matchClientErrorIngest(
-        request,
-        getServerEnv(),
-        executionContext?.waitUntil.bind(executionContext),
-      );
-      if (clientError) return withBaselineSecurityHeaders(clientError, request);
-    }
-
-    // Canonical (English) segments 308 to the board's localized URL before
-    // anything renders or reads the cache; the router rewrite stays the
-    // client-side safety net.
-    const localizedRedirect = localizedUrlRedirect(request);
-    if (localizedRedirect) {
-      return withBaselineSecurityHeaders(localizedRedirect, request);
-    }
-
-    const cached = await readPublicHtmlCache(request);
-    if (cached) return cached;
-
-    const rendered = await paraglideMiddleware(
-      localeDetectionRequest(request),
-      () => handler.fetch(request),
-    );
-    const response = withPublicHtmlCacheHeaders(
+    return serveWithServerErrorLog(
       request,
-      withBaselineSecurityHeaders(rendered, request),
+      () => serve(request, executionContext),
+      () => getServerEnv().board,
     );
-    // Always a promise now, and one that never rejects — a cache the
-    // runtime refuses must not turn a rendered page into an error.
-    const cacheWrite = writePublicHtmlCache(request, response);
-    if (executionContext) executionContext.waitUntil(cacheWrite);
-    else void cacheWrite;
-    return response;
   },
 };
