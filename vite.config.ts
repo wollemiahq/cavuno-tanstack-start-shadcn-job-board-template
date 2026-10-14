@@ -47,6 +47,27 @@ const devServer =
       }
     : { watch: devWatch };
 
+/**
+ * Pre-bundle every npm dependency of the UI kit at dev startup.
+ *
+ * Vite's dependency scan starts from the app's entries, so a kit wrapper that
+ * no route imports yet (say `ui/accordion.tsx`, the first time a new page
+ * uses it) is unknown at startup. The first request that reaches it makes
+ * Vite optimize `@base-ui/react/accordion` on the spot, and that request runs
+ * against two copies of React: the server render and the page both fail with
+ * "Cannot read properties of null (reading 'useEffect')" until Vite's
+ * reload. A browser recovers; a headless check or a slow client sees the
+ * error screen. Production builds do not pre-bundle and are unaffected.
+ *
+ * These entries are added to the ones TanStack Start registers for each
+ * environment (Vite concatenates them), so the scan still starts from the
+ * app. Test files are left out so test-only packages are not bundled.
+ */
+const uiKitEntries = [
+  'src/components/ui/**/*.tsx',
+  '!src/components/ui/**/*.test.tsx',
+];
+
 const antiSlopLint = {
   ignorePatterns: [
     '.agent/**',
@@ -399,7 +420,9 @@ function viteConfig(command: ConfigEnv['command']) {
     // in the preview's logs. Client files are not warmed: on the same CPUs
     // they delay the SSR render (20.2 s).
     environments: {
+      client: { optimizeDeps: { entries: uiKitEntries } },
       ssr: {
+        optimizeDeps: { entries: uiKitEntries },
         dev: {
           warmup: [
             './src/server.ts',
