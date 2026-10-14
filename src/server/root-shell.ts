@@ -18,9 +18,9 @@ import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
 import { getContactForRoot } from './contact';
 import { resolvePreviewStateForViewer } from './preview';
 import {
+  getBoardContext,
   getBoardSeo,
   getEmployerOfferGate,
-  getFreshBoardContext,
   getStaleBoardContext,
 } from './queries';
 import { EMPTY_GRANT } from './talent-access';
@@ -40,7 +40,14 @@ import { EMPTY_GRANT } from './talent-access';
  */
 export const getRootShellData = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const boardContext = getFreshBoardContext().catch(async () => {
+    // The root loader re-runs on every document AND every soft navigation,
+    // so it reads the per-isolate memo (one upstream read per isolate per
+    // window) rather than a fresh read each time. Chrome may lag an operator
+    // flag flip by up to that window; routes that must enforce a flag at once
+    // (e.g. /matches) still make their own fresh read, and the API enforces
+    // it authoritatively. If the memo has expired and the re-read fails,
+    // render from the last good context with recommendations failed closed.
+    const boardContext = getBoardContext().catch(async () => {
       const cached = await getStaleBoardContext();
       return {
         ...cached,

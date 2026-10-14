@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { SEO_TTL_MS } from './board-seo-cache';
 import { createBoardSeoReader } from './board-seo-cache-core';
 
 /**
@@ -7,10 +8,13 @@ import { createBoardSeoReader } from './board-seo-cache-core';
  * `board.seo()`; a settled read is reused for the window, and no caller ever
  * waits on another request's in-flight read.
  */
-function reader(getBoardSeo: () => Promise<{ canonicalBase: string }>) {
+function reader(
+  getBoardSeo: () => Promise<{ canonicalBase: string }>,
+  now: () => number = () => 0,
+) {
   return createBoardSeoReader(
-    { getBoardSeo, getDataSource: () => 'board', now: () => 0 },
-    30_000,
+    { getBoardSeo, getDataSource: () => 'board', now },
+    SEO_TTL_MS,
   ).readBoardSeo;
 }
 
@@ -26,6 +30,23 @@ describe('createBoardSeoReader', () => {
 
     expect(seo).toHaveBeenCalledTimes(1);
     expect(b).toBe(a);
+  });
+
+  it('holds a read for five minutes, then re-reads', async () => {
+    let clock = 0;
+    const seo = vi.fn(async () => ({
+      canonicalBase: 'https://careers.acme.com',
+    }));
+    const readBoardSeo = reader(seo, () => clock);
+
+    await readBoardSeo();
+    clock = 299_000;
+    await readBoardSeo();
+    expect(seo).toHaveBeenCalledTimes(1);
+
+    clock = 300_000;
+    await readBoardSeo();
+    expect(seo).toHaveBeenCalledTimes(2);
   });
 
   it('never makes a later caller wait on a read that never settles', async () => {

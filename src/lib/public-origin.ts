@@ -11,9 +11,9 @@
  * the starter match it.
  *
  * The base comes from `board.seo().canonicalBase` (`GET /v1/boards/:id/seo`),
- * memoized per isolate on the same 30s TTL as the board context so folding it
- * into every page fn costs at most one upstream round trip per isolate per
- * window — NOT one extra call per render.
+ * memoized per isolate (`SEO_TTL_MS`) so folding it into every page fn costs
+ * at most one upstream round trip per isolate per window — NOT one extra call
+ * per render.
  *
  * Fallback is the request origin: an unpublished board (local API, no
  * registered public origin) 503s `seo()` or returns an empty base, and a

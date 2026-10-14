@@ -34,6 +34,7 @@ const {
     now: () => Date.now(),
   },
   30_000,
+  300_000,
 );
 
 beforeEach(() => {
@@ -96,6 +97,18 @@ describe('board context memo', () => {
     vi.advanceTimersByTime(31_000);
     await readBoardContext();
     expect(contextSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the expired value as stale when the re-read fails', async () => {
+    contextSpy.mockResolvedValueOnce({ name: 'Last good' });
+    await readBoardContext();
+    vi.advanceTimersByTime(31_000);
+
+    contextSpy.mockRejectedValueOnce(new Error('upstream down'));
+    await expect(readBoardContext()).rejects.toThrow('upstream down');
+    await expect(readStaleBoardContext()).resolves.toEqual({
+      name: 'Last good',
+    });
   });
 
   it('never serves one data source the other board context', async () => {
@@ -199,6 +212,19 @@ describe('employer offer gate memo', () => {
     await expect(readEmployerOfferGate(load)).resolves.toEqual({
       hasEmployerOfferPage: true,
     });
+  });
+
+  it('holds the gate for its own longer window, then re-reads', async () => {
+    const load = vi.fn().mockResolvedValue({ hasEmployerOfferPage: true });
+
+    await readEmployerOfferGate(load);
+    vi.advanceTimersByTime(31_000);
+    await readEmployerOfferGate(load);
+    expect(load).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(300_000);
+    await readEmployerOfferGate(load);
+    expect(load).toHaveBeenCalledTimes(2);
   });
 
   it('does not keep a failed load', async () => {

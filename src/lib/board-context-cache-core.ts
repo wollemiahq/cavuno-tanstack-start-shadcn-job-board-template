@@ -29,13 +29,15 @@ export type EmployerOfferGate = {
 export function createBoardContextCache<Context>(
   dependencies: BoardContextCacheDependencies<Context>,
   ttlMs: number,
+  /** Plans change far less often than flags; defaults to the context TTL. */
+  offerGateTtlMs: number = ttlMs,
 ) {
   const contextCache = createSettledCache<DataSource, Context>({
     ttlMs,
     now: dependencies.now,
   });
   const offerGateCache = createSettledCache<DataSource, EmployerOfferGate>({
-    ttlMs,
+    ttlMs: offerGateTtlMs,
     now: dependencies.now,
   });
 

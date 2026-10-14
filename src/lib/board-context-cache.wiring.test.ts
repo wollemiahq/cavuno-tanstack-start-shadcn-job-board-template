@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { BOARD_CONTEXT_FETCH_OPTIONS } from './board-context-cache';
+import {
+  BOARD_CONTEXT_FETCH_OPTIONS,
+  CONTEXT_TTL_MS,
+  OFFER_GATE_TTL_MS,
+} from './board-context-cache';
 import { applyReadCache } from './read-cache';
 
 import type { BoardRequest } from '@cavuno/board';
@@ -29,5 +33,10 @@ describe('board context memo fetch options', () => {
     const out = applyReadCache(request);
     expect(out.init.cache).toBe('no-store');
     expect(out.init).not.toHaveProperty('cf');
+  });
+
+  it('keeps flags on a short window and the offer gate on five minutes', () => {
+    expect(CONTEXT_TTL_MS).toBe(30_000);
+    expect(OFFER_GATE_TTL_MS).toBe(300_000);
   });
 });

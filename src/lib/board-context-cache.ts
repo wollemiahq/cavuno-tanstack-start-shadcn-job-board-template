@@ -40,8 +40,22 @@ import type { DataSource } from './data-source';
 
 type BoardContext = Awaited<ReturnType<ReturnType<typeof getBoard>['context']>>;
 
-/** Upper bound on how long an isolate may serve a flipped operator flag. */
-const CONTEXT_TTL_MS = 30_000;
+/**
+ * Upper bound on how long an isolate may serve a flipped operator flag. The
+ * root shell reads through this memo on every document and soft navigation,
+ * so this is also how long header/footer chrome may lag a flag change.
+ */
+export const CONTEXT_TTL_MS = 30_000;
+
+/**
+ * How long an isolate reuses the employer offer gate (do the Pricing /
+ * Memberships links show). It only changes when an operator publishes or
+ * removes a plan, and the plan reads behind it are already edge-cached for
+ * `READ_CACHE_TTL.boardGlobal` (5 min), so a link that appears or disappears
+ * a few minutes late is acceptable. A visitor who follows a stale link still
+ * gets the live /employers page.
+ */
+export const OFFER_GATE_TTL_MS = 300_000;
 
 /**
  * Both readers bypass the shared edge cache — see the module comment.
@@ -58,6 +72,7 @@ const cache = createBoardContextCache<BoardContext>(
     now: Date.now,
   },
   CONTEXT_TTL_MS,
+  OFFER_GATE_TTL_MS,
 );
 
 export const readBoardContext = cache.readBoardContext;
@@ -77,7 +92,7 @@ export function resetBoardContextCache(source?: DataSource): void {
  * Per-isolate memo for the footer/nav "has employer offer page" gate.
  * Root shell reads this on every document; without a memo, soft navigations
  * that re-run the root loader re-hit the two plans.list reads even though the
- * answer is board-global and stable for the same TTL window as context.
+ * answer is board-global. Held for `OFFER_GATE_TTL_MS`.
  */
 export function readEmployerOfferGate(
   load: () => Promise<EmployerOfferGate>,

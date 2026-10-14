@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => {
   const context: ShellTestContext = { session: null, boardAccessHeaders: {} };
   return {
     context,
+    boardContext: vi.fn(),
     fresh: vi.fn(),
     stale: vi.fn(),
     seo: vi.fn(),
@@ -51,6 +52,7 @@ vi.mock('../lib/board', () => ({
 vi.mock('./preview', () => ({ resolvePreviewStateForViewer: mocks.preview }));
 vi.mock('./contact', () => ({ getContactForRoot: mocks.contact }));
 vi.mock('./queries', () => ({
+  getBoardContext: mocks.boardContext,
   getFreshBoardContext: mocks.fresh,
   getStaleBoardContext: mocks.stale,
   getBoardSeo: mocks.seo,
@@ -65,7 +67,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.impressum.mockReturnValue(false);
   mocks.context = { session: null, boardAccessHeaders: {} };
-  mocks.fresh.mockResolvedValue({
+  mocks.boardContext.mockResolvedValue({
     name: 'Fixture board',
     features: { contactPage: true },
   });
@@ -94,7 +96,7 @@ describe('public and session shells', () => {
     expect(mocks.contact).not.toHaveBeenCalled();
   });
   it('footer Contact link reads the board context, not /contact', async () => {
-    mocks.fresh.mockResolvedValue({
+    mocks.boardContext.mockResolvedValue({
       name: 'Fixture board',
       features: { contactPage: false },
     });
@@ -109,12 +111,34 @@ describe('public and session shells', () => {
     expect(mocks.impressum).toHaveBeenCalledWith({ contactPage: true });
   });
   it('a context without the Contact flag falls back to one /contact read', async () => {
-    mocks.fresh.mockResolvedValue({ name: 'Fixture board', features: {} });
+    mocks.boardContext.mockResolvedValue({
+      name: 'Fixture board',
+      features: {},
+    });
     expect(await getRootShellData()).toMatchObject({ contactEnabled: true });
     expect(mocks.contact).toHaveBeenCalledTimes(1);
 
     mocks.contact.mockResolvedValue(null);
     expect(await getRootShellData()).toMatchObject({ contactEnabled: false });
+  });
+  it('reads board context through the isolate memo, not a fresh read', async () => {
+    await getRootShellData();
+    expect(mocks.boardContext).toHaveBeenCalledTimes(1);
+    expect(mocks.fresh).not.toHaveBeenCalled();
+  });
+  it('serves the last good context with recommendations closed when the read fails', async () => {
+    mocks.boardContext.mockRejectedValue(new Error('upstream down'));
+    mocks.stale.mockResolvedValue({
+      name: 'Fixture board',
+      features: { contactPage: true, jobRecommendationsEnabled: true },
+    });
+    expect(await getRootShellData()).toMatchObject({
+      board: {
+        name: 'Fixture board',
+        features: { contactPage: true, jobRecommendationsEnabled: false },
+      },
+      contactEnabled: true,
+    });
   });
   it('anonymous session makes no viewer calls', async () => {
     expect(await getRootSessionShellData()).toEqual({ user: null });
