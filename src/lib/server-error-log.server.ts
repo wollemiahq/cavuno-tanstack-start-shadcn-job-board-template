@@ -96,7 +96,11 @@ function summarize<T>(error: T): ServerErrorSummary {
 
 /** Record `error` for `request` unless an earlier one is already noted. */
 export function noteServerError<T>(error: T, request: Request): void {
-  if (!notedErrors.has(request)) notedErrors.set(request, summarize(error));
+  try {
+    if (!notedErrors.has(request)) notedErrors.set(request, summarize(error));
+  } catch {
+    // Noting is best effort: it must never replace the error being thrown.
+  }
 }
 
 /** A `500` answered without any server-fn error noted for the request. */
@@ -137,7 +141,7 @@ export function serverErrorLine(
 
 function logServerError(
   request: Request,
-  summary: ServerErrorSummary,
+  summary: () => ServerErrorSummary,
   status: number | null,
   board: () => string | null,
 ): void {
@@ -147,9 +151,14 @@ function logServerError(
   } catch {
     // A missing binding must not stop the error line itself.
   }
-  console.error(
-    JSON.stringify(serverErrorLine(request, summary, status, boardKey)),
-  );
+  try {
+    console.error(
+      JSON.stringify(serverErrorLine(request, summary(), status, boardKey)),
+    );
+  } catch {
+    // Logging is best effort: it must never replace the visitor's response
+    // or the error being rethrown.
+  }
 }
 
 /**
@@ -166,14 +175,14 @@ export async function serveWithServerErrorLog(
   try {
     response = await serve();
   } catch (error) {
-    logServerError(request, summarize(error), null, board);
+    logServerError(request, () => summarize(error), null, board);
     throw error;
   }
   if (response.status === 500) {
     const noted = notedErrors.get(request);
     const isRpc = new URL(request.url).pathname.startsWith('/_serverFn');
     if (!(isRpc && noted?.expectedForRpc)) {
-      logServerError(request, noted ?? uncaptured(500), 500, board);
+      logServerError(request, () => noted ?? uncaptured(500), 500, board);
     }
   }
   return response;

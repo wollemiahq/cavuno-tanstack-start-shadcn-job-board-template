@@ -60,6 +60,20 @@ describe('serveWithServerErrorLog', () => {
     expect(String(error.mock.calls[0][0])).not.toContain('secret');
   });
 
+  it('rethrows the original error even when logging it fails', async () => {
+    const request = new Request('https://board.example/jobs');
+    const thrown = Object.create(null) as object;
+    error.mockImplementation(() => {
+      throw new Error('console unavailable');
+    });
+
+    await expect(
+      serveWithServerErrorLog(request, () => Promise.reject(thrown), board),
+    ).rejects.toBe(thrown);
+    expect(() => noteServerError(thrown, request)).not.toThrow();
+    error.mockReset();
+  });
+
   it('logs a framework-rendered 500 once, naming the noted error, and returns the response as is', async () => {
     const request = new Request('https://board.example/jobs?q=nurse');
     const rendered = new Response('<h1>Error</h1>', { status: 500 });
