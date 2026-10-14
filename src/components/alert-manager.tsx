@@ -167,10 +167,19 @@ function AlertForm({
   const placeSuggestions = useMemo(() => {
     const query = placeQuery.trim().toLowerCase();
     if (!query) return placeChoices;
-    return placeChoices.filter((place) =>
-      place.name.toLowerCase().includes(query),
+    // Match the board-language name and the English one, so "The Hague"
+    // still finds Den Haag on a Dutch board.
+    const matching = new Set(
+      places
+        .filter(
+          (place) =>
+            place.displayName.toLowerCase().includes(query) ||
+            place.name.toLowerCase().includes(query),
+        )
+        .map((place) => place.id),
     );
-  }, [placeChoices, placeQuery]);
+    return placeChoices.filter((place) => matching.has(place.id));
+  }, [places, placeChoices, placeQuery]);
 
   // The location filter reveals once the alert names a workplace type (or
   // already carries places) — "remote in Germany", "on-site in Munich".
