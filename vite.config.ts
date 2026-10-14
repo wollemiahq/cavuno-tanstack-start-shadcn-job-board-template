@@ -68,6 +68,26 @@ const uiKitEntries = [
   '!src/components/ui/**/*.test.tsx',
 ];
 
+/**
+ * Emit the client shell as one chunk.
+ *
+ * Every module the client entry imports statically runs on every page, so
+ * splitting it buys no caching and no laziness. Rolldown (Vite+ 1.0) still
+ * splits it by which lazy route chunks also use each module, and its
+ * `mergeCommonChunks` pass does not fold those pieces back into the entry the
+ * way Rollup did: the entry statically imported 87 chunks, and a blog post
+ * sent 100 `modulepreload` links (2026-10-15). Each is a request a slow
+ * client or a crawler's renderer can drop, and gzip compresses one file
+ * better than 87.
+ *
+ * `$initial` is Rolldown's tag for a module in the entry's static graph, so
+ * the group holds exactly the shell; route chunks keep their own code and
+ * import shared code from it.
+ */
+const shellChunk = {
+  groups: [{ name: 'shell', tags: ['$initial' as const] }],
+};
+
 const antiSlopLint = {
   ignorePatterns: [
     '.agent/**',
@@ -420,7 +440,10 @@ function viteConfig(command: ConfigEnv['command']) {
     // in the preview's logs. Client files are not warmed: on the same CPUs
     // they delay the SSR render (20.2 s).
     environments: {
-      client: { optimizeDeps: { entries: uiKitEntries } },
+      client: {
+        optimizeDeps: { entries: uiKitEntries },
+        build: { rolldownOptions: { output: { codeSplitting: shellChunk } } },
+      },
       ssr: {
         optimizeDeps: { entries: uiKitEntries },
         dev: {
