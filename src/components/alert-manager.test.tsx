@@ -34,7 +34,10 @@ const alert = {
   label: 'Frontend roles',
   frequency: 'weekly',
   isActive: true,
+  kind: 'filters',
+  anchorJob: null,
   filters: {
+    query: null,
     jobFunctions: ['Engineering'],
     seniorityLevels: [],
     remoteOptions: ['remote'],

@@ -25,6 +25,7 @@ function profile(handle: string): TalentProfile {
     bio: null,
     avatarUrl: null,
     jobSearchStatus: null,
+    lastActive: null,
     experiences: [],
     education: [],
     skills: [],
