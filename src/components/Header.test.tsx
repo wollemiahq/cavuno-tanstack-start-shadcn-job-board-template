@@ -19,6 +19,7 @@ import {
   createRoute,
   createRouter,
   useNavigate,
+  useRouterState,
 } from '@tanstack/react-router';
 import {
   cleanup,
@@ -97,6 +98,7 @@ function renderHeader({
   companyMarketSuggestions = [],
   resolvedKeywordLabel,
   jobRecommendationsEnabled = true,
+  routePlaceNames,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -122,6 +124,11 @@ function renderHeader({
   companyMarketSuggestions?: Array<{ slug: string; name: string }>;
   resolvedKeywordLabel?: string;
   jobRecommendationsEnabled?: boolean;
+  /**
+   * Follow the router as __root.tsx does, naming places the way their
+   * loaders would (a slug missing here is a place the route cannot name).
+   */
+  routePlaceNames?: Record<string, string>;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
@@ -135,6 +142,24 @@ function renderHeader({
   function HarnessHeader() {
     const navigate = useNavigate();
     const [viewer, setViewer] = useState(user);
+    const committed = useRouterState({
+      select: (state) => state.resolvedLocation ?? state.location,
+    });
+    const routeSearch = routePlaceNames
+      ? (() => {
+          const search = Object.fromEntries(
+            new URLSearchParams(committed.searchStr),
+          );
+          const slug =
+            committed.pathname.match(/^\/jobs\/locations\/([^/]+)/)?.[1] ??
+            search.place;
+          return resolveHeaderSearchState(
+            committed.pathname,
+            search,
+            slug ? routePlaceNames[slug] : undefined,
+          );
+        })()
+      : initialSearch;
 
     function submitSearch({
       scope,
@@ -203,7 +228,7 @@ function renderHeader({
         talentDirectoryVisibility={talentDirectoryVisibility}
         hasMembershipPage={hasMembershipPage}
         search={{
-          ...initialSearch,
+          ...routeSearch,
           onSubmit: submitSearch,
           locationSuggestions: {
             suggestions: locationSuggestions.map((place) => ({
@@ -1113,6 +1138,70 @@ describe('Header — pathname-scoped submit-only search', () => {
         '/jobs/locations/sydney?q=robotics',
       ),
     );
+  });
+
+  it.each([
+    {
+      scope: 'Jobs',
+      initialEntry: '/jobs',
+      typed: 'Lon',
+      place: { id: 'place-london', slug: 'london', name: 'London' },
+      expectedHref: '/jobs/locations/london',
+    },
+    {
+      scope: 'Talent',
+      initialEntry: '/talent',
+      typed: 'San',
+      place: { id: 'place-sf', slug: 'san-francisco', name: 'San Francisco' },
+      expectedHref: '/talent?place=san-francisco',
+    },
+  ])(
+    'keeps the picked $scope place name after its search runs',
+    async ({ initialEntry, typed, place, expectedHref }) => {
+      const router = renderHeader({
+        initialEntry,
+        routePlaceNames: {},
+        locationSuggestions: [{ ...place, contextLabel: null }],
+      });
+      const location = await screen.findByRole<HTMLInputElement>('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      });
+
+      fireEvent.input(location, {
+        target: { value: typed },
+        inputType: 'insertText',
+      });
+      fireEvent.click(screen.getByRole('option', { name: /^/ }));
+      submitContainingForm(location);
+
+      await waitFor(() =>
+        expect(router.state.resolvedLocation?.href).toBe(expectedHref),
+      );
+      expect(location.value).toBe(place.name);
+    },
+  );
+
+  it('names the place history moves to from its route', async () => {
+    const router = renderHeader({
+      initialEntry: '/jobs/locations/london',
+      routePlaceNames: {
+        london: 'London, England',
+        paris: 'Paris, France',
+      },
+    });
+    const location = await screen.findByRole<HTMLInputElement>('combobox', {
+      name: m.locationCombobox_locationAriaLabel(),
+    });
+    expect(location.value).toBe('London, England');
+
+    await router.navigate({
+      to: '/jobs/locations/$location',
+      params: { location: 'paris' },
+    });
+    await waitFor(() => expect(location.value).toBe('Paris, France'));
+
+    router.history.back();
+    await waitFor(() => expect(location.value).toBe('London, England'));
   });
 
   it('searches typed location text with its top place when Search is tapped without a pick', async () => {

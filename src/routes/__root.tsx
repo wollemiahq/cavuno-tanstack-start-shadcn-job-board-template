@@ -263,6 +263,14 @@ function RootChrome({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
   });
   const location = useRouterState({ select: (s) => s.location });
+  // The location whose matches are rendered. `location` moves to the next URL
+  // as soon as a navigation starts, while `matches` (and so the header's
+  // loader labels) stay on the previous page until its loaders finish; the
+  // header search reads this one so a place's slug and its name always come
+  // from the same page.
+  const committedLocation = useRouterState({
+    select: (s) => s.resolvedLocation ?? s.location,
+  });
   const resolvedHeaderLabels = useRouterState({
     select: (state) => resolveHeaderRouteLabels(state.matches),
   });
@@ -312,10 +320,10 @@ function RootChrome({
     (membership) => membership.status === 'approved',
   );
   const headerSearch = resolveHeaderSearchState(
-    location.pathname,
+    committedLocation.pathname,
     // SAFETY: TanStack route search values are URL-serializable scalars here;
     // resolveHeaderSearchState only reads known string/boolean-style keys.
-    location.search as UrlSearchInput,
+    committedLocation.search as UrlSearchInput,
     resolvedHeaderLabels.location,
     resolvedHeaderLabels.query,
     isApprovedEmployer && board.talentDirectoryVisibility !== 'off'

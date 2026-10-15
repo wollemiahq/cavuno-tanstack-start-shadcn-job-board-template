@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  nameHeaderSearchLocation,
+  reconcileHeaderSearchLocation,
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
 } from './header-search';
@@ -131,6 +133,80 @@ describe('resolveHeaderSearchState', () => {
 
   it('prefills talent query from /talent?q=ada', () => {
     expect(resolveHeaderSearchState('/talent', { q: 'ada' }).query).toBe('ada');
+  });
+});
+
+describe('header location field after a route change', () => {
+  const london = { slug: 'london-eng-united-kingdom', name: 'London' };
+  const sanFrancisco = {
+    slug: 'san-francisco-ca-united-states',
+    name: 'San Francisco',
+  };
+
+  it.each([
+    {
+      scope: 'jobs',
+      picked: london,
+      route: resolveHeaderSearchState(`/jobs/locations/${london.slug}`, {}),
+    },
+    {
+      scope: 'talent',
+      picked: sanFrancisco,
+      route: resolveHeaderSearchState('/talent', {
+        place: sanFrancisco.slug,
+      }),
+    },
+  ])(
+    'keeps the picked $scope place name while the route only knows its slug',
+    ({ picked, route }) => {
+      expect(route.location).toEqual({ slug: picked.slug, name: picked.slug });
+      const field = reconcileHeaderSearchLocation(picked, route.location);
+      expect(field).toEqual(picked);
+      // The route names nothing new, so the picked name stays.
+      expect(nameHeaderSearchLocation(field, route.location)).toEqual(picked);
+    },
+  );
+
+  it('fills in the route name for a place the field only knows by slug', () => {
+    const route = resolveHeaderSearchState(
+      '/jobs/locations/london-eng-united-kingdom/engineering',
+      {},
+      'London, England, United Kingdom',
+    ).location;
+
+    expect(
+      nameHeaderSearchLocation({ slug: london.slug, name: london.slug }, route),
+    ).toEqual(route);
+    // A name already shown, or a different place the visitor picked since,
+    // is left alone.
+    expect(nameHeaderSearchLocation(london, route)).toEqual(london);
+    expect(nameHeaderSearchLocation(sanFrancisco, route)).toEqual(sanFrancisco);
+  });
+
+  it('shows the route name when history moves to a different place', () => {
+    const route = resolveHeaderSearchState(
+      '/talent',
+      { place: sanFrancisco.slug },
+      'San Francisco, California, United States',
+    ).location;
+
+    expect(reconcileHeaderSearchLocation(london, route)).toEqual({
+      slug: sanFrancisco.slug,
+      name: 'San Francisco, California, United States',
+    });
+    expect(reconcileHeaderSearchLocation(london, null)).toBeNull();
+  });
+
+  it('takes the route name over a picked name once the route has one', () => {
+    const route = resolveHeaderSearchState(
+      `/jobs/locations/${london.slug}`,
+      {},
+      'London, England, United Kingdom',
+    ).location;
+
+    expect(reconcileHeaderSearchLocation(london, route)).toEqual(route);
+    // Cold load: nothing typed yet, the route's name is the field's.
+    expect(reconcileHeaderSearchLocation(null, route)).toEqual(route);
   });
 });
 
