@@ -148,6 +148,8 @@
   "alertManager_cancelLabel": "Abbrechen",
   "alertManager_createAlertLabel": "Benachrichtigung erstellen",
   "alertManager_deleteLabel": "Löschen",
+  "alertManager_earlierRolesHelperText": "Diese Benachrichtigung passt nur zu diesen Rollen. Entferne eine, um nicht mehr danach zu filtern.",
+  "alertManager_earlierRolesLabel": "Rollen aus deiner früheren Benachrichtigung",
   "alertManager_editAlertTitle": "Benachrichtigung bearbeiten",
   "alertManager_editLabel": "Bearbeiten",
   "alertManager_emptyText": "Du hast noch keine Job-Benachrichtigungen.",

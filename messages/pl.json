@@ -156,6 +156,8 @@
   "alertManager_cancelLabel": "Anuluj",
   "alertManager_createAlertLabel": "Utwórz alert",
   "alertManager_deleteLabel": "Usuń",
+  "alertManager_earlierRolesHelperText": "Ten alert pasuje tylko do tych stanowisk. Usuń jedno, aby przestać według niego filtrować.",
+  "alertManager_earlierRolesLabel": "Stanowiska z Twojego wcześniejszego alertu",
   "alertManager_editAlertTitle": "Edytuj alert",
   "alertManager_editLabel": "Edytuj",
   "alertManager_emptyText": "Nie masz jeszcze żadnych alertów o ofertach pracy.",

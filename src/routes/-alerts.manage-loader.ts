@@ -13,7 +13,10 @@ import {
   unsubscribeJobAlert,
 } from '../server/queries';
 
-import { anchorJobSlugs, type AnchorJobPaths } from '@/board/job-alert-match';
+import {
+  resolveAnchorJobPaths,
+  type AnchorJobPaths,
+} from '@/board/job-alert-match';
 import { headTitle } from '@/lib/page-title';
 import type {
   JobAlertDeletePreferenceInput,
@@ -84,14 +87,10 @@ export function createAlertManageLoader(
         seoPromise,
       ]);
       if (!state) return { empty: true, seo };
-      // Links for similar-job alerts' anchor jobs. Display only: without
-      // them the job title shows unlinked.
-      const jobSlugs = anchorJobSlugs(state.preferences);
-      const anchorJobPaths = jobSlugs.length
-        ? await dependencies
-            .getAnchorJobPaths({ data: { jobSlugs } })
-            .catch(() => ({}))
-        : {};
+      const anchorJobPaths = await resolveAnchorJobPaths(
+        state.preferences,
+        dependencies.getAnchorJobPaths,
+      );
       return { state, anchorJobPaths, seo };
     } catch {
       return { error: true, seo: await seoPromise };

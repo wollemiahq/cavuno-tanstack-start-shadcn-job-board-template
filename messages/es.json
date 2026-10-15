@@ -148,6 +148,8 @@
   "alertManager_cancelLabel": "Cancelar",
   "alertManager_createAlertLabel": "Crear alerta",
   "alertManager_deleteLabel": "Eliminar",
+  "alertManager_earlierRolesHelperText": "Esta alerta solo coincide con estos puestos. Quita uno para dejar de filtrar por él.",
+  "alertManager_earlierRolesLabel": "Puestos de tu alerta anterior",
   "alertManager_editAlertTitle": "Editar alerta",
   "alertManager_editLabel": "Editar",
   "alertManager_emptyText": "Aún no tienes alertas de empleo.",

@@ -90,7 +90,7 @@ function LocationSkillPage() {
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
       filters={search}
-      alertQuery={skill.displayName}
+      listedTermSlug={skill.sourceSlug}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });
       }}

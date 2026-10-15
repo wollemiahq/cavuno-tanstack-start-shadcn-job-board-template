@@ -1,11 +1,11 @@
+import { ALERT_QUERY_MAX_LENGTH } from '../board/job-alert-match';
+
 import type {
   JobAlertFiltersInput,
   JobAlertRemoteOption,
   PublicJob,
 } from '@cavuno/board';
 
-/** The Board API caps an alert's search keywords at 200 characters. */
-const MAX_QUERY_LENGTH = 200;
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
 
 export interface JobAlertDefaults {
@@ -50,18 +50,25 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
  * Scope a listing/search alert: the text query the page ran becomes the
  * alert's search `query`, and the active location slug its place. A blank
  * query leaves a location-only (or all-jobs) alert.
+ *
+ * A category or skill page also sends the slug of the term it lists as the
+ * alert's one job function. Alone, the board takes it as the alert's
+ * keywords, the same source-language term the page searched; next to the
+ * visitor's own query it filters that search to the term, as the page did.
  */
 export function jobAlertDefaultsFromSearch(opts: {
   query?: string;
+  listedTermSlug?: string;
   locationSlug?: string;
   source?: string;
 }): JobAlertDefaults {
   const query =
-    opts.query?.trim().slice(0, MAX_QUERY_LENGTH).trim() || undefined;
+    opts.query?.trim().slice(0, ALERT_QUERY_MAX_LENGTH).trim() || undefined;
   return {
     label: query,
     filters: {
       query,
+      jobFunctions: opts.listedTermSlug ? [opts.listedTermSlug] : undefined,
       placeSlugs: opts.locationSlug ? [opts.locationSlug] : undefined,
     },
     context: { source: opts.source ?? 'jobs_list' },

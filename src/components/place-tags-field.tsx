@@ -22,6 +22,44 @@ import { cn } from '@/lib/utils';
 
 export type PlaceTag = { key: string; label: string };
 
+/** Committed values as tags, each with its own remove control. */
+export function RemovableTags({
+  tags,
+  onRemove,
+  removeAriaLabel,
+}: {
+  tags: PlaceTag[];
+  onRemove: (key: string) => void;
+  /** Accessible label for a tag's remove control. */
+  removeAriaLabel: (label: string) => string;
+}) {
+  if (tags.length === 0) return null;
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {tags.map((tag) => (
+        <Badge
+          key={tag.key}
+          variant="secondary"
+          render={<li />}
+          className="h-6 gap-0.5 pe-0.5"
+        >
+          {tag.label}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={removeAriaLabel(tag.label)}
+            className="text-muted-foreground hover:text-foreground size-5 rounded-full"
+            onClick={() => onRemove(tag.key)}
+          >
+            <X className="size-3.5" />
+          </Button>
+        </Badge>
+      ))}
+    </ul>
+  );
+}
+
 /**
  * Multi-place picker: committed places render as removable tags over one
  * suggest input whose options the route owns (worldwide location search for
@@ -87,30 +125,11 @@ export function PlaceTagsField({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {tags.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <Badge
-              key={tag.key}
-              variant="secondary"
-              render={<li />}
-              className="h-6 gap-0.5 pe-0.5"
-            >
-              {tag.label}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={removeAriaLabel(tag.label)}
-                className="text-muted-foreground hover:text-foreground size-5 rounded-full"
-                onClick={() => onRemove(tag.key)}
-              >
-                <X className="size-3.5" />
-              </Button>
-            </Badge>
-          ))}
-        </ul>
-      ) : null}
+      <RemovableTags
+        tags={tags}
+        onRemove={onRemove}
+        removeAriaLabel={removeAriaLabel}
+      />
       <Combobox
         items={available}
         filteredItems={available}

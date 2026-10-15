@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
 import {
   alertManageDependencies,
   type AlertManageDependencies,
@@ -11,10 +10,10 @@ import {
 
 import {
   jobAlertMatch,
+  searchKeywordsText,
   type AnchorJobPaths,
-  type JobAlertMatch,
 } from '@/board/job-alert-match';
-import { JobAlertMatchText } from '@/components/job-alert-match-text';
+import { AnchorJobTitle } from '@/components/anchor-job-title';
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -33,33 +32,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { enumLabel } from '@/lib/enum-labels';
-import type { JobAlertPreference, JobAlertStoredFilters } from '@cavuno/board';
-
-function filtersSummary(
-  filters: JobAlertStoredFilters,
-  match: JobAlertMatch,
-): string {
-  const parts = [
-    // A search alert's keywords lead the summary instead.
-    ...(match.kind === 'search' && match.query
-      ? [m.jobAlertMatch_quotedQuery({ query: match.query })]
-      : (filters.jobFunctions ?? [])),
-    // Wire enums resolve through the catalog — never string-munged into
-    // pseudo-English ('on site') on a localized page.
-    ...(filters.remoteOptions ?? []).map(
-      (option) => enumLabel(option) ?? option.replaceAll('_', ' '),
-    ),
-  ];
-  if (parts.length === 0) return m.alertsManage_allJobsText();
-  try {
-    return new Intl.ListFormat(getLocale(), {
-      style: 'long',
-      type: 'conjunction',
-    }).format(parts);
-  } catch {
-    return parts.join(', ');
-  }
-}
+import type { JobAlertPreference } from '@cavuno/board';
 
 function PreferenceSummary({
   preference,
@@ -70,15 +43,25 @@ function PreferenceSummary({
 }) {
   const match = jobAlertMatch(preference);
   // Similar-job alerts name their anchor job; the rest list their filters.
-  return match.kind === 'similar_job' ? (
-    <JobAlertMatchText
-      match={match}
-      anchorJobPaths={anchorJobPaths}
-      filtersText=""
-    />
-  ) : (
-    filtersSummary(preference.filters, match)
-  );
+  if (match.kind === 'similar_job') {
+    const slug = match.anchorJob?.slug;
+    return (
+      <AnchorJobTitle
+        anchorJob={match.anchorJob}
+        path={slug ? anchorJobPaths[slug] : undefined}
+      />
+    );
+  }
+  return [
+    searchKeywordsText(match) ?? m.alertsManage_allJobsText(),
+    // Wire enums resolve through the catalog — never string-munged into
+    // pseudo-English ('on site') on a localized page.
+    (preference.filters.remoteOptions ?? [])
+      .map((option) => enumLabel(option) ?? option.replaceAll('_', ' '))
+      .join(', '),
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 function ManageNotice({ title, body }: { title: string; body: string }) {

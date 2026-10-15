@@ -18,10 +18,6 @@ import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
-import {
-  MAX_ANCHOR_JOB_LINKS,
-  type AnchorJobPaths,
-} from '../board/job-alert-match';
 import { getBoard } from '../lib/board';
 import { withApplyGatewayCapability } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
@@ -40,6 +36,7 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
+import type { AnchorJobPaths } from '../board/job-alert-match';
 import type { BoardContextFooter } from '../components/Footer';
 import type {
   BlogPostsListQuery,
@@ -262,6 +259,9 @@ export const getJob = createServerFn({ method: 'GET' })
     ),
   );
 
+/** At most one alert list's worth of anchor jobs are resolved to links. */
+const MAX_ANCHOR_JOB_LINKS = 10;
+
 /**
  * Job detail paths for similar-job alert anchors. An alert's `anchorJob`
  * carries the job slug but not the company slug the job URL needs, so alert
@@ -269,19 +269,30 @@ export const getJob = createServerFn({ method: 'GET' })
  * no longer resolves (closed, deleted) is left out and renders unlinked.
  */
 export const getAnchorJobPaths = createServerFn({ method: 'GET' })
+  // A public endpoint: whatever the caller sends, the slugs are read as
+  // strings, deduped and bounded to one alert list's worth.
   .validator((input: { jobSlugs: string[] }) => ({
-    jobSlugs: [...new Set(input.jobSlugs)].slice(0, MAX_ANCHOR_JOB_LINKS),
+    jobSlugs: [...new Set(Array.from(input.jobSlugs, String))].slice(
+      0,
+      MAX_ANCHOR_JOB_LINKS,
+    ),
   }))
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (h): Promise<AnchorJobPaths> => {
       const entries = await Promise.all(
         data.jobSlugs.map(async (jobSlug) => {
-          const job = await getBoard()
-            .jobs.retrieve(jobSlug, undefined, { headers: h })
-            .catch(() => null);
-          const companySlug = job?.company?.slug;
-          return job?.slug && companySlug
+          let job;
+          try {
+            job = await getBoard().jobs.retrieve(jobSlug, undefined, {
+              headers: h,
+            });
+          } catch (error) {
+            if (isNotFound(error)) return [];
+            throw error;
+          }
+          const companySlug = job.company?.slug;
+          return job.slug && companySlug
             ? [[jobSlug, jobDetailPath(companySlug, job.slug)] as const]
             : [];
         }),

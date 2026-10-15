@@ -9,11 +9,18 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { createMyAlert, deleteMyAlert, updateMyAlert } from '../server/account';
 
-import { jobAlertMatch, type AnchorJobPaths } from '@/board/job-alert-match';
+import {
+  ALERT_QUERY_MAX_LENGTH,
+  jobAlertMatch,
+  jobFunctionIsKeyword,
+  searchKeywordsText,
+  type AnchorJobPaths,
+  type JobAlertMatch,
+} from '@/board/job-alert-match';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
+import { AnchorJobTitle } from '@/components/anchor-job-title';
 import { EmptyState } from '@/components/empty-state';
-import { JobAlertMatchText } from '@/components/job-alert-match-text';
-import { PlaceTagsField } from '@/components/place-tags-field';
+import { PlaceTagsField, RemovableTags } from '@/components/place-tags-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -55,11 +62,16 @@ import {
   candidateLoaderError,
   type CandidateLoaderError,
 } from '@/lib/candidate-loader-error';
-import type { Alert, AlertBody } from '@cavuno/board';
+import type { Alert, AlertBody, JobAlertKind } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
-/** The Board API caps an alert's search keywords at 200 characters. */
-const MAX_KEYWORDS_LENGTH = 200;
+
+/** An unnamed alert's title, by what it matches. */
+const KIND_TITLE = {
+  similar_job: m.alertManager_similarJobsAlertLabel,
+  search: m.alertManager_searchAlertLabel,
+  filters: m.alertManager_allNewJobsLabel,
+} satisfies Record<JobAlertKind, () => string>;
 
 const REMOTE_LABEL = new Map([
   ['on_site', m.alertManager_remoteOnSite],
@@ -86,6 +98,11 @@ export type PlaceNameMap = Record<string, string>;
 interface FormState {
   label: string;
   keywords: string;
+  /**
+   * Job functions an earlier alert filters on. The form no longer adds
+   * them, but shows them so the subscriber can remove them.
+   */
+  roles: string[];
   remoteOptions: string[];
   places: { id: string; name: string }[];
 }
@@ -102,12 +119,18 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
   const query = form.keywords.trim();
   if (query) body.query = query;
   else if (initial) body.query = null;
-  // Job functions are no longer edited here; round-trip stored ones. An older
-  // search alert keeps its keyword as its job function, so new keywords
-  // replace it rather than narrowing the search to that category.
-  const keywordsReplaceJobFunctions = initial?.kind === 'search' && query;
-  if (filters?.jobFunctions.length && !keywordsReplaceJobFunctions)
-    body.jobFunctions = filters.jobFunctions;
+  // An older search alert's keyword job function (not shown as a role) stays
+  // only while it is still the keyword: no stored query and none typed. Once
+  // the keywords field holds the keyword, the job function is dropped.
+  const keepsKeywordFunction =
+    initial !== null &&
+    jobFunctionIsKeyword(initial) &&
+    !initial.filters.query?.trim() &&
+    !query;
+  const jobFunctions = keepsKeywordFunction
+    ? initial.filters.jobFunctions
+    : form.roles;
+  if (jobFunctions.length) body.jobFunctions = jobFunctions;
   if (form.remoteOptions.length) body.remoteOptions = form.remoteOptions;
   if (form.places.length) body.placeIds = form.places.map((place) => place.id);
   // `update` is a whole-object PUT — round-trip the filters this simplified
@@ -126,6 +149,8 @@ function fromAlert(alert: Alert | null, placeNames: PlaceNameMap): FormState {
   return {
     label: alert?.label ?? '',
     keywords: alert?.filters.query ?? '',
+    roles:
+      alert && !jobFunctionIsKeyword(alert) ? alert.filters.jobFunctions : [],
     // A new alert starts with every workplace type — matching everything,
     // narrowed by unticking.
     remoteOptions: alert ? alert.filters.remoteOptions : [...REMOTE_OPTIONS],
@@ -234,7 +259,7 @@ function AlertForm({
             id={`${id}-keywords`}
             name="query"
             value={form.keywords}
-            maxLength={MAX_KEYWORDS_LENGTH}
+            maxLength={ALERT_QUERY_MAX_LENGTH}
             placeholder={m.alertManager_keywordsPlaceholder()}
             onChange={(event) =>
               setForm((prev) => ({
@@ -247,6 +272,26 @@ function AlertForm({
             {m.alertManager_keywordsHelperText()}
           </FieldDescription>
         </Field>
+        {form.roles.length ? (
+          <FieldSet>
+            <FieldLegend variant="label">
+              {m.alertManager_earlierRolesLabel()}
+            </FieldLegend>
+            <RemovableTags
+              tags={form.roles.map((role) => ({ key: role, label: role }))}
+              onRemove={(key) =>
+                setForm((prev) => ({
+                  ...prev,
+                  roles: prev.roles.filter((role) => role !== key),
+                }))
+              }
+              removeAriaLabel={(name) => m.placeTags_removeAriaLabel({ name })}
+            />
+            <FieldDescription>
+              {m.alertManager_earlierRolesHelperText()}
+            </FieldDescription>
+          </FieldSet>
+        ) : null}
         <FieldSet>
           <FieldLegend variant="label">
             {m.alertManager_remoteOptionsLegend()}
@@ -378,50 +423,26 @@ export function AlertManagerView({
 
   const editingAlert = alerts.find((alert) => alert.id === editing) ?? null;
 
-  const describeAlert = (alert: Alert) => {
-    const match = jobAlertMatch(alert);
-    const lead = (
-      <JobAlertMatchText
-        match={match}
-        anchorJobPaths={anchorJobPaths}
-        filtersText={
-          alert.filters.jobFunctions.length
-            ? alert.filters.jobFunctions.join(', ')
-            : m.alertManager_anyRoleText()
-        }
-      />
-    );
+  const describeAlert = (alert: Alert, match: JobAlertMatch) => {
     // A similar-job alert follows its anchor job, near the job's location:
     // there are no filters of the subscriber's to list.
-    if (match.kind === 'similar_job') return lead;
-    const parts: string[] = [];
-    if (alert.filters.remoteOptions.length) {
-      parts.push(
-        alert.filters.remoteOptions
-          .map((option) => remoteOptionLabel(option))
-          .join(', '),
+    if (match.kind === 'similar_job') {
+      const slug = match.anchorJob?.slug;
+      return (
+        <AnchorJobTitle
+          anchorJob={match.anchorJob}
+          path={slug ? anchorJobPaths[slug] : undefined}
+        />
       );
     }
-    if (alert.filters.placeIds.length) {
-      parts.push(
-        alert.filters.placeIds.map((id) => placeNames[id] ?? id).join(', '),
-      );
-    }
-    return (
-      <>
-        {lead}
-        {parts.map((part) => ` · ${part}`).join('')}
-      </>
-    );
+    return [
+      searchKeywordsText(match) ?? m.alertManager_anyRoleText(),
+      alert.filters.remoteOptions.map(remoteOptionLabel).join(', '),
+      alert.filters.placeIds.map((id) => placeNames[id] ?? id).join(', '),
+    ]
+      .filter(Boolean)
+      .join(' · ');
   };
-
-  const alertTitle = (alert: Alert) =>
-    alert.label ??
-    (alert.kind === 'similar_job'
-      ? m.alertManager_similarJobsAlertLabel()
-      : alert.kind === 'search'
-        ? m.alertManager_searchAlertLabel()
-        : m.alertManager_allNewJobsLabel());
 
   const newAlertButton = (
     <Button
@@ -445,72 +466,79 @@ export function AlertManagerView({
       ) : (
         <>
           <ul className="space-y-3">
-            {alerts.map((alert) => (
-              <li key={alert.id}>
-                <Item variant="outline">
-                  <ItemContent>
-                    <ItemTitle className="flex-wrap">
-                      <span>{alertTitle(alert)}</span>
-                      <Badge>{m.alertManager_frequencyWeekly()}</Badge>
-                      {!alert.isActive ? (
-                        <Badge variant="secondary">
-                          {m.alertManager_pausedBadge()}
-                        </Badge>
+            {alerts.map((alert) => {
+              const match = jobAlertMatch(alert);
+              return (
+                <li key={alert.id}>
+                  <Item variant="outline">
+                    <ItemContent>
+                      <ItemTitle className="flex-wrap">
+                        <span>{alert.label ?? KIND_TITLE[match.kind]()}</span>
+                        <Badge>{m.alertManager_frequencyWeekly()}</Badge>
+                        {!alert.isActive ? (
+                          <Badge variant="secondary">
+                            {m.alertManager_pausedBadge()}
+                          </Badge>
+                        ) : null}
+                      </ItemTitle>
+                      <ItemDescription>
+                        {describeAlert(alert, match)}
+                      </ItemDescription>
+                      {alert.lastSentAt ? (
+                        <p className="text-muted-foreground text-xs">
+                          {m.alertManager_lastSentText({
+                            date: new Date(alert.lastSentAt).toLocaleDateString(
+                              getLocale(),
+                            ),
+                          })}
+                        </p>
                       ) : null}
-                    </ItemTitle>
-                    <ItemDescription>{describeAlert(alert)}</ItemDescription>
-                    {alert.lastSentAt ? (
-                      <p className="text-muted-foreground text-xs">
-                        {m.alertManager_lastSentText({
-                          date: new Date(alert.lastSentAt).toLocaleDateString(
-                            getLocale(),
-                          ),
-                        })}
-                      </p>
-                    ) : null}
-                  </ItemContent>
-                  <ItemActions className="self-start">
-                    {/* A similar-job alert follows its anchor job and takes
+                    </ItemContent>
+                    <ItemActions className="self-start">
+                      {/* A similar-job alert follows its anchor job and takes
                         no keywords: subscribers can delete it, not edit it. */}
-                    {alert.kind === 'similar_job' ? null : (
+                      {match.kind === 'similar_job' ? null : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditing(alert.id)}
+                        >
+                          {m.alertManager_editLabel()}
+                        </Button>
+                      )}
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => setEditing(alert.id)}
-                      >
-                        {m.alertManager_editLabel()}
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      data-test="alert-delete"
-                      disabled={pendingDeleteId !== null}
-                      onClick={async () => {
-                        setPendingDeleteId(alert.id);
-                        try {
-                          await dependencies.deleteAlert({
-                            data: { id: alert.id },
-                          });
-                        } catch (error) {
-                          dependencies.notifyError(candidateLoaderError(error));
+                        data-test="alert-delete"
+                        disabled={pendingDeleteId !== null}
+                        onClick={async () => {
+                          setPendingDeleteId(alert.id);
+                          try {
+                            await dependencies.deleteAlert({
+                              data: { id: alert.id },
+                            });
+                          } catch (error) {
+                            dependencies.notifyError(
+                              candidateLoaderError(error),
+                            );
+                            setPendingDeleteId(null);
+                            return;
+                          }
+                          dependencies.notifySuccess();
+                          await reconcileCommittedAction(
+                            dependencies.invalidate,
+                            dependencies.notifyReconciliationError,
+                          );
                           setPendingDeleteId(null);
-                          return;
-                        }
-                        dependencies.notifySuccess();
-                        await reconcileCommittedAction(
-                          dependencies.invalidate,
-                          dependencies.notifyReconciliationError,
-                        );
-                        setPendingDeleteId(null);
-                      }}
-                    >
-                      {m.alertManager_deleteLabel()}
-                    </Button>
-                  </ItemActions>
-                </Item>
-              </li>
-            ))}
+                        }}
+                      >
+                        {m.alertManager_deleteLabel()}
+                      </Button>
+                    </ItemActions>
+                  </Item>
+                </li>
+              );
+            })}
           </ul>
           {newAlertButton}
         </>

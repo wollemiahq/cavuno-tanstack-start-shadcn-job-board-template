@@ -3,9 +3,8 @@
 import { isRedirect } from '@tanstack/react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { alertFixture } from './-route-test-fixtures';
 import { createAlertsLoader, type AlertsLoaderDependencies } from './me.alerts';
-
-import type { Alert } from '@cavuno/board';
 
 const getMyAlerts = vi.fn<AlertsLoaderDependencies['getMyAlerts']>();
 const searchPlaces = vi.fn<AlertsLoaderDependencies['searchPlaces']>();
@@ -116,30 +115,15 @@ describe('alerts route plan gate', () => {
   });
 
   it('resolves similar-job anchor links, and shows the alerts unlinked if that fails', async () => {
-    const similar = {
+    const similar = alertFixture({
       id: 'alert-similar',
-      object: 'alert',
-      label: null,
-      frequency: 'weekly',
-      isActive: true,
       kind: 'similar_job',
       anchorJob: { id: 'job-1', slug: 'senior-chef', title: 'Senior chef' },
-      filters: {
-        query: null,
-        jobFunctions: [],
-        seniorityLevels: [],
-        remoteOptions: [],
-        placeIds: [],
-        salaryMin: null,
-        salaryMax: null,
-        salaryCurrency: null,
-      },
-      lastSentAt: null,
-    } satisfies Alert;
+    });
     getMyAlerts.mockResolvedValue({
       object: 'list',
       url: '/v1/me/alerts',
-      data: [similar, { ...similar, id: 'alert-similar-2' }],
+      data: [similar],
       hasMore: false,
       nextCursor: null,
     });

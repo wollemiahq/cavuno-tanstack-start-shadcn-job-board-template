@@ -148,6 +148,8 @@
   "alertManager_cancelLabel": "Annuler",
   "alertManager_createAlertLabel": "Créer l'alerte",
   "alertManager_deleteLabel": "Supprimer",
+  "alertManager_earlierRolesHelperText": "Cette alerte ne retient que ces rôles. Retirez-en un pour ne plus filtrer dessus.",
+  "alertManager_earlierRolesLabel": "Rôles de votre alerte précédente",
   "alertManager_editAlertTitle": "Modifier l'alerte",
   "alertManager_editLabel": "Modifier",
   "alertManager_emptyText": "Vous n'avez pas encore d'alerte emploi.",

@@ -1,4 +1,5 @@
 import type {
+  Alert,
   Application,
   PublicCompanyDetail,
   PublicJob,
@@ -133,5 +134,36 @@ export function applicationFixture(): Application {
     candidateHeadline: null,
     resumeFilename: null,
     job: null,
+  };
+}
+
+/** A signed-in viewer's alert; `filters` merge over empty stored filters. */
+export function alertFixture(
+  overrides: Partial<Omit<Alert, 'filters'>> & {
+    filters?: Partial<Alert['filters']>;
+  } = {},
+): Alert {
+  const { filters, ...rest } = overrides;
+  return {
+    id: 'alert-1',
+    object: 'alert',
+    label: null,
+    frequency: 'weekly',
+    isActive: true,
+    kind: 'filters',
+    anchorJob: null,
+    lastSentAt: null,
+    ...rest,
+    filters: {
+      query: null,
+      jobFunctions: [],
+      seniorityLevels: [],
+      remoteOptions: [],
+      placeIds: [],
+      salaryMin: null,
+      salaryMax: null,
+      salaryCurrency: null,
+      ...filters,
+    },
   };
 }

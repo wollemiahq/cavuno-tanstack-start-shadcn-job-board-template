@@ -13,7 +13,7 @@ import { getMyAlerts } from '../server/account';
 import { getPaywallOffers } from '../server/paywall';
 import { getAnchorJobPaths, getSeoBase, searchPlaces } from '../server/queries';
 
-import { anchorJobSlugs } from '@/board/job-alert-match';
+import { resolveAnchorJobPaths } from '@/board/job-alert-match';
 import { candidateOffersForFeature } from '@/board/paywall-offer';
 import { CandidatePaywallLock } from '@/components/board/candidate-paywall-lock';
 import {
@@ -50,21 +50,17 @@ export function createAlertsLoader(
 ) {
   return async ({ location }: { location: LocationAuthSearch }) => {
     try {
-      const [alerts, places, seo] = await Promise.all([
-        dependencies.getMyAlerts(),
+      const alertsPromise = dependencies.getMyAlerts();
+      const [alerts, anchorJobPaths, places, seo] = await Promise.all([
+        alertsPromise,
+        alertsPromise.then((list) =>
+          resolveAnchorJobPaths(list.data, dependencies.getAnchorJobPaths),
+        ),
         // Name resolution only — an unavailable directory must not take the
         // alerts page down (ids render as-is instead).
         dependencies.searchPlaces({ data: {} }).catch(() => ({ data: [] })),
         dependencies.getSeoBase(),
       ]);
-      // Links for similar-job alerts' anchor jobs. Display only: without
-      // them the job title shows unlinked.
-      const jobSlugs = anchorJobSlugs(alerts.data);
-      const anchorJobPaths = jobSlugs.length
-        ? await dependencies
-            .getAnchorJobPaths({ data: { jobSlugs } })
-            .catch(() => ({}))
-        : {};
       return {
         locked: false as const,
         alerts,

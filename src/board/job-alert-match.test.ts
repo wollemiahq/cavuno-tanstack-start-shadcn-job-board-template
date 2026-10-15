@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import {
-  anchorJobSlugs,
   jobAlertMatch,
-  MAX_ANCHOR_JOB_LINKS,
+  resolveAnchorJobPaths,
+  searchKeywordsText,
+  taxonomySlug,
   type JobAlertMatchSource,
+  type JobAlertSearchMatch,
 } from './job-alert-match';
 
 const anchorJob = { id: 'job-1', slug: 'senior-chef', title: 'Senior chef' };
@@ -18,29 +21,36 @@ function alert(overrides: Partial<JobAlertMatchSource>): JobAlertMatchSource {
   };
 }
 
+function searchMatch(source: JobAlertMatchSource): JobAlertSearchMatch {
+  const match = jobAlertMatch(source);
+  if (match.kind === 'similar_job') throw new Error('not a search match');
+  return match;
+}
+
 describe('jobAlertMatch', () => {
-  it('names the anchor job of a similar-job alert', () => {
+  it('keeps a similar-job alert similar-job, with or without its anchor job', () => {
     expect(jobAlertMatch(alert({ kind: 'similar_job', anchorJob }))).toEqual({
       kind: 'similar_job',
-      anchorJob: { slug: 'senior-chef', title: 'Senior chef' },
+      anchorJob,
     });
-  });
-
-  it('shows a similar-job alert without a captured anchor by its filters', () => {
     expect(jobAlertMatch(alert({ kind: 'similar_job' }))).toEqual({
-      kind: 'filters',
+      kind: 'similar_job',
+      anchorJob: null,
     });
   });
 
-  it('reads a search alert’s keywords', () => {
+  it('reads a search alert’s keywords and the roles next to them', () => {
     expect(
       jobAlertMatch(
-        alert({ kind: 'search', filters: { query: ' python developer ' } }),
+        alert({
+          kind: 'search',
+          filters: { query: ' react ', jobFunctions: ['engineering'] },
+        }),
       ),
-    ).toEqual({ kind: 'search', query: 'python developer', jobFunctions: [] });
+    ).toEqual({ kind: 'search', keywords: 'react', roles: ['engineering'] });
   });
 
-  it('falls back to an older search alert’s job functions', () => {
+  it('reads an older search alert’s keyword job function as its keywords', () => {
     expect(
       jobAlertMatch(
         alert({
@@ -48,41 +58,83 @@ describe('jobAlertMatch', () => {
           filters: { query: null, jobFunctions: ['python-developer'] },
         }),
       ),
-    ).toEqual({
-      kind: 'search',
-      query: null,
-      jobFunctions: ['python-developer'],
-    });
+    ).toEqual({ kind: 'search', keywords: 'python developer', roles: [] });
+    // The board stores a captured keyword as the query and its slug.
+    expect(
+      jobAlertMatch(
+        alert({
+          kind: 'search',
+          filters: {
+            query: 'C++ Developer',
+            jobFunctions: ['c-plus-plus-developer'],
+          },
+        }),
+      ),
+    ).toEqual({ kind: 'search', keywords: 'C++ Developer', roles: [] });
   });
 
-  it('leaves filter alerts to the stored filter labels', () => {
+  it('keeps a filter alert’s job functions as roles', () => {
     expect(
       jobAlertMatch(alert({ filters: { jobFunctions: ['engineering'] } })),
-    ).toEqual({ kind: 'filters' });
+    ).toEqual({ kind: 'filters', keywords: null, roles: ['engineering'] });
   });
 });
 
-describe('anchorJobSlugs', () => {
-  it('collects each similar-job anchor slug once, within the link budget', () => {
+describe('searchKeywordsText', () => {
+  it('quotes the keywords before any roles, and is null without either', () => {
+    expect(
+      searchKeywordsText(
+        searchMatch(
+          alert({
+            kind: 'search',
+            filters: { query: 'react', jobFunctions: ['engineering'] },
+          }),
+        ),
+      ),
+    ).toBe(`${m.jobAlertMatch_quotedQuery({ query: 'react' })}, engineering`);
+    expect(searchKeywordsText(searchMatch(alert({})))).toBeNull();
+  });
+});
+
+describe('taxonomySlug', () => {
+  it('slugs text the way the board slugs job functions', () => {
+    expect(taxonomySlug('  Python Developer ')).toBe('python-developer');
+    expect(taxonomySlug('C#')).toBe('c-sharp');
+    expect(taxonomySlug('Science & Technology')).toBe('science-and-technology');
+    expect(taxonomySlug('Crème brûlée')).toBe('creme-brulee');
+  });
+});
+
+describe('resolveAnchorJobPaths', () => {
+  it('asks for the similar-job anchors only, and shows titles unlinked if that fails', async () => {
+    const getAnchorJobPaths = vi.fn().mockResolvedValue({
+      'senior-chef': '/companies/acme/jobs/senior-chef',
+    });
     const alerts = [
       alert({ kind: 'similar_job', anchorJob }),
-      alert({ kind: 'similar_job', anchorJob }),
-      alert({
-        kind: 'similar_job',
-        anchorJob: { ...anchorJob, id: 'job-2', slug: null },
-      }),
+      alert({ kind: 'similar_job', anchorJob: { ...anchorJob, slug: null } }),
+      alert({ kind: 'similar_job' }),
       alert({ kind: 'search', filters: { query: 'chef' } }),
-      ...Array.from({ length: 12 }, (_, index) =>
-        alert({
-          kind: 'similar_job',
-          anchorJob: { ...anchorJob, slug: `job-${index}` },
-        }),
-      ),
     ];
 
-    const slugs = anchorJobSlugs(alerts);
-    expect(slugs[0]).toBe('senior-chef');
-    expect(slugs).toHaveLength(MAX_ANCHOR_JOB_LINKS);
-    expect(new Set(slugs).size).toBe(slugs.length);
+    await expect(
+      resolveAnchorJobPaths(alerts, getAnchorJobPaths),
+    ).resolves.toEqual({ 'senior-chef': '/companies/acme/jobs/senior-chef' });
+    expect(getAnchorJobPaths).toHaveBeenCalledExactlyOnceWith({
+      data: { jobSlugs: ['senior-chef'] },
+    });
+
+    getAnchorJobPaths.mockRejectedValue(new Error('jobs unavailable'));
+    await expect(
+      resolveAnchorJobPaths(alerts, getAnchorJobPaths),
+    ).resolves.toEqual({});
+  });
+
+  it('makes no request without a similar-job anchor', async () => {
+    const getAnchorJobPaths = vi.fn();
+    await expect(
+      resolveAnchorJobPaths([alert({ kind: 'search' })], getAnchorJobPaths),
+    ).resolves.toEqual({});
+    expect(getAnchorJobPaths).not.toHaveBeenCalled();
   });
 });

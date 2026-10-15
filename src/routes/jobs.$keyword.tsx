@@ -54,7 +54,7 @@ function CategoryPage() {
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
       filters={search}
-      alertQuery={category.displayName}
+      listedTermSlug={category.sourceSlug}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });
       }}
