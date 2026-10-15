@@ -48,7 +48,11 @@ describe('jobAlertDefaultsFromSearch', () => {
 
     expect(defaults).toEqual({
       label: 'Python developer',
-      filters: { query: 'Python developer', placeSlugs: undefined },
+      filters: {
+        query: 'Python developer',
+        jobFunctions: undefined,
+        placeSlugs: undefined,
+      },
       context: { source: 'board_home' },
     });
   });
@@ -61,6 +65,7 @@ describe('jobAlertDefaultsFromSearch', () => {
 
     expect(defaults.filters).toEqual({
       query: 'Nursing',
+      jobFunctions: undefined,
       placeSlugs: ['berlin'],
     });
     expect(defaults.context).toEqual({ source: 'jobs_list' });
@@ -80,5 +85,34 @@ describe('jobAlertDefaultsFromSearch', () => {
     const defaults = jobAlertDefaultsFromSearch({ query: 'a'.repeat(250) });
 
     expect(defaults.filters.query).toHaveLength(200);
+  });
+
+  // Category and skill pages (`/jobs/:keyword`, `/jobs/skills/:skill` and
+  // their location variants) send the term they list by its source slug.
+  it('sends a category or skill page’s term as its one job function', () => {
+    const defaults = jobAlertDefaultsFromSearch({
+      listedTermSlug: 'software-engineering',
+    });
+
+    expect(defaults.filters).toEqual({
+      query: undefined,
+      jobFunctions: ['software-engineering'],
+      placeSlugs: undefined,
+    });
+    expect(defaults.context).toEqual({ source: 'jobs_list' });
+  });
+
+  it('adds the visitor’s query next to the listed term, and its location', () => {
+    const defaults = jobAlertDefaultsFromSearch({
+      query: 'react',
+      listedTermSlug: 'typescript',
+      locationSlug: 'berlin',
+    });
+
+    expect(defaults.filters).toEqual({
+      query: 'react',
+      jobFunctions: ['typescript'],
+      placeSlugs: ['berlin'],
+    });
   });
 });

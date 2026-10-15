@@ -148,6 +148,8 @@
   "alertManager_cancelLabel": "Cancel",
   "alertManager_createAlertLabel": "Create alert",
   "alertManager_deleteLabel": "Delete",
+  "alertManager_earlierRolesHelperText": "This alert only matches these roles. Remove one to stop filtering on it.",
+  "alertManager_earlierRolesLabel": "Roles from your earlier alert",
   "alertManager_editAlertTitle": "Edit alert",
   "alertManager_editLabel": "Edit",
   "alertManager_emptyText": "You have no job alerts yet.",

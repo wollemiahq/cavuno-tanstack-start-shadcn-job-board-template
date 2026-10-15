@@ -1,13 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
-  RouterProvider,
-  createMemoryHistory,
-  createRootRoute,
-  createRoute,
-  createRouter,
-} from '@tanstack/react-router';
-import {
   cleanup,
   fireEvent,
   render,
@@ -15,6 +8,8 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { alertFixture } from '../routes/-route-test-fixtures';
 
 import type {
   AlertManagerDependencies,
@@ -35,34 +30,12 @@ const mocks = {
 import { m } from '../paraglide/messages';
 import { AlertManagerView } from './alert-manager';
 
-const alert = {
-  id: 'alert-1',
-  object: 'alert',
-  kind: 'filters',
-  anchorJob: null,
+const alert = alertFixture({
   label: 'Frontend roles',
-  frequency: 'weekly',
-  isActive: true,
-  kind: 'filters',
-  anchorJob: null,
-  filters: {
-    query: null,
-    jobFunctions: ['Engineering'],
-    seniorityLevels: [],
-    remoteOptions: ['remote'],
-    placeIds: [],
-    salaryMin: null,
-    salaryMax: null,
-    salaryCurrency: null,
-  },
-  lastSentAt: null,
-} satisfies Alert;
+  filters: { jobFunctions: ['Engineering'], remoteOptions: ['remote'] },
+});
 
-const secondAlert = {
-  ...alert,
-  id: 'alert-2',
-  label: 'Design roles',
-} satisfies Alert;
+const secondAlert = { ...alert, id: 'alert-2', label: 'Design roles' };
 
 const berlin = {
   id: 'place-berlin',
@@ -71,22 +44,18 @@ const berlin = {
   displayName: 'Berlin',
 };
 
-const searchAlert = {
-  ...alert,
+const searchAlert = alertFixture({
   id: 'alert-search',
-  label: null,
   kind: 'search',
-  filters: { ...alert.filters, query: 'react developer', jobFunctions: [] },
-} satisfies Alert;
+  filters: { query: 'react developer', remoteOptions: ['remote'] },
+});
 
-const similarJobAlert = {
-  ...alert,
+const similarJobAlert = alertFixture({
   id: 'alert-similar',
-  label: null,
   kind: 'similar_job',
   anchorJob: { id: 'job-1', slug: 'senior-chef', title: 'Senior chef' },
-  filters: { ...alert.filters, jobFunctions: [], placeIds: ['place-berlin'] },
-} satisfies Alert;
+  filters: { remoteOptions: ['remote'], placeIds: ['place-berlin'] },
+});
 
 interface RenderManagerOptions {
   alerts?: Alert[];
@@ -98,7 +67,6 @@ function managerView({ alerts = [], places = [] }: RenderManagerOptions) {
     <AlertManagerView
       alerts={alerts}
       places={places}
-      anchorJobPaths={{ 'senior-chef': '/companies/acme/jobs/senior-chef' }}
       dependencies={{
         createAlert: mocks.createMyAlert,
         deleteAlert: mocks.deleteMyAlert,
@@ -114,27 +82,6 @@ function managerView({ alerts = [], places = [] }: RenderManagerOptions) {
 
 function renderManager(options: RenderManagerOptions = {}) {
   return render(managerView(options));
-}
-
-/** Renders inside a router, for rows that link to a job. */
-function renderManagerWithRouter(options: RenderManagerOptions) {
-  const rootRoute = createRootRoute();
-  const router = createRouter({
-    routeTree: rootRoute.addChildren([
-      createRoute({
-        getParentRoute: () => rootRoute,
-        path: '/me/alerts',
-        component: () => managerView(options),
-      }),
-      createRoute({
-        getParentRoute: () => rootRoute,
-        path: '/companies/$companySlug/jobs/$jobSlug',
-        component: () => null,
-      }),
-    ]),
-    history: createMemoryHistory({ initialEntries: ['/me/alerts'] }),
-  });
-  return render(<RouterProvider router={router} />);
 }
 
 afterEach(() => {
@@ -476,29 +423,133 @@ describe('AlertManager', () => {
         { exact: false },
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText(/^python/)).toBeInTheDocument();
+    // An older search alert kept its keyword as its job function.
+    expect(
+      screen.getByText(m.jobAlertMatch_quotedQuery({ query: 'python' }), {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText(m.alertManager_searchAlertLabel())).toHaveLength(
       2,
     );
   });
 
-  it('links a similar-job alert to its job and offers delete only', async () => {
-    renderManagerWithRouter({ alerts: [similarJobAlert], places: [berlin] });
-
-    const link = await screen.findByRole('link', {
-      name: m.jobAlertMatch_similarTo({ title: 'Senior chef' }),
+  it('shows a similar-job alert by its job, delete only', () => {
+    renderManager({
+      alerts: [
+        similarJobAlert,
+        { ...similarJobAlert, id: 'alert-no-anchor', anchorJob: null },
+      ],
+      places: [berlin],
     });
-    expect(link).toHaveAttribute('href', '/companies/acme/jobs/senior-chef');
+
     expect(
-      screen.getByText(m.alertManager_similarJobsAlertLabel()),
+      screen.getByText(m.jobAlertMatch_similarTo({ title: 'Senior chef' })),
     ).toBeInTheDocument();
+    // Without a captured anchor job it still reads as a similar-job alert.
+    expect(
+      screen.getAllByText(m.alertManager_similarJobsAlertLabel()),
+    ).toHaveLength(3);
     // No location or keyword editing for a similar-job alert.
     expect(screen.queryByText(/Berlin/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: m.alertManager_editLabel() }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: m.alertManager_deleteLabel() }),
+      screen.getAllByRole('button', { name: m.alertManager_deleteLabel() }),
+    ).toHaveLength(2);
+  });
+
+  it('keeps an earlier alert’s roles across edits that add keywords', async () => {
+    const editAndSave = async (stored: Alert, change: () => void) => {
+      mocks.updateMyAlert.mockResolvedValue(stored);
+      renderManager({ alerts: [stored] });
+      fireEvent.click(
+        screen.getByRole('button', { name: m.alertManager_editLabel() }),
+      );
+      change();
+      fireEvent.click(
+        screen.getByRole('button', { name: m.alertManager_saveChangesLabel() }),
+      );
+      await waitFor(() => expect(mocks.updateMyAlert).toHaveBeenCalled());
+      const body = mocks.updateMyAlert.mock.calls[0]![0].data.body;
+      cleanup();
+      vi.clearAllMocks();
+      return body;
+    };
+
+    const filtersAlert = alertFixture({
+      label: 'Frontend roles',
+      filters: {
+        jobFunctions: ['Engineering'],
+        remoteOptions: ['on_site', 'remote'],
+      },
+    });
+    const first = await editAndSave(filtersAlert, () =>
+      fireEvent.change(screen.getByLabelText(m.alertManager_keywordsLabel()), {
+        target: { value: 'react' },
+      }),
+    );
+    expect(first).toMatchObject({
+      query: 'react',
+      jobFunctions: ['Engineering'],
+    });
+
+    // Stored as a search alert now; the next edit must not drop the role.
+    const second = await editAndSave(
+      alertFixture({
+        ...filtersAlert,
+        kind: 'search',
+        filters: { ...filtersAlert.filters, query: 'react' },
+      }),
+      () =>
+        fireEvent.click(
+          screen.getByRole('checkbox', { name: m.alertManager_remoteOnSite() }),
+        ),
+    );
+    expect(second).toEqual({
+      frequency: 'weekly',
+      label: 'Frontend roles',
+      query: 'react',
+      jobFunctions: ['Engineering'],
+      remoteOptions: ['remote'],
+    });
+  });
+
+  it('lets the subscriber remove an earlier alert’s roles', async () => {
+    mocks.updateMyAlert.mockResolvedValue(alert);
+    renderManager({ alerts: [alert] });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_editLabel() }),
+    );
+    expect(
+      screen.getByRole('group', { name: m.alertManager_earlierRolesLabel() }),
     ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.placeTags_removeAriaLabel({ name: 'Engineering' }),
+      }),
+    );
+    expect(
+      screen.queryByRole('group', { name: m.alertManager_earlierRolesLabel() }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_saveChangesLabel() }),
+    );
+
+    await waitFor(() =>
+      expect(mocks.updateMyAlert).toHaveBeenCalledWith({
+        data: {
+          id: 'alert-1',
+          body: {
+            frequency: 'weekly',
+            label: 'Frontend roles',
+            query: null,
+            remoteOptions: ['remote'],
+          },
+        },
+      }),
+    );
   });
 });

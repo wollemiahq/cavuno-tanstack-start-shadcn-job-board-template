@@ -148,6 +148,8 @@
   "alertManager_cancelLabel": "Annuleren",
   "alertManager_createAlertLabel": "Melding aanmaken",
   "alertManager_deleteLabel": "Verwijderen",
+  "alertManager_earlierRolesHelperText": "Deze melding zoekt alleen naar deze functies. Verwijder er een om er niet meer op te filteren.",
+  "alertManager_earlierRolesLabel": "Functies uit je eerdere melding",
   "alertManager_editAlertTitle": "Melding bewerken",
   "alertManager_editLabel": "Bewerken",
   "alertManager_emptyText": "Je hebt nog geen vacaturemeldingen.",
