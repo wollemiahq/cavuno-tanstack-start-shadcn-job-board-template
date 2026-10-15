@@ -117,3 +117,20 @@ describe('blog post reads', () => {
     expect(page.adjacent).toMatchObject({ previous: null, next: null });
   });
 });
+
+describe('blog post reads when the post read fails', () => {
+  it('surfaces the post error even when the early reads fail too', async () => {
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    mocks.retrieve.mockRejectedValue(new Error('post read failed'));
+    mocks.adjacent.mockRejectedValue(new Error('adjacent failed'));
+    mocks.list.mockRejectedValue(new Error('list failed'));
+
+    await expect(
+      getBlogPostPage({ data: { postSlug: 'fixture-post' } }),
+    ).rejects.toThrow('post read failed');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    process.off('unhandledRejection', unhandled);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+});
