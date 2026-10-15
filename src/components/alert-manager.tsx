@@ -9,8 +9,10 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { createMyAlert, deleteMyAlert, updateMyAlert } from '../server/account';
 
+import { jobAlertMatch, type AnchorJobPaths } from '@/board/job-alert-match';
 import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { EmptyState } from '@/components/empty-state';
+import { JobAlertMatchText } from '@/components/job-alert-match-text';
 import { PlaceTagsField } from '@/components/place-tags-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,6 +58,8 @@ import {
 import type { Alert, AlertBody } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
+/** The Board API caps an alert's search keywords at 200 characters. */
+const MAX_KEYWORDS_LENGTH = 200;
 
 const REMOTE_LABEL = new Map([
   ['on_site', m.alertManager_remoteOnSite],
@@ -81,23 +85,29 @@ export type PlaceNameMap = Record<string, string>;
 
 interface FormState {
   label: string;
-  jobFunctions: string;
+  keywords: string;
   remoteOptions: string[];
   places: { id: string; name: string }[];
 }
 
 function toBody(form: FormState, initial: Alert | null): AlertBody {
-  const jobFunctions = form.jobFunctions
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
   const filters = initial?.filters;
   const body: AlertBody = {
     frequency: 'weekly',
   };
   const label = form.label.trim();
   if (label) body.label = label;
-  if (jobFunctions.length) body.jobFunctions = jobFunctions;
+  // Keywords are the alert's search `query`. On an update `null` clears them
+  // (omitting would keep the stored ones), so an emptied field sticks.
+  const query = form.keywords.trim();
+  if (query) body.query = query;
+  else if (initial) body.query = null;
+  // Job functions are no longer edited here; round-trip stored ones. An older
+  // search alert keeps its keyword as its job function, so new keywords
+  // replace it rather than narrowing the search to that category.
+  const keywordsReplaceJobFunctions = initial?.kind === 'search' && query;
+  if (filters?.jobFunctions.length && !keywordsReplaceJobFunctions)
+    body.jobFunctions = filters.jobFunctions;
   if (form.remoteOptions.length) body.remoteOptions = form.remoteOptions;
   if (form.places.length) body.placeIds = form.places.map((place) => place.id);
   // `update` is a whole-object PUT — round-trip the filters this simplified
@@ -115,7 +125,7 @@ function toBody(form: FormState, initial: Alert | null): AlertBody {
 function fromAlert(alert: Alert | null, placeNames: PlaceNameMap): FormState {
   return {
     label: alert?.label ?? '',
-    jobFunctions: alert?.filters.jobFunctions.join(', ') ?? '',
+    keywords: alert?.filters.query ?? '',
     // A new alert starts with every workplace type — matching everything,
     // narrowed by unticking.
     remoteOptions: alert ? alert.filters.remoteOptions : [...REMOTE_OPTIONS],
@@ -217,21 +227,25 @@ function AlertForm({
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-roles`}>
-            {m.alertManager_rolesLabel()}
+          <FieldLabel htmlFor={`${id}-keywords`}>
+            {m.alertManager_keywordsLabel()}
           </FieldLabel>
           <Input
-            id={`${id}-roles`}
-            name="jobFunctions"
-            value={form.jobFunctions}
-            placeholder={m.alertManager_rolesPlaceholder()}
+            id={`${id}-keywords`}
+            name="query"
+            value={form.keywords}
+            maxLength={MAX_KEYWORDS_LENGTH}
+            placeholder={m.alertManager_keywordsPlaceholder()}
             onChange={(event) =>
               setForm((prev) => ({
                 ...prev,
-                jobFunctions: event.target.value,
+                keywords: event.target.value,
               }))
             }
           />
+          <FieldDescription>
+            {m.alertManager_keywordsHelperText()}
+          </FieldDescription>
         </Field>
         <FieldSet>
           <FieldLegend variant="label">
@@ -344,10 +358,13 @@ export interface AlertManagerDependencies {
 export function AlertManagerView({
   alerts,
   places,
+  anchorJobPaths = {},
   dependencies,
 }: {
   alerts: Alert[];
   places: AlertPlaceOption[];
+  /** Job links for similar-job alerts' anchor jobs, by job slug. */
+  anchorJobPaths?: AnchorJobPaths;
   dependencies: AlertManagerDependencies;
 }) {
   const placeNames: PlaceNameMap = useMemo(
@@ -362,11 +379,22 @@ export function AlertManagerView({
   const editingAlert = alerts.find((alert) => alert.id === editing) ?? null;
 
   const describeAlert = (alert: Alert) => {
-    const parts = [
-      alert.filters.jobFunctions.length
-        ? alert.filters.jobFunctions.join(', ')
-        : m.alertManager_anyRoleText(),
-    ];
+    const match = jobAlertMatch(alert);
+    const lead = (
+      <JobAlertMatchText
+        match={match}
+        anchorJobPaths={anchorJobPaths}
+        filtersText={
+          alert.filters.jobFunctions.length
+            ? alert.filters.jobFunctions.join(', ')
+            : m.alertManager_anyRoleText()
+        }
+      />
+    );
+    // A similar-job alert follows its anchor job, near the job's location:
+    // there are no filters of the subscriber's to list.
+    if (match.kind === 'similar_job') return lead;
+    const parts: string[] = [];
     if (alert.filters.remoteOptions.length) {
       parts.push(
         alert.filters.remoteOptions
@@ -379,8 +407,21 @@ export function AlertManagerView({
         alert.filters.placeIds.map((id) => placeNames[id] ?? id).join(', '),
       );
     }
-    return parts.join(' · ');
+    return (
+      <>
+        {lead}
+        {parts.map((part) => ` · ${part}`).join('')}
+      </>
+    );
   };
+
+  const alertTitle = (alert: Alert) =>
+    alert.label ??
+    (alert.kind === 'similar_job'
+      ? m.alertManager_similarJobsAlertLabel()
+      : alert.kind === 'search'
+        ? m.alertManager_searchAlertLabel()
+        : m.alertManager_allNewJobsLabel());
 
   const newAlertButton = (
     <Button
@@ -409,9 +450,7 @@ export function AlertManagerView({
                 <Item variant="outline">
                   <ItemContent>
                     <ItemTitle className="flex-wrap">
-                      <span>
-                        {alert.label ?? m.alertManager_allNewJobsLabel()}
-                      </span>
+                      <span>{alertTitle(alert)}</span>
                       <Badge>{m.alertManager_frequencyWeekly()}</Badge>
                       {!alert.isActive ? (
                         <Badge variant="secondary">
@@ -431,13 +470,17 @@ export function AlertManagerView({
                     ) : null}
                   </ItemContent>
                   <ItemActions className="self-start">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditing(alert.id)}
-                    >
-                      {m.alertManager_editLabel()}
-                    </Button>
+                    {/* A similar-job alert follows its anchor job and takes
+                        no keywords: subscribers can delete it, not edit it. */}
+                    {alert.kind === 'similar_job' ? null : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditing(alert.id)}
+                      >
+                        {m.alertManager_editLabel()}
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -542,15 +585,18 @@ export function AlertManagerView({
 export function AlertManager({
   alerts,
   places,
+  anchorJobPaths,
 }: {
   alerts: Alert[];
   places: AlertPlaceOption[];
+  anchorJobPaths: AnchorJobPaths;
 }) {
   const router = useRouter();
   return (
     <AlertManagerView
       alerts={alerts}
       places={places}
+      anchorJobPaths={anchorJobPaths}
       dependencies={{
         createAlert: createMyAlert,
         deleteAlert: deleteMyAlert,

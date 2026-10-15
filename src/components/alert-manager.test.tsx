@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  RouterProvider,
+  createMemoryHistory,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -34,7 +41,10 @@ const alert = {
   label: 'Frontend roles',
   frequency: 'weekly',
   isActive: true,
+  kind: 'filters',
+  anchorJob: null,
   filters: {
+    query: null,
     jobFunctions: ['Engineering'],
     seniorityLevels: [],
     remoteOptions: ['remote'],
@@ -59,19 +69,34 @@ const berlin = {
   displayName: 'Berlin',
 };
 
+const searchAlert = {
+  ...alert,
+  id: 'alert-search',
+  label: null,
+  kind: 'search',
+  filters: { ...alert.filters, query: 'react developer', jobFunctions: [] },
+} satisfies Alert;
+
+const similarJobAlert = {
+  ...alert,
+  id: 'alert-similar',
+  label: null,
+  kind: 'similar_job',
+  anchorJob: { id: 'job-1', slug: 'senior-chef', title: 'Senior chef' },
+  filters: { ...alert.filters, jobFunctions: [], placeIds: ['place-berlin'] },
+} satisfies Alert;
+
 interface RenderManagerOptions {
   alerts?: Alert[];
   places?: AlertPlaceOption[];
 }
 
-function renderManager({
-  alerts = [],
-  places = [],
-}: RenderManagerOptions = {}) {
-  return render(
+function managerView({ alerts = [], places = [] }: RenderManagerOptions) {
+  return (
     <AlertManagerView
       alerts={alerts}
       places={places}
+      anchorJobPaths={{ 'senior-chef': '/companies/acme/jobs/senior-chef' }}
       dependencies={{
         createAlert: mocks.createMyAlert,
         deleteAlert: mocks.deleteMyAlert,
@@ -81,8 +106,33 @@ function renderManager({
         notifyError: mocks.toastActionError,
         notifyReconciliationError: mocks.toastActionReconciliationError,
       }}
-    />,
+    />
   );
+}
+
+function renderManager(options: RenderManagerOptions = {}) {
+  return render(managerView(options));
+}
+
+/** Renders inside a router, for rows that link to a job. */
+function renderManagerWithRouter(options: RenderManagerOptions) {
+  const rootRoute = createRootRoute();
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/me/alerts',
+        component: () => managerView(options),
+      }),
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/companies/$companySlug/jobs/$jobSlug',
+        component: () => null,
+      }),
+    ]),
+    history: createMemoryHistory({ initialEntries: ['/me/alerts'] }),
+  });
+  return render(<RouterProvider router={router} />);
 }
 
 afterEach(() => {
@@ -267,5 +317,149 @@ describe('AlertManager', () => {
       ).toBeEnabled();
     });
     expect(mocks.toastActionError).not.toHaveBeenCalled();
+  });
+
+  it('saves the keywords field as the alert search query', async () => {
+    mocks.createMyAlert.mockResolvedValue(searchAlert);
+    renderManager();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_newAlertLabel() }),
+    );
+    fireEvent.change(screen.getByLabelText(m.alertManager_keywordsLabel()), {
+      target: { value: '  react developer ' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_createAlertLabel() }),
+    );
+
+    await waitFor(() =>
+      expect(mocks.createMyAlert).toHaveBeenCalledWith({
+        data: {
+          frequency: 'weekly',
+          query: 'react developer',
+          remoteOptions: ['on_site', 'hybrid', 'remote'],
+        },
+      }),
+    );
+  });
+
+  it('clears emptied keywords on edit and keeps job functions it does not show', async () => {
+    mocks.updateMyAlert.mockResolvedValue(alert);
+    renderManager({
+      alerts: [{ ...alert, filters: { ...alert.filters, query: 'react' } }],
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_editLabel() }),
+    );
+    const keywords = screen.getByLabelText(m.alertManager_keywordsLabel());
+    expect(keywords).toHaveValue('react');
+    fireEvent.change(keywords, { target: { value: '' } });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_saveChangesLabel() }),
+    );
+
+    await waitFor(() =>
+      expect(mocks.updateMyAlert).toHaveBeenCalledWith({
+        data: {
+          id: 'alert-1',
+          body: {
+            frequency: 'weekly',
+            label: 'Frontend roles',
+            query: null,
+            jobFunctions: ['Engineering'],
+            remoteOptions: ['remote'],
+          },
+        },
+      }),
+    );
+  });
+
+  it('replaces an older search alert keyword with the new keywords', async () => {
+    mocks.updateMyAlert.mockResolvedValue(searchAlert);
+    renderManager({
+      alerts: [
+        {
+          ...searchAlert,
+          filters: {
+            ...searchAlert.filters,
+            query: null,
+            jobFunctions: ['python'],
+          },
+        },
+      ],
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_editLabel() }),
+    );
+    fireEvent.change(screen.getByLabelText(m.alertManager_keywordsLabel()), {
+      target: { value: 'python developer' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.alertManager_saveChangesLabel() }),
+    );
+
+    await waitFor(() =>
+      expect(mocks.updateMyAlert).toHaveBeenCalledWith({
+        data: {
+          id: 'alert-search',
+          body: {
+            frequency: 'weekly',
+            query: 'python developer',
+            remoteOptions: ['remote'],
+          },
+        },
+      }),
+    );
+  });
+
+  it('shows a search alert by its quoted keywords, or an older one by its job functions', () => {
+    renderManager({
+      alerts: [
+        searchAlert,
+        {
+          ...searchAlert,
+          id: 'alert-legacy',
+          filters: {
+            ...searchAlert.filters,
+            query: null,
+            jobFunctions: ['python'],
+          },
+        },
+      ],
+    });
+
+    expect(
+      screen.getByText(
+        m.jobAlertMatch_quotedQuery({ query: 'react developer' }),
+        { exact: false },
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/^python/)).toBeInTheDocument();
+    expect(screen.getAllByText(m.alertManager_searchAlertLabel())).toHaveLength(
+      2,
+    );
+  });
+
+  it('links a similar-job alert to its job and offers delete only', async () => {
+    renderManagerWithRouter({ alerts: [similarJobAlert], places: [berlin] });
+
+    const link = await screen.findByRole('link', {
+      name: m.jobAlertMatch_similarTo({ title: 'Senior chef' }),
+    });
+    expect(link).toHaveAttribute('href', '/companies/acme/jobs/senior-chef');
+    expect(
+      screen.getByText(m.alertManager_similarJobsAlertLabel()),
+    ).toBeInTheDocument();
+    // No location or keyword editing for a similar-job alert.
+    expect(screen.queryByText(/Berlin/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: m.alertManager_editLabel() }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: m.alertManager_deleteLabel() }),
+    ).toBeInTheDocument();
   });
 });
