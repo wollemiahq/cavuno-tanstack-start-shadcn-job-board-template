@@ -125,6 +125,80 @@ describe('hosted-shaped sitemap context', () => {
     ]);
   });
 
+  describe('talent location pages', () => {
+    const place = (
+      slug: string,
+      canonicalSlug: string | null,
+      count: number,
+    ) => ({
+      object: 'talent_place' as const,
+      id: slug,
+      parentId: null,
+      slug,
+      canonicalSlug,
+      name: slug,
+      displayName: slug,
+      placeType: 'city',
+      countryCode: null,
+      regionCode: null,
+      candidateCount: count,
+    });
+
+    function talentBoard(talentDirectory: 'public' | 'employers_only' | 'off') {
+      const list = vi.fn(async () => ({
+        object: 'list' as const,
+        data: [
+          place('zurich', 'zuerich', 5),
+          place('bern', null, 12),
+          place('basel', 'basel', 4),
+        ],
+        hasMore: false,
+      }));
+      // SAFETY: Talent-sitemap fake — only `context().features` and
+      // `talent.places.list()` are assigned onto the empty-board stub; the
+      // source fakes own the buckets.
+      const fake: BoardSdk = Object.assign({} as BoardSdk, {
+        context: async () => ({ features: { talentDirectory } }),
+        talent: { places: { list } },
+      });
+      return { fake, list };
+    }
+
+    it('lists the directory and places with at least five candidates on a public directory', async () => {
+      const { fake, list } = talentBoard('public');
+      const context = await buildSitemapContext(
+        fake,
+        ORIGIN,
+        source({ buckets: ['marketing', 'jobs-details'] }),
+      );
+
+      expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
+        { url: `${ORIGIN}/marketing` },
+        { url: `${ORIGIN}/job-seekers` },
+        { url: `${ORIGIN}/pricing` },
+        { url: `${ORIGIN}/talent/locations` },
+        { url: `${ORIGIN}/talent/locations/zuerich` },
+        { url: `${ORIGIN}/talent/locations/bern` },
+      ]);
+      expect(findSitemapChunk(context, 'jobs-details', 0)).toEqual([
+        { url: `${ORIGIN}/jobs-details` },
+      ]);
+      // Anonymous counts: no viewer headers.
+      expect(list).toHaveBeenCalledWith({ limit: 500 });
+    });
+
+    it('lists none unless the directory is public', async () => {
+      for (const mode of ['employers_only', 'off'] as const) {
+        const { fake, list } = talentBoard(mode);
+        const context = await buildSitemapContext(fake, ORIGIN, source({}));
+        expect(
+          findSitemapChunk(context, 'marketing', 0)?.map((entry) => entry.url),
+        ).not.toContain(`${ORIGIN}/talent/locations`);
+        expect(list).not.toHaveBeenCalled();
+      }
+    });
+  });
+
   it('drops a stamp that is not a real date instead of persisting it', async () => {
     // A bad value would sit in the shared edge snapshot for an hour and
     // either crash the renderer or make crawlers reject the whole file.

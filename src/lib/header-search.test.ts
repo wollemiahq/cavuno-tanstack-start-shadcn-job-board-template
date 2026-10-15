@@ -129,6 +129,16 @@ describe('resolveHeaderSearchState', () => {
     ).toEqual({ slug: 'berlin', name: 'berlin' });
   });
 
+  it('keeps a talent location page place in the header search', () => {
+    expect(
+      resolveHeaderSearchState('/talent/locations/berlin', {}, 'Berlin')
+        .location,
+    ).toEqual({ slug: 'berlin', name: 'Berlin' });
+    expect(resolveHeaderSearchState('/talent/locations', {}).location).toBe(
+      null,
+    );
+  });
+
   it('prefills talent query from /talent?q=ada', () => {
     expect(resolveHeaderSearchState('/talent', { q: 'ada' }).query).toBe('ada');
   });

@@ -41,7 +41,9 @@ export function talentProfilePaths(template: string) {
         prefix.length,
         pathname.length - suffix.length,
       );
-      if (!raw) return null;
+      // A handle is one encoded segment: `/talent/locations/x` is not the
+      // profile `locations/x` when profiles move to `/talent/{$handle}`.
+      if (!raw || raw.includes('/')) return null;
       try {
         return decodeURIComponent(raw);
       } catch {

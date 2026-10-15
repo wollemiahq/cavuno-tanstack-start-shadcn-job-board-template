@@ -50,6 +50,8 @@ describe('localized URL segments', () => {
         '/jobs/locations/amsterdam/skills/react',
         '/vacatures/locaties/amsterdam/vaardigheden/react',
       ],
+      ['/talent/locations', '/talent/locaties'],
+      ['/talent/locations/amsterdam', '/talent/locaties/amsterdam'],
       ['/companies/acme', '/bedrijven/acme'],
       ['/companies/acme/jobs/designer', '/bedrijven/acme/vacatures/designer'],
       [

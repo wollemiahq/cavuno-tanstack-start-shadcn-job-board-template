@@ -186,6 +186,17 @@ function locationFromTalentPlace(
   return { slug, name: resolvedLabel ?? slug };
 }
 
+/** A talent location page's place, so a header search keeps it. */
+function talentLocationFromPathname(
+  pathname: string,
+  resolvedLabel?: string,
+): HeaderSearchLocation | null {
+  const slug = pathname.match(/^\/talent\/locations\/([^/]+)$/)?.[1];
+  if (!slug) return null;
+
+  return { slug, name: resolvedLabel ?? slug };
+}
+
 function termFromPathname(
   pathname: string,
   resolvedLabel?: string,
@@ -246,7 +257,8 @@ export function resolveHeaderSearchState(
       scope === 'jobs'
         ? locationFromPathname(pathname, resolvedLocationLabel)
         : scope === 'talent'
-          ? locationFromTalentPlace(search.place, resolvedLocationLabel)
+          ? (locationFromTalentPlace(search.place, resolvedLocationLabel) ??
+            talentLocationFromPathname(pathname, resolvedLocationLabel))
           : null,
     term:
       scope === 'jobs' && !explicitQuery

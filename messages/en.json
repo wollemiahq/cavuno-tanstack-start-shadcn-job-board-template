@@ -1309,6 +1309,7 @@
   "footer_forCompaniesHeading": "For Companies",
   "footer_impressumLabel": "Impressum",
   "footer_locationsLabel": "Locations",
+  "footer_talentLocationsLabel": "Talent by location",
   "footer_poweredByText": "Powered by",
   "footer_privacyPolicyLabel": "Privacy Policy",
   "footer_resourcesHeading": "Resources",
@@ -2386,6 +2387,24 @@
   "talentDirectory_searchPlaceholder": "Search candidates…",
   "talentDirectory_signInLabel": "Sign in",
   "talentDirectory_title": "Talent",
+  "talentLocationsIndex_emptyText": "No locations yet.",
+  "talentLocationsIndex_heading": "Talent by location",
+  "talentLocationPage_heading": "Talent in {place}",
+  "talentLocationPage_countHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} candidate in {place}",
+        "countPlural=*": "{countLabel} candidates in {place}"
+      }
+    }
+  ],
   "talentFilters_anyRelocateOption": "Any relocation",
   "talentFilters_anyStatusOption": "Any status",
   "talentFilters_applyLabel": "Apply filters",

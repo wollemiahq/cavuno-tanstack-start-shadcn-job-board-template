@@ -202,7 +202,13 @@ export const TalentFilters = memo(function TalentFilters({
   savedView,
   linkJob,
 }: TalentFiltersProps) {
-  const navigate = useNavigate({ from: '/talent/' });
+  const routeNavigate = useNavigate();
+  // SAFETY: Only search-param updates on the current route — `/talent` or a
+  // talent location page, whose place stays in the path.
+  const navigate = routeNavigate as (options: {
+    to?: string;
+    search: (previous: UrlSearchInput) => TalentSearch;
+  }) => Promise<void>;
   const [sheetOpen, setSheetOpen] = useState(false);
   /** Retained while the sheet animates out so its title does not swap mid-exit. */
   const [sheetMode, setSheetMode] = useState<'desktop' | 'mobile'>('mobile');

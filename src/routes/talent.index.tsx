@@ -1,42 +1,18 @@
-import {
-  createFileRoute,
-  getRouteApi,
-  useLocation,
-  useNavigate,
-} from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
-import { RestrictedTalentDirectory } from './-restricted-talent-directory';
 import {
-  createTalentDirectoryLoader,
-  TALENT_PAGE_SIZE,
-} from './-talent-loaders';
+  TalentDirectoryNotFound,
+  TalentDirectoryView,
+} from './-talent-directory-view';
+import { createTalentDirectoryLoader } from './-talent-loaders';
 
-import { getTalentSearchLabels } from '@/board/talent-search-labels';
-import {
-  employerCanStartMessage,
-  sellsTalentProfileUnlocks,
-  toTalentCardVM,
-  type TalentDetailViewer,
-} from '@/board/talent-view-model';
-import { NotFound } from '@/components/app-not-found';
-import { TalentSearchPage } from '@/components/board/talent-search-page';
 import { jsonLdHeadScripts } from '@/components/json-ld';
-import { Page, PageContent } from '@/components/layout/page';
-import { useRootSession } from '@/components/root-session';
-import { candidateSignInHref } from '@/lib/candidate-return-to';
-import { localizePath } from '@/lib/localized-path';
-import { pageSearchValue } from '@/lib/pagination';
 import {
   parseTalentSearch,
   talentListingLoaderDeps,
 } from '@/lib/talent-search';
-import { SelectedTalentDetail } from '@/routes/-selected-talent-detail';
-import { useSelectedTalent } from '@/routes/-use-selected-talent';
-import { startConversation } from '@/server/messaging';
 
-const rootApi = getRouteApi('__root__');
 export const Route = createFileRoute('/talent/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseTalentSearch,
@@ -62,144 +38,11 @@ export const Route = createFileRoute('/talent/')({
   notFoundComponent: TalentDirectoryNotFound,
 });
 
-/**
- * The directory API 404s only when the board has no talent directory (Off),
- * so this is the site's ordinary 404, not an empty directory: no talent
- * wording, matching the head's not-found title. The route owns `<main>`, so
- * the shared page frame supplies the landmark the root shell leaves out.
- */
-function TalentDirectoryNotFound() {
-  return (
-    <Page width="wide">
-      <PageContent>
-        <NotFound />
-      </PageContent>
-    </Page>
-  );
-}
-
 function TalentDirectoryPage() {
-  const { seo, page, restricted, customFilterFields, placeRadius } =
-    Route.useLoaderData();
-  const { board } = rootApi.useLoaderData();
-  const { user, talentAccess } = useRootSession();
-  const search = Route.useSearch();
-  const location = useLocation();
-  const navigate = useNavigate({ from: '/talent/' });
-  // Gate the detail-pane Message CTA by the viewer's role. A candidate cannot
-  // cold-message another candidate; eligible employers compose by the
-  // candidate's board-user id (see resolveTalentDetailCta for the matrix).
-  const viewer: TalentDetailViewer =
-    user === null
-      ? { kind: 'anonymous' }
-      : user.role === 'employer'
-        ? {
-            kind: 'employer',
-            hasTalentAccess: talentAccess.hasTalentAccess,
-            canStartMessage: employerCanStartMessage(talentAccess),
-          }
-        : { kind: 'candidate' };
-  const profileUnlocks = sellsTalentProfileUnlocks(talentAccess.accessModel);
-  const signInHref = candidateSignInHref(location.href);
-  const selectedOnPage = page?.data.some(
-    (candidate) =>
-      candidate.handle === search.selectedTalent ||
-      candidate.id === search.selectedTalent,
-  );
-  const selectedTalent = useSelectedTalent(
-    search.saved || selectedOnPage ? search.selectedTalent : undefined,
-  );
-
-  if (restricted) {
-    return (
-      <>
-        <RestrictedTalentDirectory
-          boardName={seo.boardName}
-          signedIn={user !== null}
-        />
-      </>
-    );
-  }
-
-  if (!page) throw new Error('Public Talent directory data is missing');
-
   return (
-    <>
-      <TalentSearchPage
-        ads={board.ads}
-        search={search}
-        customFilterFields={customFilterFields}
-        candidates={page.data.map((candidate) =>
-          toTalentCardVM(candidate, getTalentSearchLabels(), {
-            profileUnlocks,
-          }),
-        )}
-        q={search.q}
-        skill={search.skill}
-        count={page.count ?? page.data.length}
-        page={search.page ?? 1}
-        pageSize={TALENT_PAGE_SIZE}
-        language={getLocale()}
-        profileUnlocks={profileUnlocks}
-        placeRadius={placeRadius}
-        onWithinChange={(within) =>
-          navigate({
-            search: (previous) => ({
-              ...previous,
-              within,
-              page: undefined,
-              selectedTalent: undefined,
-            }),
-          })
-        }
-        onPageChange={(next) =>
-          navigate({
-            search: (previous) => ({
-              ...previous,
-              page: pageSearchValue(next),
-              selectedTalent: undefined,
-            }),
-          })
-        }
-        selectedTalent={search.selectedTalent}
-        onSelectedTalentReplace={(handle) =>
-          navigate({
-            search: (previous) => ({
-              ...previous,
-              selectedTalent: handle,
-            }),
-            replace: true,
-            // Default-first-result sync after a header click. `resetScroll:
-            // false` here re-applies the previous /talent window scroll and
-            // lands the listing mid-page. User row clicks use onPush below.
-          })
-        }
-        onSelectedTalentPush={(handle) =>
-          navigate({
-            search: (previous) => ({
-              ...previous,
-              selectedTalent: handle,
-            }),
-            resetScroll: false,
-          })
-        }
-        detail={
-          <SelectedTalentDetail
-            state={selectedTalent}
-            locale={getLocale()}
-            viewer={viewer}
-            signInHref={signInHref}
-            messagingEnabled={board.features.messaging}
-            profileUnlocks={profileUnlocks}
-            onStartConversation={(input) => startConversation({ data: input })}
-            onConversationStarted={(conversationId) =>
-              window.location.assign(
-                localizePath(`/messages/${encodeURIComponent(conversationId)}`),
-              )
-            }
-          />
-        }
-      />
-    </>
+    <TalentDirectoryView
+      data={Route.useLoaderData()}
+      search={Route.useSearch()}
+    />
   );
 }
