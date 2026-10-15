@@ -11,8 +11,9 @@ import { AlertManager } from '../components/alert-manager';
 import { m } from '../paraglide/messages';
 import { getMyAlerts } from '../server/account';
 import { getPaywallOffers } from '../server/paywall';
-import { getSeoBase, searchPlaces } from '../server/queries';
+import { getAnchorJobPaths, getSeoBase, searchPlaces } from '../server/queries';
 
+import { anchorJobSlugs } from '@/board/job-alert-match';
 import { candidateOffersForFeature } from '@/board/paywall-offer';
 import { CandidatePaywallLock } from '@/components/board/candidate-paywall-lock';
 import {
@@ -30,6 +31,7 @@ import { headTitle } from '@/lib/page-title';
 
 export type AlertsLoaderDependencies = {
   getMyAlerts: typeof getMyAlerts;
+  getAnchorJobPaths: typeof getAnchorJobPaths;
   searchPlaces: typeof searchPlaces;
   getSeoBase: () => Promise<{ boardName: string }>;
   getPaywallOffers: () => ReturnType<typeof getPaywallOffers>;
@@ -37,6 +39,7 @@ export type AlertsLoaderDependencies = {
 
 const alertsLoaderDependencies: AlertsLoaderDependencies = {
   getMyAlerts,
+  getAnchorJobPaths,
   searchPlaces,
   getSeoBase,
   getPaywallOffers,
@@ -54,7 +57,21 @@ export function createAlertsLoader(
         dependencies.searchPlaces({ data: {} }).catch(() => ({ data: [] })),
         dependencies.getSeoBase(),
       ]);
-      return { locked: false as const, alerts, places, seo };
+      // Links for similar-job alerts' anchor jobs. Display only: without
+      // them the job title shows unlinked.
+      const jobSlugs = anchorJobSlugs(alerts.data);
+      const anchorJobPaths = jobSlugs.length
+        ? await dependencies
+            .getAnchorJobPaths({ data: { jobSlugs } })
+            .catch(() => ({}))
+        : {};
+      return {
+        locked: false as const,
+        alerts,
+        places,
+        anchorJobPaths,
+        seo,
+      };
     } catch (error) {
       if (isRedirect(error)) throw error;
       const authFailure = candidateLoaderError(error);
@@ -118,7 +135,7 @@ function AlertsPage() {
       </CandidateShell>
     );
   }
-  const { alerts, places } = data;
+  const { alerts, places, anchorJobPaths } = data;
   // With no alerts the Empty composition IS the page — repeating the page
   // header above it reads the same thing twice.
   const hasAlerts = alerts.data.length > 0;
@@ -128,7 +145,11 @@ function AlertsPage() {
       title={hasAlerts ? m.meAlerts_title() : undefined}
       description={hasAlerts ? m.meAlerts_subtitleText() : undefined}
     >
-      <AlertManager alerts={alerts.data} places={places.data} />
+      <AlertManager
+        alerts={alerts.data}
+        places={places.data}
+        anchorJobPaths={anchorJobPaths}
+      />
     </CandidateShell>
   );
 }
