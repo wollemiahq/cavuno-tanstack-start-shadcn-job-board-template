@@ -109,7 +109,36 @@ describe('blog index cursor pagination contract', () => {
     } catch (error) {
       expect(isNotFound(error)).toBe(true);
     }
-    expect(getBlogIndexPage).not.toHaveBeenCalled();
+  });
+
+  it('starts the archive read without waiting for the blog flag', async () => {
+    let enable: (enabled: boolean) => void = () => undefined;
+    const flag = new Promise<boolean>((resolve) => {
+      enable = resolve;
+    });
+    const loading = createBlogIndexLoader(
+      getBlogIndexPage,
+      () => flag,
+    )(blogLoaderContext({}));
+
+    expect(getBlogIndexPage).toHaveBeenCalledTimes(1);
+    enable(true);
+    await loading;
+  });
+
+  it('answers 404 on a disabled blog even when the archive read fails', async () => {
+    vi.mocked(getBlogIndexPage).mockRejectedValueOnce(
+      new Error('blog_disabled'),
+    );
+    try {
+      await createBlogIndexLoader(
+        getBlogIndexPage,
+        async () => false,
+      )(blogLoaderContext({}));
+      throw new Error('expected the archive not to load');
+    } catch (error) {
+      expect(isNotFound(error)).toBe(true);
+    }
   });
 
   it('direct-loads the requested cursor page instead of page one', async () => {

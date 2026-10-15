@@ -310,7 +310,13 @@ export function resolveShellBreadcrumb({
   }
 
   if (section === 'talent') {
-    items.push({ name: labels.talent });
+    items.push({ name: labels.talent, href: '/talent' });
+    if (rest[0] === 'locations') {
+      items.push({ name: labels.locations, href: '/talent/locations' });
+      if (rest[1]) {
+        items.push({ name: entities.location ?? readableSegment(rest[1]) });
+      }
+    }
     return finish(items);
   }
 

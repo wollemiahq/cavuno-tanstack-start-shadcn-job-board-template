@@ -1,7 +1,5 @@
-import { isNotFound } from '@cavuno/board';
 import {
   createFileRoute,
-  notFound,
   useLocation,
   useNavigate,
   useRouter,
@@ -9,6 +7,7 @@ import {
 
 import { m } from '../paraglide/messages';
 import { getBoardContext } from '../server/queries';
+import { loadIfBlogEnabled } from './-blog-enabled';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
@@ -38,16 +37,13 @@ export const Route = createFileRoute('/blog/tag/$tagSlug')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
-    const board = await getBoardContext();
-    if (!board.features.blog) throw notFound();
-    try {
-      return await getBlogTagPage({
-        data: { tagSlug: params.tagSlug, cursor: deps.cursor },
-      });
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
+    return loadIfBlogEnabled(
+      async () => (await getBoardContext()).features.blog === true,
+      () =>
+        getBlogTagPage({
+          data: { tagSlug: params.tagSlug, cursor: deps.cursor },
+        }),
+    );
   },
   head: ({ loaderData }) =>
     loaderData

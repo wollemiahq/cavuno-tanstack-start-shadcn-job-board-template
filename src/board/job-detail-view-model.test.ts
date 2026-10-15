@@ -242,9 +242,21 @@ describe('toJobDetailVM', () => {
         remoteOption: 'on_site',
         officeLocations: [],
         placeHierarchy: [
-          { slug: 'united-states', name: 'United States' },
-          { slug: 'texas-united-states', name: 'Texas' },
-          { slug: 'austin-tx-united-states', name: 'Austin' },
+          {
+            slug: 'united-states',
+            name: 'United States',
+            canonicalSlug: 'united-states',
+          },
+          {
+            slug: 'texas-united-states',
+            name: 'Texas',
+            canonicalSlug: 'texas-united-states',
+          },
+          {
+            slug: 'austin-tx-united-states',
+            name: 'Austin',
+            canonicalSlug: 'austin-tx-united-states',
+          },
         ],
       }),
       customFields,

@@ -1309,6 +1309,7 @@
   "footer_forCompaniesHeading": "Für Unternehmen",
   "footer_impressumLabel": "Impressum",
   "footer_locationsLabel": "Standorte",
+  "footer_talentLocationsLabel": "Talente nach Standort",
   "footer_poweredByText": "Bereitgestellt von",
   "footer_privacyPolicyLabel": "Datenschutzerklärung",
   "footer_resourcesHeading": "Ressourcen",
@@ -2386,6 +2387,24 @@
   "talentDirectory_searchPlaceholder": "Kandidaten suchen…",
   "talentDirectory_signInLabel": "Anmelden",
   "talentDirectory_title": "Talente",
+  "talentLocationsIndex_emptyText": "Noch keine Standorte.",
+  "talentLocationsIndex_heading": "Talente nach Standort",
+  "talentLocationPage_heading": "Talente in {place}",
+  "talentLocationPage_countHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Kandidat in {place}",
+        "countPlural=*": "{countLabel} Kandidaten in {place}"
+      }
+    }
+  ],
   "talentFilters_anyRelocateOption": "Any relocation",
   "talentFilters_anyStatusOption": "Any status",
   "talentFilters_applyLabel": "Apply filters",

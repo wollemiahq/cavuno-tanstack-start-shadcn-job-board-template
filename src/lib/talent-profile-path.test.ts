@@ -37,4 +37,16 @@ describe('talent profile path', () => {
     expect(nested.path('ada')).toBe('/candidates/ada/cv');
     expect(nested.param('/candidates/ada/cv')).toBe('ada');
   });
+
+  it('leaves the talent location pages alone when profiles move under /talent', () => {
+    // The router matches the static /talent/locations route before
+    // /talent/$handle, and a handle is one segment, so neither the directory
+    // nor a place page reads as a profile.
+    const underTalent = talentProfilePaths('/talent/{$handle}');
+    expect(underTalent.param('/talent/locations')).toBeNull();
+    expect(underTalent.param('/talent/locations/')).toBeNull();
+    expect(underTalent.param('/talent/locations/amsterdam')).toBeNull();
+    expect(underTalent.param('/talent/ada-lovelace')).toBe('ada-lovelace');
+    expect(underTalent.param('/talent/a%2Fb')).toBe('a/b');
+  });
 });

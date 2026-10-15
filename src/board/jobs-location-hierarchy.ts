@@ -26,6 +26,17 @@ export interface LocationHierarchyCrumb {
   href?: string;
 }
 
+type HierarchyPlace = Pick<
+  PublicPlace,
+  'id' | 'parentId' | 'slug' | 'canonicalSlug' | 'displayName'
+>;
+
+type HierarchyCurrent = {
+  sourceSlug: string;
+  canonicalSlug: string;
+  displayName: string;
+};
+
 /**
  * Crumbs for the resolved place only — callers prepend Home/Jobs and append
  * the tag. `linkCurrent` distinguishes the two hosted shapes: on the plain
@@ -41,19 +52,38 @@ export interface LocationHierarchyCrumb {
  * keyword-scoped leaf link would be a self-link to the page being rendered).
  */
 export function toJobsLocationHierarchyCrumbs(
-  places: readonly Pick<
-    PublicPlace,
-    'id' | 'parentId' | 'slug' | 'canonicalSlug' | 'displayName'
-  >[],
-  current: { sourceSlug: string; canonicalSlug: string; displayName: string },
+  places: readonly HierarchyPlace[],
+  current: HierarchyCurrent,
   options?: {
     linkCurrent?: boolean;
     ancestorPath?: (slug: string) => string;
   },
 ): LocationHierarchyCrumb[] {
-  const linkCurrent = options?.linkCurrent ?? false;
-  const ancestorPath = options?.ancestorPath ?? jobsLocationPath;
-  const leafHref = () => jobsLocationPath(current.canonicalSlug);
+  return toPlaceHierarchyCrumbs(places, current, {
+    ...options,
+    placePath: jobsLocationPath,
+  });
+}
+
+/**
+ * The same chain for any place-keyed page family: `placePath` builds the
+ * family's page for a place slug (the leaf's href, and the ancestors' unless
+ * `ancestorPath` overrides it). The talent location pages pass
+ * `talentLocationPath` with the `talent.places.list()` directory, which has
+ * the same id/parentId/slug/canonicalSlug/displayName shape.
+ */
+export function toPlaceHierarchyCrumbs(
+  places: readonly HierarchyPlace[],
+  current: HierarchyCurrent,
+  options: {
+    placePath: (slug: string) => string;
+    linkCurrent?: boolean;
+    ancestorPath?: (slug: string) => string;
+  },
+): LocationHierarchyCrumb[] {
+  const linkCurrent = options.linkCurrent ?? false;
+  const ancestorPath = options.ancestorPath ?? options.placePath;
+  const leafHref = () => options.placePath(current.canonicalSlug);
   const byId = new Map(places.map((node) => [node.id, node]));
   // A resolution's source or canonical slug can match either directory slug.
   const bySlug = new Map(

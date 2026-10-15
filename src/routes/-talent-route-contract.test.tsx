@@ -53,6 +53,7 @@ const seo = {
 
 const profile: TalentProfilePageData['profile'] = {
   object: 'talent_profile',
+  lastActive: null,
   id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',

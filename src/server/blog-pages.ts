@@ -160,6 +160,22 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
+      // Everything that needs only the URL slug starts with the retrieve, so
+      // a cold render waits one Board API round trip, not two. Only the
+      // by-tag list needs the post (its first tag). The early reads get a
+      // no-op catch so a failed retrieve cannot leave them unhandled.
+      const adjacentRead: Promise<PublicBlogAdjacentPosts> = blogRead(() =>
+        board.blog.posts.adjacent(data.postSlug, { headers }),
+      ).catch((error) => {
+        if (isNotFound(error)) return EMPTY_ADJACENT;
+        throw error;
+      });
+      const latestRead = blogRead(() =>
+        board.blog.posts.list({ limit: 4 }, { headers }),
+      ).catch(() => null);
+      const seoRead = seoBase();
+      adjacentRead.catch(() => undefined);
+      seoRead.catch(() => undefined);
       const post = await blogRead(() =>
         board.blog.posts.retrieve(data.postSlug, undefined, { headers }),
       );
@@ -170,12 +186,12 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
         Awaited<ReturnType<typeof board.blog.posts.list>> | null,
         Awaited<ReturnType<typeof seoBase>>,
       ] = await Promise.all([
-        blogRead(() => board.blog.posts.adjacent(post.slug, { headers })).catch(
-          (error) => {
-            if (isNotFound(error)) return EMPTY_ADJACENT;
-            throw error;
-          },
-        ),
+        // A retired or aliased slug resolves to a post with another slug, and
+        // the loader answers 308 to it, so this render's neighbours are never
+        // shown; they must not fail it either.
+        post.slug === data.postSlug
+          ? adjacentRead
+          : Promise.resolve(EMPTY_ADJACENT),
         firstTagSlug
           ? blogRead(() =>
               board.blog.posts.list(
@@ -184,10 +200,8 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
               ),
             ).catch(() => null)
           : Promise.resolve(null),
-        blogRead(() => board.blog.posts.list({ limit: 4 }, { headers })).catch(
-          () => null,
-        ),
-        seoBase(),
+        latestRead,
+        seoRead,
       ]);
       const related = selectRelatedPosts({
         currentId: post.id,

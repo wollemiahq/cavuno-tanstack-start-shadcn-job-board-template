@@ -1,5 +1,6 @@
-import { BOARD_PATHS } from '@cavuno/board/paths';
+import { BOARD_PATHS, talentLocationPath } from '@cavuno/board/paths';
 import {
+  MIN_JOBS_PER_INDEXED_PAGE,
   SITEMAP_CHUNK_SIZE,
   bucketFilename,
   buildBucketEntries,
@@ -10,6 +11,8 @@ import {
   type SitemapUrlEntry,
 } from '@cavuno/board/sitemap';
 
+import { placeLinkSlug } from '../board/place-link';
+import { TALENT_PLACES_LIMIT } from '../board/talent-places';
 import { impressumHasContent } from '../content/legal/impressum-availability';
 import { createSettledCache } from './settled-cache';
 
@@ -209,10 +212,39 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
 
 const LOCAL_MARKETING_PATHS = ['/job-seekers', '/pricing'] as const;
 
+/**
+ * The talent location pages to list, when the talent directory is public:
+ * the `/talent/locations` directory and each place page with at least
+ * `MIN_JOBS_PER_INDEXED_PAGE` candidates (the SDK's thin-content floor,
+ * which the jobs location pages use too), counted as an anonymous visitor
+ * sees them. Linked by the board-language slug the pages are canonical at.
+ * Starter-side until the platform's published sitemap lists them; they ride
+ * the `marketing` bucket beside `/talent`.
+ */
+async function talentLocationPaths(board: BoardSdk): Promise<string[]> {
+  // Test doubles stub only the namespaces a case touches.
+  if (!board.talent?.places || !board.context) return [];
+  const { features } = await board.context();
+  if (features.talentDirectory !== 'public') return [];
+  const { data } = await board.talent.places.list({
+    limit: TALENT_PLACES_LIMIT,
+  });
+  return [
+    BOARD_PATHS.talentLocations,
+    ...data.flatMap((place) => {
+      const slug = placeLinkSlug(place);
+      return slug && place.candidateCount >= MIN_JOBS_PER_INDEXED_PAGE
+        ? [talentLocationPath(slug)]
+        : [];
+    }),
+  ];
+}
+
 function withLocalMarketingPages(
   origin: string,
   bucket: SitemapBucket,
   entries: SitemapEntry[],
+  talentPaths: readonly string[],
 ): SitemapEntry[] {
   if (bucket !== 'marketing') return entries;
   // The SDK lists `/impressum` whenever the feature is on; the page itself
@@ -224,9 +256,11 @@ function withLocalMarketingPages(
   const urls = new Set(listed.map((entry) => entry.url));
   return [
     ...listed,
-    ...LOCAL_MARKETING_PATHS.flatMap((path) => {
+    ...[...LOCAL_MARKETING_PATHS, ...talentPaths].flatMap((path) => {
       const url = `${origin}${path}`;
-      return urls.has(url) ? [] : [{ url }];
+      if (urls.has(url)) return [];
+      urls.add(url);
+      return [{ url }];
     }),
   ];
 }
@@ -237,7 +271,12 @@ export async function buildSitemapContext(
   source: SitemapSource = DEFAULT_SOURCE,
 ): Promise<SitemapContext> {
   const catalog = memoizingBoardView(board);
-  const listed = await source.listedBucketEntries(catalog);
+  const [listed, talentPaths] = await Promise.all([
+    source.listedBucketEntries(catalog),
+    // A failed talent read leaves the talent pages out; it must not take
+    // down the sitemap's other buckets, which never depended on it.
+    talentLocationPaths(board).catch((): string[] => []),
+  ]);
   const built = await Promise.all(
     listed.map(
       async ({ bucket, lastModified }): Promise<SitemapBucketContext> => {
@@ -250,6 +289,7 @@ export async function buildSitemapContext(
           origin,
           bucket,
           sdkEntries.map(toSitemapEntry),
+          talentPaths,
         );
         const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
         const built: SitemapBucketContext = {

@@ -1361,6 +1361,7 @@
   "footer_forCompaniesHeading": "Dla firm",
   "footer_impressumLabel": "Nota prawna",
   "footer_locationsLabel": "Lokalizacje",
+  "footer_talentLocationsLabel": "Kandydaci według lokalizacji",
   "footer_poweredByText": "Obsługiwane przez",
   "footer_privacyPolicyLabel": "Polityka prywatności",
   "footer_resourcesHeading": "Materiały",
@@ -2478,6 +2479,26 @@
   "talentDirectory_searchPlaceholder": "Szukaj kandydatów…",
   "talentDirectory_signInLabel": "Zaloguj się",
   "talentDirectory_title": "Kandydaci",
+  "talentLocationsIndex_emptyText": "Brak lokalizacji.",
+  "talentLocationsIndex_heading": "Kandydaci według lokalizacji",
+  "talentLocationPage_heading": "Kandydaci: {place}",
+  "talentLocationPage_countHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Kandydaci: {place} ({countLabel})",
+        "countPlural=few": "Kandydaci: {place} ({countLabel})",
+        "countPlural=many": "Kandydaci: {place} ({countLabel})",
+        "countPlural=*": "Kandydaci: {place} ({countLabel})"
+      }
+    }
+  ],
   "talentFilters_anyRelocateOption": "Any relocation",
   "talentFilters_anyStatusOption": "Any status",
   "talentFilters_applyLabel": "Apply filters",
