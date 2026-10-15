@@ -40,6 +40,7 @@ const labels = {
 
 const directoryEntry = {
   object: 'talent_directory_entry',
+  lastActive: null,
   id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
@@ -71,6 +72,7 @@ const directoryEntry = {
 
 const profile = {
   object: 'talent_profile',
+  lastActive: null,
   id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
