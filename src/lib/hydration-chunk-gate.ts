@@ -1,3 +1,5 @@
+import { reportClientError } from './client-error-report';
+
 /**
  * Keep a server-rendered page on screen when its route code fails to load.
  *
@@ -14,7 +16,9 @@
  * match rendered fully on the server and a chunk fails, hydration is held:
  * React keeps the server HTML exactly as it is. Visitors still get the
  * stale-chunk reload (see stale-chunk-reload-runtime.js), which fires on the
- * same failure; crawlers do not reload and keep the server page.
+ * same failure; crawlers do not reload and keep the server page. A held
+ * page still sends the client error report the error page would have sent,
+ * marked `kind: 'hydration-held'`, so the failure stays in the logs.
  *
  * Pages the server did not render in full (a pending shell, a client-only
  * or data-only route, an error or not-found match) take the usual path: the
@@ -68,6 +72,14 @@ export async function holdHydrationOnChunkFailure(
   if (!serverRenderedWholePage(serverMatches)) return;
   const { pathname } = router.parseLocation(router.history.location);
   const [routes] = router.getMatchedRoutes(pathname);
+  // `lazyRouteComponent` keeps a failed import's error to itself. Vite
+  // announces every failed chunk import with this event before rethrowing,
+  // so listen while the chunks load to report the real error.
+  let failure: unknown;
+  const onPreloadError = (event: Event) => {
+    if ('payload' in event) failure ??= event.payload;
+  };
+  window.addEventListener('vite:preloadError', onPreloadError);
   let loaded = true;
   try {
     await Promise.all(routes.map((route) => router.loadRouteChunk(route)));
@@ -75,9 +87,21 @@ export async function holdHydrationOnChunkFailure(
     // records it and throws at render. On the client it drops `preload`
     // once the import succeeds, so a remaining `preload` is a failed chunk.
     loaded = routes.every((route) => !route.options.component?.preload);
-  } catch {
+  } catch (error) {
     // A route's own lazy file (`lazyFn`) failed.
+    failure ??= error;
     loaded = false;
+  } finally {
+    window.removeEventListener('vite:preloadError', onPreloadError);
   }
-  if (!loaded) await new Promise<never>(() => {});
+  if (loaded) return;
+  reportClientError(
+    failure instanceof Error
+      ? failure
+      : new Error(`Route chunk failed to load on ${pathname}`, {
+          cause: failure,
+        }),
+    { kind: 'hydration-held' },
+  );
+  await new Promise<never>(() => {});
 }

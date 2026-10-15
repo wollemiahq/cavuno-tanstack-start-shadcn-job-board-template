@@ -10,6 +10,19 @@ const STACK_MAX = 4000;
 const COMPONENT_STACK_MAX = 2000;
 const reported = new Set<string>();
 
+/**
+ * Marks a report the visitor never saw as a crash. Absent on a crash.
+ * - `hydration-held`: a route chunk failed and the server-rendered page was
+ *   kept (src/lib/hydration-chunk-gate.ts).
+ * - `crawler-reload-skipped`: a chunk failed for a crawler, which does not
+ *   reload (src/lib/stale-chunk-reload-runtime.js).
+ */
+export const CLIENT_ERROR_KINDS = [
+  'hydration-held',
+  'crawler-reload-skipped',
+] as const;
+export type ClientErrorKind = (typeof CLIENT_ERROR_KINDS)[number];
+
 type ReportableError = Error & {
   digest?: string;
   componentStack?: string;
@@ -22,8 +35,12 @@ function clip(value: string | undefined, max: number): string | undefined {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
-function fingerprint(error: ReportableError, path: string): string {
-  return `${error.name}:${(error.message || '').slice(0, 80)}:${path}`;
+function fingerprint(
+  error: ReportableError,
+  path: string,
+  kind: ClientErrorKind | undefined,
+): string {
+  return `${kind ?? 'crash'}:${error.name}:${(error.message || '').slice(0, 80)}:${path}`;
 }
 
 export function resetClientErrorReports() {
@@ -34,11 +51,14 @@ export function resetClientErrorReports() {
  * Fire-and-forget. Dedupes one fingerprint per document so a render loop
  * (React #185) cannot flood the Worker.
  */
-export function reportClientError(error: ReportableError) {
+export function reportClientError(
+  error: ReportableError,
+  options: { kind?: ClientErrorKind } = {},
+) {
   if (!('document' in globalThis)) return;
 
   const path = (window.location.pathname || '/').slice(0, 500);
-  const key = fingerprint(error, path);
+  const key = fingerprint(error, path, options.kind);
   if (reported.has(key)) return;
   reported.add(key);
 
@@ -53,6 +73,7 @@ export function reportClientError(error: ReportableError) {
     host: window.location.host.slice(0, 253),
     stack: clip(error.stack, STACK_MAX) ?? null,
     componentStack: clip(error.componentStack, COMPONENT_STACK_MAX) ?? null,
+    kind: options.kind ?? null,
   };
 
   const body = JSON.stringify(payload);

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { CLIENT_ERROR_PATH } from './client-error-report';
 import {
   installStaleChunkReload,
   STALE_CHUNK_RELOAD_COOLDOWN_MS,
@@ -11,20 +12,30 @@ import {
 function fakeWindow(store: Map<string, string> = new Map()) {
   const listeners = new Map<string, (event: Event) => void>();
   const reload = vi.fn();
+  const sendBeacon = vi.fn(
+    (_url: string | URL, _data?: BodyInit | null) => true,
+  );
   const win: StaleChunkReloadWindow = {
     addEventListener: (type, listener) => listeners.set(type, listener),
     sessionStorage: {
       getItem: (key) => store.get(key) ?? null,
       setItem: (key, value) => void store.set(key, value),
     },
-    location: { reload },
+    location: { reload, pathname: '/blog/some-post', host: 'board.example' },
   };
-  const fire = () => {
-    const event = new Event('vite:preloadError', { cancelable: true });
+  const fire = (
+    payload: Error = new TypeError(
+      'Failed to fetch dynamically imported module: /assets/x.js',
+    ),
+  ) => {
+    const event = Object.assign(
+      new Event('vite:preloadError', { cancelable: true }),
+      { payload },
+    );
     listeners.get('vite:preloadError')!(event);
     return event;
   };
-  return { win, fire, reload, store };
+  return { win, fire, reload, store, sendBeacon };
 }
 
 describe('stale-chunk reload', () => {
@@ -81,6 +92,57 @@ describe('stale-chunk reload', () => {
     fire();
     expect(reload).not.toHaveBeenCalled();
     expect(store.has(STALE_CHUNK_RELOAD_KEY)).toBe(false);
+  });
+
+  it('reports a crawler chunk failure once per document instead of reloading', async () => {
+    const { win, fire, reload, sendBeacon } = fakeWindow();
+    win.navigator = {
+      userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1)',
+      sendBeacon,
+    };
+    installStaleChunkReload(win);
+    fire();
+    fire(new TypeError('Importing a module script failed.'));
+    expect(reload).not.toHaveBeenCalled();
+    expect(sendBeacon).toHaveBeenCalledTimes(1);
+    const [url, blob] = sendBeacon.mock.calls[0]!;
+    expect(url).toBe(CLIENT_ERROR_PATH);
+    expect(blob).toBeInstanceOf(Blob);
+    if (!(blob instanceof Blob)) return;
+    expect(blob.type).toBe('application/json');
+    expect(JSON.parse(await blob.text())).toEqual({
+      name: 'TypeError',
+      message: 'Failed to fetch dynamically imported module: /assets/x.js',
+      path: '/blog/some-post',
+      host: 'board.example',
+      kind: 'crawler-reload-skipped',
+    });
+  });
+
+  it('keeps the crawler page untouched when the report cannot be sent', () => {
+    const { win, fire, reload } = fakeWindow();
+    win.navigator = {
+      userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1)',
+      sendBeacon: () => {
+        throw new TypeError('Illegal invocation');
+      },
+    };
+    installStaleChunkReload(win);
+    expect(() => fire()).not.toThrow();
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('does not report a chunk failure for a browser: it reloads', () => {
+    const { win, fire, reload, sendBeacon } = fakeWindow();
+    win.navigator = {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+      sendBeacon,
+    };
+    installStaleChunkReload(win);
+    fire();
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(sendBeacon).not.toHaveBeenCalled();
   });
 
   it('still reloads for a browser', () => {

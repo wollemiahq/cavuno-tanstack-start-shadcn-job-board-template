@@ -14,7 +14,9 @@
  * a real fault, and the error reporting sees it.
  *
  * Crawlers never reload: a fully server-rendered page keeps its server HTML
- * instead (src/lib/hydration-chunk-gate.ts).
+ * instead (src/lib/hydration-chunk-gate.ts). They send one client error
+ * report per document instead (`kind: 'crawler-reload-skipped'`), so those
+ * failures still reach the logs.
  */
 
 export const STALE_CHUNK_RELOAD_KEY = 'cavuno:stale-chunk-reload';
@@ -23,8 +25,10 @@ export const STALE_CHUNK_RELOAD_COOLDOWN_MS = 60_000;
 export interface StaleChunkReloadWindow {
   addEventListener: (type: string, listener: (event: Event) => void) => void;
   sessionStorage: Pick<Storage, 'getItem' | 'setItem'>;
-  location: Pick<Location, 'reload'>;
-  navigator?: Pick<Navigator, 'userAgent'>;
+  location: Pick<Location, 'reload'> &
+    Partial<Pick<Location, 'pathname' | 'host'>>;
+  navigator?: Pick<Navigator, 'userAgent'> &
+    Partial<Pick<Navigator, 'sendBeacon'>>;
 }
 
 // Import raw source so server/client transforms cannot change the inline HTML.

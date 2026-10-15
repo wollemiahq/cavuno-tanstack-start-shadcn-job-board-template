@@ -1,4 +1,8 @@
-import { CLIENT_ERROR_PATH } from './client-error-report';
+import {
+  CLIENT_ERROR_KINDS,
+  CLIENT_ERROR_PATH,
+  type ClientErrorKind,
+} from './client-error-report';
 
 export const STARTER_OUCH_LOG_NAME = 'starter_ouch';
 
@@ -15,6 +19,7 @@ type ClientErrorBody = {
   host: string;
   stack?: string | null;
   componentStack?: string | null;
+  kind?: ClientErrorKind | null;
 };
 
 type StarterOuchLine = {
@@ -28,6 +33,7 @@ type StarterOuchLine = {
   digest: string | null;
   stack: string | null;
   componentStack: string | null;
+  kind: ClientErrorKind | null;
   preview: boolean;
   msg: string;
 };
@@ -47,6 +53,10 @@ function clip(value: string | null | undefined, max: number): string | null {
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
+function parseKind(value: string | null | undefined): ClientErrorKind | null {
+  return CLIENT_ERROR_KINDS.find((kind) => kind === value) ?? null;
+}
+
 function parseBody(record: ClientErrorBody): ClientErrorBody | null {
   const name = clip(record.name, 200);
   const message = clip(record.message, 500);
@@ -61,6 +71,7 @@ function parseBody(record: ClientErrorBody): ClientErrorBody | null {
     digest: clip(record.digest, 100),
     stack: clip(record.stack, STACK_MAX),
     componentStack: clip(record.componentStack, STACK_MAX),
+    kind: parseKind(record.kind),
   };
 }
 
@@ -94,6 +105,7 @@ function ouchLine(body: ClientErrorBody, board: string): StarterOuchLine {
     digest: body.digest ?? null,
     stack: body.stack ?? null,
     componentStack: body.componentStack ?? null,
+    kind: body.kind ?? null,
     preview,
     msg: `${STARTER_OUCH_LOG_NAME} ${body.name}: ${body.message} on ${body.host}${body.path}`,
   };
@@ -159,7 +171,7 @@ export async function matchClientErrorIngest(
   const body = parsed ? parseBody(parsed) : null;
   if (!body) return new Response(null, { status: 204 });
 
-  const rateKey = `${body.host}:${body.path}:${body.digest || body.message.slice(0, 80)}`;
+  const rateKey = `${body.kind ?? 'crash'}:${body.host}:${body.path}:${body.digest || body.message.slice(0, 80)}`;
   if (!allowRate(rateKey)) return new Response(null, { status: 204 });
 
   const line = ouchLine(body, env.board);

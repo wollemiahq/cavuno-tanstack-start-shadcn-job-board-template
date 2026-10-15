@@ -115,4 +115,43 @@ describe('matchClientErrorIngest', () => {
       expect.stringContaining('"preview":true'),
     );
   });
+  it('carries a report kind through, and drops an unknown one', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'));
+    const send = async (kind: string | undefined) => {
+      const waited: Promise<void>[] = [];
+      await matchClientErrorIngest(
+        new Request(`https://board.example${CLIENT_ERROR_PATH}`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name: 'TypeError',
+            message: 'Failed to fetch dynamically imported module',
+            path: '/blog/some-post',
+            host: 'board.example',
+            kind,
+          }),
+        }),
+        { apiUrl: 'https://api.cavuno.com', board: 'pk_test' },
+        (promise) => {
+          waited.push(promise);
+        },
+      );
+      await Promise.all(waited);
+    };
+
+    // Same failure, crash and held: neither rate-limits the other.
+    await send(undefined);
+    await send('hydration-held');
+    await send('made-up');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1]?.[1]).toEqual(
+      expect.objectContaining({
+        body: expect.stringContaining('"kind":"hydration-held"'),
+      }),
+    );
+    expect(warn.mock.calls.map(([line]) => JSON.parse(line).kind)).toEqual([
+      null,
+      'hydration-held',
+    ]);
+  });
 });

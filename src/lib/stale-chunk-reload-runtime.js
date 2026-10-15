@@ -1,6 +1,7 @@
 /** @param {import('./stale-chunk-reload').StaleChunkReloadWindow} win */
 export default function installStaleChunkReload(win) {
-  win.addEventListener('vite:preloadError', function () {
+  var crawlerReported = false;
+  win.addEventListener('vite:preloadError', function (event) {
     // Crawlers and page testers render one document and snapshot it. A
     // reload there navigates away mid-render, and the snapshot is blank or
     // whatever the next load shows. They keep the server-rendered page
@@ -11,6 +12,33 @@ export default function installStaleChunkReload(win) {
         userAgent,
       )
     ) {
+      // Still say so, once per document, so crawler chunk failures stay
+      // visible. Same body as src/lib/client-error-report.ts; beacon only.
+      if (crawlerReported) return;
+      crawlerReported = true;
+      try {
+        var error = /** @type {{ payload?: Error }} */ (event).payload;
+        var location = win.location;
+        win.navigator.sendBeacon(
+          '/.well-known/cavuno/client-error',
+          new Blob(
+            [
+              JSON.stringify({
+                name: String((error && error.name) || 'Error').slice(0, 200),
+                message: String(
+                  (error && error.message) || 'vite:preloadError',
+                ).slice(0, 500),
+                path: String(location.pathname || '/').slice(0, 500),
+                host: String(location.host || '').slice(0, 253),
+                kind: 'crawler-reload-skipped',
+              }),
+            ],
+            { type: 'application/json' },
+          ),
+        );
+      } catch {
+        // Reporting must never touch the page the crawler is rendering.
+      }
       return;
     }
     var key = 'cavuno:stale-chunk-reload';
