@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from 'react';
 
+import { formatDate } from '@cavuno/board/format';
 import { useRouter } from '@tanstack/react-router';
 import { BellRing } from 'lucide-react';
 
@@ -423,9 +424,9 @@ export function AlertManagerView({
                     {alert.lastSentAt ? (
                       <p className="text-muted-foreground text-xs">
                         {m.alertManager_lastSentText({
-                          date: new Date(alert.lastSentAt).toLocaleDateString(
-                            getLocale(),
-                          ),
+                          date:
+                            formatDate(getLocale(), alert.lastSentAt) ??
+                            alert.lastSentAt.slice(0, 10),
                         })}
                       </p>
                     ) : null}

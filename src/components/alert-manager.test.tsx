@@ -90,6 +90,18 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+/**
+ * Matches the text a message renders around a date, whatever the board
+ * language, by splitting the message on a sentinel date.
+ */
+function dateMessageMatcher(message: (date: string) => string) {
+  const [before = '', after = ''] = message('\u0000').split('\u0000');
+  return (content: string) =>
+    content.length > before.length + after.length &&
+    content.startsWith(before) &&
+    content.endsWith(after);
+}
+
 describe('AlertManager', () => {
   it('uses the owned Empty composition when there are no alerts', () => {
     renderManager();
@@ -110,6 +122,31 @@ describe('AlertManager', () => {
     expect(item).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-actions"]')).not.toBeNull();
+  });
+
+  it('formats the last-sent date the same on a UTC server and a browser in another timezone', () => {
+    const originalTimezone = process.env.TZ;
+    // 23:30 UTC on the 14th is already the 15th in Sydney.
+    const sentAlert = {
+      ...alert,
+      lastSentAt: '2026-10-14T23:30:00.000Z',
+    } satisfies Alert;
+
+    function lastSentLabel(timezone: string) {
+      process.env.TZ = timezone;
+      renderManager({ alerts: [sentAlert] });
+      const label = screen.getByText(
+        dateMessageMatcher((date) => m.alertManager_lastSentText({ date })),
+      ).textContent;
+      cleanup();
+      return label;
+    }
+
+    try {
+      expect(lastSentLabel('Australia/Sydney')).toBe(lastSentLabel('UTC'));
+    } finally {
+      process.env.TZ = originalTimezone;
+    }
   });
 
   it('opens creation in the owned dialog with Field compositions', () => {
