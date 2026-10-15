@@ -99,7 +99,7 @@ export function JobsPage() {
         <JobAlertFloatingPrompt
           language={board.language}
           defaults={jobAlertDefaultsFromSearch({
-            keyword: search.q,
+            query: search.q,
             source: 'board_home',
           })}
         />

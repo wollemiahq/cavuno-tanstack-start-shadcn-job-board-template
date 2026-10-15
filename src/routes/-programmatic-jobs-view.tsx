@@ -39,6 +39,7 @@ export function ProgrammaticJobsView({
   relatedSearches,
   filters,
   location,
+  alertQuery = filters.q,
   onSaveJob,
 }: {
   heading: string;
@@ -56,6 +57,11 @@ export function ProgrammaticJobsView({
   relatedSearches?: RelatedSearch[];
   filters: JobsSearch;
   location?: { slug: string; label: string };
+  /**
+   * The text query this page ran, sent as the job alert's keywords. Defaults
+   * to the visitor's `q`; category and skill pages pass the term they list.
+   */
+  alertQuery?: string;
   /** Save-job mutation, threaded from the route (server fns stay route-owned). */
   onSaveJob: (jobId: string) => Promise<void>;
 }) {
@@ -136,7 +142,7 @@ export function ProgrammaticJobsView({
         <JobAlertFloatingPrompt
           language={board.language}
           defaults={jobAlertDefaultsFromSearch({
-            keyword: filters.q,
+            query: alertQuery,
             locationSlug: location?.slug,
             source: 'jobs_list',
           })}
