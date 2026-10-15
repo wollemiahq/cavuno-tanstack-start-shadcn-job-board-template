@@ -12,6 +12,7 @@ import {
   readParaglideStamp,
 } from './scripts/paraglide-dev-stamp.mjs';
 import { shellEntryAfterStylesPlugin } from './scripts/shell-entry-after-styles-plugin.mjs';
+import { tailwindUnusedKitPlugin } from './scripts/tailwind-unused-kit-plugin.mjs';
 import { urlWordsPlugin } from './scripts/url-words-plugin.mjs';
 
 import { readFileSync } from 'node:fs';
@@ -485,6 +486,8 @@ function viteConfig(command: ConfigEnv['command']) {
       urlWordsPlugin(),
       devtoolsPlugins(),
       cloudflare({ viteEnvironment: { name: 'ssr' } }),
+      // Drops classes only unused UI kit files use; runs before Tailwind.
+      tailwindUnusedKitPlugin(),
       tailwindcss(),
       tanstackStart({
         router: {

@@ -80,7 +80,12 @@ const BUDGETS = {
   // 749.3 / 250.2 before (2026-10-15). Lowered to the measurement plus the
   // usual ~4 KiB gzip headroom so the code cannot drift back unnoticed.
   shell: { raw: 690_000, gzip: 219_500 },
-  styles: { raw: 260_000, gzip: 40_000 },
+  // UI kit components that nothing imports are left out of Tailwind's scan
+  // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
+  // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
+  // Lowered to the measurement plus ~2 KiB gzip of headroom, so a file that
+  // brings the whole kit back into the stylesheet fails here.
+  styles: { raw: 196_000, gzip: 30_700 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
     // The decorative home hero shader is idle-loaded, not initial-route work.
