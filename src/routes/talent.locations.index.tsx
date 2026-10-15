@@ -13,7 +13,7 @@ import { MapPin } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
-import { TalentDirectoryNotFound } from './-talent-directory-view';
+import { TalentDirectoryNotFound } from './-talent-directory-not-found';
 import { createTalentLocationsIndexLoader } from './-talent-loaders';
 
 import { PlaceDirectoryTree } from '@/components/board/place-directory-tree';

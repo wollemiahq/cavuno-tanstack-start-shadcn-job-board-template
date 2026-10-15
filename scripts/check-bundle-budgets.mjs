@@ -155,6 +155,11 @@ const BUDGETS = {
     // first load fell from 313.3 to 279.3 KiB gzip. Budget is the
     // measurement plus ~3%.
     '/talent/': { raw: 343_000, gzip: 126_000 },
+    // The talent location page renders the /talent/ directory view filtered
+    // to one place, so it loads the same code: measured 325.4 KiB raw /
+    // 120.1 KiB gzip against /talent/'s 325.2 / 120.0 (2026-10-15). Same
+    // budget as /talent/.
+    '/talent/locations/$location': { raw: 343_000, gzip: 126_000 },
     // TanStack Start 1.0's manifest lists every chunk a route's lazy code
     // imports; 1.168 left out transitive imports, so these routes were
     // measured short and loaded the rest without a preload. The bytes did not

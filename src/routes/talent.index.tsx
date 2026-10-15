@@ -1,10 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
-import {
-  TalentDirectoryNotFound,
-  TalentDirectoryView,
-} from './-talent-directory-view';
+import { TalentDirectoryNotFound } from './-talent-directory-not-found';
+import { TalentDirectoryView } from './-talent-directory-view';
 import { createTalentDirectoryLoader } from './-talent-loaders';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
