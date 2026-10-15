@@ -12,7 +12,7 @@ import { m } from '../../paraglide/messages';
  * Anatomy: page header (company avatar + name link, display title, meta
  * pills, posted date) → two-column body. The main column carries the
  * sanitized description prose, facts, taxonomy links, and operator custom
- * fields. The right rail is a stack: the ACTIONS card (full-width
+ * fields. The sticky right rail is a stack: the ACTIONS card (full-width
  * primary Apply on top, a two-up Save + Copy-link row beneath it) → the alert
  * signup card → the compact about-company card → the similar-jobs grid. On
  * mobile the actions card floats above the bottom edge of the viewport.
@@ -125,7 +125,6 @@ export function JobDetail({
 }) {
   return (
     <PageLayout
-      railSticky={false}
       band={
         <div className="border-border bg-muted/50 border-b">
           <Container width="wide">
@@ -196,7 +195,8 @@ export function JobDetail({
         <>
           {/* Sidebar actions card: full-width primary Apply on top, then a
               two-up row of the Save and Copy-link controls beneath it. On
-              mobile it floats above the bottom edge; on lg it joins the sidebar. */}
+              mobile it floats above the bottom edge; on lg it joins the sticky
+              rail. */}
           <div
             data-slot="job-actions"
             className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 lg:static"
