@@ -61,6 +61,7 @@ const profile: TalentProfilePageData['profile'] = {
   avatarUrl: null,
   bio: 'Builds dependable machines.',
   jobSearchStatus: 'open_to_work',
+  lastActive: null,
   experiences: [],
   education: [],
   skills: [{ name: 'Robotics', jobSkillId: 'skill-robotics' }],

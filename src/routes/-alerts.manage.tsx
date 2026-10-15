@@ -9,6 +9,12 @@ import {
   type ManageSearch,
 } from './-alerts.manage-loader';
 
+import {
+  jobAlertMatch,
+  type AnchorJobPaths,
+  type JobAlertMatch,
+} from '@/board/job-alert-match';
+import { JobAlertMatchText } from '@/components/job-alert-match-text';
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -27,11 +33,17 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { enumLabel } from '@/lib/enum-labels';
-import type { JobAlertStoredFilters } from '@cavuno/board';
+import type { JobAlertPreference, JobAlertStoredFilters } from '@cavuno/board';
 
-function filtersSummary(filters: JobAlertStoredFilters): string {
+function filtersSummary(
+  filters: JobAlertStoredFilters,
+  match: JobAlertMatch,
+): string {
   const parts = [
-    ...(filters.jobFunctions ?? []),
+    // A search alert's keywords lead the summary instead.
+    ...(match.kind === 'search' && match.query
+      ? [m.jobAlertMatch_quotedQuery({ query: match.query })]
+      : (filters.jobFunctions ?? [])),
     // Wire enums resolve through the catalog — never string-munged into
     // pseudo-English ('on site') on a localized page.
     ...(filters.remoteOptions ?? []).map(
@@ -47,6 +59,26 @@ function filtersSummary(filters: JobAlertStoredFilters): string {
   } catch {
     return parts.join(', ');
   }
+}
+
+function PreferenceSummary({
+  preference,
+  anchorJobPaths,
+}: {
+  preference: JobAlertPreference;
+  anchorJobPaths: AnchorJobPaths;
+}) {
+  const match = jobAlertMatch(preference);
+  // Similar-job alerts name their anchor job; the rest list their filters.
+  return match.kind === 'similar_job' ? (
+    <JobAlertMatchText
+      match={match}
+      anchorJobPaths={anchorJobPaths}
+      filtersText=""
+    />
+  ) : (
+    filtersSummary(preference.filters, match)
+  );
 }
 
 function ManageNotice({ title, body }: { title: string; body: string }) {
@@ -83,6 +115,7 @@ export function ManagePageView({
   >(null);
   const { subscription, token } = search;
   const state = 'state' in data ? data.state : null;
+  const anchorJobPaths = 'state' in data ? data.anchorJobPaths : {};
 
   const run = async (action: () => Promise<void>) => {
     setPending(true);
@@ -216,7 +249,10 @@ export function ManagePageView({
                       </span>
                     </ItemTitle>
                     <ItemDescription>
-                      {filtersSummary(preference.filters)}
+                      <PreferenceSummary
+                        preference={preference}
+                        anchorJobPaths={anchorJobPaths}
+                      />
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>

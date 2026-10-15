@@ -13,6 +13,7 @@ import { ManagePageView } from './-alerts.manage';
 import {
   createAlertManageLoader,
   type AlertManageDependencies,
+  type ManageData,
 } from './-alerts.manage-loader';
 
 import { m } from '@/paraglide/messages';
@@ -23,6 +24,7 @@ const clearUnsubscribeIntent = vi.fn<() => void>();
 const dependencies: AlertManageDependencies = {
   deleteJobAlertPreference: vi.fn(),
   getJobAlertManageState: vi.fn(),
+  getAnchorJobPaths: vi.fn(),
   getSeoBase: vi.fn(),
   resubscribeJobAlert: vi.fn(),
   unsubscribeJobAlert: vi.fn(),
@@ -39,6 +41,8 @@ const state = {
       label: 'Design jobs',
       frequency: 'weekly',
       isActive: true,
+      kind: 'filters',
+      anchorJob: null,
       filters: {},
       manageToken: 'preference-token',
     },
@@ -51,7 +55,7 @@ afterEach(() => {
 });
 
 function renderManage(
-  data: { state: JobAlertManageState } | { empty: true } | { error: true },
+  data: ManageData,
   search: { subscription?: string; token?: string; unsubscribe?: true } = {},
 ) {
   render(
@@ -78,7 +82,7 @@ describe('public job-alert management', () => {
 
   it('uses the owned Alert composition for the unsubscribed state', () => {
     renderManage(
-      { state: { ...state, unsubscribed: true } },
+      { state: { ...state, unsubscribed: true }, anchorJobPaths: {} },
       { subscription: 'subscription-1', token: 'subscription-token' },
     );
 
@@ -91,7 +95,7 @@ describe('public job-alert management', () => {
 
   it('uses the owned Item composition for each alert preference', () => {
     renderManage(
-      { state },
+      { state, anchorJobPaths: {} },
       { subscription: 'subscription-1', token: 'subscription-token' },
     );
 
@@ -108,7 +112,7 @@ describe('public job-alert management', () => {
       new Error('unsubscribe unavailable'),
     );
     renderManage(
-      { state },
+      { state, anchorJobPaths: {} },
       { subscription: 'subscription-1', token: 'subscription-token' },
     );
     fireEvent.click(
@@ -138,7 +142,7 @@ describe('public job-alert management', () => {
     });
     invalidate.mockRejectedValue(new Error('refresh unavailable'));
     renderManage(
-      { state },
+      { state, anchorJobPaths: {} },
       { subscription: 'subscription-1', token: 'subscription-token' },
     );
 
@@ -184,7 +188,7 @@ describe('public job-alert management', () => {
     });
     invalidate.mockResolvedValue();
     renderManage(
-      { state },
+      { state, anchorJobPaths: {} },
       {
         subscription: 'subscription-1',
         token: 'subscription-token',
@@ -201,7 +205,7 @@ describe('public job-alert management', () => {
 
   it('skips the unsubscribe call when already unsubscribed', () => {
     renderManage(
-      { state: { ...state, unsubscribed: true } },
+      { state: { ...state, unsubscribed: true }, anchorJobPaths: {} },
       {
         subscription: 'subscription-1',
         token: 'subscription-token',
@@ -211,5 +215,46 @@ describe('public job-alert management', () => {
 
     expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
     expect(clearUnsubscribeIntent).toHaveBeenCalledOnce();
+  });
+
+  it('names a similar-job alert’s job and quotes a search alert’s keywords', () => {
+    renderManage(
+      {
+        state: {
+          ...state,
+          preferences: [
+            {
+              ...state.preferences[0],
+              id: 'preference-similar',
+              kind: 'similar_job',
+              anchorJob: {
+                id: 'job-1',
+                slug: 'senior-chef',
+                title: 'Senior chef',
+              },
+              filters: { placeIds: ['place-berlin'] },
+            },
+            {
+              ...state.preferences[0],
+              id: 'preference-search',
+              kind: 'search',
+              filters: { query: 'python', remoteOptions: ['remote'] },
+            },
+          ],
+        },
+        anchorJobPaths: {},
+      },
+      { subscription: 'subscription-1', token: 'subscription-token' },
+    );
+
+    // Without a resolved job link the title shows as plain text.
+    expect(
+      screen.getByText(m.jobAlertMatch_similarTo({ title: 'Senior chef' })),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(m.jobAlertMatch_quotedQuery({ query: 'python' }), {
+        exact: false,
+      }),
+    ).toBeInTheDocument();
   });
 });

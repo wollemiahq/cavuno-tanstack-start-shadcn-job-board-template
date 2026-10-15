@@ -28,9 +28,21 @@ describe('jobBreadcrumbItems', () => {
       jobBreadcrumbItems(
         job({
           placeHierarchy: [
-            { slug: 'united-states', name: 'United States' },
-            { slug: 'texas-united-states', name: 'Texas' },
-            { slug: 'austin-tx-united-states', name: 'Austin' },
+            {
+              slug: 'united-states',
+              canonicalSlug: 'united-states',
+              name: 'United States',
+            },
+            {
+              slug: 'texas-united-states',
+              canonicalSlug: 'texas-united-states',
+              name: 'Texas',
+            },
+            {
+              slug: 'austin-tx-united-states',
+              canonicalSlug: 'austin-tx-united-states',
+              name: 'Austin',
+            },
           ],
         }),
       ),
@@ -82,7 +94,9 @@ describe('jobBreadcrumbJsonLd', () => {
     expect(
       jobBreadcrumbJsonLd(
         job({
-          placeHierarchy: [{ slug: 'berlin', name: 'Berlin' }],
+          placeHierarchy: [
+            { slug: 'berlin', canonicalSlug: 'berlin', name: 'Berlin' },
+          ],
         }),
       ),
     ).toEqual([

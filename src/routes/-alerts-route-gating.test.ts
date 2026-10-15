@@ -5,12 +5,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAlertsLoader, type AlertsLoaderDependencies } from './me.alerts';
 
+import type { Alert } from '@cavuno/board';
+
 const getMyAlerts = vi.fn<AlertsLoaderDependencies['getMyAlerts']>();
 const searchPlaces = vi.fn<AlertsLoaderDependencies['searchPlaces']>();
 const getSeoBase = vi.fn<AlertsLoaderDependencies['getSeoBase']>();
 const getPaywallOffers = vi.fn<AlertsLoaderDependencies['getPaywallOffers']>();
+const getAnchorJobPaths =
+  vi.fn<AlertsLoaderDependencies['getAnchorJobPaths']>();
 const dependencies: AlertsLoaderDependencies = {
   getMyAlerts,
+  getAnchorJobPaths,
   searchPlaces,
   getSeoBase,
   getPaywallOffers,
@@ -107,6 +112,52 @@ describe('alerts route plan gate', () => {
     const data = await createAlertsLoader(dependencies)({ location });
     expect(data).toMatchObject({ locked: false, alerts: { data: [] } });
     expect(getPaywallOffers).not.toHaveBeenCalled();
+    expect(getAnchorJobPaths).not.toHaveBeenCalled();
+  });
+
+  it('resolves similar-job anchor links, and shows the alerts unlinked if that fails', async () => {
+    const similar = {
+      id: 'alert-similar',
+      object: 'alert',
+      label: null,
+      frequency: 'weekly',
+      isActive: true,
+      kind: 'similar_job',
+      anchorJob: { id: 'job-1', slug: 'senior-chef', title: 'Senior chef' },
+      filters: {
+        query: null,
+        jobFunctions: [],
+        seniorityLevels: [],
+        remoteOptions: [],
+        placeIds: [],
+        salaryMin: null,
+        salaryMax: null,
+        salaryCurrency: null,
+      },
+      lastSentAt: null,
+    } satisfies Alert;
+    getMyAlerts.mockResolvedValue({
+      object: 'list',
+      url: '/v1/me/alerts',
+      data: [similar, { ...similar, id: 'alert-similar-2' }],
+      hasMore: false,
+      nextCursor: null,
+    });
+    getAnchorJobPaths.mockResolvedValue({
+      'senior-chef': '/companies/acme/jobs/senior-chef',
+    });
+
+    const data = await createAlertsLoader(dependencies)({ location });
+    expect(getAnchorJobPaths).toHaveBeenCalledExactlyOnceWith({
+      data: { jobSlugs: ['senior-chef'] },
+    });
+    expect(data).toMatchObject({
+      anchorJobPaths: { 'senior-chef': '/companies/acme/jobs/senior-chef' },
+    });
+
+    getAnchorJobPaths.mockRejectedValue(new Error('jobs unavailable'));
+    const fallback = await createAlertsLoader(dependencies)({ location });
+    expect(fallback).toMatchObject({ locked: false, anchorJobPaths: {} });
   });
 
   it('returns unauthenticated visitors to their alerts after sign-in', async () => {
