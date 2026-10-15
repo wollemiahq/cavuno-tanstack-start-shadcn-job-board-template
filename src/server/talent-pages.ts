@@ -310,8 +310,8 @@ export const getTalentProfilePage = createServerFn({ method: 'GET' })
 /**
  * /talent/locations — the places directory candidates live in, with head and
  * breadcrumbs. Follows the directory's access rules like `/talent`: Off
- * rejects with 404 (the route's not-found page), Employers only with the
- * restricted gate, which stays out of the index.
+ * rejects with 404 (the route's not-found page), Employers only renders the
+ * restricted gate. Indexing follows `/talent`: the page stays indexable.
  */
 export const getTalentLocationsIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
@@ -334,22 +334,19 @@ export const getTalentLocationsIndexPage = createServerFn({ method: 'GET' })
         { name: crumbs.talent, href: BOARD_PATHS.talent },
         { name: crumbs.locations },
       ];
-      const head = noindexFollow(
-        listingHead({
-          title: listingPageTitle({
-            heading,
-            boardName: seo.boardName,
-            language: seo.language,
-          }),
-          origin: seo.origin,
-          path: localizePath(BOARD_PATHS.talentLocations),
-          description: listingMetaDescription({
-            heading,
-            boardName: seo.boardName,
-          }),
+      const head = listingHead({
+        title: listingPageTitle({
+          heading,
+          boardName: seo.boardName,
+          language: seo.language,
         }),
-        restricted,
-      );
+        origin: seo.origin,
+        path: localizePath(BOARD_PATHS.talentLocations),
+        description: listingMetaDescription({
+          heading,
+          boardName: seo.boardName,
+        }),
+      });
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
@@ -503,11 +500,10 @@ export const getTalentLocationPage = createServerFn({ method: 'GET' })
             count,
           }),
         }),
-        restricted ||
-          isSearchRadiusViewNoindex(
-            placeSearchRadius(resolution, data.within),
-            inPlaceCount,
-          ),
+        isSearchRadiusViewNoindex(
+          placeSearchRadius(resolution, data.within),
+          inPlaceCount,
+        ),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({

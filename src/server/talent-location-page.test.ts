@@ -202,7 +202,7 @@ describe('talent location page', () => {
     });
   });
 
-  it('renders the restricted gate out of the index for an employers-only directory', async () => {
+  it('renders the restricted gate for an employers-only directory, indexed like /talent', async () => {
     api.talentList.mockRejectedValue(
       new BoardApiError({
         status: 403,
@@ -216,9 +216,8 @@ describe('talent location page', () => {
     if (result.kind !== 'ok') throw new Error('Expected a page');
     expect(result.restricted).toBe(true);
     expect(result.page).toBeNull();
-    expect(result.head.meta).toContainEqual({
-      name: 'robots',
-      content: 'noindex, follow',
-    });
+    expect(result.head.meta).not.toContainEqual(
+      expect.objectContaining({ name: 'robots' }),
+    );
   });
 });

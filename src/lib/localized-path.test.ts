@@ -85,6 +85,12 @@ describe('localized URL segments', () => {
       expect(localizeSegments('/de/jobs/locations/berlin', routing)).toBe(
         '/de/jobs/standorte/berlin',
       );
+      expect(localizeSegments('/fr/talent/locations/paris', routing)).toBe(
+        '/fr/talents/lieux/paris',
+      );
+      expect(delocalizeSegments('/de/talente/standorte/berlin', routing)).toBe(
+        '/de/talent/locations/berlin',
+      );
     }
   });
 

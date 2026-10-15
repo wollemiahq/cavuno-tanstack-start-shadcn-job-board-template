@@ -55,8 +55,7 @@ export function trailJsonLd(trail: { name: string; href?: string }[]) {
  * `head` with `noindex, follow` added when `noindex` holds: a filtered view
  * of a location page (a chosen distance, `within`, the exact place included,
  * or a place with none of its own listed, so only nearby results show; see
- * `isSearchRadiusViewNoindex`), whose plain URL stays canonical, or a talent
- * location page the directory gate hides from anonymous visitors. Its links
+ * `isSearchRadiusViewNoindex`), whose plain URL stays canonical. Its links
  * are still followed.
  */
 export function noindexFollow<T extends { meta: object[] }>(
