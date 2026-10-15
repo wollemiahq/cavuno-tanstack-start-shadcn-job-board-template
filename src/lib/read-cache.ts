@@ -26,6 +26,12 @@
  * and would also store responses origin marks `private` or `no-store`.
  * `cacheEverything` stays because Cloudflare does not cache JSON by default.
  *
+ * Errors are never edge-cached: `cacheTtlByStatus` pins 400-599 to `-1`
+ * ("any negative value instructs Cloudflare not to cache at all"). Without it,
+ * a header-less 404 gets Cloudflare's default 3 min edge TTL, so a job
+ * published just after a miss would 404 at the edge for minutes. Only the
+ * listed statuses are overridden; 2xx keep following origin's headers.
+ *
  * The one explicit TTL lives here. Do not scatter `cacheTtl` literals across
  * the server functions.
  */
@@ -41,9 +47,19 @@ type BoardGlobalCacheOptions = {
   cf: { cacheTtl: number; cacheEverything: true };
 };
 
+/**
+ * Per-status edge TTLs for anonymous reads: never store a 4xx/5xx. A negative
+ * value means "do not cache"; statuses not listed keep following origin.
+ */
+export const EDGE_NEVER_CACHE_ERRORS = { '400-599': -1 } as const;
+
 /** Workers augments `RequestInit` with a `cf` object; the SDK passes it through. */
 type WorkersRequestInit = RequestInit & {
-  cf?: { cacheTtl?: number; cacheEverything?: boolean };
+  cf?: {
+    cacheTtl?: number;
+    cacheEverything?: boolean;
+    cacheTtlByStatus?: Record<string, number>;
+  };
 };
 
 /**
@@ -88,9 +104,13 @@ export function applyReadCache(req: BoardRequest): BoardRequest {
 
   if (method === 'GET' && !viewerSpecific) {
     // Respect an explicit board-global TTL a call site already tagged;
-    // otherwise make the read cacheable and let origin's headers set the TTL.
+    // otherwise make the read cacheable, let origin's headers set the 2xx
+    // TTL, and keep error responses out of the edge cache.
     if (!init.cf?.cacheEverything) {
-      init.cf = { cacheEverything: true };
+      init.cf = {
+        cacheEverything: true,
+        cacheTtlByStatus: { ...EDGE_NEVER_CACHE_ERRORS },
+      };
     }
   } else {
     // Authed/grant read or any mutation → never touch the shared edge cache.

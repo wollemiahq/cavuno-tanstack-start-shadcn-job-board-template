@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  EDGE_NEVER_CACHE_ERRORS,
   READ_CACHE_TTL,
   applyReadCache,
   boardGlobalReadCache,
@@ -17,7 +18,11 @@ import {
 import type { BoardRequest } from '@cavuno/board';
 
 type CacheRequestInit = RequestInit & {
-  cf?: { cacheTtl?: number; cacheEverything?: boolean };
+  cf?: {
+    cacheTtl?: number;
+    cacheEverything?: boolean;
+    cacheTtlByStatus?: Record<string, number>;
+  };
 };
 
 /** Build a BoardRequest the way the SDK hands one to the `onRequest` hook. */
@@ -49,7 +54,11 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
     const r = applyReadCache(req('GET'));
     // No cacheTtl: a forced TTL would override the Board API's
     // Cloudflare-CDN-Cache-Control (fresh window + stale-while-revalidate).
-    expect(init(r).cf).toEqual({ cacheEverything: true });
+    // Errors are never stored, so a 404 cannot outlive a just-published job.
+    expect(init(r).cf).toEqual({
+      cacheEverything: true,
+      cacheTtlByStatus: { '400-599': -1 },
+    });
     // Never no-store — the anonymous view is the one shared-cacheable body.
     expect(init(r).cache).toBeUndefined();
   });
@@ -59,7 +68,24 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
       url: 'https://api.example.test/v1/jobs',
       init: { headers: new Headers() },
     });
-    expect(init(r).cf).toEqual({ cacheEverything: true });
+    expect(init(r).cf).toEqual({
+      cacheEverything: true,
+      cacheTtlByStatus: EDGE_NEVER_CACHE_ERRORS,
+    });
+  });
+
+  it('never edge-caches any 4xx/5xx and leaves 2xx to origin headers', () => {
+    const byStatus = init(applyReadCache(req('GET'))).cf?.cacheTtlByStatus;
+    // Negative = "do not cache at all" (0 would still store, expiring at once).
+    // No 2xx key: successful reads keep following origin's cache headers.
+    expect(byStatus).toEqual({ '400-599': -1 });
+  });
+
+  it('gives each request its own status map (no shared mutable object)', () => {
+    const a = init(applyReadCache(req('GET'))).cf?.cacheTtlByStatus;
+    const b = init(applyReadCache(req('GET'))).cf?.cacheTtlByStatus;
+    expect(a).not.toBe(b);
+    expect(a).not.toBe(EDGE_NEVER_CACHE_ERRORS);
   });
 
   it('preserves an explicit no-store freshness read without shared caching', () => {
