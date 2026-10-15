@@ -247,10 +247,16 @@ const rootRoute = routes.__root__;
 if (!rootRoute)
   throw new Error('TanStack Start manifest has no __root__ route');
 
+// The entry is an inline `import("…")` loader rather than a `src` script
+// (scripts/shell-entry-after-styles-plugin.mjs), and so is no longer among
+// the root's preloads either.
 const shellFiles = unique([
   ...(rootRoute.preloads ?? []),
   ...(rootRoute.scripts ?? [])
-    .map((script) => script.attrs?.src)
+    .map(
+      (script) =>
+        script.attrs?.src ?? script.children?.match(/^import\("(.+)"\)$/)?.[1],
+    )
     .filter(Boolean),
 ]);
 const shellSize = measure(shellFiles);

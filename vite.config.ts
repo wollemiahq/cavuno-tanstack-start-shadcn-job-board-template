@@ -11,6 +11,7 @@ import {
   paraglideInputsDigest,
   readParaglideStamp,
 } from './scripts/paraglide-dev-stamp.mjs';
+import { shellEntryAfterStylesPlugin } from './scripts/shell-entry-after-styles-plugin.mjs';
 import { urlWordsPlugin } from './scripts/url-words-plugin.mjs';
 
 import { readFileSync } from 'node:fs';
@@ -517,6 +518,8 @@ function viteConfig(command: ConfigEnv['command']) {
           },
         },
       }),
+      // Requests the client shell once the stylesheet has loaded.
+      shellEntryAfterStylesPlugin(),
       viteReact(),
     ],
   });
