@@ -28,9 +28,21 @@ describe('jobBreadcrumbItems', () => {
       jobBreadcrumbItems(
         job({
           placeHierarchy: [
-            { slug: 'united-states', name: 'United States' },
-            { slug: 'texas-united-states', name: 'Texas' },
-            { slug: 'austin-tx-united-states', name: 'Austin' },
+            {
+              slug: 'united-states',
+              name: 'United States',
+              canonicalSlug: 'united-states',
+            },
+            {
+              slug: 'texas-united-states',
+              name: 'Texas',
+              canonicalSlug: 'texas-united-states',
+            },
+            {
+              slug: 'austin-tx-united-states',
+              name: 'Austin',
+              canonicalSlug: 'austin-tx-united-states',
+            },
           ],
         }),
       ),
@@ -43,6 +55,30 @@ describe('jobBreadcrumbItems', () => {
       { name: 'Acme Co', href: '/companies/acme-co' },
       { name: 'Senior Engineer' },
     ]);
+  });
+
+  it('links places by canonicalSlug, not the English slug', () => {
+    const hrefs = jobBreadcrumbItems(
+      job({
+        placeHierarchy: [
+          {
+            slug: 'netherlands',
+            name: 'Nederland',
+            canonicalSlug: 'nederland',
+          },
+          {
+            slug: 'amsterdam-nh-netherlands',
+            name: 'Amsterdam',
+            canonicalSlug: 'amsterdam-noord-holland-nederland',
+          },
+        ],
+      }),
+    ).map((crumb) => crumb.href);
+    expect(hrefs).toContain('/jobs/locations/nederland');
+    expect(hrefs).toContain(
+      '/jobs/locations/amsterdam-noord-holland-nederland',
+    );
+    expect(hrefs).not.toContain('/jobs/locations/amsterdam-nh-netherlands');
   });
 
   it('does not insert the primary category', () => {
@@ -82,7 +118,9 @@ describe('jobBreadcrumbJsonLd', () => {
     expect(
       jobBreadcrumbJsonLd(
         job({
-          placeHierarchy: [{ slug: 'berlin', name: 'Berlin' }],
+          placeHierarchy: [
+            { slug: 'berlin', name: 'Berlin', canonicalSlug: 'berlin' },
+          ],
         }),
       ),
     ).toEqual([

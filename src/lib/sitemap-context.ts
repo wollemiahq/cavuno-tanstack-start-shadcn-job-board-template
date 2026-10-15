@@ -1,4 +1,4 @@
-import { BOARD_PATHS } from '@cavuno/board/paths';
+import { BOARD_PATHS, talentLocationPath } from '@cavuno/board/paths';
 import {
   MIN_JOBS_PER_INDEXED_PAGE,
   SITEMAP_CHUNK_SIZE,
@@ -12,11 +12,7 @@ import {
 } from '@cavuno/board/sitemap';
 
 import { placeLinkSlug } from '../board/place-link';
-import {
-  BOARD_PATHS as TALENT_BOARD_PATHS,
-  TALENT_PLACES_LIMIT,
-  talentLocationPath,
-} from '../board/talent-location-path';
+import { TALENT_PLACES_LIMIT } from '../board/talent-places';
 import { impressumHasContent } from '../content/legal/impressum-availability';
 import { createSettledCache } from './settled-cache';
 
@@ -234,7 +230,7 @@ async function talentLocationPaths(board: BoardSdk): Promise<string[]> {
     limit: TALENT_PLACES_LIMIT,
   });
   return [
-    TALENT_BOARD_PATHS.talentLocations,
+    BOARD_PATHS.talentLocations,
     ...data.flatMap((place) => {
       const slug = placeLinkSlug(place);
       return slug && place.candidateCount >= MIN_JOBS_PER_INDEXED_PAGE

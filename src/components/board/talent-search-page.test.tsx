@@ -37,6 +37,7 @@ const showingRange = (from: number, to: number, count: number) =>
 
 const candidate = {
   object: 'talent_directory_entry',
+  lastActive: null,
   id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
@@ -225,6 +226,7 @@ describe('TalentSearchPage — search results pattern', () => {
 
 const candidate2 = {
   object: 'talent_directory_entry',
+  lastActive: null,
   id: 'bu_grace-hopper',
   handle: 'grace-hopper',
   displayName: 'Grace Hopper',

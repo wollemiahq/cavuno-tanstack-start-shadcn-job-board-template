@@ -63,6 +63,7 @@ vi.mock('@/components/root-session', () => ({
 function candidate(id: string, name: string): TalentDirectoryEntry {
   return {
     object: 'talent_directory_entry',
+    lastActive: null,
     id,
     handle: id.replace('bu_', ''),
     displayName: name,

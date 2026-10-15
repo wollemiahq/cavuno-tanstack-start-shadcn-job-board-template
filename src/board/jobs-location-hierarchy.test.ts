@@ -1,10 +1,10 @@
+import { talentLocationPath } from '@cavuno/board/paths';
 import { describe, expect, it } from 'vitest';
 
 import {
   toJobsLocationHierarchyCrumbs,
   toPlaceHierarchyCrumbs,
 } from './jobs-location-hierarchy';
-import { talentLocationPath } from './talent-location-path';
 
 /** A directory place on an English board: board-language fields equal source. */
 const englishPlace = (place: {

@@ -18,8 +18,9 @@ export interface JobBreadcrumbItem {
  * Job-detail trail: Home › Jobs › placeHierarchy › Company › title.
  *
  * Owned here because SDK `buildJobBreadcrumbs` inserts the primary category
- * and omits the company. Place crumbs link to `/jobs/locations/:slug`; the
- * company links to its profile; the title is the current page (no href).
+ * and omits the company. Place crumbs link to
+ * `/jobs/locations/:canonicalSlug`; the company links to its profile; the
+ * title is the current page (no href).
  * The job URL itself stays `/companies/:company/jobs/:slug`.
  */
 export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
@@ -31,7 +32,9 @@ export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
 
   for (const place of job.placeHierarchy) {
     const name = place.name.trim();
-    const slug = place.slug.trim();
+    // `canonicalSlug` is the slug the location page lives at; the English
+    // `slug` 308s to it on a translated board.
+    const slug = place.canonicalSlug.trim();
     if (!name || !slug) continue;
     items.push({ name, href: jobsLocationPath(slug) });
   }

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 
+import { BOARD_PATHS } from '@cavuno/board/paths';
 import { Link } from '@tanstack/react-router';
 
 import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
-import { BOARD_PATHS } from '../board/talent-location-path';
 import { m } from '../paraglide/messages';
 
 import {

@@ -7,6 +7,7 @@ import {
   type TalentDirectoryQuery,
   type TaxonomyResolution,
 } from '@cavuno/board';
+import { BOARD_PATHS, talentLocationPath } from '@cavuno/board/paths';
 import {
   createBreadcrumbJsonLd,
   listingHead,
@@ -40,11 +41,7 @@ import {
   shortPlaceName,
   type PlaceSearchRadius,
 } from '@/board/search-radius';
-import {
-  BOARD_PATHS,
-  TALENT_PLACES_LIMIT,
-  talentLocationPath,
-} from '@/board/talent-location-path';
+import { TALENT_PLACES_LIMIT } from '@/board/talent-places';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import {

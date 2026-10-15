@@ -39,6 +39,8 @@ const state = {
       label: 'Design jobs',
       frequency: 'weekly',
       isActive: true,
+      kind: 'filters',
+      anchorJob: null,
       filters: {},
       manageToken: 'preference-token',
     },

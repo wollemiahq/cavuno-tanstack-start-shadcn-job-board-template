@@ -31,10 +31,13 @@ import { AlertManagerView } from './alert-manager';
 const alert = {
   id: 'alert-1',
   object: 'alert',
+  kind: 'filters',
+  anchorJob: null,
   label: 'Frontend roles',
   frequency: 'weekly',
   isActive: true,
   filters: {
+    query: null,
     jobFunctions: ['Engineering'],
     seniorityLevels: [],
     remoteOptions: ['remote'],

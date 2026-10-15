@@ -17,6 +17,7 @@ const dependencies: SelectedTalentDependencies = { getTalentProfile };
 function profile(handle: string): TalentProfile {
   return {
     object: 'talent_profile',
+    lastActive: null,
     id: `bu_${handle}`,
     handle,
     displayName: handle,
