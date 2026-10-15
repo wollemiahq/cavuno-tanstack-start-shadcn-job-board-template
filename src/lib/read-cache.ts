@@ -19,15 +19,20 @@
  *      anonymous body. (Needs a Workers compatibility date with `cache`
  *      support; ours is 2025-09-02.)
  *
- * All TTLs live here, in one place. Do not scatter `cacheTtl` literals across
+ * Content reads carry no `cacheTtl`: the Board API's own shared-cache policy
+ * (`Cloudflare-CDN-Cache-Control`: 5 min fresh, then up to 1 h
+ * stale-while-revalidate / stale-if-error) sets how long the edge keeps them.
+ * A `cacheTtl` would replace that policy with a fixed TTL and no stale window,
+ * and would also store responses origin marks `private` or `no-store`.
+ * `cacheEverything` stays because Cloudflare does not cache JSON by default.
+ *
+ * The one explicit TTL lives here. Do not scatter `cacheTtl` literals across
  * the server functions.
  */
 import type { BoardRequest } from '@cavuno/board';
 
 /** Read-cache TTLs, in seconds — the single source of truth. */
 export const READ_CACHE_TTL = {
-  /** Public content lists + details (jobs, companies, blog, salaries, taxonomy). */
-  content: 60,
   /** Board-global reads that rarely change (board context/SEO, employer plans). */
   boardGlobal: 300,
 } as const;
@@ -54,7 +59,8 @@ export function boardGlobalReadCache(): BoardGlobalCacheOptions {
 
 /**
  * The client `onRequest` hook: attach the edge-cache directive that matches the
- * request's identity. Anonymous GETs become edge-cacheable; anything carrying a
+ * request's identity. Anonymous GETs become edge-cacheable for as long as the
+ * Board API's cache headers allow; anything carrying a
  * bearer, grant, or capability header, and every mutation, bypasses the cache
  * entirely. Starter job-detail reads intentionally use the capability to ask
  * Cavuno for a different Apply shape, so they must never share a URL-keyed
@@ -82,12 +88,9 @@ export function applyReadCache(req: BoardRequest): BoardRequest {
 
   if (method === 'GET' && !viewerSpecific) {
     // Respect an explicit board-global TTL a call site already tagged;
-    // otherwise apply the default short content TTL.
+    // otherwise make the read cacheable and let origin's headers set the TTL.
     if (!init.cf?.cacheEverything) {
-      init.cf = {
-        cacheTtl: READ_CACHE_TTL.content,
-        cacheEverything: true,
-      };
+      init.cf = { cacheEverything: true };
     }
   } else {
     // Authed/grant read or any mutation → never touch the shared edge cache.

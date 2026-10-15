@@ -45,12 +45,11 @@ function init(r: BoardRequest) {
 }
 
 describe('applyReadCache — the anonymous/authed edge-cache split', () => {
-  it('anonymous GET (no bearer, no grant) → cacheEverything with the content TTL', () => {
+  it('anonymous GET (no bearer, no grant) → cacheEverything, TTL left to origin headers', () => {
     const r = applyReadCache(req('GET'));
-    expect(init(r).cf).toEqual({
-      cacheTtl: READ_CACHE_TTL.content,
-      cacheEverything: true,
-    });
+    // No cacheTtl: a forced TTL would override the Board API's
+    // Cloudflare-CDN-Cache-Control (fresh window + stale-while-revalidate).
+    expect(init(r).cf).toEqual({ cacheEverything: true });
     // Never no-store — the anonymous view is the one shared-cacheable body.
     expect(init(r).cache).toBeUndefined();
   });
@@ -60,10 +59,7 @@ describe('applyReadCache — the anonymous/authed edge-cache split', () => {
       url: 'https://api.example.test/v1/jobs',
       init: { headers: new Headers() },
     });
-    expect(init(r).cf).toEqual({
-      cacheTtl: READ_CACHE_TTL.content,
-      cacheEverything: true,
-    });
+    expect(init(r).cf).toEqual({ cacheEverything: true });
   });
 
   it('preserves an explicit no-store freshness read without shared caching', () => {
@@ -144,8 +140,7 @@ describe('boardGlobalReadCache — the opt-in longer TTL, only where tagged', ()
   });
 
   it('an anonymous GET already tagged board-global keeps the longer TTL', () => {
-    // A call site pre-tagged the request; the hook must not clobber it back
-    // down to the short content TTL.
+    // A call site pre-tagged the request; the hook must not strip its TTL.
     const r = applyReadCache(
       req(
         'GET',
@@ -171,8 +166,7 @@ describe('boardGlobalReadCache — the opt-in longer TTL, only where tagged', ()
     expect(init(r).cache).toBe('no-store');
   });
 
-  it('the two TTLs are distinct and positive', () => {
-    expect(READ_CACHE_TTL.content).toBeGreaterThan(0);
-    expect(READ_CACHE_TTL.boardGlobal).toBeGreaterThan(READ_CACHE_TTL.content);
+  it('the board-global TTL is positive', () => {
+    expect(READ_CACHE_TTL.boardGlobal).toBeGreaterThan(0);
   });
 });
