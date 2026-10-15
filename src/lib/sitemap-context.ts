@@ -277,7 +277,9 @@ export async function buildSitemapContext(
   const catalog = memoizingBoardView(board);
   const [listed, talentPaths] = await Promise.all([
     source.listedBucketEntries(catalog),
-    talentLocationPaths(board),
+    // A failed talent read leaves the talent pages out; it must not take
+    // down the sitemap's other buckets, which never depended on it.
+    talentLocationPaths(board).catch((): string[] => []),
   ]);
   const built = await Promise.all(
     listed.map(

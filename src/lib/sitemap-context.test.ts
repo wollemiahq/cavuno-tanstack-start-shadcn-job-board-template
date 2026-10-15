@@ -187,6 +187,22 @@ describe('hosted-shaped sitemap context', () => {
       expect(list).toHaveBeenCalledWith({ limit: 500 });
     });
 
+    it('keeps the other entries when the talent places read fails', async () => {
+      const { fake, list } = talentBoard('public');
+      list.mockRejectedValue(new Error('upstream 503'));
+      const context = await buildSitemapContext(
+        fake,
+        ORIGIN,
+        source({ buckets: ['marketing', 'jobs-details'] }),
+      );
+      expect(
+        findSitemapChunk(context, 'marketing', 0)?.map((entry) => entry.url),
+      ).not.toContain(`${ORIGIN}/talent/locations`);
+      expect(findSitemapChunk(context, 'jobs-details', 0)).toEqual([
+        { url: `${ORIGIN}/jobs-details` },
+      ]);
+    });
+
     it('lists none unless the directory is public', async () => {
       for (const mode of ['employers_only', 'off'] as const) {
         const { fake, list } = talentBoard(mode);
