@@ -1,15 +1,10 @@
-import { isNotFound } from '@cavuno/board';
 import { blogPostPath } from '@cavuno/board/paths';
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, getRouteApi, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getBoardContext } from '../server/queries';
+import { loadIfBlogEnabled } from './-blog-enabled';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
@@ -26,15 +21,10 @@ export const Route = createFileRoute('/blog/$postSlug')({
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
   loader: async ({ params }) => {
-    const board = await getBoardContext();
-    if (!board.features.blog) throw notFound();
-    let page;
-    try {
-      page = await getBlogPostPage({ data: { postSlug: params.postSlug } });
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
+    const page = await loadIfBlogEnabled(
+      async () => (await getBoardContext()).features.blog === true,
+      () => getBlogPostPage({ data: { postSlug: params.postSlug } }),
+    );
     const { post } = page;
     const target =
       (post.redirected ? post.newSlug : null) ??

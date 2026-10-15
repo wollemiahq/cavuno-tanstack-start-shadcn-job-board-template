@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { isNotFound } from '@cavuno/board';
 import {
   createFileRoute,
-  notFound,
   useLocation,
   useNavigate,
   useRouter,
@@ -11,6 +9,7 @@ import {
 
 import { m } from '../paraglide/messages';
 import { getBoardContext } from '../server/queries';
+import { loadIfBlogEnabled } from './-blog-enabled';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { CursorPagination } from '@/components/board/cursor-pagination';
@@ -41,16 +40,13 @@ export const Route = createFileRoute('/blog/author/$authorSlug')({
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ params, deps }) => {
-    const board = await getBoardContext();
-    if (!board.features.blog) throw notFound();
-    try {
-      return await getBlogAuthorPage({
-        data: { authorSlug: params.authorSlug, cursor: deps.cursor },
-      });
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
+    return loadIfBlogEnabled(
+      async () => (await getBoardContext()).features.blog === true,
+      () =>
+        getBlogAuthorPage({
+          data: { authorSlug: params.authorSlug, cursor: deps.cursor },
+        }),
+    );
   },
   head: ({ loaderData }) =>
     loaderData

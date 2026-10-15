@@ -101,15 +101,23 @@ export const getHomePage = createServerFn({ method: 'GET' })
           : null,
       );
 
-      const [boardContext, jobsEnvelope, companies, blog, talent, categories] =
-        await Promise.all([
-          boardContextP,
-          jobsListP,
-          companiesP,
-          blogP,
-          talentP,
-          categoriesP,
-        ]);
+      const [
+        boardContext,
+        jobsEnvelope,
+        companies,
+        blog,
+        talent,
+        categories,
+        origin,
+      ] = await Promise.all([
+        boardContextP,
+        jobsListP,
+        companiesP,
+        blogP,
+        talentP,
+        categoriesP,
+        readPublicOrigin(),
+      ]);
 
       const page = {
         ...jobsEnvelope,
@@ -121,7 +129,6 @@ export const getHomePage = createServerFn({ method: 'GET' })
           (related): related is RelatedSearch => related.type === 'category',
         );
 
-      const origin = await readPublicOrigin();
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,

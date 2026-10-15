@@ -47,13 +47,13 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [job, boardContext] = await Promise.all([
+      const [job, boardContext, origin] = await Promise.all([
         board.jobs.retrieve(data.jobSlug, undefined, {
           headers: withApplyGatewayCapability(headers),
         }),
         readBoardContext(),
+        readPublicOrigin(),
       ]);
-      const origin = await readPublicOrigin();
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,

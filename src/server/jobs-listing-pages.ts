@@ -162,6 +162,16 @@ function listFilters(
   };
 }
 
+/**
+ * Mark a read started ahead of an `await` as handled, so a rejection that
+ * lands before the batch that consumes it is not reported as unhandled. The
+ * returned promise still rejects for that batch.
+ */
+function startedEarly<T>(read: Promise<T>): Promise<T> {
+  read.catch(() => undefined);
+  return read;
+}
+
 async function seoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
@@ -592,6 +602,15 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
+      // Reads that do not depend on the radius start now. Only a cold slug
+      // waits on the place resolve for its radius, and it must not hold back
+      // the SEO, breadcrumb and taxonomy reads as well.
+      const seoRead = startedEarly(seoBase());
+      // Breadcrumb enrichment only: the place directory carries the ancestor
+      // chain; on failure the trail degrades to the place itself.
+      const placeTreeRead = board.taxonomy.places
+        .list(undefined, { headers })
+        .catch(() => null);
       const radius = await listingRadiusKm(
         data.locationSlug,
         placeRead,
@@ -631,10 +650,8 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
                 ),
           ),
         ),
-        seoBase(),
-        // Breadcrumb enrichment only: the place directory carries the
-        // ancestor chain; on failure the trail degrades to the place itself.
-        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+        seoRead,
+        placeTreeRead,
       ]);
       if (!place) return { kind: 'not_found' as const };
       if (place.redirectTo) {
@@ -730,6 +747,20 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
+      const categoryRead = startedEarly(
+        resolveOrNull(
+          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
+        ),
+      );
+      // Reads that do not depend on the radius start now. Only a cold slug
+      // waits on the place resolve for its radius, and it must not hold back
+      // the SEO, breadcrumb and taxonomy reads as well.
+      const seoRead = startedEarly(seoBase());
+      // Breadcrumb enrichment only: the place directory carries the ancestor
+      // chain; on failure the trail degrades to the place itself.
+      const placeTreeRead = board.taxonomy.places
+        .list(undefined, { headers })
+        .catch(() => null);
       const radius = await listingRadiusKm(
         data.locationSlug,
         placeRead,
@@ -738,9 +769,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
           placeRead,
-          resolveOrNull(
-            board.taxonomy.categories.resolve(data.categorySlug, { headers }),
-          ),
+          categoryRead,
           settled(
             readReachablePage(data.offset, data.limit, (offset) =>
               board.jobs.list(
@@ -755,10 +784,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
               ),
             ),
           ),
-          seoBase(),
-          // Breadcrumb enrichment only: the place directory carries the
-          // ancestor chain; on failure the trail degrades to the place itself.
-          board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+          seoRead,
+          placeTreeRead,
           combinationInPlaceJobCount(
             data,
             { category: data.categorySlug },
@@ -869,6 +896,20 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
+      const skillRead = startedEarly(
+        resolveOrNull(
+          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
+        ),
+      );
+      // Reads that do not depend on the radius start now. Only a cold slug
+      // waits on the place resolve for its radius, and it must not hold back
+      // the SEO, breadcrumb and taxonomy reads as well.
+      const seoRead = startedEarly(seoBase());
+      // Breadcrumb enrichment only: the place directory carries the ancestor
+      // chain; on failure the trail degrades to the place itself.
+      const placeTreeRead = board.taxonomy.places
+        .list(undefined, { headers })
+        .catch(() => null);
       const radius = await listingRadiusKm(
         data.locationSlug,
         placeRead,
@@ -877,9 +918,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
           placeRead,
-          resolveOrNull(
-            board.taxonomy.skills.resolve(data.skillSlug, { headers }),
-          ),
+          skillRead,
           settled(
             readReachablePage(data.offset, data.limit, (offset) =>
               board.jobs.list(
@@ -894,10 +933,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
               ),
             ),
           ),
-          seoBase(),
-          // Breadcrumb enrichment only: the place directory carries the
-          // ancestor chain; on failure the trail degrades to the place itself.
-          board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+          seoRead,
+          placeTreeRead,
           combinationInPlaceJobCount(
             data,
             { skill: data.skillSlug },
