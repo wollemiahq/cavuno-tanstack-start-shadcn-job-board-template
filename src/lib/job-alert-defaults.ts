@@ -4,7 +4,8 @@ import type {
   PublicJob,
 } from '@cavuno/board';
 
-const MAX_JOB_FUNCTIONS = 8;
+/** The Board API caps an alert's search keywords at 200 characters. */
+const MAX_QUERY_LENGTH = 200;
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
 
 export interface JobAlertDefaults {
@@ -12,10 +13,6 @@ export interface JobAlertDefaults {
   label?: string;
   filters: JobAlertFiltersInput;
   context: { source: string; jobId?: string; jobSlug?: string };
-}
-
-function dedupe(values: string[]): string[] {
-  return [...new Set(values.filter((value) => value.length > 0))];
 }
 
 function toRemoteOptions(
@@ -26,22 +23,17 @@ function toRemoteOptions(
 }
 
 /**
- * Scope a job-detail alert to "more jobs like this one". `jobFunctions` uses the
- * category/skill *names* — the digest matcher compares them against the job
- * doc's stored category strings (which are the source names). `placeSlugs` uses
- * the deepest (most specific) place in the hierarchy.
+ * Scope a job-detail alert to "more jobs like this one". The `job_detail`
+ * source plus `jobId` makes it a similar-job alert anchored on this job, so it
+ * sends no keywords or job functions: the anchor job decides what matches.
+ * `placeSlugs` (the deepest place in the hierarchy) keeps it near the job.
  */
 export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
-  const jobFunctions = dedupe([
-    ...job.categories.map((category) => category.name),
-    ...job.skills.map((skill) => skill.name),
-  ]).slice(0, MAX_JOB_FUNCTIONS);
   const placeSlug = job.placeHierarchy.at(-1)?.slug;
 
   return {
     label: job.title,
     filters: {
-      jobFunctions: jobFunctions.length ? jobFunctions : undefined,
       seniorityLevels: job.seniority ? [job.seniority] : undefined,
       remoteOptions: toRemoteOptions(job.remoteOption),
       placeSlugs: placeSlug ? [placeSlug] : undefined,
@@ -55,18 +47,21 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
 }
 
 /**
- * Scope a listing/search alert (the hosted `createJobAlertDefaultsFromFilters`):
- * the keyword becomes the job function and the active location slug the place.
+ * Scope a listing/search alert: the text query the page ran becomes the
+ * alert's search `query`, and the active location slug its place. A blank
+ * query leaves a location-only (or all-jobs) alert.
  */
 export function jobAlertDefaultsFromSearch(opts: {
-  keyword?: string;
+  query?: string;
   locationSlug?: string;
   source?: string;
 }): JobAlertDefaults {
+  const query =
+    opts.query?.trim().slice(0, MAX_QUERY_LENGTH).trim() || undefined;
   return {
-    label: opts.keyword,
+    label: query,
     filters: {
-      jobFunctions: opts.keyword ? [opts.keyword] : undefined,
+      query,
       placeSlugs: opts.locationSlug ? [opts.locationSlug] : undefined,
     },
     context: { source: opts.source ?? 'jobs_list' },
