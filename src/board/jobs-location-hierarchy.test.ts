@@ -1,6 +1,10 @@
+import { talentLocationPath } from '@cavuno/board/paths';
 import { describe, expect, it } from 'vitest';
 
-import { toJobsLocationHierarchyCrumbs } from './jobs-location-hierarchy';
+import {
+  toJobsLocationHierarchyCrumbs,
+  toPlaceHierarchyCrumbs,
+} from './jobs-location-hierarchy';
 
 /** A directory place on an English board: board-language fields equal source. */
 const englishPlace = (place: {
@@ -228,5 +232,43 @@ describe('toJobsLocationHierarchyCrumbs', () => {
       { name: 'B', href: '/jobs/locations/b' },
       { name: 'A' },
     ]);
+  });
+});
+
+describe('toPlaceHierarchyCrumbs', () => {
+  it('builds the same chain on another place-keyed family', () => {
+    const zurich = {
+      id: 'zrh',
+      parentId: 'ch',
+      slug: 'zurich',
+      canonicalSlug: 'zuerich',
+      displayName: 'Zürich',
+    };
+    const switzerland = {
+      id: 'ch',
+      parentId: null,
+      slug: 'switzerland',
+      canonicalSlug: 'schweiz',
+      displayName: 'Schweiz',
+    };
+    const current = {
+      sourceSlug: 'zurich',
+      canonicalSlug: 'zuerich',
+      displayName: 'Zürich',
+    };
+    expect(
+      toPlaceHierarchyCrumbs([zurich, switzerland], current, {
+        placePath: talentLocationPath,
+      }),
+    ).toEqual([
+      { name: 'Schweiz', href: '/talent/locations/schweiz' },
+      { name: 'Zürich' },
+    ]);
+    expect(
+      toPlaceHierarchyCrumbs([zurich, switzerland], current, {
+        placePath: talentLocationPath,
+        linkCurrent: true,
+      }).at(-1),
+    ).toEqual({ name: 'Zürich', href: '/talent/locations/zuerich' });
   });
 });

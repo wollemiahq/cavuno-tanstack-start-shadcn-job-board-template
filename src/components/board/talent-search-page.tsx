@@ -117,6 +117,7 @@ export function TalentSearchPage({
   profileUnlocks = false,
   placeRadius = null,
   onWithinChange,
+  heading = m.talentSearch_resultsHeading(),
 }: {
   candidates: TalentCardVM[];
   search?: TalentSearch;
@@ -150,6 +151,8 @@ export function TalentSearchPage({
   placeRadius?: TalentPlaceRadius | null;
   /** The new `within` URL value; see `SearchRadiusScope`. */
   onWithinChange?: (within: number | undefined) => void;
+  /** The results heading, e.g. the place on a talent location page. */
+  heading?: string;
 }) {
   // The loader served the last API-reachable page for anything deeper, so
   // the range label, the active page and Next/Previous must agree with it.
@@ -568,7 +571,7 @@ export function TalentSearchPage({
   const resultsBar = (
     <div data-slot="talent-results-bar" className="pb-3">
       <h1 className="text-foreground text-lg font-semibold tracking-tight">
-        {m.talentSearch_resultsHeading()}
+        {heading}
       </h1>
       {radiusScope ??
         (resultDescription ? (

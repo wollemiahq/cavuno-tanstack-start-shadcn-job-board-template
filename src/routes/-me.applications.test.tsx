@@ -100,6 +100,18 @@ describe('candidate applications — native-applications gate', () => {
   });
 });
 
+/**
+ * Matches the text a message renders around a date, whatever the board
+ * language, by splitting the message on a sentinel date.
+ */
+function dateMessageMatcher(message: (date: string) => string) {
+  const [before = '', after = ''] = message('\u0000').split('\u0000');
+  return (content: string) =>
+    content.length > before.length + after.length &&
+    content.startsWith(before) &&
+    content.endsWith(after);
+}
+
 describe('candidate applications', () => {
   it('uses the owned Item composition for each submitted application', async () => {
     const rootRoute = createRootRoute();
@@ -131,5 +143,50 @@ describe('candidate applications', () => {
         name: m.meApplications_withdrawLabel(),
       }),
     ).toBeEnabled();
+  });
+
+  it('formats the applied date the same on a UTC server and a browser in another timezone', async () => {
+    const originalTimezone = process.env.TZ;
+    // 23:32 UTC on the 14th is already the 15th in Sydney.
+    const lateApplication = {
+      ...application,
+      appliedAt: '2026-10-14T23:32:44.983Z',
+    } satisfies Application;
+
+    async function appliedLabel(timezone: string) {
+      process.env.TZ = timezone;
+      const rootRoute = createRootRoute();
+      const pageRoute = createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/',
+        component: () => (
+          <ApplicationsPageView
+            applications={{ ...applicationsEnvelope, data: [lateApplication] }}
+            invalidate={invalidate}
+            dependencies={dependencies}
+          />
+        ),
+      });
+      const router = createRouter({
+        routeTree: rootRoute.addChildren([pageRoute]),
+        history: createMemoryHistory({ initialEntries: ['/'] }),
+      });
+      render(<RouterProvider router={router} />);
+      const label = (
+        await screen.findByText(
+          dateMessageMatcher((date) => m.meApplications_appliedOn({ date })),
+        )
+      ).textContent;
+      cleanup();
+      return label;
+    }
+
+    try {
+      const server = await appliedLabel('UTC');
+      const browser = await appliedLabel('Australia/Sydney');
+      expect(browser).toBe(server);
+    } finally {
+      process.env.TZ = originalTimezone;
+    }
   });
 });

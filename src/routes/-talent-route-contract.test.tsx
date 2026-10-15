@@ -53,6 +53,7 @@ const seo = {
 
 const profile: TalentProfilePageData['profile'] = {
   object: 'talent_profile',
+  lastActive: null,
   id: 'bu_ada-lovelace',
   handle: 'ada-lovelace',
   displayName: 'Ada Lovelace',
@@ -61,7 +62,6 @@ const profile: TalentProfilePageData['profile'] = {
   avatarUrl: null,
   bio: 'Builds dependable machines.',
   jobSearchStatus: 'open_to_work',
-  lastActive: null,
   experiences: [],
   education: [],
   skills: [{ name: 'Robotics', jobSkillId: 'skill-robotics' }],

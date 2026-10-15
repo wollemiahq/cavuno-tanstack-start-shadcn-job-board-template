@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { BOARD_PATHS } from '@cavuno/board/paths';
 import { Link } from '@tanstack/react-router';
 
 import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
@@ -309,6 +310,14 @@ export default function Footer({
   // ── Resources ──
   const resourceLinks: FooterLink[] = [
     { href: '/jobs/locations', label: copy.footer.locationsLabel },
+    ...(talentLinked && !removedNav.has('talent')
+      ? [
+          {
+            href: BOARD_PATHS.talentLocations,
+            label: copy.footer.talentLocationsLabel,
+          },
+        ]
+      : []),
     { href: '/salaries', label: copy.footer.salariesLabel },
     // sitemap.xml is a server route, not a router page → plain anchor
     { href: '/sitemap.xml', label: copy.footer.sitemapLabel, external: true },

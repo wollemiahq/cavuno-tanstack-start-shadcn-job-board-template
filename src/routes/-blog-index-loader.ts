@@ -1,4 +1,4 @@
-import { notFound } from '@tanstack/react-router';
+import { loadIfBlogEnabled } from './-blog-enabled';
 
 import { getBlogIndexPage } from '@/server/blog-pages';
 
@@ -16,7 +16,8 @@ export function createBlogIndexLoader(
   isBlogEnabled: () => Promise<boolean> = async () => true,
 ) {
   return async ({ deps }: { deps: BlogSearch }) => {
-    if (!(await isBlogEnabled())) throw notFound();
-    return loadPage({ data: { cursor: deps.cursor, q: deps.q } });
+    return loadIfBlogEnabled(isBlogEnabled, () =>
+      loadPage({ data: { cursor: deps.cursor, q: deps.q } }),
+    );
   };
 }

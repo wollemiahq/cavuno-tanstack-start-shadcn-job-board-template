@@ -74,6 +74,32 @@ describe('shell breadcrumb resolver', () => {
     });
   });
 
+  it('derives talent location trails from the path until the loader trail arrives', () => {
+    expect(
+      resolveShellBreadcrumb({ pathname: '/talent/locations', labels }),
+    ).toEqual({
+      items: [
+        { name: 'Home', href: '/' },
+        { name: 'Talent', href: '/talent' },
+        { name: 'Locations' },
+      ],
+    });
+    expect(
+      resolveShellBreadcrumb({
+        pathname: '/talent/locations/new-york',
+        labels,
+        entities: { location: 'New York' },
+      }),
+    ).toEqual({
+      items: [
+        { name: 'Home', href: '/' },
+        { name: 'Talent', href: '/talent' },
+        { name: 'Locations', href: '/talent/locations' },
+        { name: 'New York' },
+      ],
+    });
+  });
+
   it('uses loaded route data when available and readable slug fallbacks while pending', () => {
     expect(
       resolveShellBreadcrumbEntities([

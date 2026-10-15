@@ -18,7 +18,6 @@
  * fetch. Discriminated `{ kind: 'not_found' | 'redirect' | 'ok' }` lets the
  * route still throw notFound / 308 with the same targets as before.
  */
-import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   jobsCategoryPath,
@@ -42,6 +41,12 @@ import {
   listingCacheKey,
   listingRadiusKm,
 } from './listing-place-cache';
+import {
+  noindexFollow,
+  resolveOrNull,
+  settled,
+  trailJsonLd,
+} from './place-listing-helpers';
 
 import {
   customFieldLabel,
@@ -77,7 +82,6 @@ import type {
   JobsSearchBody,
   RemoteOption,
   Seniority,
-  TaxonomyResolution,
 } from '@cavuno/board';
 
 type JsonPrimitive = string | number | boolean | null;
@@ -88,39 +92,6 @@ function asJsonObjects<T>(value: T): JsonObject[] {
   // SAFETY: Structured data is composed from literal schema.org objects and
   // SDK SEO builders, then JSON round-tripped to erase readonly helper types.
   return JSON.parse(JSON.stringify(value)) as JsonObject[];
-}
-
-/** Same 404→null contract as `resolveOrNull` in queries.ts (kept private there). */
-async function resolveOrNull(
-  promise: Promise<TaxonomyResolution>,
-): Promise<TaxonomyResolution | null> {
-  try {
-    return await promise;
-  } catch (error) {
-    if (isNotFound(error)) return null;
-    throw error;
-  }
-}
-
-/**
- * Capture a rejection as a VALUE instead of letting it reject the batch.
- *
- * The listing endpoint 404s on an unknown category/skill slug. Now that the
- * listing shares a `Promise.all` with its taxonomy resolve, an unrecognised
- * slug used to reject the whole batch BEFORE the resolve's verdict could be
- * read — turning a 404 page into a 500. Holding the outcome lets the resolve
- * decide: unknown slug -> `not_found`, alias -> 308, and on a slug that
- * really exists the listing's error is re-thrown unchanged, so a genuine
- * backend failure is never masked as a missing page.
- */
-type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown };
-
-async function settled<T>(promise: Promise<T>): Promise<Settled<T>> {
-  try {
-    return { ok: true, value: await promise };
-  } catch (error) {
-    return { ok: false, error };
-  }
 }
 
 /** Shared listing filter slice used by every jobs listing page function. */
@@ -162,6 +133,16 @@ function listFilters(
   };
 }
 
+/**
+ * Mark a read started ahead of an `await` as handled, so a rejection that
+ * lands before the batch that consumes it is not reported as unhandled. The
+ * returned promise still rejects for that batch.
+ */
+function startedEarly<T>(read: Promise<T>): Promise<T> {
+  read.catch(() => undefined);
+  return read;
+}
+
 async function seoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
@@ -173,33 +154,6 @@ async function seoBase() {
     boardName: boardContext.name,
     language: boardContext.language,
     origin,
-  };
-}
-
-/** `{name, href}` trail → `listingJsonLd` `{name, path}` crumbs (localized). */
-function trailJsonLd(trail: { name: string; href?: string }[]) {
-  return trail.map((crumb) =>
-    crumb.href
-      ? { name: crumb.name, path: localizePath(crumb.href) }
-      : { name: crumb.name },
-  );
-}
-
-/**
- * A location page with a chosen distance (`within`, the exact place included)
- * is a filtered view of the plain location page, which stays the canonical
- * URL and shows the default distance; a place with no jobs of its own lists
- * only nearby jobs. Keep either out of the index while its job links are
- * still followed (see `isSearchRadiusViewNoindex`).
- */
-function noindexSearchRadiusView<T extends { meta: object[] }>(
-  head: T,
-  noindex: boolean,
-): T {
-  if (!noindex) return head;
-  return {
-    ...head,
-    meta: [...head.meta, { name: 'robots', content: 'noindex, follow' }],
   };
 }
 
@@ -592,6 +546,15 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
+      // Reads that do not depend on the radius start now. Only a cold slug
+      // waits on the place resolve for its radius, and it must not hold back
+      // the SEO, breadcrumb and taxonomy reads as well.
+      const seoRead = startedEarly(seoBase());
+      // Breadcrumb enrichment only: the place directory carries the ancestor
+      // chain; on failure the trail degrades to the place itself.
+      const placeTreeRead = board.taxonomy.places
+        .list(undefined, { headers })
+        .catch(() => null);
       const radius = await listingRadiusKm(
         data.locationSlug,
         placeRead,
@@ -631,10 +594,8 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
                 ),
           ),
         ),
-        seoBase(),
-        // Breadcrumb enrichment only: the place directory carries the
-        // ancestor chain; on failure the trail degrades to the place itself.
-        board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+        seoRead,
+        placeTreeRead,
       ]);
       if (!place) return { kind: 'not_found' as const };
       if (place.redirectTo) {
@@ -658,7 +619,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place),
       ];
-      const head = noindexSearchRadiusView(
+      const head = noindexFollow(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -730,6 +691,20 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
+      const categoryRead = startedEarly(
+        resolveOrNull(
+          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
+        ),
+      );
+      // Reads that do not depend on the radius start now. Only a cold slug
+      // waits on the place resolve for its radius, and it must not hold back
+      // the SEO, breadcrumb and taxonomy reads as well.
+      const seoRead = startedEarly(seoBase());
+      // Breadcrumb enrichment only: the place directory carries the ancestor
+      // chain; on failure the trail degrades to the place itself.
+      const placeTreeRead = board.taxonomy.places
+        .list(undefined, { headers })
+        .catch(() => null);
       const radius = await listingRadiusKm(
         data.locationSlug,
         placeRead,
@@ -738,9 +713,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
           placeRead,
-          resolveOrNull(
-            board.taxonomy.categories.resolve(data.categorySlug, { headers }),
-          ),
+          categoryRead,
           settled(
             readReachablePage(data.offset, data.limit, (offset) =>
               board.jobs.list(
@@ -755,10 +728,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
               ),
             ),
           ),
-          seoBase(),
-          // Breadcrumb enrichment only: the place directory carries the
-          // ancestor chain; on failure the trail degrades to the place itself.
-          board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+          seoRead,
+          placeTreeRead,
           combinationInPlaceJobCount(
             data,
             { category: data.categorySlug },
@@ -801,7 +772,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         }),
         { name: category.displayName },
       ];
-      const head = noindexSearchRadiusView(
+      const head = noindexFollow(
         listingHead({
           title: listingPageTitle({
             heading: heading,
@@ -869,6 +840,20 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
+      const skillRead = startedEarly(
+        resolveOrNull(
+          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
+        ),
+      );
+      // Reads that do not depend on the radius start now. Only a cold slug
+      // waits on the place resolve for its radius, and it must not hold back
+      // the SEO, breadcrumb and taxonomy reads as well.
+      const seoRead = startedEarly(seoBase());
+      // Breadcrumb enrichment only: the place directory carries the ancestor
+      // chain; on failure the trail degrades to the place itself.
+      const placeTreeRead = board.taxonomy.places
+        .list(undefined, { headers })
+        .catch(() => null);
       const radius = await listingRadiusKm(
         data.locationSlug,
         placeRead,
@@ -877,9 +862,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
           placeRead,
-          resolveOrNull(
-            board.taxonomy.skills.resolve(data.skillSlug, { headers }),
-          ),
+          skillRead,
           settled(
             readReachablePage(data.offset, data.limit, (offset) =>
               board.jobs.list(
@@ -894,10 +877,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
               ),
             ),
           ),
-          seoBase(),
-          // Breadcrumb enrichment only: the place directory carries the
-          // ancestor chain; on failure the trail degrades to the place itself.
-          board.taxonomy.places.list(undefined, { headers }).catch(() => null),
+          seoRead,
+          placeTreeRead,
           combinationInPlaceJobCount(
             data,
             { skill: data.skillSlug },
@@ -940,7 +921,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         }),
         { name: skill.displayName },
       ];
-      const head = noindexSearchRadiusView(
+      const head = noindexFollow(
         listingHead({
           title: listingPageTitle({
             heading: heading,

@@ -397,3 +397,36 @@ describe('location listing search distance', () => {
     expect(countReads()).toBe(1);
   });
 });
+
+describe('location listing read order on a cold slug', () => {
+  it('starts the breadcrumb tree and the keyword resolve before the place resolves', async () => {
+    let settlePlace: (place: Place) => void = () => undefined;
+    const pendingPlace = new Promise<Place>((resolve) => {
+      settlePlace = resolve;
+    });
+    const category = { ...resolution('city', 'AU'), type: 'category' };
+    mocks.resolve.mockImplementation((slug: string) =>
+      slug === 'fixture-place' ? pendingPlace : Promise.resolve(category),
+    );
+
+    const rendering = getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'fixture-category' },
+    });
+    await Promise.resolve();
+
+    // Only the job list needs the place's radius.
+    expect(mocks.tree).toHaveBeenCalledTimes(1);
+    expect(mocks.resolve).toHaveBeenCalledWith(
+      'fixture-category',
+      expect.anything(),
+    );
+    expect(mocks.list).not.toHaveBeenCalled();
+
+    settlePlace(resolution('city', 'AU'));
+    await rendering;
+    expect(mocks.list).toHaveBeenCalledWith(
+      expect.objectContaining({ radius: 50 }),
+      expect.anything(),
+    );
+  });
+});

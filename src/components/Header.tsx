@@ -38,6 +38,10 @@ import type {
   HeaderSearchSubmission,
   HeaderSearchTerm,
 } from '@/lib/header-search';
+import {
+  nameHeaderSearchLocation,
+  reconcileHeaderSearchLocation,
+} from '@/lib/header-search';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
 import { membershipNavVisible } from '@/lib/membership-nav';
 import {
@@ -163,9 +167,22 @@ export default function Header({
   if (lastSearchKey !== searchKey) {
     setLastSearchKey(searchKey);
     setSearchValue(search.query);
-    setSearchLocation(search.location);
+    setSearchLocation((field) =>
+      reconcileHeaderSearchLocation(field, search.location),
+    );
     setSearchTerm(search.term);
     setSearchMarket(search.market);
+  }
+  // The route can name its place after the place itself is known (its loader
+  // resolves the name); fill that name in without resyncing anything else.
+  const routeLocationName = search.location?.name ?? '';
+  const [lastRouteLocationName, setLastRouteLocationName] =
+    useState(routeLocationName);
+  if (lastRouteLocationName !== routeLocationName) {
+    setLastRouteLocationName(routeLocationName);
+    setSearchLocation((field) =>
+      nameHeaderSearchLocation(field, search.location),
+    );
   }
   const searchFields = {
     value: searchValue,

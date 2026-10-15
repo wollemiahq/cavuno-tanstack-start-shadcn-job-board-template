@@ -1,5 +1,7 @@
 import { linkOptions } from '@tanstack/react-router';
 
+import { ROUTE_TEMPLATES } from './route-templates';
+
 /**
  * The one place a candidate profile URL is built. Cards, the directory's
  * selection key, header scope, canonical tags, and JSON-LD all go through
@@ -13,6 +15,17 @@ import { linkOptions } from '@tanstack/react-router';
 export const TALENT_PROFILE_ROUTE = '/p/$handle';
 
 const HANDLE_TOKEN = /\{\$handle\}|\$handle/;
+
+/**
+ * Paths of the routes without params (`/talent/locations`, …), trailing
+ * slash dropped. The router matches these before a param route, so a moved
+ * profile template (`/talent/{$handle}`) never owns them.
+ */
+const STATIC_ROUTE_PATHS: ReadonlySet<string> = new Set(
+  ROUTE_TEMPLATES.filter((template) => !template.includes('$')).map(
+    (template) => template.replace(/(.)\/$/, '$1'),
+  ),
+);
 
 /**
  * Path builder and parser for one profile route template. Only the handle
@@ -41,7 +54,12 @@ export function talentProfilePaths(template: string) {
         prefix.length,
         pathname.length - suffix.length,
       );
-      if (!raw) return null;
+      // A handle is one encoded segment: `/talent/locations/x` is not the
+      // profile `locations/x` when profiles move to `/talent/{$handle}`.
+      if (!raw || raw.includes('/')) return null;
+      if (STATIC_ROUTE_PATHS.has(pathname.replace(/(.)\/$/, '$1'))) {
+        return null;
+      }
       try {
         return decodeURIComponent(raw);
       } catch {

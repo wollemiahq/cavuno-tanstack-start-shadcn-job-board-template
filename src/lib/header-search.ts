@@ -186,6 +186,17 @@ function locationFromTalentPlace(
   return { slug, name: resolvedLabel ?? slug };
 }
 
+/** A talent location page's place, so a header search keeps it. */
+function talentLocationFromPathname(
+  pathname: string,
+  resolvedLabel?: string,
+): HeaderSearchLocation | null {
+  const slug = pathname.match(/^\/talent\/locations\/([^/]+)$/)?.[1];
+  if (!slug) return null;
+
+  return { slug, name: resolvedLabel ?? slug };
+}
+
 function termFromPathname(
   pathname: string,
   resolvedLabel?: string,
@@ -246,7 +257,8 @@ export function resolveHeaderSearchState(
       scope === 'jobs'
         ? locationFromPathname(pathname, resolvedLocationLabel)
         : scope === 'talent'
-          ? locationFromTalentPlace(search.place, resolvedLocationLabel)
+          ? (locationFromTalentPlace(search.place, resolvedLocationLabel) ??
+            talentLocationFromPathname(pathname, resolvedLocationLabel))
           : null,
     term:
       scope === 'jobs' && !explicitQuery
@@ -257,4 +269,42 @@ export function resolveHeaderSearchState(
         ? marketFromPathname(pathname, resolvedQueryLabel)
         : null,
   };
+}
+
+/**
+ * What the shared location field shows once the route's place changes.
+ *
+ * A place the route has no name for yet carries its bare slug as the name
+ * (see `resolveHeaderSearchState`). A slug is never better than a name the
+ * field already holds for the same place — the suggestion the visitor just
+ * picked — so that one is kept until the route can name the place itself.
+ */
+export function reconcileHeaderSearchLocation(
+  field: HeaderSearchLocation | null,
+  route: HeaderSearchLocation | null,
+): HeaderSearchLocation | null {
+  if (!route) return null;
+  if (route.name !== route.slug || field?.slug !== route.slug) return route;
+  return field;
+}
+
+/**
+ * Name the field's place when the route's name for it arrives after the
+ * place itself. Only fills in a bare slug: what the visitor picked or typed
+ * since, and any name already shown, stay as they are.
+ */
+export function nameHeaderSearchLocation(
+  field: HeaderSearchLocation | null,
+  route: HeaderSearchLocation | null,
+): HeaderSearchLocation | null {
+  if (
+    !field ||
+    !route ||
+    field.slug !== route.slug ||
+    field.name !== field.slug ||
+    route.name === route.slug
+  ) {
+    return field;
+  }
+  return route;
 }

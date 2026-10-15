@@ -244,18 +244,18 @@ describe('toJobDetailVM', () => {
         placeHierarchy: [
           {
             slug: 'united-states',
-            canonicalSlug: 'united-states',
             name: 'United States',
+            canonicalSlug: 'united-states',
           },
           {
             slug: 'texas-united-states',
-            canonicalSlug: 'texas-united-states',
             name: 'Texas',
+            canonicalSlug: 'texas-united-states',
           },
           {
             slug: 'austin-tx-united-states',
-            canonicalSlug: 'austin-tx-united-states',
             name: 'Austin',
+            canonicalSlug: 'austin-tx-united-states',
           },
         ],
       }),

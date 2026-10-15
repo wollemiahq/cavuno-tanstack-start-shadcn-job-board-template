@@ -1309,6 +1309,7 @@
   "footer_forCompaniesHeading": "Voor bedrijven",
   "footer_impressumLabel": "Juridische informatie",
   "footer_locationsLabel": "Locaties",
+  "footer_talentLocationsLabel": "Talent per locatie",
   "footer_poweredByText": "Mogelijk gemaakt door",
   "footer_privacyPolicyLabel": "Privacybeleid",
   "footer_resourcesHeading": "Bronnen",
@@ -2387,6 +2388,24 @@
   "talentDirectory_searchPlaceholder": "Kandidaten zoeken…",
   "talentDirectory_signInLabel": "Inloggen",
   "talentDirectory_title": "Talent",
+  "talentLocationsIndex_emptyText": "Nog geen locaties.",
+  "talentLocationsIndex_heading": "Talent per locatie",
+  "talentLocationPage_heading": "Talent in {place}",
+  "talentLocationPage_countHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input place",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} kandidaat in {place}",
+        "countPlural=*": "{countLabel} kandidaten in {place}"
+      }
+    }
+  ],
   "talentFilters_anyRelocateOption": "Alle verhuisvoorkeuren",
   "talentFilters_anyStatusOption": "Alle statussen",
   "talentFilters_applyLabel": "Filters toepassen",

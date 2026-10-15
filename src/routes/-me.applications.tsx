@@ -5,6 +5,7 @@
  */
 import { useState } from 'react';
 
+import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import { Send } from 'lucide-react';
 
@@ -116,9 +117,9 @@ export function ApplicationsPageView({
                     ) : null}
                     <p className="text-muted-foreground text-xs">
                       {m.meApplications_appliedOn({
-                        date: new Date(
-                          application.appliedAt,
-                        ).toLocaleDateString(getLocale()),
+                        date:
+                          formatDate(getLocale(), application.appliedAt) ??
+                          application.appliedAt.slice(0, 10),
                       })}
                     </p>
                   </ItemContent>

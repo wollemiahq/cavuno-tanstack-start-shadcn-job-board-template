@@ -168,6 +168,38 @@ export function talentListingLoaderDeps(
 }
 
 /**
+ * A talent location page's search (`/talent/locations/$location`): the
+ * directory filters without `place`, which the path names, or the talent-list
+ * chrome (`list`, `saved`, `stage`), which belongs to `/talent`. Picking a
+ * list there opens it on `/talent`.
+ */
+export type TalentLocationSearch = Omit<
+  TalentSearch,
+  'place' | 'list' | 'saved' | 'stage'
+>;
+
+export function parseTalentLocationSearch(
+  search: UrlSearchInput,
+): TalentLocationSearch {
+  const {
+    place: _place,
+    list: _list,
+    saved: _saved,
+    stage: _stage,
+    ...rest
+  } = parseTalentSearch(search);
+  return rest;
+}
+
+/** Listing request inputs for a talent location page; `within` applies to its place. */
+export function talentLocationLoaderDeps(
+  search: TalentLocationSearch,
+): Omit<TalentListingSearch, 'place'> {
+  const { place: _place, ...deps } = talentListingLoaderDeps(search);
+  return { ...deps, within: search.within };
+}
+
+/**
  * Directory filters a Saved view runs over a list's saved people. `within`
  * is the URL's search distance, turned into the API's `radius` (km) on the
  * server, as for `/talent`.

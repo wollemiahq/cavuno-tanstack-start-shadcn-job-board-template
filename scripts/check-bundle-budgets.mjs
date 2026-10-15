@@ -80,7 +80,12 @@ const BUDGETS = {
   // 749.3 / 250.2 before (2026-10-15). Lowered to the measurement plus the
   // usual ~4 KiB gzip headroom so the code cannot drift back unnoticed.
   shell: { raw: 690_000, gzip: 219_500 },
-  styles: { raw: 260_000, gzip: 40_000 },
+  // UI kit components that nothing imports are left out of Tailwind's scan
+  // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
+  // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
+  // Lowered to the measurement plus ~2 KiB gzip of headroom, so a file that
+  // brings the whole kit back into the stylesheet fails here.
+  styles: { raw: 196_000, gzip: 30_700 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
     // The decorative home hero shader is idle-loaded, not initial-route work.
@@ -155,6 +160,11 @@ const BUDGETS = {
     // first load fell from 313.3 to 279.3 KiB gzip. Budget is the
     // measurement plus ~3%.
     '/talent/': { raw: 343_000, gzip: 126_000 },
+    // The talent location page renders the /talent/ directory view filtered
+    // to one place, so it loads the same code: measured 325.4 KiB raw /
+    // 120.1 KiB gzip against /talent/'s 325.2 / 120.0 (2026-10-15). Same
+    // budget as /talent/.
+    '/talent/locations/$location': { raw: 343_000, gzip: 126_000 },
     // TanStack Start 1.0's manifest lists every chunk a route's lazy code
     // imports; 1.168 left out transitive imports, so these routes were
     // measured short and loaded the rest without a preload. The bytes did not
@@ -247,10 +257,16 @@ const rootRoute = routes.__root__;
 if (!rootRoute)
   throw new Error('TanStack Start manifest has no __root__ route');
 
+// The entry is an inline `import("…")` loader rather than a `src` script
+// (scripts/shell-entry-after-styles-plugin.mjs), and so is no longer among
+// the root's preloads either.
 const shellFiles = unique([
   ...(rootRoute.preloads ?? []),
   ...(rootRoute.scripts ?? [])
-    .map((script) => script.attrs?.src)
+    .map(
+      (script) =>
+        script.attrs?.src ?? script.children?.match(/^import\("(.+)"\)$/)?.[1],
+    )
     .filter(Boolean),
 ]);
 const shellSize = measure(shellFiles);
