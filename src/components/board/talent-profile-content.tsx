@@ -69,7 +69,7 @@ export function TalentProfileIdentity({
         <AvatarFallback>{initialsOf(vm.avatarName)}</AvatarFallback>
       </Avatar>
       <div className="flex min-w-0 flex-col gap-2">
-        {showName || vm.headline ? (
+        {showName || vm.headline || vm.lastActiveLabel ? (
           <div className="flex min-w-0 flex-col gap-1">
             {showName ? (
               <Text
@@ -93,6 +93,11 @@ export function TalentProfileIdentity({
             {vm.headline ? (
               <p className="text-muted-foreground text-base" dir="auto">
                 {vm.headline}
+              </p>
+            ) : null}
+            {vm.lastActiveLabel ? (
+              <p className="text-muted-foreground text-sm">
+                {vm.lastActiveLabel}
               </p>
             ) : null}
           </div>

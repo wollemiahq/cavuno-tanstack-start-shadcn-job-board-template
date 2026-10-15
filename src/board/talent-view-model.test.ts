@@ -24,6 +24,13 @@ const labels = {
     open_to_offers: 'Open to offers',
     not_looking: 'Not looking',
   },
+  lastActive: {
+    today: 'Active today',
+    this_week: 'Active this week',
+    this_month: 'Active this month',
+    last_3_months: 'Active in the last 3 months',
+    over_3_months: 'Active over 3 months ago',
+  },
   employmentTypes: {
     full_time: 'Full time',
   },
@@ -132,9 +139,28 @@ describe('talent view models', () => {
       headline: 'Computing pioneer',
       location: 'London, United Kingdom',
       jobSearchStatusLabel: 'Open to offers',
+      lastActiveLabel: null,
       skills: ['Mathematics', 'Analytical engines'],
       redacted: false,
     });
+  });
+
+  it('labels each last-active bucket the API sends and keeps a withheld one empty', () => {
+    const lastActiveLabel = (lastActive: TalentDirectoryEntry['lastActive']) =>
+      toTalentCardVM({ ...directoryEntry, lastActive }, labels).lastActiveLabel;
+
+    expect(lastActiveLabel('today')).toBe('Active today');
+    expect(lastActiveLabel('this_week')).toBe('Active this week');
+    expect(lastActiveLabel('this_month')).toBe('Active this month');
+    expect(lastActiveLabel('last_3_months')).toBe(
+      'Active in the last 3 months',
+    );
+    expect(lastActiveLabel('over_3_months')).toBe('Active over 3 months ago');
+    expect(lastActiveLabel(null)).toBeNull();
+    expect(
+      toTalentProfileVM({ ...profile, lastActive: 'this_week' }, 'fr', labels)
+        .lastActiveLabel,
+    ).toBe('Active this week');
   });
 
   it('keeps a handle-less directory entry visible without inventing a profile link', () => {

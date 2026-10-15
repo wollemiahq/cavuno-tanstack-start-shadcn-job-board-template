@@ -1047,7 +1047,11 @@ export function ProfileForm({
                   if (next) set('jobSearchStatus', next);
                 }}
               >
-                <SelectTrigger id="profile-search-status" className="w-full">
+                <SelectTrigger
+                  id="profile-search-status"
+                  className="w-full"
+                  aria-describedby="profile-search-status-description"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1058,6 +1062,9 @@ export function ProfileForm({
                   ))}
                 </SelectContent>
               </Select>
+              <FieldDescription id="profile-search-status-description">
+                {m.profileForm_searchStatusDescription()}
+              </FieldDescription>
             </Field>
             <Field className="gap-1.5">
               <FieldLabel htmlFor="profile-visible-to">

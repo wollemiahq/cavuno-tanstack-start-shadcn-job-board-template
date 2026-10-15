@@ -25,6 +25,7 @@ const vm: TalentCardVM = {
   headline: 'Computing pioneer',
   location: 'London, United Kingdom',
   jobSearchStatusLabel: 'Open to offers',
+  lastActiveLabel: null,
   skills: ['Analytical engines', 'Mathematics'],
   redacted: false,
 };
@@ -143,6 +144,25 @@ describe('TalentSearchResult', () => {
     expect(
       container.querySelector("[data-slot='search-result-card']"),
     ).toHaveAttribute('data-redacted', 'true');
+  });
+
+  it('shows when the candidate was last active only when the API sent it', async () => {
+    const { rerender } = render(
+      <TalentSearchResult
+        vm={{
+          ...vm,
+          handle: null,
+          detailHref: null,
+          lastActiveLabel: 'Active this week',
+        }}
+      />,
+    );
+    expect(screen.getByText('Active this week')).toBeVisible();
+
+    rerender(
+      <TalentSearchResult vm={{ ...vm, handle: null, detailHref: null }} />,
+    );
+    expect(screen.queryByText('Active this week')).toBeNull();
   });
 
   it('omits optional candidate facts rather than inventing placeholders', async () => {

@@ -11,6 +11,7 @@ export const profileVm: TalentProfileVM = {
   headline: 'Computing pioneer',
   location: 'London, United Kingdom',
   jobSearchStatusLabel: 'Open to offers',
+  lastActiveLabel: null,
   bio: 'I translate ambitious ideas into working systems.',
   experienceHeading: 'Experience',
   experiences: [

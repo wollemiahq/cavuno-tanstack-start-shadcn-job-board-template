@@ -20,6 +20,8 @@ export interface TalentViewModelLabels {
   present: string;
   viewProfile: string;
   jobSearchStatuses: Readonly<Record<string, string>>;
+  /** Keyed by the API's coarse `lastActive` bucket (`today`, `this_week`, …). */
+  lastActive: Readonly<Record<string, string>>;
   employmentTypes: Readonly<Record<string, string>>;
   locationTypes: Readonly<Record<string, string>>;
   foundVia: Readonly<Record<string, string>>;
@@ -36,6 +38,12 @@ export interface TalentCardVM {
   headline: string | null;
   location: string | null;
   jobSearchStatusLabel: string | null;
+  /**
+   * Roughly when the candidate was last active ("Active this week"). The API
+   * sends the bucket only to a signed-in employer, and only for candidates
+   * who are actively looking or open to offers; otherwise it is `null`.
+   */
+  lastActiveLabel: string | null;
   skills: string[];
   /**
    * True when the API withheld the card's identifying fields. The starter
@@ -262,6 +270,7 @@ export function toTalentCardVM(
       candidate.jobSearchStatus,
       labels.jobSearchStatuses,
     ),
+    lastActiveLabel: enumLabel(candidate.lastActive, labels.lastActive),
     skills: candidate.skills,
     redacted,
   };

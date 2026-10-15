@@ -141,6 +141,18 @@ describe('TalentProfileContent', () => {
     expect(screen.queryByRole('heading', { name: 'Languages' })).toBeNull();
   });
 
+  it('shows when the candidate was last active under the headline only when the API sent it', () => {
+    const { rerender } = render(
+      <TalentProfileContent
+        vm={{ ...profileVm, lastActiveLabel: 'Active today' }}
+      />,
+    );
+    expect(screen.getByText('Active today')).toBeVisible();
+
+    rerender(<TalentProfileContent vm={profileVm} />);
+    expect(screen.queryByText('Active today')).toBeNull();
+  });
+
   it('can omit the profile identity when a parent detail header owns it', () => {
     render(<TalentProfileContent vm={profileVm} showHeader={false} />);
 

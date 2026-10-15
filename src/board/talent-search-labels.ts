@@ -17,6 +17,13 @@ export function getTalentSearchLabels(): TalentViewModelLabels {
       open_to_offers: m.talentSearch_statusOpenToOffers(),
       not_looking: m.talentSearch_statusNotLooking(),
     },
+    lastActive: {
+      today: m.talentSearch_lastActiveToday(),
+      this_week: m.talentSearch_lastActiveThisWeek(),
+      this_month: m.talentSearch_lastActiveThisMonth(),
+      last_3_months: m.talentSearch_lastActiveLast3Months(),
+      over_3_months: m.talentSearch_lastActiveOver3Months(),
+    },
     employmentTypes: {
       full_time: m.talentSearch_employmentFullTime(),
       part_time: m.talentSearch_employmentPartTime(),

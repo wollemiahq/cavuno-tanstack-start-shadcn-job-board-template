@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
 import { talentDestination } from '@/lib/master-detail-destination';
+import { cn } from '@/lib/utils';
 
 export function TalentSearchResult({
   vm,
@@ -62,6 +63,16 @@ export function TalentSearchResult({
           ) : null}
           {vm.location ? (
             <p className="text-muted-foreground mt-2 text-sm">{vm.location}</p>
+          ) : null}
+          {vm.lastActiveLabel ? (
+            <p
+              className={cn(
+                'text-muted-foreground text-xs',
+                vm.location ? 'mt-0.5' : 'mt-2',
+              )}
+            >
+              {vm.lastActiveLabel}
+            </p>
           ) : null}
 
           {vm.jobSearchStatusLabel || vm.skills.length > 0 || saveSlot ? (
