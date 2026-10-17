@@ -29,6 +29,22 @@ describe('parseTalentSearch', () => {
     });
   });
 
+  it('reads Open to relocate from a bare or router-quoted URL value', () => {
+    // `?openToRelocate=true` parses to a boolean, `%22true%22` to a string.
+    expect(parseTalentSearch({ openToRelocate: true }).openToRelocate).toBe(
+      'true',
+    );
+    expect(parseTalentSearch({ openToRelocate: false }).openToRelocate).toBe(
+      'false',
+    );
+    expect(parseTalentSearch({ openToRelocate: 'false' }).openToRelocate).toBe(
+      'false',
+    );
+    expect(
+      parseTalentSearch({ openToRelocate: 'yes' }).openToRelocate,
+    ).toBeUndefined();
+  });
+
   it('collapses page 1 to a clean URL and rejects invalid page values', () => {
     // The directory is offset-paginated with a 1-based `?page=`; page 1 drops
     // from the URL, and anything invalid collapses to page 1 (also dropped).

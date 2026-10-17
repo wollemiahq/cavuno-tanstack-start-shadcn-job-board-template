@@ -85,7 +85,13 @@ function jobSearchStatusValue(
   return JOB_SEARCH_STATUSES.find((status) => status === raw);
 }
 
+/**
+ * TanStack parses `?openToRelocate=true` as the boolean `true`; only the
+ * router's own `?openToRelocate=%22true%22` comes back as the string. Accept
+ * both, or a typed or shared link silently drops the filter.
+ */
 function relocateValue(value: UrlSearchValue): TalentSearch['openToRelocate'] {
+  if (value === true || value === false) return value ? 'true' : 'false';
   const raw = stringSearchValue(value);
   if (raw === 'true' || raw === 'false') return raw;
   return undefined;
