@@ -54,7 +54,11 @@ vi.mock('../lib/board', () => ({
     };
   },
 }));
-import { getJobsCategoryPage, getJobsLocationPage } from './jobs-listing-pages';
+import {
+  getJobsCategoryPage,
+  getJobsLocationCategoryPage,
+  getJobsLocationPage,
+} from './jobs-listing-pages';
 
 const INTRO = '<p>Fixture intro.</p>';
 
@@ -122,6 +126,21 @@ describe('landing page intro', () => {
       expect(page).toMatchObject({ kind: 'ok', introHtml: undefined });
     });
   }
+
+  it('location and category: carries neither intro', async () => {
+    mocks.resolve.mockResolvedValue(withIntro);
+    mocks.list.mockResolvedValue({ data: [], count: 3 });
+    const page = await getJobsLocationCategoryPage({
+      data: {
+        locationSlug: 'fixture',
+        categorySlug: 'fixture',
+        offset: 0,
+        limit: 24,
+      },
+    });
+    expect(page).toMatchObject({ kind: 'ok' });
+    expect(JSON.stringify(page)).not.toContain(INTRO);
+  });
 
   it('location: hides the intro for a query or a chosen distance', async () => {
     mocks.resolve.mockResolvedValue(withIntro);

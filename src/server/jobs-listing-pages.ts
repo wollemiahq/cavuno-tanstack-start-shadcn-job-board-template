@@ -196,6 +196,12 @@ function landingIntro<T extends { introHtml?: string }>(
   };
 }
 
+/** A resolution without its intro, for pages that never show one. */
+function withoutIntro<T extends { introHtml?: string }>(resolution: T) {
+  const { introHtml: _introHtml, ...rest } = resolution;
+  return rest;
+}
+
 /**
  * A location combination's own jobs in the place (`within=0`), which its
  * default-distance view's noindex turns on, as the sitemap does: with none
@@ -894,8 +900,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       );
       return {
         kind: 'ok' as const,
-        place,
-        category,
+        place: withoutIntro(place),
+        category: withoutIntro(category),
         list,
         seo,
         relatedSearches: list.relatedSearches,
@@ -1057,7 +1063,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       );
       return {
         kind: 'ok' as const,
-        place,
+        place: withoutIntro(place),
         skill,
         list,
         seo,
