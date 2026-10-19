@@ -714,6 +714,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         placeRead,
         data.within,
       );
+      // A filtered view may never await it; a failed place resolve already
+      // fails the page through `placeRead`, so do not also leave a rejection
+      // unobserved.
+      radiusKmRead.catch(() => undefined);
       const radiusParams = await jobsRadiusParams(
         data.within,
         () => radiusKmRead,
@@ -869,6 +873,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         placeRead,
         data.within,
       );
+      // A filtered view may never await it; a failed place resolve already
+      // fails the page through `placeRead`, so do not also leave a rejection
+      // unobserved.
+      radiusKmRead.catch(() => undefined);
       const radiusParams = await jobsRadiusParams(
         data.within,
         () => radiusKmRead,
