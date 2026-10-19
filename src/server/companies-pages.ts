@@ -37,6 +37,7 @@ import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
+import { isSalaryPageNoindex, noindexFollow } from './place-listing-helpers';
 import { profileCustomFilters } from './profile-filter-fields';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
@@ -594,32 +595,35 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salaryCompanyTitle(locale, salary.companyName, range),
-            ),
-          },
-          {
-            name: 'description',
-            content: salaryCompanyMetaDescription(locale, {
-              company: salary.companyName,
-              range,
-              jobCount: salary.overallSalary?.jobCount ?? null,
-              categoryCount: salary.byCategory.length,
-              year: new Date().getFullYear(),
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, companySalaryPath(salary.companySlug)),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salaryCompanyTitle(locale, salary.companyName, range),
+              ),
+            },
+            {
+              name: 'description',
+              content: salaryCompanyMetaDescription(locale, {
+                company: salary.companyName,
+                range,
+                jobCount: salary.overallSalary?.jobCount ?? null,
+                categoryCount: salary.byCategory.length,
+                year: new Date().getFullYear(),
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, companySalaryPath(salary.companySlug)),
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const c = breadcrumbsCopy();
       const faqEntries = buildSalaryFaq(
         locale,
@@ -682,47 +686,50 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salaryCompanyCategoryTitle(
-                locale,
-                salary.companyName,
-                salary.categoryName,
-                range,
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salaryCompanyCategoryTitle(
+                  locale,
+                  salary.companyName,
+                  salary.categoryName,
+                  range,
+                ),
               ),
-            ),
-          },
-          {
-            name: 'description',
-            content: salary.overallSalary
-              ? m.companySalaries_categoryMetaDescriptionWithData({
-                  category: salary.categoryName,
-                  company: salary.companyName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.companySalaries_categoryMetaDescriptionEmpty({
-                  category: salary.categoryName,
-                  company: salary.companyName,
-                }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              companyCategorySalaryPath(
-                salary.companySlug,
-                salary.categoryCanonicalSlug,
+            },
+            {
+              name: 'description',
+              content: salary.overallSalary
+                ? m.companySalaries_categoryMetaDescriptionWithData({
+                    category: salary.categoryName,
+                    company: salary.companyName,
+                    range: range!,
+                    jobCount: salary.overallSalary.jobCount,
+                  })
+                : m.companySalaries_categoryMetaDescriptionEmpty({
+                    category: salary.categoryName,
+                    company: salary.companyName,
+                  }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                companyCategorySalaryPath(
+                  salary.companySlug,
+                  salary.categoryCanonicalSlug,
+                ),
               ),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const c = breadcrumbsCopy();
       const label = m.companySalaries_categoryAtCompanyLabel({
         category: salary.categoryName,

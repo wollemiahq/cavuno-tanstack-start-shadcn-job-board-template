@@ -1,7 +1,9 @@
 /**
  * Small helpers the place-keyed listing page functions share: the jobs
  * location family (`jobs-listing-pages.ts`) and the talent location pages
- * (`talent-pages.ts`).
+ * (`talent-pages.ts`), plus the `noindex, follow` robots meta the salary
+ * pages (`salary-pages.ts`, `companies-pages.ts`) add from the API's
+ * `indexable` verdict.
  */
 import { isNotFound } from '@cavuno/board';
 
@@ -67,4 +69,28 @@ export function noindexFollow<T extends { meta: object[] }>(
     ...head,
     meta: [...head.meta, { name: 'robots', content: 'noindex, follow' }],
   };
+}
+
+/**
+ * A salary payload or list item that may carry the API's `indexable` verdict.
+ * `& object` lets a type without the field (older SDK types) pass the weak-type
+ * check while a present field still has to be a boolean.
+ */
+type SalaryIndexable = { readonly indexable?: boolean } & object;
+
+/**
+ * A salary detail or link-list page is noindex only when the API says
+ * `indexable: false`; an absent field (an older API) stays indexable.
+ */
+export function isSalaryPageNoindex(payload: SalaryIndexable): boolean {
+  return payload.indexable === false;
+}
+
+/**
+ * A salary hub's items carry whether the page each one links to is
+ * indexable. The hub is indexable when at least one listed page is (an item
+ * without the field counts as indexable), so an empty hub is noindex.
+ */
+export function isSalaryHubNoindex(items: readonly SalaryIndexable[]): boolean {
+  return !items.some((item) => item.indexable !== false);
 }

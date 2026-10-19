@@ -53,6 +53,11 @@ import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
+import {
+  isSalaryHubNoindex,
+  isSalaryPageNoindex,
+  noindexFollow,
+} from './place-listing-helpers';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
@@ -111,25 +116,33 @@ export const getSalaryHubPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(seo.boardName, m.salaryHub_metaTitle()),
-          },
-          {
-            name: 'description',
-            content: m.salaryHub_metaDescription({
-              boardName: seo.boardName,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, BOARD_PATHS.salaries),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(seo.boardName, m.salaryHub_metaTitle()),
+            },
+            {
+              name: 'description',
+              content: m.salaryHub_metaDescription({
+                boardName: seo.boardName,
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, BOARD_PATHS.salaries),
+            },
+          ],
+        },
+        isSalaryHubNoindex([
+          ...companies.data,
+          ...titles.data,
+          ...skills.data,
+          ...locations.data,
+        ]),
+      );
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
@@ -166,25 +179,28 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(seo.boardName, m.salaryHub_companiesMetaTitle()),
-          },
-          {
-            name: 'description',
-            content: m.salaryHub_companiesMetaDescription({
-              boardName: seo.boardName,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, BOARD_PATHS.salaryCompanies),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(seo.boardName, m.salaryHub_companiesMetaTitle()),
+            },
+            {
+              name: 'description',
+              content: m.salaryHub_companiesMetaDescription({
+                boardName: seo.boardName,
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, BOARD_PATHS.salaryCompanies),
+            },
+          ],
+        },
+        isSalaryHubNoindex(companies.data),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -216,25 +232,28 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(seo.boardName, m.salaryHub_titlesMetaTitle()),
-          },
-          {
-            name: 'description',
-            content: m.salaryHub_titlesMetaDescription({
-              boardName: seo.boardName,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, BOARD_PATHS.salaryTitles),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(seo.boardName, m.salaryHub_titlesMetaTitle()),
+            },
+            {
+              name: 'description',
+              content: m.salaryHub_titlesMetaDescription({
+                boardName: seo.boardName,
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, BOARD_PATHS.salaryTitles),
+            },
+          ],
+        },
+        isSalaryHubNoindex(titles.data),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -266,25 +285,28 @@ export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(seo.boardName, m.salaryHub_skillsMetaTitle()),
-          },
-          {
-            name: 'description',
-            content: m.salaryHub_skillsMetaDescription({
-              boardName: seo.boardName,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, BOARD_PATHS.salarySkills),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(seo.boardName, m.salaryHub_skillsMetaTitle()),
+            },
+            {
+              name: 'description',
+              content: m.salaryHub_skillsMetaDescription({
+                boardName: seo.boardName,
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, BOARD_PATHS.salarySkills),
+            },
+          ],
+        },
+        isSalaryHubNoindex(skills.data),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -319,25 +341,28 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(seo.boardName, m.salaryHub_locationsMetaTitle()),
-          },
-          {
-            name: 'description',
-            content: m.salaryHub_locationsMetaDescription({
-              boardName: seo.boardName,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, BOARD_PATHS.salaryLocations),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(seo.boardName, m.salaryHub_locationsMetaTitle()),
+            },
+            {
+              name: 'description',
+              content: m.salaryHub_locationsMetaDescription({
+                boardName: seo.boardName,
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, BOARD_PATHS.salaryLocations),
+            },
+          ],
+        },
+        isSalaryHubNoindex(locations.data),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -385,38 +410,41 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salary.overallSalary
-                ? salaryEntityTitle(locale, salary.categoryName, range!)
-                : m.salaryDetail_titleHeading({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salary.overallSalary
+                  ? salaryEntityTitle(locale, salary.categoryName, range!)
+                  : m.salaryDetail_titleHeading({
+                      title: salary.categoryName,
+                    }),
+              ),
+            },
+            {
+              name: 'description',
+              content: salary.overallSalary
+                ? m.salaryDetail_titleMetaDescriptionWithData({
+                    title: salary.categoryName,
+                    range: range!,
+                    jobCount: salary.overallSalary.jobCount,
+                  })
+                : m.salaryDetail_titleMetaDescriptionEmpty({
                     title: salary.categoryName,
                   }),
-            ),
-          },
-          {
-            name: 'description',
-            content: salary.overallSalary
-              ? m.salaryDetail_titleMetaDescriptionWithData({
-                  title: salary.categoryName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.salaryDetail_titleMetaDescriptionEmpty({
-                  title: salary.categoryName,
-                }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, salaryTitlePath(salary.canonicalSlug)),
-          },
-        ],
-      };
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, salaryTitlePath(salary.canonicalSlug)),
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const faqEntries = buildSalaryFaq(
         locale,
         salary.categoryName,
@@ -469,38 +497,41 @@ export const getSkillSalaryPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salary.overallSalary
-                ? salaryEntityTitle(locale, salary.skillName, range!)
-                : m.salaryDetail_skillHeading({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salary.overallSalary
+                  ? salaryEntityTitle(locale, salary.skillName, range!)
+                  : m.salaryDetail_skillHeading({
+                      skill: salary.skillName,
+                    }),
+              ),
+            },
+            {
+              name: 'description',
+              content: salary.overallSalary
+                ? m.salaryDetail_skillMetaDescriptionWithData({
+                    skill: salary.skillName,
+                    range: range!,
+                    jobCount: salary.overallSalary.jobCount,
+                  })
+                : m.salaryDetail_skillMetaDescriptionEmpty({
                     skill: salary.skillName,
                   }),
-            ),
-          },
-          {
-            name: 'description',
-            content: salary.overallSalary
-              ? m.salaryDetail_skillMetaDescriptionWithData({
-                  skill: salary.skillName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.salaryDetail_skillMetaDescriptionEmpty({
-                  skill: salary.skillName,
-                }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, salarySkillPath(salary.canonicalSlug)),
-          },
-        ],
-      };
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, salarySkillPath(salary.canonicalSlug)),
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const faqEntries = buildSalaryFaq(
         locale,
         salary.skillName,
@@ -570,34 +601,40 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salaryPlaceTitle(locale, salary.placeName, range),
-            ),
-          },
-          {
-            name: 'description',
-            content: salary.overallSalary
-              ? m.salaryDetail_placeMetaDescriptionWithData({
-                  place: salary.placeName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.salaryDetail_placeMetaDescriptionEmpty({
-                  place: salary.placeName,
-                }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, salaryLocationPath(salary.canonicalSlug)),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salaryPlaceTitle(locale, salary.placeName, range),
+              ),
+            },
+            {
+              name: 'description',
+              content: salary.overallSalary
+                ? m.salaryDetail_placeMetaDescriptionWithData({
+                    place: salary.placeName,
+                    range: range!,
+                    jobCount: salary.overallSalary.jobCount,
+                  })
+                : m.salaryDetail_placeMetaDescriptionEmpty({
+                    place: salary.placeName,
+                  }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryLocationPath(salary.canonicalSlug),
+              ),
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const faqEntries = buildSalaryFaq(
         locale,
         salary.placeName,
@@ -650,35 +687,38 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              m.salaryDetail_titleLocationsMetaTitle({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                m.salaryDetail_titleLocationsMetaTitle({
+                  title: payload.categoryName,
+                }),
+              ),
+            },
+            {
+              name: 'description',
+              content: m.salaryDetail_titleLocationsMetaDescription({
                 title: payload.categoryName,
+                count: payload.locations.length,
+                countLabel: String(payload.locations.length),
               }),
-            ),
-          },
-          {
-            name: 'description',
-            content: m.salaryDetail_titleLocationsMetaDescription({
-              title: payload.categoryName,
-              count: payload.locations.length,
-              countLabel: String(payload.locations.length),
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              salaryTitleLocationsPath(payload.canonicalSlug),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryTitleLocationsPath(payload.canonicalSlug),
+              ),
+            },
+          ],
+        },
+        isSalaryPageNoindex(payload),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -729,35 +769,38 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              m.salaryDetail_skillLocationsMetaTitle({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                m.salaryDetail_skillLocationsMetaTitle({
+                  skill: payload.skillName,
+                }),
+              ),
+            },
+            {
+              name: 'description',
+              content: m.salaryDetail_skillLocationsMetaDescription({
                 skill: payload.skillName,
+                count: payload.locations.length,
+                countLabel: String(payload.locations.length),
               }),
-            ),
-          },
-          {
-            name: 'description',
-            content: m.salaryDetail_skillLocationsMetaDescription({
-              skill: payload.skillName,
-              count: payload.locations.length,
-              countLabel: String(payload.locations.length),
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              salarySkillLocationsPath(payload.canonicalSlug),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salarySkillLocationsPath(payload.canonicalSlug),
+              ),
+            },
+          ],
+        },
+        isSalaryPageNoindex(payload),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -819,34 +862,37 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
         },
         { name: c.titles },
       ];
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              m.salaryDetail_titlesInPlaceMetaTitle({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                m.salaryDetail_titlesInPlaceMetaTitle({
+                  place: payload.placeName,
+                }),
+              ),
+            },
+            {
+              name: 'description',
+              content: m.salaryDetail_titlesInPlaceMetaDescription({
                 place: payload.placeName,
+                count: payload.titles.length,
               }),
-            ),
-          },
-          {
-            name: 'description',
-            content: m.salaryDetail_titlesInPlaceMetaDescription({
-              place: payload.placeName,
-              count: payload.titles.length,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              salaryLocationTitlesPath(payload.canonicalSlug),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryLocationTitlesPath(payload.canonicalSlug),
+              ),
+            },
+          ],
+        },
+        isSalaryPageNoindex(payload),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -907,34 +953,37 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
         },
         { name: c.skills },
       ];
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              m.salaryDetail_skillsInPlaceMetaTitle({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                m.salaryDetail_skillsInPlaceMetaTitle({
+                  place: payload.placeName,
+                }),
+              ),
+            },
+            {
+              name: 'description',
+              content: m.salaryDetail_skillsInPlaceMetaDescription({
                 place: payload.placeName,
+                count: payload.skills.length,
               }),
-            ),
-          },
-          {
-            name: 'description',
-            content: m.salaryDetail_skillsInPlaceMetaDescription({
-              place: payload.placeName,
-              count: payload.skills.length,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              salaryLocationSkillsPath(payload.canonicalSlug),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryLocationSkillsPath(payload.canonicalSlug),
+              ),
+            },
+          ],
+        },
+        isSalaryPageNoindex(payload),
+      );
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
@@ -997,52 +1046,55 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salary.overallSalary
-                ? salaryEntityInPlaceTitle(
-                    locale,
-                    salary.categoryName,
-                    salary.placeName,
-                    range!,
-                  )
-                : m.salaryDetail_titleInPlaceHeading({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salary.overallSalary
+                  ? salaryEntityInPlaceTitle(
+                      locale,
+                      salary.categoryName,
+                      salary.placeName,
+                      range!,
+                    )
+                  : m.salaryDetail_titleInPlaceHeading({
+                      title: salary.categoryName,
+                      place: salary.placeName,
+                    }),
+              ),
+            },
+            {
+              name: 'description',
+              content: salary.overallSalary
+                ? m.salaryDetail_titleInPlaceMetaDescriptionWithData({
+                    title: salary.categoryName,
+                    place: salary.placeName,
+                    range: range!,
+                    jobCount: salary.overallSalary.jobCount,
+                  })
+                : m.salaryDetail_titleInPlaceMetaDescriptionEmpty({
                     title: salary.categoryName,
                     place: salary.placeName,
                   }),
-            ),
-          },
-          {
-            name: 'description',
-            content: salary.overallSalary
-              ? m.salaryDetail_titleInPlaceMetaDescriptionWithData({
-                  title: salary.categoryName,
-                  place: salary.placeName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.salaryDetail_titleInPlaceMetaDescriptionEmpty({
-                  title: salary.categoryName,
-                  place: salary.placeName,
-                }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              salaryTitleInLocationPath(
-                salary.categoryCanonicalSlug,
-                salary.locationCanonicalSlug,
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryTitleInLocationPath(
+                  salary.categoryCanonicalSlug,
+                  salary.locationCanonicalSlug,
+                ),
               ),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const jsonLd = asJsonObjects(
         [
           crossAxisSalaryJsonLd({
@@ -1102,52 +1154,55 @@ export const getSkillLocationSalaryPage = createServerFn({ method: 'GET' })
             salary.currency,
           )
         : null;
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              salary.overallSalary
-                ? salaryEntityInPlaceTitle(
-                    locale,
-                    salary.skillName,
-                    salary.placeName,
-                    range!,
-                  )
-                : m.salaryDetail_skillInPlaceHeading({
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                salary.overallSalary
+                  ? salaryEntityInPlaceTitle(
+                      locale,
+                      salary.skillName,
+                      salary.placeName,
+                      range!,
+                    )
+                  : m.salaryDetail_skillInPlaceHeading({
+                      skill: salary.skillName,
+                      place: salary.placeName,
+                    }),
+              ),
+            },
+            {
+              name: 'description',
+              content: salary.overallSalary
+                ? m.salaryDetail_skillInPlaceMetaDescriptionWithData({
+                    skill: salary.skillName,
+                    place: salary.placeName,
+                    range: range!,
+                    jobCount: salary.overallSalary.jobCount,
+                  })
+                : m.salaryDetail_skillInPlaceMetaDescriptionEmpty({
                     skill: salary.skillName,
                     place: salary.placeName,
                   }),
-            ),
-          },
-          {
-            name: 'description',
-            content: salary.overallSalary
-              ? m.salaryDetail_skillInPlaceMetaDescriptionWithData({
-                  skill: salary.skillName,
-                  place: salary.placeName,
-                  range: range!,
-                  jobCount: salary.overallSalary.jobCount,
-                })
-              : m.salaryDetail_skillInPlaceMetaDescriptionEmpty({
-                  skill: salary.skillName,
-                  place: salary.placeName,
-                }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(
-              seo.origin,
-              salarySkillInLocationPath(
-                salary.skillCanonicalSlug,
-                salary.locationCanonicalSlug,
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salarySkillInLocationPath(
+                  salary.skillCanonicalSlug,
+                  salary.locationCanonicalSlug,
+                ),
               ),
-            ),
-          },
-        ],
-      };
+            },
+          ],
+        },
+        isSalaryPageNoindex(salary),
+      );
       const jsonLd = asJsonObjects(
         [
           crossAxisSalaryJsonLd({
