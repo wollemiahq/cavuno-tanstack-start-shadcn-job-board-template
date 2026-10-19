@@ -20,6 +20,8 @@ const DEBOUNCE_MS = 200;
 const LIMIT = 10;
 /** Suggested places listed after the board's own (the API default). */
 const SUGGEST_LIMIT = 5;
+/** The board's own places never wait longer than this for suggestions. */
+const SUGGEST_WAIT_MS = 800;
 
 /** Which place list feeds the field: job places or candidate places. */
 export type LocationSuggestionSource = 'jobs' | 'talent';
@@ -91,12 +93,15 @@ export function useLocationSuggestions(
         // the board's own still show and still resolve typed text.
         const [boardPlaces, suggested] = await Promise.all([
           dependencies.searchPlaces({ data }),
-          dependencies
-            .suggestPlaces({ data: { q, limit: SUGGEST_LIMIT } })
-            .then(
-              ({ data: places }) => places,
-              () => [],
-            ),
+          Promise.race([
+            dependencies
+              .suggestPlaces({ data: { q, limit: SUGGEST_LIMIT } })
+              .then(
+                ({ data: places }) => places,
+                () => [],
+              ),
+            new Promise<[]>((done) => setTimeout(() => done([]), SUGGEST_WAIT_MS)),
+          ]),
         ]);
         // The board's places first, then the suggestions that are not one
         // of them; `resolve` takes the first of this merged list.

@@ -192,7 +192,14 @@ async function combinationInPlaceJobCount(
   radius: number | undefined,
   headers: Record<string, string>,
 ): Promise<number | null> {
-  if (radius === undefined || !isPlainListingView(data)) return null;
+  if (
+    radius === undefined ||
+    !isPlainListingView(data) ||
+    // Noindexed regardless (`combinationNoindexCount`): skip the read.
+    isSuggestedPlaceSlug(data.locationSlug)
+  ) {
+    return null;
+  }
   const key = listingCacheKey(
     data.locationSlug,
     'category' in facet ? `category:${facet.category}` : `skill:${facet.skill}`,
@@ -215,6 +222,18 @@ async function combinationInPlaceJobCount(
 }
 
 /**
+ * A slug from `places.suggest` (`marrickville-new-south-wales-au-r5701701`):
+ * board place slugs never end in a country code and an OSM id. Such a place
+ * has no jobs of its own, so its pages are never indexed, even when the place
+ * directory read that would say so fails.
+ */
+const SUGGESTED_PLACE_SLUG = /-[a-z]{2}-[nwr]\d+$/u;
+
+function isSuggestedPlaceSlug(slug: string): boolean {
+  return SUGGESTED_PLACE_SLUG.test(slug);
+}
+
+/**
  * The in-place count a combination's noindex reads: none when the place has
  * no jobs of its own in the board's place directory. A suggested place (any
  * settlement from `places.suggest`) is never in it, and its exact read
@@ -225,7 +244,10 @@ function combinationNoindexCount(
   place: Pick<TaxonomyResolution, 'sourceSlug' | 'canonicalSlug'>,
   inPlaceJobCount: number | null,
 ): number | null {
-  return placeJobCount(placeTree?.data, place) === 0 ? 0 : inPlaceJobCount;
+  return isSuggestedPlaceSlug(place.sourceSlug) ||
+    placeJobCount(placeTree?.data, place) === 0
+    ? 0
+    : inPlaceJobCount;
 }
 
 /** The board's job custom fields as "All filters" controls. */
@@ -655,7 +677,9 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         }),
         isSearchRadiusViewNoindex(
           searchRadius,
-          placeJobCount(placeTree?.data, place),
+          isSuggestedPlaceSlug(place.sourceSlug)
+            ? 0
+            : placeJobCount(placeTree?.data, place),
         ),
       );
       const jsonLd = asJsonObjects(

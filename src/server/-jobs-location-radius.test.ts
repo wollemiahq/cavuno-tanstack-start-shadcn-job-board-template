@@ -359,6 +359,23 @@ describe('location listing search distance', () => {
     ]);
   });
 
+  it('noindexes a suggested place even when the place directory read fails', async () => {
+    const slug = 'marrickville-new-south-wales-au-r5701701';
+    mocks.resolve.mockResolvedValue({
+      ...resolution('locality', 'AU'),
+      sourceSlug: slug,
+      canonicalSlug: slug,
+    });
+    mocks.tree.mockRejectedValue(new Error('places unavailable'));
+
+    const result = await getJobsLocationPage({
+      data: { ...page, locationSlug: slug },
+    });
+
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(robots(result.head)?.content).toBe('noindex, follow');
+  });
+
   it('noindexes a combination in a suggested place, whose exact read is widened', async () => {
     // The API widens a suggested place without `radius` to its default
     // distance, so the combination's in-place read finds nearby jobs.

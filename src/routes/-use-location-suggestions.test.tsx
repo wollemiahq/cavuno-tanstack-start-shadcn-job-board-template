@@ -271,6 +271,21 @@ describe('useLocationSuggestions — place suggestions', () => {
     ]);
   });
 
+  it('shows the board places without waiting long on slow suggestions', async () => {
+    searchPlaces.mockResolvedValue({ data: [london] });
+    suggestPlaces.mockReturnValue(new Promise(() => {}));
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', 'jobs', placeSuggestionsOn, dependencies),
+    );
+
+    act(() => result.current.onQueryChange('Lond'));
+    await act(async () => vi.advanceTimersByTimeAsync(250 + 800));
+
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({ slug: 'london-uk' }),
+    ]);
+  });
+
   it('resolves typed text to a suggested place when the board has none', async () => {
     const marrickville = suggested(
       'Marrickville',
