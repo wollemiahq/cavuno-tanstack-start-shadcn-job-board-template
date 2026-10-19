@@ -105,3 +105,10 @@ body {
 :root {
   --board-floating-bottom: var(--board-ad-live-height, 0px);
 }
+
+/* The cookie banner is in every document of a board that requires consent
+   (the document never varies on the consent cookie). A visitor who already
+   decided is marked before first paint; see cookieConsentDecidedScript. */
+[data-cookie-consent='decided'] [data-cookie-consent-banner] {
+  display: none;
+}

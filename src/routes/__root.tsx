@@ -68,6 +68,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { cookieConsentDecidedScript } from '@/lib/cookie-consent';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
@@ -684,6 +685,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
           {/* System-mode resolution before first paint (no theme flash). */}
           <script dangerouslySetInnerHTML={{ __html: themeModeScript(mode) }} />
+          {/* Before the cookie banner is parsed: a visitor who already chose
+            never sees it (see cookieConsentDecidedScript). */}
+          <script
+            dangerouslySetInnerHTML={{ __html: cookieConsentDecidedScript() }}
+          />
           {/* Before any lazy import: a chunk the current deploy no longer
             ships reloads the document once instead of crashing the page. */}
           <script

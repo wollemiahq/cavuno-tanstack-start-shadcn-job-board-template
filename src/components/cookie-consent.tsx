@@ -35,7 +35,10 @@ import {
 } from '@/lib/analytics-withdrawal';
 import {
   clearCookieConsent,
+  COOKIE_CONSENT_BANNER_ATTRIBUTE,
+  COOKIE_CONSENT_DECIDED_ATTRIBUTE,
   cookieBannerVersion,
+  COOKIE_CONSENT_STORAGE_KEY,
   GOOGLE_DECLINE_STORAGE_KEY,
   readCookieConsent,
   serializeCookieConsent,
@@ -55,7 +58,7 @@ import { chromeCookieConsent } from '@/lib/site-chrome';
  * consent cookie is the source of truth (a pre-cookie value found here is
  * migrated to the cookie on mount).
  */
-const STORAGE_KEY = 'cavuno:cookie-consent';
+const STORAGE_KEY = COOKIE_CONSENT_STORAGE_KEY;
 
 export type { CookieConsentChoice };
 
@@ -93,7 +96,11 @@ interface CookieConsentState {
    * `null` once resolved and still undecided.
    */
   choice: CookieConsentChoice | null | undefined;
-  /** True while the accept/deny banner occupies the floating-stack slot. */
+  /**
+   * True while the accept/deny banner occupies the floating-stack slot:
+   * from the server render until the visitor's saved choice is read, and
+   * again while undecided.
+   */
   bannerOpen: boolean;
   accept: () => void;
   deny: () => void;
@@ -211,9 +218,14 @@ function clearPersistedChoice(
  * "cookie consent required" (`board.analytics.cookieConsentRequired`).
  *
  * Choice is resolved client-side after mount so SSR and the first client
- * render are identical: no banner, no footer preferences action. A brief
- * post-hydration pop-in is accepted and standard for consent UIs. The
- * public document can then be edge-cached without varying on the cookie.
+ * render are identical and the public document can be edge-cached without
+ * varying on the cookie. Both render the banner (no footer preferences
+ * action yet), so a first-time visitor sees it with the page's first paint
+ * rather than after hydration, when it would become the page's Largest
+ * Contentful Paint. For a visitor who already decided, an inline script
+ * (`cookieConsentDecidedScript`) marks `<html>` before the banner is parsed
+ * (the root document renders it) and a style rule hides it until the mount
+ * effect reads the choice and the banner unmounts.
  *
  * On mount: `document.cookie` via `readCookieConsent`, then the
  * localStorage mirror (migrated to the cookie), else `null` (undecided).
@@ -325,6 +337,14 @@ export function CookieConsentProvider({
     }
     setChoice(null);
   }, []);
+
+  // Once React has the choice, it alone decides whether the banner shows:
+  // drop the pre-paint marker so a reopened banner is not hidden. Runs
+  // after the commit that unmounted the banner for a decided visitor.
+  useEffect(() => {
+    if (choice === undefined) return;
+    document.documentElement.removeAttribute(COOKIE_CONSENT_DECIDED_ATTRIBUTE);
+  }, [choice]);
 
   // A choice made in another tab applies here too. On a decline there,
   // Cavuno Analytics in this tab stops at once (kill switch, lifted again
@@ -524,8 +544,13 @@ export function CookieConsentProvider({
       allowed,
       adsAllowed: googleMode || ownAllowed,
       choice,
-      // Undetermined (`undefined`) must match SSR: no banner until mount.
-      bannerOpen: consentSource === 'cavuno' && required && choice === null,
+      // Undetermined (`undefined`) matches SSR: the banner is in the
+      // document; decided visitors have it hidden by the pre-paint marker.
+      bannerOpen:
+        consentSource === 'cavuno' &&
+        required &&
+        choice !== 'accepted' &&
+        choice !== 'denied',
       accept: () => {
         window.__cavunoAnalyticsOff = false;
         const { consentId } = saveChoice('accepted');
@@ -590,6 +615,7 @@ export function CookieConsentBanner() {
       <section
         aria-label={m.cookieConsent_regionAriaLabel()}
         data-test="cookie-consent-banner"
+        {...{ [COOKIE_CONSENT_BANNER_ATTRIBUTE]: '' }}
       >
         <Card className="shadow-lg">
           <CardHeader>

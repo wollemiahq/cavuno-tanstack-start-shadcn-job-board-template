@@ -62,3 +62,23 @@ export async function listingRadiusKm(
   if (place) placeRadiusGeoCache.set(key, placeRadiusGeo(place.geo), readAt);
   return placeSearchRadius(place, within)?.selected?.km;
 }
+
+/** The distance part of a jobs list or search query for a place listing. */
+export type JobsRadiusParams = { radius?: number; defaultRadius?: boolean };
+
+/**
+ * The distance a place's job list asks for. Without a URL `within`, the Board
+ * API applies the market default itself (`defaultRadius`), so the list joins
+ * the first wave of reads instead of waiting for the place; a city or
+ * locality is widened by the same rule as `placeSearchRadius`, a region or
+ * country is not. An explicit `within` is in the place's unit, so only that
+ * case waits for `radiusKm` (see `listingRadiusKm`).
+ */
+export async function jobsRadiusParams(
+  within: number | undefined,
+  radiusKm: () => Promise<number | undefined>,
+): Promise<JobsRadiusParams> {
+  if (within === undefined) return { defaultRadius: true };
+  const radius = await radiusKm();
+  return radius === undefined ? {} : { radius };
+}

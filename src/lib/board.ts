@@ -21,6 +21,7 @@ import {
   createBoardClient,
   type BoardSdk,
   type CreateBoardClientOptions,
+  type JobRetrieveQuery,
 } from '@cavuno/board';
 import { createSessionRefresher } from '@cavuno/board/server';
 import {
@@ -45,7 +46,7 @@ import { createSessionRecovery } from './session-recovery';
 import type { DataSource } from './data-source';
 
 const APPLY_GATEWAY_CAPABILITY_HEADER = 'x-cavuno-board-capabilities';
-const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1';
+const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1' as const;
 
 /** The incoming request, the scope of per-request memos; `null` outside one. */
 function currentRequest(): Request | null {
@@ -112,7 +113,21 @@ const registry = createBoardClientRegistry({
     ),
 });
 
-/** Advertise the upgraded Apply contract only at its controlled seams. */
+/**
+ * Job-detail reads opt in to the upgraded Apply contract as a query
+ * parameter. It selects the same country-gated Apply shape as the header, but
+ * the opt-in is part of the URL, so the response stays shared-cacheable at the
+ * edge instead of being fetched from the Board API on every render.
+ */
+export const APPLY_GATEWAY_QUERY: JobRetrieveQuery = {
+  capabilities: [APPLY_GATEWAY_CAPABILITY],
+};
+
+/**
+ * Advertise the upgraded Apply contract only at its controlled seams. The
+ * header form is never edge-cached; apply writes and the apply route's
+ * trusted re-read use it so they always see the current job.
+ */
 export function withApplyGatewayCapability(
   headers: Record<string, string> = {},
 ) {

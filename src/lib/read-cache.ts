@@ -78,9 +78,11 @@ export function boardGlobalReadCache(): BoardGlobalCacheOptions {
  * request's identity. Anonymous GETs become edge-cacheable for as long as the
  * Board API's cache headers allow; anything carrying a
  * bearer, grant, or capability header, and every mutation, bypasses the cache
- * entirely. Starter job-detail reads intentionally use the capability to ask
- * Cavuno for a different Apply shape, so they must never share a URL-keyed
- * edge entry with legacy readers.
+ * entirely. A capability header asks Cavuno for a different Apply shape under
+ * the same URL as legacy readers, so it must never share a URL-keyed edge
+ * entry. Job-detail page reads send it as the `capabilities` query parameter
+ * instead (`APPLY_GATEWAY_QUERY`): the opt-in is part of the URL, so they
+ * are cacheable like any anonymous read.
  */
 export function applyReadCache(req: BoardRequest): BoardRequest {
   // SAFETY: BoardRequest.init is the fetch init object handed to the SDK hook;
