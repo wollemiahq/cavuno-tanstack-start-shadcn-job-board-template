@@ -47,6 +47,7 @@ describe('location jobs route — combined keyword and place filtering', () => {
           placeType: 'city',
         },
       },
+      introHtml: undefined,
       list: {
         object: 'list',
         url: '/v1/jobs',

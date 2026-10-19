@@ -39,8 +39,14 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
 });
 
 function LocationPage() {
-  const { place, list, relatedSearches, searchRadius, reachableCount } =
-    Route.useLoaderData();
+  const {
+    place,
+    introHtml,
+    list,
+    relatedSearches,
+    searchRadius,
+    reachableCount,
+  } = Route.useLoaderData();
   const { location } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -76,6 +82,7 @@ function LocationPage() {
             )
           : undefined
       }
+      introHtml={introHtml}
       count={list.count}
       gatedCount={list.gatedCount}
       reachableCount={reachableCount}

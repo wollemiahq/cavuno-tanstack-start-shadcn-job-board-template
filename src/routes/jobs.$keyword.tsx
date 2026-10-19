@@ -34,7 +34,7 @@ export const Route = createFileRoute('/jobs/$keyword')({
 });
 
 function CategoryPage() {
-  const { category, list, relatedSearches, reachableCount } =
+  const { category, introHtml, list, relatedSearches, reachableCount } =
     Route.useLoaderData();
   const search = Route.useSearch();
   return (
@@ -46,6 +46,7 @@ function CategoryPage() {
           category: category.displayName,
         })
       }
+      introHtml={introHtml}
       count={list.count}
       gatedCount={list.gatedCount}
       reachableCount={reachableCount}

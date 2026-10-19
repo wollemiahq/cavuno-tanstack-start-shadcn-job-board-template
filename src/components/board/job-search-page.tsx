@@ -31,6 +31,7 @@ import { SaveJobButton } from '@/components/board/save-job-button';
 import { Box } from '@/components/layout/box';
 import { Page } from '@/components/layout/page';
 import { InPlaceListingSelect } from '@/components/master-detail-link';
+import { Prose } from '@/components/prose';
 import {
   SearchResultDetail,
   SearchResultsLayout,
@@ -116,6 +117,7 @@ export function JobSearchPage({
   heading,
   countedHeading,
   resultsScope,
+  introHtml,
   relatedSearches,
   onFiltersChange,
   onPageChange,
@@ -151,6 +153,11 @@ export function JobSearchPage({
   countedHeading?: CountedHeading;
   /** Replaces the results range line; see `JobsResultsBar` `scope`. */
   resultsScope?: (range: ResultsRange | null) => React.ReactNode;
+  /**
+   * The landing page's intro under the heading: pre-sanitized Board API HTML
+   * (a category or place `introHtml`), rendered as-is.
+   */
+  introHtml?: string;
   relatedSearches?: RelatedSearch[];
   onFiltersChange: (next: JobsFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;
@@ -198,6 +205,9 @@ export function JobSearchPage({
       scope={resultsScope}
     />
   );
+  const intro = introHtml ? (
+    <Prose data-slot="listing-intro" html={introHtml} />
+  ) : null;
   return (
     <Page width="wide" fill>
       <main
@@ -229,7 +239,10 @@ export function JobSearchPage({
                   data-slot="job-empty-results"
                   className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0"
                 >
-                  <div className="space-y-4">{resultsBar}</div>
+                  <div className="space-y-4">
+                    {resultsBar}
+                    {intro}
+                  </div>
                   <JobsEmpty
                     filters={filters}
                     hasCustomFilters={Boolean(customFilters?.active.length)}
@@ -249,7 +262,10 @@ export function JobSearchPage({
                   label={m.jobSearch_resultsRegionLabel()}
                   scrollRestorationId="jobs-search-results"
                 >
-                  <div className="space-y-4">{resultsBar}</div>
+                  <div className="space-y-4">
+                    {resultsBar}
+                    {intro}
+                  </div>
 
                   <InPlaceListingSelect onSelect={selection.onResultActivate}>
                     <ListingAdResults ads={ads}>

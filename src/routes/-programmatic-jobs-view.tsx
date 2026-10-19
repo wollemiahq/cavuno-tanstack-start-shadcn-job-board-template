@@ -30,6 +30,7 @@ export function ProgrammaticJobsView({
   heading,
   countedHeading,
   resultsScope,
+  introHtml,
   count,
   gatedCount,
   reachableCount,
@@ -47,6 +48,8 @@ export function ProgrammaticJobsView({
   countedHeading: CountedHeading;
   /** Replaces the results range line, such as the location search distance. */
   resultsScope?: (range: ResultsRange | null) => React.ReactNode;
+  /** The landing page's pre-sanitized intro HTML; see `JobSearchPage`. */
+  introHtml?: string;
   count?: number;
   gatedCount?: number;
   /** The search's reachable depth; see `JobSearchPage`. */
@@ -89,6 +92,7 @@ export function ProgrammaticJobsView({
         heading={heading}
         countedHeading={countedHeading}
         resultsScope={resultsScope}
+        introHtml={introHtml}
         count={count}
         gatedCount={gatedCount}
         reachableCount={reachableCount}

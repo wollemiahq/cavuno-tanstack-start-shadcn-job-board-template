@@ -535,4 +535,48 @@ describe('JobSearchPage — search results pattern', () => {
       screen.queryByRole('link', { name: m.jobSearch_unlockMoreLabel() }),
     ).toBeNull();
   });
+
+  it('renders the landing intro under the heading, above the results', async () => {
+    const rootRoute = createRootRoute();
+    const indexRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/',
+      component: () => (
+        <JobSearchPage
+          jobs={[jobVm]}
+          count={1}
+          page={1}
+          pageSize={20}
+          filters={{}}
+          heading="Fixture jobs"
+          introHtml="<p>Fixture <strong>intro</strong>.</p>"
+          language="en"
+          viewer={null}
+          onSaveJob={vi.fn(async () => {})}
+          onFiltersChange={vi.fn()}
+          onPageChange={vi.fn()}
+          onSelectedJobReplace={vi.fn()}
+          onSelectedJobPush={vi.fn()}
+          detail={null}
+        />
+      ),
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([indexRoute]),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    });
+    const { container } = render(<RouterProvider router={router} />);
+
+    const heading = await screen.findByRole('heading', { level: 1 });
+    const intro = container.querySelector("[data-slot='listing-intro']");
+    if (!intro) throw new Error('Expected the landing intro');
+    expect(intro.querySelector('strong')).toHaveTextContent('intro');
+    expect(
+      heading.compareDocumentPosition(intro) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const result = screen.getByText(job.title);
+    expect(
+      intro.compareDocumentPosition(result) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });
