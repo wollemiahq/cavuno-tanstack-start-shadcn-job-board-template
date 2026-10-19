@@ -21,6 +21,12 @@ export type CookieConsentChoice = 'accepted' | 'denied';
 
 export const COOKIE_CONSENT_COOKIE = 'cavuno_cookie_consent';
 
+/**
+ * Cross-tab mirror of the banner choice (and where choices made before the
+ * cookie lived); the cookie is the source of truth.
+ */
+export const COOKIE_CONSENT_STORAGE_KEY = 'cavuno:cookie-consent';
+
 /** ~13 months in seconds — long-lived preference, not a session token. */
 /**
  * Cross-tab signal of a decline in Google's consent message (its value
@@ -70,6 +76,30 @@ export function readCookieConsent(
   const consentId = rest.find((part) => CONSENT_ID_RE.test(part)) ?? null;
   const reopened = rest.includes(REOPENED);
   return { choice: reopened ? null : lastChoice, lastChoice, consentId };
+}
+
+/** Set on `<html>` before first paint when the visitor has decided. */
+export const COOKIE_CONSENT_DECIDED_ATTRIBUTE = 'data-cookie-consent';
+
+/** Marks the banner element the decided-visitor style rule hides. */
+export const COOKIE_CONSENT_BANNER_ATTRIBUTE = 'data-cookie-consent-banner';
+
+/**
+ * Inline classic script for the start of `<body>`. The public document is
+ * viewer-anonymous (it never varies on this cookie), so it always carries the
+ * banner on boards that require consent, and the banner paints with the
+ * page instead of after hydration. A visitor who already decided must not see
+ * it: this runs before the banner is parsed and marks `<html>`, and a style
+ * rule hides the banner until React has read the choice and removed it.
+ * Mirrors `readCookieConsent` and the localStorage mirror the provider
+ * migrates from. Any error leaves the banner visible, which is the
+ * undecided state.
+ */
+export function cookieConsentDecidedScript(): string {
+  const storageKey = COOKIE_CONSENT_STORAGE_KEY;
+  const cookie = JSON.stringify(`${COOKIE_CONSENT_COOKIE}=`);
+  const choices = JSON.stringify(COOKIE_CONSENT_CHOICES);
+  return `(function(){try{var p=${cookie},c=document.cookie.split(';'),v=null,i;for(i=0;i<c.length;i++){var s=c[i].trim();if(s.indexOf(p)===0){v=decodeURIComponent(s.slice(p.length)).split('.');break}}var k=${choices},d=v&&k.indexOf(v[0])>-1?v.indexOf(${JSON.stringify(REOPENED)})<0:k.indexOf(localStorage.getItem(${JSON.stringify(storageKey)}))>-1;if(d)document.documentElement.setAttribute(${JSON.stringify(COOKIE_CONSENT_DECIDED_ATTRIBUTE)},'decided')}catch(e){}})()`;
 }
 
 /** The choice in force from a Cookie header. Null if absent/invalid/reopened. */

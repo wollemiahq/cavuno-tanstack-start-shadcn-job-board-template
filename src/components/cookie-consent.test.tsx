@@ -6,12 +6,13 @@ import { useEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 /**
- * Cookie-consent behavior: the choice is resolved client-side after mount
- * so SSR / the first render never paint the banner or footer action. After
- * mount, no cookie + required opens the banner; a saved cookie or
- * localStorage choice closes it and shows "Cookie preferences". Accept/deny
- * persist to cookie (+ the cross-tab localStorage mirror); the reopener
- * clears them.
+ * Cookie-consent behavior: the choice is resolved client-side after mount,
+ * so SSR and the first render are the same for every visitor: the banner
+ * (it paints with the page; a decided visitor has it hidden by the pre-paint
+ * marker) and no footer action. After mount, no cookie + required keeps the
+ * banner; a saved cookie or localStorage choice closes it and shows "Cookie
+ * preferences". Accept/deny persist to cookie (+ the cross-tab localStorage
+ * mirror); the reopener clears them.
  */
 import {
   RouterProvider,
@@ -42,6 +43,7 @@ import { JobAlertFloatingPromptView } from './job-alert-floating-prompt-view';
 
 import {
   COOKIE_CONSENT_COOKIE,
+  COOKIE_CONSENT_DECIDED_ATTRIBUTE,
   serializeCookieConsent,
 } from '@/lib/cookie-consent';
 import type { RecordConsentInput } from '@cavuno/board/analytics';
@@ -53,6 +55,7 @@ afterEach(() => {
   localStorage.clear();
   delete window.__cavunoAnalyticsOff;
   document.cookie = `${COOKIE_CONSENT_COOKIE}=; Path=/; Max-Age=0`;
+  document.documentElement.removeAttribute(COOKIE_CONSENT_DECIDED_ATTRIBUTE);
   for (const el of document.querySelectorAll(
     'script[id^="cavuno-analytics-"]',
   )) {
@@ -73,6 +76,24 @@ function renderWithRouter(ui: () => ReactNode) {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   render(<RouterProvider router={router} />);
+}
+
+/** Server markup of `ui` under a loaded memory router (the banner links). */
+async function renderStaticWithRouter(ui: () => ReactNode) {
+  const rootRoute = createRootRoute();
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      createRoute({
+        getParentRoute: () => rootRoute,
+        path: '/',
+        component: ui,
+      }),
+      createRoute({ getParentRoute: () => rootRoute, path: '/cookie-policy' }),
+    ]),
+    history: createMemoryHistory({ initialEntries: ['/'] }),
+  });
+  await router.load();
+  return renderToStaticMarkup(<RouterProvider router={router} />);
 }
 
 const bannerRegion = () =>
@@ -103,18 +124,30 @@ describe('CookieConsentBanner', () => {
     ['accepted cookie', `${COOKIE_CONSENT_COOKIE}=accepted; Path=/`],
     ['denied cookie', `${COOKIE_CONSENT_COOKIE}=denied; Path=/`],
   ])(
-    'SSR markup contains no banner and no preferences action (%s)',
-    (_label, cookie) => {
+    'SSR markup is the same for every visitor: the banner, no preferences action (%s)',
+    async (_label, cookie) => {
       if (cookie) document.cookie = cookie;
-      const html = renderToStaticMarkup(
+      const html = await renderStaticWithRouter(() => (
         <CookieConsentProvider required>
           <CookieConsentBanner />
           <CookiePreferencesFooterAction />
-        </CookieConsentProvider>,
-      );
-      expect(html).toBe('');
+        </CookieConsentProvider>
+      ));
+      expect(html).toContain('data-cookie-consent-banner');
+      expect(html).toContain(m.cookieConsent_acceptLabel());
+      expect(html).not.toContain(m.cookieConsent_preferencesLabel());
     },
   );
+
+  it('SSR markup has no banner when consent is not required', () => {
+    const html = renderToStaticMarkup(
+      <CookieConsentProvider required={false}>
+        <CookieConsentBanner />
+        <CookiePreferencesFooterAction />
+      </CookieConsentProvider>,
+    );
+    expect(html).toBe('');
+  });
 
   it.each([
     [
@@ -142,7 +175,7 @@ describe('CookieConsentBanner', () => {
         }),
     ],
   ])(
-    'first client render shows no banner regardless of cookie (%s)',
+    'first client render shows the banner regardless of cookie (%s)',
     async (_label, cookie, waitForSettled) => {
       if (cookie) document.cookie = cookie;
       const seen: Array<{ bannerOpen: boolean; choice: unknown }> = [];
@@ -155,7 +188,7 @@ describe('CookieConsentBanner', () => {
       ));
 
       await waitForSettled();
-      expect(seen[0]).toEqual({ bannerOpen: false, choice: undefined });
+      expect(seen[0]).toEqual({ bannerOpen: true, choice: undefined });
     },
   );
 
@@ -165,6 +198,23 @@ describe('CookieConsentBanner', () => {
     await screen.findByRole('region', {
       name: m.cookieConsent_regionAriaLabel(),
     });
+  });
+
+  it('drops the pre-paint decided marker once the choice is read, so a reopen shows the banner', async () => {
+    document.cookie = `${COOKIE_CONSENT_COOKIE}=accepted; Path=/`;
+    document.documentElement.setAttribute(
+      COOKIE_CONSENT_DECIDED_ATTRIBUTE,
+      'decided',
+    );
+    renderWithRouter(() => <Consent />);
+
+    await screen.findByRole('button', {
+      name: m.cookieConsent_preferencesLabel(),
+    });
+    expect(bannerRegion()).not.toBeInTheDocument();
+    expect(
+      document.documentElement.hasAttribute(COOKIE_CONSENT_DECIDED_ATTRIBUTE),
+    ).toBe(false);
   });
 
   it('opens until accepted, then persists the choice and closes', async () => {
