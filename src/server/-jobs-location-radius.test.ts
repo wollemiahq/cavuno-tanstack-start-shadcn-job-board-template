@@ -332,6 +332,54 @@ describe('location listing search distance', () => {
     expect(robots(skill.head)).toBeUndefined();
   });
 
+  it('lists a suggested place around its point, noindexed, with no parent crumbs', async () => {
+    // A place from `places.suggest`: it resolves with a point but is not in
+    // the board's place directory, so it has no jobs of its own.
+    const slug = 'marrickville-new-south-wales-au-r5701701';
+    mocks.resolve.mockResolvedValue({
+      ...resolution('locality', 'AU'),
+      sourceSlug: slug,
+      canonicalSlug: slug,
+      displayName: 'Marrickville, Sydney, New South Wales, Australia',
+    });
+
+    const result = await getJobsLocationPage({
+      data: { ...page, locationSlug: slug },
+    });
+
+    expect(mocks.list).toHaveBeenCalledWith(
+      expect.objectContaining({ location: slug, radius: 50 }),
+      expect.anything(),
+    );
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(result.searchRadius).toMatchObject({ explicit: false });
+    expect(robots(result.head)?.content).toBe('noindex, follow');
+    expect(result.breadcrumbTrail.slice(2)).toEqual([
+      { name: 'Marrickville, Sydney, New South Wales, Australia' },
+    ]);
+  });
+
+  it('noindexes a combination in a suggested place, whose exact read is widened', async () => {
+    // The API widens a suggested place without `radius` to its default
+    // distance, so the combination's in-place read finds nearby jobs.
+    mocks.resolve.mockResolvedValue(resolution('locality', 'AU'));
+    mocks.tree.mockResolvedValue({ data: [] });
+    mocks.list.mockResolvedValue({ ...emptyList, count: 8 });
+
+    const category = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'nursing' },
+    });
+    const skill = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'react' },
+    });
+
+    if (category.kind !== 'ok' || skill.kind !== 'ok') {
+      throw new Error('expected listings');
+    }
+    expect(robots(category.head)?.content).toBe('noindex, follow');
+    expect(robots(skill.head)?.content).toBe('noindex, follow');
+  });
+
   it('keeps the default distance indexable when the place directory is unreadable', async () => {
     mocks.resolve.mockResolvedValue(resolution('city', 'US'));
     mocks.tree.mockRejectedValue(new Error('directory down'));

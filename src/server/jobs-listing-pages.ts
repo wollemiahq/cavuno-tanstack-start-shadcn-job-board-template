@@ -80,8 +80,10 @@ import type {
   JobSort,
   JobsListQuery,
   JobsSearchBody,
+  PublicPlace,
   RemoteOption,
   Seniority,
+  TaxonomyResolution,
 } from '@cavuno/board';
 
 type JsonPrimitive = string | number | boolean | null;
@@ -210,6 +212,20 @@ async function combinationInPlaceJobCount(
   } catch {
     return null;
   }
+}
+
+/**
+ * The in-place count a combination's noindex reads: none when the place has
+ * no jobs of its own in the board's place directory. A suggested place (any
+ * settlement from `places.suggest`) is never in it, and its exact read
+ * cannot say so: the API widens it to the place's default distance.
+ */
+function combinationNoindexCount(
+  placeTree: { data: readonly Pick<PublicPlace, 'slug' | 'jobCount'>[] } | null,
+  place: Pick<TaxonomyResolution, 'sourceSlug' | 'canonicalSlug'>,
+  inPlaceJobCount: number | null,
+): number | null {
+  return placeJobCount(placeTree?.data, place) === 0 ? 0 : inPlaceJobCount;
 }
 
 /** The board's job custom fields as "All filters" controls. */
@@ -792,7 +808,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        isSearchRadiusViewNoindex(searchRadius, inPlaceJobCount),
+        isSearchRadiusViewNoindex(
+          searchRadius,
+          combinationNoindexCount(placeTree, place, inPlaceJobCount),
+        ),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
@@ -941,7 +960,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        isSearchRadiusViewNoindex(searchRadius, inPlaceJobCount),
+        isSearchRadiusViewNoindex(
+          searchRadius,
+          combinationNoindexCount(placeTree, place, inPlaceJobCount),
+        ),
       );
       const jsonLd = asJsonObjects(
         listingJsonLd({
