@@ -14,7 +14,7 @@ import { jobDetailPath } from '@cavuno/board/paths';
 import { createJobPostingJsonLd, listingJsonLd } from '@cavuno/board/seo';
 import { createServerFn } from '@tanstack/react-start';
 
-import { getBoard, withApplyGatewayCapability } from '../lib/board';
+import { APPLY_GATEWAY_QUERY, getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle, jobTitleAtCompany } from '../lib/page-title';
@@ -48,9 +48,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const [job, boardContext, origin] = await Promise.all([
-        board.jobs.retrieve(data.jobSlug, undefined, {
-          headers: withApplyGatewayCapability(headers),
-        }),
+        board.jobs.retrieve(data.jobSlug, APPLY_GATEWAY_QUERY, { headers }),
         readBoardContext(),
         readPublicOrigin(),
       ]);

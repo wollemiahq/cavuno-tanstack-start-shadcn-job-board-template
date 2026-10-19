@@ -39,6 +39,7 @@ import { gatedRead } from './board-access';
 import {
   combinationInPlaceCountCache,
   listingCacheKey,
+  jobsRadiusParams,
   listingRadiusKm,
 } from './listing-place-cache';
 import {
@@ -187,10 +188,13 @@ function isPlainListingView(
 async function combinationInPlaceJobCount(
   data: JobsListingFiltersInput & { locationSlug: string; within?: number },
   facet: { category: string } | { skill: string },
-  radius: number | undefined,
+  radiusKmRead: Promise<number | undefined>,
   headers: Record<string, string>,
 ): Promise<number | null> {
-  if (radius === undefined || !isPlainListingView(data)) return null;
+  if (!isPlainListingView(data)) return null;
+  // Only a widened listing (a city or locality) has an in-place count to
+  // compare against.
+  if ((await radiusKmRead) === undefined) return null;
   const key = listingCacheKey(
     data.locationSlug,
     'category' in facet ? `category:${facet.category}` : `skill:${facet.skill}`,
@@ -555,10 +559,8 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const placeTreeRead = board.taxonomy.places
         .list(undefined, { headers })
         .catch(() => null);
-      const radius = await listingRadiusKm(
-        data.locationSlug,
-        placeRead,
-        data.within,
+      const radiusParams = await jobsRadiusParams(data.within, () =>
+        listingRadiusKm(data.locationSlug, placeRead, data.within),
       );
       const [place, listResult, seo, placeTree] = await Promise.all([
         placeRead,
@@ -570,7 +572,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
                     query: data.q,
                     filters: {
                       location: data.locationSlug,
-                      radius,
+                      ...radiusParams,
                       remoteOption: filters.remoteOption,
                       employmentType: filters.employmentType,
                       customEmploymentType: filters.customEmploymentType,
@@ -588,7 +590,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
                     ...filters,
                     offset,
                     location: data.locationSlug,
-                    radius,
+                    ...radiusParams,
                   },
                   { headers },
                 ),
@@ -705,10 +707,16 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       const placeTreeRead = board.taxonomy.places
         .list(undefined, { headers })
         .catch(() => null);
-      const radius = await listingRadiusKm(
+      // The in-place count needs the kilometres (whether the place widens
+      // at all); the job list does not wait for them (see jobsRadiusParams).
+      const radiusKmRead = listingRadiusKm(
         data.locationSlug,
         placeRead,
         data.within,
+      );
+      const radiusParams = await jobsRadiusParams(
+        data.within,
+        () => radiusKmRead,
       );
       const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
@@ -721,7 +729,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
                   ...filters,
                   offset,
                   location: data.locationSlug,
-                  radius,
+                  ...radiusParams,
                   category: data.categorySlug,
                 },
                 { headers },
@@ -733,7 +741,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           combinationInPlaceJobCount(
             data,
             { category: data.categorySlug },
-            radius,
+            radiusKmRead,
             headers,
           ),
         ]);
@@ -854,10 +862,16 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       const placeTreeRead = board.taxonomy.places
         .list(undefined, { headers })
         .catch(() => null);
-      const radius = await listingRadiusKm(
+      // The in-place count needs the kilometres (whether the place widens
+      // at all); the job list does not wait for them (see jobsRadiusParams).
+      const radiusKmRead = listingRadiusKm(
         data.locationSlug,
         placeRead,
         data.within,
+      );
+      const radiusParams = await jobsRadiusParams(
+        data.within,
+        () => radiusKmRead,
       );
       const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
         await Promise.all([
@@ -870,7 +884,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
                   ...filters,
                   offset,
                   location: data.locationSlug,
-                  radius,
+                  ...radiusParams,
                   skill: data.skillSlug,
                 },
                 { headers },
@@ -882,7 +896,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           combinationInPlaceJobCount(
             data,
             { skill: data.skillSlug },
-            radius,
+            radiusKmRead,
             headers,
           ),
         ]);

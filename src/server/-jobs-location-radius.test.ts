@@ -123,10 +123,15 @@ describe('location listing search distance', () => {
 
     const result = await getJobsLocationPage({ data: page });
 
+    // The API applies the market default; the starter sends no kilometres.
     expect(mocks.list).toHaveBeenCalledWith(
-      expect.objectContaining({ location: 'fixture-place', radius: 50 }),
+      expect.objectContaining({
+        location: 'fixture-place',
+        defaultRadius: true,
+      }),
       expect.anything(),
     );
+    expect(mocks.list.mock.calls[0]?.[0].radius).toBeUndefined();
     expect(result).toMatchObject({
       kind: 'ok',
       searchRadius: {
@@ -284,9 +289,10 @@ describe('location listing search distance', () => {
   it('noindexes a combination with no jobs of its own in a place that has jobs', async () => {
     // Houston has jobs, but its nursing jobs are all nearby (Pasadena).
     mocks.resolve.mockResolvedValue(resolution('city', 'US'));
-    mocks.list.mockImplementation(async (query: { radius?: number }) => ({
+    // The in-place count is the `limit: 1` read; the listing is widened.
+    mocks.list.mockImplementation(async (query: { limit?: number }) => ({
       ...emptyList,
-      count: query.radius === undefined ? 0 : 8,
+      count: query.limit === 1 ? 0 : 8,
     }));
 
     const category = await getJobsLocationCategoryPage({
@@ -313,9 +319,9 @@ describe('location listing search distance', () => {
 
   it('keeps a combination with jobs of its own in the place indexable', async () => {
     mocks.resolve.mockResolvedValue(resolution('city', 'US'));
-    mocks.list.mockImplementation(async (query: { radius?: number }) => ({
+    mocks.list.mockImplementation(async (query: { limit?: number }) => ({
       ...emptyList,
-      count: query.radius === undefined ? 2 : 8,
+      count: query.limit === 1 ? 2 : 8,
     }));
 
     const category = await getJobsLocationCategoryPage({
@@ -356,11 +362,7 @@ describe('location listing search distance', () => {
     expect((await pending).kind).toBe('ok');
   });
 
-  it("starts a warm place's default-distance list without waiting for the place", async () => {
-    mocks.resolve.mockResolvedValue(resolution('city', 'US'));
-    await getJobsLocationPage({ data: page });
-    mocks.list.mockClear();
-
+  it("starts a cold place's default-distance list without waiting for the place", async () => {
     let settle: (place: Place) => void = () => {};
     mocks.resolve.mockReturnValue(
       new Promise<Place>((resolve) => {
@@ -369,8 +371,9 @@ describe('location listing search distance', () => {
     );
     const pending = getJobsLocationPage({ data: page });
     await vi.waitFor(() => expect(mocks.list).toHaveBeenCalledTimes(1));
-    // 25 mi, the US default, as kilometres.
-    expect(mocks.list.mock.calls[0]?.[0].radius).toBeCloseTo(40.23, 2);
+    expect(mocks.list.mock.calls[0]?.[0]).toMatchObject({
+      defaultRadius: true,
+    });
     settle(resolution('city', 'US'));
 
     expect((await pending).kind).toBe('ok');
@@ -399,7 +402,7 @@ describe('location listing search distance', () => {
 });
 
 describe('location listing read order on a cold slug', () => {
-  it('starts the breadcrumb tree and the keyword resolve before the place resolves', async () => {
+  it('starts the job list, breadcrumb tree and keyword resolve before the place resolves', async () => {
     let settlePlace: (place: Place) => void = () => undefined;
     const pendingPlace = new Promise<Place>((resolve) => {
       settlePlace = resolve;
@@ -414,18 +417,23 @@ describe('location listing read order on a cold slug', () => {
     });
     await Promise.resolve();
 
-    // Only the job list needs the place's radius.
+    // Only the in-place count needs the place (whether it widens).
     expect(mocks.tree).toHaveBeenCalledTimes(1);
     expect(mocks.resolve).toHaveBeenCalledWith(
       'fixture-category',
       expect.anything(),
     );
-    expect(mocks.list).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(mocks.list).toHaveBeenCalledTimes(1));
+    expect(mocks.list).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultRadius: true }),
+      expect.anything(),
+    );
 
     settlePlace(resolution('city', 'AU'));
     await rendering;
+    // Then the in-place count for the widened city.
     expect(mocks.list).toHaveBeenCalledWith(
-      expect.objectContaining({ radius: 50 }),
+      expect.objectContaining({ limit: 1 }),
       expect.anything(),
     );
   });
