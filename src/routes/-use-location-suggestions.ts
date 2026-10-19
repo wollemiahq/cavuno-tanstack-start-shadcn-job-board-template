@@ -100,7 +100,9 @@ export function useLocationSuggestions(
                 ({ data: places }) => places,
                 () => [],
               ),
-            new Promise<[]>((done) => setTimeout(() => done([]), SUGGEST_WAIT_MS)),
+            new Promise<[]>((done) =>
+              setTimeout(() => done([]), SUGGEST_WAIT_MS),
+            ),
           ]),
         ]);
         // The board's places first, then the suggestions that are not one
