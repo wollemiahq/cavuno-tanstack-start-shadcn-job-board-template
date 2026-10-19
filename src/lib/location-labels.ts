@@ -47,6 +47,27 @@ export function isWorldwideRemote(job: CardLocationLabelJob): boolean {
  * viewer's locale; longer lists (typically region/continent authored
  * selections) keep the wire label, whose grouping the codes can't recover.
  */
+type RegionFormatters = {
+  displayNames: Intl.DisplayNames;
+  list: Intl.ListFormat;
+};
+// Per language; one listing page labels every card with the same two.
+const regionFormattersByTag = new Map<string, RegionFormatters>();
+
+function regionFormatters(tag: string | undefined): RegionFormatters {
+  const key = tag ?? '';
+  let formatters = regionFormattersByTag.get(key);
+  if (!formatters) {
+    const locales = tag ? [tag] : undefined;
+    formatters = {
+      displayNames: new Intl.DisplayNames(locales, { type: 'region' }),
+      list: new Intl.ListFormat(locales, { style: 'long', type: 'conjunction' }),
+    };
+    regionFormattersByTag.set(key, formatters);
+  }
+  return formatters;
+}
+
 export function localizedRemoteRegion(
   job: CardLocationLabelJob,
   language?: string,
@@ -57,14 +78,9 @@ export function localizedRemoteRegion(
     // chrome locale (English-only default). Paraglide catalogs are separate.
     const tag = language && language.length > 0 ? language : undefined;
     try {
-      const displayNames = new Intl.DisplayNames(tag ? [tag] : undefined, {
-        type: 'region',
-      });
+      const { displayNames, list } = regionFormatters(tag);
       const names = codes.map((code) => displayNames.of(code) ?? code);
-      return new Intl.ListFormat(tag ? [tag] : undefined, {
-        style: 'long',
-        type: 'conjunction',
-      }).format(names);
+      return list.format(names);
     } catch {
       // Unknown code shapes fall through to the wire label.
     }

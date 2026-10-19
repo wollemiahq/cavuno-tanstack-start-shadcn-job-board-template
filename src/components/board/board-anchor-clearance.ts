@@ -15,8 +15,14 @@ export function observeAnchorClearance(
     frame = 0;
     const containers = new Set<Element>();
     let clearance = 0;
-    const height = document.documentElement.clientHeight || window.innerHeight;
-    for (const ad of document.querySelectorAll(selector)) {
+    const ads = document.querySelectorAll(selector);
+    // Reading the viewport forces a layout; with no ad on the page (most
+    // pages, and every page until AdSense fills one) there is nothing to
+    // measure, so hydration does not pay for it.
+    const height = ads.length
+      ? document.documentElement.clientHeight || window.innerHeight
+      : 0;
+    for (const ad of ads) {
       for (
         let node: Element | null = ad;
         node && node !== document.body;
