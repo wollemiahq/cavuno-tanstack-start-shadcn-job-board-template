@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { searchPlaces, searchTalentPlaces } from '../server/queries';
+import {
+  searchPlaces,
+  searchTalentPlaces,
+  suggestPlaces,
+} from '../server/queries';
 
 import {
+  suggestionsBeyondBoardPlaces,
   toLocationSuggestionVM,
+  toSuggestedPlaceVM,
   toTalentPlaceSuggestionVM,
   type LocationSuggestionVM,
 } from '@/board/location-suggestion';
@@ -12,6 +18,8 @@ import type { LocationSearchState } from '@/components/location-combobox';
 const MIN_QUERY = 2;
 const DEBOUNCE_MS = 200;
 const LIMIT = 10;
+/** Suggested places listed after the board's own (the API default). */
+const SUGGEST_LIMIT = 5;
 
 /** Which place list feeds the field: job places or candidate places. */
 export type LocationSuggestionSource = 'jobs' | 'talent';
@@ -25,22 +33,36 @@ export type LocationSuggestionDependencies = {
   }) => Promise<{
     data: Awaited<ReturnType<typeof searchTalentPlaces>>['data'];
   }>;
+  suggestPlaces: (input: {
+    data: { q: string; limit: number };
+  }) => Promise<{ data: Awaited<ReturnType<typeof suggestPlaces>>['data'] }>;
 };
 
 const locationSuggestionDependencies: LocationSuggestionDependencies = {
   searchPlaces,
   searchTalentPlaces,
+  suggestPlaces,
+};
+
+export type LocationSuggestionOptions = {
+  /**
+   * The board context's `features.placeSuggestions`: the `jobs` field also
+   * suggests any town, city or neighbourhood after the board's places.
+   */
+  placeSuggestions?: boolean;
 };
 
 /**
  * Route-owned controller for the presentational location combobox. `jobs`
  * suggests board places (only places the board's jobs use) for the jobs
- * location filter; `talent` suggests the places directory candidates live
- * in, for the `/talent` `place` filter.
+ * location filter, followed by any other matching place when
+ * `placeSuggestions` is on; `talent` suggests the places directory
+ * candidates live in, for the `/talent` `place` filter.
  */
 export function useLocationSuggestions(
   locale: string,
   source: LocationSuggestionSource = 'jobs',
+  { placeSuggestions = false }: LocationSuggestionOptions = {},
   dependencies: LocationSuggestionDependencies = locationSuggestionDependencies,
 ): LocationSearchState {
   const [query, setQuery] = useState('');
@@ -64,6 +86,29 @@ export function useLocationSuggestions(
           (suggestion): suggestion is LocationSuggestionVM =>
             suggestion !== null,
         );
+      if (source === 'jobs' && placeSuggestions) {
+        // Both lists at once. A failed suggest costs only the extra places;
+        // the board's own still show and still resolve typed text.
+        const [boardPlaces, suggested] = await Promise.all([
+          dependencies.searchPlaces({ data }),
+          dependencies
+            .suggestPlaces({ data: { q, limit: SUGGEST_LIMIT } })
+            .then(
+              ({ data: places }) => places,
+              () => [],
+            ),
+        ]);
+        // The board's places first, then the suggestions that are not one
+        // of them; `resolve` takes the first of this merged list.
+        return present([
+          ...boardPlaces.data.map((place) =>
+            toLocationSuggestionVM(place, locale),
+          ),
+          ...suggestionsBeyondBoardPlaces(boardPlaces.data, suggested).map(
+            (place) => toSuggestedPlaceVM(place, locale),
+          ),
+        ]);
+      }
       if (source === 'jobs') {
         return present(
           (await dependencies.searchPlaces({ data })).data.map((place) =>
@@ -89,7 +134,7 @@ export function useLocationSuggestions(
         ),
       );
     },
-    [dependencies, locale, source],
+    [dependencies, locale, placeSuggestions, source],
   );
 
   useEffect(() => {

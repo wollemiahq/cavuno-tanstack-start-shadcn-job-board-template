@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  suggestionsBeyondBoardPlaces,
   toLocationSuggestionVM,
+  toSuggestedPlaceVM,
   toTalentPlaceSuggestionVM,
 } from './location-suggestion';
 
@@ -71,6 +73,141 @@ describe('toLocationSuggestionVM', () => {
       toLocationSuggestionVM({ ...place, countryCode: 'XXX' }, 'en')
         ?.contextLabel,
     ).toBe('XXX');
+  });
+});
+
+const marrickville = {
+  object: 'place' as const,
+  id: 'gazetteer:R5701701',
+  parentId: null,
+  slug: 'marrickville-new-south-wales-au-r5701701',
+  canonicalSlug: 'marrickville-new-south-wales-au-r5701701',
+  name: 'Marrickville',
+  displayName: 'Marrickville, Sydney, New South Wales, Australia',
+  placeType: 'locality',
+  countryCode: 'AU',
+  regionCode: null,
+  jobCount: 0,
+};
+
+describe('toSuggestedPlaceVM', () => {
+  it('names the place and shows its region and country as context', () => {
+    expect(toSuggestedPlaceVM(marrickville, 'en')).toEqual({
+      id: 'gazetteer:R5701701',
+      slug: 'marrickville-new-south-wales-au-r5701701',
+      name: 'Marrickville',
+      contextLabel: 'Sydney, New South Wales, Australia',
+      countryCode: 'AU',
+      regionCode: null,
+      placeType: 'locality',
+    });
+  });
+
+  it('falls back to the country name when the display name adds nothing', () => {
+    expect(
+      toSuggestedPlaceVM({ ...marrickville, displayName: 'Marrickville' }, 'en')
+        ?.contextLabel,
+    ).toBe('Australia');
+  });
+
+  it('drops a suggestion that cannot form a location route', () => {
+    expect(
+      toSuggestedPlaceVM(
+        { ...marrickville, slug: null, canonicalSlug: null },
+        'en',
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('suggestionsBeyondBoardPlaces', () => {
+  const settlement = (
+    name: string,
+    countryCode: string,
+    regionCode: string | null,
+    placeType = 'city',
+  ) => ({
+    ...place,
+    id: `${name}-${regionCode ?? countryCode}`,
+    name,
+    displayName: name,
+    placeType,
+    countryCode,
+    regionCode,
+  });
+  const suggestion = (
+    name: string,
+    countryCode: string,
+    regionCode: string | null,
+  ) => ({
+    ...marrickville,
+    id: `gazetteer:${name}-${regionCode ?? countryCode}`,
+    name,
+    displayName: `${name}, ${regionCode ?? countryCode}`,
+    placeType: 'city',
+    countryCode,
+    regionCode,
+  });
+
+  it('hides a suggestion of unknown region behind the board place it names', () => {
+    // New York City: the board's has a region, the suggestion none yet.
+    const boardNyc = settlement('New York', 'US', 'US-NY');
+    const suggestedNyc = suggestion('New York', 'US', null);
+
+    expect(suggestionsBeyondBoardPlaces([boardNyc], [suggestedNyc])).toEqual(
+      [],
+    );
+  });
+
+  it('keeps a same-named town in another region', () => {
+    const portlandMaine = suggestion('Portland', 'US', 'US-ME');
+
+    expect(
+      suggestionsBeyondBoardPlaces(
+        [settlement('Portland', 'US', 'US-OR')],
+        [portlandMaine, suggestion('Portland', 'US', 'US-OR')],
+      ),
+    ).toEqual([portlandMaine]);
+  });
+
+  it('never lets a board place with no region hide one with a region', () => {
+    const portlandMaine = suggestion('Portland', 'US', 'US-ME');
+
+    expect(
+      suggestionsBeyondBoardPlaces(
+        [settlement('Portland', 'US', null)],
+        [portlandMaine],
+      ),
+    ).toEqual([portlandMaine]);
+  });
+
+  it('matches names without case or accents, in either board-place name', () => {
+    expect(
+      suggestionsBeyondBoardPlaces(
+        [
+          {
+            ...settlement('Zurich', 'CH', 'CH-ZH'),
+            displayName: 'Zürich',
+          },
+        ],
+        [suggestion('ZÜRICH', 'CH', null), suggestion('zurich', 'CH', null)],
+      ),
+    ).toEqual([]);
+  });
+
+  it('keeps suggestions that only share a name with a region or another country', () => {
+    const newYorkCity = suggestion('New York', 'US', null);
+    const london = suggestion('London', 'CA', 'CA-ON');
+
+    expect(
+      suggestionsBeyondBoardPlaces(
+        [
+          settlement('New York', 'US', 'US-NY', 'region'),
+          settlement('London', 'GB', 'GB-ENG'),
+        ],
+        [newYorkCity, london],
+      ),
+    ).toEqual([newYorkCity, london]);
   });
 });
 

@@ -16,6 +16,7 @@ import { isNotFound } from '@cavuno/board';
 import { jobDetailPath } from '@cavuno/board/paths';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
+import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
@@ -32,6 +33,7 @@ import { readBoardSeo } from '../lib/board-seo-cache';
 import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
+import { approximateNear, type RequestGeo } from '../lib/request-near';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
@@ -54,6 +56,7 @@ import type {
   JobsSearchBody,
   LocationSearchQuery,
   LocationResolveInput,
+  PlaceSuggestQuery,
   PlacesListQuery,
   PlansListQuery,
   PublicBlogAdjacentPosts,
@@ -314,6 +317,33 @@ export const searchPlaces = createServerFn({ method: 'GET' })
       getBoard().taxonomy.places.list(data, { headers: h }),
     ),
   );
+
+/**
+ * Place suggestions beyond the board's own places: any town, city or
+ * neighbourhood by name (`places.suggest`), for the jobs location field on
+ * boards whose context has `features.placeSuggestions`. Ranked near the
+ * visitor's approximate location from the request's Cloudflare geo, rounded
+ * so responses cache per area; local dev has no geo and sends no `near`.
+ * Only `q` and `limit` come from the browser.
+ */
+export const suggestPlaces = createServerFn({ method: 'GET' })
+  .validator((input: Pick<PlaceSuggestQuery, 'q' | 'limit'>) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().taxonomy.places.suggest(
+        { q: data.q, limit: data.limit, near: visitorNear() },
+        { headers: h },
+      ),
+    ),
+  );
+
+function visitorNear() {
+  // SAFETY: Workers supplies cf metadata on the incoming request; a local
+  // server has no cf property, and approximateNear checks each field.
+  const incoming = getRequest() as Request & { cf?: RequestGeo };
+  return approximateNear(incoming.cf);
+}
 
 /**
  * Talent location autocomplete — `talent.places.list({ q, limit })` lists the

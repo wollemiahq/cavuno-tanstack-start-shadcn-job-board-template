@@ -6,7 +6,8 @@
  * components clean typed booleans so no cast leaks into presentation.
  *
  * Existing additive flags and Job recommendations are default-on. Recommended
- * talent is deliberately opt-in, so an absent value remains off.
+ * talent and place suggestions are deliberately opt-in, so an absent value
+ * remains off.
  *
  *  - `nativeApplications === false` ⇒ external-applications-only: native
  *    apply is 422'd and applicant / pipeline reads 404 / are disabled.
@@ -31,6 +32,11 @@ export interface RuntimeBoardFeatureFlags {
   jobRecommendationsEnabled: boolean;
   /** false ⇒ recommended talent is unavailable. */
   recommendedTalentEnabled: boolean;
+  /**
+   * true ⇒ the jobs location field also suggests any town, city or
+   * neighbourhood (`taxonomy.places.suggest`), not only the board's places.
+   */
+  placeSuggestions: boolean;
 }
 
 type RuntimeBoardFeatureInput = Omit<
@@ -61,7 +67,7 @@ export function resolveTalentDirectoryVisibility(
 
 /**
  * Read runtime flags off the context's `features` group, narrowing once here
- * at the boundary. Recommended talent is the sole default-off capability.
+ * at the boundary. Recommended talent and place suggestions default off.
  */
 export function resolveRuntimeFeatureFlags(
   features: RuntimeBoardFeatureInput,
@@ -73,12 +79,14 @@ export function resolveRuntimeFeatureFlags(
     messaging?: boolean;
     jobRecommendationsEnabled?: boolean;
     recommendedTalentEnabled?: boolean;
+    placeSuggestions?: boolean;
   };
   return {
     nativeApplications: parity.nativeApplications ?? true,
     messaging: parity.messaging ?? true,
     jobRecommendationsEnabled: parity.jobRecommendationsEnabled ?? true,
     recommendedTalentEnabled: parity.recommendedTalentEnabled ?? false,
+    placeSuggestions: parity.placeSuggestions ?? false,
   };
 }
 

@@ -331,10 +331,12 @@ function RootChrome({
       : 'jobs',
   );
   // On /talent the location field filters candidates, so it suggests the
-  // places candidates live in rather than places with jobs.
+  // places candidates live in rather than places with jobs. The jobs field
+  // also suggests any town or city where the board turns that on.
   const locationSuggestions = useLocationSuggestions(
     board.language,
     headerSearch.scope === 'talent' ? 'talent' : 'jobs',
+    { placeSuggestions: board.features.placeSuggestions },
   );
   const keywordSuggestions = useKeywordSuggestions(
     headerSearch.scope === 'jobs',

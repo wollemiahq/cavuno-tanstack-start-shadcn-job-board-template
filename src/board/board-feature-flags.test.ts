@@ -10,7 +10,8 @@ import {
 /**
  * The runtime flags (Board PR #968) ride the board context ahead of the
  * pinned SDK's types. Job recommendations preserve shipped behavior when
- * absent; Recommended talent remains opt-in and therefore defaults off.
+ * absent; Recommended talent and place suggestions remain opt-in and
+ * therefore default off.
  */
 type RuntimeFeatureInput = Parameters<typeof resolveRuntimeFeatureFlags>[0];
 type RuntimeFeatureFixture = Omit<
@@ -47,11 +48,13 @@ describe('resolveRuntimeFeatureFlags', () => {
     Reflect.deleteProperty(legacyFeatures, 'messaging');
     Reflect.deleteProperty(legacyFeatures, 'jobRecommendationsEnabled');
     Reflect.deleteProperty(legacyFeatures, 'recommendedTalentEnabled');
+    Reflect.deleteProperty(legacyFeatures, 'placeSuggestions');
     expect(resolveRuntimeFeatureFlags(legacyFeatures)).toEqual({
       nativeApplications: true,
       messaging: true,
       jobRecommendationsEnabled: true,
       recommendedTalentEnabled: false,
+      placeSuggestions: false,
     });
   });
 
@@ -63,6 +66,7 @@ describe('resolveRuntimeFeatureFlags', () => {
           messaging: false,
           jobRecommendationsEnabled: false,
           recommendedTalentEnabled: false,
+          placeSuggestions: false,
         }),
       ),
     ).toEqual({
@@ -70,6 +74,7 @@ describe('resolveRuntimeFeatureFlags', () => {
       messaging: false,
       jobRecommendationsEnabled: false,
       recommendedTalentEnabled: false,
+      placeSuggestions: false,
     });
   });
 
@@ -81,6 +86,7 @@ describe('resolveRuntimeFeatureFlags', () => {
           messaging: true,
           jobRecommendationsEnabled: true,
           recommendedTalentEnabled: true,
+          placeSuggestions: true,
         }),
       ),
     ).toEqual({
@@ -88,6 +94,7 @@ describe('resolveRuntimeFeatureFlags', () => {
       messaging: true,
       jobRecommendationsEnabled: true,
       recommendedTalentEnabled: true,
+      placeSuggestions: true,
     });
   });
 
@@ -99,6 +106,7 @@ describe('resolveRuntimeFeatureFlags', () => {
           messaging: true,
           jobRecommendationsEnabled: false,
           recommendedTalentEnabled: true,
+          placeSuggestions: true,
         }),
       ),
     ).toEqual({
@@ -106,6 +114,7 @@ describe('resolveRuntimeFeatureFlags', () => {
       messaging: true,
       jobRecommendationsEnabled: false,
       recommendedTalentEnabled: true,
+      placeSuggestions: true,
     });
   });
 });
