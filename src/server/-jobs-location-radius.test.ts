@@ -88,6 +88,17 @@ function resolution(placeType: string, countryCode: string) {
 
 type Place = ReturnType<typeof resolution>;
 
+function suggestedResolution(slug: string) {
+  return {
+    ...resolution('locality', 'AU'),
+    sourceSlug: slug,
+    canonicalSlug: slug,
+    displayName: 'Marrickville',
+    suggested: true,
+    ancestors: [],
+  };
+}
+
 const emptyList = {
   object: 'list',
   url: '/v1/jobs',
@@ -338,41 +349,72 @@ describe('location listing search distance', () => {
     expect(robots(skill.head)).toBeUndefined();
   });
 
-  it('lists a suggested place around its point, noindexed, with no parent crumbs', async () => {
-    // A place from `places.suggest`: it resolves with a point but is not in
-    // the board's place directory, so it has no jobs of its own.
-    const slug = 'marrickville-new-south-wales-au-r5701701';
-    mocks.resolve.mockResolvedValue({
-      ...resolution('locality', 'AU'),
-      sourceSlug: slug,
-      canonicalSlug: slug,
-      displayName: 'Marrickville, Sydney, New South Wales, Australia',
-    });
+  it('lists a suggested place within its own default distance, noindexed below 5 on-site or hybrid jobs', async () => {
+    // A place from `places.suggest`: the resolution says so (`suggested`).
+    const slug = 'marrickville-nsw-australia';
+    mocks.resolve.mockResolvedValue(suggestedResolution(slug));
+    mocks.list.mockImplementation(async (query: { limit?: number }) => ({
+      ...emptyList,
+      count: query.limit === 1 ? 4 : 30,
+    }));
 
     const result = await getJobsLocationPage({
       data: { ...page, locationSlug: slug },
     });
 
+    // The API applies the place's own default distance.
     expect(mocks.list).toHaveBeenCalledWith(
-      expect.objectContaining({ location: slug, radius: 50 }),
+      expect.objectContaining({ location: slug, defaultRadius: true }),
+      expect.anything(),
+    );
+    // Only on-site and hybrid jobs count toward indexing.
+    expect(mocks.list).toHaveBeenCalledWith(
+      {
+        location: slug,
+        remoteOption: ['on_site', 'hybrid'],
+        offset: 0,
+        limit: 1,
+      },
       expect.anything(),
     );
     if (result.kind !== 'ok') throw new Error('expected a listing');
-    expect(result.searchRadius).toMatchObject({ explicit: false });
     expect(robots(result.head)?.content).toBe('noindex, follow');
-    expect(result.breadcrumbTrail.slice(2)).toEqual([
-      { name: 'Marrickville, Sydney, New South Wales, Australia' },
-    ]);
   });
 
-  it('noindexes a suggested place even when the place directory read fails', async () => {
-    const slug = 'marrickville-new-south-wales-au-r5701701';
-    mocks.resolve.mockResolvedValue({
-      ...resolution('locality', 'AU'),
-      sourceSlug: slug,
-      canonicalSlug: slug,
-    });
+  it('indexes a suggested place with 5 on-site or hybrid jobs', async () => {
+    const slug = 'marrickville-nsw-australia';
+    mocks.resolve.mockResolvedValue(suggestedResolution(slug));
     mocks.tree.mockRejectedValue(new Error('places unavailable'));
+    mocks.list.mockImplementation(async (query: { limit?: number }) => ({
+      ...emptyList,
+      count: query.limit === 1 ? 5 : 30,
+    }));
+
+    const result = await getJobsLocationPage({
+      data: { ...page, locationSlug: slug },
+    });
+    const chosen = await getJobsLocationPage({
+      data: { ...page, locationSlug: slug, within: 25 },
+    });
+
+    if (result.kind !== 'ok' || chosen.kind !== 'ok') {
+      throw new Error('expected listings');
+    }
+    expect(robots(result.head)).toBeUndefined();
+    // A chosen distance stays noindexed and skips the count.
+    expect(robots(chosen.head)?.content).toBe('noindex, follow');
+    expect(
+      mocks.list.mock.calls.filter(([query]) => query.limit === 1),
+    ).toHaveLength(1);
+  });
+
+  it('noindexes a suggested place when its count read fails', async () => {
+    const slug = 'marrickville-nsw-australia';
+    mocks.resolve.mockResolvedValue(suggestedResolution(slug));
+    mocks.list.mockImplementation(async (query: { limit?: number }) => {
+      if (query.limit === 1) throw new Error('count unavailable');
+      return { ...emptyList, count: 30 };
+    });
 
     const result = await getJobsLocationPage({
       data: { ...page, locationSlug: slug },
@@ -380,13 +422,24 @@ describe('location listing search distance', () => {
 
     if (result.kind !== 'ok') throw new Error('expected a listing');
     expect(robots(result.head)?.content).toBe('noindex, follow');
+  });
+
+  it('reads no suggested-place count for a board place', async () => {
+    mocks.resolve.mockResolvedValue(resolution('city', 'AU'));
+
+    await getJobsLocationPage({ data: page });
+
+    expect(
+      mocks.list.mock.calls.filter(([query]) => query.limit === 1),
+    ).toHaveLength(0);
   });
 
   it('noindexes a combination in a suggested place, whose exact read is widened', async () => {
     // The API widens a suggested place without `radius` to its default
     // distance, so the combination's in-place read finds nearby jobs.
-    mocks.resolve.mockResolvedValue(resolution('locality', 'AU'));
-    mocks.tree.mockResolvedValue({ data: [] });
+    mocks.resolve.mockResolvedValue(
+      suggestedResolution('marrickville-nsw-australia'),
+    );
     mocks.list.mockResolvedValue({ ...emptyList, count: 8 });
 
     const category = await getJobsLocationCategoryPage({
