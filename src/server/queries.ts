@@ -287,7 +287,7 @@ export const getAnchorJobPaths = createServerFn({ method: 'GET' })
         data.jobSlugs.map(async (jobSlug) => {
           let job;
           try {
-            job = await getBoard().jobs.retrieve(jobSlug, undefined, {
+            job = await getBoard().jobs.retrieve(jobSlug, APPLY_GATEWAY_QUERY, {
               headers: h,
             });
           } catch (error) {

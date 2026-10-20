@@ -1,7 +1,7 @@
 /** 1200×630 job share card rendered in the Cloudflare Worker via Takumi WASM. */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { getBoard } from '../lib/board';
+import { APPLY_GATEWAY_QUERY, getBoard } from '../lib/board';
 import { rethrowBoardApiShed } from '../lib/board-api-shed.server';
 import { readBoardContext } from '../lib/board-context-cache';
 import { buildJobOgHtml } from '../lib/job-og';
@@ -24,7 +24,13 @@ export const Route = createFileRoute(
       GET: async ({ params }) => {
         let job;
         try {
-          job = await getBoard().jobs.retrieve(params.jobSlug);
+          // The same opt-in as the job page: the Board API answers a
+          // Sponsored job's detail only to callers that send it, and the
+          // query form keeps this read shared-cacheable.
+          job = await getBoard().jobs.retrieve(
+            params.jobSlug,
+            APPLY_GATEWAY_QUERY,
+          );
         } catch (error) {
           // A shed read is a 503 + Retry-After (request middleware), not a
           // miss. A miss must be HTTP 404 (not 200 `{isNotFound:true}` from
