@@ -212,7 +212,6 @@ function withoutIntro<T extends { introHtml?: string }>(resolution: T) {
 async function combinationInPlaceJobCount(
   data: JobsListingFiltersInput & { locationSlug: string; within?: number },
   facet: { category: string } | { skill: string },
-  placeRead: Promise<TaxonomyResolution | null>,
   radiusKmRead: Promise<number | undefined>,
   headers: Record<string, string>,
 ): Promise<number | null> {
@@ -220,8 +219,6 @@ async function combinationInPlaceJobCount(
   // Only a widened listing (a city or locality) has an in-place count to
   // compare against.
   if ((await radiusKmRead) === undefined) return null;
-  // Noindexed regardless (`combinationNoindexCount`): skip the read.
-  if ((await placeRead)?.suggested) return null;
   const key = listingCacheKey(
     data.locationSlug,
     'category' in facet ? `category:${facet.category}` : `skill:${facet.skill}`,
@@ -843,7 +840,6 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           combinationInPlaceJobCount(
             data,
             { category: data.categorySlug },
-            placeRead,
             radiusKmRead,
             headers,
           ),
@@ -1009,7 +1005,6 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           combinationInPlaceJobCount(
             data,
             { skill: data.skillSlug },
-            placeRead,
             radiusKmRead,
             headers,
           ),
