@@ -12,6 +12,7 @@ vi.mock('@tanstack/react-start/server', () => ({
 
 const retrieveJob = vi.fn();
 vi.mock('./board', () => ({
+  APPLY_GATEWAY_QUERY: { capabilities: ['apply-gateway-v1'] },
   getBoard: () => ({ jobs: { retrieve: retrieveJob } }),
   getPrimaryBoard: vi.fn(),
 }));
@@ -133,6 +134,11 @@ describe('Board API shed → server route status', () => {
 
     expect(response.status).toBe(404);
     expect(response.headers.has('Retry-After')).toBe(false);
+    // The same Apply gateway opt-in as the job page, so a Sponsored job's
+    // card is not a 404.
+    expect(retrieveJob).toHaveBeenCalledWith(expect.any(String), {
+      capabilities: ['apply-gateway-v1'],
+    });
   });
 
   it('rethrows any other error unchanged', async () => {
