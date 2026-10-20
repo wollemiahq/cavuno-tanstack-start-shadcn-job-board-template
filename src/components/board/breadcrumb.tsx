@@ -63,8 +63,11 @@ export function Breadcrumb({
                 >
                   {crumb.name}
                 </BreadcrumbLink>
-              ) : (
+              ) : index === items.length - 1 ? (
                 <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
+              ) : (
+                // An ancestor with no page of its own (a suggested place's).
+                <span>{crumb.name}</span>
               )}
             </BreadcrumbItem>
           </Fragment>

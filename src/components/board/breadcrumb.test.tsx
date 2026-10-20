@@ -24,7 +24,11 @@ describe('ShellBreadcrumb', () => {
       component: () => (
         <ShellBreadcrumb
           ariaLabel="Breadcrumbs"
-          items={[{ name: 'Home', href: '/' }, { name: 'Jobs' }]}
+          items={[
+            { name: 'Home', href: '/' },
+            { name: 'Region' },
+            { name: 'Jobs' },
+          ]}
         />
       ),
     });
@@ -42,5 +46,7 @@ describe('ShellBreadcrumb', () => {
       screen.getByRole('link', { name: 'Home' }),
     );
     expect(screen.getByText('Jobs')).toHaveAttribute('aria-current', 'page');
+    // An unlinked crumb before the last is plain text, not the current page.
+    expect(screen.getByText('Region')).not.toHaveAttribute('aria-current');
   });
 });

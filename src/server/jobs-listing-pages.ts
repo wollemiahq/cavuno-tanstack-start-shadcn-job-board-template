@@ -46,7 +46,7 @@ import {
   noindexFollow,
   resolveOrNull,
   settled,
-  trailJsonLd,
+  trailBreadcrumbJsonLd,
 } from './place-listing-helpers';
 
 import {
@@ -738,11 +738,14 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             ),
       );
       const jsonLd = asJsonObjects(
-        listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: trailJsonLd(breadcrumbTrail),
-          jobs: list.data,
-        }),
+        [
+          trailBreadcrumbJsonLd(breadcrumbTrail, seo.origin),
+          ...listingJsonLd({
+            origin: seo.origin,
+            breadcrumbs: [],
+            jobs: list.data,
+          }),
+        ].filter((entry) => entry !== null),
       );
       const intro = landingIntro(place, data);
       return {
@@ -906,11 +909,14 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         ),
       );
       const jsonLd = asJsonObjects(
-        listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: trailJsonLd(breadcrumbTrail),
-          jobs: list.data,
-        }),
+        [
+          trailBreadcrumbJsonLd(breadcrumbTrail, seo.origin),
+          ...listingJsonLd({
+            origin: seo.origin,
+            breadcrumbs: [],
+            jobs: list.data,
+          }),
+        ].filter((entry) => entry !== null),
       );
       return {
         kind: 'ok' as const,
@@ -1069,11 +1075,14 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         ),
       );
       const jsonLd = asJsonObjects(
-        listingJsonLd({
-          origin: seo.origin,
-          breadcrumbs: trailJsonLd(breadcrumbTrail),
-          jobs: list.data,
-        }),
+        [
+          trailBreadcrumbJsonLd(breadcrumbTrail, seo.origin),
+          ...listingJsonLd({
+            origin: seo.origin,
+            breadcrumbs: [],
+            jobs: list.data,
+          }),
+        ].filter((entry) => entry !== null),
       );
       return {
         kind: 'ok' as const,

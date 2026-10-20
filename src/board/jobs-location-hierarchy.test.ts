@@ -220,6 +220,45 @@ describe('toJobsLocationHierarchyCrumbs', () => {
     ]);
   });
 
+  it("builds a suggested place's trail from its ancestors, linking only those with a page", () => {
+    const mullumbimby = {
+      sourceSlug: 'mullumbimby-nsw-australia',
+      canonicalSlug: 'mullumbimby-nsw-australia',
+      displayName: 'Mullumbimby',
+      ancestors: [
+        {
+          displayName: 'Australia',
+          placeType: 'country' as const,
+          canonicalSlug: 'australia',
+        },
+        {
+          displayName: 'New South Wales',
+          placeType: 'region' as const,
+          canonicalSlug: null,
+        },
+      ],
+    };
+
+    expect(toJobsLocationHierarchyCrumbs([australia], mullumbimby)).toEqual([
+      { name: 'Australia', href: '/jobs/locations/australia' },
+      { name: 'New South Wales' },
+      { name: 'Mullumbimby' },
+    ]);
+    expect(
+      toJobsLocationHierarchyCrumbs([], mullumbimby, {
+        linkCurrent: true,
+        ancestorPath: (slug) => `/jobs/locations/${slug}/nursing`,
+      }),
+    ).toEqual([
+      { name: 'Australia', href: '/jobs/locations/australia/nursing' },
+      { name: 'New South Wales' },
+      {
+        name: 'Mullumbimby',
+        href: '/jobs/locations/mullumbimby-nsw-australia',
+      },
+    ]);
+  });
+
   it('stops at a parent cycle instead of looping', () => {
     const a = englishPlace({ id: 'a', parentId: 'b', slug: 'a', name: 'A' });
     const b = englishPlace({ id: 'b', parentId: 'a', slug: 'b', name: 'B' });

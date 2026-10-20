@@ -19,7 +19,7 @@ import { jobsLocationPath } from '@cavuno/board/paths';
 
 import { placeLinkSlug } from './place-link';
 
-import type { PublicPlace } from '@cavuno/board';
+import type { PublicPlace, TaxonomyResolution } from '@cavuno/board';
 
 export interface LocationHierarchyCrumb {
   name: string;
@@ -35,6 +35,8 @@ type HierarchyCurrent = {
   sourceSlug: string;
   canonicalSlug: string;
   displayName: string;
+  /** A suggested place's ancestors, country first (its resolution's). */
+  ancestors?: TaxonomyResolution['ancestors'];
 };
 
 /**
@@ -50,6 +52,10 @@ type HierarchyCurrent = {
  * relaxation, "same jobs, wider area") while the leaf keeps its bare
  * `jobsLocationPath` (dropping the keyword is the real one-level-up; a
  * keyword-scoped leaf link would be a self-link to the page being rendered).
+ *
+ * A suggested place is not in the directory: its resolution carries its
+ * ancestors instead, and one the board has no page for (`canonicalSlug`
+ * `null`) stays unlinked.
  */
 export function toJobsLocationHierarchyCrumbs(
   places: readonly HierarchyPlace[],
@@ -59,6 +65,25 @@ export function toJobsLocationHierarchyCrumbs(
     ancestorPath?: (slug: string) => string;
   },
 ): LocationHierarchyCrumb[] {
+  if (current.ancestors) {
+    const ancestorPath = options?.ancestorPath ?? jobsLocationPath;
+    return [
+      ...current.ancestors.map((ancestor) =>
+        ancestor.canonicalSlug
+          ? {
+              name: ancestor.displayName,
+              href: ancestorPath(ancestor.canonicalSlug),
+            }
+          : { name: ancestor.displayName },
+      ),
+      options?.linkCurrent
+        ? {
+            name: current.displayName,
+            href: jobsLocationPath(current.canonicalSlug),
+          }
+        : { name: current.displayName },
+    ];
+  }
   return toPlaceHierarchyCrumbs(places, current, {
     ...options,
     placePath: jobsLocationPath,

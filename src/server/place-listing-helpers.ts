@@ -6,6 +6,7 @@
  * `indexable` verdict.
  */
 import { isNotFound } from '@cavuno/board';
+import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 
 import { localizePath } from '../lib/localized-path';
 
@@ -50,6 +51,25 @@ export function trailJsonLd(trail: { name: string; href?: string }[]) {
     crumb.href
       ? { name: crumb.name, path: localizePath(crumb.href) }
       : { name: crumb.name },
+  );
+}
+
+/**
+ * A `{name, href}` trail as `BreadcrumbList` JSON-LD (localized hrefs on the
+ * board origin). A crumb without a link before the last one, such as a
+ * suggested place's ancestor the board has no page for, is left out: every
+ * crumb but the last needs an `item` URL.
+ */
+export function trailBreadcrumbJsonLd(
+  trail: { name: string; href?: string }[],
+  origin: string,
+) {
+  return createBreadcrumbJsonLd(
+    trail.map((crumb) => ({
+      label: crumb.name,
+      href: crumb.href ? localizePath(crumb.href) : undefined,
+    })),
+    { origin },
   );
 }
 

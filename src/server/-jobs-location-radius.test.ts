@@ -381,6 +381,58 @@ describe('location listing search distance', () => {
     expect(robots(result.head)?.content).toBe('noindex, follow');
   });
 
+  it('trails a suggested place under its ancestors, leaving an unlinked one out of the JSON-LD', async () => {
+    const slug = 'marrickville-nsw-australia';
+    mocks.resolve.mockResolvedValue({
+      ...suggestedResolution(slug),
+      ancestors: [
+        {
+          displayName: 'Australia',
+          placeType: 'country',
+          canonicalSlug: 'australia',
+        },
+        {
+          displayName: 'New South Wales',
+          placeType: 'region',
+          canonicalSlug: null,
+        },
+        { displayName: 'Sydney', placeType: 'city', canonicalSlug: 'sydney' },
+      ],
+    });
+
+    const result = await getJobsLocationPage({
+      data: { ...page, locationSlug: slug },
+    });
+
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(result.breadcrumbTrail.slice(2)).toEqual([
+      { name: 'Australia', href: '/jobs/locations/australia' },
+      { name: 'New South Wales' },
+      { name: 'Sydney', href: '/jobs/locations/sydney' },
+      { name: 'Marrickville' },
+    ]);
+    const breadcrumbList = result.jsonLd.find(
+      (entry) => entry['@type'] === 'BreadcrumbList',
+    );
+    expect(breadcrumbList?.itemListElement).toEqual([
+      expect.objectContaining({ position: 1 }),
+      expect.objectContaining({ position: 2 }),
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: 'Australia',
+        item: `https://fixture.example${localizePath('/jobs/locations/australia')}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: 'Sydney',
+        item: `https://fixture.example${localizePath('/jobs/locations/sydney')}`,
+      },
+      { '@type': 'ListItem', position: 5, name: 'Marrickville' },
+    ]);
+  });
+
   it('indexes a suggested place with 5 on-site or hybrid jobs', async () => {
     const slug = 'marrickville-nsw-australia';
     mocks.resolve.mockResolvedValue(suggestedResolution(slug));
