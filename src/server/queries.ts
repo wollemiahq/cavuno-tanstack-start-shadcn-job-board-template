@@ -33,7 +33,7 @@ import { readBoardSeo } from '../lib/board-seo-cache';
 import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
-import { approximateNear, type RequestGeo } from '../lib/request-near';
+import { requestNear } from '../lib/request-near';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
@@ -322,9 +322,11 @@ export const searchPlaces = createServerFn({ method: 'GET' })
  * Place suggestions beyond the board's own places: any town, city or
  * neighbourhood by name (`places.suggest`), for the jobs location field on
  * boards whose context has `features.placeSuggestions`. Ranked near the
- * visitor's approximate location from the request's Cloudflare geo, rounded
- * so responses cache per area. A plain Node server has no Cloudflare geo and
- * sends no `near`; workerd in local dev fills it with the host's location.
+ * visitor's approximate location from the request's Cloudflare geo (or the
+ * platform dispatcher's `X-Cavuno-Visitor-Geo` header on live boards, which
+ * get no `request.cf`), rounded so responses cache per area. A client-only
+ * server fn, never public HTML. A plain Node server has no geo and sends no
+ * `near`; workerd in local dev fills it with the host's location.
  * Only `q` and `limit` come from the browser.
  */
 export const suggestPlaces = createServerFn({ method: 'GET' })
@@ -340,10 +342,9 @@ export const suggestPlaces = createServerFn({ method: 'GET' })
   );
 
 function visitorNear() {
-  // SAFETY: Workers supplies cf metadata on the incoming request; a plain
-  // Node server has no cf property, and approximateNear checks each field.
-  const incoming = getRequest() as Request & { cf?: RequestGeo };
-  return approximateNear(incoming.cf);
+  // A plain Node server has neither cf nor the dispatcher header, and
+  // requestNear checks each field.
+  return requestNear(getRequest());
 }
 
 /**

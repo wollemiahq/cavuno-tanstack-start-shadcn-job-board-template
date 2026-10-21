@@ -40,6 +40,7 @@ import {
 } from './data-source.server';
 import { getServerEnv } from './env';
 import { applyReadCache } from './read-cache';
+import { requestCountry } from './request-near';
 import { collapseRefreshesPerRequest } from './session-decision';
 import { createSessionRecovery } from './session-recovery';
 
@@ -101,14 +102,9 @@ const registry = createBoardClientRegistry({
       applyAudienceAttribution(
         request,
         () => getRequestHeader('cookie'),
-        () => {
-          // SAFETY: Workers supplies cf metadata on the incoming request;
-          // a local server has no cf property and leaves country unknown.
-          const incoming = getRequest() as Request & {
-            cf?: { country?: string };
-          };
-          return incoming.cf?.country;
-        },
+        // cf on Workers, else the dispatcher's geo header on live boards; a
+        // local server has neither and leaves country unknown.
+        () => requestCountry(getRequest()),
       ),
     ),
 });
