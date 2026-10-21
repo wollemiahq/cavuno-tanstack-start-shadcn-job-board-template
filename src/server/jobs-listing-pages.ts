@@ -693,7 +693,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const list = listResult.value;
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
-      const searchRadius = placeSearchRadius(place, data.within);
+      const searchRadius = placeSearchRadius(
+        place,
+        data.within,
+        place.defaultRadiusKm,
+      );
       const heading = m.locationPage_jobsHeading({ place: place.displayName });
       const countedHeading: CountedHeading = (counted) =>
         m.locationPage_jobsCountHeading({
@@ -854,7 +858,11 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const searchRadius = placeSearchRadius(place, data.within);
+      const searchRadius = placeSearchRadius(
+        place,
+        data.within,
+        place.defaultRadiusKm,
+      );
       const heading = m.locationCategoryPage_jobsHeading({
         category: category.displayName,
         place: place.displayName,
@@ -1019,7 +1027,11 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const searchRadius = placeSearchRadius(place, data.within);
+      const searchRadius = placeSearchRadius(
+        place,
+        data.within,
+        place.defaultRadiusKm,
+      );
       const heading = m.locationSkillPage_jobsHeading({
         skill: skill.displayName,
         place: place.displayName,

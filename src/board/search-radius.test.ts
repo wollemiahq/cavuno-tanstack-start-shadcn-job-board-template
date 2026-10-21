@@ -70,6 +70,21 @@ describe('placeSearchRadius', () => {
     });
   });
 
+  it("shows the place's own default distance, in the place unit", () => {
+    expect(placeSearchRadius(place('locality', 'AU'), undefined, 15)).toEqual({
+      unit: 'km',
+      selected: { value: 15, unit: 'km', km: 15 },
+      defaultOption: { value: 15, unit: 'km', km: 15 },
+      explicit: false,
+    });
+    expect(
+      placeSearchRadius(place('locality', 'US'), undefined, 15)?.selected,
+    ).toEqual({ value: 9, unit: 'mi', km: 15 });
+    expect(
+      placeSearchRadius(place('locality', 'AU'), 50, 15)?.selected?.value,
+    ).toBe(50);
+  });
+
   it('reads `within` in the place unit and marks it chosen', () => {
     expect(placeSearchRadius(place('locality', 'DE'), 10)).toMatchObject({
       unit: 'km',

@@ -1,6 +1,7 @@
 import {
   defaultSearchRadius,
   distanceUnitForCountry,
+  kmToDistanceUnit,
   searchRadiusOptions,
   type DistanceUnit,
   type SearchRadiusOption,
@@ -16,7 +17,9 @@ import type {
  * The "within" distance on a location listing. The URL carries `within` in
  * the place's unit (`?within=10` is 10 mi in the US, 10 km in Germany); the
  * API takes kilometres. Without it a city or locality lists jobs within the
- * market default (25 mi or 50 km); `within=0` is the place itself. Only a
+ * place's own default distance (the API's `defaultRadiusKm`, e.g. 15 km for
+ * a suburb) or else the market default (25 mi or 50 km); `within=0` is the
+ * place itself. Only a
  * city or a locality widens: a region or country page already covers
  * everything inside it.
  */
@@ -46,7 +49,7 @@ export type PlaceSearchRadius = {
   unit: DistanceUnit;
   /** The applied preset, or `null` for jobs in the place itself. */
   selected: SearchRadiusOption | null;
-  /** The market default preset for `unit`. */
+  /** The place's default distance, or the market default preset for `unit`. */
   defaultOption: SearchRadiusOption;
   /**
    * The URL chose the distance (`within` is `0` or a preset). Such a page is
@@ -72,19 +75,29 @@ export function placeRadiusGeo(
 
 /**
  * The radius control `place` takes, with `within` applied (the default
- * preset when `within` is `undefined`); `null` for a region, a country or a
- * place without a point, which show no control: the API widens only a city
- * or locality around its point.
+ * when `within` is `undefined`); `null` for a region, a country or a place
+ * without a point, which show no control: the API widens only a city or
+ * locality around its point. `defaultRadiusKm` is the distance the jobs API
+ * applies when no radius is sent; it replaces the market default, shown as
+ * a whole number in `unit`.
  */
 export function placeSearchRadius(
   place: { geo?: PlaceRadiusGeo | null } | null,
   within: number | undefined,
+  defaultRadiusKm?: number,
 ): PlaceSearchRadius | null {
   const placeType = place?.geo?.placeType;
   if (placeType !== 'city' && placeType !== 'locality') return null;
   if (place?.geo?.lat == null || place.geo.lng == null) return null;
   const unit = distanceUnitForCountry(place?.geo?.countryCode);
-  const defaultOption = defaultSearchRadius(unit);
+  const defaultOption: SearchRadiusOption =
+    defaultRadiusKm === undefined
+      ? defaultSearchRadius(unit)
+      : {
+          value: Math.round(kmToDistanceUnit(defaultRadiusKm, unit)),
+          unit,
+          km: defaultRadiusKm,
+        };
   const selected =
     within === SEARCH_RADIUS_EXACT
       ? null
