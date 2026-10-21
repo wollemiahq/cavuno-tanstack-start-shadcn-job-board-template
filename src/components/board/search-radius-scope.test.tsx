@@ -161,6 +161,26 @@ describe('SearchRadiusScope', () => {
     ]);
   });
 
+  it("lists a place's own default among the presets, and picking it drops within", async () => {
+    const onWithinChange = vi.fn();
+    line({ within: 25, defaultWithin: 9, onWithinChange });
+    fireEvent.click(trigger(mi(25)));
+    const options = await screen.findAllByRole('menuitemradio');
+    expect(options.map((option) => option.textContent)).toEqual([
+      m.searchRadius_exactOption(),
+      ...[5, 9, 10, 25, 50, 100].map((value) =>
+        m.searchRadius_withinOption({ distance: mi(value) }),
+      ),
+    ]);
+
+    fireEvent.click(
+      screen.getByRole('menuitemradio', {
+        name: m.searchRadius_withinOption({ distance: mi(9) }),
+      }),
+    );
+    expect(onWithinChange).toHaveBeenCalledWith(undefined);
+  });
+
   it.each([
     ['the exact place', () => m.searchRadius_exactOption(), 0],
     [

@@ -87,7 +87,10 @@ export function SearchRadiusScope({
   unit: DistanceUnit;
   /** The applied distance in `unit`, or `null` for the place itself. */
   within: number | null;
-  /** The market default in `unit`; picking it drops `within` from the URL. */
+  /**
+   * The default distance in `unit` (the place's own or the market's), listed
+   * even when it is not a preset; picking it drops `within` from the URL.
+   */
   defaultWithin: number;
   /** The page's range, or `null` when the count is unknown. */
   range: ResultsRange | null;
@@ -101,6 +104,10 @@ export function SearchRadiusScope({
 }) {
   const locale = getLocale();
   const distance = (value: number) => formatDistance(value, unit, locale);
+  const presets = searchRadiusOptions(unit).map((option) => option.value);
+  const choices = presets.includes(defaultWithin)
+    ? presets
+    : [...presets, defaultWithin].sort((a, b) => a - b);
   const triggerText =
     within === null ? m.searchRadius_exactPlace({ place }) : distance(within);
   const [before, after = ''] = sentence({
@@ -156,14 +163,14 @@ export function SearchRadiusScope({
                 >
                   {m.searchRadius_exactOption()}
                 </DropdownMenuRadioItem>
-                {searchRadiusOptions(unit).map((option) => (
+                {choices.map((value) => (
                   <DropdownMenuRadioItem
-                    key={option.value}
-                    value={String(option.value)}
+                    key={value}
+                    value={String(value)}
                     closeOnClick
                   >
                     {m.searchRadius_withinOption({
-                      distance: distance(option.value),
+                      distance: distance(value),
                     })}
                   </DropdownMenuRadioItem>
                 ))}
