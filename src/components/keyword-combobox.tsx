@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 
 import { Search, X } from 'lucide-react';
 
@@ -15,6 +15,7 @@ import {
   ComboboxItem,
   ComboboxList,
   useComboboxAnchor,
+  useComboboxSpanAnchor,
 } from '@/components/ui/combobox';
 import { InputGroupAddon, InputGroupButton } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
@@ -33,6 +34,11 @@ interface KeywordComboboxProps extends KeywordSuggestionState {
   onSelect: (suggestion: KeywordSuggestionVM) => void;
   onClear: () => void;
   className?: string;
+  /**
+   * The whole search bar this field sits in. The suggestion popup spans its
+   * width (still opening under this field) so long names are not clipped.
+   */
+  popupSpanRef?: RefObject<HTMLElement | null>;
 }
 
 /** Jobs keyword autocomplete: companies and canonical terms plus an unrestricted text value. */
@@ -46,9 +52,11 @@ export function KeywordCombobox({
   onSelect,
   onClear,
   className,
+  popupSpanRef,
 }: KeywordComboboxProps) {
   const [open, setOpen] = useState(false);
   const anchorRef = useComboboxAnchor();
+  const popupAnchor = useComboboxSpanAnchor(anchorRef, popupSpanRef);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const clear = () => {
@@ -120,7 +128,7 @@ export function KeywordCombobox({
           </InputGroupAddon>
         ) : null}
       </ComboboxInput>
-      <ComboboxContent anchor={anchorRef} aria-busy={loading}>
+      <ComboboxContent anchor={popupAnchor} aria-busy={loading}>
         {loading && suggestions.length === 0 ? (
           <div
             role="status"

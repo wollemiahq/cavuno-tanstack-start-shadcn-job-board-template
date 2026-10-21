@@ -84,6 +84,8 @@ export function HeaderSearchEnhanced({
   } = fields;
   const keywordInputRef = useRef<HTMLInputElement>(null);
   const locationRef = useRef<LocationComboboxHandle>(null);
+  // Suggestion popups span the whole bar, not just their own field.
+  const barRef = useRef<HTMLDivElement>(null);
   const scopePlaceholders = {
     jobs: jobsPlaceholder,
     companies: companiesPlaceholder,
@@ -125,6 +127,7 @@ export function HeaderSearchEnhanced({
       className="col-span-2 row-start-2 w-full min-w-0 py-2 xl:col-auto xl:row-auto xl:flex-1 xl:py-0"
     >
       <ButtonGroup
+        ref={barRef}
         aria-label={m.searchBar_searchAriaLabel()}
         className="w-full min-w-0"
       >
@@ -146,6 +149,7 @@ export function HeaderSearchEnhanced({
               location={location}
               placeholder={scopePlaceholders.jobs}
               locationClassName="border-border bg-input/50 h-9 min-w-0 flex-1"
+              popupSpanRef={barRef}
               onValueChange={setValue}
               onLocationChange={setLocation}
               onTermChange={setTerm}
@@ -218,6 +222,7 @@ export function HeaderSearchEnhanced({
                 onSelect={setLocation}
                 onClear={() => setLocation(null)}
                 className="border-border bg-input/50 h-9 min-w-0 flex-1"
+                popupSpanRef={barRef}
               />
             </Suspense>
           </>

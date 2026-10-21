@@ -114,6 +114,8 @@ export function EmbedJobsHeader({
   const seniorityLabel = seniorityLabelMap(SENIORITIES);
   const searchRef = useRef<HTMLAnchorElement>(null);
   const locationRef = useRef<LocationComboboxHandle>(null);
+  // Suggestion popups span the whole search row, not just their own field.
+  const searchRowRef = useRef<HTMLDivElement>(null);
 
   // Pure function of staged state, so the Search control can be a real anchor
   // with an href rather than a click handler.
@@ -189,7 +191,10 @@ export function EmbedJobsHeader({
 
       <div className="bg-border hidden w-px self-stretch lg:block" />
 
-      <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+      <div
+        ref={searchRowRef}
+        className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:flex-row sm:items-center"
+      >
         <div className="min-w-0 flex-1">
           <KeywordCombobox
             {...keywordSuggestions}
@@ -215,6 +220,7 @@ export function EmbedJobsHeader({
             }}
             onClear={() => setTerm(null)}
             className="border-border bg-input/50 h-9 min-w-0"
+            popupSpanRef={searchRowRef}
           />
         </div>
 
@@ -227,6 +233,7 @@ export function EmbedJobsHeader({
             onSelect={setLocation}
             onClear={() => setLocation(null)}
             className="border-border bg-input/50 h-9 min-w-0 flex-1"
+            popupSpanRef={searchRowRef}
           />
         </div>
 

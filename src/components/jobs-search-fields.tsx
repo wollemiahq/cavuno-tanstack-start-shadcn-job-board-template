@@ -1,6 +1,6 @@
 'use client';
 
-import type { Ref } from 'react';
+import type { Ref, RefObject } from 'react';
 
 import {
   KeywordCombobox,
@@ -25,6 +25,8 @@ export interface JobsSearchFieldsProps {
   location: HeaderSearchLocation | null;
   placeholder: string;
   locationClassName?: string;
+  /** The search bar both suggestion popups span. */
+  popupSpanRef?: RefObject<HTMLElement | null>;
   onValueChange: (value: string) => void;
   onLocationChange: (location: HeaderSearchLocation | null) => void;
   onTermChange: (term: HeaderSearchTerm | null) => void;
@@ -39,6 +41,7 @@ export function JobsSearchFields({
   location,
   placeholder,
   locationClassName,
+  popupSpanRef,
   onValueChange,
   onLocationChange,
   onTermChange,
@@ -49,6 +52,7 @@ export function JobsSearchFields({
         {...keywordSuggestions}
         value={value}
         placeholder={placeholder}
+        popupSpanRef={popupSpanRef}
         onValueChange={(nextValue) => {
           onValueChange(nextValue);
           onTermChange(null);
@@ -67,6 +71,7 @@ export function JobsSearchFields({
         onSelect={onLocationChange}
         onClear={() => onLocationChange(null)}
         className={locationClassName}
+        popupSpanRef={popupSpanRef}
       />
     </>
   );

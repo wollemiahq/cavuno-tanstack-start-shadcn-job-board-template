@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, type Ref } from 'react';
 
 import { Search, X } from 'lucide-react';
 
@@ -29,6 +29,7 @@ export function ListingSearchBand({
   searchAriaLabel,
   leadingSlot,
   belowSlot,
+  searchRowRef,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -41,6 +42,8 @@ export function ListingSearchBand({
   leadingSlot?: React.ReactNode;
   /** A second row under the search row (e.g. the jobs facet pills). */
   belowSlot?: React.ReactNode;
+  /** The search row (fields + Search), e.g. for a popup to span. */
+  searchRowRef?: Ref<HTMLDivElement>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,7 +55,10 @@ export function ListingSearchBand({
       }}
       className="bg-card ring-border flex flex-col gap-3 rounded-2xl p-4 shadow-lg ring-1"
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div
+        ref={searchRowRef}
+        className="flex flex-col gap-3 lg:flex-row lg:items-center"
+      >
         {/* The keyword field carries its own inline clear: a leading search
             icon, and — only when the field is non-empty — a trailing X that
             empties just this field and refocuses it. The X sits inside the

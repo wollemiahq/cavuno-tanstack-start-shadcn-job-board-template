@@ -41,6 +41,8 @@ export function CompanyJobsSearchBar({
 }) {
   const navigate = useNavigate();
   const locationRef = useRef<LocationComboboxHandle>(null);
+  // Location suggestions span the whole search row, not just their field.
+  const searchRowRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(defaultValue ?? '');
   const [place, setPlace] = useState<{ slug: string; name: string } | null>(
     location?.slug ? { slug: location.slug, name: location.name ?? '' } : null,
@@ -62,6 +64,7 @@ export function CompanyJobsSearchBar({
 
   return (
     <ListingSearchBand
+      searchRowRef={searchRowRef}
       value={query}
       onChange={setQuery}
       onSubmit={() => {
@@ -110,6 +113,7 @@ export function CompanyJobsSearchBar({
               submit(null);
             }}
             className="border-border bg-input/50 h-9 min-w-0 lg:min-w-56 lg:flex-1"
+            popupSpanRef={searchRowRef}
           />
         </Suspense>
       }

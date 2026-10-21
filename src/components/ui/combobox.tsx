@@ -287,6 +287,32 @@ function useComboboxAnchor() {
   return React.useRef<HTMLDivElement | null>(null);
 }
 
+/**
+ * Popup anchor that sits under the field (`fieldRef`) but spans the width of
+ * `spanRef`, e.g. a whole search bar, so suggestions are not clipped to one
+ * input. Without `spanRef` it is the field itself. Pass the result as
+ * `ComboboxContent`'s `anchor`; its `--anchor-width` then becomes the span's.
+ */
+function useComboboxSpanAnchor(
+  fieldRef: React.RefObject<HTMLElement | null>,
+  spanRef?: React.RefObject<HTMLElement | null>,
+) {
+  return React.useCallback(() => {
+    const field = fieldRef.current;
+    const span = spanRef?.current;
+    if (!field || !span) return field;
+    return {
+      // Scroll and resize tracking follow the field.
+      contextElement: field,
+      getBoundingClientRect() {
+        const { top, bottom, height } = field.getBoundingClientRect();
+        const { left, right, width } = span.getBoundingClientRect();
+        return { x: left, y: top, top, bottom, left, right, width, height };
+      },
+    };
+  }, [fieldRef, spanRef]);
+}
+
 export {
   Combobox,
   ComboboxInput,
@@ -304,4 +330,5 @@ export {
   ComboboxTrigger,
   ComboboxValue,
   useComboboxAnchor,
+  useComboboxSpanAnchor,
 };

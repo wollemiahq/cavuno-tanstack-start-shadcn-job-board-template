@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type Ref,
+  type RefObject,
 } from 'react';
 
 import { MapPin, X } from 'lucide-react';
@@ -21,6 +22,7 @@ import {
   ComboboxItem,
   ComboboxList,
   useComboboxAnchor,
+  useComboboxSpanAnchor,
 } from '@/components/ui/combobox';
 import { InputGroupAddon, InputGroupButton } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
@@ -82,6 +84,11 @@ interface LocationComboboxProps extends LocationSearchState {
    */
   onClear: () => void;
   className?: string;
+  /**
+   * The whole search bar this field sits in. The suggestion popup spans its
+   * width (still opening under this field) so long names are not clipped.
+   */
+  popupSpanRef?: RefObject<HTMLElement | null>;
   inputClassName?: string;
 }
 
@@ -106,6 +113,7 @@ export function LocationCombobox({
   resolve,
   className,
   inputClassName,
+  popupSpanRef,
   ref,
 }: LocationComboboxProps) {
   const [text, setText] = useState(valueLabel ?? value ?? '');
@@ -114,6 +122,7 @@ export function LocationCombobox({
   const [unmatched, setUnmatched] = useState<string | null>(null);
   const unmatchedId = useId();
   const anchorRef = useComboboxAnchor();
+  const popupAnchor = useComboboxSpanAnchor(anchorRef, popupSpanRef);
   const inputRef = useRef<HTMLInputElement>(null);
   const resolutionGenerationRef = useRef(0);
   /**
@@ -291,7 +300,7 @@ export function LocationCombobox({
           </InputGroupAddon>
         ) : null}
       </ComboboxInput>
-      <ComboboxContent anchor={anchorRef} aria-busy={loading}>
+      <ComboboxContent anchor={popupAnchor} aria-busy={loading}>
         {unmatched !== null ? (
           <p
             id={unmatchedId}
