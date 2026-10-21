@@ -117,6 +117,7 @@ function JobDetailPage() {
             companySlug={companySlug}
             applicationUrl={job.applicationUrl}
             applyAction={job.applyAction}
+            isSponsored={job.isSponsored}
             language={board.language}
             returnTo={returnTo}
             nativeApplications={board.features.nativeApplications}

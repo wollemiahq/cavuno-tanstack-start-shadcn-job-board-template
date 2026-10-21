@@ -43,6 +43,31 @@ describe('toApplyButtonVM — decision ladder', () => {
     });
   });
 
+  it('sends a Sponsored job through the gateway even when a raw URL is present', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      applicationUrl: 'https://sponsored.example/click',
+      applyAction: 'external_direct',
+      isSponsored: true,
+      viewer: null,
+    });
+    expect(vm.action).toEqual({
+      kind: 'gateway-external',
+      jobSlug: 'senior-eng',
+    });
+  });
+
+  it('never links a Sponsored job without a slug to its raw URL', () => {
+    const vm = toApplyButtonVM({
+      ...base,
+      jobSlug: null,
+      applicationUrl: 'https://sponsored.example/click',
+      isSponsored: true,
+      viewer: null,
+    });
+    expect(vm.action).toEqual({ kind: 'none' });
+  });
+
   it('honours a server-declared native action even if a stale URL is present', () => {
     const vm = toApplyButtonVM({
       ...base,

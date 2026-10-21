@@ -131,6 +131,7 @@ export function ApplyButton({
   companySlug,
   applicationUrl,
   applyAction,
+  isSponsored,
   viewer,
   language,
   returnTo,
@@ -155,6 +156,8 @@ export function ApplyButton({
   applicationUrl: string | null;
   /** Cavuno's server-supplied Apply contract (absent for pre-gateway data). */
   applyAction?: PublicApplyAction | null;
+  /** Sponsored jobs apply only through the gateway, never a raw URL. */
+  isSponsored?: boolean | null;
   /** Session state: null = anonymous. */
   viewer: { emailVerified: boolean } | null;
   /** Board language (ISO code) from `board.context()`. */
@@ -292,6 +295,7 @@ export function ApplyButton({
     jobSlug,
     applicationUrl,
     applyAction,
+    isSponsored,
     viewer,
     applied: applicationState === 'applied' || state === 'applied',
     language,

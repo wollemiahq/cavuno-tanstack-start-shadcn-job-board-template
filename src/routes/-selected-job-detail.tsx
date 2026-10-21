@@ -91,6 +91,7 @@ export function SelectedJobDetail({
       companySlug={state.job.company?.slug ?? ''}
       applicationUrl={state.job.applicationUrl}
       applyAction={state.job.applyAction}
+      isSponsored={state.job.isSponsored}
       language={board.language}
       returnTo={returnTo}
       nativeApplications={board.features.nativeApplications}

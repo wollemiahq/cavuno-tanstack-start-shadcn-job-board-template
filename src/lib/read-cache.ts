@@ -80,8 +80,8 @@ export function boardGlobalReadCache(): BoardGlobalCacheOptions {
  * bearer, grant, or capability header, and every mutation, bypasses the cache
  * entirely. A capability header asks Cavuno for a different Apply shape under
  * the same URL as legacy readers, so it must never share a URL-keyed edge
- * entry. Job-detail page reads send it as the `capabilities` query parameter
- * instead (`APPLY_GATEWAY_QUERY`): the opt-in is part of the URL, so they
+ * entry. Cacheable job reads send it as the `capabilities` query parameter
+ * instead (`withApplyGatewayReads`): the opt-in is part of the URL, so they
  * are cacheable like any anonymous read.
  */
 export function applyReadCache(req: BoardRequest): BoardRequest {

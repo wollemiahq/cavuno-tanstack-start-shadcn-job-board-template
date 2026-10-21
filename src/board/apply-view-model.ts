@@ -95,6 +95,7 @@ export function toApplyButtonVM({
   jobSlug,
   applicationUrl,
   applyAction,
+  isSponsored,
   viewer,
   applied,
   nativeApplications = true,
@@ -105,6 +106,11 @@ export function toApplyButtonVM({
   applicationUrl: string | null;
   /** Server-supplied contract; absent keeps the pre-gateway behavior. */
   applyAction?: PublicApplyAction | null;
+  /**
+   * A Sponsored job's Apply URL is a paid click: it is only ever reached
+   * through the gateway, whatever `applyAction` and `applicationUrl` say.
+   */
+  isSponsored?: boolean | null;
   viewer: { emailVerified: boolean } | null;
   /** `alreadyApplied` (server) OR the transient in-session applied state. */
   applied: boolean;
@@ -133,7 +139,9 @@ export function toApplyButtonVM({
   allowGuestApply?: boolean;
 }): ApplyButtonVM {
   const copy = applyCopy();
-  if (applyAction === 'gateway_external') {
+  if (applyAction === 'gateway_external' || isSponsored === true) {
+    // A Sponsored job takes this branch whatever its other fields say, so a
+    // stale or legacy body can never render its paid URL as a link.
     // The wall outranks the server-declared gateway contract: a walled board
     // must not hand an anonymous visitor a route to the employer. A gateway
     // job without a slug is malformed; fail closed rather than falling into

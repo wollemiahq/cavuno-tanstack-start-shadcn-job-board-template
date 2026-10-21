@@ -93,3 +93,15 @@ describe('board client session recovery wiring', () => {
     expect(value).toMatch(/Max-Age=0/);
   });
 });
+
+describe('board client Apply gateway wiring', () => {
+  it('declares the capability on job reads, so Sponsored jobs are listed', async () => {
+    request = new Request('https://board.example.test/');
+    await getPrimaryBoard().jobs.list({ limit: 20 });
+
+    const [url] = fetchMock.mock.calls.at(-1)!;
+    expect(new URL(url).searchParams.getAll('capabilities')).toEqual([
+      'apply-gateway-v1',
+    ]);
+  });
+});

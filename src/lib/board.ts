@@ -30,6 +30,11 @@ import {
   getRequestHeader,
 } from '@tanstack/react-start/server';
 
+import {
+  APPLY_GATEWAY_CAPABILITY,
+  APPLY_GATEWAY_CAPABILITY_HEADER,
+  withApplyGatewayReads,
+} from './apply-gateway-capability';
 import { applyAudienceAttribution } from './audience-request';
 import { createBoardClientRegistry } from './board-client-registry';
 import {
@@ -45,9 +50,6 @@ import { collapseRefreshesPerRequest } from './session-decision';
 import { createSessionRecovery } from './session-recovery';
 
 import type { DataSource } from './data-source';
-
-const APPLY_GATEWAY_CAPABILITY_HEADER = 'x-cavuno-board-capabilities';
-const APPLY_GATEWAY_CAPABILITY = 'apply-gateway-v1' as const;
 
 /** The incoming request, the scope of per-request memos; `null` outside one. */
 function currentRequest(): Request | null {
@@ -91,7 +93,8 @@ const registry = createBoardClientRegistry({
       board.client.fetch.bind(board.client),
       source,
     );
-    return board;
+    // Every job read declares the Apply gateway, so Sponsored jobs are listed.
+    return withApplyGatewayReads(board);
   },
   createRefresher: (board) =>
     collapseRefreshesPerRequest(createSessionRefresher(board), currentRequest),
@@ -113,7 +116,9 @@ const registry = createBoardClientRegistry({
  * Job-detail reads opt in to the upgraded Apply contract as a query
  * parameter. It selects the same country-gated Apply shape as the header, but
  * the opt-in is part of the URL, so the response stays shared-cacheable at the
- * edge instead of being fetched from the Board API on every render.
+ * edge instead of being fetched from the Board API on every render. The board
+ * client adds it to every job read anyway (`withApplyGatewayReads`); call
+ * sites keep it so the detail contract reads where it is used.
  */
 export const APPLY_GATEWAY_QUERY: JobRetrieveQuery = {
   capabilities: [APPLY_GATEWAY_CAPABILITY],
