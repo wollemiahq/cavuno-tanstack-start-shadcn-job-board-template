@@ -55,6 +55,12 @@ vi.mock('../lib/board', () => ({
   },
 }));
 import {
+  listingMetaDescription,
+  listingPageTitle,
+  type CountedHeading,
+} from '../lib/listing-description';
+import { m } from '../paraglide/messages';
+import {
   getJobsCategoryPage,
   getJobsLocationCategoryPage,
   getJobsLocationPage,
@@ -151,5 +157,176 @@ describe('landing page intro', () => {
         introHtml: undefined,
       });
     }
+  });
+});
+
+const META_TITLE = 'Fixture meta title';
+const META_DESCRIPTION = 'Fixture meta description.';
+
+function documentTitle(head: { meta: readonly object[] }): string {
+  const entry = head.meta.find(
+    (meta): meta is { title: string } =>
+      'title' in meta && typeof meta.title === 'string',
+  );
+  return entry?.title ?? '';
+}
+
+function documentDescription(head: { meta: readonly object[] }): string {
+  const entry = head.meta.find(
+    (meta): meta is { name: string; content: string } =>
+      'name' in meta &&
+      meta.name === 'description' &&
+      'content' in meta &&
+      typeof meta.content === 'string',
+  );
+  return entry?.content ?? '';
+}
+
+function composedListing(kind: 'category' | 'location', count = 0) {
+  const heading =
+    kind === 'category'
+      ? m.categoryPage_jobsHeading({ category: 'Fixture' })
+      : m.locationPage_jobsHeading({ place: 'Fixture' });
+  const countedHeading: CountedHeading = (counted) =>
+    kind === 'category'
+      ? m.categoryPage_jobsCountHeading({ ...counted, category: 'Fixture' })
+      : m.locationPage_jobsCountHeading({ ...counted, place: 'Fixture' });
+  return {
+    title: listingPageTitle({
+      heading,
+      countedHeading,
+      boardName: 'Fixture',
+      language: 'en',
+      count,
+    }),
+    description: listingMetaDescription({
+      heading,
+      countedHeading,
+      boardName: 'Fixture',
+      count,
+    }),
+  };
+}
+
+describe('landing page meta', () => {
+  for (const [name, load] of pages) {
+    const composed = composedListing(name);
+
+    it(`${name}: uses metaTitle as the document title on the plain landing`, async () => {
+      mocks.resolve.mockResolvedValue({ ...resolution, metaTitle: META_TITLE });
+      const page = await load({});
+      if (page.kind !== 'ok') throw new Error('Expected an ok page');
+      expect(documentTitle(page.head)).toBe(META_TITLE);
+      expect(documentDescription(page.head)).toBe(composed.description);
+      expect(mocks.resolve).toHaveBeenCalledTimes(1);
+      expect(mocks.list).toHaveBeenCalledTimes(1);
+    });
+
+    it(`${name}: keeps the listing title when metaTitle is absent or blank`, async () => {
+      for (const metaTitle of [undefined, '   ']) {
+        mocks.resolve.mockResolvedValue({ ...resolution, metaTitle });
+        const page = await load({});
+        if (page.kind !== 'ok') throw new Error('Expected an ok page');
+        expect(documentTitle(page.head)).toBe(composed.title);
+        expect(documentTitle(page.head)).not.toBe(META_TITLE);
+      }
+    });
+
+    it(`${name}: ignores metaTitle on a filtered or later page`, async () => {
+      mocks.resolve.mockResolvedValue({
+        ...resolution,
+        metaTitle: META_TITLE,
+      });
+      for (const filters of [
+        { offset: 24 },
+        { remoteOption: 'remote' as const },
+      ]) {
+        const page = await load(filters);
+        if (page.kind !== 'ok') throw new Error('Expected an ok page');
+        expect(documentTitle(page.head)).toBe(composed.title);
+        expect(documentTitle(page.head)).not.toContain(META_TITLE);
+      }
+    });
+
+    it(`${name}: uses metaDescription on the plain landing`, async () => {
+      mocks.resolve.mockResolvedValue({
+        ...resolution,
+        metaDescription: META_DESCRIPTION,
+      });
+      const page = await load({});
+      if (page.kind !== 'ok') throw new Error('Expected an ok page');
+      expect(documentDescription(page.head)).toBe(META_DESCRIPTION);
+      expect(documentTitle(page.head)).toBe(composed.title);
+    });
+
+    it(`${name}: keeps the listing description when metaDescription is absent or blank`, async () => {
+      for (const metaDescription of [undefined, ' \n ']) {
+        mocks.resolve.mockResolvedValue({ ...resolution, metaDescription });
+        const page = await load({});
+        if (page.kind !== 'ok') throw new Error('Expected an ok page');
+        expect(documentDescription(page.head)).toBe(composed.description);
+        expect(documentDescription(page.head)).not.toBe(META_DESCRIPTION);
+      }
+    });
+
+    it(`${name}: ignores metaDescription on a filtered or later page`, async () => {
+      mocks.resolve.mockResolvedValue({
+        ...resolution,
+        metaDescription: META_DESCRIPTION,
+      });
+      for (const filters of [{ offset: 24 }, { q: 'designer' }]) {
+        const page = await load(filters);
+        if (page.kind !== 'ok') throw new Error('Expected an ok page');
+        expect(documentDescription(page.head)).toBe(composed.description);
+        expect(documentDescription(page.head)).not.toContain(META_DESCRIPTION);
+      }
+    });
+  }
+
+  it('location and category ignores page-content meta on the plain view', async () => {
+    mocks.resolve.mockResolvedValue({
+      ...resolution,
+      metaTitle: META_TITLE,
+      metaDescription: META_DESCRIPTION,
+    });
+    mocks.list.mockResolvedValue({ data: [], count: 3 });
+    const page = await getJobsLocationCategoryPage({
+      data: {
+        locationSlug: 'fixture',
+        categorySlug: 'fixture',
+        offset: 0,
+        limit: 24,
+      },
+    });
+    if (page.kind !== 'ok') throw new Error('Expected an ok page');
+    const heading = m.locationCategoryPage_jobsHeading({
+      category: 'Fixture',
+      place: 'Fixture',
+    });
+    const countedHeading: CountedHeading = (counted) =>
+      m.locationCategoryPage_jobsCountHeading({
+        ...counted,
+        category: 'Fixture',
+        place: 'Fixture',
+      });
+    expect(documentTitle(page.head)).toBe(
+      listingPageTitle({
+        heading,
+        countedHeading,
+        boardName: 'Fixture',
+        language: 'en',
+        count: 3,
+      }),
+    );
+    expect(documentDescription(page.head)).toBe(
+      listingMetaDescription({
+        heading,
+        countedHeading,
+        boardName: 'Fixture',
+        count: 3,
+      }),
+    );
+    expect(documentTitle(page.head)).not.toContain(META_TITLE);
+    expect(documentDescription(page.head)).not.toContain(META_DESCRIPTION);
   });
 });
