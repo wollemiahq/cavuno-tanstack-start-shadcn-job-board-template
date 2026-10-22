@@ -108,6 +108,12 @@ function foldPlaceName(name: string) {
     .trim();
 }
 
+/** Fields a board place and a talent place share, enough to tell a suggestion apart. */
+type SettlementPlace = Pick<
+  PublicPlace,
+  'placeType' | 'countryCode' | 'regionCode' | 'displayName' | 'name'
+>;
+
 /**
  * Whether a suggested place is one of the board's own settlements: same
  * name and country, the board place is a city or locality, and the
@@ -115,7 +121,10 @@ function foldPlaceName(name: string) {
  * never hides a suggestion that has one: a duplicate row is better than
  * hiding Portland, Maine behind the board's Portland, Oregon.
  */
-function isBoardSettlement(boardPlace: PublicPlace, suggestion: PublicPlace) {
+function isBoardSettlement(
+  boardPlace: SettlementPlace,
+  suggestion: SettlementPlace,
+) {
   if (boardPlace.placeType !== 'city' && boardPlace.placeType !== 'locality') {
     return false;
   }
@@ -137,13 +146,13 @@ function isBoardSettlement(boardPlace: PublicPlace, suggestion: PublicPlace) {
 }
 
 /**
- * The suggested places to list after the board's own places: every one
- * except those that are one of the board's settlements.
+ * The suggested places to list after the board's or talent directory's
+ * places: every one except those that are one of those settlements.
  */
-export function suggestionsBeyondBoardPlaces(
-  boardPlaces: readonly PublicPlace[],
-  suggestions: readonly PublicPlace[],
-): PublicPlace[] {
+export function suggestionsBeyondBoardPlaces<T extends SettlementPlace>(
+  boardPlaces: readonly SettlementPlace[],
+  suggestions: readonly T[],
+): T[] {
   return suggestions.filter(
     (suggestion) =>
       !boardPlaces.some((boardPlace) =>
@@ -156,7 +165,8 @@ export function suggestionsBeyondBoardPlaces(
  * A place as a `/talent` location option: one the board's directory
  * candidates live in, or a job place when that list is unavailable. Its value
  * is the English `slug`, the talent directory's `place` filter; never a job
- * location page slug.
+ * location page slug. `placeType` is kept, and context is the region and
+ * country in `displayName` when that name adds them.
  */
 export function toTalentPlaceSuggestionVM(
   place: TalentPlace | PublicPlace,
@@ -168,9 +178,12 @@ export function toTalentPlaceSuggestionVM(
     id: place.id,
     slug: place.slug,
     name: place.displayName ?? place.name,
-    contextLabel: contextLabel(place.countryCode, locale),
+    contextLabel:
+      displayNameContext(place.name, place.displayName) ??
+      contextLabel(place.countryCode, locale),
     countryCode: place.countryCode,
     regionCode: place.regionCode,
+    placeType: place.placeType,
   };
 }
 

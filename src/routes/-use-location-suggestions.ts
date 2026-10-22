@@ -48,8 +48,9 @@ const locationSuggestionDependencies: LocationSuggestionDependencies = {
 
 export type LocationSuggestionOptions = {
   /**
-   * The board context's `features.placeSuggestions`: the `jobs` field also
-   * suggests any town, city or neighbourhood after the board's places.
+   * The board context's `features.placeSuggestions`: the `jobs` and `talent`
+   * fields also suggest any town, city or neighbourhood after their own
+   * places.
    */
   placeSuggestions?: boolean;
 };
@@ -59,7 +60,8 @@ export type LocationSuggestionOptions = {
  * suggests board places (only places the board's jobs use) for the jobs
  * location filter, followed by any other matching place when
  * `placeSuggestions` is on; `talent` suggests the places directory
- * candidates live in, for the `/talent` `place` filter.
+ * candidates live in, for the `/talent` `place` filter, followed by any
+ * other matching place when `placeSuggestions` is on.
  */
 export function useLocationSuggestions(
   locale: string,
@@ -122,6 +124,38 @@ export function useLocationSuggestions(
             toLocationSuggestionVM(place, locale),
           ),
         );
+      }
+      if (source === 'talent' && placeSuggestions) {
+        // Both lists at once. A failed suggest costs only the extra places;
+        // talent places still show. A failed talent list still shows the
+        // gazetteer. This path never falls back to job places.
+        const [talentPlaces, suggested] = await Promise.all([
+          dependencies.searchTalentPlaces({ data }).then(
+            ({ data: places }) => places,
+            () => [],
+          ),
+          Promise.race([
+            dependencies
+              .suggestPlaces({ data: { q, limit: SUGGEST_LIMIT } })
+              .then(
+                ({ data: places }) => places,
+                () => [],
+              ),
+            new Promise<[]>((done) =>
+              setTimeout(() => done([]), SUGGEST_WAIT_MS),
+            ),
+          ]),
+        ]);
+        // Talent places first, then the suggestions that are not one of
+        // them; `resolve` takes the first of this merged list.
+        return present([
+          ...talentPlaces.map((place) =>
+            toTalentPlaceSuggestionVM(place, locale),
+          ),
+          ...suggestionsBeyondBoardPlaces(talentPlaces, suggested).map(
+            (place) => toSuggestedPlaceVM(place, locale),
+          ),
+        ]);
       }
       // Candidate places first. A restricted directory rejects the list and
       // one whose counts are not built yet returns none; job places (by their

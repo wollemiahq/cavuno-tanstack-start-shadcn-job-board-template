@@ -308,13 +308,134 @@ describe('useLocationSuggestions — place suggestions', () => {
     );
   });
 
-  it('never suggests other places for the talent filter', async () => {
+  it('suggests only talent places while place suggestions are off', async () => {
+    searchTalentPlaces.mockResolvedValue({
+      data: [
+        {
+          object: 'talent_place',
+          id: london.id,
+          parentId: null,
+          slug: london.slug,
+          canonicalSlug: london.canonicalSlug,
+          name: london.name,
+          displayName: london.displayName,
+          placeType: london.placeType,
+          countryCode: london.countryCode,
+          regionCode: null,
+          candidateCount: 3,
+        },
+      ],
+    });
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', 'talent', {}, dependencies),
+    );
+
+    act(() => result.current.onQueryChange('Lond'));
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+
+    expect(suggestPlaces).not.toHaveBeenCalled();
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({ slug: 'london-uk' }),
+    ]);
+  });
+
+  it('lists talent places first, then suggestions that are not one of them', async () => {
+    searchTalentPlaces.mockResolvedValue({
+      data: [
+        {
+          object: 'talent_place',
+          id: london.id,
+          parentId: null,
+          slug: london.slug,
+          canonicalSlug: london.canonicalSlug,
+          name: london.name,
+          displayName: london.displayName,
+          placeType: london.placeType,
+          countryCode: london.countryCode,
+          regionCode: null,
+          candidateCount: 3,
+        },
+      ],
+    });
+    suggestPlaces.mockResolvedValue({
+      data: [
+        suggested('London', 'GB', null, 'England, United Kingdom'),
+        suggested('Dover', 'GB', null, 'Kent, United Kingdom'),
+      ],
+    });
     const { result } = renderHook(() =>
       useLocationSuggestions('en', 'talent', placeSuggestionsOn, dependencies),
     );
 
-    await result.current.resolve('Lond');
+    act(() => result.current.onQueryChange('Lon'));
+    await act(async () => vi.advanceTimersByTimeAsync(250));
 
-    expect(suggestPlaces).not.toHaveBeenCalled();
+    expect(searchTalentPlaces).toHaveBeenCalledWith({
+      data: { q: 'Lon', limit: 10 },
+    });
+    expect(suggestPlaces).toHaveBeenCalledWith({
+      data: { q: 'Lon', limit: 5 },
+    });
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({ slug: 'london-uk', name: 'London' }),
+      expect.objectContaining({
+        name: 'Dover',
+        contextLabel: 'Kent, United Kingdom',
+      }),
+    ]);
+  });
+
+  it('keeps the talent places when the suggest request fails', async () => {
+    searchTalentPlaces.mockResolvedValue({
+      data: [
+        {
+          object: 'talent_place',
+          id: london.id,
+          parentId: null,
+          slug: london.slug,
+          canonicalSlug: london.canonicalSlug,
+          name: london.name,
+          displayName: london.displayName,
+          placeType: london.placeType,
+          countryCode: london.countryCode,
+          regionCode: null,
+          candidateCount: 3,
+        },
+      ],
+    });
+    suggestPlaces.mockRejectedValue(new Error('rate limited'));
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', 'talent', placeSuggestionsOn, dependencies),
+    );
+
+    act(() => result.current.onQueryChange('Lond'));
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({ slug: 'london-uk' }),
+    ]);
+  });
+
+  it('shows suggested places when the talent list fails', async () => {
+    searchTalentPlaces.mockRejectedValue(new Error('restricted'));
+    suggestPlaces.mockResolvedValue({
+      data: [suggested('Dover', 'GB', null, 'Kent, United Kingdom')],
+    });
+    const { result } = renderHook(() =>
+      useLocationSuggestions('en', 'talent', placeSuggestionsOn, dependencies),
+    );
+
+    act(() => result.current.onQueryChange('Dov'));
+    await act(async () => vi.advanceTimersByTimeAsync(250));
+
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(result.current.suggestions).toEqual([
+      expect.objectContaining({
+        name: 'Dover',
+        contextLabel: 'Kent, United Kingdom',
+      }),
+    ]);
   });
 });

@@ -232,6 +232,27 @@ describe('toTalentPlaceSuggestionVM', () => {
     );
   });
 
+  it('keeps the place type and the region and country from the display name', () => {
+    expect(
+      toTalentPlaceSuggestionVM(
+        {
+          ...talentPlace,
+          slug: 'dover',
+          name: 'Dover',
+          displayName: 'Dover, Kent, United Kingdom',
+          placeType: 'city',
+        },
+        'en',
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        slug: 'dover',
+        placeType: 'city',
+        contextLabel: 'Kent, United Kingdom',
+      }),
+    );
+  });
+
   it('drops places without a filter slug', () => {
     expect(
       toTalentPlaceSuggestionVM({ ...talentPlace, slug: null }, 'en'),
