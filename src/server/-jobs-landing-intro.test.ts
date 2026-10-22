@@ -163,23 +163,28 @@ describe('landing page intro', () => {
 const META_TITLE = 'Fixture meta title';
 const META_DESCRIPTION = 'Fixture meta description.';
 
-function documentTitle(head: { meta: readonly object[] }): string {
-  const entry = head.meta.find(
-    (meta): meta is { title: string } =>
-      'title' in meta && typeof meta.title === 'string',
-  );
-  return entry?.title ?? '';
+type DocumentHead = {
+  meta: ReadonlyArray<{
+    title?: string;
+    name?: string;
+    content?: string;
+  }>;
+};
+
+function documentTitle(head: DocumentHead): string {
+  for (const entry of head.meta) {
+    if (entry.title !== undefined) return entry.title;
+  }
+  return '';
 }
 
-function documentDescription(head: { meta: readonly object[] }): string {
-  const entry = head.meta.find(
-    (meta): meta is { name: string; content: string } =>
-      'name' in meta &&
-      meta.name === 'description' &&
-      'content' in meta &&
-      typeof meta.content === 'string',
-  );
-  return entry?.content ?? '';
+function documentDescription(head: DocumentHead): string {
+  for (const entry of head.meta) {
+    if (entry.name === 'description' && entry.content !== undefined) {
+      return entry.content;
+    }
+  }
+  return '';
 }
 
 function composedListing(kind: 'category' | 'location', count = 0) {

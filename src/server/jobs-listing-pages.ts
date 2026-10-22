@@ -195,29 +195,38 @@ function landingIntro<T extends { introHtml?: string }>(
   };
 }
 
-/** The API has already filled these strings. Use them as written. */
-function landingDocument(
-  resolution: object,
-  data: JobsListingFiltersInput & { within?: number },
-  fallback: { title: string; description: string },
-): { title: string; description: string } {
-  if (!isPlainListingView(data)) return fallback;
-  return {
-    title: landingMetaField(resolution, 'metaTitle') ?? fallback.title,
-    description:
-      landingMetaField(resolution, 'metaDescription') ?? fallback.description,
-  };
+type LandingSeoCopy = {
+  title: string;
+  description: string;
+};
+
+/**
+ * /v1 taxonomy resolve already fills these. Board 4.53.0 types only
+ * introHtml; the extra optional strings still arrive on the object.
+ */
+type LandingPageContent = {
+  introHtml?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+};
+
+function filledLandingCopy(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : trimmed;
 }
 
-function landingMetaField(
-  resolution: object,
-  field: 'metaTitle' | 'metaDescription',
-): string | undefined {
-  if (!(field in resolution)) return undefined;
-  const raw = (resolution as Record<typeof field, unknown>)[field];
-  if (typeof raw !== 'string') return undefined;
-  const trimmed = raw.trim();
-  return trimmed === '' ? undefined : trimmed;
+function landingDocument(
+  resolution: LandingPageContent,
+  data: JobsListingFiltersInput & { within?: number },
+  fallback: LandingSeoCopy,
+): LandingSeoCopy {
+  if (!isPlainListingView(data)) return fallback;
+  return {
+    title: filledLandingCopy(resolution.metaTitle) ?? fallback.title,
+    description:
+      filledLandingCopy(resolution.metaDescription) ?? fallback.description,
+  };
 }
 
 /** A resolution without its intro, for pages that never show one. */
