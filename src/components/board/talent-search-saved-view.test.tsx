@@ -198,6 +198,47 @@ function pickOption(name: string) {
 }
 
 describe('TalentSearchPage — Saved view of a saved search', () => {
+  it('retains edits made before the saved-list workspace finishes loading', async () => {
+    let finishWorkspace = () => {};
+    const pending = new Promise<void>((resolve) => {
+      finishWorkspace = resolve;
+    });
+    server.getEmployerTalentWorkspace.mockImplementationOnce(async () => {
+      await pending;
+      return { jobs: { data: [] }, lists: { data: [savedSearch(null)] } };
+    });
+    server.updateTalentList.mockImplementation(async ({ data }) => ({
+      ok: true,
+      data: { ...savedSearch(null), filters: data.filters },
+    }));
+    const router = renderSaved('/talent/?list=list_berlin&place=berlin');
+    fireEvent.click(
+      await screen.findByRole('combobox', {
+        name: m.talentFilters_statusLabel(),
+      }),
+    );
+    pickOption(m.talentFilters_statusActive());
+    await waitFor(() =>
+      expect(router.state.location.search).toHaveProperty(
+        'jobSearchStatus',
+        'actively_looking',
+      ),
+    );
+    expect(server.updateTalentList).not.toHaveBeenCalled();
+    await act(async () => {
+      finishWorkspace();
+    });
+    await waitFor(() =>
+      expect(server.updateTalentList).toHaveBeenCalledWith({
+        data: {
+          slug: 'acme',
+          listId: 'list_berlin',
+          filters: { place: 'berlin', jobSearchStatus: 'actively_looking' },
+        },
+      }),
+    );
+  });
+
   it('keeps shared URL filters read-only but autosaves a deliberate filter edit', async () => {
     server.updateTalentList.mockImplementation(async ({ data }) => ({
       ok: true,

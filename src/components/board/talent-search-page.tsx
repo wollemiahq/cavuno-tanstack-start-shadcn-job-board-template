@@ -227,26 +227,32 @@ export function TalentSearchPage({
       ),
     [],
   );
+  const [filterEdits, setFilterEdits] = useState<TalentSearch[]>([]);
   useEffect(
     () =>
       subscribeTalentSearchEdits((next) => {
-        // An address-bar change, shared link, list selection or history traversal
-        // never publishes an edit. Only a viewer's filter controls reach here.
-        if (
-          !workspace ||
-          !next.list ||
-          next.saved ||
-          !lists.some((list) => list.id === next.list)
-        )
-          return;
-        autosave.enqueue({
-          slug: workspace.slug,
-          listId: next.list,
-          filters: talentSearchToListFilters(next),
-        });
+        // URL arrivals and history traversal never publish edits. Buffer only
+        // deliberate controls until ownership of the selected list is known.
+        if (!next.list || next.saved) return;
+        setFilterEdits((current) => [
+          ...current.filter((edit) => edit.list !== next.list),
+          next,
+        ]);
       }),
-    [autosave, workspace, lists],
+    [],
   );
+  useEffect(() => {
+    if (!workspace || filterEdits.length === 0) return;
+    setFilterEdits([]);
+    for (const next of filterEdits) {
+      if (!next.list || !lists.some((list) => list.id === next.list)) continue;
+      autosave.enqueue({
+        slug: workspace.slug,
+        listId: next.list,
+        filters: talentSearchToListFilters(next),
+      });
+    }
+  }, [autosave, workspace, lists, filterEdits]);
 
   // ── Saved view: the open list's saved people, filtered like /talent ──────
   const savedRequested = Boolean(search.saved && search.list);
