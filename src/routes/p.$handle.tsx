@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 import {
   Link,
@@ -7,7 +7,7 @@ import {
   useLocation,
   useRouter,
 } from '@tanstack/react-router';
-import { Building2, UserRoundX } from 'lucide-react';
+import { UserRoundX } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { createTalentProfileLoader } from './-talent-loaders';
@@ -21,7 +21,6 @@ import {
   resolveTalentProfileSurface,
   sellsTalentProfileUnlocks,
 } from '@/board/talent-view-model';
-import { EmptyState } from '@/components/empty-state';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { useRootSession } from '@/components/root-session';
@@ -34,11 +33,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { Field, FieldLabel } from '@/components/ui/field';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
 import { toastActionError } from '@/lib/action-toast';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { localizePath } from '@/lib/localized-path';
@@ -54,6 +48,12 @@ import {
 import type { Plan, TalentCandidateAccess, TalentAccess } from '@cavuno/board';
 
 const rootApi = getRouteApi('__root__');
+// Company selection is employer-only; public profiles do not need its controls.
+const EmployerCompanySelect = lazy(() =>
+  import('@/components/board/employer-company-select').then((module) => ({
+    default: module.EmployerCompanySelect,
+  })),
+);
 
 type CandidateCompanyAccess = {
   candidateId: string;
@@ -174,31 +174,22 @@ function TalentProfilePage() {
     !needsCandidateAccess || currentCompanyAccess !== null;
 
   const companySelector = needsCompany ? (
-    <Field className="mb-6 max-w-sm">
-      <FieldLabel htmlFor="talent-access-company">
-        {m.talentUnlock_companyLabel()}
-      </FieldLabel>
-      <NativeSelect
-        id="talent-access-company"
-        value={companyId ?? ''}
-        disabled={busy !== null}
-        onChange={(event) =>
-          void navigate({
-            search: { companyId: event.target.value || undefined },
-            resetScroll: false,
-          })
-        }
-      >
-        <NativeSelectOption value="">
-          {m.talentUnlock_chooseCompanyLabel()}
-        </NativeSelectOption>
-        {companies.map((company) => (
-          <NativeSelectOption key={company.id} value={company.id}>
-            {company.name}
-          </NativeSelectOption>
-        ))}
-      </NativeSelect>
-    </Field>
+    <div className="mb-6 max-w-sm">
+      <Suspense fallback={<p role="status">{m.ui_loadingLabel()}</p>}>
+        <EmployerCompanySelect
+          id="talent-access-company"
+          value={companyId}
+          companies={companies}
+          disabled={busy !== null}
+          onChange={(selectedCompanyId) =>
+            void navigate({
+              search: { companyId: selectedCompanyId },
+              resetScroll: false,
+            })
+          }
+        />
+      </Suspense>
+    </div>
   ) : undefined;
 
   useEffect(() => {
@@ -257,11 +248,9 @@ function TalentProfilePage() {
       <Page width="content">
         <PageContent>
           {companySelector}
-          <EmptyState
-            icon={<Building2 aria-hidden="true" />}
-            title={m.talentUnlock_chooseCompanyLabel()}
-            description={m.talentUnlock_chooseCompanyBody()}
-          />
+          <p className="text-muted-foreground">
+            {m.talentUnlock_chooseCompanyBody()}
+          </p>
         </PageContent>
       </Page>
     );

@@ -17,15 +17,10 @@ import {
   toEmployersTalentCompanyOptions,
 } from './-employers.talent-access';
 
+import { EmployerCompanySelect } from '@/components/board/employer-company-select';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { useRootSession } from '@/components/root-session';
-import { Field, FieldLabel } from '@/components/ui/field';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
-import { m } from '@/paraglide/messages';
 
 type EmployersSearch = { session_id?: string; companyId?: string };
 
@@ -90,31 +85,20 @@ function EmployersPage() {
   const companySelector = (disabled: boolean) =>
     isEmployer &&
     (companies.length > 1 || Boolean(requestedCompanyId && !companyId)) ? (
-      <Field className="w-full min-w-48 sm:w-auto">
-        <FieldLabel htmlFor="employer-billing-company">
-          {m.talentUnlock_companyLabel()}
-        </FieldLabel>
-        <NativeSelect
+      <div className="w-full min-w-48 sm:w-auto">
+        <EmployerCompanySelect
           id="employer-billing-company"
+          companies={companies}
+          value={companyId}
           disabled={disabled}
-          value={companyId ?? ''}
-          onChange={(event) =>
+          onChange={(selectedCompanyId) =>
             void navigate({
-              search: { companyId: event.target.value || undefined },
+              search: { companyId: selectedCompanyId },
               resetScroll: false,
             })
           }
-        >
-          <NativeSelectOption value="">
-            {m.talentUnlock_chooseCompanyLabel()}
-          </NativeSelectOption>
-          {companies.map((option) => (
-            <NativeSelectOption key={option.id} value={option.id}>
-              {option.name}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
-      </Field>
+        />
+      </div>
     ) : undefined;
   const returnPath = companyId
     ? `/employers?${new URLSearchParams({ companyId })}`
