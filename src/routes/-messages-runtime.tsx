@@ -78,7 +78,6 @@ export const messagesRuntimeDependencies: MessagesRuntimeDependencies = {
 };
 const MESSAGING_POLL_INTERVAL_MS = 15_000;
 type ThreadMessagePage = {
-  cursor?: string;
   nextCursor: string | null;
   hasMore: boolean;
 };
@@ -357,42 +356,62 @@ export function ThreadController({
   const [blocked, setBlocked] = useState(initialBlockStatus.blocked);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [page, setPage] = useState<ThreadMessagePage>({
-    cursor: undefined,
     nextCursor: initialMessages.nextCursor,
     hasMore: initialMessages.hasMore,
   });
   const [loadingMore, setLoadingMore] = useState(false);
-  const inFlight = useRef(false);
+  const inFlight = useRef<symbol | null>(null);
   const latestMessageId = messages.at(-1)?.id;
 
+  useEffect(
+    () => () => {
+      inFlight.current = null;
+    },
+    [],
+  );
+
   const loadPage = useCallback(
-    async (cursor?: string) => {
+    async (cursor?: string, refreshHistory = false) => {
       if (inFlight.current) return;
-      inFlight.current = true;
+      const request = Symbol();
+      inFlight.current = request;
       setLoadingMore(true);
       try {
-        const result = await dependencies.getThread({
-          data: { id: initialConversation.id, cursor },
-        });
-        setConversation(result.conversation);
-        setMessages((current) => mergeMessages(current, result.messages.data));
-        setBlocked(result.blockStatus.blocked);
-        const next = result.messages.nextCursor;
-        if (result.messages.hasMore && (!next || next === cursor))
-          throw new Error('Invalid message cursor');
-        setPage({ cursor, nextCursor: next, hasMore: result.messages.hasMore });
-        setSyncError(null);
+        let currentCursor = cursor;
+        const visited = new Set<string | undefined>();
+        do {
+          visited.add(currentCursor);
+          const result = await dependencies.getThread({
+            data: { id: initialConversation.id, cursor: currentCursor },
+          });
+          if (inFlight.current !== request) return;
+          const next = result.messages.nextCursor;
+          if (result.messages.hasMore && (!next || visited.has(next)))
+            throw new Error('Invalid message cursor');
+          setConversation(result.conversation);
+          setMessages((current) =>
+            mergeMessages(current, result.messages.data),
+          );
+          setBlocked(result.blockStatus.blocked);
+          setPage({ nextCursor: next, hasMore: result.messages.hasMore });
+          setSyncError(null);
+          if (!refreshHistory || !result.messages.hasMore) break;
+          currentCursor = next ?? undefined;
+        } while (currentCursor !== undefined);
       } catch (error) {
-        setSyncError(errorMessage(error));
+        if (inFlight.current === request) setSyncError(errorMessage(error));
         throw error;
       } finally {
-        inFlight.current = false;
-        setLoadingMore(false);
+        if (inFlight.current === request) {
+          inFlight.current = null;
+          setLoadingMore(false);
+        }
       }
     },
     [dependencies, initialConversation.id],
   );
-  const refresh = () => loadPage(page.cursor);
+  // Earlier pages contain editable messages and unsend tombstones too.
+  const refresh = () => loadPage(undefined, true);
 
   // Drain forward pages so oldest-first histories reach current replies.
   // A failed page stays available through the explicit retry control.
