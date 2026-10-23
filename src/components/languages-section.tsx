@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { Languages, Pencil, Trash2 } from 'lucide-react';
@@ -29,7 +29,7 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldSet, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -68,8 +68,14 @@ const LEVELS = [
  * any previously stored custom value selectable so an edit round-trip cannot
  * lose it.
  */
-export function LanguagesSection({ languages }: { languages: Language[] }) {
+export function LanguagesSection({
+  languages: initialValues,
+}: {
+  languages: Language[];
+}) {
   const router = useRouter();
+  const [languages, setValues] = useState(initialValues);
+  useEffect(() => setValues(initialValues), [initialValues]);
   const [editing, setEditing] = useState<Editing>(null);
   const [draft, setDraft] = useState<Language>({ name: '', proficiency: '' });
   const [pending, setPending] = useState(false);
@@ -80,17 +86,19 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
     setPending(true);
     try {
       await replaceLanguages({ data: { languages: next } });
+      setValues(next);
+      await reconcileCommittedAction(() => router.invalidate());
+      return true;
     } catch {
       void toastActionError();
       return false;
     } finally {
       setPending(false);
     }
-    await reconcileCommittedAction(() => router.invalidate());
-    return true;
   };
 
   const submit = async () => {
+    if (pending) return;
     const entry = {
       name: draft.name.trim(),
       proficiency: draft.proficiency.trim(),
@@ -106,6 +114,7 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
   };
 
   const open = (index: number | null) => {
+    if (pending) return;
     // SAFETY: `open` is only called with indexes from `languages.map`; null is
     // the explicit "new language" sentinel.
     setDraft(
@@ -115,7 +124,12 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
   };
 
   const addButton = (
-    <Button variant="outline" size="sm" onClick={() => open(null)}>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      onClick={() => open(null)}
+    >
       {m.languagesSection_addLabel()}
     </Button>
   );
@@ -134,7 +148,7 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
           void submit();
         }}
       >
-        <FieldGroup className="gap-3">
+        <FieldSet disabled={pending} className="gap-3">
           <Field className="gap-1.5">
             <FieldLabel htmlFor="language-name">
               {m.languagesSection_languageLabel()}
@@ -203,7 +217,7 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
                 : m.languagesSection_saveLabel()}
             </Button>
           </div>
-        </FieldGroup>
+        </FieldSet>
       </form>
     ) : null;
 
@@ -277,7 +291,7 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
         <Dialog
           open={editing !== null && editing.index === null}
           onOpenChange={(open) => {
-            if (!open) setEditing(null);
+            if (!open && !pending) setEditing(null);
           }}
         >
           <DialogContent className="sm:max-w-md">
@@ -291,7 +305,7 @@ export function LanguagesSection({ languages }: { languages: Language[] }) {
         <Sheet
           open={editing !== null && editing.index !== null}
           onOpenChange={(open) => {
-            if (!open) setEditing(null);
+            if (!open && !pending) setEditing(null);
           }}
         >
           <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">

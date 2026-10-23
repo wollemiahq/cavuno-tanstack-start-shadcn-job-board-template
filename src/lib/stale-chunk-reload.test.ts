@@ -66,7 +66,7 @@ describe('stale-chunk reload', () => {
     }
   });
 
-  it('still reloads when sessionStorage throws (private mode, storage disabled)', () => {
+  it('retains the page when storage cannot persist a reload guard', () => {
     const { win, fire, reload } = fakeWindow();
     win.sessionStorage = {
       getItem: () => {
@@ -78,7 +78,7 @@ describe('stale-chunk reload', () => {
     };
     installStaleChunkReload(win);
     fire();
-    expect(reload).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
   });
 
   it.each([

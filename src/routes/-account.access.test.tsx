@@ -15,6 +15,7 @@ import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 import type {
   AccessCheckoutSession,
+  AccessCheckoutSessionState,
   AccessGrant,
   PaywallOffer,
 } from '@cavuno/board';
@@ -89,7 +90,14 @@ const annualOffer = {
   isDefault: false,
 } satisfies PaywallOffer;
 
-async function renderAccessPage() {
+async function renderAccessPage(
+  checkoutState: AccessCheckoutSessionState = {
+    object: 'checkout_session_state',
+    status: 'complete',
+    paymentStatus: 'paid',
+    clientSecret: null,
+  },
+) {
   const loaderData = mocks.useLoaderData();
   const search = mocks.useSearch();
   return await renderRouted(
@@ -100,6 +108,7 @@ async function renderAccessPage() {
       returnToRaw={search.returnTo}
       offerKey={search.offerKey}
       getAccessGrantAction={mocks.getAccessGrant}
+      getCheckoutStateAction={async () => checkoutState}
       openBillingPortalAction={mocks.openBillingPortal}
       startCheckoutAction={mocks.startCheckout}
       invalidate={mocks.invalidate}
@@ -117,6 +126,45 @@ afterEach(() => {
 });
 
 describe('candidate access actions', () => {
+  it.each(['processing', 'failed'] as const)(
+    'does not poll grants or confirm access for a %s payment',
+    async (paymentStatus) => {
+      mocks.useLoaderData.mockReturnValue({
+        grant,
+        offers: [offer, annualOffer],
+      });
+      mocks.useSearch.mockReturnValue({ session_id: 'cs_returned' });
+      await renderAccessPage({
+        object: 'checkout_session_state',
+        status: 'complete',
+        paymentStatus,
+        clientSecret: null,
+      });
+      expect(
+        await screen.findByText(
+          paymentStatus === 'processing'
+            ? m.checkout_processingText()
+            : m.checkout_failedText(),
+        ),
+      ).toBeVisible();
+      expect(mocks.getAccessGrant).not.toHaveBeenCalled();
+      if (paymentStatus === 'failed') {
+        fireEvent.click(
+          screen.getByRole('button', {
+            name: m.accountAccess_backToPlansLabel(),
+          }),
+        );
+        await waitFor(() =>
+          expect(
+            screen.getAllByRole('button', {
+              name: m.accountAccess_chooseLabel(),
+            }),
+          ).toHaveLength(2),
+        );
+      }
+    },
+  );
+
   it('starts the selected current offer directly and mounts its checkout', async () => {
     mocks.useLoaderData.mockReturnValue({
       grant,
@@ -201,6 +249,12 @@ describe('candidate access actions', () => {
           offers={[{ ...offer }, { ...annualOffer }]}
           offerKey="annual"
           getAccessGrantAction={mocks.getAccessGrant}
+          getCheckoutStateAction={async () => ({
+            object: 'checkout_session_state',
+            status: 'complete',
+            paymentStatus: 'paid',
+            clientSecret: null,
+          })}
           openBillingPortalAction={mocks.openBillingPortal}
           startCheckoutAction={(input) => mocks.startCheckout(input)}
           invalidate={async () => {}}
@@ -255,6 +309,12 @@ describe('candidate access actions', () => {
           offers={[offer, annualOffer]}
           offerKey={selectedKey}
           getAccessGrantAction={mocks.getAccessGrant}
+          getCheckoutStateAction={async () => ({
+            object: 'checkout_session_state',
+            status: 'complete',
+            paymentStatus: 'paid',
+            clientSecret: null,
+          })}
           openBillingPortalAction={mocks.openBillingPortal}
           startCheckoutAction={mocks.startCheckout}
           invalidate={mocks.invalidate}

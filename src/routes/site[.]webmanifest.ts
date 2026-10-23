@@ -6,7 +6,7 @@
  */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { readBoardContext } from '../lib/board-context-cache';
+import { getPrimaryBoard } from '../lib/board';
 import { boardManifestIcons } from '../lib/board-icons';
 import { themeTokens } from '../theme/resolved';
 
@@ -14,8 +14,7 @@ export const Route = createFileRoute('/site.webmanifest')({
   server: {
     handlers: {
       GET: async () => {
-        // Same per-isolate context cache as the root shell — no extra hop.
-        const board = await readBoardContext();
+        const board = await getPrimaryBoard().context({ cache: 'no-store' });
         const name = board.name?.trim() || 'Board';
 
         const doc = {

@@ -35,7 +35,7 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldSet, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Item,
@@ -105,11 +105,13 @@ export function EducationSection({
   const [pending, setPending] = useState(false);
 
   const open = (item: CandidateEducation | null) => {
+    if (pending) return;
     setEditing({ id: item ? item.id : null });
     setDraft(item ? toDraft(item) : EMPTY);
   };
 
   const submit = async () => {
+    if (pending) return;
     setPending(true);
     const body = {
       institutionName: draft.institutionName.trim(),
@@ -145,7 +147,7 @@ export function EducationSection({
           void submit();
         }}
       >
-        <FieldGroup className="gap-3">
+        <FieldSet disabled={pending} className="gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field className="gap-1.5">
               <FieldLabel htmlFor="education-institution">
@@ -246,12 +248,17 @@ export function EducationSection({
                 : m.educationSection_saveLabel()}
             </Button>
           </div>
-        </FieldGroup>
+        </FieldSet>
       </form>
     ) : null;
 
   const addButton = (
-    <Button variant="outline" size="sm" onClick={() => open(null)}>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      onClick={() => open(null)}
+    >
       {m.educationSection_addLabel()}
     </Button>
   );
@@ -305,6 +312,7 @@ export function EducationSection({
                     size="icon-sm"
                     aria-label={m.educationSection_editLabel()}
                     title={m.educationSection_editLabel()}
+                    disabled={pending}
                     onClick={() => open(item)}
                   >
                     <Pencil aria-hidden />
@@ -339,7 +347,7 @@ export function EducationSection({
         <Dialog
           open={editing !== null && editing.id === null}
           onOpenChange={(open) => {
-            if (!open) setEditing(null);
+            if (!open && !pending) setEditing(null);
           }}
         >
           <DialogContent className="sm:max-w-xl">
@@ -353,7 +361,7 @@ export function EducationSection({
         <Sheet
           open={editing !== null && editing.id !== null}
           onOpenChange={(open) => {
-            if (!open) setEditing(null);
+            if (!open && !pending) setEditing(null);
           }}
         >
           <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">

@@ -19,6 +19,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
+import { validateAnchorJobInput } from '../lib/anchor-job-input';
 import { getBoard } from '../lib/board';
 import { APPLY_GATEWAY_QUERY } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
@@ -262,9 +263,6 @@ export const getJob = createServerFn({ method: 'GET' })
     ),
   );
 
-/** At most one alert list's worth of anchor jobs are resolved to links. */
-const MAX_ANCHOR_JOB_LINKS = 10;
-
 /**
  * Job detail paths for similar-job alert anchors. An alert's `anchorJob`
  * carries the job slug but not the company slug the job URL needs, so alert
@@ -274,12 +272,7 @@ const MAX_ANCHOR_JOB_LINKS = 10;
 export const getAnchorJobPaths = createServerFn({ method: 'GET' })
   // A public endpoint: whatever the caller sends, the slugs are read as
   // strings, deduped and bounded to one alert list's worth.
-  .validator((input: { jobSlugs: string[] }) => ({
-    jobSlugs: [...new Set(Array.from(input.jobSlugs, String))].slice(
-      0,
-      MAX_ANCHOR_JOB_LINKS,
-    ),
-  }))
+  .validator(validateAnchorJobInput)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (h): Promise<AnchorJobPaths> => {

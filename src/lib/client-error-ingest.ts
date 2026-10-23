@@ -3,13 +3,15 @@ import {
   CLIENT_ERROR_PATH,
   type ClientErrorKind,
 } from './client-error-report';
+import { searchString } from './pagination';
 
 export const STARTER_OUCH_LOG_NAME = 'starter_ouch';
 
 const STACK_MAX = 4000;
 const RATE_WINDOW_MS = 60_000;
-const RATE_LIMIT = 1;
-const rateHits = new Map<string, number[]>();
+const MAX_RATE_KEYS = 1024;
+const MAX_REPORT_BYTES = 16_384;
+const rateHits = new Map<string, { count: number; expires: number }>();
 
 type ClientErrorBody = {
   name: string;
@@ -46,9 +48,8 @@ export function clientErrorIngestUrl(apiUrl: string): string {
   return `${url.origin}/api/board-client-error`;
 }
 
-function clip(value: string | null | undefined, max: number): string | null {
-  if (value == null) return null;
-  const trimmed = value.trim();
+function clip<T>(value: T, max: number): string | null {
+  const trimmed = searchString(value)?.trim();
   if (!trimmed) return null;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
@@ -75,16 +76,43 @@ function parseBody(record: ClientErrorBody): ClientErrorBody | null {
   };
 }
 
-function allowRate(key: string, now = Date.now()): boolean {
-  const threshold = now - RATE_WINDOW_MS;
-  const recent = (rateHits.get(key) ?? []).filter((ts) => ts > threshold);
-  if (recent.length >= RATE_LIMIT) {
-    rateHits.set(key, recent);
-    return false;
+function allowRate(key: string, limit: number, now = Date.now()): boolean {
+  for (const [storedKey, entry] of rateHits) {
+    if (entry.expires <= now) rateHits.delete(storedKey);
   }
-  recent.push(now);
-  rateHits.set(key, recent);
+  const entry = rateHits.get(key);
+  if (entry) {
+    if (entry.count >= limit) return false;
+    entry.count++;
+    return true;
+  }
+  if (rateHits.size >= MAX_RATE_KEYS) return false;
+  rateHits.set(key, { count: 1, expires: now + RATE_WINDOW_MS });
   return true;
+}
+
+async function readReport(request: Request): Promise<ClientErrorBody | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return null;
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_REPORT_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 export function resetClientErrorIngestRateLimit() {
@@ -156,9 +184,29 @@ export async function matchClientErrorIngest(
     return new Response(null, { status: 405 });
   }
 
+  const origin = request.headers.get('origin');
+  if (
+    (origin && origin !== new URL(request.url).origin) ||
+    request.headers.get('sec-fetch-site') === 'cross-site'
+  ) {
+    return new Response(null, { status: 204 });
+  }
+  // Content fingerprints are useful for deduplication, but cannot identify
+  // clients: each report can choose a new digest. The aggregate bucket also
+  // bounds forwarding across clients, and all retained buckets expire.
+  if (
+    !allowRate(`board:${env.board}`, 60) ||
+    !allowRate(
+      `client:${env.board}:${request.headers.get('cf-connecting-ip') ?? 'unknown'}`,
+      10,
+    )
+  ) {
+    return new Response(null, { status: 204 });
+  }
+
   let parsed: ClientErrorBody | null = null;
   try {
-    const json = await request.json();
+    const json = await readReport(request);
     if (json !== null && Object(json) === json) {
       // SAFETY: POST JSON is a ClientErrorBody; missing or empty required
       // fields fail the clip checks below and are dropped.
@@ -172,7 +220,8 @@ export async function matchClientErrorIngest(
   if (!body) return new Response(null, { status: 204 });
 
   const rateKey = `${body.kind ?? 'crash'}:${body.host}:${body.path}:${body.digest || body.message.slice(0, 80)}`;
-  if (!allowRate(rateKey)) return new Response(null, { status: 204 });
+  if (!allowRate(`report:${env.board}:${rateKey}`, 1))
+    return new Response(null, { status: 204 });
 
   const line = ouchLine(body, env.board);
   const ingestUrl = clientErrorIngestUrl(env.apiUrl);

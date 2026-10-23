@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -66,6 +72,90 @@ const detail: ConversationDetail = {
 afterEach(cleanup);
 
 describe('messaging runtime failures', () => {
+  it('loads forward history before marking the conversation read', async () => {
+    let resolvePage!: (
+      value: Awaited<ReturnType<MessagesRuntimeDependencies['getThread']>>,
+    ) => void;
+    const getThread = vi.fn<MessagesRuntimeDependencies['getThread']>();
+    getThread.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePage = resolve;
+        }),
+    );
+    markRead.mockResolvedValue({
+      object: 'read_receipt',
+      markedAt: '2026-07-14T05:00:00.000Z',
+    });
+    render(
+      <ThreadController
+        initialConversation={detail}
+        initialMessages={{
+          object: 'list',
+          url: '/messages',
+          data: [],
+          hasMore: true,
+          nextCursor: 'page-two',
+        }}
+        initialBlockStatus={{ object: 'block_status', blocked: false }}
+        onExit={vi.fn()}
+        dependencies={{ ...dependencies, getThread }}
+      />,
+    );
+    await waitFor(() =>
+      expect(getThread).toHaveBeenCalledWith({
+        data: { id: detail.id, cursor: 'page-two' },
+      }),
+    );
+    expect(markRead).not.toHaveBeenCalled();
+    resolvePage({
+      conversation: detail,
+      messages: {
+        object: 'list',
+        url: '/messages',
+        data: [],
+        hasMore: false,
+        nextCursor: null,
+      },
+      blockStatus: { object: 'block_status', blocked: false },
+    });
+    await waitFor(() =>
+      expect(markRead).toHaveBeenCalledWith({ data: { id: detail.id } }),
+    );
+  });
+
+  it('reconciles an authoritative inbox refresh after a conversation is archived', () => {
+    const initial = {
+      object: 'list' as const,
+      url: '/conversations',
+      data: [conversation],
+      hasMore: false,
+      nextCursor: null,
+    };
+    const view = render(
+      <InboxController
+        initial={initial}
+        archived={false}
+        onSelect={vi.fn()}
+        dependencies={dependencies}
+      />,
+    );
+    expect(
+      screen.getByText(conversation.counterparty.displayName),
+    ).toBeVisible();
+    view.rerender(
+      <InboxController
+        initial={{ ...initial, data: [] }}
+        archived={false}
+        onSelect={vi.fn()}
+        dependencies={dependencies}
+      />,
+    );
+    expect(
+      screen.queryByText(conversation.counterparty.displayName),
+    ).toBeNull();
+  });
+
   beforeEach(() => {
     vi.resetAllMocks();
   });

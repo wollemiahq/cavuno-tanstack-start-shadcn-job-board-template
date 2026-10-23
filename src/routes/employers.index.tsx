@@ -40,7 +40,8 @@ function EmployersPage() {
   const { plans, contactPlans, seo } = Route.useLoaderData();
   const { session_id } = Route.useSearch();
   const router = useRouter();
-  const { user, talentAccess, employerCompanies, ready } = useRootSession();
+  const { user, talentAccess, employerCompanies, ready, refreshSession } =
+    useRootSession();
   const companies = toEmployersTalentCompanyOptions(employerCompanies ?? []);
   const companyId =
     talentAccess.companyId ??
@@ -75,7 +76,7 @@ function EmployersPage() {
       upgradeAction={upgradeTalentAccess}
       openBillingPortalAction={openTalentBillingPortal}
       invalidate={async () => {
-        await router.invalidate();
+        await Promise.all([router.invalidate(), refreshSession()]);
       }}
       reportActionError={toastActionError}
     />

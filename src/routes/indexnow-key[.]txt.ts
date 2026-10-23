@@ -4,13 +4,13 @@
  */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { getBoard } from '../lib/board';
+import { getPrimaryBoard } from '../lib/board';
 import { indexNowResponse } from '../lib/seo-handlers';
 
 export const Route = createFileRoute('/indexnow-key.txt')({
   server: {
     handlers: {
-      GET: async () => indexNowResponse(await getBoard().seo()),
+      GET: async () => indexNowResponse(await getPrimaryBoard().seo()),
     },
   },
 });

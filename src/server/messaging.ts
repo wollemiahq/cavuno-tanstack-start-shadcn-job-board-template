@@ -82,7 +82,7 @@ export const getBlocked = createServerFn({ method: 'GET' })
 
 /** One thread: the conversation header, its messages, and the block status. */
 export const getThread = createServerFn({ method: 'GET' })
-  .validator((input: { id: string }) => input)
+  .validator((input: { id: string; cursor?: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (access) => {
@@ -95,7 +95,7 @@ export const getThread = createServerFn({ method: 'GET' })
       const [messages, blockStatus] = await Promise.all([
         board.me.conversations.listMessages(
           data.id,
-          { limit: 200 },
+          { limit: 200, cursor: data.cursor },
           { headers },
         ),
         board.me.blocks.status(conversation.counterparty.boardUserId, {

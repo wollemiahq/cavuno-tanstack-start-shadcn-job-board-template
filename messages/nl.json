@@ -2715,5 +2715,17 @@
   "ui_sidebarDescription": "Toont de zijbalk op mobiele apparaten.",
   "ui_sidebarTitle": "Zijbalk",
   "ui_sidebarToggleLabel": "Zijbalk openen of sluiten",
-  "candidatePaywallLock_includedLabel": "Inbegrepen bij dit abonnement"
+  "candidatePaywallLock_includedLabel": "Inbegrepen bij dit abonnement",
+  "authLinkConfirm_title": "Aanmelden bevestigen",
+  "authLinkConfirm_body": "Ga alleen verder als je deze aanmeldlink hebt aangevraagd. Doorgaan kan het account wijzigen waarmee je bent aangemeld.",
+  "authLinkConfirm_continueLabel": "Doorgaan met aanmelden",
+  "authLinkConfirm_pendingLabel": "Bezig met aanmelden…",
+  "settingsEmail_editPendingLabel": "Bevestiging wijzigen of opnieuw verzenden",
+  "threadView_loadMoreMessagesLabel": "Meer berichten laden",
+  "checkout_loadErrorText": "Het afrekenen kon niet worden geladen. Probeer het opnieuw.",
+  "checkout_processingText": "Je betaling wordt verwerkt. Toegang wordt geactiveerd zodra deze is bevestigd.",
+  "checkout_failedText": "Je betaling is mislukt. Kies een abonnement om het opnieuw te proberen.",
+  "checkout_incompleteText": "Het afrekenen is niet voltooid. Ga terug naar de abonnementen en probeer het opnieuw.",
+  "checkout_pendingTitle": "Toegang nog niet bevestigd",
+  "checkout_pendingText": "De toegang is nog niet bevestigd. Controleer het zo opnieuw."
 }

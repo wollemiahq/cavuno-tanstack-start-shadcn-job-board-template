@@ -2715,5 +2715,17 @@
   "ui_sidebarDescription": "Zeigt die mobile Seitenleiste an.",
   "ui_sidebarTitle": "Seitenleiste",
   "ui_sidebarToggleLabel": "Seitenleiste umschalten",
-  "candidatePaywallLock_includedLabel": "In diesem Tarif enthalten"
+  "candidatePaywallLock_includedLabel": "In diesem Tarif enthalten",
+  "authLinkConfirm_title": "Anmeldung bestätigen",
+  "authLinkConfirm_body": "Fahre nur fort, wenn du diesen Anmeldelink angefordert hast. Dabei kann dein angemeldetes Konto gewechselt werden.",
+  "authLinkConfirm_continueLabel": "Anmeldung fortsetzen",
+  "authLinkConfirm_pendingLabel": "Anmeldung läuft…",
+  "settingsEmail_editPendingLabel": "Bestätigung ändern oder erneut senden",
+  "threadView_loadMoreMessagesLabel": "Weitere Nachrichten laden",
+  "checkout_loadErrorText": "Die Kasse konnte nicht geladen werden. Versuche es erneut.",
+  "checkout_processingText": "Deine Zahlung wird verarbeitet. Der Zugang wird nach Eingang freigeschaltet.",
+  "checkout_failedText": "Deine Zahlung ist fehlgeschlagen. Wähle einen Tarif, um es erneut zu versuchen.",
+  "checkout_incompleteText": "Der Kauf ist nicht abgeschlossen. Kehre zur Tarifauswahl zurück und versuche es erneut.",
+  "checkout_pendingTitle": "Zugang noch nicht bestätigt",
+  "checkout_pendingText": "Der Zugang wurde noch nicht bestätigt. Prüfe es in Kürze erneut."
 }

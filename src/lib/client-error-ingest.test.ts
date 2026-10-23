@@ -53,6 +53,48 @@ describe('matchClientErrorIngest', () => {
     expect(response).toBeNull();
   });
 
+  it('bounds forwarding independently of attacker-controlled report digests', async () => {
+    for (let i = 0; i < 40; i++) {
+      await matchClientErrorIngest(
+        new Request(`https://board.example${CLIENT_ERROR_PATH}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: 'Error',
+            message: 'failure',
+            host: 'board.example',
+            path: '/',
+            digest: String(i),
+          }),
+        }),
+        { apiUrl: 'https://api.cavuno.com', board: 'pk_test' },
+      );
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(10);
+  });
+
+  it('drops oversized and malformed reports without forwarding or throwing', async () => {
+    for (const body of [
+      { name: {}, message: 'failure', host: 'board.example', path: '/' },
+      {
+        name: 'Error',
+        message: 'x'.repeat(20_000),
+        host: 'board.example',
+        path: '/',
+      },
+    ]) {
+      await expect(
+        matchClientErrorIngest(
+          new Request(`https://board.example${CLIENT_ERROR_PATH}`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+          }),
+          { apiUrl: 'https://api.cavuno.com', board: 'pk_test' },
+        ),
+      ).resolves.toHaveProperty('status', 204);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('forwards a valid report and stays silent on success', async () => {
     const waited: Promise<void>[] = [];
     const response = await matchClientErrorIngest(

@@ -2715,5 +2715,17 @@
   "ui_sidebarDescription": "Displays the mobile sidebar.",
   "ui_sidebarTitle": "Sidebar",
   "ui_sidebarToggleLabel": "Toggle sidebar",
-  "candidatePaywallLock_includedLabel": "Included in this plan"
+  "candidatePaywallLock_includedLabel": "Included in this plan",
+  "authLinkConfirm_title": "Confirm sign-in",
+  "authLinkConfirm_body": "Continue only if you requested this sign-in link. Continuing may switch the account you are signed in to.",
+  "authLinkConfirm_continueLabel": "Continue signing in",
+  "authLinkConfirm_pendingLabel": "Signing in…",
+  "settingsEmail_editPendingLabel": "Change or resend confirmation",
+  "threadView_loadMoreMessagesLabel": "Load more messages",
+  "checkout_loadErrorText": "We couldn’t load checkout. Try again.",
+  "checkout_processingText": "Your payment is processing. Access will unlock once it clears.",
+  "checkout_failedText": "Your payment did not go through. Choose a plan to try again.",
+  "checkout_incompleteText": "Checkout is not complete. You can return to plans and try again.",
+  "checkout_pendingTitle": "Access not confirmed yet",
+  "checkout_pendingText": "We haven’t confirmed access yet. Check again shortly."
 }

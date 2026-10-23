@@ -86,6 +86,7 @@ export function SelectedJobDetail({
 
   const applySlot = state.job ? (
     <ApplyButton
+      key={state.job.id}
       jobId={state.job.id}
       jobSlug={state.job.slug}
       companySlug={state.job.company?.slug ?? ''}
@@ -119,6 +120,7 @@ export function SelectedJobDetail({
       saveSlot
     ) : state.job ? (
       <SaveJobButton
+        key={state.job.id}
         jobId={state.job.id}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         returnTo={returnTo}

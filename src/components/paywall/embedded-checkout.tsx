@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { m } from '../../paraglide/messages';
 
+import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import type { AccessCheckoutSession } from '@cavuno/board';
 import type { StripeEmbeddedCheckout } from '@stripe/stripe-js';
@@ -27,40 +28,70 @@ export function EmbeddedCheckout({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let instance: StripeEmbeddedCheckout | undefined;
     let cancelled = false;
     setLoading(true);
+    setFailed(false);
 
     void (async () => {
-      // Keep Stripe's loader out of the public app shell. Import it only after
-      // a buyer has reached checkout and a mount kit actually exists.
-      const { loadStripe } = await import('@stripe/stripe-js');
-      const stripe = await loadStripe(kit.publishableKey, {
-        stripeAccount: kit.stripeAccountId,
-      });
-      if (!stripe || cancelled || !ref.current) return;
-      instance = await stripe.createEmbeddedCheckoutPage({
-        clientSecret: kit.clientSecret,
-        onComplete,
-      });
-      if (cancelled) {
-        instance.destroy();
-        return;
+      try {
+        // Keep Stripe's loader out of the public app shell. Import it only after
+        // a buyer has reached checkout and a mount kit actually exists.
+        const { loadStripe } = await import('@stripe/stripe-js');
+        const stripe = await loadStripe(kit.publishableKey, {
+          stripeAccount: kit.stripeAccountId,
+        });
+        if (cancelled || !ref.current) return;
+        if (!stripe) throw new Error('Checkout unavailable');
+        instance = await stripe.createEmbeddedCheckoutPage({
+          clientSecret: kit.clientSecret,
+          onComplete,
+        });
+        if (cancelled) {
+          instance.destroy();
+          return;
+        }
+        instance.mount(ref.current);
+        setLoading(false);
+      } catch {
+        instance?.destroy();
+        instance = undefined;
+        if (!cancelled) {
+          setLoading(false);
+          setFailed(true);
+        }
       }
-      instance.mount(ref.current);
-      setLoading(false);
     })();
 
     return () => {
       cancelled = true;
       instance?.destroy();
     };
-  }, [kit.clientSecret, kit.publishableKey, kit.stripeAccountId, onComplete]);
+  }, [
+    kit.clientSecret,
+    kit.publishableKey,
+    kit.stripeAccountId,
+    onComplete,
+    attempt,
+  ]);
 
   return (
     <div className="relative min-h-80">
+      {failed ? (
+        <div role="alert" className="grid justify-items-center gap-3 p-8">
+          <p>{m.checkout_loadErrorText()}</p>
+          <Button
+            variant="outline"
+            onClick={() => setAttempt((value) => value + 1)}
+          >
+            {m.appError_retryAction()}
+          </Button>
+        </div>
+      ) : null}
       {loading ? (
         <div
           className="text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-3"

@@ -112,6 +112,7 @@ function JobDetailPage() {
         vm={vm}
         applySlot={
           <ApplyButton
+            key={job.id}
             jobId={job.id}
             jobSlug={job.slug}
             companySlug={companySlug}
@@ -142,6 +143,7 @@ function JobDetailPage() {
         secondaryActions={
           <>
             <SaveJobButton
+              key={job.id}
               jobId={job.id}
               viewer={user ? { emailVerified: user.emailVerified } : null}
               returnTo={returnTo}

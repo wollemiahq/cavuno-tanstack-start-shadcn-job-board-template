@@ -1,4 +1,8 @@
-import { isBoardApiError, type BoardAuthSession } from '@cavuno/board';
+import {
+  BoardApiError,
+  isBoardApiError,
+  type BoardAuthSession,
+} from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
  * stores tokens on the server; these functions move the bearer pair in
@@ -12,6 +16,8 @@ import {
 } from '@tanstack/react-start/server';
 import { waitUntil } from 'cloudflare:workers';
 
+import { AUTH_FLOW_KINDS, authFlowToken } from '../lib/auth-flow';
+import { resolveAuthFlowToken, finishAuthFlow } from '../lib/auth-flow.server';
 import { getBoard, getSessionRefresher } from '../lib/board';
 import {
   clearSessionForSource,
@@ -20,7 +26,30 @@ import {
   parseSessionForSource,
   serializeSessionForSource,
 } from '../lib/data-source.server';
+import {
+  hasMagicLinkIntent,
+  magicLinkIntentCookie,
+  matchesMagicLinkIntent,
+  clearMagicLinkIntentCookie,
+} from '../lib/magic-link-intent';
+import {
+  matchesOAuthBrowser,
+  oauthBrowserCookie,
+  OAUTH_BROWSER_BINDING_PARAM,
+} from '../lib/oauth-browser-binding';
+import { safeRedirectPath } from '../lib/safe-redirect-path';
 import { sessionMiddleware } from '../lib/session-middleware';
+
+/** Presence only: credentials stay in their httpOnly flow cookies. */
+export const getAuthFlowState = createServerFn({ method: 'GET' }).handler(() =>
+  Object.fromEntries([
+    ...AUTH_FLOW_KINDS.map((kind) => [
+      kind,
+      Boolean(authFlowToken(getRequestHeader('cookie'), kind)),
+    ]),
+    ['magic-link-requested', hasMagicLinkIntent(getRequestHeader('cookie'))],
+  ]),
+);
 
 /** Map API failures to a form-friendly result instead of a 500. */
 type AuthActionError = {
@@ -74,6 +103,10 @@ export const signUp = createServerFn({ method: 'POST' })
         ...data,
       });
       persistAuthSession(session);
+      appendResponseHeader(
+        'Set-Cookie',
+        await magicLinkIntentCookie(data.email),
+      );
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -106,6 +139,10 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
         ...data,
       });
       persistAuthSession(session);
+      appendResponseHeader(
+        'Set-Cookie',
+        await magicLinkIntentCookie(data.email),
+      );
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -138,6 +175,10 @@ export const signUpInvitedEmployer = createServerFn({ method: 'POST' })
         ...data,
       });
       persistAuthSession(session);
+      appendResponseHeader(
+        'Set-Cookie',
+        await magicLinkIntentCookie(data.email),
+      );
       return { ok: true as const, boardUser: session.boardUser };
     } catch (error) {
       return authError(error);
@@ -273,7 +314,11 @@ export const resetPassword = createServerFn({ method: 'POST' })
   .validator((input: { token: string; password: string }) => input)
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.resetPassword(data);
+      await getBoard().auth.resetPassword({
+        ...data,
+        token: resolveAuthFlowToken('reset-password', data.token),
+      });
+      finishAuthFlow('reset-password');
       return { ok: true as const };
     } catch (error) {
       return authError(error);
@@ -285,7 +330,10 @@ export const confirmEmailChange = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
   .handler(async ({ data }) => {
     try {
-      await getBoard().me.confirmEmailChange(data);
+      await getBoard().me.confirmEmailChange({
+        token: resolveAuthFlowToken('confirm-email-change', data.token),
+      });
+      finishAuthFlow('confirm-email-change');
       return { ok: true as const };
     } catch (error) {
       return authError(error);
@@ -299,6 +347,10 @@ export const requestMagicLink = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       await getBoard().auth.requestMagicLink(data);
+      appendResponseHeader(
+        'Set-Cookie',
+        await magicLinkIntentCookie(data.email),
+      );
       return { ok: true as const };
     } catch (error) {
       return authError(error);
@@ -306,10 +358,33 @@ export const requestMagicLink = createServerFn({ method: 'POST' })
   });
 
 export const consumeMagicLink = createServerFn({ method: 'POST' })
-  .validator((input: { token: string }) => input)
+  .validator((input: { token: string; confirmed?: boolean }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.consumeMagicLink(data);
+      const session = await getBoard().auth.consumeMagicLink({
+        token: resolveAuthFlowToken('magic-link', data.token),
+      });
+      if (
+        data.confirmed !== true &&
+        !(await matchesMagicLinkIntent(
+          getRequestHeader('cookie'),
+          session.boardUser.email,
+        ))
+      ) {
+        waitUntil(
+          getBoard()
+            .auth.logout({ refreshToken: session.refreshToken })
+            .catch(() => undefined),
+        );
+        throw new BoardApiError({
+          status: 401,
+          code: 'board_auth_invalid_token',
+          message: 'Sign-in link does not match the requested account',
+          raw: undefined,
+        });
+      }
+      finishAuthFlow('magic-link');
+      appendResponseHeader('Set-Cookie', clearMagicLinkIntentCookie());
       persistAuthSession(session);
       return {
         ok: true as const,
@@ -334,10 +409,17 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     try {
       const { provider, ...query } = data;
-      const result = await getBoard().auth.getOAuthAuthorizationUrl(
-        provider,
-        query,
+      const binding = crypto.randomUUID();
+      const returnTo = new URL(
+        safeRedirectPath(query.returnTo, '/account'),
+        'https://board.invalid',
       );
+      returnTo.searchParams.set(OAUTH_BROWSER_BINDING_PARAM, binding);
+      const result = await getBoard().auth.getOAuthAuthorizationUrl(provider, {
+        ...query,
+        returnTo: `${returnTo.pathname}${returnTo.search}${returnTo.hash}`,
+      });
+      appendResponseHeader('Set-Cookie', oauthBrowserCookie(binding));
       return { ok: true as const, authorizeUrl: result.authorizeUrl };
     } catch (error) {
       return authError(error);
@@ -345,10 +427,24 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
   });
 
 export const exchangeOAuth = createServerFn({ method: 'POST' })
-  .validator((input: { token: string }) => input)
+  .validator((input: { token: string; browserBinding?: string }) => input)
   .handler(async ({ data }) => {
     try {
-      const session = await getBoard().auth.exchangeOAuth(data);
+      if (
+        !matchesOAuthBrowser(getRequestHeader('cookie'), data.browserBinding)
+      ) {
+        throw new BoardApiError({
+          status: 401,
+          code: 'board_auth_invalid_token',
+          message: 'Start sign-in in this browser',
+          raw: undefined,
+        });
+      }
+      const session = await getBoard().auth.exchangeOAuth({
+        token: resolveAuthFlowToken('oauth-complete', data.token),
+      });
+      finishAuthFlow('oauth-complete');
+      appendResponseHeader('Set-Cookie', oauthBrowserCookie(''));
       persistAuthSession(session);
       return {
         ok: true as const,

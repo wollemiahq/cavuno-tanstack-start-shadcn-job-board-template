@@ -31,6 +31,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { parseCustomEmploymentType } from '@/lib/jobs-search';
+import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
 import { headTitle } from '@/lib/page-title';
 import {
   searchNumber,
@@ -188,11 +189,24 @@ export const Route = createFileRoute('/embed/jobs')({
  * chrome: a "see all jobs" link when there are more matches than this page
  * shows, pointing back at this frontend's own jobs listing.
  */
+type EmbedCta = {
+  label: string;
+  search: Pick<
+    EmbedSearch,
+    | 'q'
+    | 'location'
+    | 'remoteOption'
+    | 'employmentType'
+    | 'customEmploymentType'
+    | 'seniority'
+  >;
+};
+
 function buildEmbedCta(
   search: EmbedSearch,
   pageSize: number,
   total: number | undefined,
-): { label: string; search: UrlSearchInput } | null {
+): EmbedCta | null {
   const hasFilters = Boolean(
     search.q ||
     search.location ||
@@ -359,8 +373,22 @@ export const embedJobsViewDependencies: EmbedJobsViewDependencies = {
   getLocale,
   renderCtaLink: (cta) => (
     <Link
-      to="/"
-      search={cta.search}
+      {...resolveJobsSearchTarget({
+        query: searchString(cta.search.q),
+        term: null,
+        location: searchString(cta.search.location)
+          ? {
+              slug: String(cta.search.location),
+              name: String(cta.search.location),
+            }
+          : null,
+        filters: {
+          remoteOption: cta.search.remoteOption,
+          employmentType: cta.search.employmentType,
+          customEmploymentType: searchString(cta.search.customEmploymentType),
+          seniority: cta.search.seniority ? [cta.search.seniority] : undefined,
+        },
+      })}
       target="_blank"
       className={cn(
         buttonVariants({ variant: 'outline', size: 'sm' }),

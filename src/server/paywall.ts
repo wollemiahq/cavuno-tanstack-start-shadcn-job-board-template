@@ -70,6 +70,18 @@ export const getAccessGrant = createServerFn({ method: 'GET' })
     }),
   );
 
+export const getAccessCheckoutState = createServerFn({ method: 'GET' })
+  .validator((input: { sessionId: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, (h) =>
+      getBoard().me.access.retrieveCheckout(data.sessionId, {
+        headers: authed(context, h),
+        cache: 'no-store',
+      }),
+    ),
+  );
+
 /**
  * Start an embedded checkout for one offer. Returns the connected-account mount
  * kit `{ sessionId, clientSecret, stripeAccountId, publishableKey, offerType }`.

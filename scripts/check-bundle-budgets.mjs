@@ -188,7 +188,10 @@ const BUDGETS = {
     '/matches': { raw: 150_000, gzip: 58_000 },
     '/companies/markets/$market': { raw: 121_500, gzip: 46_500 },
     '/companies/': { raw: 121_000, gzip: 46_000 },
-    '/saved-jobs': { raw: 120_500, gzip: 44_500 },
+    // Saved-job pagination makes the full saved collection reachable. Its
+    // shared cursor controls add ~1.6 KiB gzip (42.2 -> 43.8 KiB measured);
+    // retain roughly the original 1.3 KiB headroom on this private route.
+    '/saved-jobs': { raw: 123_000, gzip: 46_000 },
     '/companies/$companySlug/jobs/$jobSlug': { raw: 112_500, gzip: 44_500 },
     '/p/$handle': { raw: 113_500, gzip: 43_000 },
     '/settings': { raw: 100_500, gzip: 37_500 },

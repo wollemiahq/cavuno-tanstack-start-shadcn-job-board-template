@@ -48,13 +48,14 @@ export default function installStaleChunkReload(win) {
     try {
       last = Number(win.sessionStorage.getItem(key)) || 0;
     } catch {
-      // Storage disabled: still reload once — the guard is a nicety.
+      // Without a persisted guard, a new document could reload forever.
+      return;
     }
     if (now - last < cooldownMs) return;
     try {
       win.sessionStorage.setItem(key, String(now));
     } catch {
-      // Same: never let a storage failure block the recovery.
+      return;
     }
     // Keep the import rejected while navigation is pending. Cancelling this
     // event makes Vite resolve the failed import as undefined; lazy route and

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 import { Sparkles, X } from 'lucide-react';
@@ -39,27 +39,32 @@ import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
  * (`board.me.profile.updateSkills`). Adding happens in an "Add skill" dialog
  * (the LinkedIn flow); add and remove each persist immediately with one PUT.
  */
-export function SkillsSection({ skills }: { skills: string[] }) {
+export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
   const router = useRouter();
+  const [skills, setValues] = useState(initialValues);
+  useEffect(() => setValues(initialValues), [initialValues]);
   const [adding, setAdding] = useState(false);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
 
   const save = async (next: string[]): Promise<boolean> => {
+    if (pending) return false;
     setPending(true);
     try {
       await replaceSkills({ data: { skills: next } });
+      setValues(next);
+      await reconcileCommittedAction(() => router.invalidate());
+      return true;
     } catch {
       void toastActionError();
       return false;
     } finally {
       setPending(false);
     }
-    await reconcileCommittedAction(() => router.invalidate());
-    return true;
   };
 
   const submitAdd = async () => {
+    if (pending) return;
     const name = input.trim();
     if (!name) return;
     if (skills.includes(name)) {
@@ -77,6 +82,7 @@ export function SkillsSection({ skills }: { skills: string[] }) {
     <Button
       variant="outline"
       size="sm"
+      disabled={pending}
       onClick={() => {
         setInput('');
         setAdding(true);
@@ -134,7 +140,7 @@ export function SkillsSection({ skills }: { skills: string[] }) {
         <Dialog
           open={adding}
           onOpenChange={(open) => {
-            if (!open) setAdding(false);
+            if (!open && !pending) setAdding(false);
           }}
         >
           <DialogContent className="sm:max-w-md">
@@ -154,6 +160,7 @@ export function SkillsSection({ skills }: { skills: string[] }) {
                 </FieldLabel>
                 <Input
                   id="skill-name"
+                  disabled={pending}
                   required
                   value={input}
                   onChange={(event) => setInput(event.target.value)}

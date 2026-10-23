@@ -1,10 +1,11 @@
 /** Magic-link landing — consumes ?token= and creates the starter session. */
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
+import { AuthLinkConfirmation } from '../components/auth-link-confirmation';
+import { STORED_AUTH_FLOW_TOKEN } from '../lib/auth-flow';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { consumeMagicLink } from '../server/auth';
+import { consumeMagicLink, getAuthFlowState } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 import { MagicLinkView } from './-auth.magic-link';
 
@@ -21,11 +22,15 @@ export const Route = createFileRoute('/auth/magic-link')({
     token: searchString(search.token),
     returnTo: candidateReturnTo(search.returnTo),
   }),
+  beforeLoad: ({ search, location }) => {
+    if (!import.meta.env.SSR && search.token)
+      throw redirect({ href: location.href, reloadDocument: true });
+  },
   loaderDeps: ({ search }) => search,
   loader: ({ deps }) => loadMagicLink(deps),
   head: ({ loaderData }) => ({
     meta: [
-      { title: headTitle(loaderData?.seo.boardName, m.authMagicLink_title()) },
+      { title: headTitle(loaderData?.seo?.boardName, m.authMagicLink_title()) },
       { name: 'robots', content: 'noindex' },
     ],
   }),
@@ -35,33 +40,32 @@ export const Route = createFileRoute('/auth/magic-link')({
 export async function loadMagicLink(
   deps: MagicLinkSearch,
   actions: {
-    consumeMagicLink: (input: {
-      data: { token: string };
-    }) => Promise<
-      { ok: true; isNewUser: boolean } | { ok: false; message: string }
-    >;
     getSeoBase: () => ReturnType<typeof getSeoBase>;
-  } = { consumeMagicLink, getSeoBase },
+    getAuthFlowState?: () => Promise<Record<string, boolean>>;
+  } = { getSeoBase, getAuthFlowState },
 ) {
-  const seoPromise = actions.getSeoBase();
-  if (!deps.token) {
-    return { status: 'missing-token' as const, seo: await seoPromise };
-  }
-  const [result, seo] = await Promise.all([
-    actions.consumeMagicLink({ data: { token: deps.token } }),
-    seoPromise,
-  ]);
-  if (!result.ok) return { status: 'invalid' as const, seo };
-  throw redirect({
-    href: resolvePostAuthConversionRedirect(deps.returnTo, {
-      isNewUser: result.isNewUser,
-      fallbackMethod: 'magic_link',
-    }),
-  });
+  const flow = await actions.getAuthFlowState?.();
+  const hasToken = Boolean(deps.token) || Boolean(flow?.['magic-link']);
+  const seo = await actions.getSeoBase().catch(() => undefined);
+  return {
+    status: hasToken ? ('ready' as const) : ('missing-token' as const),
+    automatic: Boolean(flow?.['magic-link-requested']),
+    seo,
+  };
 }
 
 function MagicLinkPage() {
-  const { status } = Route.useLoaderData();
-  const { returnTo } = Route.useSearch();
+  const { status, automatic } = Route.useLoaderData();
+  const { returnTo, token } = Route.useSearch();
+  if (status === 'ready')
+    return (
+      <AuthLinkConfirmation
+        token={token ?? STORED_AUTH_FLOW_TOKEN}
+        returnTo={returnTo}
+        action={consumeMagicLink}
+        method="magic_link"
+        autoContinue={automatic}
+      />
+    );
   return <MagicLinkView status={status} returnTo={returnTo} />;
 }

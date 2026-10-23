@@ -22,6 +22,7 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   createEvent,
   fireEvent,
@@ -30,7 +31,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   resolveHeaderSearchState,
@@ -53,9 +54,21 @@ vi.mock('@/chrome.json', () => ({ default: { nav: navigation } }));
 
 const signOutMock = vi.fn();
 
+beforeEach(() => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+});
+
 afterEach(() => {
   cleanup();
   signOutMock.mockReset();
+  vi.unstubAllGlobals();
 });
 
 type HeaderFeatures = Omit<
@@ -806,6 +819,40 @@ describe('Header — subscription entry gating', () => {
 });
 
 describe('Header — mobile navigation disclosure', () => {
+  it('closes the hidden mobile menu and releases scrolling at the desktop breakpoint', async () => {
+    let onChange = () => {};
+    const media = {
+      matches: false,
+      addEventListener: (_event: string, listener: () => void) => {
+        onChange = listener;
+      },
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal('matchMedia', () => media);
+    renderHeader();
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.siteHeader_openNavMenuAriaLabel(),
+      }),
+    );
+    await screen.findByRole('dialog', {
+      name: m.siteHeader_primaryNavigationAriaLabel(),
+    });
+    expect(document.body.style.overflow).toBe('hidden');
+    act(() => {
+      media.matches = true;
+      onChange();
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', {
+          name: m.siteHeader_primaryNavigationAriaLabel(),
+        }),
+      ).toBeNull(),
+    );
+    expect(document.body.style.overflow).not.toBe('hidden');
+  });
+
   it('opens a named non-modal panel and restores focus to the trigger on Escape', async () => {
     renderHeader();
 

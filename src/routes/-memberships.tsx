@@ -82,7 +82,7 @@ export type StartMembershipCheckout = (input: {
 
 export type GetMembershipCheckoutState = (input: {
   data: { companySlug: string; sessionId: string };
-}) => Promise<MembershipCheckoutSessionState>;
+}) => Promise<MembershipCheckoutSessionState & { membershipActive?: boolean }>;
 
 export const MEMBERSHIPS_PATH = '/memberships';
 
@@ -400,6 +400,9 @@ export function MembershipsPageView({
   const [error, setError] = useState<string | null>(null);
   const [polling, setPolling] = useState(Boolean(returning));
   const [confirmed, setConfirmed] = useState(false);
+  const [paymentState, setPaymentState] = useState<
+    'processing' | 'failed' | null
+  >(null);
   const [exhausted, setExhausted] = useState(false);
 
   // After Stripe's return redirect: poll the session until it is `complete`,
@@ -412,7 +415,9 @@ export function MembershipsPageView({
     let timerId: number;
     const tick = async () => {
       attempts += 1;
-      let state: MembershipCheckoutSessionState;
+      let state: MembershipCheckoutSessionState & {
+        membershipActive?: boolean;
+      };
       try {
         state = await getCheckoutStateAction({ data: returning });
       } catch {
@@ -422,7 +427,13 @@ export function MembershipsPageView({
         return;
       }
       if (stop) return;
-      if (state.status === 'complete') {
+      if (
+        state.paymentStatus === 'processing' ||
+        state.paymentStatus === 'failed'
+      ) {
+        setPaymentState(state.paymentStatus);
+        setPolling(false);
+      } else if (state.status === 'complete' && state.membershipActive) {
         setConfirmed(true);
         setPolling(false);
         void invalidate?.().catch(() => undefined);
@@ -514,14 +525,43 @@ export function MembershipsPageView({
     );
   }
 
+  if (paymentState)
+    return (
+      <Page width="content">
+        <PageContent>
+          <EmptyState
+            icon={<Clock aria-hidden="true" />}
+            title={m.memberships_title()}
+            description={
+              paymentState === 'processing'
+                ? m.checkout_processingText()
+                : m.checkout_failedText()
+            }
+            action={
+              <Button
+                onClick={() => {
+                  setPaymentState(null);
+                  if (paymentState === 'processing') setPolling(true);
+                }}
+              >
+                {paymentState === 'processing'
+                  ? m.appError_retryAction()
+                  : m.employerLanding_backToPlansLabel()}
+              </Button>
+            }
+          />
+        </PageContent>
+      </Page>
+    );
+
   if (exhausted) {
     return (
       <Page width="content">
         <PageContent>
           <EmptyState
             icon={<Clock aria-hidden="true" />}
-            title={m.employerLanding_paymentReceivedTitle()}
-            description={m.employerLanding_paymentReceivedBody()}
+            title={m.checkout_pendingTitle()}
+            description={m.checkout_pendingText()}
             action={
               <Button
                 onClick={() => {

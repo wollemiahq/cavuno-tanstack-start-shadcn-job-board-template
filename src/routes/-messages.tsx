@@ -6,6 +6,7 @@ import {
   mergeAuthConversionSearch,
   type LocationAuthSearch,
 } from '@/lib/board-datalayer-events';
+import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { getBlocked, getInbox } from '@/server/messaging';
 import { getBoardContext, getSeoBase } from '@/server/queries';
 
@@ -59,7 +60,8 @@ export function createMessagesLoader(
       if (isRedirect(error)) throw error;
       const returnTo =
         deps.view === 'inbox' ? '/messages' : `/messages?view=${deps.view}`;
-      if (String(error).includes('EMAIL_UNVERIFIED')) {
+      const failure = candidateLoaderError(error);
+      if (failure === 'email-unverified') {
         throw redirect({
           to: '/auth/verify-email-required',
           search: mergeAuthConversionSearch(
@@ -68,7 +70,9 @@ export function createMessagesLoader(
           ),
         });
       }
-      throw redirect({ to: '/auth/sign-in', search: { returnTo } });
+      if (failure === 'unauthenticated')
+        throw redirect({ to: '/auth/sign-in', search: { returnTo } });
+      throw error;
     }
   };
 }

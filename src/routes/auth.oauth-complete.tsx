@@ -1,10 +1,11 @@
 /** OAuth completion landing — exchanges the callback one-time token. */
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { resolvePostAuthConversionRedirect } from '../lib/board-datalayer-events';
+import { AuthLinkConfirmation } from '../components/auth-link-confirmation';
+import { STORED_AUTH_FLOW_TOKEN } from '../lib/auth-flow';
 import { candidateReturnTo } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
-import { exchangeOAuth } from '../server/auth';
+import { exchangeOAuth, getAuthFlowState } from '../server/auth';
 import { getSeoBase } from '../server/queries';
 import { OAuthCompleteView } from './-auth.oauth-complete';
 
@@ -21,13 +22,17 @@ export const Route = createFileRoute('/auth/oauth-complete')({
     token: searchString(search.token),
     returnTo: candidateReturnTo(search.returnTo),
   }),
+  beforeLoad: ({ search, location }) => {
+    if (!import.meta.env.SSR && search.token)
+      throw redirect({ href: location.href, reloadDocument: true });
+  },
   loaderDeps: ({ search }) => search,
   loader: ({ deps }) => loadOAuthComplete(deps),
   head: ({ loaderData }) => ({
     meta: [
       {
         title: headTitle(
-          loaderData?.seo.boardName,
+          loaderData?.seo?.boardName,
           m.authOauthComplete_title(),
         ),
       },
@@ -40,33 +45,32 @@ export const Route = createFileRoute('/auth/oauth-complete')({
 export async function loadOAuthComplete(
   deps: OAuthCompleteSearch,
   actions: {
-    exchangeOAuth: (input: {
-      data: { token: string };
-    }) => Promise<
-      { ok: true; isNewUser: boolean } | { ok: false; message: string }
-    >;
     getSeoBase: () => ReturnType<typeof getSeoBase>;
-  } = { exchangeOAuth, getSeoBase },
+    getAuthFlowState?: () => Promise<Record<string, boolean>>;
+  } = { getSeoBase, getAuthFlowState },
 ) {
-  const seoPromise = actions.getSeoBase();
-  if (!deps.token) {
-    return { status: 'missing-token' as const, seo: await seoPromise };
-  }
-  const [result, seo] = await Promise.all([
-    actions.exchangeOAuth({ data: { token: deps.token } }),
-    seoPromise,
-  ]);
-  if (!result.ok) return { status: 'invalid' as const, seo };
-  throw redirect({
-    href: resolvePostAuthConversionRedirect(deps.returnTo, {
-      isNewUser: result.isNewUser,
-      fallbackMethod: 'google',
-    }),
-  });
+  const hasToken =
+    Boolean(deps.token) ||
+    Boolean((await actions.getAuthFlowState?.())?.['oauth-complete']);
+  const seo = await actions.getSeoBase().catch(() => undefined);
+  return {
+    status: hasToken ? ('ready' as const) : ('missing-token' as const),
+    seo,
+  };
 }
 
 function OAuthCompletePage() {
   const { status } = Route.useLoaderData();
-  const { returnTo } = Route.useSearch();
+  const { returnTo, token } = Route.useSearch();
+  if (status === 'ready')
+    return (
+      <AuthLinkConfirmation
+        token={token ?? STORED_AUTH_FLOW_TOKEN}
+        returnTo={returnTo}
+        action={exchangeOAuth}
+        method="google"
+        autoContinue
+      />
+    );
   return <OAuthCompleteView status={status} returnTo={returnTo} />;
 }

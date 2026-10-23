@@ -120,13 +120,14 @@ export const getAccount = createServerFn({ method: 'GET' })
  * the card mapper.
  */
 export const getSavedJobs = createServerFn({ method: 'GET' })
+  .validator((input: { cursor?: string } | undefined) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ context }) =>
+  .handler(({ data, context }) =>
     gatedRead(context, async () => {
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
       const savedJobs = await getBoard().me.savedJobs.list(
-        { limit: 50 },
+        { limit: 50, cursor: data?.cursor },
         { headers },
       );
       return {

@@ -1,5 +1,6 @@
 import { isNotFound, type PublicJobCard } from '@cavuno/board';
-import { notFound } from '@tanstack/react-router';
+import { jobDetailPath } from '@cavuno/board/paths';
+import { notFound, redirect } from '@tanstack/react-router';
 
 import { getSessionUser } from '@/server/account';
 import { myApplicationForJob } from '@/server/applications';
@@ -57,6 +58,16 @@ export function createJobDetailLoader(
           .getCompany({ data: { companySlug: params.companySlug } })
           .catch(() => null),
       ]);
+      const actualCompanySlug = page.job.company?.slug;
+      if (
+        actualCompanySlug &&
+        page.job.slug &&
+        actualCompanySlug !== params.companySlug
+      )
+        throw redirect({
+          href: jobDetailPath(actualCompanySlug, page.job.slug),
+          statusCode: 301,
+        });
       const { user, applicationState } = session;
       return {
         job: page.job,

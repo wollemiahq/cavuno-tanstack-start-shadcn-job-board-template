@@ -43,6 +43,8 @@
     "functions": ["tw", "clsx", "cn", "cva"]
   },
   "ignorePatterns": [
+    ".deepsec/**",
+    ".worktrees/**",
     "database.types.ts",
     "*.hbs",
     "*.md",

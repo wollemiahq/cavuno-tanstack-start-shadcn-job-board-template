@@ -65,11 +65,9 @@ export interface SessionContext {
  *  - no session               → stay signed out, no cookie change
  *  - valid (not expiring soon) → pass the session through, no cookie change
  *  - expiring soon, refresh ok → rotate to the fresh pair, persist it
- *  - expiring soon, refresh KO → clear the cookie, continue signed out
+ *  - revoked refresh token    → clear the cookie, continue signed out
+ *  - transient refresh error → propagate, retaining the cookie for retry
  *
- * The catch collapses ANY refresh throw to the signed-out/clear branch (the
- * refresher returns null only on a 401 and rethrows the rest) — the pre-SDK
- * middleware's behavior: never loop, never surface the error to the caller.
  */
 /** Thin request/response adapter around the pure {@link decideSession}. */
 async function resolveSession(): Promise<SessionContext> {

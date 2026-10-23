@@ -980,7 +980,10 @@ export function EmployerJobForm({
     if (collectionValues) body.collectionValues = collectionValues;
     if (jobForm.seniority.visible && form.seniority)
       body.seniority = form.seniority;
-    if (jobForm.location.visible && form.officeLocations.length > 0) {
+    if (
+      jobForm.location.visible &&
+      (mode.kind === 'edit' || form.officeLocations.length > 0)
+    ) {
       body.officeLocations = form.officeLocations.map((location) =>
         location.locationId
           ? {
@@ -1057,6 +1060,8 @@ export function EmployerJobForm({
     if (!checkout.ok) {
       if (isMembershipRequiredCode(checkout.code)) {
         setMembershipRequired(true);
+        setStatus('error');
+        setMessage(boardErrorMessage({ code: 'membership_required' }));
         return;
       }
       setStatus('committed');
@@ -1256,6 +1261,8 @@ export function EmployerJobForm({
     if (!result.ok) {
       if (isMembershipRequiredCode(result.code)) {
         setMembershipRequired(true);
+        setStatus('error');
+        setMessage(boardErrorMessage({ code: 'membership_required' }));
         return;
       }
       setStatus('error');

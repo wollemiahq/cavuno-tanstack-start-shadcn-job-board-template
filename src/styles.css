@@ -1,6 +1,10 @@
 @import './theme.css';
 @import './typeset.css';
 
+/* Isolated tooling and checkouts must not contribute product utilities. */
+@source not '../.deepsec';
+@source not '../.worktrees';
+
 html,
 body {
   font-family: var(--font-sans);

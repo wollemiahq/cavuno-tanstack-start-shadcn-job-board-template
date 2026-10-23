@@ -34,6 +34,7 @@ import {
   defaultStreamHandler,
 } from '@tanstack/react-start/server';
 
+import { captureAuthFlow } from './lib/auth-flow';
 import { matchClientErrorIngest } from './lib/client-error-ingest';
 import { CLIENT_ERROR_PATH } from './lib/client-error-report';
 import { getServerEnv } from './lib/env';
@@ -76,6 +77,8 @@ async function serve(
   request: Request,
   executionContext?: ExecutionContext,
 ): Promise<Response> {
+  const authFlow = captureAuthFlow(request);
+  if (authFlow) return withBaselineSecurityHeaders(authFlow, request);
   const pathname = new URL(request.url).pathname;
   if (pathname === CLIENT_ERROR_PATH || pathname === `${CLIENT_ERROR_PATH}/`) {
     const clientError = await matchClientErrorIngest(

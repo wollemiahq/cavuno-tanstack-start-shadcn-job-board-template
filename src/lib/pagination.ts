@@ -88,7 +88,9 @@ export function cursorSearchValue<T>(raw: T): string | undefined {
 
 /** Coerce a raw `?page=` search value to a valid 1-based page number. */
 export function parsePageParam<T>(raw: T): number {
-  const value = Number(raw);
+  const scalar = searchString(raw) ?? searchNumber(raw);
+  if (scalar === undefined) return 1;
+  const value = Number(scalar);
   return Number.isInteger(value) && value >= 1 ? value : 1;
 }
 

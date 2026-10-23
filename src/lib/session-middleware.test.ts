@@ -83,16 +83,15 @@ describe('decideSession — the session-refresh security seam', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it('refresh THROWING collapses to the same clear + signed-out branch (never loops)', async () => {
+  it('transient refresh failure propagates without requesting cookie deletion', async () => {
     const current = session({ expiresAt: NOW - 1000 });
     const refresh = vi.fn<SessionRefresh>(async () => {
       throw new Error('network blip / 500');
     });
 
-    await expect(decideSession(current, NOW, refresh)).resolves.toEqual({
-      session: null,
-      setCookie: 'clear',
-    });
+    await expect(decideSession(current, NOW, refresh)).rejects.toThrow(
+      'network blip / 500',
+    );
   });
 
   it('an already-expired session is treated as expiring soon (refreshes)', async () => {
@@ -162,12 +161,12 @@ describe('decideRejectedSession — after the API rejected a live-looking sessio
     ).resolves.toEqual({ session: null, setCookie: 'clear' });
   });
 
-  it('refresh throwing → clear + signed out', async () => {
+  it('transient recovery failure preserves the session cookie', async () => {
     await expect(
       decideRejectedSession(session(), async () => {
         throw new Error('network');
       }),
-    ).resolves.toEqual({ session: null, setCookie: 'clear' });
+    ).rejects.toThrow('network');
   });
 });
 

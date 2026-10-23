@@ -99,7 +99,7 @@ function TalentProfilePage() {
   const { profile } = Route.useLoaderData();
   const { handle: routeParam } = Route.useParams();
   const { board } = rootApi.useLoaderData();
-  const { user, talentAccess, ready } = useRootSession();
+  const { user, talentAccess, ready, refreshSession } = useRootSession();
   const location = useLocation();
   const router = useRouter();
   const [candidateAccess, setCandidateAccess] =
@@ -213,7 +213,12 @@ function TalentProfilePage() {
               },
             });
             if (result.ok || result.code === 'already_on_plan') {
-              await router.invalidate();
+              const [access] = await Promise.all([
+                getTalentCandidateAccess({ data: { candidateId: profile.id } }),
+                refreshSession(),
+                router.invalidate(),
+              ]);
+              setCandidateAccess(access);
             } else {
               toastActionError(boardErrorMessage(result));
             }

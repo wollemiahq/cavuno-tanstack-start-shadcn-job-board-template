@@ -11,6 +11,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -175,6 +176,9 @@ async function renderPage(
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   const result = render(<RouterProvider router={router} />);
+  await act(async () => {
+    await router.load();
+  });
   // The router mounts asynchronously; wait for the page heading before
   // asserting anything about the page.
   if (waitForHeading) {
@@ -188,6 +192,7 @@ async function renderPage(
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.clearAllMocks();
 });
 
@@ -454,9 +459,12 @@ describe('memberships page', () => {
   });
 
   it('polls the returned session and confirms the membership once complete', async () => {
+    vi.useFakeTimers();
     getCheckoutStateAction.mockResolvedValue({
       object: 'checkout_session_state',
       status: 'complete',
+      paymentStatus: 'paid',
+      membershipActive: true,
       clientSecret: null,
     });
     const invalidate = vi.fn().mockResolvedValue(undefined);
@@ -474,15 +482,14 @@ describe('memberships page', () => {
       { waitForHeading: false },
     );
 
-    expect(
-      await screen.findByText(m.employerLanding_confirmingText()),
-    ).toBeVisible();
-    await waitFor(() => {
-      expect(getCheckoutStateAction).toHaveBeenCalledWith({
-        data: { companySlug: 'acme', sessionId: 'cs_1' },
-      });
+    expect(screen.getByText(m.employerLanding_confirmingText())).toBeVisible();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
     });
-    expect(await screen.findByRole('status')).toHaveTextContent(
+    expect(getCheckoutStateAction).toHaveBeenCalledWith({
+      data: { companySlug: 'acme', sessionId: 'cs_1' },
+    });
+    expect(screen.getByRole('status')).toHaveTextContent(
       m.memberships_confirmedText(),
     );
     expect(invalidate).toHaveBeenCalled();

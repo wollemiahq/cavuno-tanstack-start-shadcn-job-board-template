@@ -88,11 +88,23 @@ export const getMembershipCheckoutState = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string; sessionId: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context, data }) =>
-    gatedRead(context, (h) =>
-      getBoard().me.companies.retrieveMembershipCheckout(
+    gatedRead(context, async (h) => {
+      const board = getBoard();
+      const headers = authed(context, h);
+      const state = await board.me.companies.retrieveMembershipCheckout(
         data.companySlug,
         data.sessionId,
-        { headers: authed(context, h) },
-      ),
-    ),
+        { headers, cache: 'no-store' },
+      );
+      const company =
+        state.status === 'complete' &&
+        state.paymentStatus !== 'processing' &&
+        state.paymentStatus !== 'failed'
+          ? await board.companies.retrieve(data.companySlug, undefined, {
+              headers,
+              cache: 'no-store',
+            })
+          : null;
+      return { ...state, membershipActive: Boolean(company?.membership) };
+    }),
   );
