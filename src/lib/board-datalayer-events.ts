@@ -4,6 +4,7 @@
  */
 
 import { canonicalPathname, localizePath } from './localized-path';
+import { MAGIC_LINK_BROWSER_BINDING_PARAM } from './magic-link-intent';
 import { OAUTH_BROWSER_BINDING_PARAM } from './oauth-browser-binding';
 import { safeRedirectPath } from './safe-redirect-path';
 
@@ -231,6 +232,7 @@ export function resolvePostAuthConversionRedirect(
   url.searchParams.delete(CAVUNO_AUTH_INTENT_PARAM);
   url.searchParams.delete(CAVUNO_OAUTH_PROVIDER_PARAM);
   url.searchParams.delete(OAUTH_BROWSER_BINDING_PARAM);
+  url.searchParams.delete(MAGIC_LINK_BROWSER_BINDING_PARAM);
   const event: BoardAuthEvent = input.isNewUser ? 'sign_up' : 'login';
   const method: BoardAuthMethod =
     input.fallbackMethod === 'magic_link'

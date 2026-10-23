@@ -1,11 +1,13 @@
+export const MAGIC_LINK_BROWSER_BINDING_PARAM = 'cavuno_magic_binding';
 const COOKIE = '__Host-cavuno-magic-request';
+const BROWSER_COOKIE = '__Host-cavuno-magic-browser';
 
-function intentHash(cookie: string | null | undefined) {
+function cookieValue(cookie: string | null | undefined, name: string) {
   return cookie
     ?.split(';')
     .map((part) => part.trim())
-    .find((part) => part.startsWith(`${COOKIE}=`))
-    ?.slice(COOKIE.length + 1);
+    .find((part) => part.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
 }
 
 async function emailHash(email: string) {
@@ -19,7 +21,7 @@ async function emailHash(email: string) {
 }
 
 export function hasMagicLinkIntent(cookie: string | null | undefined) {
-  return Boolean(intentHash(cookie));
+  return Boolean(cookieValue(cookie, COOKIE));
 }
 
 export async function magicLinkIntentCookie(email: string) {
@@ -35,6 +37,18 @@ export async function matchesMagicLinkIntent(
   cookie: string | null | undefined,
   email: string,
 ) {
-  const expected = intentHash(cookie);
+  const expected = cookieValue(cookie, COOKIE);
   return Boolean(expected && expected === (await emailHash(email)));
+}
+
+/** Bind automatic exchange to this specific request before consuming its token. */
+export function magicLinkBrowserCookie(binding: string) {
+  return `${BROWSER_COOKIE}=${binding}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${binding ? 600 : 0}`;
+}
+
+export function matchesMagicLinkBrowser(
+  cookie: string | null | undefined,
+  binding: string | undefined,
+) {
+  return Boolean(binding && cookieValue(cookie, BROWSER_COOKIE) === binding);
 }
