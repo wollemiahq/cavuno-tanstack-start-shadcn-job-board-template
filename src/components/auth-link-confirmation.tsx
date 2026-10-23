@@ -10,6 +10,7 @@ import {
   type BoardAuthMethod,
 } from '@/lib/board-datalayer-events';
 import { candidateAuthSearch } from '@/lib/candidate-return-to';
+import { MAGIC_LINK_BROWSER_BINDING_PARAM } from '@/lib/magic-link-intent';
 import { OAUTH_BROWSER_BINDING_PARAM } from '@/lib/oauth-browser-binding';
 import { m } from '@/paraglide/messages';
 
@@ -41,11 +42,11 @@ export function AuthLinkConfirmation({
   const automaticRequest = useRef<Promise<ExchangeResult> | null>(null);
   const exchange = useCallback(() => {
     const browserBinding =
-      method === 'magic_link'
-        ? undefined
-        : (new URL(returnTo, 'https://board.invalid').searchParams.get(
-            OAUTH_BROWSER_BINDING_PARAM,
-          ) ?? undefined);
+      new URL(returnTo, 'https://board.invalid').searchParams.get(
+        method === 'magic_link'
+          ? MAGIC_LINK_BROWSER_BINDING_PARAM
+          : OAUTH_BROWSER_BINDING_PARAM,
+      ) ?? undefined;
     return action({
       data: { token, browserBinding, confirmed: !autoContinue },
     });
