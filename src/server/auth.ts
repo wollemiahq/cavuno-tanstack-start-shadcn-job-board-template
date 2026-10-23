@@ -28,6 +28,9 @@ import {
 } from '../lib/data-source.server';
 import {
   hasMagicLinkIntent,
+  MAGIC_LINK_BROWSER_BINDING_PARAM,
+  magicLinkBrowserCookie,
+  matchesMagicLinkBrowser,
   magicLinkIntentCookie,
   matchesMagicLinkIntent,
   clearMagicLinkIntentCookie,
@@ -41,15 +44,24 @@ import { safeRedirectPath } from '../lib/safe-redirect-path';
 import { sessionMiddleware } from '../lib/session-middleware';
 
 /** Presence only: credentials stay in their httpOnly flow cookies. */
-export const getAuthFlowState = createServerFn({ method: 'GET' }).handler(() =>
-  Object.fromEntries([
-    ...AUTH_FLOW_KINDS.map((kind) => [
-      kind,
-      Boolean(authFlowToken(getRequestHeader('cookie'), kind)),
+export const getAuthFlowState = createServerFn({ method: 'GET' })
+  .validator((input: { magicLinkBinding?: string } | undefined) => input)
+  .handler(({ data }) =>
+    Object.fromEntries([
+      ...AUTH_FLOW_KINDS.map((kind) => [
+        kind,
+        Boolean(authFlowToken(getRequestHeader('cookie'), kind)),
+      ]),
+      [
+        'magic-link-requested',
+        hasMagicLinkIntent(getRequestHeader('cookie')) &&
+          matchesMagicLinkBrowser(
+            getRequestHeader('cookie'),
+            data?.magicLinkBinding,
+          ),
+      ],
     ]),
-    ['magic-link-requested', hasMagicLinkIntent(getRequestHeader('cookie'))],
-  ]),
-);
+  );
 
 /** Map API failures to a form-friendly result instead of a 500. */
 type AuthActionError = {
@@ -346,7 +358,17 @@ export const requestMagicLink = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     try {
-      await getBoard().auth.requestMagicLink(data);
+      const binding = crypto.randomUUID();
+      const returnTo = new URL(
+        safeRedirectPath(data.returnTo, '/account'),
+        'https://board.invalid',
+      );
+      returnTo.searchParams.set(MAGIC_LINK_BROWSER_BINDING_PARAM, binding);
+      await getBoard().auth.requestMagicLink({
+        ...data,
+        returnTo: `${returnTo.pathname}${returnTo.search}${returnTo.hash}`,
+      });
+      appendResponseHeader('Set-Cookie', magicLinkBrowserCookie(binding));
       appendResponseHeader(
         'Set-Cookie',
         await magicLinkIntentCookie(data.email),
@@ -358,9 +380,26 @@ export const requestMagicLink = createServerFn({ method: 'POST' })
   });
 
 export const consumeMagicLink = createServerFn({ method: 'POST' })
-  .validator((input: { token: string; confirmed?: boolean }) => input)
+  .validator(
+    (input: { token: string; confirmed?: boolean; browserBinding?: string }) =>
+      input,
+  )
   .handler(async ({ data }) => {
     try {
+      if (
+        data.confirmed !== true &&
+        !matchesMagicLinkBrowser(
+          getRequestHeader('cookie'),
+          data.browserBinding,
+        )
+      ) {
+        throw new BoardApiError({
+          status: 401,
+          code: 'board_auth_invalid_token',
+          message: 'Confirm this sign-in link before continuing',
+          raw: undefined,
+        });
+      }
       const session = await getBoard().auth.consumeMagicLink({
         token: resolveAuthFlowToken('magic-link', data.token),
       });
@@ -385,6 +424,7 @@ export const consumeMagicLink = createServerFn({ method: 'POST' })
       }
       finishAuthFlow('magic-link');
       appendResponseHeader('Set-Cookie', clearMagicLinkIntentCookie());
+      appendResponseHeader('Set-Cookie', magicLinkBrowserCookie(''));
       persistAuthSession(session);
       return {
         ok: true as const,

@@ -18,6 +18,26 @@ describe('authentication completion GET', () => {
     expect(consumeMagicLink).not.toHaveBeenCalled();
   });
 
+  it('checks the email request binding before deciding whether to continue automatically', async () => {
+    const getAuthFlowState = vi
+      .fn()
+      .mockResolvedValue({ 'magic-link-requested': false });
+    const result = await loadMagicLink(
+      {
+        token: 'older-valid-token',
+        returnTo: '/jobs?q=robotics&cavuno_magic_binding=request-a',
+      },
+      {
+        getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Example' }),
+        getAuthFlowState,
+      },
+    );
+    expect(getAuthFlowState).toHaveBeenCalledWith({
+      data: { magicLinkBinding: 'request-a' },
+    });
+    expect(result).toMatchObject({ status: 'ready', automatic: false });
+  });
+
   it('recognizes a stored credential without returning it to the browser', async () => {
     const result = await loadMagicLink(
       { returnTo: '/account' },
