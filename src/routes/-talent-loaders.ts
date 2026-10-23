@@ -22,10 +22,19 @@ const profileDependencies: TalentProfileRouteDependencies = {
 export function createTalentProfileLoader(
   dependencies: TalentProfileRouteDependencies = profileDependencies,
 ) {
-  return async ({ params }: { params: { handle: string } }) => {
+  return async ({
+    params,
+    deps,
+  }: {
+    params: { handle: string };
+    deps?: { companyId?: string };
+  }) => {
     try {
       return await dependencies.getTalentProfilePage({
-        data: { handle: params.handle },
+        data: {
+          handle: params.handle,
+          ...(deps?.companyId ? { companyId: deps.companyId } : {}),
+        },
       });
     } catch (error) {
       if (isNotFound(error)) throw notFound();

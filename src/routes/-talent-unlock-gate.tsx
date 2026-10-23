@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { Link } from '@tanstack/react-router';
 import { Lock } from 'lucide-react';
@@ -30,10 +30,13 @@ import { getLocale } from '@/paraglide/runtime';
 import { TalentProfileSilhouette } from '@/routes/-talent-profile-silhouette';
 import type { Plan } from '@cavuno/board';
 
-export function TalentUnlockPending() {
+export function TalentUnlockPending({
+  companySelector,
+}: { companySelector?: ReactNode } = {}) {
   return (
     <Page width="content">
       <PageContent>
+        {companySelector}
         <EmptyState
           icon={<Spinner className="size-5" />}
           title={m.talentUnlock_pendingTitle()}
@@ -45,6 +48,7 @@ export function TalentUnlockPending() {
 }
 
 export function TalentUnlockGate({
+  companySelector,
   surface,
   creditsRemaining,
   plans,
@@ -53,6 +57,7 @@ export function TalentUnlockGate({
   onUnlock,
   onUpgrade,
 }: {
+  companySelector?: ReactNode;
   surface: 'unlock_needed' | 'out_of_unlocks' | 'no_plan';
   creditsRemaining: number;
   plans: Plan[];
@@ -71,6 +76,7 @@ export function TalentUnlockGate({
     return (
       <Page width="content">
         <PageContent>
+          {companySelector}
           <EmptyState
             icon={<Lock aria-hidden="true" />}
             title={m.talentUnlock_noPlanTitle()}
@@ -94,6 +100,7 @@ export function TalentUnlockGate({
     return (
       <Page width="content">
         <PageContent>
+          {companySelector}
           <div className="space-y-6">
             <EmptyState
               icon={<Lock aria-hidden="true" />}
@@ -139,6 +146,7 @@ export function TalentUnlockGate({
   return (
     <Page width="content">
       <PageContent>
+        {companySelector}
         <Card>
           <CardHeader>
             <CardTitle>{m.talentUnlock_neededTitle()}</CardTitle>

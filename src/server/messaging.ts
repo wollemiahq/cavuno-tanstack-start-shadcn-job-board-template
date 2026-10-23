@@ -118,7 +118,7 @@ export const sendReply = createServerFn({ method: 'POST' })
   });
 
 export const startConversation = createServerFn({ method: 'POST' })
-  .validator((input: StartConversationBody) => input)
+  .validator((input: StartConversationBody & { companyId?: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);

@@ -85,12 +85,16 @@ export const EMPTY_GRANT: TalentAccessGrant = {
 
 /** Viewer talent entitlement. Call from a signed-in session; 401/403 → empty. */
 export const getTalentAccessGrant = createServerFn({ method: 'GET' })
+  .validator((input: { companyId?: string } | undefined) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
-  .handler(({ context }) =>
+  .handler(({ context, data }) =>
     gatedRead(context, async (h) => {
       const headers = authed(context, h);
       try {
-        return await getBoard().me.talentAccess.retrieve({ headers });
+        return await getBoard().me.talentAccess.retrieve({
+          headers,
+          query: data?.companyId ? { companyId: data.companyId } : undefined,
+        });
       } catch (error) {
         if (
           isBoardApiError(error) &&
@@ -160,7 +164,7 @@ export const unlockTalentProfile = createServerFn({ method: 'POST' })
   );
 
 export const getTalentCandidateAccess = createServerFn({ method: 'GET' })
-  .validator((input: { candidateId: string }) => input)
+  .validator((input: { candidateId: string; companyId?: string }) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context, data }) =>
     gatedRead(context, async (h) => {
@@ -168,6 +172,7 @@ export const getTalentCandidateAccess = createServerFn({ method: 'GET' })
       await requireVerifiedBoardUser(headers);
       return getBoard().me.talentAccess.retrieveCandidate(data.candidateId, {
         headers,
+        query: data.companyId ? { companyId: data.companyId } : undefined,
       });
     }),
   );
