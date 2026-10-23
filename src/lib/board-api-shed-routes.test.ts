@@ -68,7 +68,7 @@ const sitemapIndex = createSitemapIndexHandler({
 const listJobs = vi.fn();
 const jobsRss = createJobsRssHandler({
   getRequest: () => new Request('https://board.example/jobs/rss.xml'),
-  getBoard: () => ({
+  getPrimaryBoard: () => ({
     context: async () => ({ name: 'Board', language: 'en' }),
     jobs: { list: listJobs },
   }),

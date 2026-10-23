@@ -173,7 +173,7 @@ export function VerifyEmailRequiredView({
     setStep('resume');
   }, [emailVerified, navigate, role, returnTo]);
 
-  // Shared by the auto-submit (`onComplete`) and the form's implicit
+  // Shared by the full-code change and the form's implicit
   // Enter-key submission — the sixth digit IS the submit action.
   async function verify(code: string) {
     if (pending) return;
@@ -254,7 +254,9 @@ export function VerifyEmailRequiredView({
             data-test="otp-code"
             containerClassName="justify-center"
             disabled={pending}
-            onComplete={(code: string) => void verify(code)}
+            onChange={(code: string) => {
+              if (code.length === 6) void verify(code);
+            }}
           >
             <InputOTPGroup>
               <InputOTPSlot index={0} className="size-10" />

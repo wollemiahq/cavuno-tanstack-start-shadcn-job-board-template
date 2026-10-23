@@ -1,11 +1,11 @@
 import { jobDetailPath } from '@cavuno/board/paths';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { getBoard } from '@/lib/board';
+import { getPrimaryBoard } from '@/lib/board';
 import { jobEmploymentTypeLabel } from '@/lib/job-employment-type-label';
 import { localizePath } from '@/lib/localized-path';
 import { jobTitleAtCompany } from '@/lib/page-title';
-import { readPublicOrigin } from '@/lib/public-origin';
+import { readPrimaryPublicOrigin } from '@/lib/public-origin';
 import { m } from '@/paraglide/messages';
 import { baseLocale, getLocale, isLocale } from '@/paraglide/runtime';
 
@@ -25,7 +25,7 @@ function rssDate(iso: string | null): string {
 }
 
 type JobsRssJob = Awaited<
-  ReturnType<ReturnType<typeof getBoard>['jobs']['list']>
+  ReturnType<ReturnType<typeof getPrimaryBoard>['jobs']['list']>
 >['data'][number];
 
 export type JobsRssBoard = {
@@ -39,7 +39,7 @@ export type JobsRssBoard = {
 };
 
 export type JobsRssDependencies = {
-  getBoard: () => JobsRssBoard;
+  getPrimaryBoard: () => JobsRssBoard;
   getRequest: () => Request;
   /**
    * Board-published origin for the feed's own address and every item link
@@ -52,9 +52,9 @@ export type JobsRssDependencies = {
 };
 
 const defaultDependencies: JobsRssDependencies = {
-  getBoard,
+  getPrimaryBoard,
   getRequest,
-  readPublicOrigin,
+  readPublicOrigin: readPrimaryPublicOrigin,
 };
 
 export function createJobsRssHandler(
@@ -66,7 +66,7 @@ export function createJobsRssHandler(
       return Response.redirect(`${requestOrigin}/jobs/rss.xml`, 308);
     }
     const origin = await dependencies.readPublicOrigin();
-    const board = dependencies.getBoard();
+    const board = dependencies.getPrimaryBoard();
     const [context, list] = await Promise.all([
       board.context(),
       board.jobs.list({ fields: '+description', limit: 50 }),

@@ -335,10 +335,10 @@ export function ProfileForm({
   const [form, setForm] = useState<FormState>(() => toForm(profile));
   const countries = countryOptions(language);
   const [status, setStatus] = useState<Status>('idle');
+  const saving = useRef(false);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    setStatus('idle');
   };
 
   const storedHandle = profile.handle ?? '';
@@ -607,6 +607,7 @@ export function ProfileForm({
   }
 
   async function save() {
+    if (saving.current) return;
     const missing = missingRequired();
     setInvalid(missing);
     setHandleShowsProblem(true);
@@ -631,6 +632,7 @@ export function ProfileForm({
       return;
     }
     if (missing) return;
+    saving.current = true;
     setStatus('saving');
     const handle = form.handle;
     try {
@@ -671,7 +673,6 @@ export function ProfileForm({
       }
       const result = await dependencies.updateProfile({ data });
       if (!result.ok) {
-        setStatus('idle');
         if ('field' in result && result.field === 'location') {
           setLocationSaveError(boardErrorMessage({ code: result.code }));
           locationInput.current?.focus();
@@ -717,16 +718,16 @@ export function ProfileForm({
           dependencies.updateObjectReferences ?? updateProfileObjectReferences
         )({ data: references });
       }
+      void dependencies.toastActionSuccess();
+      await reconcileCommittedAction(async () => {
+        await Promise.all([router.invalidate(), refreshSession()]);
+      }, dependencies.toastActionReconciliationError);
     } catch {
-      setStatus('idle');
       void dependencies.toastActionError();
-      return;
+    } finally {
+      saving.current = false;
+      setStatus('idle');
     }
-    setStatus('idle');
-    void dependencies.toastActionSuccess();
-    await reconcileCommittedAction(async () => {
-      await Promise.all([router.invalidate(), refreshSession()]);
-    }, dependencies.toastActionReconciliationError);
   }
 
   // Neither the country nor the profile visibility is a layout field: they
@@ -822,7 +823,6 @@ export function ProfileForm({
               unit: commuteUnit,
             });
             setCommuteError(false);
-            setStatus('idle');
           }}
         />
         <InputGroupAddon align="inline-end">
@@ -952,7 +952,6 @@ export function ProfileForm({
                       ? handleFromName(displayName)
                       : prev.handle,
                   }));
-                  setStatus('idle');
                 }}
               />
             </Field>
@@ -1138,7 +1137,6 @@ export function ProfileForm({
           onChange={(value) => {
             editedCustomFields.current.add(entry.key);
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }));
-            setStatus('idle');
           }}
         />
       );
@@ -1150,7 +1148,6 @@ export function ProfileForm({
         onChange={(value) => {
           editedCollections.current.add(entry.key);
           setSelections((prev) => ({ ...prev, [entry.key]: value }));
-          setStatus('idle');
         }}
         loadChoices={(search) => loadChoices(entry.key, search)}
         error={invalid?.id === formEntryKey(entry) ? invalid.message : null}

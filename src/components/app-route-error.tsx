@@ -121,6 +121,11 @@ export function AppRouteErrorPage({
   const rateLimited =
     isRateLimited(error) ||
     (error instanceof Error && /rate limit/i.test(error.message));
+  const failedModuleImport =
+    error instanceof Error &&
+    /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(
+      error.message,
+    );
 
   // Dual-source escape hatch. Facts come from env+cookie only (no board API),
   // so this still resolves when the demo tenant is the thing that is down.
@@ -161,7 +166,16 @@ export function AppRouteErrorPage({
       // itself once the load lands (its reset key is the router's loadedAt).
       // Calling `reset` as well would re-render the now-pending match with no
       // Suspense boundary above it on a hydrated client.
-      reset={() => void router.invalidate()}
+      reset={() => {
+        // React.lazy retains a rejected import for this document. Retrying
+        // its loader cannot repair it; an explicit retry needs fresh modules.
+        // This user action also works when storage blocks automatic recovery.
+        if (failedModuleImport) {
+          window.location.reload();
+          return;
+        }
+        void router.invalidate();
+      }}
       switchToYourBoard={
         stuckOnDemo
           ? {

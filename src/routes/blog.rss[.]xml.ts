@@ -3,10 +3,10 @@ import { blogPostPath } from '@cavuno/board/paths';
 import { createFileRoute } from '@tanstack/react-router';
 import { getRequest } from '@tanstack/react-start/server';
 
-import { blogDisabledResponse, isBlogEnabled } from '../lib/blog-enabled';
-import { getBoard } from '../lib/board';
+import { blogDisabledResponse } from '../lib/blog-enabled';
+import { getPrimaryBoard } from '../lib/board';
 import { localizePath } from '../lib/localized-path';
-import { readPublicOrigin } from '../lib/public-origin';
+import { readPrimaryPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { baseLocale, getLocale, isLocale } from '../paraglide/runtime';
 
@@ -69,11 +69,13 @@ export const Route = createFileRoute('/blog/rss.xml')({
           return Response.redirect(`${requestOrigin}/blog/rss.xml`, 308);
         }
         // A blog-off board has no archive, so it has no feed either.
-        if (!(await isBlogEnabled())) return blogDisabledResponse();
-        const origin = await readPublicOrigin();
-        const board = getBoard();
-        const [context, posts] = await Promise.all([
-          board.context(),
+        // A cacheable discovery file belongs to the primary deployment even
+        // while this browser previews a demo board with different features.
+        const board = getPrimaryBoard();
+        const context = await board.context({ cache: 'no-store' });
+        if (context.features.blog !== true) return blogDisabledResponse();
+        const [origin, posts] = await Promise.all([
+          readPrimaryPublicOrigin(),
           board.blog.posts.list({ limit: 50 }),
         ]);
         const locale = isLocale(context.language)

@@ -1,4 +1,3 @@
-import { currentPathFromReferer } from '@cavuno/board/server';
 /**
  * Board-access middleware: composes the per-call headers for gated SDK
  * content reads. Mirrors the session middleware's per-request,
@@ -16,15 +15,16 @@ import { currentPathFromReferer } from '@cavuno/board/server';
  *    header-free and get the shared-cacheable public view.
  */
 import { createMiddleware } from '@tanstack/react-start';
-import { getRequestHeader } from '@tanstack/react-start/server';
+import { getRequest, getRequestHeader } from '@tanstack/react-start/server';
 
+import { boardAccessPath } from './board-access-path';
 import { getDataSource, parseGrantForSource } from './data-source.server';
 import { sessionMiddleware } from './session-middleware';
 
 export interface BoardAccessContext {
   /** Grant + bearer headers for one gated content read; `{}` when anonymous. */
   boardAccessHeaders: Record<string, string>;
-  /** Current page path (from the RPC Referer) for the /password redirect-back. */
+  /** Current page path for the /password redirect-back, during SSR or RPC. */
   currentPath: string;
 }
 
@@ -42,7 +42,10 @@ export const boardAccessMiddleware = createMiddleware({
       boardAccessHeaders: grant
         ? { 'x-board-access': grant, ...context.authHeaders }
         : context.authHeaders,
-      currentPath: currentPathFromReferer(getRequestHeader('referer') ?? null),
+      currentPath: boardAccessPath(
+        getRequest().url,
+        getRequestHeader('referer') ?? null,
+      ),
     };
     return next({ context: boardAccessContext });
   });
