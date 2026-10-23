@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -22,6 +23,7 @@ import type {
   BlockedUser,
   Conversation,
   ConversationDetail,
+  Message,
 } from '@cavuno/board';
 
 const getInbox = vi.fn<MessagesRuntimeDependencies['getInbox']>();
@@ -122,6 +124,139 @@ describe('messaging runtime failures', () => {
     await waitFor(() =>
       expect(markRead).toHaveBeenCalledWith({ data: { id: detail.id } }),
     );
+  });
+
+  it('refreshes older edits and unsends as well as new replies in a paged thread', async () => {
+    const history: Message[] = Array.from({ length: 201 }, (_, index) => ({
+      id: `message-${index}`,
+      object: 'message',
+      conversationId: detail.id,
+      authorBoardUserId: conversation.counterparty.boardUserId,
+      recipientBoardUserId: 'viewer-1',
+      author: { ...conversation.counterparty },
+      body: `Reply ${index}`,
+      sentAt: new Date(Date.UTC(2026, 6, 14, 0, index)).toISOString(),
+      editedAt: null,
+      deletedAt: null,
+      readAt: null,
+    }));
+    const pageOfHistory = (cursor?: string) => {
+      const start = Number(cursor ?? 0);
+      const next = start + 200;
+      return {
+        object: 'list' as const,
+        url: '/messages',
+        data: history.slice(start, next),
+        hasMore: next < history.length,
+        nextCursor: next < history.length ? String(next) : null,
+      };
+    };
+    const getThread = vi.fn<MessagesRuntimeDependencies['getThread']>();
+    getThread.mockImplementation(async ({ data }) => ({
+      conversation: detail,
+      messages: pageOfHistory(data.cursor),
+      blockStatus: { object: 'block_status', blocked: false },
+    }));
+    markRead.mockResolvedValue({
+      object: 'read_receipt',
+      markedAt: '2026-07-14T05:00:00.000Z',
+    });
+    render(
+      <ThreadController
+        initialConversation={detail}
+        initialMessages={pageOfHistory()}
+        initialBlockStatus={{ object: 'block_status', blocked: false }}
+        onExit={vi.fn()}
+        dependencies={{ ...dependencies, getThread }}
+      />,
+    );
+    expect(await screen.findByText(history[200].body)).toBeVisible();
+    await waitFor(() =>
+      expect(markRead).toHaveBeenCalledWith({ data: { id: detail.id } }),
+    );
+
+    const oldBody = history[0].body;
+    const unsentBody = history[1].body;
+    history[0] = {
+      ...history[0],
+      body: 'Updated earlier reply',
+      editedAt: '2026-07-14T05:00:00.000Z',
+    };
+    history[1] = {
+      ...history[1],
+      body: '',
+      deletedAt: '2026-07-14T05:00:00.000Z',
+    };
+    history.push({
+      ...history[200],
+      id: 'new-reply',
+      body: 'New reply after history loaded',
+      sentAt: '2026-07-14T05:01:00.000Z',
+    });
+    await act(async () => {
+      await useVisiblePoll.mock.calls.at(-1)?.[0]();
+    });
+
+    expect(screen.queryByText(oldBody)).toBeNull();
+    expect(screen.queryByText(unsentBody)).toBeNull();
+    expect(screen.getByText(history[0].body)).toBeVisible();
+    expect(
+      screen.getByText(m.messageBubble_messageDeletedText()),
+    ).toBeVisible();
+    expect(screen.getAllByText(history[201].body)).toHaveLength(1);
+    expect(screen.getAllByText(history[200].body)).toHaveLength(1);
+  });
+
+  it('stops a pending history refresh when the thread is closed', async () => {
+    let resolvePage!: (
+      value: Awaited<ReturnType<MessagesRuntimeDependencies['getThread']>>,
+    ) => void;
+    const getThread = vi.fn<MessagesRuntimeDependencies['getThread']>();
+    getThread.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePage = resolve;
+        }),
+    );
+    markRead.mockResolvedValue({
+      object: 'read_receipt',
+      markedAt: '2026-07-14T05:00:00.000Z',
+    });
+    const view = render(
+      <ThreadController
+        initialConversation={detail}
+        initialMessages={{
+          object: 'list',
+          url: '/messages',
+          data: [],
+          hasMore: false,
+          nextCursor: null,
+        }}
+        initialBlockStatus={{ object: 'block_status', blocked: false }}
+        onExit={vi.fn()}
+        dependencies={{ ...dependencies, getThread }}
+      />,
+    );
+    let refresh: void | Promise<void>;
+    act(() => {
+      refresh = useVisiblePoll.mock.calls.at(-1)?.[0]();
+    });
+    view.unmount();
+    await act(async () => {
+      resolvePage({
+        conversation: detail,
+        messages: {
+          object: 'list',
+          url: '/messages',
+          data: [],
+          hasMore: true,
+          nextCursor: '200',
+        },
+        blockStatus: { object: 'block_status', blocked: false },
+      });
+      await refresh;
+    });
+    expect(getThread).toHaveBeenCalledTimes(1);
   });
 
   it('reconciles an authoritative inbox refresh after a conversation is archived', () => {
