@@ -49,6 +49,7 @@ export function TalentUnlockPending({
 
 export function TalentUnlockGate({
   companySelector,
+  companyId,
   surface,
   creditsRemaining,
   plans,
@@ -58,6 +59,7 @@ export function TalentUnlockGate({
   onUpgrade,
 }: {
   companySelector?: ReactNode;
+  companyId?: string;
   surface: 'unlock_needed' | 'out_of_unlocks' | 'no_plan';
   creditsRemaining: number;
   plans: Plan[];
@@ -84,6 +86,7 @@ export function TalentUnlockGate({
             action={
               <Link
                 to="/employers"
+                search={companyId ? { companyId } : {}}
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {m.talentUnlock_viewPlansLabel()}
@@ -131,6 +134,7 @@ export function TalentUnlockGate({
             ) : (
               <Link
                 to="/employers"
+                search={companyId ? { companyId } : {}}
                 className={buttonVariants({ variant: 'outline' })}
               >
                 {m.talentUnlock_viewPlansLabel()}

@@ -9,25 +9,41 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const state = vi.hoisted(() => ({
-  companyId: undefined as string | undefined,
-  navigate: vi.fn(),
-  invalidate: vi.fn(),
-  refresh: vi.fn(),
-  gate: vi.fn(),
-  grant: vi.fn(),
-  unlock: vi.fn(),
-  upgrade: vi.fn(),
-  start: vi.fn(),
-}));
+import type { StartTalentConversation } from '@/components/board/talent-message-action';
+
+type ProfileTestConfig = {
+  companyId?: string;
+  accessModel: TalentAccess['accessModel'];
+};
+type MockRouteOptions = Parameters<
+  ReturnType<typeof import('@tanstack/react-router').createFileRoute>
+>[0];
+
+const state = vi.hoisted(() => {
+  const config: ProfileTestConfig = {
+    accessModel: 'paid_unlocks_and_messaging',
+  };
+  return {
+    ...config,
+    routeHandle: 'candidate-1',
+    navigate: vi.fn(),
+    invalidate: vi.fn(),
+    refresh: vi.fn(),
+    gate: vi.fn(),
+    grant: vi.fn(),
+    unlock: vi.fn(),
+    upgrade: vi.fn(),
+    start: vi.fn(),
+  };
+});
 vi.mock('@tanstack/react-router', async (original) => {
   const actual = await original<typeof import('@tanstack/react-router')>();
   return {
     ...actual,
-    createFileRoute: () => (options: object) => ({
+    createFileRoute: () => (options: MockRouteOptions) => ({
       options,
       useLoaderData: () => ({ profile }),
-      useParams: () => ({ handle: 'candidate-1' }),
+      useParams: () => ({ handle: state.routeHandle }),
       useSearch: () => ({ companyId: state.companyId }),
       useNavigate: () => state.navigate,
     }),
@@ -43,7 +59,7 @@ vi.mock('@/components/root-session', () => ({
     user: { role: 'employer' },
     ready: true,
     refreshSession: state.refresh,
-    talentAccess: grant,
+    talentAccess: { ...grant, accessModel: state.accessModel },
     employerCompanies: [
       { status: 'approved', company: { id: 'company-a', name: 'Company A' } },
       { status: 'approved', company: { id: 'company-b', name: 'Company B' } },
@@ -71,16 +87,32 @@ vi.mock('@/server/talent-pages', () => ({
 vi.mock('./-talent-profile-view', () => ({
   TalentProfilePageView: ({
     companySelector,
+    canStartMessage,
+    onStartConversation,
   }: {
     companySelector: React.ReactNode;
+    canStartMessage: boolean;
+    onStartConversation: StartTalentConversation;
   }) => (
     <main>
       {companySelector}
       <p data-testid="unlocked-profile">{profile.displayName}</p>
+      <button
+        disabled={!canStartMessage}
+        onClick={() =>
+          onStartConversation({
+            candidateBoardUserId: profile.id,
+            body: 'Hello',
+          })
+        }
+      >
+        {m.talentSearch_messageLabel()}
+      </button>
     </main>
   ),
 }));
-import { TalentProfilePage } from './p.$handle';
+import { Route } from './p.$handle';
+const TalentProfilePage = Route.options.component!;
 
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
@@ -136,6 +168,8 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
   state.companyId = undefined;
+  state.routeHandle = 'candidate-1';
+  state.accessModel = 'paid_unlocks_and_messaging';
   state.gate.mockImplementation(async ({ data }) => access(data.companyId));
   state.grant.mockImplementation(async ({ data }) => ({
     ...grant,
@@ -144,6 +178,40 @@ beforeEach(() => {
   state.unlock.mockResolvedValue({ ok: true, data: { alreadyUnlocked: true } });
 });
 describe('candidate profile company context', () => {
+  it.each(['named', 'messaging-only'])(
+    'scopes messaging for %s profiles without hiding public content',
+    async (kind) => {
+      state.routeHandle = kind === 'named' ? profile.handle : profile.id;
+      state.accessModel =
+        kind === 'messaging-only'
+          ? 'paid_messaging'
+          : 'paid_unlocks_and_messaging';
+      const view = await renderRouted(<TalentProfilePage />);
+      expect(screen.getByTestId('unlocked-profile')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: m.talentSearch_messageLabel() }),
+      ).toBeDisabled();
+      expect(state.gate).not.toHaveBeenCalled();
+      state.companyId = 'company-b';
+      view.rerender(<TalentProfilePage />);
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: m.talentSearch_messageLabel() }),
+        ).toBeEnabled(),
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: m.talentSearch_messageLabel() }),
+      );
+      expect(state.start).toHaveBeenCalledWith({
+        data: {
+          candidateBoardUserId: profile.id,
+          body: 'Hello',
+          companyId: 'company-b',
+        },
+      });
+    },
+  );
+
   it('requires an explicit approved company when several memberships exist', async () => {
     await renderRouted(<TalentProfilePage />);
     expect(

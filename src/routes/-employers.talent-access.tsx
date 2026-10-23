@@ -5,7 +5,13 @@
  * invalidate. Out-of-credits plan changes call `upgrade`, never a second
  * checkout. Billing management is the company portal.
  */
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { Link } from '@tanstack/react-router';
 import { Clock } from 'lucide-react';
@@ -69,6 +75,7 @@ export type EmployersTalentViewer =
   | {
       kind: 'employer';
       hasTalentAccess: boolean;
+      ready?: boolean;
       companyId: string | null;
       companySlug: string | null;
       companies: EmployersTalentCompanyOption[];
@@ -130,6 +137,8 @@ export function EmployersTalentAccessView({
   contactPlans,
   seo,
   sessionId,
+  returnPath = EMPLOYERS_RETURN_PATH,
+  companySelector,
   viewer,
   pageDependencies,
   getTalentAccessGrantAction,
@@ -144,9 +153,13 @@ export function EmployersTalentAccessView({
   contactPlans: Plan[];
   seo: { boardName: string };
   sessionId?: string;
+  returnPath?: string;
+  companySelector?: (disabled: boolean) => ReactNode;
   viewer: EmployersTalentViewer;
   pageDependencies?: EmployersPageViewDependencies;
-  getTalentAccessGrantAction: () => Promise<TalentAccessGrant>;
+  getTalentAccessGrantAction: (input?: {
+    data?: { companyId?: string };
+  }) => Promise<TalentAccessGrant>;
   startCheckoutAction: (input: {
     data: { planId: string; returnPath: string; companyId?: string };
   }) => Promise<TalentAccessResult<TalentAccessCheckoutSession>>;
@@ -162,6 +175,13 @@ export function EmployersTalentAccessView({
   invalidate: () => Promise<void>;
   reportActionError: (message?: string) => void;
 }) {
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [kit, setKit] = useState<TalentAccessCheckoutSession | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -172,9 +192,10 @@ export function EmployersTalentAccessView({
     (viewer.kind === 'employer' && viewer.hasTalentAccess) || confirmed;
   const companyId = viewer.kind === 'employer' ? viewer.companyId : null;
   const companySlug = viewer.kind === 'employer' ? viewer.companySlug : null;
+  const selectionReady = viewer.kind !== 'employer' || viewer.ready !== false;
 
   useEffect(() => {
-    if (!polling || hasTalentAccess) return;
+    if (!polling || hasTalentAccess || !selectionReady) return;
     let stop = false;
     let attempts = 0;
     let timerId: number;
@@ -182,7 +203,9 @@ export function EmployersTalentAccessView({
       attempts += 1;
       let next;
       try {
-        next = await getTalentAccessGrantAction();
+        next = await getTalentAccessGrantAction({
+          data: { companyId: companyId ?? undefined },
+        });
       } catch {
         if (stop) return;
         setPolling(false);
@@ -209,6 +232,8 @@ export function EmployersTalentAccessView({
     };
   }, [
     getTalentAccessGrantAction,
+    companyId,
+    selectionReady,
     hasTalentAccess,
     invalidate,
     polling,
@@ -245,7 +270,7 @@ export function EmployersTalentAccessView({
       const result = await startCheckoutAction({
         data: {
           planId,
-          returnPath: EMPLOYERS_RETURN_PATH,
+          returnPath,
           companyId: selectedCompanyId ?? companyId ?? undefined,
         },
       });
@@ -285,9 +310,10 @@ export function EmployersTalentAccessView({
       const result = await openBillingPortalAction({
         data: {
           companySlug,
-          returnPath: EMPLOYERS_RETURN_PATH,
+          returnPath,
         },
       });
+      if (!mounted.current) return;
       if (result.ok) window.location.href = result.data.url;
       else reportActionError(boardErrorMessage(result));
     } catch {
@@ -324,7 +350,7 @@ export function EmployersTalentAccessView({
     );
   }
 
-  if (polling && !hasTalentAccess) {
+  if (polling && !hasTalentAccess && selectionReady) {
     return (
       <Page width="content">
         <PageContent header={<PageHeader title={m.employerLanding_title()} />}>
@@ -385,6 +411,13 @@ export function EmployersTalentAccessView({
     className: string;
     children: ReactNode;
   }) => {
+    if (viewer.kind === 'employer' && !selectionReady) {
+      return (
+        <Button className={className} disabled>
+          {children}
+        </Button>
+      );
+    }
     if (viewer.kind === 'employer' && planKind === 'free') {
       return (
         <CompanyTalentPlanAction
@@ -435,7 +468,7 @@ export function EmployersTalentAccessView({
   // customer with no way to update a failing card or cancel — dunning churn
   // with no self-service exit.
   const billingAction =
-    viewer.kind === 'employer' && companySlug ? (
+    viewer.kind === 'employer' && companySlug && selectionReady ? (
       <Button
         type="button"
         variant="outline"
@@ -454,7 +487,16 @@ export function EmployersTalentAccessView({
       plans={plans}
       contactPlans={contactPlans}
       seo={seo}
-      billingAction={billingAction}
+      billingAction={
+        companySelector ? (
+          <div className="flex flex-wrap items-end gap-3">
+            {companySelector(busy !== null)}
+            {billingAction}
+          </div>
+        ) : (
+          billingAction
+        )
+      }
       dependencies={{
         postingPlanLink:
           pageDependencies?.postingPlanLink ??

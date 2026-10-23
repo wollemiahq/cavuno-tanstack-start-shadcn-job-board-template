@@ -361,6 +361,9 @@ describe('employer talent-access checkout', () => {
     });
 
     expect(mocks.invalidate).toHaveBeenCalled();
+    expect(mocks.getTalentAccessGrant).toHaveBeenCalledWith({
+      data: { companyId: 'company-acme' },
+    });
   });
 
   it('upgrades in place when the employer already holds talent access', async () => {

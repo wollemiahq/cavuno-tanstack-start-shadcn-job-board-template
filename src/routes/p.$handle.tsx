@@ -127,7 +127,7 @@ function TalentProfileNotFound() {
   );
 }
 
-export function TalentProfilePage() {
+function TalentProfilePage() {
   const { profile } = Route.useLoaderData();
   const { handle: routeParam } = Route.useParams();
   const { companyId: requestedCompanyId } = Route.useSearch();
@@ -154,20 +154,22 @@ export function TalentProfilePage() {
     : companies.length === 1
       ? companies[0]!.id
       : undefined;
+  const needsCompanyContext =
+    sessionEmployer && ((opaque && gated) || board.features.messaging);
   const needsCompany =
-    opaque &&
-    gated &&
-    sessionEmployer &&
+    needsCompanyContext &&
     (companies.length > 1 || Boolean(requestedCompanyId && !companyId));
   const needsCandidateAccess =
-    opaque && gated && sessionEmployer && (!needsCompany || Boolean(companyId));
+    needsCompanyContext && (!needsCompany || Boolean(companyId));
   const currentCompanyAccess =
     companyAccess?.candidateId === profile.id &&
     companyAccess.companyId === companyId
       ? companyAccess
       : null;
   const candidateAccess = currentCompanyAccess?.access ?? null;
-  const scopedGrant = currentCompanyAccess?.grant ?? talentAccess;
+  const scopedGrant = needsCompanyContext
+    ? currentCompanyAccess?.grant
+    : talentAccess;
   const candidateAccessReady =
     !needsCandidateAccess || currentCompanyAccess !== null;
 
@@ -250,7 +252,7 @@ export function TalentProfilePage() {
     };
   }, [surface]);
 
-  if (needsCompany && !companyId) {
+  if (opaque && gated && needsCompany && !companyId) {
     return (
       <Page width="content">
         <PageContent>
@@ -272,6 +274,7 @@ export function TalentProfilePage() {
   if (surface !== 'profile') {
     return (
       <TalentUnlockGate
+        companyId={companyId}
         companySelector={companySelector}
         surface={surface}
         creditsRemaining={candidateAccess?.unlockCreditsRemaining ?? 0}
@@ -336,8 +339,10 @@ export function TalentProfilePage() {
       companySelector={companySelector}
       profile={profile}
       user={user}
-      hasTalentAccess={scopedGrant.hasTalentAccess}
-      canStartMessage={employerCanStartMessage(scopedGrant)}
+      hasTalentAccess={scopedGrant?.hasTalentAccess ?? false}
+      canStartMessage={Boolean(
+        scopedGrant && employerCanStartMessage(scopedGrant),
+      )}
       messagingEnabled={board.features.messaging}
       locationHref={location.href}
       onStartConversation={(input) =>
