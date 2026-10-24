@@ -1,8 +1,24 @@
 import { isRedirect } from '@tanstack/react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  appendResponseHeader: vi.fn(),
+  clearGrantForSource: vi.fn(() => 'expired-demo-grant'),
+}));
+vi.mock('@tanstack/react-start/server', () => ({
+  appendResponseHeader: mocks.appendResponseHeader,
+}));
+vi.mock('../lib/board', () => ({ getBoard: vi.fn() }));
+vi.mock('../lib/data-source.server', () => ({
+  getDataSource: () => 'demo',
+  clearGrantForSource: mocks.clearGrantForSource,
+  serializeGrantForSource: vi.fn(),
+}));
 
 import { EMPLOYER_NOT_MEMBER } from '../lib/employer-not-member';
 import { gatedRead } from './board-access';
+
+afterEach(() => vi.clearAllMocks());
 
 /** `gatedRead` is the last point at which a `BoardApiError` is still structured. */
 const context = {
@@ -48,6 +64,26 @@ describe('gatedRead', () => {
     expect(error.options.search).toEqual({
       redirect: '/companies/acme/jobs/new',
     });
+    expect(mocks.appendResponseHeader).not.toHaveBeenCalled();
+  });
+
+  it('clears a rejected grant only for the active source before rechallenging', async () => {
+    const failure = boardApiError(
+      'board_password_required',
+      401,
+      'Password required',
+    );
+    await expect(
+      gatedRead(
+        { ...context, boardAccessHeaders: { 'x-board-access': 'stale-grant' } },
+        () => Promise.reject(failure),
+      ),
+    ).rejects.toSatisfy(isRedirect);
+    expect(mocks.clearGrantForSource).toHaveBeenCalledExactlyOnceWith('demo');
+    expect(mocks.appendResponseHeader).toHaveBeenCalledExactlyOnceWith(
+      'Set-Cookie',
+      'expired-demo-grant',
+    );
   });
 
   it('turns an unapproved company claim into the loader sentinel', async () => {

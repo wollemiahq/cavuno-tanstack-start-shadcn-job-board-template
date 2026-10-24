@@ -203,7 +203,33 @@ describe('public route error backstop', () => {
     );
 
     await waitFor(() => expect(loader).toHaveBeenCalledTimes(2));
+    expect(reloadMock).not.toHaveBeenCalled();
   });
+
+  it.each([
+    'Failed to fetch dynamically imported module: /assets/menu.js',
+    'Importing a module script failed.',
+    'error loading dynamically imported module: /assets/menu.js',
+  ])(
+    'reloads on an explicit retry after a failed module import (%s)',
+    async (message) => {
+      await renderInRouter(
+        <AppRouteErrorPage
+          error={new TypeError(message)}
+          reset={vi.fn()}
+          loadDataSourceFacts={mocks.getDataSourceFacts}
+        />,
+      );
+
+      // A rejected React.lazy import stays rejected in this document even
+      // after the route loader succeeds. Only the visitor's retry reloads it.
+      expect(reloadMock).not.toHaveBeenCalled();
+      fireEvent.click(
+        screen.getByRole('button', { name: m.appError_retryAction() }),
+      );
+      expect(reloadMock).toHaveBeenCalledOnce();
+    },
+  );
 
   it('retries the failed route in place rather than navigating away', async () => {
     const reset = vi.fn();

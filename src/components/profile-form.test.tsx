@@ -91,6 +91,49 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+it('keeps a later draft while preventing overlapping profile submissions', async () => {
+  let finishSave!: (value: { ok: true }) => void;
+  const pending = new Promise<{ ok: true }>((resolve) => {
+    finishSave = resolve;
+  });
+  mocks.updateProfile
+    .mockResolvedValue({ ok: true })
+    .mockImplementationOnce(() => pending);
+  await renderWithRouter(
+    <ProfileForm
+      profile={profile}
+      language="en"
+      dependencies={mocks}
+      locationSuggestions={{
+        suggestions: [],
+        loading: false,
+        onQueryChange: vi.fn(),
+      }}
+    />,
+  );
+  const headline = screen.getByLabelText(m.profileForm_headlineLabel());
+  const save = screen.getByRole('button', { name: m.profileForm_saveLabel() });
+  const form = document.querySelector('[data-test="profile-form"]')!;
+  fireEvent.change(headline, { target: { value: 'First draft' } });
+  fireEvent.submit(form);
+  await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledOnce());
+  try {
+    fireEvent.change(headline, { target: { value: 'Latest draft' } });
+    expect(save).toBeDisabled();
+    fireEvent.submit(form);
+    expect(mocks.updateProfile).toHaveBeenCalledOnce();
+  } finally {
+    await act(async () => finishSave({ ok: true }));
+  }
+  await waitFor(() => expect(save).toBeEnabled());
+  expect(headline).toHaveValue('Latest draft');
+  fireEvent.submit(form);
+  await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalledTimes(2));
+  expect(mocks.updateProfile).toHaveBeenLastCalledWith({
+    data: expect.objectContaining({ headline: 'Latest draft' }),
+  });
+});
+
 describe('ProfileForm country', () => {
   it('submits only the explicitly selected ISO country code, independently of free-text location', async () => {
     mocks.updateProfile.mockResolvedValue({ ok: true });

@@ -212,9 +212,17 @@ describe('CookieConsentBanner', () => {
       name: m.cookieConsent_preferencesLabel(),
     });
     expect(bannerRegion()).not.toBeInTheDocument();
-    expect(
-      document.documentElement.hasAttribute(COOKIE_CONSENT_DECIDED_ATTRIBUTE),
-    ).toBe(false);
+    await waitFor(() =>
+      expect(
+        document.documentElement.hasAttribute(COOKIE_CONSENT_DECIDED_ATTRIBUTE),
+      ).toBe(false),
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.cookieConsent_preferencesLabel() }),
+    );
+    await screen.findByRole('region', {
+      name: m.cookieConsent_regionAriaLabel(),
+    });
   });
 
   it('opens until accepted, then persists the choice and closes', async () => {

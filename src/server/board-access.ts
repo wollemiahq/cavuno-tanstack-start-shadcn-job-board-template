@@ -5,11 +5,12 @@ import { isBoardApiError } from '@cavuno/board';
  * gated read's wall error into the /password redirect.
  */
 import { redirect } from '@tanstack/react-router';
-import { createServerFn } from '@tanstack/react-start';
+import { createServerFn, createServerOnlyFn } from '@tanstack/react-start';
 import { appendResponseHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import {
+  clearGrantForSource,
   getDataSource,
   serializeGrantForSource,
 } from '../lib/data-source.server';
@@ -51,24 +52,32 @@ export const verifyBoardPassword = createServerFn({ method: 'POST' })
  * `redirect`, which the router follows wherever the read ran. Anything else
  * propagates unchanged.
  */
-export async function gatedRead<T>(
-  context: BoardAccessContext,
-  read: (headers: Record<string, string>) => Promise<T>,
-): Promise<T> {
-  try {
-    return await read(context.boardAccessHeaders);
-  } catch (error) {
-    if (isBoardApiError(error) && error.code === 'board_password_required') {
-      throw redirect({
-        to: '/password',
-        search: { redirect: context.currentPath },
-      });
+export const gatedRead = createServerOnlyFn(
+  async <T>(
+    context: BoardAccessContext,
+    read: (headers: Record<string, string>) => Promise<T>,
+  ): Promise<T> => {
+    try {
+      return await read(context.boardAccessHeaders);
+    } catch (error) {
+      if (isBoardApiError(error) && error.code === 'board_password_required') {
+        if (context.boardAccessHeaders['x-board-access']) {
+          appendResponseHeader(
+            'Set-Cookie',
+            clearGrantForSource(getDataSource()),
+          );
+        }
+        throw redirect({
+          to: '/password',
+          search: { redirect: context.currentPath },
+        });
+      }
+      // Same boundary problem; a sentinel rather than a redirect because the
+      // destination depends on which route asked.
+      if (isBoardApiError(error) && error.code === EMPLOYER_NOT_MEMBER_CODE) {
+        throw new Error(EMPLOYER_NOT_MEMBER);
+      }
+      throw error;
     }
-    // Same boundary problem; a sentinel rather than a redirect because the
-    // destination depends on which route asked.
-    if (isBoardApiError(error) && error.code === EMPLOYER_NOT_MEMBER_CODE) {
-      throw new Error(EMPLOYER_NOT_MEMBER);
-    }
-    throw error;
-  }
-}
+  },
+);

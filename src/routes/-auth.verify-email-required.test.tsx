@@ -302,6 +302,32 @@ describe('/auth/verify-email-required search contract', () => {
     expect(code).toBeEnabled();
   });
 
+  it('submits a corrected full-length code after an unsuccessful attempt', async () => {
+    mocks.verifyOtpCode
+      .mockResolvedValueOnce({
+        ok: false,
+        message: m.candidateAction_errorText(),
+      })
+      .mockResolvedValueOnce({ ok: true });
+    mocks.invalidate.mockResolvedValue(undefined);
+
+    const { container } = renderVerifyPage();
+    const code = container.querySelector('input[name="code"]')!;
+    fireEvent.change(code, { target: { value: '123456' } });
+    await screen.findByRole('alert');
+    expect(code).toBeEnabled();
+
+    // A candidate can select the whole rejected code and paste its replacement.
+    fireEvent.change(code, { target: { value: '654321' } });
+    await waitFor(() => expect(mocks.verifyOtpCode).toHaveBeenCalledTimes(2));
+    expect(mocks.verifyOtpCode).toHaveBeenLastCalledWith({
+      data: { code: '654321' },
+    });
+    expect(
+      await screen.findByText(m.authVerifyEmailRequired_resumeTitle()),
+    ).toBeInTheDocument();
+  });
+
   it('recovers when resending the verification code rejects unexpectedly', async () => {
     mocks.resendOtp.mockRejectedValue(new Error('network unavailable'));
 
