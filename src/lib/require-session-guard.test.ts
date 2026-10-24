@@ -68,6 +68,20 @@ describe('requireSessionMiddleware after a revoked session', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it('transient refresh failure → its error, not a sign-in redirect', async () => {
+    const next = vi.fn(async () => 'ran');
+    const failure = new Error('refresh 429');
+
+    await expect(
+      guardRequiredSession(
+        { ...context, session: null, refreshError: failure },
+        next,
+        outcome,
+      ),
+    ).rejects.toBe(failure);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('no recovery happened → the original error propagates', async () => {
     outcome.mockReturnValue(undefined);
     const error = unauthorized();
