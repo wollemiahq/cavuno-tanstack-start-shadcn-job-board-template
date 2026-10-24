@@ -26,6 +26,7 @@ const state = vi.hoisted(() => {
     upgrade: vi.fn(),
     portal: vi.fn(),
     noCompanies: false,
+    companiesLoading: false,
   };
 });
 vi.mock('@tanstack/react-router', async (original) => {
@@ -50,30 +51,40 @@ vi.mock('@tanstack/react-router', async (original) => {
 });
 vi.mock('@/components/root-session', () => ({
   useRootSession: () => ({
-    user: { role: 'employer' },
+    user: { role: 'employer', emailVerified: true },
     ready: true,
     refreshSession: state.refresh,
     talentAccess: { ...grant, hasTalentAccess: true, companyId: null },
-    employerCompanies: state.noCompanies
-      ? []
-      : [
-          {
-            status: 'approved',
-            company: { id: 'company-a', name: 'Company A', slug: 'company-a' },
-          },
-          {
-            status: 'approved',
-            company: { id: 'company-b', name: 'Company B', slug: 'company-b' },
-          },
-          {
-            status: 'pending',
-            company: {
-              id: 'pending',
-              name: 'Pending company',
-              slug: 'pending',
+    employerCompanies: state.companiesLoading
+      ? null
+      : state.noCompanies
+        ? []
+        : [
+            {
+              status: 'approved',
+              company: {
+                id: 'company-a',
+                name: 'Company A',
+                slug: 'company-a',
+              },
             },
-          },
-        ],
+            {
+              status: 'approved',
+              company: {
+                id: 'company-b',
+                name: 'Company B',
+                slug: 'company-b',
+              },
+            },
+            {
+              status: 'pending',
+              company: {
+                id: 'pending',
+                name: 'Pending company',
+                slug: 'pending',
+              },
+            },
+          ],
   }),
 }));
 vi.mock('@/server/talent-access', () => ({
@@ -145,6 +156,7 @@ beforeEach(() => {
   state.companyId = undefined;
   state.sessionId = undefined;
   state.noCompanies = false;
+  state.companiesLoading = false;
   state.grant.mockImplementation(async ({ data }) => ({
     ...grant,
     companyId: data.companyId,
@@ -300,6 +312,13 @@ describe('employer billing company context', () => {
       screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
     ).toBeEnabled();
     expect(state.grant).not.toHaveBeenCalled();
+  });
+  it('waits for companies to load before enabling plan actions', async () => {
+    state.companiesLoading = true;
+    await renderRouted(<EmployersPage />);
+    expect(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    ).toBeDisabled();
   });
   it('does not silently replace a foreign or pending URL company', async () => {
     state.companyId = 'pending';

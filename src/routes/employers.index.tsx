@@ -114,7 +114,11 @@ function EmployersPage() {
         ? ({
             kind: 'employer' as const,
             // No approved company: the plan action reports `company_required`.
-            ready: companies.length === 0 || Boolean(currentGrant && companyId),
+            // Companies load only for verified users; wait for them first.
+            ready:
+              ((employerCompanies != null || !user.emailVerified) &&
+                companies.length === 0) ||
+              Boolean(currentGrant && companyId),
             retryGrant:
               companyId && grantFailedFor === companyId && !currentGrant
                 ? () => {
