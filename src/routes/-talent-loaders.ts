@@ -15,6 +15,8 @@ export type TalentProfileRouteDependencies = {
   getTalentProfilePage: typeof getTalentProfilePage;
 };
 
+type TalentProfileLoaderRequest = { handle: string; companyId?: string };
+
 const profileDependencies: TalentProfileRouteDependencies = {
   getTalentProfilePage,
 };
@@ -22,11 +24,19 @@ const profileDependencies: TalentProfileRouteDependencies = {
 export function createTalentProfileLoader(
   dependencies: TalentProfileRouteDependencies = profileDependencies,
 ) {
-  return async ({ params }: { params: { handle: string } }) => {
+  return async ({
+    params,
+    deps,
+  }: {
+    params: { handle: string };
+    deps?: { companyId?: string };
+  }) => {
     try {
-      return await dependencies.getTalentProfilePage({
-        data: { handle: params.handle },
-      });
+      const data: TalentProfileLoaderRequest = {
+        handle: params.handle,
+      };
+      if (deps?.companyId) data.companyId = deps.companyId;
+      return await dependencies.getTalentProfilePage({ data });
     } catch (error) {
       if (isNotFound(error)) throw notFound();
       throw error;

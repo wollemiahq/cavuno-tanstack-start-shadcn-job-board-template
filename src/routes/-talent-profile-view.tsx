@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   resolveTalentDetailCta,
@@ -24,6 +26,7 @@ import { getTalentProfilePage } from '@/server/talent-pages';
 const PRICING_HREF = '/employers';
 
 export function TalentProfilePageView({
+  companySelector,
   profile,
   user,
   hasTalentAccess = false,
@@ -33,6 +36,7 @@ export function TalentProfilePageView({
   onStartConversation,
   onConversationStarted,
 }: {
+  companySelector?: ReactNode;
   profile: Awaited<ReturnType<typeof getTalentProfilePage>>['profile'];
   user: Pick<NonNullable<RootSessionValue['user']>, 'role'> | null;
   hasTalentAccess?: boolean;
@@ -74,6 +78,7 @@ export function TalentProfilePageView({
           <DitherCanvas className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
           <Container width="wide">
             <div className="flex flex-col pt-(--header-space) pb-8 md:pb-10">
+              {companySelector}
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <TalentProfileIdentity vm={vm} headingAs="h1" size="xl" />
                 {cta.message ? (

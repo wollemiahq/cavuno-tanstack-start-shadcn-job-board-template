@@ -234,12 +234,15 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
   );
 
 export const getTalentProfilePage = createServerFn({ method: 'GET' })
-  .validator((input: { handle: string }) => input)
+  .validator((input: { handle: string; companyId?: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [profile, seo] = await Promise.all([
-        getBoard().talent.retrieve(data.handle, { headers }),
+        getBoard().talent.retrieve(data.handle, {
+          headers,
+          query: data.companyId ? { companyId: data.companyId } : undefined,
+        }),
         seoBase(),
       ]);
       const title =
