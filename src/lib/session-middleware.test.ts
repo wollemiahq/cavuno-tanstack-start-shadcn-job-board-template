@@ -83,15 +83,32 @@ describe('decideSession — the session-refresh security seam', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it('transient refresh failure propagates without requesting cookie deletion', async () => {
+  it('transient refresh failure on an expired token reads signed out and keeps the cookie', async () => {
     const current = session({ expiresAt: NOW - 1000 });
+    const failure = new Error('network blip / 500');
     const refresh = vi.fn<SessionRefresh>(async () => {
-      throw new Error('network blip / 500');
+      throw failure;
     });
 
-    await expect(decideSession(current, NOW, refresh)).rejects.toThrow(
-      'network blip / 500',
-    );
+    await expect(decideSession(current, NOW, refresh)).resolves.toEqual({
+      session: null,
+      setCookie: null,
+      refreshError: failure,
+    });
+  });
+
+  it('transient refresh failure keeps using an unexpired access token', async () => {
+    const current = session({ expiresAt: NOW + FIVE_MIN / 2 });
+    const failure = new Error('429');
+    const refresh = vi.fn<SessionRefresh>(async () => {
+      throw failure;
+    });
+
+    await expect(decideSession(current, NOW, refresh)).resolves.toEqual({
+      session: current,
+      setCookie: null,
+      refreshError: failure,
+    });
   });
 
   it('an already-expired session is treated as expiring soon (refreshes)', async () => {
