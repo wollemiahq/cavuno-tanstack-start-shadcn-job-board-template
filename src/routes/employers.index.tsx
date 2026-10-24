@@ -61,15 +61,20 @@ function EmployersPage() {
     companyId: string;
     grant: TalentAccessGrant;
   } | null>(null);
-  const currentGrant =
-    scopedAccess && scopedAccess.companyId === companyId
+  // One company: the root session's grant is already that company's.
+  const scoped = companies.length > 1 || Boolean(requestedCompanyId);
+  const currentGrant = !scoped
+    ? companyId
+      ? talentAccess
+      : null
+    : scopedAccess && scopedAccess.companyId === companyId
       ? scopedAccess.grant
       : null;
   const [grantFailedFor, setGrantFailedFor] = useState<string | null>(null);
   const [grantAttempt, setGrantAttempt] = useState(0);
 
   useEffect(() => {
-    if (!isEmployer || !companyId) return;
+    if (!isEmployer || !companyId || !scoped) return;
     let cancelled = false;
     void getTalentAccessGrant({ data: { companyId } }).then(
       (grant) => {
@@ -84,7 +89,7 @@ function EmployersPage() {
     return () => {
       cancelled = true;
     };
-  }, [isEmployer, companyId, grantAttempt]);
+  }, [isEmployer, companyId, scoped, grantAttempt]);
 
   const companySelector = (disabled: boolean) =>
     isEmployer &&
@@ -150,7 +155,7 @@ function EmployersPage() {
       openBillingPortalAction={openTalentBillingPortal}
       invalidate={async () => {
         await Promise.all([router.invalidate(), refreshSession()]);
-        if (companyId) {
+        if (companyId && scoped) {
           const grant = await getTalentAccessGrant({ data: { companyId } });
           setScopedAccess({ companyId, grant });
         }

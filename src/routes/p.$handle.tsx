@@ -66,9 +66,10 @@ async function readCandidateCompanyAccess(
   candidateId: string,
   companyId?: string,
 ) {
+  // Without an explicit company the root session's grant already applies.
   const [access, grant] = await Promise.all([
     getTalentCandidateAccess({ data: { candidateId, companyId } }),
-    getTalentAccessGrant({ data: { companyId } }),
+    companyId ? getTalentAccessGrant({ data: { companyId } }) : null,
   ]);
   return { candidateId, companyId, access, grant };
 }
@@ -154,16 +155,23 @@ function TalentProfilePage() {
     : companies.length === 1
       ? companies[0]!.id
       : undefined;
+  // A one-company employer's default context is that company, so only a
+  // choice between companies (or an explicit one) needs scoped requests.
+  const scoped = companies.length > 1 || Boolean(requestedCompanyId);
+  const requestCompanyId = scoped ? companyId : undefined;
   const needsCompanyContext =
-    sessionEmployer && ((opaque && gated) || board.features.messaging);
+    sessionEmployer &&
+    scoped &&
+    ((opaque && gated) || board.features.messaging);
   const needsCompany =
     needsCompanyContext &&
     (companies.length > 1 || Boolean(requestedCompanyId && !companyId));
-  const needsCandidateAccess =
-    needsCompanyContext && (!needsCompany || Boolean(companyId));
+  const needsCandidateAccess = scoped
+    ? needsCompanyContext && (!needsCompany || Boolean(companyId))
+    : sessionEmployer && opaque && gated;
   const currentCompanyAccess =
     companyAccess?.candidateId === profile.id &&
-    companyAccess.companyId === companyId
+    companyAccess.companyId === requestCompanyId
       ? companyAccess
       : null;
   const candidateAccess = currentCompanyAccess?.access ?? null;
@@ -198,7 +206,7 @@ function TalentProfilePage() {
       return;
     }
     let cancelled = false;
-    void readCandidateCompanyAccess(profile.id, companyId)
+    void readCandidateCompanyAccess(profile.id, requestCompanyId)
       .then((state) => {
         if (!cancelled) setCompanyAccess(state);
       })
@@ -206,7 +214,7 @@ function TalentProfilePage() {
         if (!cancelled)
           setCompanyAccess({
             candidateId: profile.id,
-            companyId,
+            companyId: requestCompanyId,
             access: null,
             grant: null,
           });
@@ -214,7 +222,7 @@ function TalentProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [needsCandidateAccess, profile.id, companyId]);
+  }, [needsCandidateAccess, profile.id, requestCompanyId]);
 
   const surface = resolveTalentProfileSurface({
     routeParam,
@@ -276,14 +284,14 @@ function TalentProfilePage() {
             const result = await unlockTalentProfile({
               data: {
                 candidateId: profile.id,
-                companyId,
+                companyId: requestCompanyId,
               },
             });
             // The spend is idempotent, so an already-unlocked reply is a
             // success: re-read and show the full profile.
             if (result.ok) {
               const [access] = await Promise.all([
-                readCandidateCompanyAccess(profile.id, companyId),
+                readCandidateCompanyAccess(profile.id, requestCompanyId),
                 router.invalidate(),
               ]);
               setCompanyAccess(access);
@@ -300,12 +308,12 @@ function TalentProfilePage() {
             const result = await upgradeTalentAccess({
               data: {
                 planId,
-                companyId,
+                companyId: requestCompanyId,
               },
             });
             if (result.ok || result.code === 'already_on_plan') {
               const [access] = await Promise.all([
-                readCandidateCompanyAccess(profile.id, companyId),
+                readCandidateCompanyAccess(profile.id, requestCompanyId),
                 refreshSession(),
                 router.invalidate(),
               ]);
@@ -335,7 +343,7 @@ function TalentProfilePage() {
       messagingEnabled={board.features.messaging}
       locationHref={location.href}
       onStartConversation={(input) =>
-        startConversation({ data: { ...input, companyId } })
+        startConversation({ data: { ...input, companyId: requestCompanyId } })
       }
       onConversationStarted={(conversationId) =>
         window.location.assign(

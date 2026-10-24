@@ -27,6 +27,7 @@ const state = vi.hoisted(() => {
     portal: vi.fn(),
     noCompanies: false,
     companiesLoading: false,
+    singleCompany: false,
   };
 });
 vi.mock('@tanstack/react-router', async (original) => {
@@ -59,32 +60,43 @@ vi.mock('@/components/root-session', () => ({
       ? null
       : state.noCompanies
         ? []
-        : [
-            {
-              status: 'approved',
-              company: {
-                id: 'company-a',
-                name: 'Company A',
-                slug: 'company-a',
+        : state.singleCompany
+          ? [
+              {
+                status: 'approved',
+                company: {
+                  id: 'company-a',
+                  name: 'Company A',
+                  slug: 'company-a',
+                },
               },
-            },
-            {
-              status: 'approved',
-              company: {
-                id: 'company-b',
-                name: 'Company B',
-                slug: 'company-b',
+            ]
+          : [
+              {
+                status: 'approved',
+                company: {
+                  id: 'company-a',
+                  name: 'Company A',
+                  slug: 'company-a',
+                },
               },
-            },
-            {
-              status: 'pending',
-              company: {
-                id: 'pending',
-                name: 'Pending company',
-                slug: 'pending',
+              {
+                status: 'approved',
+                company: {
+                  id: 'company-b',
+                  name: 'Company B',
+                  slug: 'company-b',
+                },
               },
-            },
-          ],
+              {
+                status: 'pending',
+                company: {
+                  id: 'pending',
+                  name: 'Pending company',
+                  slug: 'pending',
+                },
+              },
+            ],
   }),
 }));
 vi.mock('@/server/talent-access', () => ({
@@ -157,6 +169,7 @@ beforeEach(() => {
   state.sessionId = undefined;
   state.noCompanies = false;
   state.companiesLoading = false;
+  state.singleCompany = false;
   state.grant.mockImplementation(async ({ data }) => ({
     ...grant,
     companyId: data.companyId,
@@ -310,6 +323,14 @@ describe('employer billing company context', () => {
     await renderRouted(<EmployersPage />);
     expect(
       screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    ).toBeEnabled();
+    expect(state.grant).not.toHaveBeenCalled();
+  });
+  it('uses the session grant for a one-company employer without another read', async () => {
+    state.singleCompany = true;
+    await renderRouted(<EmployersPage />);
+    expect(
+      screen.getByRole('button', { name: m.employerLanding_upgradeLabel() }),
     ).toBeEnabled();
     expect(state.grant).not.toHaveBeenCalled();
   });
