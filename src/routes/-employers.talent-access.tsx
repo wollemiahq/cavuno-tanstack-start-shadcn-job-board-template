@@ -76,6 +76,8 @@ export type EmployersTalentViewer =
       kind: 'employer';
       hasTalentAccess: boolean;
       ready?: boolean;
+      /** Reloads the selected company's grant after a failed load. */
+      retryGrant?: () => void;
       companyId: string | null;
       companySlug: string | null;
       companies: EmployersTalentCompanyOption[];
@@ -412,6 +414,13 @@ export function EmployersTalentAccessView({
     children: ReactNode;
   }) => {
     if (viewer.kind === 'employer' && !selectionReady) {
+      if (viewer.retryGrant) {
+        return (
+          <Button className={className} onClick={viewer.retryGrant}>
+            {m.appError_retryAction()}
+          </Button>
+        );
+      }
       return (
         <Button className={className} disabled>
           {children}

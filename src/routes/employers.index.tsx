@@ -65,6 +65,8 @@ function EmployersPage() {
     scopedAccess && scopedAccess.companyId === companyId
       ? scopedAccess.grant
       : null;
+  const [grantFailedFor, setGrantFailedFor] = useState<string | null>(null);
+  const [grantAttempt, setGrantAttempt] = useState(0);
 
   useEffect(() => {
     if (!isEmployer || !companyId) return;
@@ -74,13 +76,15 @@ function EmployersPage() {
         if (!cancelled) setScopedAccess({ companyId, grant });
       },
       () => {
-        if (!cancelled) toastActionError();
+        if (cancelled) return;
+        setGrantFailedFor(companyId);
+        toastActionError();
       },
     );
     return () => {
       cancelled = true;
     };
-  }, [isEmployer, companyId]);
+  }, [isEmployer, companyId, grantAttempt]);
 
   const companySelector = (disabled: boolean) =>
     isEmployer &&
@@ -109,7 +113,15 @@ function EmployersPage() {
       : talentAccess.isEmployer
         ? ({
             kind: 'employer' as const,
-            ready: Boolean(currentGrant && companyId),
+            // No approved company: the plan action reports `company_required`.
+            ready: companies.length === 0 || Boolean(currentGrant && companyId),
+            retryGrant:
+              companyId && grantFailedFor === companyId && !currentGrant
+                ? () => {
+                    setGrantFailedFor(null);
+                    setGrantAttempt((attempt) => attempt + 1);
+                  }
+                : undefined,
             hasTalentAccess: currentGrant?.hasTalentAccess ?? false,
             companyId: companyId ?? null,
             companySlug: company?.slug ?? null,

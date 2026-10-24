@@ -25,6 +25,7 @@ const state = vi.hoisted(() => {
     claim: vi.fn(),
     upgrade: vi.fn(),
     portal: vi.fn(),
+    noCompanies: false,
   };
 });
 vi.mock('@tanstack/react-router', async (original) => {
@@ -53,20 +54,26 @@ vi.mock('@/components/root-session', () => ({
     ready: true,
     refreshSession: state.refresh,
     talentAccess: { ...grant, hasTalentAccess: true, companyId: null },
-    employerCompanies: [
-      {
-        status: 'approved',
-        company: { id: 'company-a', name: 'Company A', slug: 'company-a' },
-      },
-      {
-        status: 'approved',
-        company: { id: 'company-b', name: 'Company B', slug: 'company-b' },
-      },
-      {
-        status: 'pending',
-        company: { id: 'pending', name: 'Pending company', slug: 'pending' },
-      },
-    ],
+    employerCompanies: state.noCompanies
+      ? []
+      : [
+          {
+            status: 'approved',
+            company: { id: 'company-a', name: 'Company A', slug: 'company-a' },
+          },
+          {
+            status: 'approved',
+            company: { id: 'company-b', name: 'Company B', slug: 'company-b' },
+          },
+          {
+            status: 'pending',
+            company: {
+              id: 'pending',
+              name: 'Pending company',
+              slug: 'pending',
+            },
+          },
+        ],
   }),
 }));
 vi.mock('@/server/talent-access', () => ({
@@ -137,6 +144,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.companyId = undefined;
   state.sessionId = undefined;
+  state.noCompanies = false;
   state.grant.mockImplementation(async ({ data }) => ({
     ...grant,
     companyId: data.companyId,
@@ -268,6 +276,30 @@ describe('employer billing company context', () => {
         name: m.employerLanding_subscribeLabel(),
       }),
     ).not.toBeInTheDocument();
+  });
+  it('offers a retry when the selected company’s grant fails to load', async () => {
+    state.companyId = 'company-a';
+    state.grant.mockRejectedValueOnce(new Error('network'));
+    await renderRouted(<EmployersPage />);
+    fireEvent.click(
+      await screen.findByRole('button', { name: m.appError_retryAction() }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', {
+          name: m.employerLanding_subscribeLabel(),
+        }),
+      ).toBeEnabled(),
+    );
+    expect(state.grant).toHaveBeenCalledTimes(2);
+  });
+  it('keeps plan actions enabled for an employer with no approved company', async () => {
+    state.noCompanies = true;
+    await renderRouted(<EmployersPage />);
+    expect(
+      screen.getByRole('button', { name: m.employerLanding_subscribeLabel() }),
+    ).toBeEnabled();
+    expect(state.grant).not.toHaveBeenCalled();
   });
   it('does not silently replace a foreign or pending URL company', async () => {
     state.companyId = 'pending';
