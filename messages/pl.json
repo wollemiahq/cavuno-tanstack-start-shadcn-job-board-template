@@ -2825,5 +2825,17 @@
   "ui_sidebarDescription": "Wyświetla panel boczny na urządzeniach mobilnych.",
   "ui_sidebarTitle": "Panel boczny",
   "ui_sidebarToggleLabel": "Pokaż lub ukryj panel boczny",
-  "candidatePaywallLock_includedLabel": "W ramach tego planu"
+  "candidatePaywallLock_includedLabel": "W ramach tego planu",
+  "authLinkConfirm_title": "Potwierdź logowanie",
+  "authLinkConfirm_body": "Kontynuuj tylko wtedy, gdy prosisz o ten link logowania. Kontynuowanie może zmienić konto, na którym jesteś zalogowany.",
+  "authLinkConfirm_continueLabel": "Kontynuuj logowanie",
+  "authLinkConfirm_pendingLabel": "Logowanie…",
+  "settingsEmail_editPendingLabel": "Zmień lub wyślij potwierdzenie ponownie",
+  "threadView_loadMoreMessagesLabel": "Wczytaj więcej wiadomości",
+  "checkout_loadErrorText": "Nie udało się wczytać płatności. Spróbuj ponownie.",
+  "checkout_processingText": "Twoja płatność jest przetwarzana. Dostęp zostanie aktywowany po jej potwierdzeniu.",
+  "checkout_failedText": "Twoja płatność nie powiodła się. Wybierz plan, aby spróbować ponownie.",
+  "checkout_incompleteText": "Płatność nie została zakończona. Wróć do planów i spróbuj ponownie.",
+  "checkout_pendingTitle": "Dostęp nie został jeszcze potwierdzony",
+  "checkout_pendingText": "Dostęp nie został jeszcze potwierdzony. Sprawdź ponownie za chwilę."
 }

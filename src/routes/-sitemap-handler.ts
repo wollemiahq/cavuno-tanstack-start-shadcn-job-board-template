@@ -5,7 +5,7 @@ import {
 } from '@cavuno/board/sitemap';
 
 import { getPrimaryBoard } from '../lib/board';
-import { readPublicOrigin } from '../lib/public-origin';
+import { readPrimaryPublicOrigin } from '../lib/public-origin';
 import {
   LOCALIZED_BUCKETS,
   localizeSitemapEntries,
@@ -42,7 +42,7 @@ export type SitemapHandlerDependencies = {
 
 const defaultDependencies: SitemapHandlerDependencies = {
   getPrimaryBoard,
-  readPublicOrigin,
+  readPublicOrigin: readPrimaryPublicOrigin,
   loadSitemapContext,
 };
 

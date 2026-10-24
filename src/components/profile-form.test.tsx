@@ -858,13 +858,16 @@ describe('ProfileForm — committed overview refresh', () => {
     profileFields?: TalentProfileFields,
   ) {
     let refresh!: (next: CandidateProfile) => void;
+    let refreshFields!: (next: TalentProfileFields) => void;
     function Editor() {
       const [current, setCurrent] = useState(initial);
+      const [fields, setFields] = useState(profileFields);
+      refreshFields = setFields;
       refresh = setCurrent;
       return (
         <ProfileForm
           profile={current}
-          profileFields={profileFields}
+          profileFields={fields}
           language="en"
           dependencies={mocks}
           locationSuggestions={suggestions}
@@ -872,11 +875,44 @@ describe('ProfileForm — committed overview refresh', () => {
       );
     }
     await renderWithRouter(<Editor />);
-    return (next: CandidateProfile) => act(() => refresh(next));
+    return Object.assign((next: CandidateProfile) => act(() => refresh(next)), {
+      fields: (next: TalentProfileFields) => act(() => refreshFields(next)),
+    });
   }
   const field = (name: string) => screen.getByLabelText(name);
   const submit = () =>
     fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+
+  it('adopts recovered answers without deleting them on an unrelated save', async () => {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    const refresh = await mount(profile);
+    refresh.fields({
+      customFields: {
+        definitions: [
+          {
+            key: 'portfolio_note',
+            label: 'Portfolio note',
+            type: 'short_text',
+            required: false,
+            visibility: 'private',
+            editableByOwner: true,
+          },
+        ],
+        values: { portfolio_note: 'Previously saved answer' },
+      },
+      objectReferences: null,
+    });
+    expect(await screen.findByLabelText('Portfolio note')).toHaveValue(
+      'Previously saved answer',
+    );
+    fireEvent.change(field(m.profileForm_headlineLabel()), {
+      target: { value: 'Updated headline' },
+    });
+    submit();
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
+    expect(mocks.updateCustomFields).not.toHaveBeenCalled();
+    expect(mocks.updateObjectReferences).not.toHaveBeenCalled();
+  });
 
   it.each(['', 'rowan'])(
     'refreshes and submits imported overview from initial name %s',

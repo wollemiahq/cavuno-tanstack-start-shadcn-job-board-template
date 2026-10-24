@@ -1,3 +1,4 @@
+import { getPrimaryBoard } from './board';
 /**
  * The origin this board PUBLISHES itself at (ADR-0098).
  *
@@ -44,6 +45,19 @@ const reader = createPublicOriginReader(
 );
 
 export const readPublicOrigin = reader.readPublicOrigin;
+
+const primaryReader = createPublicOriginReader(
+  {
+    getBoardSeo: () => getPrimaryBoard().seo(),
+    getRequestOrigin: () => requestOrigin(),
+    getDataSource: () => 'board',
+    now: Date.now,
+  },
+  PUBLIC_ORIGIN_TTL_MS,
+);
+
+/** Discovery files are deployment-wide and never follow a demo cookie. */
+export const readPrimaryPublicOrigin = primaryReader.readPublicOrigin;
 
 /** Test seam: drop the memo for one data source, or all of them. */
 export function resetPublicOriginCache(source?: DataSource): void {

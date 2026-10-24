@@ -62,6 +62,7 @@ import {
 } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchSelection } from '@/hooks/use-search-selection';
+import { toastActionError } from '@/lib/action-toast';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
 import {
   pickCustomFieldSearch,
@@ -70,14 +71,15 @@ import {
 } from '@/lib/custom-field-filters';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
+import { createTalentListAutosave } from '@/lib/talent-list-autosave';
 import {
   listFiltersToTalentSearch,
   narrowsSavedPeople,
   savedPeopleFilters,
-  talentListFiltersEqual,
   talentSearchToListFilters,
   type TalentSearch,
 } from '@/lib/talent-search';
+import { subscribeTalentSearchEdits } from '@/lib/talent-search-edits';
 import {
   getEmployerTalentWorkspace,
   getPipeline,
@@ -207,32 +209,50 @@ export function TalentSearchPage({
       cancelled = true;
     };
   }, [employerSlug]);
+  const autosave = useMemo(
+    () =>
+      createTalentListAutosave(
+        async (edit) => {
+          const result = await updateTalentList({ data: edit });
+          if (!result.ok) throw new Error('Saved search update failed');
+          setLists((current) =>
+            current.map((list) =>
+              list.id === result.data.id ? result.data : list,
+            ),
+          );
+        },
+        () => {
+          void toastActionError();
+        },
+      ),
+    [],
+  );
+  const [filterEdits, setFilterEdits] = useState<TalentSearch[]>([]);
+  useEffect(
+    () =>
+      subscribeTalentSearchEdits((next) => {
+        // URL arrivals and history traversal never publish edits. Buffer only
+        // deliberate controls until ownership of the selected list is known.
+        if (!next.list || next.saved) return;
+        setFilterEdits((current) => [
+          ...current.filter((edit) => edit.list !== next.list),
+          next,
+        ]);
+      }),
+    [],
+  );
   useEffect(() => {
-    // The Saved view narrows what is shown; it never rewrites the search.
-    if (!workspace || !selectedList || search.saved) return;
-    const nextFilters = talentSearchToListFilters(search);
-    if (talentListFiltersEqual(nextFilters, selectedList.filters)) return;
-    let cancelled = false;
-    void updateTalentList({
-      data: {
+    if (!workspace || filterEdits.length === 0) return;
+    setFilterEdits([]);
+    for (const next of filterEdits) {
+      if (!next.list || !lists.some((list) => list.id === next.list)) continue;
+      autosave.enqueue({
         slug: workspace.slug,
-        listId: selectedList.id,
-        filters: nextFilters,
-      },
-    })
-      .then((result) => {
-        if (cancelled || !result.ok) return;
-        setLists((current) =>
-          current.map((list) =>
-            list.id === result.data.id ? result.data : list,
-          ),
-        );
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [search, selectedList, workspace]);
+        listId: next.list,
+        filters: talentSearchToListFilters(next),
+      });
+    }
+  }, [autosave, workspace, lists, filterEdits]);
 
   // ── Saved view: the open list's saved people, filtered like /talent ──────
   const savedRequested = Boolean(search.saved && search.list);

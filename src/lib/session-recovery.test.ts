@@ -152,14 +152,15 @@ describe('revoked session recovery at the Board API client seam', () => {
     expect(retried.get('x-board-access')).toBe('g');
   });
 
-  it('(b) a refresher that throws collapses to the same clear + anonymous retry', async () => {
+  it('(b) a transient refresh failure propagates without deleting the session', async () => {
     h.refresh.mockRejectedValue(new Error('network'));
     const fetch = api();
 
     await expect(
       wrap(fetch)('/jobs', { headers: { authorization: 'Bearer revoked' } }),
-    ).resolves.toBe('anonymous');
-    expect(h.setCookies).toEqual(['clear:board']);
+    ).rejects.toThrow('network');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(h.setCookies).toEqual([]);
   });
 
   it('(c) a non-401 error is rethrown untouched, with no refresh or retry', async () => {

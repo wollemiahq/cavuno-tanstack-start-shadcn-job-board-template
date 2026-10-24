@@ -92,6 +92,8 @@ const shellChunk = {
 
 const antiSlopLint = {
   ignorePatterns: [
+    '.deepsec/**',
+    '.worktrees/**',
     '.agent/**',
     '.agents/**',
     '.claude/**',

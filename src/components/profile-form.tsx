@@ -452,6 +452,28 @@ export function ProfileForm({
   const [selections, setSelections] = useState<ProfileSelections>(() =>
     initialProfileSelections(storedSelections),
   );
+  const editedCustomFields = useRef(new Set<string>());
+  const editedCollections = useRef(new Set<string>());
+  useEffect(() => {
+    setCustomValues((current) => ({
+      ...storedValues,
+      ...Object.fromEntries(
+        Object.entries(current).filter(([key]) =>
+          editedCustomFields.current.has(key),
+        ),
+      ),
+    }));
+  }, [profileFields?.customFields?.values]);
+  useEffect(() => {
+    setSelections((current) => ({
+      ...initialProfileSelections(storedSelections),
+      ...Object.fromEntries(
+        Object.entries(current).filter(([key]) =>
+          editedCollections.current.has(key),
+        ),
+      ),
+    }));
+  }, [profileFields?.objectReferences?.selections]);
   const [invalid, setInvalid] = useState<{
     id: string;
     message: string;
@@ -667,7 +689,9 @@ export function ProfileForm({
       }
       const values = profileCustomFieldsBody(
         inlineEntries.flatMap((entry) =>
-          entry.kind === 'custom' ? [entry.key] : [],
+          entry.kind === 'custom' && editedCustomFields.current.has(entry.key)
+            ? [entry.key]
+            : [],
         ),
         customValues,
         storedValues,
@@ -679,7 +703,10 @@ export function ProfileForm({
       }
       const references = profileObjectReferencesBody(
         inlineEntries.flatMap((entry) =>
-          entry.kind === 'collection' ? [entry.key] : [],
+          entry.kind === 'collection' &&
+          editedCollections.current.has(entry.key)
+            ? [entry.key]
+            : [],
         ),
         selections,
         storedSelections,
@@ -1109,6 +1136,7 @@ export function ProfileForm({
           required={entry.required}
           value={customValues[entry.key]}
           onChange={(value) => {
+            editedCustomFields.current.add(entry.key);
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }));
             setStatus('idle');
           }}
@@ -1120,6 +1148,7 @@ export function ProfileForm({
         definition={entry.definition}
         value={selections[entry.key] ?? []}
         onChange={(value) => {
+          editedCollections.current.add(entry.key);
           setSelections((prev) => ({ ...prev, [entry.key]: value }));
           setStatus('idle');
         }}

@@ -14,8 +14,7 @@ export type SessionRefresh = (
  * The SDK refresher holds no shared state, and the API converges concurrent
  * refreshes of the same token, so correctness does not need this. The rate
  * limit does: every refresh POST spends the API's per-IP auth bucket, which
- * all Workers-hosted boards share, and a 429 there signs the viewer out (see
- * {@link rotateOrClear}). One page render runs the session middleware once per
+ * all Workers-hosted boards share. One page render runs the session middleware once per
  * server function, so without this one page could send several refreshes.
  * The expiring-soon path and revoked-session recovery both go through the
  * same wrapped refresher, so they share one slot per token.
@@ -40,6 +39,8 @@ export function collapseRefreshesPerRequest(
 export interface SessionResolution {
   session: BoardSession | null;
   setCookie: 'clear' | 'rotate' | null;
+  /** A transient refresh failure; the cookie is kept for the next request. */
+  refreshError?: unknown;
 }
 
 /** Pure session-refresh state transition. */
@@ -54,7 +55,17 @@ export async function decideSession(
     return { session, setCookie: null };
   }
 
-  return rotateOrClear(session, refresh);
+  try {
+    return await rotateOrClear(session, refresh);
+  } catch (refreshError) {
+    // Keep the cookie so the next request retries. An unexpired access token
+    // still works; an expired one reads as signed out for this request only.
+    return {
+      session: session.expiresAt > now ? session : null,
+      setCookie: null,
+      refreshError,
+    };
+  }
 }
 
 /**
@@ -70,20 +81,14 @@ export function decideRejectedSession(
 }
 
 /**
- * The catch collapses ANY refresh throw to the signed-out/clear branch (the
- * refresher returns null only on a 401 and rethrows the rest): never loop,
- * never surface the error to the caller.
+ * Only an explicit revoked-session result clears the cookie. Transient
+ * failures propagate so the next request can retry the existing session.
  */
 async function rotateOrClear(
   session: BoardSession,
   refresh: SessionRefresh,
 ): Promise<SessionResolution & { setCookie: 'clear' | 'rotate' }> {
-  let next: BoardSession | null;
-  try {
-    next = await refresh(session);
-  } catch {
-    next = null;
-  }
+  const next = await refresh(session);
 
   if (!next) return { session: null, setCookie: 'clear' };
   return { session: next, setCookie: 'rotate' };

@@ -68,9 +68,13 @@ export function readCookieConsent(
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${COOKIE_CONSENT_COOKIE}=`));
   if (!pair) return null;
-  const [head = '', ...rest] = decodeURIComponent(
-    pair.slice(COOKIE_CONSENT_COOKIE.length + 1),
-  ).split('.');
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pair.slice(COOKIE_CONSENT_COOKIE.length + 1));
+  } catch {
+    return null;
+  }
+  const [head = '', ...rest] = decoded.split('.');
   const lastChoice = cookieConsentChoice(head);
   if (!lastChoice) return null;
   const consentId = rest.find((part) => CONSENT_ID_RE.test(part)) ?? null;

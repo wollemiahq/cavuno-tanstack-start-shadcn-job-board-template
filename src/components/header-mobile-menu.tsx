@@ -47,11 +47,18 @@ export function HeaderMobileMenu({
   // Lock page scroll behind the panel for its lifetime.
   useEffect(() => {
     const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const desktop = window.matchMedia('(min-width: 80rem)');
+    const update = () => {
+      document.body.style.overflow = desktop.matches ? previous : 'hidden';
+      if (desktop.matches) onOpenChange(false);
+    };
+    update();
+    desktop.addEventListener('change', update);
     return () => {
+      desktop.removeEventListener('change', update);
       document.body.style.overflow = previous;
     };
-  }, []);
+  }, [onOpenChange]);
 
   return (
     <div

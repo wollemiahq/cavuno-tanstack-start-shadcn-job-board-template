@@ -37,6 +37,7 @@ import {
 } from '@/lib/custom-field-filters';
 import type { UrlSearchInput } from '@/lib/pagination';
 import { parseTalentSearch, type TalentSearch } from '@/lib/talent-search';
+import { publishTalentSearchEdit } from '@/lib/talent-search-edits';
 import type { CustomFieldFilter } from '@cavuno/board';
 
 const ANY = '__any__';
@@ -223,14 +224,12 @@ export const TalentFilters = memo(function TalentFilters({
   ) => {
     void navigate({
       search: (previous) => {
-        const next = {
-          ...previous,
-          ...patch,
-          page: undefined,
-        };
-        return parseTalentSearch(
+        const next = { ...previous, ...patch, page: undefined };
+        const parsed = parseTalentSearch(
           customFields ? withCustomFieldFilters(next, customFields) : next,
         );
+        publishTalentSearchEdit(parsed);
+        return parsed;
       },
     });
   };

@@ -29,6 +29,7 @@ import { SelectedJobDetail } from './-selected-job-detail';
 import { useSelectedJob } from './-use-selected-job';
 
 import { toSavedJobCardVM } from '@/board/job-view-model';
+import { CursorPagination } from '@/components/board/cursor-pagination';
 import { JobSearchResult } from '@/components/board/job-search-result';
 import {
   CandidateRouteErrorPage,
@@ -53,21 +54,31 @@ import {
 } from '@/lib/board-datalayer-events';
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
-import { searchString, type UrlSearchInput } from '@/lib/pagination';
+import {
+  cursorSearchValue,
+  cursorPageHref,
+  searchString,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 
 const rootApi = getRouteApi('__root__');
+type SavedJobsSearch = { selectedJob?: string; cursor?: string };
 
 export const Route = createFileRoute('/saved-jobs')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
-  validateSearch: (search: UrlSearchInput): { selectedJob?: string } => {
+  validateSearch: (search: UrlSearchInput): SavedJobsSearch => {
     const selectedJob = searchString(search.selectedJob);
-    return selectedJob ? { selectedJob } : {};
+    return { selectedJob, cursor: cursorSearchValue(search.cursor) };
   },
   pendingComponent: CandidateRoutePendingPage,
   errorComponent: CandidateRouteErrorPage,
-  loader: async ({ location }) => {
+  loaderDeps: ({ search }) => ({ cursor: search.cursor }),
+  loader: async ({ deps, location }) => {
     try {
-      const [saved, seo] = await Promise.all([getSavedJobs(), getSeoBase()]);
+      const [saved, seo] = await Promise.all([
+        getSavedJobs({ data: { cursor: deps.cursor } }),
+        getSeoBase(),
+      ]);
       return { ...saved, seo };
     } catch (error) {
       if (isRedirect(error)) throw error;
@@ -113,6 +124,19 @@ function SavedJobsPage() {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
+  const removeSaved = async (saved: { id: string; jobId: string }) => {
+    setPendingId(saved.id);
+    try {
+      await unsaveJob({ data: { jobId: saved.jobId } });
+    } catch {
+      void toastActionError();
+      setPendingId(null);
+      return;
+    }
+    await reconcileCommittedAction(() => router.invalidate());
+    setPendingId(null);
+  };
+
   const rows = savedJobs.data.flatMap((saved) => {
     if (!saved.job) return [];
     const vm = toSavedJobCardVM(saved.job, getLocale(), board);
@@ -127,11 +151,14 @@ function SavedJobsPage() {
     resultIds: selectableSlugs,
     onReplace: (selectedJob) =>
       navigate({
-        search: () => ({ selectedJob }),
+        search: (previous) => ({ ...previous, selectedJob }),
         replace: true,
       }),
     onPush: (selectedJob) =>
-      navigate({ search: () => ({ selectedJob }), resetScroll: false }),
+      navigate({
+        search: (previous) => ({ ...previous, selectedJob }),
+        resetScroll: false,
+      }),
   });
   const selectedSlug = selectableSlugs.includes(search.selectedJob ?? '')
     ? search.selectedJob
@@ -222,22 +249,7 @@ function SavedJobsPage() {
                                 aria-label={m.accountHome_unsaveLabel()}
                                 title={m.accountHome_unsaveLabel()}
                                 disabled={pendingId === saved.id}
-                                onClick={async () => {
-                                  setPendingId(saved.id);
-                                  try {
-                                    await unsaveJob({
-                                      data: { jobId: saved.jobId },
-                                    });
-                                  } catch {
-                                    void toastActionError();
-                                    setPendingId(null);
-                                    return;
-                                  }
-                                  await reconcileCommittedAction(() =>
-                                    router.invalidate(),
-                                  );
-                                  setPendingId(null);
-                                }}
+                                onClick={() => void removeSaved(saved)}
                               >
                                 <Bookmark
                                   aria-hidden
@@ -270,24 +282,12 @@ function SavedJobsPage() {
                           size="lg"
                           title={m.accountHome_unsaveLabel()}
                           disabled={pendingId !== null}
-                          onClick={async () => {
+                          onClick={() => {
                             const saved = savedJobs.data.find(
                               (entry) =>
                                 entry.job?.slug === selectedJobState.job?.slug,
                             );
-                            if (!saved) return;
-                            setPendingId(saved.id);
-                            try {
-                              await unsaveJob({ data: { jobId: saved.jobId } });
-                            } catch {
-                              void toastActionError();
-                              setPendingId(null);
-                              return;
-                            }
-                            await reconcileCommittedAction(() =>
-                              router.invalidate(),
-                            );
-                            setPendingId(null);
+                            if (saved) void removeSaved(saved);
                           }}
                         >
                           <Bookmark
@@ -304,6 +304,23 @@ function SavedJobsPage() {
               }
             />
           )}
+        </div>
+        <div className="py-4">
+          <CursorPagination
+            hasPrevious={Boolean(search.cursor)}
+            hasNext={Boolean(savedJobs.hasMore && savedJobs.nextCursor)}
+            nextHref={
+              savedJobs.nextCursor
+                ? cursorPageHref('/saved-jobs', savedJobs.nextCursor)
+                : undefined
+            }
+            onPrevious={() => router.history.back()}
+            onNext={() =>
+              void navigate({
+                search: { cursor: savedJobs.nextCursor ?? undefined },
+              })
+            }
+          />
         </div>
       </main>
     </Page>

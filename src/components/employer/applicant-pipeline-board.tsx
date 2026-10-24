@@ -696,12 +696,14 @@ function ApplicantDetailBody({
           onSubmit={async (event) => {
             event.preventDefault();
             if (!note.trim()) return;
+            const submittedNote = note;
             const ok = await run('note', () =>
               actions.addApplicantNote({
                 data: { slug, applicationId: card.id, body: note.trim() },
               }),
             );
-            if (ok) setNote('');
+            if (ok)
+              setNote((current) => (current === submittedNote ? '' : current));
           }}
         >
           <Field

@@ -38,12 +38,7 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
+import { Field, FieldError, FieldSet, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Item,
@@ -126,6 +121,7 @@ export function ExperienceSection({
   const locationInput = useRef<HTMLInputElement>(null);
 
   const open = (item: CandidateExperience | null) => {
+    if (pending) return;
     setEditing({ id: item ? item.id : null });
     setDraft(item ? toDraft(item) : EMPTY);
     setLocationUnpicked(false);
@@ -133,6 +129,7 @@ export function ExperienceSection({
   };
 
   const submit = async () => {
+    if (pending) return;
     if (locationUnpicked && draft.location.trim()) {
       setLocationPickError(true);
       locationInput.current?.focus();
@@ -174,7 +171,7 @@ export function ExperienceSection({
           void submit();
         }}
       >
-        <FieldGroup className="gap-3">
+        <FieldSet disabled={pending} className="gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field className="gap-1.5">
               <FieldLabel htmlFor="experience-title">
@@ -321,12 +318,17 @@ export function ExperienceSection({
                 : m.experienceSection_saveLabel()}
             </Button>
           </div>
-        </FieldGroup>
+        </FieldSet>
       </form>
     ) : null;
 
   const addButton = (
-    <Button variant="outline" size="sm" onClick={() => open(null)}>
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      onClick={() => open(null)}
+    >
       {m.experienceSection_addLabel()}
     </Button>
   );
@@ -378,6 +380,7 @@ export function ExperienceSection({
                     size="icon-sm"
                     aria-label={m.experienceSection_editLabel()}
                     title={m.experienceSection_editLabel()}
+                    disabled={pending}
                     onClick={() => open(item)}
                   >
                     <Pencil aria-hidden />
@@ -412,7 +415,7 @@ export function ExperienceSection({
         <Dialog
           open={editing !== null && editing.id === null}
           onOpenChange={(open) => {
-            if (!open) setEditing(null);
+            if (!open && !pending) setEditing(null);
           }}
         >
           <DialogContent className="sm:max-w-xl">
@@ -426,7 +429,7 @@ export function ExperienceSection({
         <Sheet
           open={editing !== null && editing.id !== null}
           onOpenChange={(open) => {
-            if (!open) setEditing(null);
+            if (!open && !pending) setEditing(null);
           }}
         >
           <SheetContent side="right" className="w-full gap-0 sm:max-w-lg">

@@ -4,6 +4,9 @@
  */
 
 import { canonicalPathname, localizePath } from './localized-path';
+import { MAGIC_LINK_BROWSER_BINDING_PARAM } from './magic-link-intent';
+import { OAUTH_BROWSER_BINDING_PARAM } from './oauth-browser-binding';
+import { safeRedirectPath } from './safe-redirect-path';
 
 export const CAVUNO_AUTH_PARAM = 'cavuno_auth';
 export const CAVUNO_AUTH_METHOD_PARAM = 'cavuno_auth_method';
@@ -99,7 +102,7 @@ export function appendAuthConversionQuery(
   event: BoardAuthEvent,
   method: BoardAuthMethod,
 ): string {
-  const url = new URL(href, 'https://example.com');
+  const url = new URL(safeRedirectPath(href), 'https://example.com');
   url.searchParams.set(CAVUNO_AUTH_PARAM, event);
   url.searchParams.set(CAVUNO_AUTH_METHOD_PARAM, method);
   return `${url.pathname}${url.search}${url.hash}`;
@@ -109,7 +112,7 @@ export function appendAuthIntentQuery(
   href: string,
   intent: BoardAuthEvent,
 ): string {
-  const url = new URL(href, 'https://example.com');
+  const url = new URL(safeRedirectPath(href), 'https://example.com');
   url.searchParams.set(CAVUNO_AUTH_INTENT_PARAM, intent);
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -118,7 +121,7 @@ export function appendOAuthProviderHint(
   href: string,
   provider: 'google' | 'linkedin',
 ): string {
-  const url = new URL(href, 'https://example.com');
+  const url = new URL(safeRedirectPath(href), 'https://example.com');
   url.searchParams.set(CAVUNO_OAUTH_PROVIDER_PARAM, provider);
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -224,10 +227,12 @@ export function resolvePostAuthConversionRedirect(
     fallbackMethod: BoardAuthMethod;
   },
 ): string {
-  const url = new URL(returnTo, 'https://example.com');
+  const url = new URL(safeRedirectPath(returnTo), 'https://example.com');
   const provider = url.searchParams.get(CAVUNO_OAUTH_PROVIDER_PARAM);
   url.searchParams.delete(CAVUNO_AUTH_INTENT_PARAM);
   url.searchParams.delete(CAVUNO_OAUTH_PROVIDER_PARAM);
+  url.searchParams.delete(OAUTH_BROWSER_BINDING_PARAM);
+  url.searchParams.delete(MAGIC_LINK_BROWSER_BINDING_PARAM);
   const event: BoardAuthEvent = input.isNewUser ? 'sign_up' : 'login';
   const method: BoardAuthMethod =
     input.fallbackMethod === 'magic_link'

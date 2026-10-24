@@ -85,6 +85,17 @@ export function SettingsEmailCard({
             {m.settingsEmail_pendingBody({ email: pendingEmail })}
           </CardDescription>
         </CardHeader>
+        <CardFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setValue(pendingEmail);
+              setPendingEmail(null);
+            }}
+          >
+            {m.settingsEmail_editPendingLabel()}
+          </Button>
+        </CardFooter>
       </Card>
     );
   }

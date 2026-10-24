@@ -74,7 +74,7 @@ export type EmployersTalentViewer =
       companies: EmployersTalentCompanyOption[];
     };
 
-function FreeTalentPlanAction({
+function CompanyTalentPlanAction({
   planId,
   className,
   children,
@@ -216,6 +216,7 @@ export function EmployersTalentAccessView({
   ]);
 
   const handleCheckoutComplete = useCallback(() => {
+    setKit(null);
     setPolling(true);
   }, []);
 
@@ -245,7 +246,7 @@ export function EmployersTalentAccessView({
         data: {
           planId,
           returnPath: EMPLOYERS_RETURN_PATH,
-          companyId: companyId ?? undefined,
+          companyId: selectedCompanyId ?? companyId ?? undefined,
         },
       });
       if (result.ok) setKit(result.data);
@@ -257,11 +258,14 @@ export function EmployersTalentAccessView({
     }
   }
 
-  async function upgrade(planId: string) {
+  async function upgrade(planId: string, selectedCompanyId?: string) {
     setBusy(planId);
     try {
       const result = await upgradeAction({
-        data: { planId, companyId: companyId ?? undefined },
+        data: {
+          planId,
+          companyId: selectedCompanyId ?? companyId ?? undefined,
+        },
       });
       // `already_on_plan` is the company asking for the plan it holds: nothing
       // changed, so re-reading is the honest response, not an error toast.
@@ -346,8 +350,8 @@ export function EmployersTalentAccessView({
         <PageContent>
           <EmptyState
             icon={<Clock aria-hidden="true" />}
-            title={m.employerLanding_paymentReceivedTitle()}
-            description={m.employerLanding_paymentReceivedBody()}
+            title={m.checkout_pendingTitle()}
+            description={m.checkout_pendingText()}
             action={
               <Button
                 onClick={async () => {
@@ -383,7 +387,7 @@ export function EmployersTalentAccessView({
   }) => {
     if (viewer.kind === 'employer' && planKind === 'free') {
       return (
-        <FreeTalentPlanAction
+        <CompanyTalentPlanAction
           planId={planId}
           className={className}
           companies={viewer.companies}
@@ -393,33 +397,23 @@ export function EmployersTalentAccessView({
           }
         >
           {children}
-        </FreeTalentPlanAction>
+        </CompanyTalentPlanAction>
       );
     }
-    if (canCheckout) {
+    if (canCheckout || canUpgrade) {
       return (
-        <button
-          type="button"
+        <CompanyTalentPlanAction
+          planId={planId}
           className={className}
-          disabled={busy !== null}
-          onClick={() => void subscribe(planId, planKind)}
+          companies={viewer.companies}
+          busy={busy !== null}
+          onClaim={(selectedCompanyId) => {
+            if (canUpgrade) void upgrade(planId, selectedCompanyId);
+            else void subscribe(planId, planKind, selectedCompanyId);
+          }}
         >
-          {busy === planId ? m.employerLanding_startingLabel() : children}
-        </button>
-      );
-    }
-    if (canUpgrade) {
-      return (
-        <button
-          type="button"
-          className={className}
-          disabled={busy !== null}
-          onClick={() => void upgrade(planId)}
-        >
-          {busy === planId
-            ? m.employerLanding_startingLabel()
-            : m.employerLanding_upgradeLabel()}
-        </button>
+          {canUpgrade ? m.employerLanding_upgradeLabel() : children}
+        </CompanyTalentPlanAction>
       );
     }
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 
 import {
   isColdRule,
@@ -63,6 +63,7 @@ export function ThreadView({
   messages,
   blocked,
   statusError,
+  historyControl,
   companyHref,
   onBack,
   onClose,
@@ -81,6 +82,7 @@ export function ThreadView({
   messages: Message[];
   blocked: boolean;
   statusError?: string | null;
+  historyControl?: ReactNode;
   companyHref?: string;
   onBack?: () => void;
   onClose?: () => void;
@@ -309,6 +311,7 @@ export function ThreadView({
                   </Fragment>
                 );
               })}
+              {historyControl}
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton

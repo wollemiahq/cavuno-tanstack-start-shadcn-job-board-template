@@ -6,13 +6,13 @@
  */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { getBoard } from '../lib/board';
+import { getPrimaryBoard } from '../lib/board';
 import { robotsResponse } from '../lib/seo-handlers';
 
 export const Route = createFileRoute('/robots.txt')({
   server: {
     handlers: {
-      GET: async () => robotsResponse(await getBoard().seo()),
+      GET: async () => robotsResponse(await getPrimaryBoard().seo()),
     },
   },
 });

@@ -2715,5 +2715,17 @@
   "ui_sidebarDescription": "Affiche la barre latérale mobile.",
   "ui_sidebarTitle": "Barre latérale",
   "ui_sidebarToggleLabel": "Afficher ou masquer la barre latérale",
-  "candidatePaywallLock_includedLabel": "Inclus dans cette offre"
+  "candidatePaywallLock_includedLabel": "Inclus dans cette offre",
+  "authLinkConfirm_title": "Confirmer la connexion",
+  "authLinkConfirm_body": "Continuez uniquement si vous avez demandé ce lien. Continuer peut changer le compte auquel vous êtes connecté.",
+  "authLinkConfirm_continueLabel": "Continuer la connexion",
+  "authLinkConfirm_pendingLabel": "Connexion en cours…",
+  "settingsEmail_editPendingLabel": "Modifier ou renvoyer la confirmation",
+  "threadView_loadMoreMessagesLabel": "Charger plus de messages",
+  "checkout_loadErrorText": "Impossible de charger le paiement. Réessayez.",
+  "checkout_processingText": "Votre paiement est en cours de traitement. L’accès sera activé après confirmation.",
+  "checkout_failedText": "Votre paiement a échoué. Choisissez une offre pour réessayer.",
+  "checkout_incompleteText": "Le paiement n’est pas terminé. Revenez aux offres pour réessayer.",
+  "checkout_pendingTitle": "Accès pas encore confirmé",
+  "checkout_pendingText": "L’accès n’est pas encore confirmé. Vérifiez à nouveau dans un instant."
 }

@@ -1,68 +1,55 @@
-import { isRedirect } from '@tanstack/react-router';
-import '@testing-library/jest-dom/vitest';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+import { describe, expect, it, vi } from 'vitest';
 
 import { loadMagicLink } from './auth.magic-link';
 
-import { appendAuthIntentQuery } from '@/lib/board-datalayer-events';
-// @vitest-environment jsdom
-import { localizePath } from '@/lib/localized-path';
-
-const mocks = {
-  consumeMagicLink: vi.fn(),
-  getSeoBase: vi.fn().mockResolvedValue({
-    boardName: 'Acme Board',
-    language: 'en',
-    origin: 'https://board.example',
-  }),
-};
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
-describe('/auth/magic-link loader', () => {
-  it('redirects returning magic-link users to login', async () => {
-    mocks.consumeMagicLink.mockResolvedValue({ ok: true, isNewUser: false });
-    let result: unknown;
-    try {
-      await loadMagicLink(
-        {
-          token: 'magic-token',
-          returnTo: appendAuthIntentQuery('/account', 'sign_up'),
-        },
-        mocks,
-      );
-    } catch (error) {
-      result = error;
-    }
-
-    expect(isRedirect(result)).toBe(true);
-    if (!isRedirect(result)) return;
-    expect(result.options.href).toBe(
-      '/account?cavuno_auth=login&cavuno_auth_method=magic_link',
+describe('authentication completion GET', () => {
+  it('prepares confirmation without exchanging a token or creating a session', async () => {
+    const consumeMagicLink = vi.fn();
+    const actions = {
+      getSeoBase: vi.fn().mockRejectedValue(new Error('metadata unavailable')),
+      consumeMagicLink,
+    };
+    const result = await loadMagicLink(
+      { token: 'unused-token', returnTo: '/account' },
+      actions,
     );
+    expect(result.status).toBe('ready');
+    expect(consumeMagicLink).not.toHaveBeenCalled();
   });
 
-  it('redirects new magic-link users to sign_up', async () => {
-    mocks.consumeMagicLink.mockResolvedValue({ ok: true, isNewUser: true });
-    let result: unknown;
-    try {
-      await loadMagicLink(
-        {
-          token: 'magic-token',
-          returnTo: appendAuthIntentQuery('/account', 'login'),
-        },
-        mocks,
-      );
-    } catch (error) {
-      result = error;
-    }
-
-    expect(isRedirect(result)).toBe(true);
-    if (!isRedirect(result)) return;
-    expect(result.options.href).toBe(
-      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/account'))}&cavuno_auth=sign_up&cavuno_auth_method=magic_link`,
+  it('checks the email request binding before deciding whether to continue automatically', async () => {
+    const getAuthFlowState = vi
+      .fn()
+      .mockResolvedValue({ 'magic-link-requested': false });
+    const result = await loadMagicLink(
+      {
+        token: 'older-valid-token',
+        returnTo: '/jobs?q=robotics&cavuno_magic_binding=request-a',
+      },
+      {
+        getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Example' }),
+        getAuthFlowState,
+      },
     );
+    expect(getAuthFlowState).toHaveBeenCalledWith({
+      data: { magicLinkBinding: 'request-a' },
+    });
+    expect(result).toMatchObject({ status: 'ready', automatic: false });
+  });
+
+  it('recognizes a stored credential without returning it to the browser', async () => {
+    const result = await loadMagicLink(
+      { returnTo: '/account' },
+      {
+        getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Example' }),
+        getAuthFlowState: async () => ({ 'magic-link': true }),
+      },
+    );
+    expect(result).toEqual({
+      status: 'ready',
+      automatic: false,
+      seo: { boardName: 'Example' },
+    });
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Link } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
@@ -16,6 +16,7 @@ import { BlockedList } from '@/components/messages/blocked-list';
 import { InboxList } from '@/components/messages/inbox-list';
 import { ThreadView } from '@/components/messages/thread-view';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   InputGroup,
   InputGroupAddon,
@@ -76,6 +77,10 @@ export const messagesRuntimeDependencies: MessagesRuntimeDependencies = {
   useVisiblePoll,
 };
 const MESSAGING_POLL_INTERVAL_MS = 15_000;
+type ThreadMessagePage = {
+  nextCursor: string | null;
+  hasMore: boolean;
+};
 
 export function InboxController({
   initial,
@@ -97,6 +102,11 @@ export function InboxController({
   const [hasMore, setHasMore] = useState(initial.hasMore);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  useEffect(() => {
+    setConversations(initial.data);
+    setNextCursor(initial.nextCursor);
+    setHasMore(initial.hasMore);
+  }, [initial]);
 
   dependencies.useVisiblePoll(
     () =>
@@ -345,22 +355,70 @@ export function ThreadController({
   const [messages, setMessages] = useState(initialMessages.data);
   const [blocked, setBlocked] = useState(initialBlockStatus.blocked);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [page, setPage] = useState<ThreadMessagePage>({
+    nextCursor: initialMessages.nextCursor,
+    hasMore: initialMessages.hasMore,
+  });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const inFlight = useRef<symbol | null>(null);
   const latestMessageId = messages.at(-1)?.id;
 
-  const refresh = async () => {
-    try {
-      const result = await dependencies.getThread({
-        data: { id: conversation.id },
-      });
-      setConversation(result.conversation);
-      setMessages((current) => mergeMessages(current, result.messages.data));
-      setBlocked(result.blockStatus.blocked);
-      setSyncError(null);
-    } catch (error) {
-      setSyncError(errorMessage(error));
-      throw error;
-    }
-  };
+  useEffect(
+    () => () => {
+      inFlight.current = null;
+    },
+    [],
+  );
+
+  const loadPage = useCallback(
+    async (cursor?: string, refreshHistory = false) => {
+      if (inFlight.current) return;
+      const request = Symbol();
+      inFlight.current = request;
+      setLoadingMore(true);
+      try {
+        let currentCursor = cursor;
+        const visited = new Set<string | undefined>();
+        do {
+          visited.add(currentCursor);
+          const result = await dependencies.getThread({
+            data: { id: initialConversation.id, cursor: currentCursor },
+          });
+          if (inFlight.current !== request) return;
+          const next = result.messages.nextCursor;
+          if (result.messages.hasMore && (!next || visited.has(next)))
+            throw new Error('Invalid message cursor');
+          setConversation(result.conversation);
+          setMessages((current) =>
+            mergeMessages(current, result.messages.data),
+          );
+          setBlocked(result.blockStatus.blocked);
+          setPage({ nextCursor: next, hasMore: result.messages.hasMore });
+          setSyncError(null);
+          if (!refreshHistory || !result.messages.hasMore) break;
+          currentCursor = next ?? undefined;
+        } while (currentCursor !== undefined);
+      } catch (error) {
+        if (inFlight.current === request) setSyncError(errorMessage(error));
+        throw error;
+      } finally {
+        if (inFlight.current === request) {
+          inFlight.current = null;
+          setLoadingMore(false);
+        }
+      }
+    },
+    [dependencies, initialConversation.id],
+  );
+  // Earlier pages contain editable messages and unsend tombstones too.
+  const refresh = () => loadPage(undefined, true);
+
+  // Drain forward pages so oldest-first histories reach current replies.
+  // A failed page stays available through the explicit retry control.
+  useEffect(() => {
+    if (page.hasMore && page.nextCursor)
+      void loadPage(page.nextCursor).catch(() => {});
+  }, [loadPage, page.hasMore, page.nextCursor]);
 
   dependencies.useVisiblePoll(
     () => refresh().catch(() => {}),
@@ -368,10 +426,18 @@ export function ThreadController({
   );
 
   useEffect(() => {
+    if (page.hasMore || loadingMore || syncError) return;
     void dependencies
       .markRead({ data: { id: conversation.id } })
       .catch((error) => setSyncError(errorMessage(error)));
-  }, [conversation.id, dependencies, latestMessageId]);
+  }, [
+    conversation.id,
+    dependencies,
+    latestMessageId,
+    page.hasMore,
+    loadingMore,
+    syncError,
+  ]);
 
   return (
     <ThreadView
@@ -379,6 +445,19 @@ export function ThreadController({
       messages={messages}
       blocked={blocked}
       statusError={syncError}
+      historyControl={
+        page.hasMore ? (
+          <Button
+            variant="outline"
+            disabled={loadingMore}
+            onClick={() =>
+              void loadPage(page.nextCursor ?? undefined).catch(() => {})
+            }
+          >
+            {m.threadView_loadMoreMessagesLabel()}
+          </Button>
+        ) : null
+      }
       companyHref={companyHref}
       onBack={onBack}
       onClose={onClose}

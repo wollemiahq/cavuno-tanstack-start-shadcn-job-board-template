@@ -122,7 +122,8 @@ function isCustomFieldParam(param: string): param is CustomFieldParam {
 
 function valueTokens(value: UrlSearchValue): string[] {
   if (value === true) return ['true'];
-  if (Array.isArray(value)) return value.flatMap((item) => item.split(','));
+  if (Array.isArray(value))
+    return value.flatMap((item) => searchString(item)?.split(',') ?? []);
   const number = searchNumber(value);
   if (number !== undefined) return [String(number)];
   return searchString(value)?.split(',') ?? [];

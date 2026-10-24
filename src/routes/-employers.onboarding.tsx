@@ -189,6 +189,7 @@ function WorkEmailStep({
     setEditing(false);
     try {
       await dependencies.invalidate();
+      setStatus('idle');
     } catch {
       setStatus('error');
       setMessage(m.employerCompany_reconciliationError());

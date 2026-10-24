@@ -2715,5 +2715,17 @@
   "ui_sidebarDescription": "Muestra la barra lateral en móvil.",
   "ui_sidebarTitle": "Barra lateral",
   "ui_sidebarToggleLabel": "Mostrar u ocultar la barra lateral",
-  "candidatePaywallLock_includedLabel": "Incluido en este plan"
+  "candidatePaywallLock_includedLabel": "Incluido en este plan",
+  "authLinkConfirm_title": "Confirmar inicio de sesión",
+  "authLinkConfirm_body": "Continúa solo si solicitaste este enlace. Al continuar, puede cambiar la cuenta en la que has iniciado sesión.",
+  "authLinkConfirm_continueLabel": "Continuar e iniciar sesión",
+  "authLinkConfirm_pendingLabel": "Iniciando sesión…",
+  "settingsEmail_editPendingLabel": "Cambiar o reenviar confirmación",
+  "threadView_loadMoreMessagesLabel": "Cargar más mensajes",
+  "checkout_loadErrorText": "No pudimos cargar el pago. Inténtalo de nuevo.",
+  "checkout_processingText": "Tu pago se está procesando. El acceso se activará cuando se confirme.",
+  "checkout_failedText": "Tu pago no se completó. Elige un plan para intentarlo de nuevo.",
+  "checkout_incompleteText": "La compra no está completa. Puedes volver a los planes e intentarlo de nuevo.",
+  "checkout_pendingTitle": "Acceso aún no confirmado",
+  "checkout_pendingText": "Aún no hemos confirmado el acceso. Vuelve a comprobarlo en breve."
 }

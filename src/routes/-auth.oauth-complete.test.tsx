@@ -1,65 +1,31 @@
 // @vitest-environment jsdom
-import '@testing-library/jest-dom/vitest';
-import { isRedirect } from '@tanstack/react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { loadOAuthComplete } from './auth.oauth-complete';
 
-import {
-  appendAuthIntentQuery,
-  appendOAuthProviderHint,
-} from '@/lib/board-datalayer-events';
-import { candidateOAuthReturnTo } from '@/lib/candidate-return-to';
-import { localizePath } from '@/lib/localized-path';
-
-const mocks = {
-  exchangeOAuth: vi.fn(),
-  getSeoBase: vi.fn().mockResolvedValue({
-    boardName: 'Acme Board',
-    language: 'en',
-    origin: 'https://board.example',
-  }),
-};
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
-
-describe('/auth/oauth-complete loader', () => {
-  it('redirects returning users to login even from a sign-up OAuth start', async () => {
-    const returnTo = candidateOAuthReturnTo('/account', 'sign_up', 'google');
-    mocks.exchangeOAuth.mockResolvedValue({ ok: true, isNewUser: false });
-    let result: unknown;
-    try {
-      await loadOAuthComplete({ token: 'oauth-token', returnTo }, mocks);
-    } catch (error) {
-      result = error;
-    }
-
-    expect(isRedirect(result)).toBe(true);
-    if (!isRedirect(result)) return;
-    expect(result.options.href).toBe(
-      '/account?cavuno_auth=login&cavuno_auth_method=google',
+describe('authentication completion GET', () => {
+  it('prepares confirmation without exchanging a token or creating a session', async () => {
+    const exchangeOAuth = vi.fn();
+    const actions = {
+      getSeoBase: vi.fn().mockRejectedValue(new Error('metadata unavailable')),
+      exchangeOAuth,
+    };
+    const result = await loadOAuthComplete(
+      { token: 'unused-token', returnTo: '/account' },
+      actions,
     );
+    expect(result.status).toBe('ready');
+    expect(exchangeOAuth).not.toHaveBeenCalled();
   });
 
-  it('redirects new users to sign_up even when sign-in intent was staged', async () => {
-    const returnTo = appendOAuthProviderHint(
-      appendAuthIntentQuery('/jobs?q=design', 'login'),
-      'linkedin',
+  it('recognizes a stored credential without returning it to the browser', async () => {
+    const result = await loadOAuthComplete(
+      { returnTo: '/account' },
+      {
+        getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Example' }),
+        getAuthFlowState: async () => ({ 'oauth-complete': true }),
+      },
     );
-    mocks.exchangeOAuth.mockResolvedValue({ ok: true, isNewUser: true });
-    let result: unknown;
-    try {
-      await loadOAuthComplete({ token: 'oauth-token', returnTo }, mocks);
-    } catch (error) {
-      result = error;
-    }
-
-    expect(isRedirect(result)).toBe(true);
-    if (!isRedirect(result)) return;
-    expect(result.options.href).toBe(
-      `${localizePath('/auth/verify-email-required')}?returnTo=${encodeURIComponent(localizePath('/jobs?q=design'))}&cavuno_auth=sign_up&cavuno_auth_method=linkedin`,
-    );
+    expect(result).toEqual({ status: 'ready', seo: { boardName: 'Example' } });
   });
 });

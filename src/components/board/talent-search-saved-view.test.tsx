@@ -10,6 +10,7 @@ import {
   useLocation,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -197,6 +198,133 @@ function pickOption(name: string) {
 }
 
 describe('TalentSearchPage — Saved view of a saved search', () => {
+  it('retains edits made before the saved-list workspace finishes loading', async () => {
+    let finishWorkspace = () => {};
+    const pending = new Promise<void>((resolve) => {
+      finishWorkspace = resolve;
+    });
+    server.getEmployerTalentWorkspace.mockImplementationOnce(async () => {
+      await pending;
+      return { jobs: { data: [] }, lists: { data: [savedSearch(null)] } };
+    });
+    server.updateTalentList.mockImplementation(async ({ data }) => ({
+      ok: true,
+      data: { ...savedSearch(null), filters: data.filters },
+    }));
+    const router = renderSaved('/talent/?list=list_berlin&place=berlin');
+    fireEvent.click(
+      await screen.findByRole('combobox', {
+        name: m.talentFilters_statusLabel(),
+      }),
+    );
+    pickOption(m.talentFilters_statusActive());
+    await waitFor(() =>
+      expect(router.state.location.search).toHaveProperty(
+        'jobSearchStatus',
+        'actively_looking',
+      ),
+    );
+    expect(server.updateTalentList).not.toHaveBeenCalled();
+    await act(async () => {
+      finishWorkspace();
+    });
+    await waitFor(() =>
+      expect(server.updateTalentList).toHaveBeenCalledWith({
+        data: {
+          slug: 'acme',
+          listId: 'list_berlin',
+          filters: { place: 'berlin', jobSearchStatus: 'actively_looking' },
+        },
+      }),
+    );
+  });
+
+  it('keeps shared URL filters read-only but autosaves a deliberate filter edit', async () => {
+    server.updateTalentList.mockImplementation(async ({ data }) => ({
+      ok: true,
+      data: { ...savedSearch(null), filters: data.filters },
+    }));
+    const router = renderSaved('/talent/?list=list_berlin&q=shared-value');
+    await screen.findByRole('combobox', { name: m.talentSaved_showLabel() });
+    expect(server.updateTalentList).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole('combobox', { name: m.talentFilters_statusLabel() }),
+    );
+    pickOption(m.talentFilters_statusActive());
+    await waitFor(() =>
+      expect(server.updateTalentList).toHaveBeenCalledWith({
+        data: {
+          slug: 'acme',
+          listId: 'list_berlin',
+          filters: { q: 'shared-value', jobSearchStatus: 'actively_looking' },
+        },
+      }),
+    );
+    const writes = server.updateTalentList.mock.calls.length;
+    await act(async () => {
+      await router.navigate({
+        to: '/talent',
+        search: { list: 'list_berlin', q: 'another-shared-value' },
+      });
+    });
+    expect(server.updateTalentList).toHaveBeenCalledTimes(writes);
+  });
+
+  it('saves the final filter revert after a pending autosave finishes', async () => {
+    let finishFirst = () => {};
+    const first = new Promise<void>((resolve) => {
+      finishFirst = resolve;
+    });
+    server.updateTalentList
+      .mockImplementationOnce(async ({ data }) => {
+        await first;
+        return {
+          ok: true,
+          data: { ...savedSearch(null), filters: data.filters },
+        };
+      })
+      .mockImplementation(async ({ data }) => ({
+        ok: true,
+        data: { ...savedSearch(null), filters: data.filters },
+      }));
+    const router = renderSaved('/talent/?list=list_berlin&place=berlin');
+    await screen.findByRole('combobox', { name: m.talentSaved_showLabel() });
+    fireEvent.click(
+      screen.getByRole('combobox', { name: m.talentFilters_statusLabel() }),
+    );
+    pickOption(m.talentFilters_statusActive());
+    await waitFor(() =>
+      expect(router.state.location.search).toHaveProperty(
+        'jobSearchStatus',
+        'actively_looking',
+      ),
+    );
+    fireEvent.click(
+      screen.getByRole('combobox', { name: m.talentFilters_statusLabel() }),
+    );
+    pickOption(m.talentFilters_anyStatusOption());
+    await waitFor(() =>
+      expect(router.state.location.search).not.toHaveProperty(
+        'jobSearchStatus',
+      ),
+    );
+    expect(server.updateTalentList).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      finishFirst();
+    });
+    await waitFor(() =>
+      expect(server.updateTalentList).toHaveBeenCalledTimes(2),
+    );
+    expect(server.updateTalentList).toHaveBeenLastCalledWith({
+      data: {
+        slug: 'acme',
+        listId: 'list_berlin',
+        filters: { place: 'berlin' },
+      },
+    });
+  });
+
   it('shows only the saved people the current filters keep', async () => {
     const router = renderSaved(
       '/talent/?list=list_berlin&saved=1&place=berlin&within=25',

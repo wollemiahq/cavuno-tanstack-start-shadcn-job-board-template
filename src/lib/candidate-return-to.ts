@@ -1,5 +1,3 @@
-import { safeRedirectPath } from '@cavuno/board/server';
-
 import {
   appendAuthConversionQuery,
   appendAuthIntentQuery,
@@ -7,6 +5,7 @@ import {
 } from './board-datalayer-events';
 import { canonicalPathname, localizePath } from './localized-path';
 import { searchString } from './pagination';
+import { safeRedirectPath } from './safe-redirect-path';
 
 const DEFAULT_CANDIDATE_RETURN_TO = '/account';
 

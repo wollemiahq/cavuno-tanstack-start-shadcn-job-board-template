@@ -23,6 +23,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import {
   getAccessGrant,
+  getAccessCheckoutState,
   openBillingPortal,
   startCheckout,
 } from '../server/paywall';
@@ -52,6 +53,7 @@ import { toastActionError } from '@/lib/action-toast';
 import { cn } from '@/lib/utils';
 import type {
   AccessCheckoutSession,
+  AccessCheckoutSessionState,
   AccessGrant,
   PaywallOffer,
 } from '@cavuno/board';
@@ -144,6 +146,7 @@ export function AccessPage() {
       returnToRaw={returnToRaw}
       offerKey={offerKey}
       getAccessGrantAction={getAccessGrant}
+      getCheckoutStateAction={getAccessCheckoutState}
       openBillingPortalAction={openBillingPortal}
       startCheckoutAction={startCheckout}
       invalidate={async () => {
@@ -166,6 +169,7 @@ export function AccessPageView({
   returnToRaw,
   offerKey,
   getAccessGrantAction,
+  getCheckoutStateAction,
   openBillingPortalAction,
   startCheckoutAction,
   invalidate,
@@ -178,6 +182,9 @@ export function AccessPageView({
   returnToRaw?: string;
   offerKey?: string;
   getAccessGrantAction: () => Promise<AccessGrant>;
+  getCheckoutStateAction: (input: {
+    data: { sessionId: string };
+  }) => Promise<AccessCheckoutSessionState>;
   openBillingPortalAction: (input: {
     data: { returnPath: string };
   }) => Promise<{ url: string }>;
@@ -210,11 +217,55 @@ export function AccessPageView({
   const [exhausted, setExhausted] = useState(false);
   // Returning from Stripe with a session id means a checkout just completed —
   // poll the grant until the webhook has recorded it.
-  const [polling, setPolling] = useState(
-    Boolean(sessionId) && !grant.hasAccess,
-  );
+  const [polling, setPolling] = useState(false);
+  const [checkoutId, setCheckoutId] = useState(sessionId);
+  const [paymentState, setPaymentState] = useState<
+    'checking' | 'processing' | 'failed' | 'incomplete' | null
+  >(sessionId ? 'checking' : null);
+  const [checkoutCheck, setCheckoutCheck] = useState(0);
 
   const hasAccess = grant.hasAccess || confirmed;
+  useEffect(() => {
+    if (!checkoutId || hasAccess) return;
+    let cancelled = false;
+    setPaymentState('checking');
+    void getCheckoutStateAction({ data: { sessionId: checkoutId } })
+      .then((state) => {
+        if (cancelled) return;
+        if (
+          state.status === 'complete' &&
+          state.paymentStatus !== 'processing' &&
+          state.paymentStatus !== 'failed'
+        ) {
+          setPaymentState(null);
+          setPolling(true);
+        } else {
+          setPolling(false);
+          setPaymentState(
+            state.paymentStatus === 'processing'
+              ? 'processing'
+              : state.paymentStatus === 'failed'
+                ? 'failed'
+                : 'incomplete',
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPaymentState('incomplete');
+          reportActionError();
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    checkoutId,
+    checkoutCheck,
+    getCheckoutStateAction,
+    hasAccess,
+    reportActionError,
+  ]);
 
   // A grant that just landed (confirmed in-page, or returned from Stripe with a
   // session id) with a captured return path means we bounce the buyer back to
@@ -268,8 +319,10 @@ export function AccessPageView({
   // A stable reference so mounting the embedded checkout doesn't re-run its
   // effect (and destroy/remount the live Stripe iframe) on every render.
   const handleCheckoutComplete = useCallback(() => {
-    setPolling(true);
-  }, []);
+    setCheckoutId(kit?.sessionId);
+    setKit(null);
+    setPaymentState('checking');
+  }, [kit?.sessionId]);
 
   const buy = useCallback(
     async (offer: PaywallOffer) => {
@@ -451,7 +504,7 @@ export function AccessPageView({
   }
 
   // Confirming: waiting on the webhook after Stripe returns the buyer.
-  if (polling) {
+  if (polling || paymentState === 'checking') {
     return (
       <Page width="content">
         <PageContent header={<PageHeader title={m.accountAccess_title()} />}>
@@ -471,15 +524,56 @@ export function AccessPageView({
     );
   }
 
-  // Exhausted: the poll timed out (or failed) but the payment went through.
+  if (
+    paymentState === 'processing' ||
+    paymentState === 'failed' ||
+    paymentState === 'incomplete'
+  ) {
+    const processing = paymentState === 'processing';
+    return (
+      <Page width="content">
+        <PageContent>
+          <EmptyState
+            icon={<Clock aria-hidden="true" />}
+            title={m.accountAccess_title()}
+            description={
+              processing
+                ? m.checkout_processingText()
+                : paymentState === 'failed'
+                  ? m.checkout_failedText()
+                  : m.checkout_incompleteText()
+            }
+            action={
+              <Button
+                onClick={() => {
+                  if (processing) setCheckoutCheck((value) => value + 1);
+                  else {
+                    setCheckoutId(undefined);
+                    setPaymentState(null);
+                    setExhausted(false);
+                  }
+                }}
+              >
+                {processing
+                  ? m.appError_retryAction()
+                  : m.accountAccess_backToPlansLabel()}
+              </Button>
+            }
+          />
+        </PageContent>
+      </Page>
+    );
+  }
+
+  // Paid checkout, but the authoritative access grant has not arrived yet.
   if (exhausted) {
     return (
       <Page width="content">
         <PageContent>
           <EmptyState
             icon={<Clock aria-hidden="true" />}
-            title={m.accountAccess_paymentReceivedTitle()}
-            description={m.accountAccess_paymentReceivedBody()}
+            title={m.checkout_pendingTitle()}
+            description={m.checkout_pendingText()}
             action={
               <Button
                 onClick={async () => {

@@ -54,6 +54,8 @@ export interface SessionContext {
   authHeaders: Record<string, string>;
   /** Data source whose session this context carries. */
   dataSource: DataSource;
+  /** Set when a transient refresh failure left this request signed out. */
+  refreshError?: unknown;
 }
 
 /**
@@ -65,17 +67,16 @@ export interface SessionContext {
  *  - no session               → stay signed out, no cookie change
  *  - valid (not expiring soon) → pass the session through, no cookie change
  *  - expiring soon, refresh ok → rotate to the fresh pair, persist it
- *  - expiring soon, refresh KO → clear the cookie, continue signed out
+ *  - revoked refresh token    → clear the cookie, continue signed out
+ *  - transient refresh error → keep the cookie; use the session while its
+ *    access token is unexpired, else continue signed out for this request
  *
- * The catch collapses ANY refresh throw to the signed-out/clear branch (the
- * refresher returns null only on a 401 and rethrows the rest) — the pre-SDK
- * middleware's behavior: never loop, never surface the error to the caller.
  */
 /** Thin request/response adapter around the pure {@link decideSession}. */
 async function resolveSession(): Promise<SessionContext> {
   const dataSource = getDataSource();
   const cookieHeader = getRequestHeader('cookie') ?? null;
-  const { session, setCookie } = await decideSession(
+  const { session, setCookie, refreshError } = await decideSession(
     parseSessionForSource(cookieHeader, dataSource),
     Date.now(),
     getSessionRefresher(),
@@ -94,6 +95,7 @@ async function resolveSession(): Promise<SessionContext> {
     session,
     authHeaders: session ? authHeaders(session.accessToken) : {},
     dataSource,
+    refreshError,
   };
 }
 

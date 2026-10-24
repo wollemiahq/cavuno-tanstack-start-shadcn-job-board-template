@@ -11,11 +11,15 @@ const fixture = vi.hoisted(() => ({
     indexNowKey: 'fixture-key',
   },
   read: vi.fn(),
+  primaryRead: vi.fn(),
   robots: vi.fn(),
   ads: vi.fn(),
   indexNow: vi.fn(),
 }));
-vi.mock('../lib/board', () => ({ getBoard: () => ({ seo: fixture.read }) }));
+vi.mock('../lib/board', () => ({
+  getBoard: () => ({ seo: fixture.read }),
+  getPrimaryBoard: () => ({ seo: fixture.primaryRead }),
+}));
 vi.mock('../lib/seo-handlers', () => ({
   robotsResponse: fixture.robots,
   adsTxtResponse: fixture.ads,
@@ -27,9 +31,10 @@ describe('public SEO endpoint tenant wiring', () => {
     [AdsRoute, fixture.ads],
     [IndexNowRoute, fixture.indexNow],
   ])(
-    'reads request-owned board SEO and returns the response from its handler',
+    'uses the primary board for robots and IndexNow discovery',
     async (route, handler) => {
       fixture.read.mockResolvedValue(fixture.seo);
+      fixture.primaryRead.mockResolvedValue(fixture.seo);
       const response = new Response('fixture response');
       handler.mockReturnValue(response);
       // SAFETY: each imported route defines GET as an async function with no arguments that returns its SEO handler response.
@@ -38,7 +43,9 @@ describe('public SEO endpoint tenant wiring', () => {
       };
       const get = handlers.GET;
       const result = await get();
-      expect(fixture.read).toHaveBeenCalled();
+      expect(
+        route === AdsRoute ? fixture.read : fixture.primaryRead,
+      ).toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith(fixture.seo);
       expect(result).toBe(response);
     },
