@@ -39,6 +39,8 @@ export function collapseRefreshesPerRequest(
 export interface SessionResolution {
   session: BoardSession | null;
   setCookie: 'clear' | 'rotate' | null;
+  /** A transient refresh failure; the cookie is kept for the next request. */
+  refreshError?: unknown;
 }
 
 /** Pure session-refresh state transition. */
@@ -53,7 +55,17 @@ export async function decideSession(
     return { session, setCookie: null };
   }
 
-  return rotateOrClear(session, refresh);
+  try {
+    return await rotateOrClear(session, refresh);
+  } catch (refreshError) {
+    // Keep the cookie so the next request retries. An unexpired access token
+    // still works; an expired one reads as signed out for this request only.
+    return {
+      session: session.expiresAt > now ? session : null,
+      setCookie: null,
+      refreshError,
+    };
+  }
 }
 
 /**
