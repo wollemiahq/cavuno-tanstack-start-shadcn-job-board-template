@@ -39,8 +39,8 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import { boardErrorMessage } from '@/lib/board-error-message';
 import { suggestEmailFix } from '@/lib/email-typo';
+import { productErrorMessage } from '@/lib/product-error-message';
 import type { Product, ProductCheckoutBody } from '@cavuno/board';
 
 export type ProductCheckoutValues = {
@@ -179,10 +179,12 @@ export function ProductCheckoutForm({
     try {
       const refusal = await onSubmit(payload);
       if (refusal) {
-        setErrors({ [refusalField(refusal.code)]: boardErrorMessage(refusal) });
+        setErrors({
+          [refusalField(refusal.code)]: productErrorMessage(refusal),
+        });
       }
     } catch {
-      setErrors({ form: boardErrorMessage({}) });
+      setErrors({ form: productErrorMessage({}) });
     } finally {
       setPending(false);
     }

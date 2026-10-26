@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { boardErrorMessage } from '@/lib/board-error-message';
+import { productErrorMessage } from '@/lib/product-error-message';
 
 export type ResendLinkAction = (input: {
   data: { email: string; productSlug?: string; website?: string };
@@ -72,11 +72,11 @@ export function PurchaseResendDialog({
         setStatus('sent');
       } else {
         setStatus('error');
-        setError(boardErrorMessage(result));
+        setError(productErrorMessage(result));
       }
     } catch {
       setStatus('error');
-      setError(boardErrorMessage({}));
+      setError(productErrorMessage({}));
     }
   }
 
