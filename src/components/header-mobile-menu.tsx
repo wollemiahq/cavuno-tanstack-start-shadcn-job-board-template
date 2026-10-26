@@ -14,7 +14,8 @@ type MobileNavDestination =
   | '/companies'
   | '/talent'
   | '/blog'
-  | '/memberships';
+  | '/memberships'
+  | '/products';
 
 /**
  * Mobile nav disclosure — a plain non-modal panel pinned from the header's

@@ -16,6 +16,8 @@ export interface BoardContextCacheDependencies<Context> {
 export type EmployerOfferGate = {
   hasEmployerOfferPage: boolean;
   hasMembershipPage: boolean;
+  /** The board lists at least one digital product (the Products link). */
+  hasProductsPage: boolean;
   hasCandidatePricingPage: boolean;
 };
 

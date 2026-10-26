@@ -12,6 +12,7 @@ import {
   Building2,
   Loader2,
   Menu,
+  ShoppingBag,
   Users,
   X,
 } from 'lucide-react';
@@ -109,6 +110,7 @@ export default function Header({
   signOutAction,
   talentDirectoryVisibility,
   hasMembershipPage = false,
+  hasProductsPage = false,
   search,
   messagesNav,
 }: {
@@ -132,6 +134,8 @@ export default function Header({
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
   /** Whether the board publishes a membership plan (the Memberships link). */
   hasMembershipPage?: boolean;
+  /** Whether the board lists a digital product (the Products link). */
+  hasProductsPage?: boolean;
   messagesNav?: ReactNode;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
@@ -243,6 +247,14 @@ export default function Header({
       // Loader-driven, so the link never flashes in on a board that
       // publishes no membership plan (and /memberships 404s there).
       enabled: membershipNavVisible(hasMembershipPage, user?.role),
+    },
+    {
+      id: 'products',
+      to: '/products',
+      label: copy.nav.products,
+      icon: ShoppingBag,
+      // Loader-driven like Memberships: no link on a board with no product.
+      enabled: hasProductsPage,
     },
   ] as const;
   const enabledNavLinks = navLinks.filter(
@@ -359,6 +371,7 @@ export default function Header({
           nativeApplications={features.nativeApplications}
           jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}
           employerCompanies={employerCompanies}
+          hasProductsPage={hasProductsPage}
           canPostJobs={features.publicJobSubmission}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}

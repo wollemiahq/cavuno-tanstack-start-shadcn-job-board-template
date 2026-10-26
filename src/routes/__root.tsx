@@ -464,6 +464,7 @@ function RootChrome({
       onSignOut={clearSession}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       hasMembershipPage={offerGate.hasMembershipPage}
+      hasProductsPage={offerGate.hasProductsPage}
       messagesNav={
         user && board.features.messaging ? (
           <Suspense fallback={null}>
@@ -587,7 +588,7 @@ function RootChrome({
               <BoardAdsBoot
                 key={location.pathname}
                 adPage={isBoardAdPage(location.pathname)}
-                hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$/.test(
+                hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$|\/products\/[^/]+\/?$/.test(
                   location.pathname,
                 )}
               />

@@ -141,7 +141,8 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
  * Whether /employers has anything to sell — self-service plans, talent
  * plans, or quote-only employer-service tiers — the hosted
  * `hasEmployerOfferPage` gate the footer/nav Pricing links key on, plus
- * whether the board publishes a membership plan (the Memberships link). OPEN read on an open board; a
+ * whether the board publishes a membership plan (the Memberships link), and
+ * whether it lists a digital product (the Products link). OPEN read on an open board; a
  * password-protected board refuses ungated plan reads, so the links hide
  * until the wall is passed (the wall page renders no footer nav anyway).
  */
@@ -153,13 +154,20 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
       // the boolean gate per isolate so soft root re-runs do not re-hit
       // the two plans.list reads.
       return await readEmployerOfferGate(async () => {
-        const [plans, employerServicePlans] = await Promise.all([
-          getBoard().plans.list({}, boardGlobalReadCache()),
-          getBoard().plans.list(
-            { purpose: 'employer_service' },
-            boardGlobalReadCache(),
-          ),
-        ]);
+        const [plans, employerServicePlans, hasProductsPage] =
+          await Promise.all([
+            getBoard().plans.list({}, boardGlobalReadCache()),
+            getBoard().plans.list(
+              { purpose: 'employer_service' },
+              boardGlobalReadCache(),
+            ),
+            // One product is enough to show the Products link. Its own
+            // fallback: an API without products must not hide Pricing.
+            getBoard()
+              .products.list({ limit: 1 }, boardGlobalReadCache())
+              .then((page) => page.data.length > 0)
+              .catch(() => false),
+          ]);
         return {
           hasEmployerOfferPage:
             plans.data.some((plan) => plan.purpose !== 'job_seeker') ||
@@ -170,6 +178,7 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
           hasMembershipPage: plans.data.some(
             (plan) => plan.purpose === 'membership',
           ),
+          hasProductsPage,
         };
       });
     } catch {
@@ -180,6 +189,7 @@ export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
         hasEmployerOfferPage: false,
         hasMembershipPage: false,
         hasCandidatePricingPage: false,
+        hasProductsPage: false,
       };
     }
   },

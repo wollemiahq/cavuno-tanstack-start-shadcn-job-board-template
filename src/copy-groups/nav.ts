@@ -10,6 +10,7 @@ export function navCopy() {
     memberships: m.nav_memberships(),
     post: chrome.post ?? m.nav_post(),
     pricing: chrome.pricing ?? m.nav_pricing(),
+    products: m.nav_products(),
     talent: chrome.talent ?? m.nav_talent(),
   };
 }

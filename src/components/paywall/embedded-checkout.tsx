@@ -23,7 +23,11 @@ export function EmbeddedCheckout({
   kit,
   onComplete,
 }: {
-  kit: AccessCheckoutSession;
+  /** A connected-account mount kit (paywall, memberships, products). */
+  kit: Pick<
+    AccessCheckoutSession,
+    'publishableKey' | 'stripeAccountId' | 'clientSecret'
+  >;
   onComplete?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);

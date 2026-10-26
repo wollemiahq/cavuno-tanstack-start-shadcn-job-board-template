@@ -48,7 +48,22 @@ export function talentDestination(input: { handle: string }) {
   };
 }
 
+export function productDestination(input: { productSlug: string }) {
+  return {
+    canonical: linkOptions({
+      to: '/products/$productSlug',
+      params: { productSlug: input.productSlug },
+    }),
+    listing: linkOptions({
+      to: '/products',
+      search: { selectedProduct: input.productSlug },
+    }),
+    selectionKey: input.productSlug,
+  };
+}
+
 export type MasterDetailDestination =
   | ReturnType<typeof jobDestination>
   | ReturnType<typeof companyDestination>
-  | ReturnType<typeof talentDestination>;
+  | ReturnType<typeof talentDestination>
+  | ReturnType<typeof productDestination>;

@@ -105,6 +105,7 @@ function renderHeader({
   user = null,
   hasAccessGrant = false,
   hasMembershipPage = false,
+  hasProductsPage = false,
   logoUrl = null,
   locationSuggestions = [],
   keywordSuggestions = [],
@@ -119,6 +120,7 @@ function renderHeader({
   user?: React.ComponentProps<typeof Header>['user'];
   hasAccessGrant?: boolean;
   hasMembershipPage?: boolean;
+  hasProductsPage?: boolean;
   logoUrl?: string | null;
   locationSuggestions?: Array<{
     id: string;
@@ -240,6 +242,7 @@ function renderHeader({
         signOutAction={signOutMock}
         talentDirectoryVisibility={talentDirectoryVisibility}
         hasMembershipPage={hasMembershipPage}
+        hasProductsPage={hasProductsPage}
         search={{
           ...routeSearch,
           onSubmit: submitSearch,
@@ -559,6 +562,40 @@ describe('Header — Memberships link', () => {
     expect(
       screen.queryByRole('link', { name: m.nav_memberships() }),
     ).toBeNull();
+  });
+});
+
+describe('Header — Products link', () => {
+  const buyer = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+
+  it('links to products only when the board lists one', async () => {
+    renderHeader({ hasProductsPage: true });
+    expect(
+      await screen.findByRole('link', { name: m.nav_products() }),
+    ).toHaveAttribute('href', '/products');
+    cleanup();
+
+    renderHeader({ hasProductsPage: false });
+    await screen.findByRole('link', { name: navigation.home });
+    expect(screen.queryByRole('link', { name: m.nav_products() })).toBeNull();
+  });
+
+  it('adds Purchases to the account menu on a board with products', async () => {
+    renderHeader({ hasProductsPage: true, user: buyer });
+    fireEvent.click(await findAccountButton());
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_purchasesNav(),
+      }),
+    ).toHaveAttribute('href', '/me/purchases');
   });
 });
 

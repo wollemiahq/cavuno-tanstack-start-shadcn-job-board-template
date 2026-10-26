@@ -188,6 +188,14 @@ const BUDGETS = {
     '/matches': { raw: 150_000, gzip: 58_000 },
     '/companies/markets/$market': { raw: 121_500, gzip: 46_500 },
     '/companies/': { raw: 121_000, gzip: 46_000 },
+    // Digital products (2026-10-26). The store listing reuses the companies
+    // list-and-detail split (search, Select filters, cursor pagination), so it
+    // is budgeted like /companies/: measured 137.5 KiB raw / 52.8 KiB gzip.
+    // The product page loads its checkout form and the Stripe mount lazily,
+    // when the buyer starts buying: measured 100.9 KiB raw / 38.3 KiB gzip.
+    // Both with the usual ~4 KiB gzip headroom.
+    '/products/': { raw: 145_000, gzip: 58_000 },
+    '/products/$productSlug': { raw: 108_000, gzip: 43_500 },
     // Saved-job pagination makes the full saved collection reachable. Its
     // shared cursor controls add ~1.6 KiB gzip (42.2 -> 43.8 KiB measured);
     // retain roughly the original 1.3 KiB headroom on this private route.

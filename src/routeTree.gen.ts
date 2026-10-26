@@ -63,10 +63,14 @@ import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
 import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
+import { Route as MePurchasesRouteImport } from './routes/me.purchases'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
 import { Route as PostSuccessRouteImport } from './routes/post_.success'
+import { Route as ProductsIndexRouteImport } from './routes/products.index'
+import { Route as ProductsProductSlugRouteImport } from './routes/products.$productSlug'
+import { Route as PurchasesPurchaseTokenRouteImport } from './routes/purchases.$purchaseToken'
 import { Route as SalariesIndexRouteImport } from './routes/salaries.index'
 import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
 import { Route as TalentIndexRouteImport } from './routes/talent.index'
@@ -386,6 +390,11 @@ const MeApplicationsRoute = MeApplicationsRouteImport.update({
   path: '/me/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MePurchasesRoute = MePurchasesRouteImport.update({
+  id: '/me/purchases',
+  path: '/me/purchases',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
   id: '/$conversationId',
   path: '/$conversationId',
@@ -404,6 +413,21 @@ const PostCheckoutCanceledRoute = PostCheckoutCanceledRouteImport.update({
 const PostSuccessRoute = PostSuccessRouteImport.update({
   id: '/post_/success',
   path: '/post/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsIndexRoute = ProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsProductSlugRoute = ProductsProductSlugRouteImport.update({
+  id: '/products/$productSlug',
+  path: '/products/$productSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PurchasesPurchaseTokenRoute = PurchasesPurchaseTokenRouteImport.update({
+  id: '/purchases/$purchaseToken',
+  path: '/purchases/$purchaseToken',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SalariesIndexRoute = SalariesIndexRouteImport.update({
@@ -716,16 +740,20 @@ export interface FileRoutesByFullPath {
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
+  '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
+  '/products/$productSlug': typeof ProductsProductSlugRoute
+  '/purchases/$purchaseToken': typeof PurchasesPurchaseTokenRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
   '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
+  '/products/': typeof ProductsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
   '/talent/': typeof TalentIndexRoute
   '/auth/employer/sign-up': typeof AuthEmployerSignUpRoute
@@ -823,16 +851,20 @@ export interface FileRoutesByTo {
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
+  '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
+  '/products/$productSlug': typeof ProductsProductSlugRoute
+  '/purchases/$purchaseToken': typeof PurchasesPurchaseTokenRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog': typeof BlogIndexRoute
   '/companies': typeof CompaniesIndexRoute
   '/employer': typeof EmployerIndexRoute
   '/employers': typeof EmployersIndexRoute
   '/jobs': typeof JobsIndexRoute
+  '/products': typeof ProductsIndexRoute
   '/salaries': typeof SalariesIndexRoute
   '/talent': typeof TalentIndexRoute
   '/auth/employer/sign-up': typeof AuthEmployerSignUpRoute
@@ -931,16 +963,20 @@ export interface FileRoutesById {
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
+  '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/p/$handle': typeof PHandleRoute
   '/post_/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post_/success': typeof PostSuccessRoute
+  '/products/$productSlug': typeof ProductsProductSlugRoute
+  '/purchases/$purchaseToken': typeof PurchasesPurchaseTokenRoute
   '/sitemap/$file': typeof SitemapFileRoute
   '/blog/': typeof BlogIndexRoute
   '/companies/': typeof CompaniesIndexRoute
   '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
+  '/products/': typeof ProductsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
   '/talent/': typeof TalentIndexRoute
   '/auth/employer/sign-up': typeof AuthEmployerSignUpRoute
@@ -1040,16 +1076,20 @@ export interface FileRouteTypes {
     | '/jobs/rss.xml'
     | '/me/alerts'
     | '/me/applications'
+    | '/me/purchases'
     | '/messages/$conversationId'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
+    | '/products/$productSlug'
+    | '/purchases/$purchaseToken'
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
     | '/employer/'
     | '/employers/'
     | '/jobs/'
+    | '/products/'
     | '/salaries/'
     | '/talent/'
     | '/auth/employer/sign-up'
@@ -1147,16 +1187,20 @@ export interface FileRouteTypes {
     | '/jobs/rss.xml'
     | '/me/alerts'
     | '/me/applications'
+    | '/me/purchases'
     | '/messages/$conversationId'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
+    | '/products/$productSlug'
+    | '/purchases/$purchaseToken'
     | '/sitemap/$file'
     | '/blog'
     | '/companies'
     | '/employer'
     | '/employers'
     | '/jobs'
+    | '/products'
     | '/salaries'
     | '/talent'
     | '/auth/employer/sign-up'
@@ -1254,16 +1298,20 @@ export interface FileRouteTypes {
     | '/jobs/rss.xml'
     | '/me/alerts'
     | '/me/applications'
+    | '/me/purchases'
     | '/messages/$conversationId'
     | '/p/$handle'
     | '/post_/checkout-canceled'
     | '/post_/success'
+    | '/products/$productSlug'
+    | '/purchases/$purchaseToken'
     | '/sitemap/$file'
     | '/blog/'
     | '/companies/'
     | '/employer/'
     | '/employers/'
     | '/jobs/'
+    | '/products/'
     | '/salaries/'
     | '/talent/'
     | '/auth/employer/sign-up'
@@ -1362,15 +1410,19 @@ export interface RootRouteChildren {
   JobsRssDotxmlRoute: typeof JobsRssDotxmlRoute
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
+  MePurchasesRoute: typeof MePurchasesRoute
   PHandleRoute: typeof PHandleRoute
   PostCheckoutCanceledRoute: typeof PostCheckoutCanceledRoute
   PostSuccessRoute: typeof PostSuccessRoute
+  ProductsProductSlugRoute: typeof ProductsProductSlugRoute
+  PurchasesPurchaseTokenRoute: typeof PurchasesPurchaseTokenRoute
   SitemapFileRoute: typeof SitemapFileRoute
   BlogIndexRoute: typeof BlogIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
   EmployerIndexRoute: typeof EmployerIndexRoute
   EmployersIndexRoute: typeof EmployersIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
+  ProductsIndexRoute: typeof ProductsIndexRoute
   SalariesIndexRoute: typeof SalariesIndexRoute
   TalentIndexRoute: typeof TalentIndexRoute
   AuthEmployerSignUpRoute: typeof AuthEmployerSignUpRoute
@@ -1797,6 +1849,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/me/purchases': {
+      id: '/me/purchases'
+      path: '/me/purchases'
+      fullPath: '/me/purchases'
+      preLoaderRoute: typeof MePurchasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messages/$conversationId': {
       id: '/messages/$conversationId'
       path: '/$conversationId'
@@ -1823,6 +1882,27 @@ declare module '@tanstack/react-router' {
       path: '/post/success'
       fullPath: '/post/success'
       preLoaderRoute: typeof PostSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/': {
+      id: '/products/'
+      path: '/products'
+      fullPath: '/products/'
+      preLoaderRoute: typeof ProductsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productSlug': {
+      id: '/products/$productSlug'
+      path: '/products/$productSlug'
+      fullPath: '/products/$productSlug'
+      preLoaderRoute: typeof ProductsProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/purchases/$purchaseToken': {
+      id: '/purchases/$purchaseToken'
+      path: '/purchases/$purchaseToken'
+      fullPath: '/purchases/$purchaseToken'
+      preLoaderRoute: typeof PurchasesPurchaseTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/salaries/': {
@@ -2246,15 +2326,19 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRssDotxmlRoute: JobsRssDotxmlRoute,
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
+  MePurchasesRoute: MePurchasesRoute,
   PHandleRoute: PHandleRoute,
   PostCheckoutCanceledRoute: PostCheckoutCanceledRoute,
   PostSuccessRoute: PostSuccessRoute,
+  ProductsProductSlugRoute: ProductsProductSlugRoute,
+  PurchasesPurchaseTokenRoute: PurchasesPurchaseTokenRoute,
   SitemapFileRoute: SitemapFileRoute,
   BlogIndexRoute: BlogIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
   EmployerIndexRoute: EmployerIndexRoute,
   EmployersIndexRoute: EmployersIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
+  ProductsIndexRoute: ProductsIndexRoute,
   SalariesIndexRoute: SalariesIndexRoute,
   TalentIndexRoute: TalentIndexRoute,
   AuthEmployerSignUpRoute: AuthEmployerSignUpRoute,
