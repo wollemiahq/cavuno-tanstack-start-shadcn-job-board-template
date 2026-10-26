@@ -2743,7 +2743,7 @@
   "boardError_purchaseFilePreparingText": "Tu copia todavía se está preparando. Te avisaremos por correo cuando esté lista.",
   "boardError_purchaseDownloadLimitText": "No te quedan descargas de este archivo. Contacta con el sitio para restablecerlas.",
   "boardError_purchaseReviewInvalidText": "Elige entre 1 y 5 estrellas.",
-  "boardError_purchaseDownloadAllText": "Por ahora, descarga cada archivo por separado.",
+  "boardError_purchaseDownloadAllText": "Estos archivos no se pueden descargar juntos. Descarga cada archivo por separado.",
   "boardError_purchaseRefundedText": "Esta compra se reembolsó.",
   "products_metaTitle": "Productos",
   "products_metaDescription": "Guías, plantillas e informes de {boardName}.",

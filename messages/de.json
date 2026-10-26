@@ -2743,7 +2743,7 @@
   "boardError_purchaseFilePreparingText": "Dein Exemplar wird noch vorbereitet. Wir schicken dir eine E-Mail, sobald es fertig ist.",
   "boardError_purchaseDownloadLimitText": "Für diese Datei sind keine Downloads mehr übrig. Kontaktiere die Plattform, um sie zurückzusetzen.",
   "boardError_purchaseReviewInvalidText": "Wähle zwischen 1 und 5 Sternen.",
-  "boardError_purchaseDownloadAllText": "Lade die Dateien vorerst einzeln herunter.",
+  "boardError_purchaseDownloadAllText": "Diese Dateien können nicht zusammen heruntergeladen werden. Lade jede Datei einzeln herunter.",
   "boardError_purchaseRefundedText": "Dieser Kauf wurde erstattet.",
   "products_metaTitle": "Produkte",
   "products_metaDescription": "Leitfäden, Vorlagen und Berichte von {boardName}.",

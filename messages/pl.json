@@ -2853,7 +2853,7 @@
   "boardError_purchaseFilePreparingText": "Twoja kopia jest jeszcze przygotowywana. Wyślemy e-mail, gdy będzie gotowa.",
   "boardError_purchaseDownloadLimitText": "Nie masz już pobrań tego pliku. Skontaktuj się z serwisem, aby je odnowić.",
   "boardError_purchaseReviewInvalidText": "Wybierz od 1 do 5 gwiazdek.",
-  "boardError_purchaseDownloadAllText": "Na razie pobierz pliki pojedynczo.",
+  "boardError_purchaseDownloadAllText": "Tych plików nie można pobrać razem. Pobierz każdy plik osobno.",
   "boardError_purchaseRefundedText": "Ten zakup został zwrócony.",
   "products_metaTitle": "Produkty",
   "products_metaDescription": "Poradniki, szablony i raporty od {boardName}.",

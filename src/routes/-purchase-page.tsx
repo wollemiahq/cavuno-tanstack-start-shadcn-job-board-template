@@ -44,8 +44,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { boardErrorMessage } from '@/lib/board-error-message';
 import { candidateAuthSearch } from '@/lib/candidate-return-to';
+import { productErrorMessage } from '@/lib/product-error-message';
 import { cn } from '@/lib/utils';
 import type {
   Purchase,
@@ -90,6 +90,13 @@ type PurchaseFile = Purchase['files'][number];
 /** Re-read the page when the API says the link needs confirming again. */
 const RECHECK_CODES = new Set(['purchase_email_confirmation_required']);
 
+/**
+ * "Download all" refused from a stale tab (the files grew past the 500 MB
+ * ZIP limit, or the ZIP is off): say so inline, then re-read the page so
+ * `downloadAllAvailable` hides the button.
+ */
+const DOWNLOAD_ALL_UNAVAILABLE = 'purchase_download_all_unavailable';
+
 export function PurchaseReadyView({
   purchase,
   purchaseToken,
@@ -107,6 +114,11 @@ export function PurchaseReadyView({
   const downloadable = files.filter(
     (file) => file.kind === 'file' && file.state === 'ready',
   );
+  // Like Gumroad, the button is simply not offered when the files are too
+  // large to zip together (`downloadAllAvailable`); each file still has its
+  // own download.
+  const offerDownloadAll =
+    purchase.downloadAllAvailable && downloadable.length > 1;
   const preparing = files.some(
     (file) => file.kind === 'file' && file.state === 'preparing',
   );
@@ -127,7 +139,7 @@ export function PurchaseReadyView({
       } else {
         setRowErrors((previous) => ({
           ...previous,
-          [file.fileId]: boardErrorMessage(result),
+          [file.fileId]: productErrorMessage(result),
         }));
         if (
           result.code === 'purchase_download_limit_reached' ||
@@ -139,7 +151,7 @@ export function PurchaseReadyView({
     } catch {
       setRowErrors((previous) => ({
         ...previous,
-        [file.fileId]: boardErrorMessage({}),
+        [file.fileId]: productErrorMessage({}),
       }));
     } finally {
       setBusy(null);
@@ -159,10 +171,13 @@ export function PurchaseReadyView({
       } else if (result.code && RECHECK_CODES.has(result.code)) {
         await dependencies.invalidate();
       } else {
-        setAllError(boardErrorMessage(result));
+        setAllError(productErrorMessage(result));
+        if (result.code === DOWNLOAD_ALL_UNAVAILABLE) {
+          await dependencies.invalidate();
+        }
       }
     } catch {
-      setAllError(boardErrorMessage({}));
+      setAllError(productErrorMessage({}));
     } finally {
       setBusy(null);
     }
@@ -220,7 +235,7 @@ export function PurchaseReadyView({
           >
             {m.purchase_filesHeading()}
           </h2>
-          {downloadable.length > 1 ? (
+          {offerDownloadAll ? (
             <Button
               variant="outline"
               size="sm"
@@ -466,7 +481,7 @@ function OrderCard({
             {m.purchase_resentText({ email: purchase.email })}
           </FieldDescription>
         ) : status === 'error' ? (
-          <FieldError>{boardErrorMessage({})}</FieldError>
+          <FieldError>{productErrorMessage({})}</FieldError>
         ) : null}
       </CardContent>
     </Card>
@@ -547,11 +562,11 @@ function PurchaseReviewCard({
         await dependencies.invalidate();
       } else {
         setStatus('error');
-        setError(boardErrorMessage(result));
+        setError(productErrorMessage(result));
       }
     } catch {
       setStatus('error');
-      setError(boardErrorMessage({}));
+      setError(productErrorMessage({}));
     }
   }
 
@@ -687,10 +702,10 @@ export function PurchaseConfirmView({
       if (result.ok) {
         await dependencies.invalidate();
       } else {
-        setError(boardErrorMessage(result));
+        setError(productErrorMessage(result));
       }
     } catch {
-      setError(boardErrorMessage({}));
+      setError(productErrorMessage({}));
     } finally {
       setPending(false);
     }

@@ -2743,7 +2743,7 @@
   "boardError_purchaseFilePreparingText": "Je exemplaar wordt nog voorbereid. We mailen je zodra het klaar is.",
   "boardError_purchaseDownloadLimitText": "Je hebt geen downloads meer voor dit bestand. Neem contact op met het platform om ze te resetten.",
   "boardError_purchaseReviewInvalidText": "Kies tussen 1 en 5 sterren.",
-  "boardError_purchaseDownloadAllText": "Download de bestanden voorlopig los.",
+  "boardError_purchaseDownloadAllText": "Deze bestanden kunnen niet samen worden gedownload. Download elk bestand los.",
   "boardError_purchaseRefundedText": "Deze aankoop is terugbetaald.",
   "products_metaTitle": "Producten",
   "products_metaDescription": "Gidsen, sjablonen en rapporten van {boardName}.",

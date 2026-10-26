@@ -2743,7 +2743,7 @@
   "boardError_purchaseFilePreparingText": "Your copy is still being prepared. We'll email you when it's ready.",
   "boardError_purchaseDownloadLimitText": "You have no downloads left for this file. Contact the board to reset them.",
   "boardError_purchaseReviewInvalidText": "Choose between 1 and 5 stars.",
-  "boardError_purchaseDownloadAllText": "Download each file on its own for now.",
+  "boardError_purchaseDownloadAllText": "These files can't be downloaded together. Download each file on its own.",
   "boardError_purchaseRefundedText": "This purchase was refunded.",
   "products_metaTitle": "Products",
   "products_metaDescription": "Guides, templates and reports from {boardName}.",

@@ -2743,7 +2743,7 @@
   "boardError_purchaseFilePreparingText": "Votre exemplaire est en cours de préparation. Nous vous enverrons un e-mail dès qu’il sera prêt.",
   "boardError_purchaseDownloadLimitText": "Il ne vous reste plus de téléchargements pour ce fichier. Contactez le site pour les réinitialiser.",
   "boardError_purchaseReviewInvalidText": "Choisissez entre 1 et 5 étoiles.",
-  "boardError_purchaseDownloadAllText": "Téléchargez les fichiers un par un pour le moment.",
+  "boardError_purchaseDownloadAllText": "Ces fichiers ne peuvent pas être téléchargés ensemble. Téléchargez-les un par un.",
   "boardError_purchaseRefundedText": "Cet achat a été remboursé.",
   "products_metaTitle": "Produits",
   "products_metaDescription": "Guides, modèles et rapports de {boardName}.",
