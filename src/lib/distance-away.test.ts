@@ -7,22 +7,29 @@ import { distanceAwayLabel } from './distance-away';
 describe('distanceAwayLabel', () => {
   it('rounds to a whole unit', () => {
     expect(distanceAwayLabel(12.4, 'km', 'en')).toBe(
-      m.searchRadius_distanceAway({ distance: formatDistance(12, 'km', 'en') }),
+      m.searchRadius_distanceAway(
+        { distance: formatDistance(12, 'km', 'en') },
+        { locale: 'en' },
+      ),
     );
   });
 
   it('shows the place unit', () => {
     // 16.1 km is 10 mi.
     expect(distanceAwayLabel(16.1, 'mi', 'en')).toBe(
-      m.searchRadius_distanceAway({ distance: formatDistance(10, 'mi', 'en') }),
+      m.searchRadius_distanceAway(
+        { distance: formatDistance(10, 'mi', 'en') },
+        { locale: 'en' },
+      ),
     );
   });
 
   it('reads under one unit as less than one', () => {
     expect(distanceAwayLabel(0.4, 'km', 'en')).toBe(
-      m.searchRadius_distanceUnderOneAway({
-        distance: formatDistance(1, 'km', 'en'),
-      }),
+      m.searchRadius_distanceUnderOneAway(
+        { distance: formatDistance(1, 'km', 'en') },
+        { locale: 'en' },
+      ),
     );
   });
 
