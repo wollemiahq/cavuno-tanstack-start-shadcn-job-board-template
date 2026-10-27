@@ -352,7 +352,16 @@ function RootChrome({
   // Operator overrides ride the same jobCardLabels.breadcrumbAriaLabel key
   // that jobDetailCopy resolves via resolveCopyGroup.
   const breadcrumbAriaLabel = resolveJobDetailBreadcrumbAriaLabel();
-  const breadcrumbLabels: ShellBreadcrumbLabels = breadcrumbsCopy();
+  const breadcrumbLabels: ShellBreadcrumbLabels = {
+    ...breadcrumbsCopy(),
+    // Static pages the SDK's breadcrumb copy does not cover: their own page
+    // titles, matching the trails their loaders inject once data arrives.
+    contact: m.contact_title(),
+    pricing: m.pricing_title(),
+    employers: m.employerLanding_title(),
+    jobSeekers: m.candidateLanding_title(),
+    memberships: m.memberships_title(),
+  };
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
     labels: breadcrumbLabels,
@@ -381,6 +390,8 @@ function RootChrome({
       companyMembers: m.accountShell_membersNav(),
       employerDashboard: m.employerDashboard_title(),
       authConfirmEmailChange: m.authConfirmEmailChange_title(),
+      authOauthComplete: m.authOauthComplete_title(),
+      employerInviteAccept: m.employerInviteAccept_title(),
     },
     entities: {
       ...breadcrumbEntities,

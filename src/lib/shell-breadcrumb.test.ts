@@ -22,6 +22,11 @@ const labels = {
   privacyPolicy: 'Privacy Policy',
   cookiePolicy: 'Cookie Policy',
   talent: 'Talent',
+  contact: 'Contact label',
+  pricing: 'Pricing label',
+  employers: 'Employers label',
+  jobSeekers: 'Job seekers label',
+  memberships: 'Memberships label',
 };
 
 describe('shell breadcrumb resolver', () => {
@@ -32,6 +37,22 @@ describe('shell breadcrumb resolver', () => {
     expect(resolveShellBreadcrumb({ pathname: '/', labels })).toEqual({
       items: [{ name: 'Home' }],
     });
+  });
+
+  it('labels static public pages from their titles, not the English segment', () => {
+    for (const [pathname, name] of [
+      ['/contact', labels.contact],
+      ['/pricing', labels.pricing],
+      ['/employers', labels.employers],
+      ['/job-seekers', labels.jobSeekers],
+      ['/memberships', labels.memberships],
+      ['/about', labels.about],
+      ['/privacy-policy', labels.privacyPolicy],
+    ] as const) {
+      expect(resolveShellBreadcrumb({ pathname, labels })).toEqual({
+        items: [{ name: labels.home, href: '/' }, { name }],
+      });
+    }
   });
 
   it('builds friendly nested job and company trails from loaded entities', () => {
@@ -167,6 +188,8 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
     companyMembers: 'Team members',
     employerDashboard: 'Companies',
     authConfirmEmailChange: 'Confirm your new email',
+    authOauthComplete: 'OAuth label',
+    employerInviteAccept: 'Invite label',
   };
   const resolve = (pathname: string, entities = {}) =>
     resolveShellBreadcrumb({ pathname, labels, privateLabels, entities });
@@ -227,8 +250,21 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
     ).toEqual({ name: 'Director of Hardware Engineering' });
   });
 
+  it('employer dashboard and invite pages use their own labels', () => {
+    expect(resolve('/employers/dashboard')?.items[1]).toEqual({
+      name: privateLabels.employerDashboard,
+    });
+    expect(resolve('/employers/invites/accept')?.items).toEqual([
+      { name: 'Home', href: '/' },
+      { name: privateLabels.employerInviteAccept },
+    ]);
+  });
+
   it('auth pages get a trail; embeds and the password gate stay bare', () => {
     expect(resolve('/auth/sign-in')?.items[1]).toEqual({ name: 'Sign in' });
+    expect(resolve('/auth/oauth-complete')?.items[1]).toEqual({
+      name: privateLabels.authOauthComplete,
+    });
     expect(resolve('/embed/jobs')).toBeNull();
     expect(resolve('/password')).toBeNull();
   });
