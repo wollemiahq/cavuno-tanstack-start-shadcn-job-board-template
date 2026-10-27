@@ -12,6 +12,7 @@ import { m } from '../paraglide/messages';
 
 import { CursorPagination } from '@/components/board/cursor-pagination';
 import { ProductGridCard } from '@/components/board/product-ui';
+import { Container } from '@/components/layout/container';
 import { Page } from '@/components/layout/page';
 import { SearchResultsToolbar } from '@/components/search-results/search-results';
 import { buttonVariants } from '@/components/ui/button';
@@ -176,42 +177,44 @@ export function ProductsPageView({
             ) : null}
           </Empty>
         ) : (
-          <section
-            aria-label={m.products_resultsRegionLabel()}
-            className="flex flex-col gap-4 pt-6"
-          >
-            <h1 className="text-foreground text-lg font-semibold tracking-tight">
-              {complete
-                ? m.products_count({ count: products.length })
-                : m.products_metaTitle()}
-            </h1>
-            <ul
-              data-slot="products-grid"
-              className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          <Container width="wide">
+            <section
+              aria-label={m.products_resultsRegionLabel()}
+              className="flex flex-col gap-4 pt-6"
             >
-              {products.map((product) => (
-                <li key={product.slug}>
-                  <ProductGridCard product={product} />
-                </li>
-              ))}
-            </ul>
-            <CursorPagination
-              hasPrevious={Boolean(search.cursor)}
-              hasNext={Boolean(page.hasMore && page.nextCursor)}
-              nextHref={
-                page.nextCursor
-                  ? cursorPageHref(currentHref, page.nextCursor, [])
-                  : undefined
-              }
-              onPrevious={() => router.history.back()}
-              onNext={() =>
-                onSearchChange({
-                  kind: 'page',
-                  cursor: page.nextCursor ?? undefined,
-                })
-              }
-            />
-          </section>
+              <h1 className="text-foreground text-lg font-semibold tracking-tight">
+                {complete
+                  ? m.products_count({ count: products.length })
+                  : m.products_metaTitle()}
+              </h1>
+              <ul
+                data-slot="products-grid"
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              >
+                {products.map((product) => (
+                  <li key={product.slug}>
+                    <ProductGridCard product={product} />
+                  </li>
+                ))}
+              </ul>
+              <CursorPagination
+                hasPrevious={Boolean(search.cursor)}
+                hasNext={Boolean(page.hasMore && page.nextCursor)}
+                nextHref={
+                  page.nextCursor
+                    ? cursorPageHref(currentHref, page.nextCursor, [])
+                    : undefined
+                }
+                onPrevious={() => router.history.back()}
+                onNext={() =>
+                  onSearchChange({
+                    kind: 'page',
+                    cursor: page.nextCursor ?? undefined,
+                  })
+                }
+              />
+            </section>
+          </Container>
         )}
       </main>
     </Page>

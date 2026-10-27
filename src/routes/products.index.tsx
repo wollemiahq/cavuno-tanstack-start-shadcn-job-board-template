@@ -12,6 +12,7 @@ import {
   nextProductsSearch,
   parseProductsSearch,
   productsLoaderDeps,
+  productsSearchResetsScroll,
   type ProductsSearch,
 } from '@/lib/products-search';
 
@@ -43,7 +44,7 @@ function ProductsPage() {
           search: (previous: ProductsSearch) =>
             nextProductsSearch(previous, change),
           replace: options?.replace,
-          resetScroll: false,
+          resetScroll: productsSearchResetsScroll(change),
         })
       }
     />

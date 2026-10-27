@@ -80,6 +80,17 @@ export function nextProductsSearch(
   }
 }
 
+/**
+ * Whether a listing change scrolls the window back to the top. The grid
+ * scrolls with the window, so a new page starts at its first row; a filter,
+ * search or sort change keeps the reader at the toolbar they just used.
+ */
+export function productsSearchResetsScroll(
+  change: ProductsSearchChange,
+): boolean {
+  return change.kind === 'page';
+}
+
 /** A listing Select value back to the price filter (`any` clears it). */
 export function priceFilterFrom<T>(value: T): ProductPriceFilter | undefined {
   return PRODUCT_PRICE_FILTERS.find((filter) => filter === value);
