@@ -115,6 +115,7 @@ function renderHeader({
   jobRecommendationsEnabled = true,
   routePlaceNames,
   routeSearchScope,
+  routeActionsRef,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -148,6 +149,8 @@ function renderHeader({
   routePlaceNames?: Record<string, string>;
   /** The scope the route declares, as a route's `headerSearchScope` does. */
   routeSearchScope?: HeaderSearchScope;
+  /** Set as __root.tsx does for a route with `ownsHeaderActions`. */
+  routeActionsRef?: (element: HTMLDivElement | null) => void;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
@@ -251,6 +254,7 @@ function renderHeader({
         talentDirectoryVisibility={talentDirectoryVisibility}
         hasMembershipPage={hasMembershipPage}
         hasProductsPage={hasProductsPage}
+        routeActionsRef={routeActionsRef}
         search={{
           ...routeSearch,
           onSubmit: submitSearch,
@@ -1543,5 +1547,70 @@ describe('Header — pathname-scoped submit-only search', () => {
     await waitFor(() =>
       expect(router.state.location.href).toBe('/jobs?q=systems'),
     );
+  });
+});
+
+describe('Header — route-owned actions (the product page)', () => {
+  const buyer = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+  /** Hidden from `lg` up: phones still get the element. */
+  const desktopHidden = (element: HTMLElement) =>
+    element.closest('.lg\\:hidden') !== null;
+
+  it('keeps the usual actions and no slot on other routes', async () => {
+    renderHeader();
+
+    const signIn = await screen.findByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    expect(desktopHidden(signIn)).toBe(false);
+    expect(
+      document.querySelector('[data-slot="header-route-actions"]'),
+    ).toBeNull();
+  });
+
+  it('hands the route a desktop slot in place of the sign-in links', async () => {
+    const routeActionsRef = vi.fn();
+    renderHeader({ routeActionsRef });
+
+    const signIn = await screen.findByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    const slot = document.querySelector<HTMLElement>(
+      '[data-slot="header-route-actions"]',
+    );
+    expect(slot).not.toBeNull();
+    expect(slot).toHaveClass('hidden', 'lg:flex');
+    expect(routeActionsRef).toHaveBeenCalledWith(slot);
+    // Phones keep Sign in / Sign up; desktops show the route's actions.
+    expect(desktopHidden(signIn)).toBe(true);
+    expect(
+      desktopHidden(
+        screen.getByRole('link', { name: m.siteHeader_signUpLabel() }),
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps the signed-in account menu after the route actions', async () => {
+    renderHeader({
+      user: buyer,
+      routeActionsRef: vi.fn(),
+    });
+
+    const account = await findAccountButton();
+    expect(desktopHidden(account)).toBe(false);
+    const slot = document.querySelector('[data-slot="header-route-actions"]');
+    expect(
+      slot &&
+        slot.compareDocumentPosition(account) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

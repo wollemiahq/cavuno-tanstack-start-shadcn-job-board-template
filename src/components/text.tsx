@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 
 type HeadingVariant =
   | 'display'
+  | 'headline'
   | 'heading1'
   | 'heading2'
   | 'heading3'
@@ -48,6 +49,9 @@ type BodySize = 'xs' | 'sm' | 'base' | 'lg';
 /** The `text-*` size + `font-*` weight + default `text-*` color per role. */
 const VARIANT_CLASSES = {
   display: 'text-4xl font-semibold text-foreground md:text-5xl',
+  /** A detail page's title: heading2 on phones, 32px on desktops. */
+  headline:
+    'text-2xl font-semibold text-foreground md:text-3xl lg:text-[2rem] lg:leading-tight lg:tracking-tight',
   heading1: 'text-3xl font-semibold text-foreground',
   heading2: 'text-2xl font-semibold text-foreground',
   heading3: 'text-xl font-semibold text-foreground',

@@ -82,9 +82,9 @@ export function ProductCarousel({ images }: { images: readonly string[] }) {
         <ProductCover key={images[index]} src={images[index]} />
         <Button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="absolute start-3 top-1/2 -translate-y-1/2 rounded-full shadow-sm"
+          variant="overlay"
+          size="icon-xl"
+          className="absolute start-3 top-1/2 -translate-y-1/2 lg:start-4"
           aria-label={m.product_previousImageLabel()}
           onClick={previous}
         >
@@ -92,9 +92,9 @@ export function ProductCarousel({ images }: { images: readonly string[] }) {
         </Button>
         <Button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="absolute end-3 top-1/2 -translate-y-1/2 rounded-full shadow-sm"
+          variant="overlay"
+          size="icon-xl"
+          className="absolute end-3 top-1/2 -translate-y-1/2 lg:end-4"
           aria-label={m.product_nextImageLabel()}
           onClick={next}
         >

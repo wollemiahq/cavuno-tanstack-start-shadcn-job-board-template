@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 /**
  * Root: loads the PUBLIC board shell once (identity, features, SEO)
@@ -55,6 +55,10 @@ import {
 } from '@/components/cookie-consent';
 import { DeferredToaster } from '@/components/deferred-toaster';
 import { FloatingStackProvider } from '@/components/floating-stack';
+import {
+  HeaderRouteActionsProvider,
+  routeOwnsHeaderActions,
+} from '@/components/header-route-actions';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
@@ -135,6 +139,11 @@ declare module '@tanstack/react-router' {
      * say (the product routes: `products`, whatever words their URLs use).
      */
     headerSearchScope?: HeaderSearchScope;
+    /**
+     * The page fills the desktop header's actions (`<HeaderRouteActions>`)
+     * in place of the sign-in links; see src/components/header-route-actions.tsx.
+     */
+    ownsHeaderActions?: boolean;
   }
 }
 
@@ -270,6 +279,12 @@ function RootChrome({
   const fillsViewport = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
   });
+  // A route that fills the header's actions slot itself (the product page).
+  const ownsHeaderActions = useRouterState({
+    select: (s) => routeOwnsHeaderActions(s.matches),
+  });
+  const [headerActionsSlot, setHeaderActionsSlot] =
+    useState<HTMLElement | null>(null);
   // The deepest rendered route's declared header search scope, if any.
   const routeSearchScope = useRouterState({
     select: (s) =>
@@ -485,6 +500,7 @@ function RootChrome({
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       hasMembershipPage={offerGate.hasMembershipPage}
       hasProductsPage={offerGate.hasProductsPage}
+      routeActionsRef={ownsHeaderActions ? setHeaderActionsSlot : undefined}
       messagesNav={
         user && board.features.messaging ? (
           <Suspense fallback={null}>
@@ -506,7 +522,7 @@ function RootChrome({
       }}
     />
   );
-  const routeContent = ownsMain ? (
+  const routeContentInner = ownsMain ? (
     <MainContentTarget
       className={fillsViewport ? 'flex-1 md:h-full md:min-h-0' : 'flex-1'}
     >
@@ -528,6 +544,13 @@ function RootChrome({
         </Container>
       </main>
     </MainContentTarget>
+  );
+  const routeContent = (
+    <HeaderRouteActionsProvider
+      value={ownsHeaderActions ? headerActionsSlot : null}
+    >
+      {routeContentInner}
+    </HeaderRouteActionsProvider>
   );
 
   return (

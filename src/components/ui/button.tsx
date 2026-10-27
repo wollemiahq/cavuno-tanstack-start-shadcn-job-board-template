@@ -18,6 +18,9 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
+        /** A round control floating over an image, e.g. carousel arrows. */
+        overlay:
+          'border-border bg-background text-foreground hover:bg-muted rounded-full shadow-sm',
         /** A control inside a line of text, e.g. a distance menu in a sentence. */
         inline:
           'text-foreground hover:bg-muted aria-expanded:bg-muted font-semibold',
@@ -30,10 +33,13 @@ const buttonVariants = cva(
         inline: "h-6 gap-0.5 px-1 text-xs [&_svg:not([class*='size-'])]:size-3",
         sm: 'h-7 gap-1 px-3 has-data-[icon=inline-end]:pe-2 has-data-[icon=inline-start]:ps-2',
         lg: 'h-9 gap-1.5 px-4 has-data-[icon=inline-end]:pe-3 has-data-[icon=inline-start]:ps-3',
+        /** 44px tall: a page's main call to action. */
+        xl: 'h-11 gap-2 px-5 text-base has-data-[icon=inline-end]:pe-4 has-data-[icon=inline-start]:ps-4',
         icon: 'size-8',
         'icon-xs': "size-6 [&_svg:not([class*='size-'])]:size-3",
         'icon-sm': 'size-7',
         'icon-lg': 'size-9',
+        'icon-xl': 'size-10',
       },
     },
     defaultVariants: {

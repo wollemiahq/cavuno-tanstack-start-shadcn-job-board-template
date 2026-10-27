@@ -39,13 +39,18 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
 
 function AvatarFallback({
   className,
+  variant = 'muted',
   ...props
-}: AvatarPrimitive.Fallback.Props) {
+}: AvatarPrimitive.Fallback.Props & {
+  /** `inverse`: foreground-coloured disc with background-coloured initials. */
+  variant?: 'muted' | 'inverse';
+}) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
+      data-variant={variant}
       className={cn(
-        'bg-muted text-muted-foreground flex size-full items-center justify-center rounded-full text-sm group-data-[size=sm]/avatar:text-xs',
+        'bg-muted text-muted-foreground data-[variant=inverse]:bg-foreground data-[variant=inverse]:text-background flex size-full items-center justify-center rounded-full text-sm group-data-[size=sm]/avatar:text-xs data-[variant=inverse]:font-semibold',
         className,
       )}
       {...props}

@@ -3,7 +3,11 @@
  * and star ratings. Pure functions over the Board API wire shapes so the
  * listing, product page, download page and library word them the same way.
  */
-import type { ProductPrice } from '@cavuno/board';
+import type {
+  ProductDetailRow,
+  ProductPrice,
+  PurchaseSummary,
+} from '@cavuno/board';
 
 export function formatMoney(
   locale: string,
@@ -131,14 +135,19 @@ export function formatRating(locale: string, average: number): string {
   }).format(average);
 }
 
-export type ProductFactRow = { label: string; value: string };
+/**
+ * One facts-table row: `text` shows its value, `check` is a yes/no row the
+ * page shows as a tick or a cross.
+ */
+export type ProductFactRow = ProductDetailRow;
 
 /**
  * The product page's facts table: the seller's own detail rows, then the
  * computed rows (pages, files) the seller has not already given. A computed
- * row is left out when a seller row has the same label, compared trimmed and
- * case-insensitively against the computed row's localized label, so a
- * seller's "Pages: 1 or 2 per template" wins over the counted "Pages: 20".
+ * row is left out when a seller row of either kind has the same label,
+ * compared trimmed and case-insensitively against the computed row's
+ * localized label, so a seller's "Pages: 1 or 2 per template" wins over the
+ * counted "Pages: 20".
  */
 export function productFactRows(
   details: readonly ProductFactRow[],
@@ -150,6 +159,21 @@ export function productFactRows(
     ...details,
     ...computed.filter((row) => !sellerLabels.has(key(row.label))),
   ];
+}
+
+/**
+ * The signed-in buyer's purchase of this product, from their library (newest
+ * first): the newest one that can still be delivered, or null.
+ */
+export function ownedPurchase(
+  purchases: readonly PurchaseSummary[],
+  productSlug: string,
+): PurchaseSummary | null {
+  return (
+    purchases.find(
+      (purchase) => purchase.product.slug === productSlug && purchase.available,
+    ) ?? null
+  );
 }
 
 /**

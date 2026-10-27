@@ -114,6 +114,7 @@ export default function Header({
   hasProductsPage = false,
   search,
   messagesNav,
+  routeActionsRef,
 }: {
   boardName: string;
   logoUrl: string | null;
@@ -138,6 +139,14 @@ export default function Header({
   /** Whether the board lists a digital product (the Products link). */
   hasProductsPage?: boolean;
   messagesNav?: ReactNode;
+  /**
+   * Set when the route owns the header's actions
+   * (`staticData.ownsHeaderActions`): from `lg` up the header renders an
+   * empty slot the page fills, in place of the sign-in, post-a-job and
+   * sign-up links and the messages link; the account menu stays after it.
+   * Phones keep the usual actions.
+   */
+  routeActionsRef?: (element: HTMLDivElement | null) => void;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     keywordSuggestions: KeywordSuggestionState;
@@ -349,6 +358,10 @@ export default function Header({
       ) : null}
     </div>
   );
+  // On a route that owns the header's actions, these give way to the route's
+  // slot from `lg` up.
+  const belowLgOnRouteActions = (node: ReactNode) =>
+    routeActionsRef ? <div className="contents lg:hidden">{node}</div> : node;
   const accountActions = signingOut ? (
     <Button
       type="button"
@@ -365,7 +378,7 @@ export default function Header({
     </Button>
   ) : user ? (
     <>
-      {messagesNav}
+      {belowLgOnRouteActions(messagesNav)}
       <Suspense fallback={null}>
         <LazyAccountMenu
           user={user}
@@ -382,23 +395,25 @@ export default function Header({
       </Suspense>
     </>
   ) : (
-    <>
-      {authEnabled ? (
-        <Link
-          to="/auth/sign-in"
-          search={{ returnTo: '/account' }}
-          className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-        >
-          {signInLabel}
-        </Link>
-      ) : null}
-      {postJob}
-      {signUpHref ? (
-        <Link to={signUpHref} className={buttonVariants({ size: 'sm' })}>
-          {signUpLabel}
-        </Link>
-      ) : null}
-    </>
+    belowLgOnRouteActions(
+      <>
+        {authEnabled ? (
+          <Link
+            to="/auth/sign-in"
+            search={{ returnTo: '/account' }}
+            className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+          >
+            {signInLabel}
+          </Link>
+        ) : null}
+        {postJob}
+        {signUpHref ? (
+          <Link to={signUpHref} className={buttonVariants({ size: 'sm' })}>
+            {signUpLabel}
+          </Link>
+        ) : null}
+      </>,
+    )
   );
 
   return (
@@ -445,6 +460,13 @@ export default function Header({
               data-test="header-actions"
               className="col-start-2 row-start-1 flex shrink-0 items-center gap-2 justify-self-end xl:col-start-3"
             >
+              {routeActionsRef ? (
+                <div
+                  ref={routeActionsRef}
+                  data-slot="header-route-actions"
+                  className="hidden items-center gap-4 lg:flex"
+                />
+              ) : null}
               {accountActions}
               <Button
                 ref={menuButtonRef}

@@ -24,7 +24,7 @@ import {
 
 import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Clock, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Check, X } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -32,7 +32,9 @@ import { getLocale } from '../paraglide/runtime';
 import {
   fileTypeLabels,
   formatRating,
+  ownedPurchase,
   productFactRows,
+  type ProductFactRow,
 } from '@/board/product-view-model';
 import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { ProductCarousel } from '@/components/board/product-carousel';
@@ -51,7 +53,7 @@ import {
   PurchaseResendDialog,
   type ResendLinkAction,
 } from '@/components/board/purchase-resend-dialog';
-import { EmptyState } from '@/components/empty-state';
+import { HeaderRouteActions } from '@/components/header-route-actions';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Prose } from '@/components/prose';
@@ -59,15 +61,8 @@ import { useRootSession } from '@/components/root-session';
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import type {
@@ -76,12 +71,20 @@ import type {
   ProductCheckoutStatus,
   ProductReview,
   ProductReviewListEnvelope,
+  PurchaseSummary,
+  PurchaseSummaryListEnvelope,
 } from '@cavuno/board';
 
 // Loaded when the buyer starts buying: the product page itself stays light.
 const ProductCheckoutForm = lazy(() =>
   import('@/components/board/product-checkout-form').then((module) => ({
     default: module.ProductCheckoutForm,
+  })),
+);
+// Only a buyer coming back from Stripe sees the confirming states.
+const CheckoutReturnState = lazy(() =>
+  import('@/components/board/product-checkout-return').then((module) => ({
+    default: module.CheckoutReturnState,
   })),
 );
 const EmbeddedCheckout = lazy(() =>
@@ -105,6 +108,8 @@ export type ProductPageDependencies = {
   loadReviews: (input: {
     data: { productSlug: string; cursor?: string };
   }) => Promise<ProductReviewListEnvelope>;
+  /** The signed-in visitor's library (`/me/purchases`). */
+  loadMyPurchases: () => Promise<PurchaseSummaryListEnvelope>;
 };
 
 type MountKit = {
@@ -185,6 +190,105 @@ function useCheckoutReturn(
   };
 }
 
+/**
+ * The signed-in visitor's own purchase of this product, or null. Read in the
+ * browser after the page has loaded, and only for a signed-in visitor, so the
+ * shared (edge-cached) product page never carries anyone's purchases. A
+ * failed read leaves the usual buy card. The purchase is kept with the user
+ * it was read for, so signing out (or in as someone else) drops it at once.
+ */
+function useOwnedPurchase(
+  productSlug: string,
+  userId: string | null,
+  loadMyPurchases: ProductPageDependencies['loadMyPurchases'],
+): PurchaseSummary | null {
+  const [owned, setOwned] = useState<{
+    userId: string;
+    purchase: PurchaseSummary | null;
+  } | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    loadMyPurchases().then(
+      (library) => {
+        if (cancelled) return;
+        setOwned({
+          userId,
+          purchase: ownedPurchase(library.data, productSlug),
+        });
+      },
+      () => {
+        if (!cancelled) setOwned({ userId, purchase: null });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [loadMyPurchases, productSlug, userId]);
+  return owned && userId && owned.userId === userId ? owned.purchase : null;
+}
+
+/** A link styled as a button to the buyer's download page. */
+function DownloadPageLink({
+  purchase,
+  size,
+  className,
+}: {
+  purchase: PurchaseSummary;
+  size: 'default' | 'lg' | 'xl';
+  className?: string;
+}) {
+  return (
+    <Link
+      to="/purchases/$purchaseToken"
+      params={{ purchaseToken: purchase.purchaseToken }}
+      className={cn(buttonVariants({ size }), 'hover:no-underline', className)}
+    >
+      {m.product_openDownloadPageAction()}
+    </Link>
+  );
+}
+
+/**
+ * The desktop header's actions on the product page (`lg` and up): the
+ * stars, the price and the buy button, which opens the same buying step as
+ * the price card. A buyer who owns the product gets their download page.
+ */
+function ProductHeaderActions({
+  rating,
+  priceLabel,
+  ctaLabel,
+  soldOut,
+  owned,
+  onBuy,
+}: {
+  rating: Product['rating'] | null;
+  priceLabel: string;
+  ctaLabel: string;
+  soldOut: boolean;
+  owned: PurchaseSummary | null;
+  onBuy: () => void;
+}) {
+  return (
+    <div
+      data-slot="product-header-actions"
+      className="flex items-center gap-4 text-sm whitespace-nowrap"
+    >
+      <ReviewsLink rating={rating} />
+      <span className="text-foreground text-base font-semibold">
+        {priceLabel}
+      </span>
+      {owned ? (
+        <DownloadPageLink purchase={owned} size="default" />
+      ) : soldOut ? (
+        <Button disabled>{m.product_soldOutLabel()}</Button>
+      ) : (
+        <Button onClick={onBuy}>{ctaLabel}</Button>
+      )}
+    </div>
+  );
+}
+
 /** The board selling the product: the seller line under the title. */
 export type ProductSeller = { name: string; logoUrl: string | null };
 
@@ -233,6 +337,11 @@ export function ProductPageView({
   const railFits = useFitsViewport(railElement);
   const priceLabel = productPriceText(product.price);
   const ctaLabel = productButtonText(product);
+  const owned = useOwnedPurchase(
+    product.slug,
+    user?.id ?? null,
+    dependencies.loadMyPurchases,
+  );
   const returning = useCheckoutReturn(
     product.slug,
     sessionId ?? kitSessionId,
@@ -273,11 +382,13 @@ export function ProductPageView({
 
   if (returning.state !== 'idle') {
     return (
-      <CheckoutReturnState
-        state={returning.state}
-        productName={product.name}
-        onRetry={returning.retry}
-      />
+      <Suspense fallback={<Spinner className="mx-auto my-24 size-6" />}>
+        <CheckoutReturnState
+          state={returning.state}
+          productName={product.name}
+          onRetry={returning.retry}
+        />
+      </Suspense>
     );
   }
 
@@ -329,10 +440,33 @@ export function ProductPageView({
               onCancel={() => setStep('product')}
             />
           </Suspense>
+        ) : owned ? (
+          // The signed-in buyer already owns it: their download page first,
+          // buying another copy stays possible.
+          <>
+            <p
+              data-slot="product-owned"
+              className="text-foreground text-lg font-semibold"
+            >
+              {m.product_youBoughtThisText()}
+            </p>
+            <DownloadPageLink purchase={owned} size="xl" />
+            <CopyLinkButton url={shareUrl} language={language} size="md" />
+            {product.soldOut ? null : (
+              <Button
+                variant="link"
+                size="sm"
+                className="self-center"
+                onClick={openStep}
+              >
+                {m.product_buyAgainAction()}
+              </Button>
+            )}
+          </>
         ) : (
           <>
             <div className="flex items-baseline justify-between gap-3">
-              <span className="text-foreground text-3xl font-semibold">
+              <span className="text-foreground text-3xl font-semibold lg:text-[2rem] lg:tracking-tight">
                 {priceLabel}
               </span>
               {product.price.kind === 'pay_what_you_want' ? (
@@ -349,7 +483,7 @@ export function ProductPageView({
                 {m.boardError_productSoldOutText()}
               </p>
             ) : (
-              <Button size="lg" onClick={openStep}>
+              <Button size="xl" onClick={openStep}>
                 {ctaLabel}
               </Button>
             )}
@@ -383,6 +517,7 @@ export function ProductPageView({
     ...(product.facts.pageCount
       ? [
           {
+            kind: 'text' as const,
             label: m.product_pagesLabel(),
             value: String(product.facts.pageCount),
           },
@@ -391,6 +526,7 @@ export function ProductPageView({
     ...(fileTypes.length > 0
       ? [
           {
+            kind: 'text' as const,
             label: m.product_filesLabel(),
             value: filesFactValue(product),
           },
@@ -418,15 +554,13 @@ export function ProductPageView({
                 product.summary && 'border-border border-t pt-3',
               )}
             >
-              {factsRows.map((row) => (
+              {factsRows.map((row, index) => (
                 <div
-                  key={`${row.label}:${row.value}`}
+                  key={`${index}:${row.label}`}
                   className="flex justify-between gap-4"
                 >
                   <dt className="text-muted-foreground">{row.label}</dt>
-                  <dd className="text-foreground text-end" dir="auto">
-                    {row.value}
-                  </dd>
+                  <FactValue row={row} />
                 </div>
               ))}
             </dl>
@@ -459,12 +593,7 @@ export function ProductPageView({
                   <ProductCarousel images={product.images} />
                 ) : null}
                 <header className="border-border flex flex-col gap-2 lg:gap-2.5 lg:border-b lg:pt-7 lg:pb-5">
-                  <Text
-                    as="h1"
-                    variant="heading2"
-                    className="md:text-3xl"
-                    dir="auto"
-                  >
+                  <Text as="h1" variant="headline" dir="auto">
                     {product.name}
                   </Text>
                   <div className="flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-4">
@@ -551,7 +680,17 @@ export function ProductPageView({
           </Container>
         </main>
       </Page>
-      {step === 'product' && !product.soldOut && !buyCardInView ? (
+      <HeaderRouteActions>
+        <ProductHeaderActions
+          rating={rating}
+          priceLabel={priceLabel}
+          ctaLabel={ctaLabel}
+          soldOut={product.soldOut}
+          owned={owned}
+          onBuy={openStep}
+        />
+      </HeaderRouteActions>
+      {step === 'product' && (owned || !product.soldOut) && !buyCardInView ? (
         <div
           data-slot="product-buy-bar"
           className="border-border bg-background fixed inset-x-0 bottom-[var(--board-floating-bottom,0px)] z-40 flex items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
@@ -568,9 +707,13 @@ export function ProductPageView({
               />
             ) : null}
           </div>
-          <Button size="lg" className="flex-1" onClick={openStep}>
-            {ctaLabel}
-          </Button>
+          {owned ? (
+            <DownloadPageLink purchase={owned} size="lg" className="flex-1" />
+          ) : (
+            <Button size="lg" className="flex-1" onClick={openStep}>
+              {ctaLabel}
+            </Button>
+          )}
         </div>
       ) : null}
     </>
@@ -622,6 +765,38 @@ function useFitsViewport(element: HTMLElement | null): boolean {
   return fits;
 }
 
+/** A facts row's value: the text, or a tick or a cross for a yes/no row. */
+function FactValue({ row }: { row: ProductFactRow }) {
+  if (row.kind === 'text') {
+    return (
+      <dd className="text-foreground text-end" dir="auto">
+        {row.value}
+      </dd>
+    );
+  }
+  return (
+    <dd data-slot="product-fact-check" data-checked={row.checked}>
+      <span
+        className={cn(
+          'inline-flex size-5 items-center justify-center rounded-full',
+          row.checked
+            ? 'bg-foreground text-background'
+            : 'bg-muted text-muted-foreground',
+        )}
+      >
+        {row.checked ? (
+          <Check aria-hidden="true" className="size-3.5" strokeWidth={3} />
+        ) : (
+          <X aria-hidden="true" className="size-3.5" strokeWidth={2.5} />
+        )}
+        <span className="sr-only">
+          {row.checked ? m.product_detailYes() : m.product_detailNo()}
+        </span>
+      </span>
+    </dd>
+  );
+}
+
 /** "PDF, XLSX, 1 link". */
 function filesFactValue(product: Product): string {
   const parts = fileTypeLabels(product.facts.fileTypes);
@@ -639,8 +814,6 @@ function SellerLine({
   seller: ProductSeller;
   rating: Product['rating'] | null;
 }) {
-  const rated =
-    rating && rating.average !== null && rating.count > 0 ? rating : null;
   return (
     <div
       data-slot="product-seller"
@@ -655,26 +828,34 @@ function SellerLine({
           />
         ) : (
           <Avatar size="sm" aria-hidden="true">
-            <AvatarFallback>{initials(seller.name)}</AvatarFallback>
+            <AvatarFallback variant="inverse">
+              {initials(seller.name)}
+            </AvatarFallback>
           </Avatar>
         )}
         <span dir="auto">{seller.name}</span>
       </span>
-      {rated && rated.average !== null ? (
-        <a
-          href="#reviews"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
-        >
-          <span aria-hidden="true">
-            <ReviewStars stars={rated.average} />
-          </span>
-          {m.product_ratingLong({
-            rating: formatRating(getLocale(), rated.average),
-            count: rated.count,
-          })}
-        </a>
-      ) : null}
+      <ReviewsLink rating={rating} />
     </div>
+  );
+}
+
+/** The stars and "4.6 (7 ratings)", linking down to the reviews. */
+function ReviewsLink({ rating }: { rating: Product['rating'] | null }) {
+  if (!rating || rating.average === null || rating.count === 0) return null;
+  return (
+    <a
+      href="#reviews"
+      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+    >
+      <span aria-hidden="true">
+        <ReviewStars stars={rating.average} />
+      </span>
+      {m.product_ratingLong({
+        rating: formatRating(getLocale(), rating.average),
+        count: rating.count,
+      })}
+    </a>
   );
 }
 
@@ -793,61 +974,5 @@ function ProductReviews({
         </div>
       ) : null}
     </section>
-  );
-}
-
-function CheckoutReturnState({
-  state,
-  productName,
-  onRetry,
-}: {
-  state: 'polling' | 'waiting' | 'removed';
-  productName: string;
-  onRetry: () => void;
-}) {
-  if (state === 'polling') {
-    return (
-      <Page width="content">
-        <PageContent header={<PageHeader title={productName} />}>
-          <Empty className="min-h-80 border-0" data-test="product-confirming">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Spinner className="size-5" />
-              </EmptyMedia>
-              <EmptyTitle>{m.product_confirmingTitle()}</EmptyTitle>
-              <EmptyDescription>{m.product_confirmingText()}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </PageContent>
-      </Page>
-    );
-  }
-  return (
-    <Page width="content">
-      <PageContent>
-        <EmptyState
-          icon={
-            state === 'removed' ? (
-              <ShoppingBag aria-hidden="true" />
-            ) : (
-              <Clock aria-hidden="true" />
-            )
-          }
-          title={productName}
-          description={
-            state === 'removed'
-              ? m.product_accessRemovedText()
-              : m.product_paymentPendingText()
-          }
-          action={
-            state === 'waiting' ? (
-              <Button variant="outline" onClick={onRetry}>
-                {m.appError_retryAction()}
-              </Button>
-            ) : undefined
-          }
-        />
-      </PageContent>
-    </Page>
   );
 }

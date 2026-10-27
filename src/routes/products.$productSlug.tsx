@@ -19,6 +19,7 @@ import {
   resendPurchaseLink,
   startProductCheckout,
 } from '../server/products';
+import { getMyPurchases } from '../server/purchases';
 import { ProductPageView, type ProductPageDependencies } from './-product-page';
 
 import { EmptyState } from '@/components/empty-state';
@@ -40,6 +41,7 @@ const dependencies: ProductPageDependencies = {
   getCheckoutState: getProductCheckoutState,
   resendLink: resendPurchaseLink,
   loadReviews: getProductReviews,
+  loadMyPurchases: getMyPurchases,
 };
 
 const rootApi = getRouteApi('__root__');
@@ -49,6 +51,8 @@ export const Route = createFileRoute('/products/$productSlug')({
     fullBleed: true,
     ownsMain: true,
     headerSearchScope: 'products',
+    // Desktop header: stars, price and the buy button (ProductHeaderActions).
+    ownsHeaderActions: true,
   },
   validateSearch: (search: UrlSearchInput): ProductSearch => ({
     session_id: searchString(search.session_id),

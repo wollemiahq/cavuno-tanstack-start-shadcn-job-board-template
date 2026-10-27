@@ -4,32 +4,63 @@ import { productFactRows, ratingHistogramRows } from './product-view-model';
 
 describe('productFactRows', () => {
   const computed = [
-    { label: 'Pages', value: '20' },
-    { label: 'Files', value: 'PDF' },
+    { kind: 'text' as const, label: 'Pages', value: '20' },
+    { kind: 'text' as const, label: 'Files', value: 'PDF' },
   ];
 
   it('drops each computed row the seller already gave, ignoring case and spaces', () => {
     expect(
       productFactRows(
-        [{ label: '  pages ', value: '1 or 2 per template' }],
+        [
+          {
+            kind: 'text' as const,
+            label: '  pages ',
+            value: '1 or 2 per template',
+          },
+        ],
         computed,
       ),
     ).toEqual([
-      { label: '  pages ', value: '1 or 2 per template' },
-      { label: 'Files', value: 'PDF' },
+      {
+        kind: 'text' as const,
+        label: '  pages ',
+        value: '1 or 2 per template',
+      },
+      { kind: 'text' as const, label: 'Files', value: 'PDF' },
     ]);
     expect(
-      productFactRows([{ label: 'FILES', value: 'Google Docs' }], computed),
+      productFactRows(
+        [{ kind: 'text' as const, label: 'FILES', value: 'Google Docs' }],
+        computed,
+      ),
     ).toEqual([
-      { label: 'FILES', value: 'Google Docs' },
-      { label: 'Pages', value: '20' },
+      { kind: 'text' as const, label: 'FILES', value: 'Google Docs' },
+      { kind: 'text' as const, label: 'Pages', value: '20' },
     ]);
   });
 
   it('keeps every computed row when the seller gave none of them', () => {
     expect(
-      productFactRows([{ label: 'Format', value: 'A4' }], computed),
-    ).toEqual([{ label: 'Format', value: 'A4' }, ...computed]);
+      productFactRows(
+        [{ kind: 'text' as const, label: 'Format', value: 'A4' }],
+        computed,
+      ),
+    ).toEqual([
+      { kind: 'text' as const, label: 'Format', value: 'A4' },
+      ...computed,
+    ]);
+  });
+
+  it('lets a seller yes/no row win over a computed row with its label', () => {
+    expect(
+      productFactRows(
+        [{ kind: 'check', label: 'Pages', checked: false }],
+        computed,
+      ),
+    ).toEqual([
+      { kind: 'check', label: 'Pages', checked: false },
+      { kind: 'text', label: 'Files', value: 'PDF' },
+    ]);
   });
 });
 
