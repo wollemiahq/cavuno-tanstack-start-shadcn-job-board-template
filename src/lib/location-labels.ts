@@ -130,6 +130,10 @@ export function remotePermitsLabel(
       // Fall through to the "+ N more" wording.
     }
   }
+  // The "+ N more" wording comes from the chrome catalog; on a board language
+  // with no compiled catalog it would be English around localized names, so
+  // keep the API's label whole instead.
+  if (!locale) return null;
   return m.label_locationRemoteFirstAndMore(
     { first: named[0]!, count: named.length - 1 },
     locale,

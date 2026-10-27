@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  relatedMarketOptions,
-  relatedSearchesToChips,
-} from './related-searches';
+import { relatedSearchesToChips } from './related-searches';
 
 import type { RelatedSearch } from '@cavuno/board';
 
@@ -49,18 +46,5 @@ describe('relatedSearchesToChips', () => {
         href: '/companies/markets/robotik',
       },
     ]);
-  });
-});
-
-describe('relatedMarketOptions', () => {
-  it('maps market related searches to board-language options', () => {
-    expect(relatedMarketOptions(related)).toEqual([
-      { slug: 'robotik', name: 'Robotik' },
-    ]);
-  });
-
-  it('returns null without market entries so the caller keeps its list', () => {
-    expect(relatedMarketOptions(undefined)).toBeNull();
-    expect(relatedMarketOptions(related.slice(0, 2))).toBeNull();
   });
 });

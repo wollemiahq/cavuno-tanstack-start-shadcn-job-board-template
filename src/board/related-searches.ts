@@ -44,19 +44,3 @@ export function relatedSearchesToChips(
           : jobsCategoryPath(r.canonicalSlug),
   }));
 }
-
-/**
- * The companies index "Browse by market" options from the list response's
- * market `relatedSearches`, in the board language (`displayName`, linked by
- * `canonicalSlug`). `null` when the response has none (a search, or an older
- * API), so the caller keeps the markets taxonomy list, which carries English
- * names only.
- */
-export function relatedMarketOptions(
-  related: RelatedSearch[] | undefined,
-): Array<{ slug: string; name: string }> | null {
-  const markets = (related ?? [])
-    .filter((r) => r.type === 'market')
-    .map((r) => ({ slug: r.canonicalSlug, name: r.displayName }));
-  return markets.length > 0 ? markets : null;
-}
