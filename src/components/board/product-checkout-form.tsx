@@ -4,7 +4,7 @@
  * The short step before payment (or before a free download): the email the
  * link goes to, the amount for pay what you want, the product's buyer
  * questions (a required checkbox covers the EU right-to-cancel waiver), the
- * job-alert opt-in on free products, and a hidden honeypot field. Refusals
+ * job-alert opt-in on free products of a board that sends job alerts, and a hidden honeypot field. Refusals
  * from the Board API are worded under the field they concern.
  */
 import { useId, useState, type FormEvent } from 'react';
@@ -77,11 +77,14 @@ export function refusalField(code: string | null): FieldKey {
 export function ProductCheckoutForm({
   product,
   defaultEmail,
+  offerJobAlertOptIn,
   onSubmit,
   onCancel,
 }: {
   product: Product;
   defaultEmail?: string | null;
+  /** Show the job-alert opt-in (`offersJobAlertOptIn`). */
+  offerJobAlertOptIn: boolean;
   /** Resolves with a refusal to show, or nothing once the step moved on. */
   onSubmit: (
     values: ProductCheckoutValues,
@@ -171,8 +174,7 @@ export function ProductCheckoutForm({
         },
       ),
       amountCents,
-      // The job-alert opt-in is offered on free products only.
-      jobAlertOptIn: free ? jobAlertOptIn : undefined,
+      jobAlertOptIn: offerJobAlertOptIn ? jobAlertOptIn : undefined,
       website: website || undefined,
     };
     setPending(true);
@@ -353,7 +355,7 @@ export function ProductCheckoutForm({
         })}
         {errors.answers ? <FieldError>{errors.answers}</FieldError> : null}
 
-        {free ? (
+        {offerJobAlertOptIn ? (
           <Field orientation="horizontal">
             <Checkbox
               id={`${id}-alerts`}

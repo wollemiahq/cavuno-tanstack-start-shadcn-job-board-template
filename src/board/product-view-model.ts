@@ -178,6 +178,14 @@ export function ownedPurchase(
   );
 }
 
+/** Free products offer the job-alert opt-in on a board that sends job alerts. */
+export function offersJobAlertOptIn(
+  product: Pick<Product, 'price'>,
+  { jobAlertsEnabled }: { jobAlertsEnabled: boolean },
+): boolean {
+  return product.price.kind === 'free' && jobAlertsEnabled;
+}
+
 /**
  * The email a signed-in visitor can buy with straight away, skipping the
  * "Before you pay" step, or null when the step has something to ask: a
@@ -193,7 +201,7 @@ export function directCheckoutEmail(
   if (!user?.emailVerified || !user.email) return null;
   if (product.questions.length > 0) return null;
   if (product.price.kind === 'pay_what_you_want') return null;
-  if (product.price.kind === 'free' && jobAlertsEnabled) return null;
+  if (offersJobAlertOptIn(product, { jobAlertsEnabled })) return null;
   return user.email;
 }
 

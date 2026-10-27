@@ -32,6 +32,7 @@ import { getLocale } from '../paraglide/runtime';
 import {
   directCheckoutEmail,
   fileTypeLabels,
+  offersJobAlertOptIn,
   formatRating,
   ownedPurchase,
   productFactRows,
@@ -604,6 +605,9 @@ export function ProductPageView({
             <ProductCheckoutForm
               product={product}
               defaultEmail={user?.email ?? null}
+              offerJobAlertOptIn={offersJobAlertOptIn(product, {
+                jobAlertsEnabled,
+              })}
               onSubmit={submit}
               onCancel={() => setStep('product')}
             />

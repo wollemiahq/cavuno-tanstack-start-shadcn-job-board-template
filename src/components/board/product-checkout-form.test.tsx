@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ProductCheckoutForm } from './product-checkout-form';
@@ -73,6 +79,7 @@ describe('ProductCheckoutForm', () => {
         product={product()}
         onSubmit={onSubmit}
         onCancel={() => {}}
+        offerJobAlertOptIn
       />,
     );
     fillEmail();
@@ -108,6 +115,7 @@ describe('ProductCheckoutForm', () => {
         })}
         onSubmit={onSubmit}
         onCancel={() => {}}
+        offerJobAlertOptIn
       />,
     );
     fillEmail();
@@ -131,6 +139,7 @@ describe('ProductCheckoutForm', () => {
         product={product({ questions: [] })}
         onSubmit={onSubmit}
         onCancel={() => {}}
+        offerJobAlertOptIn
       />,
     );
     fillEmail();
@@ -149,10 +158,36 @@ describe('ProductCheckoutForm', () => {
         })}
         onSubmit={vi.fn()}
         onCancel={() => {}}
+        offerJobAlertOptIn
       />,
     );
     expect(
       screen.getByRole('checkbox', { name: m.product_jobAlertOptInLabel() }),
     ).not.toBeChecked();
+  });
+
+  it('leaves the opt-in out on a board that sends no job alerts', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ProductCheckoutForm
+        product={product({
+          questions: [],
+          price: { kind: 'free', currency: null, amountCents: 0 },
+        })}
+        defaultEmail="ada@example.com"
+        onSubmit={onSubmit}
+        onCancel={() => {}}
+        offerJobAlertOptIn={false}
+      />,
+    );
+    expect(
+      screen.queryByRole('checkbox', { name: m.product_jobAlertOptInLabel() }),
+    ).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.product_sendFilesAction() }),
+    );
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0].jobAlertOptIn).toBeUndefined();
   });
 });
