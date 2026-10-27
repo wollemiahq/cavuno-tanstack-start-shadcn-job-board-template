@@ -1,11 +1,11 @@
 /**
- * `/products/$productSlug` — the product page. The main column holds the
- * cover images, the title with the seller line, the formatted description
- * and the reviews (rating distribution first). The rail holds the price card
- * and the facts table, and stays in view while the reader scrolls when it
- * fits the window. On a phone the order is cover, title, price card,
- * description, facts, reviews, with a buy bar at the bottom once the price
- * card has scrolled away.
+ * `/products/$productSlug` — the product page. The cover images and the
+ * title with the seller line run the full width; below them the main column
+ * holds the formatted description and the reviews (rating distribution
+ * first), and the rail beside it holds the price card and the facts table,
+ * staying in view while the reader scrolls when it fits the window. On a
+ * phone the order is cover, title, price card, description, facts, reviews,
+ * with a buy bar at the bottom once the price card has scrolled away.
  *
  * Buying: the price card turns into a short step (email, amount, questions).
  * A free claim goes straight to the download page; a paid product mounts the
@@ -52,8 +52,8 @@ import {
   type ResendLinkAction,
 } from '@/components/board/purchase-resend-dialog';
 import { EmptyState } from '@/components/empty-state';
+import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
-import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
 import { useRootSession } from '@/components/root-session';
 import { Text } from '@/components/text';
@@ -437,99 +437,120 @@ export function ProductPageView({
 
   return (
     <>
-      <PageLayout>
-        <div className="flex flex-col gap-4 pb-24 lg:pb-0">
-          <Link
-            to="/products"
-            className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 rtl:rotate-180" />
-            {m.products_metaTitle()}
-          </Link>
-          <div
-            data-slot="product-layout"
-            className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start lg:gap-x-10 lg:gap-y-8"
-          >
-            {product.images.length > 0 ? (
-              <div className="lg:col-start-1">
-                <ProductCarousel images={product.images} />
-              </div>
-            ) : null}
-            <header className="flex flex-col gap-2 lg:col-start-1">
-              <Text
-                as="h1"
-                variant="heading2"
-                className="md:text-3xl"
-                dir="auto"
+      <Page width="wide">
+        <main data-layout="product-page">
+          <Container width="wide">
+            {/* Desktop: back link, the cover and the title block run the
+                full width; the rail starts beside the description below
+                the divider. Phones stack everything in reading order. */}
+            <div className="mx-auto flex w-full max-w-[77rem] flex-col gap-4 pt-8 pb-32 md:pt-10 lg:pt-6 lg:pb-16">
+              <Link
+                to="/products"
+                className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
               >
-                {product.name}
-              </Text>
-              <SellerLine seller={seller} rating={rating} />
-              {fileTypes.length > 0 || product.soldOut ? (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {fileTypes.length > 0 ? (
-                    <Badge variant="secondary">{fileTypes.join(' · ')}</Badge>
-                  ) : null}
-                  {product.soldOut ? (
-                    <Badge variant="outline">{m.product_soldOutLabel()}</Badge>
-                  ) : null}
-                </div>
-              ) : null}
-            </header>
-            <aside
-              ref={setRailElement}
-              aria-label={m.product_purchaseRegionLabel()}
-              data-sticky={railFits ? 'true' : 'false'}
-              className="flex flex-col gap-4 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:data-[sticky=true]:sticky lg:data-[sticky=true]:top-24"
-            >
-              <div
-                ref={(element) => {
-                  buyCardRef.current = element;
-                  setBuyCardElement(element);
-                }}
-                className="scroll-mt-24"
-              >
-                {buyCard}
-              </div>
-              {/* The rail's copy; phones read it after the description. */}
-              {factsCard ? (
-                <div className="hidden lg:block">{factsCard}</div>
-              ) : null}
-            </aside>
-            <div data-slot="product-description" className="lg:col-start-1">
-              {product.descriptionHtml ? (
-                <Prose html={product.descriptionHtml} />
-              ) : product.description ? (
-                <div
-                  className="text-foreground leading-relaxed whitespace-pre-line"
-                  dir="auto"
-                >
-                  {product.description}
-                </div>
-              ) : null}
-              {product.refundPolicy ? (
-                <p className="text-muted-foreground mt-6 text-sm whitespace-pre-line">
-                  <span className="text-foreground font-medium">
-                    {m.product_refundPolicyLabel()}
-                  </span>{' '}
-                  {product.refundPolicy}
-                </p>
-              ) : null}
-            </div>
-            {factsCard ? <div className="lg:hidden">{factsCard}</div> : null}
-            {rating ? (
-              <div className="lg:col-start-1">
-                <ProductReviews
-                  productSlug={product.slug}
-                  rating={rating}
-                  initial={reviews}
-                  loadReviews={dependencies.loadReviews}
+                <ArrowLeft
+                  aria-hidden="true"
+                  className="size-4 rtl:rotate-180"
                 />
+                {m.products_metaTitle()}
+              </Link>
+              <div className="flex flex-col gap-6 lg:gap-0">
+                {product.images.length > 0 ? (
+                  <ProductCarousel images={product.images} />
+                ) : null}
+                <header className="border-border flex flex-col gap-2 lg:gap-2.5 lg:border-b lg:pt-7 lg:pb-5">
+                  <Text
+                    as="h1"
+                    variant="heading2"
+                    className="md:text-3xl"
+                    dir="auto"
+                  >
+                    {product.name}
+                  </Text>
+                  <div className="flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-4">
+                    <SellerLine seller={seller} rating={rating} />
+                    {fileTypes.length > 0 || product.soldOut ? (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {fileTypes.length > 0 ? (
+                          <Badge variant="secondary">
+                            {fileTypes.join(' · ')}
+                          </Badge>
+                        ) : null}
+                        {product.soldOut ? (
+                          <Badge variant="outline">
+                            {m.product_soldOutLabel()}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </header>
+                <div
+                  data-slot="product-layout"
+                  className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_22.5rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-12 lg:gap-y-8 lg:pt-8"
+                >
+                  <aside
+                    ref={setRailElement}
+                    aria-label={m.product_purchaseRegionLabel()}
+                    data-sticky={railFits ? 'true' : 'false'}
+                    className="flex flex-col gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:data-[sticky=true]:sticky lg:data-[sticky=true]:top-24"
+                  >
+                    <div
+                      ref={(element) => {
+                        buyCardRef.current = element;
+                        setBuyCardElement(element);
+                      }}
+                      className="scroll-mt-24"
+                    >
+                      {buyCard}
+                    </div>
+                    {/* The rail's copy; phones read it after the description. */}
+                    {factsCard ? (
+                      <div className="hidden lg:block">{factsCard}</div>
+                    ) : null}
+                  </aside>
+                  <div
+                    data-slot="product-description"
+                    className="lg:col-start-1 lg:row-start-1"
+                  >
+                    {product.descriptionHtml ? (
+                      <Prose html={product.descriptionHtml} />
+                    ) : product.description ? (
+                      <div
+                        className="text-foreground leading-relaxed whitespace-pre-line"
+                        dir="auto"
+                      >
+                        {product.description}
+                      </div>
+                    ) : null}
+                    {product.refundPolicy ? (
+                      <p className="text-muted-foreground mt-6 text-sm whitespace-pre-line">
+                        <span className="text-foreground font-medium">
+                          {m.product_refundPolicyLabel()}
+                        </span>{' '}
+                        {product.refundPolicy}
+                      </p>
+                    ) : null}
+                  </div>
+                  {factsCard ? (
+                    <div className="lg:hidden">{factsCard}</div>
+                  ) : null}
+                  {rating ? (
+                    <div className="lg:col-start-1 lg:row-start-2">
+                      <ProductReviews
+                        productSlug={product.slug}
+                        rating={rating}
+                        initial={reviews}
+                        loadReviews={dependencies.loadReviews}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-          </div>
-        </div>
-      </PageLayout>
+            </div>
+          </Container>
+        </main>
+      </Page>
       {step === 'product' && !product.soldOut && !buyCardInView ? (
         <div
           data-slot="product-buy-bar"

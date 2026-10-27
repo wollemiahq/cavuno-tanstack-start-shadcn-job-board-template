@@ -249,6 +249,28 @@ describe('route-owned search scope', () => {
     );
   });
 
+  it('uses the scope a route declares over its path, with no location', () => {
+    for (const path of ['/products', '/produits/cv-pack']) {
+      expect(
+        resolveHeaderSearchState(
+          path,
+          { q: 'resume', place: 'berlin' },
+          'Berlin',
+          'Resume',
+          'talent',
+          'products',
+        ),
+      ).toEqual({
+        visible: true,
+        scope: 'products',
+        query: 'resume',
+        location: null,
+        term: null,
+        market: null,
+      });
+    }
+  });
+
   it('hides shared search on private shells without pinning header markup', () => {
     expect(resolveHeaderSearchState('/account', {}).visible).toBe(false);
     expect(resolveHeaderSearchState('/employers/dashboard', {}).visible).toBe(

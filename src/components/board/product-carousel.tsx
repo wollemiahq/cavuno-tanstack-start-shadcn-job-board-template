@@ -102,7 +102,7 @@ export function ProductCarousel({ images }: { images: readonly string[] }) {
         </Button>
         <div
           aria-hidden="true"
-          className="bg-background/80 absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full px-2 py-1 sm:hidden"
+          className="bg-background/80 absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full px-2 py-1"
         >
           {images.map((image, dot) => (
             <span

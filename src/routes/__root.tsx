@@ -72,6 +72,7 @@ import { cookieConsentDecidedScript } from '@/lib/cookie-consent';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
+  type HeaderSearchScope,
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
 import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
@@ -129,6 +130,11 @@ declare module '@tanstack/react-router' {
     ownsMain?: boolean;
     /** Search workspaces fill the desktop viewport below their natural header. */
     fillsViewport?: boolean;
+    /**
+     * What the header search searches on this route, when its path does not
+     * say (the product routes: `products`, whatever words their URLs use).
+     */
+    headerSearchScope?: HeaderSearchScope;
   }
 }
 
@@ -264,6 +270,14 @@ function RootChrome({
   const fillsViewport = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
   });
+  // The deepest rendered route's declared header search scope, if any.
+  const routeSearchScope = useRouterState({
+    select: (s) =>
+      s.matches
+        .map((match) => match.staticData?.headerSearchScope)
+        .filter((scope) => scope !== undefined)
+        .at(-1),
+  });
   const location = useRouterState({ select: (s) => s.location });
   // The location whose matches are rendered. `location` moves to the next URL
   // as soon as a navigation starts, while `matches` (and so the header's
@@ -331,6 +345,7 @@ function RootChrome({
     isApprovedEmployer && board.talentDirectoryVisibility !== 'off'
       ? 'talent'
       : 'jobs',
+    routeSearchScope,
   );
   // On /talent the location field filters candidates, so it suggests the
   // places candidates live in rather than places with jobs. The jobs field
@@ -407,6 +422,11 @@ function RootChrome({
       }
 
       void navigate({ to: '/companies', search: { query } });
+      return;
+    }
+
+    if (scope === 'products') {
+      void navigate({ to: '/products', search: { q: query } });
       return;
     }
 

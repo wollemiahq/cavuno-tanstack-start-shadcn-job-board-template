@@ -93,6 +93,7 @@ export interface HeaderSearchProps {
   companiesPlaceholder: string;
   talentPlaceholder: string;
   blogPlaceholder: string;
+  productsPlaceholder: string;
 }
 
 function HeaderSearch(props: HeaderSearchProps) {
@@ -343,6 +344,7 @@ export default function Header({
           companiesPlaceholder={m.companySearchBar_placeholderText()}
           talentPlaceholder={m.talentDirectory_searchPlaceholder()}
           blogPlaceholder={m.blogSearchBar_placeholderText()}
+          productsPlaceholder={m.productSearchBar_placeholderText()}
         />
       ) : null}
     </div>

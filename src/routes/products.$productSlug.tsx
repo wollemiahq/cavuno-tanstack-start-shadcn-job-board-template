@@ -45,7 +45,11 @@ const dependencies: ProductPageDependencies = {
 const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/products/$productSlug')({
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: {
+    fullBleed: true,
+    ownsMain: true,
+    headerSearchScope: 'products',
+  },
   validateSearch: (search: UrlSearchInput): ProductSearch => ({
     session_id: searchString(search.session_id),
     buy: search.buy === true || search.buy === 'true' ? true : undefined,

@@ -1,12 +1,11 @@
 /**
- * `/products` — the store listing: a toolbar with search, price filter and
- * sort, then a responsive grid of product cards (cover, name, summary,
+ * `/products` — the store listing: a toolbar with the price filter and sort
+ * (the site header's search field searches products here), then a
+ * responsive grid of product cards (cover, name, summary,
  * price, rating), each linking to its product page.
  */
-import { useState, type FormEvent } from 'react';
-
 import { Link, useLocation, useRouter } from '@tanstack/react-router';
-import { ArrowUpDown, Search, ShoppingBag } from 'lucide-react';
+import { ArrowUpDown, ShoppingBag } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 
@@ -24,12 +23,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from '@/components/ui/input-group';
 import {
   Select,
   SelectContent,
@@ -87,16 +80,6 @@ export function ProductsPageView({
           data-slot="products-toolbar"
           className="flex flex-wrap items-center gap-2"
         >
-          <ProductSearchField
-            key={search.q ?? ''}
-            initial={search.q ?? ''}
-            onSubmit={(q) =>
-              onSearchChange({
-                kind: 'filter',
-                filters: { q: q || undefined },
-              })
-            }
-          />
           <Select
             items={priceItems}
             value={search.price ?? ANY_PRICE}
@@ -218,47 +201,5 @@ export function ProductsPageView({
         )}
       </main>
     </Page>
-  );
-}
-
-function ProductSearchField({
-  initial,
-  onSubmit,
-}: {
-  initial: string;
-  onSubmit: (q: string) => void;
-}) {
-  const [value, setValue] = useState(initial);
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    onSubmit(value.trim());
-  }
-  return (
-    <form
-      role="search"
-      onSubmit={submit}
-      className="w-full sm:w-auto sm:min-w-72"
-    >
-      <InputGroup>
-        <InputGroupInput
-          type="search"
-          name="q"
-          value={value}
-          maxLength={200}
-          placeholder={m.products_searchPlaceholder()}
-          aria-label={m.products_searchLabel()}
-          onChange={(event) => setValue(event.target.value)}
-        />
-        <InputGroupAddon align="inline-end">
-          <InputGroupButton
-            type="submit"
-            size="icon-xs"
-            aria-label={m.products_searchLabel()}
-          >
-            <Search aria-hidden="true" />
-          </InputGroupButton>
-        </InputGroupAddon>
-      </InputGroup>
-    </form>
   );
 }

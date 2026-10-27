@@ -35,6 +35,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   resolveHeaderSearchState,
+  type HeaderSearchScope,
   type HeaderSearchSubmission,
 } from '../lib/header-search';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
@@ -113,6 +114,7 @@ function renderHeader({
   resolvedKeywordLabel,
   jobRecommendationsEnabled = true,
   routePlaceNames,
+  routeSearchScope,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -144,6 +146,8 @@ function renderHeader({
    * loaders would (a slug missing here is a place the route cannot name).
    */
   routePlaceNames?: Record<string, string>;
+  /** The scope the route declares, as a route's `headerSearchScope` does. */
+  routeSearchScope?: HeaderSearchScope;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
@@ -151,6 +155,8 @@ function renderHeader({
     Object.fromEntries(initialUrl.searchParams),
     initialUrl.pathname.startsWith('/jobs/locations/') ? 'Sydney' : undefined,
     resolvedKeywordLabel,
+    'jobs',
+    routeSearchScope,
   );
   // Mounted once in the root route, as __root.tsx does, so navigation keeps
   // the same Header instance instead of remounting it with each page.
@@ -199,6 +205,8 @@ function renderHeader({
         });
       } else if (scope === 'blog') {
         void navigate({ to: '/blog', search: { q: query } });
+      } else if (scope === 'products') {
+        void navigate({ to: '/products', search: { q: query } });
       } else if (location && term?.type === 'skill') {
         void navigate({
           to: '/jobs/locations/$location/skills/$skill',
@@ -314,6 +322,7 @@ function renderHeader({
       route('/talent'),
       route('/p/$handle'),
       route('/blog'),
+      route('/products'),
       route('/post'),
       route('/auth/sign-in'),
       route('/auth/join'),
@@ -1071,6 +1080,37 @@ describe('Header — pathname-scoped submit-only search', () => {
         name: m.locationCombobox_locationAriaLabel(),
       }),
     ).toBeNull();
+  });
+
+  it('searches products by keyword alone on the product routes', async () => {
+    const router = renderHeader({
+      initialEntry: '/products?q=resume',
+      routeSearchScope: 'products',
+    });
+
+    const productsSearch = await screen.findByRole('search');
+    expect(productsSearch).toHaveAttribute('data-search-scope', 'products');
+    const searchbox = within(productsSearch).getByRole('searchbox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
+    expect(searchbox).toHaveAttribute(
+      'placeholder',
+      m.productSearchBar_placeholderText(),
+    );
+    expect(searchbox).toHaveValue('resume');
+    expect(
+      within(productsSearch).queryByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+    ).toBeNull();
+
+    fireEvent.change(searchbox, { target: { value: 'cover letter' } });
+    submitContainingForm(searchbox);
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/products'),
+    );
+    expect(router.state.location.search).toEqual({ q: 'cover letter' });
   });
 
   it('stages a canonical Jobs suggestion and navigates only when Search is submitted', async () => {
