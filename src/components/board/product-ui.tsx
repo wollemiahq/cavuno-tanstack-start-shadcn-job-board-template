@@ -141,15 +141,9 @@ export function ProductSearchResult({
               </p>
             ) : null}
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              {product.price.kind === 'free' ? (
-                <Badge variant="secondary">
-                  {productPriceText(product.price)}
-                </Badge>
-              ) : (
-                <span className="text-foreground font-semibold">
-                  {productPriceText(product.price)}
-                </span>
-              )}
+              <span className="text-foreground font-semibold">
+                {productPriceText(product.price)}
+              </span>
               <RatingSummary
                 average={product.rating?.average ?? null}
                 count={product.rating?.count ?? 0}
