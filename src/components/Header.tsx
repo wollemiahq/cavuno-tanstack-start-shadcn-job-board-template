@@ -115,6 +115,7 @@ export default function Header({
   search,
   messagesNav,
   routeActionsRef,
+  routeActionsFilled = false,
 }: {
   boardName: string;
   logoUrl: string | null;
@@ -141,12 +142,16 @@ export default function Header({
   messagesNav?: ReactNode;
   /**
    * Set when the route owns the header's actions
-   * (`staticData.ownsHeaderActions`): from `lg` up the header renders an
-   * empty slot the page fills, in place of the sign-in, post-a-job and
-   * sign-up links and the messages link; the account menu stays after it.
-   * Phones keep the usual actions.
+   * (`staticData.ownsHeaderActions`): from `lg` up the header renders a
+   * slot the page fills (src/components/header-route-actions.tsx).
    */
   routeActionsRef?: (element: HTMLDivElement | null) => void;
+  /**
+   * The page has filled that slot: from `lg` up the sign-in, post-a-job and
+   * sign-up links and the messages link give way to it; the account menu
+   * stays after it. Phones keep the usual actions.
+   */
+  routeActionsFilled?: boolean;
   search: HeaderSearchState & {
     onSubmit: (submission: HeaderSearchSubmission) => void;
     keywordSuggestions: KeywordSuggestionState;
@@ -358,10 +363,14 @@ export default function Header({
       ) : null}
     </div>
   );
-  // On a route that owns the header's actions, these give way to the route's
-  // slot from `lg` up.
+  // While the route fills the header's actions slot, these give way to it
+  // from `lg` up.
   const belowLgOnRouteActions = (node: ReactNode) =>
-    routeActionsRef ? <div className="contents lg:hidden">{node}</div> : node;
+    routeActionsFilled ? (
+      <div className="contents lg:hidden">{node}</div>
+    ) : (
+      node
+    );
   const accountActions = signingOut ? (
     <Button
       type="button"
@@ -464,7 +473,7 @@ export default function Header({
                 <div
                   ref={routeActionsRef}
                   data-slot="header-route-actions"
-                  className="hidden items-center gap-4 lg:flex"
+                  className="hidden items-center gap-4 lg:flex lg:empty:hidden"
                 />
               ) : null}
               {accountActions}

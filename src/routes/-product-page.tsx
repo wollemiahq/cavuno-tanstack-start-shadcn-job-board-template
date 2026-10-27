@@ -774,6 +774,9 @@ function FactValue({ row }: { row: ProductFactRow }) {
       </dd>
     );
   }
+  // A row kind this page does not know yet shows its label only, never a
+  // made-up yes or no.
+  if (row.kind !== 'check') return <dd />;
   return (
     <dd data-slot="product-fact-check" data-checked={row.checked}>
       <span

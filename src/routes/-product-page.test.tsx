@@ -87,12 +87,19 @@ function product(overrides: Partial<Product> = {}): Product {
   };
 }
 
-function renderPage(
+function page(
   overrides: Partial<Product> = {},
   headerSlot: HTMLElement | null = null,
+  {
+    onFilledChange = () => {},
+    sessionId = null,
+  }: {
+    onFilledChange?: (filled: boolean) => void;
+    sessionId?: string | null;
+  } = {},
 ) {
-  return render(
-    <HeaderRouteActionsProvider value={headerSlot}>
+  return (
+    <HeaderRouteActionsProvider value={{ target: headerSlot, onFilledChange }}>
       <ProductPageView
         product={product(overrides)}
         seller={{ name: 'Example Board', logoUrl: null }}
@@ -100,12 +107,16 @@ function renderPage(
         shareUrl="https://board.example/products/resume-pack"
         language="en"
         returnPath="/products/resume-pack"
-        sessionId={null}
+        sessionId={sessionId}
         dependencies={dependencies}
         onPurchase={vi.fn()}
       />
-    </HeaderRouteActionsProvider>,
+    </HeaderRouteActionsProvider>
   );
+}
+
+function renderPage(...args: Parameters<typeof page>) {
+  return render(page(...args));
 }
 
 function rail() {
@@ -327,6 +338,22 @@ describe('ProductPageView — already bought', () => {
     ).toBeNull();
   });
 
+  it('drops the bought state as soon as the buyer signs out', async () => {
+    session.user = buyer;
+    vi.mocked(dependencies.loadMyPurchases).mockResolvedValue(
+      library([purchase()]),
+    );
+    const view = renderPage();
+    await screen.findByText(m.product_youBoughtThisText());
+
+    session.user = null;
+    view.rerender(page());
+    expect(screen.queryByText(m.product_youBoughtThisText())).toBeNull();
+    expect(
+      within(rail()).getByRole('button', { name: m.product_buyAction() }),
+    ).toBeInTheDocument();
+  });
+
   it('keeps the buy card for a signed-in visitor who has not bought it', async () => {
     session.user = buyer;
     vi.mocked(dependencies.loadMyPurchases).mockResolvedValue(
@@ -418,6 +445,18 @@ describe('ProductPageView — desktop header actions', () => {
         }),
       ).toBeNull(),
     );
+  });
+
+  it('tells the header while it fills the slot, and not while paying', () => {
+    const slot = headerSlot();
+    const onFilledChange = vi.fn();
+    const view = renderPage({}, slot, { onFilledChange });
+    expect(onFilledChange).toHaveBeenLastCalledWith(true);
+
+    // Back from Stripe: the confirming state leaves the header its links.
+    view.rerender(page({}, slot, { onFilledChange, sessionId: 'cs_1' }));
+    expect(onFilledChange).toHaveBeenLastCalledWith(false);
+    expect(slot).toBeEmptyDOMElement();
   });
 
   it('leaves the stars out when nothing is rated', () => {

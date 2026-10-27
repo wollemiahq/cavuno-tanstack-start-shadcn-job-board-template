@@ -116,6 +116,7 @@ function renderHeader({
   routePlaceNames,
   routeSearchScope,
   routeActionsRef,
+  routeActionsFilled,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -151,6 +152,8 @@ function renderHeader({
   routeSearchScope?: HeaderSearchScope;
   /** Set as __root.tsx does for a route with `ownsHeaderActions`. */
   routeActionsRef?: (element: HTMLDivElement | null) => void;
+  /** The page has filled that slot. */
+  routeActionsFilled?: boolean;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
@@ -255,6 +258,7 @@ function renderHeader({
         hasMembershipPage={hasMembershipPage}
         hasProductsPage={hasProductsPage}
         routeActionsRef={routeActionsRef}
+        routeActionsFilled={routeActionsFilled}
         search={{
           ...routeSearch,
           onSubmit: submitSearch,
@@ -1576,9 +1580,21 @@ describe('Header — route-owned actions (the product page)', () => {
     ).toBeNull();
   });
 
+  it('keeps the sign-in links while the route leaves its slot empty', async () => {
+    renderHeader({ routeActionsRef: vi.fn(), routeActionsFilled: false });
+
+    const signIn = await screen.findByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    expect(desktopHidden(signIn)).toBe(false);
+    expect(
+      document.querySelector('[data-slot="header-route-actions"]'),
+    ).not.toBeNull();
+  });
+
   it('hands the route a desktop slot in place of the sign-in links', async () => {
     const routeActionsRef = vi.fn();
-    renderHeader({ routeActionsRef });
+    renderHeader({ routeActionsRef, routeActionsFilled: true });
 
     const signIn = await screen.findByRole('link', {
       name: m.siteHeader_signInLabel(),
@@ -1602,6 +1618,7 @@ describe('Header — route-owned actions (the product page)', () => {
     renderHeader({
       user: buyer,
       routeActionsRef: vi.fn(),
+      routeActionsFilled: true,
     });
 
     const account = await findAccountButton();

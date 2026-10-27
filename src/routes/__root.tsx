@@ -285,6 +285,14 @@ function RootChrome({
   });
   const [headerActionsSlot, setHeaderActionsSlot] =
     useState<HTMLElement | null>(null);
+  const [headerActionsFilled, setHeaderActionsFilled] = useState(false);
+  const headerActions = useMemo(
+    () => ({
+      target: ownsHeaderActions ? headerActionsSlot : null,
+      onFilledChange: setHeaderActionsFilled,
+    }),
+    [ownsHeaderActions, headerActionsSlot],
+  );
   // The deepest rendered route's declared header search scope, if any.
   const routeSearchScope = useRouterState({
     select: (s) =>
@@ -501,6 +509,7 @@ function RootChrome({
       hasMembershipPage={offerGate.hasMembershipPage}
       hasProductsPage={offerGate.hasProductsPage}
       routeActionsRef={ownsHeaderActions ? setHeaderActionsSlot : undefined}
+      routeActionsFilled={ownsHeaderActions && headerActionsFilled}
       messagesNav={
         user && board.features.messaging ? (
           <Suspense fallback={null}>
@@ -546,9 +555,7 @@ function RootChrome({
     </MainContentTarget>
   );
   const routeContent = (
-    <HeaderRouteActionsProvider
-      value={ownsHeaderActions ? headerActionsSlot : null}
-    >
+    <HeaderRouteActionsProvider value={headerActions}>
       {routeContentInner}
     </HeaderRouteActionsProvider>
   );
