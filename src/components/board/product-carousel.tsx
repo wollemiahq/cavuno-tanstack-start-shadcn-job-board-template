@@ -1,8 +1,10 @@
 /**
  * The product page's cover images: one image at a time, previous and next
- * buttons over it, arrow keys while the carousel has focus, a swipe on touch
- * screens, and a strip of thumbnail buttons. It never moves on its own. One
- * image renders as a plain cover; no images render nothing.
+ * buttons over it from the `md` breakpoint up (phones swipe instead), arrow
+ * keys while the carousel has focus, a swipe on touch screens, a row of dot
+ * buttons over the image (the phone's non-gesture control), and a strip of
+ * thumbnail buttons from `sm` up. It never moves on its own. One image renders
+ * as a plain cover; no images render nothing.
  *
  * Arrow keys and swipes are physical: under a right-to-left page the next
  * image is the one to the left, so ArrowLeft and a swipe to the right
@@ -84,7 +86,7 @@ export function ProductCarousel({ images }: { images: readonly string[] }) {
           type="button"
           variant="overlay"
           size="icon-xl"
-          className="absolute start-3 top-1/2 -translate-y-1/2 lg:start-4"
+          className="absolute start-3 top-1/2 hidden -translate-y-1/2 md:inline-flex lg:start-4"
           aria-label={m.product_previousImageLabel()}
           onClick={previous}
         >
@@ -94,24 +96,33 @@ export function ProductCarousel({ images }: { images: readonly string[] }) {
           type="button"
           variant="overlay"
           size="icon-xl"
-          className="absolute end-3 top-1/2 -translate-y-1/2 lg:end-4"
+          className="absolute end-3 top-1/2 hidden -translate-y-1/2 md:inline-flex lg:end-4"
           aria-label={m.product_nextImageLabel()}
           onClick={next}
         >
           <ChevronRight aria-hidden="true" className="rtl:rotate-180" />
         </Button>
-        <div
-          aria-hidden="true"
-          className="bg-background/80 absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full px-2 py-1"
-        >
+        <div className="bg-background/80 absolute bottom-3 left-1/2 flex -translate-x-1/2 rounded-full px-1">
           {images.map((image, dot) => (
-            <span
+            <button
               key={image}
-              className={cn(
-                'size-1.5 rounded-full',
-                dot === index ? 'bg-foreground' : 'bg-muted-foreground/40',
-              )}
-            />
+              type="button"
+              aria-label={m.product_imagePositionText({
+                index: dot + 1,
+                count,
+              })}
+              aria-current={dot === index ? 'true' : undefined}
+              onClick={() => setActive(dot)}
+              className="focus-visible:ring-ring/50 flex size-6 items-center justify-center rounded-full outline-none focus-visible:ring-2"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'size-1.5 rounded-full',
+                  dot === index ? 'bg-foreground' : 'bg-muted-foreground/40',
+                )}
+              />
+            </button>
           ))}
         </div>
       </div>

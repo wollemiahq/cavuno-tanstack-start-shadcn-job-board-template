@@ -59,6 +59,32 @@ describe('ProductCarousel', () => {
     expect(thumb(3)).toHaveAttribute('aria-current', 'true');
   });
 
+  it('keeps the arrows off phones, where the dots are named buttons', () => {
+    const { container } = render(<ProductCarousel images={IMAGES} />);
+
+    // Phones (below md) swipe; tablets and desktops get the arrows.
+    for (const name of [
+      m.product_previousImageLabel(),
+      m.product_nextImageLabel(),
+    ]) {
+      const arrow = screen.getByRole('button', { name });
+      expect(arrow).toHaveClass('hidden', 'md:inline-flex');
+    }
+
+    const dot = (index: number) =>
+      screen.getByRole('button', {
+        name: m.product_imagePositionText({ index, count: IMAGES.length }),
+      });
+    expect(dot(1)).toHaveAttribute('aria-current', 'true');
+    expect(dot(1)).not.toHaveClass('hidden');
+
+    fireEvent.click(dot(2));
+    expect(dot(2)).toHaveAttribute('aria-current', 'true');
+    expect(dot(1)).not.toHaveAttribute('aria-current');
+    expect(thumb(2)).toHaveAttribute('aria-current', 'true');
+    expect(container.querySelector('img')).toHaveAttribute('src', IMAGES[1]);
+  });
+
   it('renders one image without controls, and nothing without images', () => {
     const { container } = render(<ProductCarousel images={[IMAGES[0]!]} />);
     expect(container.querySelector('img')).toHaveAttribute('src', IMAGES[0]);
