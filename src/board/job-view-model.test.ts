@@ -275,11 +275,11 @@ describe('worldwide remote card wording', () => {
       remoteLocationLabel: 'United States + 1 more',
       locationLabel: 'United States + 1 more',
     } satisfies PublicJobCard;
-    const us = new Intl.DisplayNames(['de'], { type: 'region' }).of('US');
-    const place = m.label_locationRemoteFirstAndMore(
-      { first: us ?? 'US', count: 1 },
-      localeOpt('de'),
-    );
+    const names = new Intl.DisplayNames(['de'], { type: 'region' });
+    const place = new Intl.ListFormat(['de'], {
+      style: 'long',
+      type: 'conjunction',
+    }).format([names.of('US') ?? 'US', names.of('GB') ?? 'GB']);
     const vm = toJobCardVM(job, 'de');
     expect(vm.locationLabel).toContain(place);
     expect(vm.compLine).toContain(

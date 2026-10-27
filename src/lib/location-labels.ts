@@ -115,6 +115,21 @@ export function remotePermitsLabel(
   ) {
     return named.join(', ');
   }
+  // Up to three countries read as a list ("Deutschland, Spanien und Polen"),
+  // as the card did before it had `remotePermits`.
+  if (
+    named.length <= 3 &&
+    permits.every((permit) => permit.type === 'country')
+  ) {
+    try {
+      return new Intl.ListFormat(language ? [language] : undefined, {
+        style: 'long',
+        type: 'conjunction',
+      }).format(named);
+    } catch {
+      // Fall through to the "+ N more" wording.
+    }
+  }
   return m.label_locationRemoteFirstAndMore(
     { first: named[0]!, count: named.length - 1 },
     locale,

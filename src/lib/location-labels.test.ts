@@ -22,14 +22,29 @@ describe('remotePermitsLabel', () => {
     );
   });
 
-  it('names the first of several countries plus the rest', () => {
+  it('lists up to three countries', () => {
     const permits: RemotePermit[] = [
       { type: 'country', value: 'DE' },
       { type: 'country', value: 'AT' },
       { type: 'country', value: 'CH' },
     ];
     expect(remotePermitsLabel(permits, 'de')).toBe(
-      firstAndMore('de', region('de', 'DE'), 2),
+      new Intl.ListFormat(['de'], {
+        style: 'long',
+        type: 'conjunction',
+      }).format(['DE', 'AT', 'CH'].map((code) => region('de', code))),
+    );
+  });
+
+  it('names the first of four or more countries plus the rest', () => {
+    const permits: RemotePermit[] = [
+      { type: 'country', value: 'DE' },
+      { type: 'country', value: 'AT' },
+      { type: 'country', value: 'CH' },
+      { type: 'country', value: 'NL' },
+    ];
+    expect(remotePermitsLabel(permits, 'de')).toBe(
+      firstAndMore('de', region('de', 'DE'), 3),
     );
   });
 
@@ -128,7 +143,7 @@ describe('remotePermitsLabel', () => {
         ],
         'en',
       ),
-    ).toBe(firstAndMore('en', region('en', 'US'), 1));
+    ).toBe(`${region('en', 'US')} and ${region('en', 'GB')}`);
     expect(
       remotePermitsLabel(
         [{ type: 'continent', value: 'Europe', code: '150' }],
