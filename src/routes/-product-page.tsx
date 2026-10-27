@@ -36,7 +36,6 @@ import {
   productFactRows,
   type ProductFactRow,
 } from '@/board/product-view-model';
-import { CopyLinkButton } from '@/components/board/copy-link-button';
 import { ProductCarousel } from '@/components/board/product-carousel';
 import type {
   ProductCheckoutRefusal,
@@ -53,6 +52,7 @@ import {
   PurchaseResendDialog,
   type ResendLinkAction,
 } from '@/components/board/purchase-resend-dialog';
+import { ShareButton } from '@/components/board/share-button';
 import { HeaderRouteActions } from '@/components/header-route-actions';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -297,7 +297,6 @@ export function ProductPageView({
   seller,
   reviews,
   shareUrl,
-  language,
   returnPath,
   sessionId,
   startInCheckout = false,
@@ -307,9 +306,8 @@ export function ProductPageView({
   product: Product;
   seller: ProductSeller;
   reviews: ProductReviewListEnvelope | null;
-  /** The product page's canonical URL, for "Copy link". */
+  /** The product page's canonical URL, for "Share". */
   shareUrl: string;
-  language: string;
   /** This page's own path, where Stripe sends the buyer back. */
   returnPath: string;
   /** Set when Stripe sent the buyer back. */
@@ -451,7 +449,6 @@ export function ProductPageView({
               {m.product_youBoughtThisText()}
             </p>
             <DownloadPageLink purchase={owned} size="xl" />
-            <CopyLinkButton url={shareUrl} language={language} size="md" />
             {product.soldOut ? null : (
               <Button
                 variant="link"
@@ -487,17 +484,25 @@ export function ProductPageView({
                 {ctaLabel}
               </Button>
             )}
-            <CopyLinkButton url={shareUrl} language={language} size="md" />
-            <PurchaseResendDialog
-              productSlug={product.slug}
-              resend={dependencies.resendLink}
-              defaultEmail={user?.email ?? null}
-              trigger={
-                <Button variant="link" size="sm" className="self-center">
-                  {m.product_alreadyBoughtAction()}
-                </Button>
-              }
-            />
+            <p
+              data-slot="product-already-bought"
+              className="text-muted-foreground text-center text-sm"
+            >
+              {m.product_alreadyBoughtText()}{' '}
+              <PurchaseResendDialog
+                productSlug={product.slug}
+                resend={dependencies.resendLink}
+                defaultEmail={user?.email ?? null}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-foreground hover:text-primary underline underline-offset-4"
+                  >
+                    {m.product_getDownloadLinkAction()}
+                  </button>
+                }
+              />
+            </p>
             {salesCount !== null ? (
               <p
                 data-slot="product-sales-count"
@@ -569,6 +574,12 @@ export function ProductPageView({
       </Card>
     ) : null;
 
+  // Under the details, like the facts card: in the rail on desktop, after
+  // the description on a phone.
+  const shareButton = (
+    <ShareButton url={shareUrl} title={product.name} className="w-full" />
+  );
+
   return (
     <>
       <Page width="wide">
@@ -634,9 +645,10 @@ export function ProductPageView({
                       {buyCard}
                     </div>
                     {/* The rail's copy; phones read it after the description. */}
-                    {factsCard ? (
-                      <div className="hidden lg:block">{factsCard}</div>
-                    ) : null}
+                    <div className="hidden flex-col gap-4 lg:flex">
+                      {factsCard}
+                      {shareButton}
+                    </div>
                   </aside>
                   <div
                     data-slot="product-description"
@@ -661,9 +673,10 @@ export function ProductPageView({
                       </p>
                     ) : null}
                   </div>
-                  {factsCard ? (
-                    <div className="lg:hidden">{factsCard}</div>
-                  ) : null}
+                  <div className="flex flex-col gap-4 lg:hidden">
+                    {factsCard}
+                    {shareButton}
+                  </div>
                   {rating ? (
                     <div className="lg:col-start-1 lg:row-start-2">
                       <ProductReviews

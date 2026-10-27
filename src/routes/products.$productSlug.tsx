@@ -90,7 +90,6 @@ function ProductPage() {
       seller={{ name: board.name, logoUrl: board.logoUrl ?? null }}
       reviews={reviews}
       shareUrl={canonical}
-      language={board.language}
       returnPath={pathname}
       sessionId={sessionId ?? null}
       startInCheckout={buy === true}

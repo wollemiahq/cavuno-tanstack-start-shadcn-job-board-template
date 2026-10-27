@@ -16,6 +16,7 @@ import { ProductPageView, type ProductPageDependencies } from './-product-page';
 import { formatRating, formatShare } from '@/board/product-view-model';
 import { productPriceText } from '@/components/board/product-ui';
 import { HeaderRouteActionsProvider } from '@/components/header-route-actions';
+import { copyLinkCopy } from '@/copy-groups/copy-link';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
 import type { Product, PurchaseSummary } from '@cavuno/board';
@@ -105,7 +106,6 @@ function page(
         seller={{ name: 'Example Board', logoUrl: null }}
         reviews={null}
         shareUrl="https://board.example/products/resume-pack"
-        language="en"
         returnPath="/products/resume-pack"
         sessionId={sessionId}
         dependencies={dependencies}
@@ -205,6 +205,55 @@ describe('ProductPageView', () => {
     expect(follows(rail(), description)).toBe(true);
     expect(follows(description, phoneFacts)).toBe(true);
     expect(rail()).not.toContainElement(phoneFacts ?? null);
+  });
+
+  it('keeps the buy card to the price, the buy button and the resend line', () => {
+    const { container } = renderPage({ salesCount: null });
+
+    const card = container.querySelector<HTMLElement>(
+      '[data-slot="product-buy-card"]',
+    );
+    if (!card) throw new Error('buy card missing');
+    const buttons = within(card).getAllByRole('button');
+    expect(buttons.map((button) => button.textContent)).toEqual([
+      m.product_buyAction(),
+      m.product_getDownloadLinkAction(),
+    ]);
+    // "Already bought it?" is plain text; only "Get your download link"
+    // opens the resend dialog.
+    const line = card.querySelector('[data-slot="product-already-bought"]');
+    expect(line).toHaveTextContent(
+      `${m.product_alreadyBoughtText()} ${m.product_getDownloadLinkAction()}`,
+    );
+    fireEvent.click(
+      within(card).getByRole('button', {
+        name: m.product_getDownloadLinkAction(),
+      }),
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('puts Share under the details: in the rail, and after the description on a phone', () => {
+    const { container } = renderPage({
+      summary: 'Six templates and a guide.',
+    });
+
+    const [railShare, phoneShare] = screen.getAllByRole('button', {
+      name: m.product_shareAction(),
+    });
+    const [railFacts, phoneFacts] = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="product-facts"]'),
+    );
+    const follows = (a: Node | null | undefined, b: Node | null | undefined) =>
+      Boolean(
+        a &&
+        b &&
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    expect(rail()).toContainElement(railShare ?? null);
+    expect(follows(railFacts, railShare)).toBe(true);
+    expect(rail()).not.toContainElement(phoneShare ?? null);
+    expect(follows(phoneFacts, phoneShare)).toBe(true);
   });
 
   it('shows the sales count only when the seller shares it', () => {
@@ -316,7 +365,7 @@ function headerSlot() {
 describe('ProductPageView — already bought', () => {
   const buyer = { id: 'user-1', email: 'ada@example.com' };
 
-  it('gives the owner their download page, Copy link and Buy again', async () => {
+  it('gives the owner their download page and Buy again', async () => {
     session.user = buyer;
     vi.mocked(dependencies.loadMyPurchases).mockResolvedValue(
       library([purchase({ product: otherProduct }), purchase()]),
@@ -335,6 +384,13 @@ describe('ProductPageView — already bought', () => {
     ).toBeInTheDocument();
     expect(
       card.queryByRole('button', { name: m.product_buyAction() }),
+    ).toBeNull();
+    // Owners have their download page: no resend line, no copy link.
+    expect(
+      card.queryByRole('button', { name: m.product_getDownloadLinkAction() }),
+    ).toBeNull();
+    expect(
+      card.queryByRole('button', { name: copyLinkCopy().ariaLabel }),
     ).toBeNull();
   });
 
