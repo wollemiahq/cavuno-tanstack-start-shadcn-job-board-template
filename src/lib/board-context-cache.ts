@@ -35,7 +35,7 @@ import { getBoard } from './board';
 import { createBoardContextCache } from './board-context-cache-core';
 import { getDataSource } from './data-source.server';
 
-import type { EmployerOfferGate } from './board-context-cache-core';
+import type { PlanOfferGate } from './board-context-cache-core';
 import type { DataSource } from './data-source';
 
 type BoardContext = Awaited<ReturnType<ReturnType<typeof getBoard>['context']>>;
@@ -58,6 +58,16 @@ export const CONTEXT_TTL_MS = 30_000;
 export const OFFER_GATE_TTL_MS = 300_000;
 
 /**
+ * How long an isolate reuses "does the board list a product" (the Products
+ * link). Products are listed and unlisted at any time, and the Board API
+ * marks the products list fresh for 60 s, so the link may lag a listing by
+ * at most that long. Riding the 5-minute plan memo (and a forced 5-minute
+ * edge TTL) kept a board that was empty when the shell first loaded hiding
+ * Products after its first product was listed.
+ */
+export const PRODUCTS_GATE_TTL_MS = 60_000;
+
+/**
  * Both readers bypass the shared edge cache — see the module comment.
  * Exported so a test can pin it; `applyReadCache` strips any `cf` directive
  * when it sees `cache: 'no-store'`.
@@ -73,6 +83,7 @@ const cache = createBoardContextCache<BoardContext>(
   },
   CONTEXT_TTL_MS,
   OFFER_GATE_TTL_MS,
+  PRODUCTS_GATE_TTL_MS,
 );
 
 export const readBoardContext = cache.readBoardContext;
@@ -95,9 +106,19 @@ export function resetBoardContextCache(source?: DataSource): void {
  * answer is board-global. Held for `OFFER_GATE_TTL_MS`.
  */
 export function readEmployerOfferGate(
-  load: () => Promise<EmployerOfferGate>,
-): Promise<EmployerOfferGate> {
+  load: () => Promise<PlanOfferGate>,
+): Promise<PlanOfferGate> {
   return cache.readEmployerOfferGate(load);
+}
+
+/**
+ * Per-isolate memo for the header's Products link, held for
+ * `PRODUCTS_GATE_TTL_MS`. A failed read is never kept.
+ */
+export function readProductsGate(
+  load: () => Promise<boolean>,
+): Promise<boolean> {
+  return cache.readProductsGate(load);
 }
 
 export function resetEmployerOfferGateCache(source?: DataSource): void {

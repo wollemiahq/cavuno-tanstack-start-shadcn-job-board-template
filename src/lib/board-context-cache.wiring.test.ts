@@ -4,6 +4,7 @@ import {
   BOARD_CONTEXT_FETCH_OPTIONS,
   CONTEXT_TTL_MS,
   OFFER_GATE_TTL_MS,
+  PRODUCTS_GATE_TTL_MS,
 } from './board-context-cache';
 import { applyReadCache } from './read-cache';
 
@@ -38,5 +39,11 @@ describe('board context memo fetch options', () => {
   it('keeps flags on a short window and the offer gate on five minutes', () => {
     expect(CONTEXT_TTL_MS).toBe(30_000);
     expect(OFFER_GATE_TTL_MS).toBe(300_000);
+  });
+
+  it('holds the Products link no longer than the products list stays fresh', () => {
+    // GET /products is marked fresh for 60 s; a longer memo kept a board
+    // that was empty at first load hiding Products after a product listed.
+    expect(PRODUCTS_GATE_TTL_MS).toBeLessThanOrEqual(60_000);
   });
 });
