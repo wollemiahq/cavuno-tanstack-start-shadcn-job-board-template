@@ -79,6 +79,7 @@ function ProductPage() {
     <ProductPageView
       key={product.slug}
       product={product}
+      seller={{ name: board.name, logoUrl: board.logoUrl ?? null }}
       reviews={reviews}
       shareUrl={canonical}
       language={board.language}

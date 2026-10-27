@@ -1,8 +1,7 @@
 /**
- * `/products` — the store listing in the starter's list and detail split
- * (as /companies): a toolbar with search, price filter and sort; the product
- * cards on the left; on desktop the selected product on the right. On a
- * phone the cards link straight to each product page.
+ * `/products` — the store listing: a toolbar with search, price filter and
+ * sort, then a responsive grid of product cards (cover, name, summary,
+ * price, rating), each linking to its product page.
  */
 import { useState, type FormEvent } from 'react';
 
@@ -10,27 +9,12 @@ import { Link, useLocation, useRouter } from '@tanstack/react-router';
 import { ArrowUpDown, Search, ShoppingBag } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
-import { useSelectedProduct } from './-use-selected-product';
 
-import { fileTypeLabels } from '@/board/product-view-model';
 import { CursorPagination } from '@/components/board/cursor-pagination';
-import {
-  ProductCover,
-  ProductSearchResult,
-  RatingSummary,
-  productPriceText,
-} from '@/components/board/product-ui';
+import { ProductGridCard } from '@/components/board/product-ui';
 import { Page } from '@/components/layout/page';
-import { InPlaceListingSelect } from '@/components/master-detail-link';
-import {
-  SearchResultDetail,
-  SearchResultsLayout,
-  SearchResultsList,
-  SearchResultsToolbar,
-} from '@/components/search-results/search-results';
-import { Text } from '@/components/text';
-import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { SearchResultsToolbar } from '@/components/search-results/search-results';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -53,8 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSearchSelection } from '@/hooks/use-search-selection';
 import { cursorPageHref } from '@/lib/pagination';
 import {
   priceFilterFrom,
@@ -62,7 +44,7 @@ import {
   type ProductsSearch,
   type ProductsSearchChange,
 } from '@/lib/products-search';
-import type { Product, ProductCardListEnvelope } from '@cavuno/board';
+import type { ProductCardListEnvelope } from '@cavuno/board';
 
 const ANY_PRICE = 'any';
 
@@ -82,16 +64,6 @@ export function ProductsPageView({
   const router = useRouter();
   const currentHref = useLocation({ select: (location) => location.href });
   const products = page.data;
-  const slugs = products.map((product) => product.slug);
-  const selection = useSearchSelection({
-    selectedId: search.selectedProduct,
-    resultIds: slugs,
-    page: search.cursor ? 2 : 1,
-    onReplace: (productSlug) =>
-      onSearchChange({ kind: 'select', productSlug }, { replace: true }),
-    onPush: (productSlug) => onSearchChange({ kind: 'select', productSlug }),
-  });
-  const selected = useSelectedProduct(selection.selectedId);
   const filtered = Boolean(search.q || search.price);
   const complete = !search.cursor && !page.hasMore;
 
@@ -108,186 +80,139 @@ export function ProductsPageView({
   ];
 
   const toolbar = (
-    <Page width="wide">
-      <div className="border-border border-b">
-        <SearchResultsToolbar>
-          <div
-            data-slot="products-toolbar"
-            className="flex flex-wrap items-center gap-2"
+    <div className="border-border border-b">
+      <SearchResultsToolbar>
+        <div
+          data-slot="products-toolbar"
+          className="flex flex-wrap items-center gap-2"
+        >
+          <ProductSearchField
+            key={search.q ?? ''}
+            initial={search.q ?? ''}
+            onSubmit={(q) =>
+              onSearchChange({
+                kind: 'filter',
+                filters: { q: q || undefined },
+              })
+            }
+          />
+          <Select
+            items={priceItems}
+            value={search.price ?? ANY_PRICE}
+            onValueChange={(value) =>
+              onSearchChange({
+                kind: 'filter',
+                filters: { price: priceFilterFrom(value) },
+              })
+            }
           >
-            <ProductSearchField
-              key={search.q ?? ''}
-              initial={search.q ?? ''}
-              onSubmit={(q) =>
-                onSearchChange({
-                  kind: 'filter',
-                  filters: { q: q || undefined },
-                })
-              }
-            />
-            <Select
-              items={priceItems}
-              value={search.price ?? ANY_PRICE}
-              onValueChange={(value) =>
-                onSearchChange({
-                  kind: 'filter',
-                  filters: { price: priceFilterFrom(value) },
-                })
-              }
+            <SelectTrigger aria-label={m.products_priceFilterLabel()}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="start">
+              <SelectGroup>
+                {priceItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Select
+            items={sortItems}
+            value={search.sort ?? 'featured'}
+            onValueChange={(value) =>
+              onSearchChange({
+                kind: 'filter',
+                filters: { sort: sortFrom(value) },
+              })
+            }
+          >
+            <SelectTrigger
+              aria-label={m.products_sortLabel()}
+              className="ms-auto"
             >
-              <SelectTrigger aria-label={m.products_priceFilterLabel()}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="start">
-                <SelectGroup>
-                  {priceItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Select
-              items={sortItems}
-              value={search.sort ?? 'featured'}
-              onValueChange={(value) =>
-                onSearchChange({
-                  kind: 'filter',
-                  filters: { sort: sortFrom(value) },
-                })
-              }
-            >
-              <SelectTrigger
-                aria-label={m.products_sortLabel()}
-                className="ms-auto"
-              >
-                <ArrowUpDown aria-hidden="true" />
-                <span>{m.products_sortLabel()}:</span>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectGroup>
-                  {sortItems.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </SearchResultsToolbar>
-      </div>
-    </Page>
-  );
-
-  const heading = (
-    <div data-slot="products-results-bar" className="pb-3">
-      <h1 className="text-foreground text-lg font-semibold tracking-tight">
-        {complete
-          ? m.products_count({ count: products.length })
-          : m.products_metaTitle()}
-      </h1>
+              <ArrowUpDown aria-hidden="true" />
+              <span>{m.products_sortLabel()}:</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectGroup>
+                {sortItems.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </SearchResultsToolbar>
     </div>
   );
 
   return (
-    <Page width="wide" fill>
-      <main
-        data-layout="products-page"
-        className="md:flex md:h-full md:min-h-0 md:flex-col"
-      >
+    <Page width="wide">
+      <main data-layout="products-page" className="pb-10">
         {toolbar}
-        <div className="min-w-0 overflow-x-clip md:flex md:min-h-0 md:flex-1 md:overflow-hidden">
-          {products.length === 0 ? (
-            <SearchResultsLayout
-              list={
-                <div className="space-y-4 px-4 pt-4 pb-4 md:col-span-2 md:px-0">
-                  <Empty className="min-h-[calc(100dvh-16rem)] border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <ShoppingBag aria-hidden="true" />
-                      </EmptyMedia>
-                      <EmptyTitle>{m.products_metaTitle()}</EmptyTitle>
-                      <EmptyDescription>
-                        {filtered
-                          ? m.products_noMatchText()
-                          : m.products_emptyText()}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    {filtered ? (
-                      <EmptyContent>
-                        <Link to="/products" className={buttonVariants()}>
-                          {m.jobSearch_resetFiltersAction()}
-                        </Link>
-                      </EmptyContent>
-                    ) : null}
-                  </Empty>
-                </div>
+        {products.length === 0 ? (
+          <Empty className="min-h-[calc(100dvh-16rem)] border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <ShoppingBag aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>{m.products_metaTitle()}</EmptyTitle>
+              <EmptyDescription>
+                {filtered ? m.products_noMatchText() : m.products_emptyText()}
+              </EmptyDescription>
+            </EmptyHeader>
+            {filtered ? (
+              <EmptyContent>
+                <Link to="/products" className={buttonVariants()}>
+                  {m.jobSearch_resetFiltersAction()}
+                </Link>
+              </EmptyContent>
+            ) : null}
+          </Empty>
+        ) : (
+          <section
+            aria-label={m.products_resultsRegionLabel()}
+            className="flex flex-col gap-4 pt-6"
+          >
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">
+              {complete
+                ? m.products_count({ count: products.length })
+                : m.products_metaTitle()}
+            </h1>
+            <ul
+              data-slot="products-grid"
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {products.map((product) => (
+                <li key={product.slug}>
+                  <ProductGridCard product={product} />
+                </li>
+              ))}
+            </ul>
+            <CursorPagination
+              hasPrevious={Boolean(search.cursor)}
+              hasNext={Boolean(page.hasMore && page.nextCursor)}
+              nextHref={
+                page.nextCursor
+                  ? cursorPageHref(currentHref, page.nextCursor, [])
+                  : undefined
               }
-              detail={null}
-            />
-          ) : (
-            <SearchResultsLayout
-              list={
-                <SearchResultsList
-                  ref={selection.listRef}
-                  label={m.products_resultsRegionLabel()}
-                  scrollRestorationId="products-results"
-                  className="pt-4 pb-6 md:pe-6"
-                >
-                  {heading}
-                  <InPlaceListingSelect onSelect={selection.onResultActivate}>
-                    <ul className="flex flex-col gap-3">
-                      {products.map((product) => (
-                        <li key={product.slug} data-result-id={product.slug}>
-                          <ProductSearchResult
-                            product={product}
-                            selected={product.slug === selection.selectedId}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </InPlaceListingSelect>
-                  <div className="pt-4">
-                    <CursorPagination
-                      hasPrevious={Boolean(search.cursor)}
-                      hasNext={Boolean(page.hasMore && page.nextCursor)}
-                      nextHref={
-                        page.nextCursor
-                          ? cursorPageHref(currentHref, page.nextCursor, [
-                              'selectedProduct',
-                            ])
-                          : undefined
-                      }
-                      onPrevious={() => router.history.back()}
-                      onNext={() =>
-                        onSearchChange({
-                          kind: 'page',
-                          cursor: page.nextCursor ?? undefined,
-                        })
-                      }
-                    />
-                  </div>
-                </SearchResultsList>
-              }
-              detail={
-                <SearchResultDetail
-                  ref={selection.detailRef}
-                  label={m.products_selectedRegionLabel()}
-                  scrollRestorationId="products-selected-detail"
-                >
-                  <SelectedProductPane
-                    status={selected.status}
-                    product={selected.product}
-                    onRetry={selected.retry}
-                  />
-                </SearchResultDetail>
+              onPrevious={() => router.history.back()}
+              onNext={() =>
+                onSearchChange({
+                  kind: 'page',
+                  cursor: page.nextCursor ?? undefined,
+                })
               }
             />
-          )}
-        </div>
+          </section>
+        )}
       </main>
     </Page>
   );
@@ -332,102 +257,5 @@ function ProductSearchField({
         </InputGroupAddon>
       </InputGroup>
     </form>
-  );
-}
-
-function SelectedProductPane({
-  status,
-  product,
-  onRetry,
-}: {
-  status: 'idle' | 'loading' | 'ready' | 'error';
-  product?: Product;
-  onRetry: () => void;
-}) {
-  if (status === 'error' && !product) {
-    return (
-      <Empty className="border-0">
-        <EmptyHeader>
-          <EmptyTitle>{m.products_selectedErrorTitle()}</EmptyTitle>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button variant="outline" onClick={onRetry}>
-            {m.appError_retryAction()}
-          </Button>
-        </EmptyContent>
-      </Empty>
-    );
-  }
-  if (!product) {
-    return (
-      <div role="status" aria-busy="true" className="space-y-4 p-5 md:p-6">
-        <span className="sr-only">{m.products_loadingLabel()}</span>
-        <Skeleton className="aspect-[2/1] w-full rounded-2xl" />
-        <Skeleton className="h-7 w-2/3" />
-        <Skeleton className="h-5 w-1/2" />
-      </div>
-    );
-  }
-  const fileTypes = [
-    ...fileTypeLabels(product.facts.fileTypes),
-    ...(product.facts.linkCount > 0 ? [m.product_linkTypeLabel()] : []),
-  ];
-  return (
-    <article
-      aria-busy={status === 'loading' || undefined}
-      className="flex flex-col gap-4 p-5 md:p-6"
-    >
-      {product.images[0] ? <ProductCover src={product.images[0]} /> : null}
-      <Text as="h2" variant="heading2" dir="auto">
-        {product.name}
-      </Text>
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Badge variant="outline">{productPriceText(product.price)}</Badge>
-        {fileTypes.length > 0 ? (
-          <Badge variant="secondary">{fileTypes.join(' · ')}</Badge>
-        ) : null}
-        {product.rating && product.rating.count > 0 ? (
-          <Badge variant="secondary">
-            <RatingSummary
-              average={product.rating.average}
-              count={product.rating.count}
-            />
-          </Badge>
-        ) : null}
-        {product.soldOut ? (
-          <Badge variant="outline">{m.product_soldOutLabel()}</Badge>
-        ) : null}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {product.soldOut ? null : (
-          <Link
-            to="/products/$productSlug"
-            params={{ productSlug: product.slug }}
-            search={{ buy: true }}
-            className={buttonVariants()}
-          >
-            {product.buttonLabel ??
-              (product.price.kind === 'free'
-                ? m.product_getFreeAction()
-                : m.product_buyAction())}
-          </Link>
-        )}
-        <Link
-          to="/products/$productSlug"
-          params={{ productSlug: product.slug }}
-          className={buttonVariants({ variant: 'outline' })}
-        >
-          {m.products_viewDetailsAction()}
-        </Link>
-      </div>
-      {product.summary || product.description ? (
-        <p
-          className="text-muted-foreground line-clamp-6 leading-relaxed whitespace-pre-line"
-          dir="auto"
-        >
-          {product.description ?? product.summary}
-        </p>
-      ) : null}
-    </article>
   );
 }

@@ -18,7 +18,7 @@ import {
 export const cavunoPage = 'products';
 
 export const Route = createFileRoute('/products/')({
-  staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
+  staticData: { fullBleed: true, ownsMain: true },
   validateSearch: parseProductsSearch,
   loaderDeps: ({ search }) => productsLoaderDeps(search),
   loader: ({ deps }) => getProductsPage({ data: deps }),

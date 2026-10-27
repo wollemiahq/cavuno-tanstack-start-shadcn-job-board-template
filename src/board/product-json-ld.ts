@@ -37,7 +37,9 @@ export function productJsonLd(product: Product, url: string): ProductJsonLd {
     url,
   };
   if (product.summary) jsonLd.description = product.summary;
-  if (product.images.length > 0) jsonLd.image = product.images;
+  // The cover (first) image: the one the listing and social cards show.
+  const cover = product.images[0];
+  if (cover) jsonLd.image = [cover];
   const currency = product.price.currency;
   if (currency) {
     jsonLd.offers = {

@@ -117,16 +117,6 @@ export const getProductsPage = createServerFn({ method: 'GET' })
     }),
   );
 
-/** One product (the listing's selected-product panel). */
-export const getProduct = createServerFn({ method: 'GET' })
-  .validator((input: { productSlug: string }) => input)
-  .middleware([boardAccessMiddleware])
-  .handler(({ data, context }) =>
-    gatedRead(context, (headers) =>
-      getBoard().products.get(data.productSlug, { headers }),
-    ),
-  );
-
 async function readReviews(
   product: Product,
   headers: Record<string, string>,

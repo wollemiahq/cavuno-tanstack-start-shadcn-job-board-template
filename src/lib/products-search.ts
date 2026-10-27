@@ -1,6 +1,6 @@
 /**
  * The `/products` URL contract: `q` (search words), `price` (`free` / `paid`),
- * `sort`, an opaque `cursor`, and the desktop pane's `selectedProduct`.
+ * `sort` and an opaque `cursor`.
  * Public input, so parsing never throws: unknown values drop out.
  */
 import {
@@ -26,10 +26,7 @@ export interface ProductsSearch {
   /** `featured` is the default and stays out of the URL. */
   sort?: Exclude<ProductSort, 'featured'>;
   cursor?: string;
-  selectedProduct?: string;
 }
-
-export type ProductsListingSearch = Omit<ProductsSearch, 'selectedProduct'>;
 
 function oneOf<T extends string>(
   values: readonly T[],
@@ -46,14 +43,11 @@ export function parseProductsSearch(search: UrlSearchInput): ProductsSearch {
     price: oneOf(PRODUCT_PRICE_FILTERS, search.price),
     sort: sort === 'featured' ? undefined : sort,
     cursor: cursorSearchValue(search.cursor),
-    selectedProduct: searchString(search.selectedProduct)?.trim() || undefined,
   };
 }
 
-/** A pane selection changes history, never the listing request. */
-export function productsLoaderDeps(
-  search: ProductsSearch,
-): ProductsListingSearch {
+/** The listing request: every search value. */
+export function productsLoaderDeps(search: ProductsSearch): ProductsSearch {
   return {
     q: search.q,
     price: search.price,
@@ -62,9 +56,8 @@ export function productsLoaderDeps(
   };
 }
 
-/** What the listing changes: a pane selection, a page, or the filters. */
+/** What the listing changes: a page, or the filters. */
 export type ProductsSearchChange =
-  | { kind: 'select'; productSlug: string }
   | { kind: 'page'; cursor: string | undefined }
   | {
       kind: 'filter';
@@ -72,25 +65,18 @@ export type ProductsSearchChange =
     };
 
 /**
- * The next URL search: a selection keeps the page, a page change drops the
- * selection, and a new search or filter starts again from the first page.
+ * The next URL search: a new search or filter starts again from the first
+ * page.
  */
 export function nextProductsSearch(
   previous: ProductsSearch,
   change: ProductsSearchChange,
 ): ProductsSearch {
   switch (change.kind) {
-    case 'select':
-      return { ...previous, selectedProduct: change.productSlug };
     case 'page':
-      return { ...previous, cursor: change.cursor, selectedProduct: undefined };
+      return { ...previous, cursor: change.cursor };
     case 'filter':
-      return {
-        ...previous,
-        ...change.filters,
-        cursor: undefined,
-        selectedProduct: undefined,
-      };
+      return { ...previous, ...change.filters, cursor: undefined };
   }
 }
 

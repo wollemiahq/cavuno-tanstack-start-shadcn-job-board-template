@@ -10,6 +10,8 @@ function product(overrides: Partial<Product> = {}): Product {
     slug: 'salary-report',
     name: 'Salary report',
     description: null,
+    descriptionHtml: null,
+    salesCount: null,
     summary: 'A 48-page PDF.',
     details: [],
     images: ['https://cdn.example/cover.png'],
@@ -52,6 +54,16 @@ describe('productJsonLd', () => {
     expect(
       productJsonLd(product({ soldOut: true }), URL).offers?.availability,
     ).toBe('https://schema.org/SoldOut');
+  });
+
+  it('uses the cover (first) image, and none without images', () => {
+    const gallery = product({
+      images: ['https://cdn.example/cover.png', 'https://cdn.example/2.png'],
+    });
+    expect(productJsonLd(gallery, URL).image).toEqual([
+      'https://cdn.example/cover.png',
+    ]);
+    expect(productJsonLd(product({ images: [] }), URL).image).toBeUndefined();
   });
 
   it('has no offer for a free product (no currency)', () => {

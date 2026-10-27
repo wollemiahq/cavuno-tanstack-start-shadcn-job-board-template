@@ -2869,10 +2869,6 @@
   "products_sortRatingLabel": "Najwyżej oceniane",
   "products_sortPriceLabel": "Cena: od najniższej",
   "products_resultsRegionLabel": "Produkty",
-  "products_selectedRegionLabel": "Wybrany produkt",
-  "products_selectedErrorTitle": "Nie udało się wczytać tego produktu.",
-  "products_loadingLabel": "Wczytywanie produktu",
-  "products_viewDetailsAction": "Zobacz szczegóły",
   "products_emptyText": "Nie ma jeszcze produktów. Zajrzyj wkrótce.",
   "products_noMatchText": "Brak pasujących produktów. Spróbuj innych słów lub wyczyść filtry.",
   "product_metaDescription": "{productName} od {boardName}.",
@@ -2923,6 +2919,15 @@
   "product_accessRemovedText": "Dostęp do tego zakupu został cofnięty. Skontaktuj się z serwisem, jeśli to pomyłka.",
   "product_notFoundTitle": "Nie znaleziono produktu",
   "product_notFoundText": "Ten produkt nie jest już dostępny.",
+  "product_iWantThisAction": "Chcę to!",
+  "product_buyThisAction": "Kup",
+  "product_payAction": "Zapłać",
+  "product_getThisAction": "Odbierz",
+  "product_downloadAction": "Pobierz",
+  "product_previousImageLabel": "Poprzedni obraz",
+  "product_nextImageLabel": "Następny obraz",
+  "product_imagePositionText": "Obraz {index} z {count}",
+  "product_ratingDistributionLabel": "Rozkład ocen",
   "purchaseResend_title": "Odbierz link do pobrania",
   "purchaseResend_description": "Wpisz adres e-mail użyty przy zakupie, a wyślemy link ponownie.",
   "purchaseResend_submitAction": "Wyślij mi link",
@@ -3029,6 +3034,46 @@
         "starsPlural=few": "{stars} gwiazdki",
         "starsPlural=many": "{stars} gwiazdek",
         "starsPlural=*": "{stars} gwiazdki"
+      }
+    }
+  ],
+  "product_ratingCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} ocena",
+        "countPlural=few": "{count} oceny",
+        "countPlural=many": "{count} ocen",
+        "countPlural=*": "{count} oceny"
+      }
+    }
+  ],
+  "product_ratingLong": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{rating} ({count} ocena)",
+        "countPlural=few": "{rating} ({count} oceny)",
+        "countPlural=many": "{rating} ({count} ocen)",
+        "countPlural=*": "{rating} ({count} oceny)"
+      }
+    }
+  ],
+  "product_salesCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} sprzedaż",
+        "countPlural=few": "{count} sprzedaże",
+        "countPlural=many": "{count} sprzedaży",
+        "countPlural=*": "{count} sprzedaży"
       }
     }
   ],

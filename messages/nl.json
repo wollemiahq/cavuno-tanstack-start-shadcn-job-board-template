@@ -2759,10 +2759,6 @@
   "products_sortRatingLabel": "Best beoordeeld",
   "products_sortPriceLabel": "Prijs: laag naar hoog",
   "products_resultsRegionLabel": "Producten",
-  "products_selectedRegionLabel": "Geselecteerd product",
-  "products_selectedErrorTitle": "Dit product kon niet worden geladen.",
-  "products_loadingLabel": "Product laden",
-  "products_viewDetailsAction": "Details bekijken",
   "products_emptyText": "Nog geen producten. Kom snel terug.",
   "products_noMatchText": "Geen producten gevonden. Probeer andere woorden of wis de filters.",
   "product_metaDescription": "{productName} van {boardName}.",
@@ -2813,6 +2809,15 @@
   "product_accessRemovedText": "De toegang tot deze aankoop is ingetrokken. Neem contact op met het platform als dit niet klopt.",
   "product_notFoundTitle": "Product niet gevonden",
   "product_notFoundText": "Dit product is niet meer beschikbaar.",
+  "product_iWantThisAction": "Dit wil ik!",
+  "product_buyThisAction": "Kopen",
+  "product_payAction": "Betalen",
+  "product_getThisAction": "Ophalen",
+  "product_downloadAction": "Downloaden",
+  "product_previousImageLabel": "Vorige afbeelding",
+  "product_nextImageLabel": "Volgende afbeelding",
+  "product_imagePositionText": "Afbeelding {index} van {count}",
+  "product_ratingDistributionLabel": "Verdeling van de beoordelingen",
   "purchaseResend_title": "Vraag je downloadlink op",
   "purchaseResend_description": "Vul het e-mailadres in waarmee je hebt gekocht, dan sturen we de link opnieuw.",
   "purchaseResend_submitAction": "Mail me de link",
@@ -2911,6 +2916,40 @@
       "match": {
         "starsPlural=one": "{stars} ster",
         "starsPlural=*": "{stars} sterren"
+      }
+    }
+  ],
+  "product_ratingCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} beoordeling",
+        "countPlural=*": "{count} beoordelingen"
+      }
+    }
+  ],
+  "product_ratingLong": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{rating} ({count} beoordeling)",
+        "countPlural=*": "{rating} ({count} beoordelingen)"
+      }
+    }
+  ],
+  "product_salesCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} keer verkocht",
+        "countPlural=*": "{count} keer verkocht"
       }
     }
   ],

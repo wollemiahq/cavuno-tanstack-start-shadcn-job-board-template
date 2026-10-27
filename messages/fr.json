@@ -2759,10 +2759,6 @@
   "products_sortRatingLabel": "Mieux notés",
   "products_sortPriceLabel": "Prix : croissant",
   "products_resultsRegionLabel": "Produits",
-  "products_selectedRegionLabel": "Produit sélectionné",
-  "products_selectedErrorTitle": "Ce produit n'a pas pu être chargé.",
-  "products_loadingLabel": "Chargement du produit",
-  "products_viewDetailsAction": "Voir les détails",
   "products_emptyText": "Aucun produit pour le moment. Revenez bientôt.",
   "products_noMatchText": "Aucun produit ne correspond. Essayez d’autres mots ou effacez les filtres.",
   "product_metaDescription": "{productName} par {boardName}.",
@@ -2813,6 +2809,15 @@
   "product_accessRemovedText": "L'accès à cet achat a été retiré. Contactez le site s'il s'agit d'une erreur.",
   "product_notFoundTitle": "Produit introuvable",
   "product_notFoundText": "Ce produit n'est plus disponible.",
+  "product_iWantThisAction": "Je le veux !",
+  "product_buyThisAction": "Acheter",
+  "product_payAction": "Payer",
+  "product_getThisAction": "Obtenir",
+  "product_downloadAction": "Télécharger",
+  "product_previousImageLabel": "Image précédente",
+  "product_nextImageLabel": "Image suivante",
+  "product_imagePositionText": "Image {index} sur {count}",
+  "product_ratingDistributionLabel": "Répartition des notes",
   "purchaseResend_title": "Recevoir votre lien de téléchargement",
   "purchaseResend_description": "Saisissez l'adresse e-mail utilisée pour l'achat et nous vous renverrons le lien.",
   "purchaseResend_submitAction": "Envoyez-moi le lien",
@@ -2911,6 +2916,40 @@
       "match": {
         "starsPlural=one": "{stars} étoile",
         "starsPlural=*": "{stars} étoiles"
+      }
+    }
+  ],
+  "product_ratingCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} note",
+        "countPlural=*": "{count} notes"
+      }
+    }
+  ],
+  "product_ratingLong": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{rating} ({count} note)",
+        "countPlural=*": "{rating} ({count} notes)"
+      }
+    }
+  ],
+  "product_salesCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} vente",
+        "countPlural=*": "{count} ventes"
       }
     }
   ],

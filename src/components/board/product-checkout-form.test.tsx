@@ -19,6 +19,8 @@ function product(overrides: Partial<Product> = {}): Product {
     slug: 'guide',
     name: 'Guide',
     description: null,
+    descriptionHtml: null,
+    salesCount: null,
     summary: null,
     details: [],
     images: [],

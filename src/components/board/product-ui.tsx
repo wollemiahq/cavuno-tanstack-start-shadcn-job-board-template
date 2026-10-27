@@ -1,8 +1,10 @@
 /**
  * Shared digital-product presentation: the cover image, the price text,
- * the star rating and the listing's result card. Every value comes from
- * the Board API wire shapes through src/board/product-view-model.ts.
+ * the buy button's words, the star rating and the listing's product card.
+ * Every value comes from the Board API wire shapes through
+ * src/board/product-view-model.ts.
  */
+import { Link } from '@tanstack/react-router';
 import { Star } from 'lucide-react';
 
 import { m } from '../../paraglide/messages';
@@ -13,13 +15,14 @@ import {
   priceLabel,
   type PriceLabel,
 } from '@/board/product-view-model';
-import { MasterDetailLink } from '@/components/master-detail-link';
-import { SearchResultCard } from '@/components/search-results/search-results';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { hideBrokenImage } from '@/lib/hide-broken-image';
-import { productDestination } from '@/lib/master-detail-destination';
 import { cn } from '@/lib/utils';
-import type { ProductCard, ProductPrice } from '@cavuno/board';
+import type {
+  ProductCard as ProductCardData,
+  ProductPrice,
+} from '@cavuno/board';
 
 /** "Free", "$19" or "$5+". */
 export function priceText(label: PriceLabel): string {
@@ -32,6 +35,35 @@ export function productPriceText(price: ProductPrice): string {
   return priceText(priceLabel(price, getLocale()));
 }
 
+/**
+ * The seller's button wording. The API sends one of the dashboard's preset
+ * keys; anything else is shown as written. With none chosen the button says
+ * "Buy now", or "Get it free" on a free product.
+ */
+export function productButtonText(product: {
+  buttonLabel: string | null;
+  price: Pick<ProductPrice, 'kind'>;
+}): string {
+  switch (product.buttonLabel?.trim() || null) {
+    case null:
+      return product.price.kind === 'free'
+        ? m.product_getFreeAction()
+        : m.product_buyAction();
+    case 'i_want_this':
+      return m.product_iWantThisAction();
+    case 'buy_this':
+      return m.product_buyThisAction();
+    case 'pay':
+      return m.product_payAction();
+    case 'get_this':
+      return m.product_getThisAction();
+    case 'download':
+      return m.product_downloadAction();
+    default:
+      return product.buttonLabel ?? '';
+  }
+}
+
 /** A product image, or a muted block of the same shape when there is none. */
 export function ProductCover({
   src,
@@ -40,12 +72,15 @@ export function ProductCover({
 }: {
   src: string | null | undefined;
   className?: string;
-  size?: 'hero' | 'thumb';
+  /** `hero`: the product page; `card`: the listing grid; `thumb`: rows. */
+  size?: 'hero' | 'card' | 'thumb';
 }) {
   const frame =
     size === 'hero'
       ? 'aspect-[2/1] w-full rounded-2xl'
-      : 'h-20 w-16 shrink-0 rounded-lg';
+      : size === 'card'
+        ? 'aspect-[2/1] w-full'
+        : 'h-20 w-16 shrink-0 rounded-lg';
   return src ? (
     <img
       src={src}
@@ -84,13 +119,20 @@ export function RatingSummary({
   );
 }
 
-/** Read-only stars for one review. */
-export function ReviewStars({ stars }: { stars: number }) {
+/** Read-only stars; a fractional average fills to the nearest whole star. */
+export function ReviewStars({
+  stars,
+  className,
+}: {
+  stars: number;
+  className?: string;
+}) {
+  const filled = Math.round(stars);
   return (
     <span
-      className="inline-flex items-center gap-0.5"
+      className={cn('inline-flex items-center gap-0.5', className)}
       role="img"
-      aria-label={m.product_starsAriaLabel({ stars })}
+      aria-label={m.product_starsAriaLabel({ stars: filled })}
     >
       {[1, 2, 3, 4, 5].map((value) => (
         <Star
@@ -98,7 +140,7 @@ export function ReviewStars({ stars }: { stars: number }) {
           aria-hidden="true"
           className={cn(
             'size-3.5',
-            value <= stars
+            value <= filled
               ? 'text-foreground fill-current'
               : 'text-muted-foreground/40',
           )}
@@ -108,54 +150,49 @@ export function ReviewStars({ stars }: { stars: number }) {
   );
 }
 
-/** One product in the `/products` list (desktop selects in place). */
-export function ProductSearchResult({
-  product,
-  selected = false,
-}: {
-  product: ProductCard;
-  selected?: boolean;
-}) {
+/** One product in the `/products` grid: cover, name, summary, price, rating. */
+export function ProductGridCard({ product }: { product: ProductCardData }) {
   return (
-    <SearchResultCard selected={selected} className="p-0">
-      <MasterDetailLink
-        destination={productDestination({ productSlug: product.slug })}
-        aria-current={selected ? 'true' : undefined}
-        className="block rounded-[inherit] p-4 outline-none"
+    <Link
+      to="/products/$productSlug"
+      params={{ productSlug: product.slug }}
+      className="group focus-visible:ring-ring/50 block h-full rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3"
+    >
+      <Card
+        size="sm"
+        className="group-hover:ring-foreground/15 h-full gap-0 py-0 transition-shadow group-hover:shadow-md"
       >
-        <div className="flex items-start gap-3">
-          <ProductCover src={product.coverImageUrl} size="thumb" />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h2
-              className="text-foreground line-clamp-2 text-base font-semibold"
+        <ProductCover src={product.coverImageUrl} size="card" />
+        <CardContent className="flex flex-1 flex-col gap-1 p-4">
+          <h2
+            className="text-foreground line-clamp-2 text-base font-semibold"
+            dir="auto"
+          >
+            {product.name}
+          </h2>
+          {product.summary ? (
+            <p
+              className="text-muted-foreground line-clamp-2 text-sm"
               dir="auto"
             >
-              {product.name}
-            </h2>
-            {product.summary ? (
-              <p
-                className="text-muted-foreground line-clamp-2 text-sm"
-                dir="auto"
-              >
-                {product.summary}
-              </p>
+              {product.summary}
+            </p>
+          ) : null}
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-2 text-sm">
+            <span className="text-foreground font-semibold">
+              {productPriceText(product.price)}
+            </span>
+            <RatingSummary
+              average={product.rating?.average ?? null}
+              count={product.rating?.count ?? 0}
+              className="text-muted-foreground"
+            />
+            {product.soldOut ? (
+              <Badge variant="outline">{m.product_soldOutLabel()}</Badge>
             ) : null}
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-foreground font-semibold">
-                {productPriceText(product.price)}
-              </span>
-              <RatingSummary
-                average={product.rating?.average ?? null}
-                count={product.rating?.count ?? 0}
-                className="text-muted-foreground"
-              />
-              {product.soldOut ? (
-                <Badge variant="outline">{m.product_soldOutLabel()}</Badge>
-              ) : null}
-            </div>
           </div>
-        </div>
-      </MasterDetailLink>
-    </SearchResultCard>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }

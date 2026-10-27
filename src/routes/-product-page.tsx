@@ -1,9 +1,11 @@
 /**
- * `/products/$productSlug` — the product page, in the job page's anatomy:
- * a tinted header band, the gallery and description on the left, a rail
- * with the price card and the facts box on the right, reviews under the
- * description. On a phone the price card sits above the description and a
- * sticky buy bar stays at the bottom.
+ * `/products/$productSlug` — the product page. The main column holds the
+ * cover images, the title with the seller line, the formatted description
+ * and the reviews (rating distribution first). The rail holds the price card
+ * and the facts table, and stays in view while the reader scrolls when it
+ * fits the window. On a phone the order is cover, title, price card,
+ * description, facts, reviews, with a buy bar at the bottom once the price
+ * card has scrolled away.
  *
  * Buying: the price card turns into a short step (email, amount, questions).
  * A free claim goes straight to the download page; a paid product mounts the
@@ -27,16 +29,22 @@ import { ArrowLeft, Clock, ShoppingBag } from 'lucide-react';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
-import { fileTypeLabels } from '@/board/product-view-model';
+import {
+  fileTypeLabels,
+  formatRating,
+  productFactRows,
+} from '@/board/product-view-model';
 import { CopyLinkButton } from '@/components/board/copy-link-button';
+import { ProductCarousel } from '@/components/board/product-carousel';
 import type {
   ProductCheckoutRefusal,
   ProductCheckoutValues,
 } from '@/components/board/product-checkout-form';
+import { ProductRatingHistogram } from '@/components/board/product-rating-histogram';
 import {
-  ProductCover,
   RatingSummary,
   ReviewStars,
+  productButtonText,
   productPriceText,
 } from '@/components/board/product-ui';
 import {
@@ -44,11 +52,12 @@ import {
   type ResendLinkAction,
 } from '@/components/board/purchase-resend-dialog';
 import { EmptyState } from '@/components/empty-state';
-import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PageLayout } from '@/components/layout/page-layout';
+import { Prose } from '@/components/prose';
 import { useRootSession } from '@/components/root-session';
 import { Text } from '@/components/text';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -176,8 +185,12 @@ function useCheckoutReturn(
   };
 }
 
+/** The board selling the product: the seller line under the title. */
+export type ProductSeller = { name: string; logoUrl: string | null };
+
 export function ProductPageView({
   product,
+  seller,
   reviews,
   shareUrl,
   language,
@@ -188,6 +201,7 @@ export function ProductPageView({
   onPurchase,
 }: {
   product: Product;
+  seller: ProductSeller;
   reviews: ProductReviewListEnvelope | null;
   /** The product page's canonical URL, for "Copy link". */
   shareUrl: string;
@@ -209,11 +223,16 @@ export function ProductPageView({
   const [kit, setKit] = useState<MountKit | null>(null);
   const [kitSessionId, setKitSessionId] = useState<string | null>(null);
   const buyCardRef = useRef<HTMLDivElement>(null);
-  const free = product.price.kind === 'free';
+  // Elements in state, not refs: the page unmounts while Stripe Checkout
+  // shows, and the observers must follow the remounted elements.
+  const [buyCardElement, setBuyCardElement] = useState<HTMLDivElement | null>(
+    null,
+  );
+  const [railElement, setRailElement] = useState<HTMLElement | null>(null);
+  const buyCardInView = useInView(buyCardElement);
+  const railFits = useFitsViewport(railElement);
   const priceLabel = productPriceText(product.price);
-  const ctaLabel =
-    product.buttonLabel ??
-    (free ? m.product_getFreeAction() : m.product_buyAction());
+  const ctaLabel = productButtonText(product);
   const returning = useCheckoutReturn(
     product.slug,
     sessionId ?? kitSessionId,
@@ -296,6 +315,7 @@ export function ProductPageView({
     ...(product.facts.linkCount > 0 ? [m.product_linkTypeLabel()] : []),
   ];
   const rating = product.ratingsEnabled ? product.rating : null;
+  const salesCount = product.salesCount;
 
   const buyCard = (
     <Card size="sm" className="gap-0 py-0" data-slot="product-buy-card">
@@ -344,14 +364,22 @@ export function ProductPageView({
                 </Button>
               }
             />
+            {salesCount !== null ? (
+              <p
+                data-slot="product-sales-count"
+                className="text-muted-foreground text-center text-sm"
+              >
+                {m.product_salesCount({ count: salesCount })}
+              </p>
+            ) : null}
           </>
         )}
       </CardContent>
     </Card>
   );
 
-  const factsRows = [
-    ...product.details,
+  // The seller's own rows win over a computed row with the same label.
+  const factsRows = productFactRows(product.details, [
     ...(product.facts.pageCount
       ? [
           {
@@ -368,7 +396,7 @@ export function ProductPageView({
           },
         ]
       : []),
-  ];
+  ]);
   const factsCard =
     product.summary || factsRows.length > 0 ? (
       <Card size="sm" className="gap-0 py-0" data-slot="product-facts">
@@ -409,120 +437,115 @@ export function ProductPageView({
 
   return (
     <>
-      <PageLayout
-        band={
-          <div className="border-border bg-muted/50 border-b">
-            <Container width="wide">
-              <header className="flex flex-col gap-3 pt-(--header-space) pb-(--header-space)">
-                <Link
-                  to="/products"
-                  className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
-                >
-                  <ArrowLeft aria-hidden="true" className="size-4" />
-                  {m.products_metaTitle()}
-                </Link>
-                <Text
-                  as="h1"
-                  variant="heading2"
-                  className="md:text-3xl"
-                  dir="auto"
-                >
-                  {product.name}
-                </Text>
-                {fileTypes.length > 0 || product.soldOut ? (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {fileTypes.length > 0 ? (
-                      <Badge variant="secondary">{fileTypes.join(' · ')}</Badge>
-                    ) : null}
-                    {product.soldOut ? (
-                      <Badge variant="outline">
-                        {m.product_soldOutLabel()}
-                      </Badge>
-                    ) : null}
-                  </div>
-                ) : null}
-                {rating && rating.count > 0 ? (
-                  <a
-                    href="#reviews"
-                    className="text-muted-foreground w-fit text-sm"
-                  >
-                    <RatingSummary
-                      average={rating.average}
-                      count={rating.count}
-                    />
-                  </a>
-                ) : null}
-              </header>
-            </Container>
-          </div>
-        }
-      >
-        <div
-          data-slot="product-layout"
-          className="flex flex-col gap-6 pb-24 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_auto_1fr] lg:items-start lg:gap-x-10 lg:gap-y-8 lg:pb-0"
-        >
-          {product.images.length > 0 ? (
-            <div className="order-1 lg:col-start-1 lg:row-start-1">
-              <ProductGallery images={product.images} />
-            </div>
-          ) : null}
-          <aside
-            aria-label={m.product_purchaseRegionLabel()}
-            className="contents lg:sticky lg:top-24 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:flex lg:flex-col lg:gap-4"
+      <PageLayout>
+        <div className="flex flex-col gap-4 pb-24 lg:pb-0">
+          <Link
+            to="/products"
+            className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
           >
-            <div ref={buyCardRef} className="order-2 scroll-mt-24">
-              {buyCard}
-            </div>
-            {factsCard ? <div className="order-4">{factsCard}</div> : null}
-          </aside>
+            <ArrowLeft aria-hidden="true" className="size-4 rtl:rotate-180" />
+            {m.products_metaTitle()}
+          </Link>
           <div
-            className={cn(
-              'order-3 lg:col-start-1',
-              product.images.length > 0 ? 'lg:row-start-2' : 'lg:row-start-1',
-            )}
+            data-slot="product-layout"
+            className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start lg:gap-x-10 lg:gap-y-8"
           >
-            {product.description ? (
-              <div
-                className="text-foreground leading-relaxed whitespace-pre-line"
-                dir="auto"
-              >
-                {product.description}
+            {product.images.length > 0 ? (
+              <div className="order-1 lg:col-start-1">
+                <ProductCarousel images={product.images} />
               </div>
             ) : null}
-            {product.refundPolicy ? (
-              <p className="text-muted-foreground mt-6 text-sm whitespace-pre-line">
-                <span className="text-foreground font-medium">
-                  {m.product_refundPolicyLabel()}
-                </span>{' '}
-                {product.refundPolicy}
-              </p>
+            <header className="order-2 flex flex-col gap-2 lg:col-start-1">
+              <Text
+                as="h1"
+                variant="heading2"
+                className="md:text-3xl"
+                dir="auto"
+              >
+                {product.name}
+              </Text>
+              <SellerLine seller={seller} rating={rating} />
+              {fileTypes.length > 0 || product.soldOut ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {fileTypes.length > 0 ? (
+                    <Badge variant="secondary">{fileTypes.join(' · ')}</Badge>
+                  ) : null}
+                  {product.soldOut ? (
+                    <Badge variant="outline">{m.product_soldOutLabel()}</Badge>
+                  ) : null}
+                </div>
+              ) : null}
+            </header>
+            <aside
+              ref={setRailElement}
+              aria-label={m.product_purchaseRegionLabel()}
+              data-sticky={railFits ? 'true' : 'false'}
+              className="contents lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:flex lg:flex-col lg:gap-4 lg:data-[sticky=true]:sticky lg:data-[sticky=true]:top-24"
+            >
+              <div
+                ref={(element) => {
+                  buyCardRef.current = element;
+                  setBuyCardElement(element);
+                }}
+                className="order-3 scroll-mt-24"
+              >
+                {buyCard}
+              </div>
+              {factsCard ? <div className="order-5">{factsCard}</div> : null}
+            </aside>
+            <div
+              data-slot="product-description"
+              className="order-4 lg:col-start-1"
+            >
+              {product.descriptionHtml ? (
+                <Prose html={product.descriptionHtml} />
+              ) : product.description ? (
+                <div
+                  className="text-foreground leading-relaxed whitespace-pre-line"
+                  dir="auto"
+                >
+                  {product.description}
+                </div>
+              ) : null}
+              {product.refundPolicy ? (
+                <p className="text-muted-foreground mt-6 text-sm whitespace-pre-line">
+                  <span className="text-foreground font-medium">
+                    {m.product_refundPolicyLabel()}
+                  </span>{' '}
+                  {product.refundPolicy}
+                </p>
+              ) : null}
+            </div>
+            {rating ? (
+              <div className="order-6 lg:col-start-1">
+                <ProductReviews
+                  productSlug={product.slug}
+                  rating={rating}
+                  initial={reviews}
+                  loadReviews={dependencies.loadReviews}
+                />
+              </div>
             ) : null}
           </div>
-          {rating ? (
-            <div
-              className={cn(
-                'order-5 lg:col-start-1',
-                product.images.length > 0 ? 'lg:row-start-3' : 'lg:row-start-2',
-              )}
-            >
-              <ProductReviews
-                productSlug={product.slug}
-                rating={rating}
-                initial={reviews}
-                loadReviews={dependencies.loadReviews}
-              />
-            </div>
-          ) : null}
         </div>
       </PageLayout>
-      {step === 'product' && !product.soldOut ? (
+      {step === 'product' && !product.soldOut && !buyCardInView ? (
         <div
           data-slot="product-buy-bar"
           className="border-border bg-background fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
         >
-          <span className="text-foreground text-lg font-semibold">
-            {priceLabel}
-          </span>
+          <div className="flex min-w-0 flex-col">
+            <span className="text-foreground text-lg font-semibold">
+              {priceLabel}
+            </span>
+            {rating ? (
+              <RatingSummary
+                average={rating.average}
+                count={rating.count}
+                className="text-muted-foreground text-xs"
+              />
+            ) : null}
+          </div>
           <Button size="lg" className="flex-1" onClick={openStep}>
             {ctaLabel}
           </Button>
@@ -530,6 +553,51 @@ export function ProductPageView({
       ) : null}
     </>
   );
+}
+
+/**
+ * Whether the element is on screen. Starts `true` so the server render and
+ * the first paint never show the phone's buy bar over a visible price card.
+ */
+function useInView(element: HTMLElement | null): boolean {
+  const [inView, setInView] = useState(true);
+  useEffect(() => {
+    if (!element || !window.IntersectionObserver) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry) setInView(entry.isIntersecting);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+  return inView;
+}
+
+/** The sticky rail's top offset (`top-24`) plus a little room below. */
+const RAIL_STICKY_CLEARANCE_PX = 96 + 16;
+
+/**
+ * Whether the rail fits the window below the sticky header. A rail taller
+ * than the window must scroll with the page, or its bottom would be out of
+ * reach until the end of the page.
+ */
+function useFitsViewport(element: HTMLElement | null): boolean {
+  const [fits, setFits] = useState(true);
+  useEffect(() => {
+    if (!element) return;
+    const measure = () =>
+      setFits(
+        element.offsetHeight + RAIL_STICKY_CLEARANCE_PX <= window.innerHeight,
+      );
+    measure();
+    window.addEventListener('resize', measure);
+    const observer = window.ResizeObserver ? new ResizeObserver(measure) : null;
+    observer?.observe(element);
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer?.disconnect();
+    };
+  }, [element]);
+  return fits;
 }
 
 /** "PDF, XLSX, 1 link". */
@@ -541,42 +609,61 @@ function filesFactValue(product: Product): string {
   return parts.join(', ');
 }
 
-function ProductGallery({ images }: { images: string[] }) {
-  const [active, setActive] = useState(0);
-  const current = images[active] ?? images[0];
+/** The board's logo and name, then the stars linking down to the reviews. */
+function SellerLine({
+  seller,
+  rating,
+}: {
+  seller: ProductSeller;
+  rating: Product['rating'] | null;
+}) {
+  const rated =
+    rating && rating.average !== null && rating.count > 0 ? rating : null;
   return (
-    <div className="flex flex-col gap-3">
-      <ProductCover src={current} />
-      {images.length > 1 ? (
-        <div
-          role="group"
-          aria-label={m.product_galleryLabel()}
-          className="flex flex-wrap gap-2"
+    <div
+      data-slot="product-seller"
+      className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm"
+    >
+      <span className="text-foreground inline-flex items-center gap-2 font-medium">
+        {seller.logoUrl ? (
+          <img
+            src={seller.logoUrl}
+            alt=""
+            className="h-6 w-auto max-w-24 object-contain"
+          />
+        ) : (
+          <Avatar size="sm" aria-hidden="true">
+            <AvatarFallback>{initials(seller.name)}</AvatarFallback>
+          </Avatar>
+        )}
+        <span dir="auto">{seller.name}</span>
+      </span>
+      {rated && rated.average !== null ? (
+        <a
+          href="#reviews"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
         >
-          {images.map((image, index) => (
-            <button
-              key={image}
-              type="button"
-              aria-label={m.product_showImageLabel({ index: index + 1 })}
-              aria-pressed={index === active}
-              onClick={() => setActive(index)}
-              className={cn(
-                'focus-visible:ring-ring/50 overflow-hidden rounded-lg ring-offset-2 outline-none focus-visible:ring-2',
-                index === active && 'ring-foreground ring-2',
-              )}
-            >
-              <img
-                src={image}
-                alt=""
-                loading="lazy"
-                className="bg-muted h-11 w-18 object-cover"
-              />
-            </button>
-          ))}
-        </div>
+          <span aria-hidden="true">
+            <ReviewStars stars={rated.average} />
+          </span>
+          {m.product_ratingLong({
+            rating: formatRating(getLocale(), rated.average),
+            count: rated.count,
+          })}
+        </a>
       ) : null}
     </div>
   );
+}
+
+/** "Career Moves Jobs" → "CM". */
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => [...word][0]?.toLocaleUpperCase() ?? '')
+    .join('');
 }
 
 function ProductReviews({
@@ -619,27 +706,21 @@ function ProductReviews({
       aria-labelledby="product-reviews-heading"
       className="border-border flex scroll-mt-24 flex-col gap-5 border-t pt-6"
     >
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2
-          id="product-reviews-heading"
-          className="text-foreground text-lg font-semibold"
-        >
-          {m.product_reviewsHeading()}
-        </h2>
-        <RatingSummary
-          average={rating.average}
-          count={rating.count}
-          className="text-muted-foreground text-sm"
-        />
-      </div>
+      <h2
+        id="product-reviews-heading"
+        className="text-foreground text-lg font-semibold"
+      >
+        {m.product_reviewsHeading()}
+      </h2>
+      {rating.count > 0 ? <ProductRatingHistogram rating={rating} /> : null}
       {items.length === 0 ? (
         <p className="text-muted-foreground text-sm">
           {m.product_noReviewsText()}
         </p>
       ) : (
-        <ul className="flex flex-col gap-5">
+        <ul className="border-border flex flex-col divide-y border-t">
           {items.map((review) => (
-            <li key={review.id} className="flex flex-col gap-1">
+            <li key={review.id} className="flex flex-col gap-1 py-4">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                 <ReviewStars stars={review.stars} />
                 <span className="text-foreground font-semibold" dir="auto">
@@ -652,12 +733,15 @@ function ProductReviews({
                 </span>
               </div>
               {review.comment ? (
-                <p className="text-foreground whitespace-pre-line" dir="auto">
+                <p
+                  className="text-foreground break-words whitespace-pre-line"
+                  dir="auto"
+                >
                   {review.comment}
                 </p>
               ) : null}
               {review.reply ? (
-                <p className="border-border text-muted-foreground mt-1 border-s-2 ps-3 text-sm">
+                <p className="bg-muted text-muted-foreground mt-2 rounded-lg px-3 py-2 text-sm break-words">
                   <span className="text-foreground font-medium">
                     {m.product_operatorReplyLabel()}
                   </span>{' '}

@@ -130,3 +130,46 @@ export function formatRating(locale: string, average: number): string {
     maximumFractionDigits: 1,
   }).format(average);
 }
+
+export type ProductFactRow = { label: string; value: string };
+
+/**
+ * The product page's facts table: the seller's own detail rows, then the
+ * computed rows (pages, files) the seller has not already given. A computed
+ * row is left out when a seller row has the same label, compared trimmed and
+ * case-insensitively against the computed row's localized label, so a
+ * seller's "Pages: 1 or 2 per template" wins over the counted "Pages: 20".
+ */
+export function productFactRows(
+  details: readonly ProductFactRow[],
+  computed: readonly ProductFactRow[],
+): ProductFactRow[] {
+  const key = (label: string) => label.trim().toLocaleLowerCase();
+  const sellerLabels = new Set(details.map((row) => key(row.label)));
+  return [
+    ...details,
+    ...computed.filter((row) => !sellerLabels.has(key(row.label))),
+  ];
+}
+
+/**
+ * The rating histogram's rows, 5 stars first. The API counts reviews per
+ * star with 1 star first; each row's share is of all counted reviews.
+ */
+export function ratingHistogramRows(
+  histogram: readonly number[],
+): Array<{ stars: number; count: number; share: number }> {
+  const total = histogram.reduce((sum, count) => sum + Math.max(0, count), 0);
+  return [5, 4, 3, 2, 1].map((stars) => {
+    const count = Math.max(0, histogram[stars - 1] ?? 0);
+    return { stars, count, share: total > 0 ? count / total : 0 };
+  });
+}
+
+/** "71%" in the viewer's locale, in whole percents. */
+export function formatShare(locale: string, share: number): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'percent',
+    maximumFractionDigits: 0,
+  }).format(share);
+}
