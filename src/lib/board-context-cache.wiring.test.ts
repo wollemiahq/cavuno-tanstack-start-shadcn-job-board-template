@@ -41,9 +41,10 @@ describe('board context memo fetch options', () => {
     expect(OFFER_GATE_TTL_MS).toBe(300_000);
   });
 
-  it('holds the Products link no longer than the products list stays fresh', () => {
-    // GET /products is marked fresh for 60 s; a longer memo kept a board
-    // that was empty at first load hiding Products after a product listed.
+  it('memoizes the Products link for at most 60 s on top of the API cache', () => {
+    // The memo stacks on GET /products' own shared cache (max-age=60,
+    // stale-while-revalidate=300); a longer memo kept a board that was
+    // empty at first load hiding Products long after a product listed.
     expect(PRODUCTS_GATE_TTL_MS).toBeLessThanOrEqual(60_000);
   });
 });

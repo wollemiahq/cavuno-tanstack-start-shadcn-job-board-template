@@ -59,11 +59,13 @@ export const OFFER_GATE_TTL_MS = 300_000;
 
 /**
  * How long an isolate reuses "does the board list a product" (the Products
- * link). Products are listed and unlisted at any time, and the Board API
- * marks the products list fresh for 60 s, so the link may lag a listing by
- * at most that long. Riding the 5-minute plan memo (and a forced 5-minute
- * edge TTL) kept a board that was empty when the shell first loaded hiding
- * Products after its first product was listed.
+ * link). Products are listed and unlisted at any time. This memo adds up to
+ * 60 s on top of the Board API's own shared cache for the products list
+ * (`Cache-Control: public, max-age=60, stale-while-revalidate=300`), so the
+ * link can lag a listing by a few minutes, not seconds. Riding the
+ * 5-minute plan memo (and a forced 5-minute edge TTL) kept a board that was
+ * empty when the shell first loaded hiding Products for much longer after its
+ * first product was listed.
  */
 export const PRODUCTS_GATE_TTL_MS = 60_000;
 
