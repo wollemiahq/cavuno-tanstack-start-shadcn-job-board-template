@@ -154,16 +154,31 @@ export function productFactRows(
 
 /**
  * The rating histogram's rows, 5 stars first. The API counts reviews per
- * star with 1 star first; each row's share is of all counted reviews.
+ * star with 1 star first; each row's share is of all counted reviews,
+ * rounded to whole percents that add up to 100 (largest remainder), so the
+ * shown percents never total 99 or 102.
  */
 export function ratingHistogramRows(
   histogram: readonly number[],
 ): Array<{ stars: number; count: number; share: number }> {
   const total = histogram.reduce((sum, count) => sum + Math.max(0, count), 0);
-  return [5, 4, 3, 2, 1].map((stars) => {
+  const rows = [5, 4, 3, 2, 1].map((stars) => {
     const count = Math.max(0, histogram[stars - 1] ?? 0);
-    return { stars, count, share: total > 0 ? count / total : 0 };
+    const exact = total > 0 ? (count * 100) / total : 0;
+    return { stars, count, percent: Math.floor(exact), rest: exact % 1 };
   });
+  let missing =
+    total > 0 ? 100 - rows.reduce((sum, r) => sum + r.percent, 0) : 0;
+  for (const row of [...rows].sort((a, b) => b.rest - a.rest)) {
+    if (missing <= 0) break;
+    row.percent += 1;
+    missing -= 1;
+  }
+  return rows.map(({ stars, count, percent }) => ({
+    stars,
+    count,
+    share: percent / 100,
+  }));
 }
 
 /** "71%" in the viewer's locale, in whole percents. */

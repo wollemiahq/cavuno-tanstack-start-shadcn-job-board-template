@@ -83,8 +83,15 @@ function renderPage(overrides: Partial<Product> = {}) {
   );
 }
 
+function rail() {
+  return screen.getByRole('complementary', {
+    name: m.product_purchaseRegionLabel(),
+  });
+}
+
+/** The rail's facts table (phones get a second copy after the description). */
 function facts() {
-  return screen.getByText((_, element) => element?.tagName === 'DL');
+  return within(rail()).getByText((_, element) => element?.tagName === 'DL');
 }
 
 describe('ProductPageView', () => {
@@ -139,6 +146,30 @@ describe('ProductPageView', () => {
     expect(within(table).getByText(m.product_filesLabel())).toBeInTheDocument();
   });
 
+  it('reads in the phone’s visual order: buy card, description, then details', () => {
+    const { container } = renderPage();
+
+    const description = container.querySelector(
+      '[data-slot="product-description"]',
+    );
+    const [railFacts, phoneFacts] = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="product-facts"]'),
+    );
+    const follows = (a: Node | null, b: Node | null | undefined) =>
+      Boolean(
+        a &&
+        b &&
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+
+    // The rail (buy card, then its desktop-only facts) comes before the
+    // description, and the phone's facts copy after it.
+    expect(rail()).toContainElement(railFacts ?? null);
+    expect(follows(rail(), description)).toBe(true);
+    expect(follows(description, phoneFacts)).toBe(true);
+    expect(rail()).not.toContainElement(phoneFacts ?? null);
+  });
+
   it('shows the sales count only when the seller shares it', () => {
     renderPage({ salesCount: 214 });
     expect(
@@ -174,8 +205,9 @@ describe('ProductPageView', () => {
     const share = (value: number) =>
       formatShare(locale, value).replace(/\s+/gu, ' ');
     expect(rows[0]).toHaveTextContent(m.product_starsAriaLabel({ stars: 5 }));
-    expect(rows[0]).toHaveTextContent(share(5 / 7));
-    expect(rows[1]).toHaveTextContent(share(1 / 7));
+    // Whole percents that add up to 100: 72 + 14 + 14.
+    expect(rows[0]).toHaveTextContent(share(0.72));
+    expect(rows[1]).toHaveTextContent(share(0.14));
     expect(rows[4]).toHaveTextContent(share(0));
   });
 });

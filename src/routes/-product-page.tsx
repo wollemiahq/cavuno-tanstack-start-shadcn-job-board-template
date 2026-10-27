@@ -451,11 +451,11 @@ export function ProductPageView({
             className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_auto_auto_1fr] lg:items-start lg:gap-x-10 lg:gap-y-8"
           >
             {product.images.length > 0 ? (
-              <div className="order-1 lg:col-start-1">
+              <div className="lg:col-start-1">
                 <ProductCarousel images={product.images} />
               </div>
             ) : null}
-            <header className="order-2 flex flex-col gap-2 lg:col-start-1">
+            <header className="flex flex-col gap-2 lg:col-start-1">
               <Text
                 as="h1"
                 variant="heading2"
@@ -480,23 +480,23 @@ export function ProductPageView({
               ref={setRailElement}
               aria-label={m.product_purchaseRegionLabel()}
               data-sticky={railFits ? 'true' : 'false'}
-              className="contents lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:flex lg:flex-col lg:gap-4 lg:data-[sticky=true]:sticky lg:data-[sticky=true]:top-24"
+              className="flex flex-col gap-4 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:data-[sticky=true]:sticky lg:data-[sticky=true]:top-24"
             >
               <div
                 ref={(element) => {
                   buyCardRef.current = element;
                   setBuyCardElement(element);
                 }}
-                className="order-3 scroll-mt-24"
+                className="scroll-mt-24"
               >
                 {buyCard}
               </div>
-              {factsCard ? <div className="order-5">{factsCard}</div> : null}
+              {/* The rail's copy; phones read it after the description. */}
+              {factsCard ? (
+                <div className="hidden lg:block">{factsCard}</div>
+              ) : null}
             </aside>
-            <div
-              data-slot="product-description"
-              className="order-4 lg:col-start-1"
-            >
+            <div data-slot="product-description" className="lg:col-start-1">
               {product.descriptionHtml ? (
                 <Prose html={product.descriptionHtml} />
               ) : product.description ? (
@@ -516,8 +516,9 @@ export function ProductPageView({
                 </p>
               ) : null}
             </div>
+            {factsCard ? <div className="lg:hidden">{factsCard}</div> : null}
             {rating ? (
-              <div className="order-6 lg:col-start-1">
+              <div className="lg:col-start-1">
                 <ProductReviews
                   productSlug={product.slug}
                   rating={rating}
@@ -532,7 +533,7 @@ export function ProductPageView({
       {step === 'product' && !product.soldOut && !buyCardInView ? (
         <div
           data-slot="product-buy-bar"
-          className="border-border bg-background fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
+          className="border-border bg-background fixed inset-x-0 bottom-[var(--board-floating-bottom,0px)] z-40 flex items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
         >
           <div className="flex min-w-0 flex-col">
             <span className="text-foreground text-lg font-semibold">

@@ -45,6 +45,16 @@ describe('ratingHistogramRows', () => {
     ]);
   });
 
+  it('rounds to whole percents that add up to 100', () => {
+    const percents = (histogram: number[]) =>
+      ratingHistogramRows(histogram).map((row) => Math.round(row.share * 100));
+
+    // 4 + 1 + 1 + 1 + 1: plain rounding shows 50/13/13/13/13 = 102%.
+    expect(percents([1, 1, 1, 1, 4])).toEqual([50, 13, 13, 12, 12]);
+    // 5 + 1 + 1 of 7: plain rounding shows 71/14/14 = 99%.
+    expect(percents([0, 0, 1, 1, 5])).toEqual([72, 14, 14, 0, 0]);
+  });
+
   it('gives every row a zero share when nothing is counted', () => {
     expect(ratingHistogramRows([]).every((row) => row.share === 0)).toBe(true);
   });
