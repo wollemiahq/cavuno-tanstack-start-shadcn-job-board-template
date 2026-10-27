@@ -68,7 +68,6 @@ function product(overrides: Partial<Product> = {}): Product {
     summary: null,
     details: [],
     images: [],
-    buttonLabel: null,
     price: { kind: 'fixed', currency: 'usd', amountCents: 1900 },
     soldOut: false,
     refundPolicy: null,
@@ -159,17 +158,16 @@ describe('ProductPageView', () => {
     expect(screen.getByText('Plain description')).toBeInTheDocument();
   });
 
-  it('words a preset button key, and the default when none is set', () => {
-    renderPage({ buttonLabel: 'i_want_this' });
-    expect(
-      screen.getByRole('button', { name: m.product_iWantThisAction() }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText('i_want_this')).not.toBeInTheDocument();
-    cleanup();
-
-    renderPage({ buttonLabel: null });
+  it('words the buy button with the board’s own copy: Buy now, or Get it free', () => {
+    renderPage();
     expect(
       screen.getByRole('button', { name: m.product_buyAction() }),
+    ).toBeInTheDocument();
+    cleanup();
+
+    renderPage({ price: { kind: 'free', currency: null, amountCents: 0 } });
+    expect(
+      screen.getByRole('button', { name: m.product_getFreeAction() }),
     ).toBeInTheDocument();
   });
 
@@ -489,7 +487,6 @@ describe('ProductPageView — desktop header actions', () => {
     const slot = headerSlot();
     renderPage(
       {
-        buttonLabel: 'i_want_this',
         ratingsEnabled: true,
         rating: { average: 4.6, count: 7, histogram: [0, 0, 1, 1, 5] },
       },
@@ -510,13 +507,13 @@ describe('ProductPageView — desktop header actions', () => {
     ).toHaveAttribute('href', '#reviews');
 
     fireEvent.click(
-      header.getByRole('button', { name: m.product_iWantThisAction() }),
+      header.getByRole('button', { name: m.product_buyAction() }),
     );
     // The header button opens the price card's own buying step.
     await waitFor(() =>
       expect(
         within(rail()).queryByRole('button', {
-          name: m.product_iWantThisAction(),
+          name: m.product_buyAction(),
         }),
       ).toBeNull(),
     );

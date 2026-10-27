@@ -36,32 +36,16 @@ export function productPriceText(price: ProductPrice): string {
 }
 
 /**
- * The seller's button wording. The API sends one of the dashboard's preset
- * keys; anything else is shown as written. With none chosen the button says
- * "Buy now", or "Get it free" on a free product.
+ * The buy button's text: the board's own copy, not product data (as a shop
+ * theme owns "Add to cart"). "Buy now", or "Get it free" on a free product,
+ * from this board's messages, so the builder can change it in one place.
  */
 export function productButtonText(product: {
-  buttonLabel: string | null;
   price: Pick<ProductPrice, 'kind'>;
 }): string {
-  switch (product.buttonLabel?.trim() || null) {
-    case null:
-      return product.price.kind === 'free'
-        ? m.product_getFreeAction()
-        : m.product_buyAction();
-    case 'i_want_this':
-      return m.product_iWantThisAction();
-    case 'buy_this':
-      return m.product_buyThisAction();
-    case 'pay':
-      return m.product_payAction();
-    case 'get_this':
-      return m.product_getThisAction();
-    case 'download':
-      return m.product_downloadAction();
-    default:
-      return product.buttonLabel ?? '';
-  }
+  return product.price.kind === 'free'
+    ? m.product_getFreeAction()
+    : m.product_buyAction();
 }
 
 /** A product image, or a muted block of the same shape when there is none. */

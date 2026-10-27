@@ -5,28 +5,18 @@ import { productButtonText } from './product-ui';
 import { m } from '@/paraglide/messages';
 
 describe('productButtonText', () => {
-  const paid = { kind: 'fixed' as const };
-
-  it('words each dashboard preset key', () => {
-    expect(
-      ['i_want_this', 'buy_this', 'pay', 'get_this', 'download'].map(
-        (buttonLabel) => productButtonText({ buttonLabel, price: paid }),
-      ),
-    ).toEqual([
-      m.product_iWantThisAction(),
-      m.product_buyThisAction(),
-      m.product_payAction(),
-      m.product_getThisAction(),
-      m.product_downloadAction(),
-    ]);
-  });
-
-  it('falls back to Buy, or Get it free on a free product', () => {
-    expect(productButtonText({ buttonLabel: null, price: paid })).toBe(
+  it('says Buy now on a paid product', () => {
+    expect(productButtonText({ price: { kind: 'fixed' } })).toBe(
       m.product_buyAction(),
     );
-    expect(
-      productButtonText({ buttonLabel: null, price: { kind: 'free' } }),
-    ).toBe(m.product_getFreeAction());
+    expect(productButtonText({ price: { kind: 'pay_what_you_want' } })).toBe(
+      m.product_buyAction(),
+    );
+  });
+
+  it('says Get it free on a free product', () => {
+    expect(productButtonText({ price: { kind: 'free' } })).toBe(
+      m.product_getFreeAction(),
+    );
   });
 });

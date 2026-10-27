@@ -15,7 +15,6 @@ function product(overrides: Partial<Product> = {}): Product {
     summary: 'A 48-page PDF.',
     details: [],
     images: ['https://cdn.example/cover.png'],
-    buttonLabel: null,
     price: { kind: 'fixed', currency: 'usd', amountCents: 1900 },
     soldOut: false,
     refundPolicy: null,

@@ -30,7 +30,6 @@ function product(overrides: Partial<Product> = {}): Product {
     summary: null,
     details: [],
     images: [],
-    buttonLabel: null,
     price: { kind: 'fixed', currency: 'eur', amountCents: 1900 },
     soldOut: false,
     refundPolicy: null,
