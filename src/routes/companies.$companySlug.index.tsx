@@ -274,10 +274,10 @@ function CompanyPage() {
                       <Link
                         key={market.slug}
                         to="/companies/markets/$market"
-                        params={{ market: market.slug }}
+                        params={{ market: market.canonicalSlug }}
                         className="focus-visible:ring-ring rounded-full transition-opacity hover:no-underline hover:opacity-75 focus-visible:ring-2 focus-visible:outline-none"
                       >
-                        <Badge variant="secondary">{market.name}</Badge>
+                        <Badge variant="secondary">{market.displayName}</Badge>
                       </Link>
                     ))}
                   </div>

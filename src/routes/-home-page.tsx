@@ -66,7 +66,7 @@ export function HomePage() {
     .slice(0, 8)
     .map((related) => ({
       slug: related.slug,
-      name: related.term,
+      name: related.displayName,
       countLabel:
         related.count > 0
           ? entityCount(related.count, getLocale(), m.count_jobs, {
@@ -74,7 +74,7 @@ export function HomePage() {
               plural: chromeEntity().jobPlural,
             })
           : null,
-      href: jobsCategoryPath(related.slug),
+      href: jobsCategoryPath(related.canonicalSlug),
     }));
 
   return (

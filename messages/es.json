@@ -1523,6 +1523,20 @@
   "label_employmentTemporary": "Temporal",
   "label_employmentVolunteer": "Voluntariado",
   "label_locationHybrid": "{place} (híbrido)",
+  "label_locationRemoteFirstAndMore": [
+    {
+      "declarations": [
+        "input first",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{first} + {count} más",
+        "countPlural=*": "{first} + {count} más"
+      }
+    }
+  ],
   "label_locationRemoteIn": "En remoto · {region}",
   "label_locationRemoteWorldwide": "En remoto (todo el mundo)",
   "label_remoteHybrid": "Híbrido",

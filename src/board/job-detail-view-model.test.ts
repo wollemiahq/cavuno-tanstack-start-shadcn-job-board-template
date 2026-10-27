@@ -198,6 +198,64 @@ describe('toJobDetailVM', () => {
     ]);
   });
 
+  it('shows board-language taxonomy names and links their canonical slugs', () => {
+    const translated = toJobDetailVM(
+      createJob({
+        categories: [
+          {
+            slug: 'engineering',
+            name: 'Engineering',
+            canonicalSlug: 'technik',
+            displayName: 'Technik',
+          },
+        ],
+        skills: [
+          {
+            slug: 'artificial-intelligence',
+            name: 'Artificial Intelligence',
+            canonicalSlug: 'kuenstliche-intelligenz',
+            displayName: 'Künstliche Intelligenz',
+          },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'de',
+    );
+    expect(translated.categoryChips).toEqual([
+      { key: 'engineering', name: 'Technik', href: '/jobs/technik' },
+    ]);
+    expect(translated.skillChips).toEqual([
+      {
+        key: 'artificial-intelligence',
+        name: 'Künstliche Intelligenz',
+        href: '/jobs/skills/kuenstliche-intelligenz',
+      },
+    ]);
+  });
+
+  it('renders time zone areas by their board-language label', () => {
+    const translated = toJobDetailVM(
+      createJob({
+        remoteTimezones: [
+          { type: 'continent', value: 'Europe', label: 'Europa' },
+          { type: 'continent', value: 'Americas', label: 'Amerika' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'de',
+    );
+    const timezones = translated.facts.find(
+      (fact) => fact.label === copy.timezonesLabel,
+    );
+    expect(timezones?.value).toContain('Europa');
+    expect(timezones?.value).toContain('Amerika');
+    expect(timezones?.value).not.toContain('Europe');
+  });
+
   // The resolves-or-omits contract: when the loader supplies the set of chips
   // the taxonomy resolver accepts, chips outside it are dropped and survivors
   // link via their canonical slug. This is the defensive guard against a board

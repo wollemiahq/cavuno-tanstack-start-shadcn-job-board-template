@@ -150,17 +150,18 @@ export function toJobDetailVM(
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
   // chips link directly with no resolve round trip and no filtering.
+  // Chips show the board-language `displayName` and link `canonicalSlug`.
   const taxonomyChip = (
     type: 'category' | 'skill',
-    term: { slug: string; name: string },
+    term: { slug: string; canonicalSlug: string; displayName: string },
   ): JobDetailChipVM => {
     return {
       key: term.slug,
-      name: term.name,
+      name: term.displayName,
       href:
         type === 'skill'
-          ? jobsSkillPath(term.slug)
-          : jobsCategoryPath(term.slug),
+          ? jobsSkillPath(term.canonicalSlug)
+          : jobsCategoryPath(term.canonicalSlug),
     };
   };
 
@@ -203,13 +204,14 @@ export function toJobDetailVM(
   const permitCountries = job.remoteWorldwide
     ? [copy.worldwideLabel]
     : job.remoteWorkPermitCountryCodes.map(regionName);
-  // Timezone windows: `all` → the worldwide word; country entries → region
-  // names; IANA zones keep their identifier with a localized ±N hr window
+  // Timezone windows: `all` → the worldwide word; every other entry → the
+  // API's board-language `label` (country, area or time zone name, falling
+  // back to the region name / raw value), with a localized ±N hr window
   // (Intl unit formatting supplies the unit word).
   const timezoneEntries = job.remoteTimezones.map((tz) => {
     if (tz.type === 'all') return copy.worldwideLabel;
-    if (tz.type === 'country') return regionName(tz.value);
-    const zone = tz.value;
+    const zone =
+      tz.label || (tz.type === 'country' ? regionName(tz.value) : tz.value);
     if (Number.isFinite(tz.plusMinus) && Number(tz.plusMinus) > 0) {
       try {
         const window = new Intl.NumberFormat(displayLocale, {
@@ -396,7 +398,7 @@ export function toJobDetailVM(
     companyName: company?.name ?? null,
     companyLogoUrl: company?.logoUrl ?? null,
     companyAvatarName: company?.name ?? job.title,
-    sector: job.categories[0]?.name ?? null,
+    sector: job.categories[0]?.displayName ?? null,
     locationLabel: location,
     workplaceLabel: job.remoteOption ? enumLabel(job.remoteOption) : null,
     employmentTypeLabel: jobEmploymentTypeLabel(job),
