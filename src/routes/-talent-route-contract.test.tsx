@@ -68,6 +68,7 @@ const profile: TalentProfilePageData['profile'] = {
   languages: [],
   customFieldValues: {},
   objectReferences: [],
+  resumeUrl: null,
 };
 
 function apiError(status: number, code: string) {

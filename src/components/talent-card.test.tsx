@@ -32,6 +32,7 @@ const candidate = {
   education: [],
   customFieldValues: {},
   objectReferences: [],
+  distanceKm: null,
 } satisfies TalentDirectoryEntry;
 
 afterEach(cleanup);

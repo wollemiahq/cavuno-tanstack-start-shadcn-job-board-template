@@ -75,6 +75,7 @@ const directoryEntry = {
   ],
   customFieldValues: {},
   objectReferences: [],
+  distanceKm: null,
 } satisfies TalentDirectoryEntry;
 
 const profile = {
@@ -125,6 +126,7 @@ const profile = {
   languages: [{ name: 'English', proficiency: 'fluent' }],
   customFieldValues: {},
   objectReferences: [],
+  resumeUrl: null,
 } satisfies TalentProfile;
 
 describe('talent view models', () => {

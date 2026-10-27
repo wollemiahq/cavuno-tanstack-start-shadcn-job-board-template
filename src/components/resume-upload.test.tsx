@@ -62,6 +62,7 @@ const resume = {
     contentType: 'application/pdf',
     sizeBytes: 2048,
   },
+  shareWithEmployers: false,
 } satisfies Resume;
 
 afterEach(() => {
@@ -76,6 +77,7 @@ const emptyResume = {
   keepResumeOnFile: false,
   hasResumeOnFile: false,
   file: null,
+  shareWithEmployers: false,
 } satisfies Resume;
 
 describe('ResumeUpload', () => {
@@ -201,6 +203,7 @@ describe('ResumeUpload', () => {
     const parsingResume = {
       ...resume,
       parseStatus: 'parsing',
+      shareWithEmployers: false,
     } satisfies Resume;
 
     beforeEach(() => {

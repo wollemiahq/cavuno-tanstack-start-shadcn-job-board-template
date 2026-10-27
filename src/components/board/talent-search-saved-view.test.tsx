@@ -79,6 +79,7 @@ function candidate(id: string, name: string): TalentDirectoryEntry {
     education: [],
     customFieldValues: {},
     objectReferences: [],
+    distanceKm: null,
   };
 }
 

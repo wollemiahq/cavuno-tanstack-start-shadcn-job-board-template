@@ -52,11 +52,20 @@ const olderJob: PublicJobCard = {
     logoUrl: null,
     customFieldValues: {},
   },
-  categories: [{ slug: 'design', name: 'Design & UX' }],
+  categories: [
+    {
+      slug: 'design',
+      name: 'Design & UX',
+      canonicalSlug: 'design',
+      displayName: 'Design & UX',
+    },
+  ],
   skills: [],
   links: {
     public: 'https://board.example/companies/acme/jobs/older-role',
   },
+  remotePermits: [],
+  distanceKm: null,
 };
 
 const newerJob: PublicJobCard = {

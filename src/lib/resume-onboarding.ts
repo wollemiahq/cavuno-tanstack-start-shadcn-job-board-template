@@ -10,6 +10,7 @@ export const EMPTY_RESUME: Resume = {
   parsedAt: null,
   keepResumeOnFile: false,
   hasResumeOnFile: false,
+  shareWithEmployers: false,
   file: null,
 };
 

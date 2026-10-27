@@ -168,7 +168,15 @@ const company = {
   description: '<p>Building better hiring tools.</p>',
   jobCount: 1,
   publishedJobCount: 1,
-  markets: [{ id: 'market-1', name: 'Hiring', slug: 'hiring' }],
+  markets: [
+    {
+      id: 'market-1',
+      name: 'Hiring',
+      slug: 'hiring',
+      canonicalSlug: 'hiring',
+      displayName: 'Hiring',
+    },
+  ],
   links: { public: 'https://jobs.example/companies/northstar-labs' },
 };
 

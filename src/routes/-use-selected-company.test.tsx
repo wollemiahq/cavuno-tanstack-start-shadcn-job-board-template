@@ -73,6 +73,8 @@ function jobs(slug: string) {
     links: {
       public: `https://jobs.example/companies/${slug}/jobs/job-${slug}`,
     },
+    remotePermits: [],
+    distanceKm: null,
   };
   return {
     object: 'list' as const,

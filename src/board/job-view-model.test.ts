@@ -46,11 +46,27 @@ const baseJob: PublicJobCard = {
     logoUrl: null,
     customFieldValues: {},
   },
-  categories: [{ slug: 'engineering', name: 'Engineering' }],
-  skills: [{ slug: 'react', name: 'React' }],
+  categories: [
+    {
+      slug: 'engineering',
+      name: 'Engineering',
+      canonicalSlug: 'engineering',
+      displayName: 'Engineering',
+    },
+  ],
+  skills: [
+    {
+      slug: 'react',
+      name: 'React',
+      canonicalSlug: 'react',
+      displayName: 'React',
+    },
+  ],
   links: {
     public: 'https://board.example/companies/acme-co/jobs/senior-engineer',
   },
+  remotePermits: [],
+  distanceKm: null,
 };
 
 describe('toJobCardVM', () => {
@@ -186,6 +202,8 @@ describe('toSavedJobCardVM', () => {
     links: {
       public: 'https://board.example/companies/acme-co/jobs/staff-engineer',
     },
+    remotePermits: [],
+    distanceKm: null,
   };
 
   it('maps the slim saved-list card embed without requiring full-job fields', () => {

@@ -45,6 +45,8 @@ const job: PublicJobCard = {
   links: {
     public: 'https://jobs.example/companies/acme/jobs/product-designer',
   },
+  remotePermits: [],
+  distanceKm: null,
 };
 
 // The mapping seam now lives in the loader/pane, so the page takes resolved
