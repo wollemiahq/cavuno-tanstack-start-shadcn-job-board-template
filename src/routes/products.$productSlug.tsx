@@ -93,6 +93,7 @@ function ProductPage() {
       returnPath={pathname}
       sessionId={sessionId ?? null}
       startInCheckout={buy === true}
+      jobAlertsEnabled={board.features.jobAlerts}
       dependencies={dependencies}
       onPurchase={(purchaseToken) =>
         void navigate({

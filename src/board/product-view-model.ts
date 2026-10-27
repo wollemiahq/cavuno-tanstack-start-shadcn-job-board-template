@@ -4,6 +4,8 @@
  * listing, product page, download page and library word them the same way.
  */
 import type {
+  BoardUser,
+  Product,
   ProductDetailRow,
   ProductPrice,
   PurchaseSummary,
@@ -174,6 +176,25 @@ export function ownedPurchase(
       (purchase) => purchase.product.slug === productSlug && purchase.available,
     ) ?? null
   );
+}
+
+/**
+ * The email a signed-in visitor can buy with straight away, skipping the
+ * "Before you pay" step, or null when the step has something to ask: a
+ * guest or an unverified email (where the link goes), a pay-what-you-want
+ * amount, the product's own questions, or the job-alert opt-in a free
+ * product offers when the board sends job alerts.
+ */
+export function directCheckoutEmail(
+  product: Pick<Product, 'price' | 'questions'>,
+  user: Pick<BoardUser, 'email' | 'emailVerified'> | null,
+  { jobAlertsEnabled }: { jobAlertsEnabled: boolean },
+): string | null {
+  if (!user?.emailVerified || !user.email) return null;
+  if (product.questions.length > 0) return null;
+  if (product.price.kind === 'pay_what_you_want') return null;
+  if (product.price.kind === 'free' && jobAlertsEnabled) return null;
+  return user.email;
 }
 
 /**

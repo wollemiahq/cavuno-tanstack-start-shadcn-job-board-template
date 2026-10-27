@@ -41,11 +41,14 @@ export function PurchaseResendDialog({
   trigger,
   resend,
   defaultEmail,
+  defaultOpen = false,
 }: {
   productSlug?: string;
   trigger: ReactElement;
   resend: ResendLinkAction;
   defaultEmail?: string | null;
+  /** Open on mount: the dialog was loaded by a click on the trigger. */
+  defaultOpen?: boolean;
 }) {
   const id = useId();
   const [email, setEmail] = useState(defaultEmail ?? '');
@@ -82,6 +85,7 @@ export function PurchaseResendDialog({
 
   return (
     <Dialog
+      defaultOpen={defaultOpen}
       onOpenChange={(open) => {
         if (!open && status === 'sent') setStatus('idle');
       }}

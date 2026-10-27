@@ -33,7 +33,9 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }));
 
-type TestSession = { user: { id: string; email: string } | null };
+type TestSession = {
+  user: { id: string; email: string; emailVerified?: boolean } | null;
+};
 const session = vi.hoisted((): TestSession => ({
   user: null,
 }));
@@ -46,6 +48,7 @@ afterEach(() => {
   cleanup();
   session.user = null;
   vi.mocked(dependencies.loadMyPurchases).mockReset();
+  vi.mocked(dependencies.startCheckout).mockReset();
 });
 
 const dependencies: ProductPageDependencies = {
@@ -94,9 +97,13 @@ function page(
   {
     onFilledChange = () => {},
     sessionId = null,
+    jobAlertsEnabled = false,
+    onPurchase = vi.fn(),
   }: {
     onFilledChange?: (filled: boolean) => void;
     sessionId?: string | null;
+    jobAlertsEnabled?: boolean;
+    onPurchase?: (purchaseToken: string) => void;
   } = {},
 ) {
   return (
@@ -108,8 +115,9 @@ function page(
         shareUrl="https://board.example/products/resume-pack"
         returnPath="/products/resume-pack"
         sessionId={sessionId}
+        jobAlertsEnabled={jobAlertsEnabled}
         dependencies={dependencies}
-        onPurchase={vi.fn()}
+        onPurchase={onPurchase}
       />
     </HeaderRouteActionsProvider>
   );
@@ -207,7 +215,7 @@ describe('ProductPageView', () => {
     expect(rail()).not.toContainElement(phoneFacts ?? null);
   });
 
-  it('keeps the buy card to the price, the buy button and the resend line', () => {
+  it('keeps the buy card to the price, the buy button and the resend line', async () => {
     const { container } = renderPage({ salesCount: null });
 
     const card = container.querySelector<HTMLElement>(
@@ -230,7 +238,8 @@ describe('ProductPageView', () => {
         name: m.product_getDownloadLinkAction(),
       }),
     );
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    // The dialog loads on the first press and opens at once.
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
   it('puts Share under the details: in the rail, and after the description on a phone', () => {
@@ -551,5 +560,263 @@ describe('ProductPageView — desktop header actions', () => {
       }),
     ).toBeInTheDocument();
     expect(within(slot).queryByRole('button')).toBeNull();
+  });
+});
+
+describe('ProductPageView — buying without the "Before you pay" step', () => {
+  const verified = {
+    id: 'user-1',
+    email: 'ada@example.com',
+    emailVerified: true,
+  };
+  const free: Product['price'] = {
+    kind: 'free',
+    currency: null,
+    amountCents: 0,
+  };
+  const payWhatYouWant: Product['price'] = {
+    kind: 'pay_what_you_want',
+    currency: 'usd',
+    amountCents: 500,
+    minimumCents: 500,
+    suggestedCents: 900,
+  };
+  const question: Product['questions'][number] = {
+    id: 'q1',
+    kind: 'text',
+    label: 'Your LinkedIn URL',
+    required: false,
+    options: null,
+  };
+  const openCheckout = {
+    object: 'product_checkout',
+    status: 'open',
+    downloadUrl: null,
+    purchaseToken: null,
+    sessionId: 'cs_1',
+    clientSecret: 'cs_1_secret',
+    stripeAccountId: 'acct_1',
+    publishableKey: 'pk_test_1',
+  } as const;
+
+  beforeEach(() => {
+    session.user = verified;
+    vi.mocked(dependencies.loadMyPurchases).mockResolvedValue(library([]));
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    document.body.replaceChildren();
+    Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+    Reflect.deleteProperty(window, 'IntersectionObserver');
+  });
+
+  function buyButton() {
+    return within(rail()).getByRole('button', { name: m.product_buyAction() });
+  }
+
+  function stepForm() {
+    return screen.queryByRole('form', { name: m.product_paidStepTitle() });
+  }
+
+  it('takes a signed-in buyer of a fixed-price product straight to payment', async () => {
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: true,
+      data: openCheckout,
+    });
+    renderPage();
+
+    fireEvent.click(buyButton());
+
+    expect(
+      await screen.findByText(m.product_completePurchaseTitle()),
+    ).toBeInTheDocument();
+    expect(dependencies.startCheckout).toHaveBeenCalledWith({
+      data: {
+        email: 'ada@example.com',
+        answers: [],
+        productSlug: 'resume-pack',
+        returnPath: '/products/resume-pack',
+      },
+    });
+    expect(stepForm()).toBeNull();
+
+    // "Back to product" finds the buy button ready again.
+    fireEvent.click(
+      screen.getByRole('button', { name: m.product_backToProductAction() }),
+    );
+    expect(buyButton()).toBeEnabled();
+  });
+
+  it('opens the download page of a free product without asking', async () => {
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: true,
+      data: {
+        ...openCheckout,
+        status: 'complete',
+        purchaseToken: 'tok_free',
+        downloadUrl: '/purchases/tok_free',
+        sessionId: null,
+        clientSecret: null,
+      },
+    });
+    const onPurchase = vi.fn();
+    renderPage({ price: free }, null, { onPurchase });
+
+    fireEvent.click(
+      within(rail()).getByRole('button', { name: m.product_getFreeAction() }),
+    );
+
+    await waitFor(() => expect(onPurchase).toHaveBeenCalledWith('tok_free'));
+    expect(
+      vi.mocked(dependencies.startCheckout).mock.calls[0]?.[0].data,
+    ).not.toHaveProperty('jobAlertOptIn');
+    expect(screen.queryByRole('form')).toBeNull();
+  });
+
+  const keepsStep: Array<
+    [
+      string,
+      TestSession['user'],
+      Partial<Product>,
+      { jobAlertsEnabled?: boolean },
+    ]
+  > = [
+    ['a guest', null, {}, {}],
+    ['an unverified email', { ...verified, emailVerified: false }, {}, {}],
+    ['checkout questions', verified, { questions: [question] }, {}],
+    ['pay what you want', verified, { price: payWhatYouWant }, {}],
+    [
+      'the job-alert opt-in on a free product',
+      verified,
+      { price: free },
+      { jobAlertsEnabled: true },
+    ],
+  ];
+
+  it.each(keepsStep)(
+    'keeps the step for %s',
+    async (_, user, overrides, options) => {
+      session.user = user;
+      const freeProduct = overrides.price?.kind === 'free';
+      renderPage(overrides, null, options);
+
+      fireEvent.click(
+        within(rail()).getByRole('button', {
+          name: freeProduct ? m.product_getFreeAction() : m.product_buyAction(),
+        }),
+      );
+
+      expect(
+        await screen.findByRole('form', {
+          name: freeProduct
+            ? m.product_freeStepTitle()
+            : m.product_paidStepTitle(),
+        }),
+      ).toBeInTheDocument();
+      expect(dependencies.startCheckout).not.toHaveBeenCalled();
+    },
+  );
+
+  it('spins the pressed button and holds the others while checkout starts', async () => {
+    vi.mocked(dependencies.startCheckout).mockReturnValue(
+      new Promise(() => {}),
+    );
+    const slot = headerSlot();
+    renderPage({}, slot);
+    const headerButton = within(slot).getByRole('button', {
+      name: m.product_buyAction(),
+    });
+
+    fireEvent.click(buyButton());
+
+    // The spinner joins the pressed button's name ("Loading Buy now").
+    const pressed = await within(rail()).findByRole('button', {
+      busy: true,
+    });
+    expect(pressed).toHaveTextContent(m.product_buyAction());
+    expect(within(pressed).getByRole('status')).toBeInTheDocument();
+    expect(pressed).toBeDisabled();
+    expect(headerButton).toBeDisabled();
+    expect(headerButton).not.toHaveAttribute('aria-busy');
+  });
+
+  it.each([
+    ['product_sold_out', m.boardError_productSoldOutText()],
+    ['product_email_blocked', m.boardError_productEmailBlockedText()],
+  ])('words a %s refusal under the price card button', async (code, text) => {
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: false,
+      code,
+      message: 'refused',
+    });
+    renderPage();
+
+    fireEvent.click(buyButton());
+
+    expect(await within(rail()).findByRole('alert')).toHaveTextContent(text);
+    expect(buyButton()).toBeEnabled();
+  });
+
+  it('words a refusal next to the header button that was pressed', async () => {
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: false,
+      code: 'rate_limited',
+      message: 'Too many requests',
+    });
+    const slot = headerSlot();
+    renderPage({}, slot);
+
+    fireEvent.click(
+      within(slot).getByRole('button', { name: m.product_buyAction() }),
+    );
+
+    expect(await within(slot).findByRole('alert')).toHaveTextContent(
+      m.boardError_rateLimitedText(),
+    );
+    expect(within(rail()).queryByRole('alert')).toBeNull();
+  });
+
+  it('words a refusal above the phone buy bar when that was pressed', async () => {
+    // The price card has scrolled away: the bar shows.
+    Reflect.set(
+      window,
+      'IntersectionObserver',
+      class {
+        constructor(
+          private readonly report: (
+            entries: Array<{ isIntersecting: boolean }>,
+          ) => void,
+        ) {}
+        observe() {
+          this.report([{ isIntersecting: false }]);
+        }
+        disconnect() {}
+      },
+    );
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: false,
+      code: 'stripe_not_connected',
+      message: 'Payments are not set up',
+    });
+    const { container } = renderPage();
+    const bar = await waitFor(() => {
+      const element = container.querySelector<HTMLElement>(
+        '[data-slot="product-buy-bar"]',
+      );
+      if (!element) throw new Error('no buy bar');
+      return element;
+    });
+
+    fireEvent.click(
+      within(bar).getByRole('button', { name: m.product_buyAction() }),
+    );
+
+    expect(await within(bar).findByRole('alert')).toHaveTextContent(
+      m.boardError_stripeNotConnectedText(),
+    );
   });
 });

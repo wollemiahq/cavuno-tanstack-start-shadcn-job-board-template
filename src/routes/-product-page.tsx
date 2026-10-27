@@ -30,6 +30,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 
 import {
+  directCheckoutEmail,
   fileTypeLabels,
   formatRating,
   ownedPurchase,
@@ -48,10 +49,7 @@ import {
   productButtonText,
   productPriceText,
 } from '@/components/board/product-ui';
-import {
-  PurchaseResendDialog,
-  type ResendLinkAction,
-} from '@/components/board/purchase-resend-dialog';
+import type { ResendLinkAction } from '@/components/board/purchase-resend-dialog';
 import { ShareButton } from '@/components/board/share-button';
 import { HeaderRouteActions } from '@/components/header-route-actions';
 import { Container } from '@/components/layout/container';
@@ -85,6 +83,15 @@ const ProductCheckoutForm = lazy(() =>
 const CheckoutReturnState = lazy(() =>
   import('@/components/board/product-checkout-return').then((module) => ({
     default: module.CheckoutReturnState,
+  })),
+);
+// Loaded when the visitor reaches for "Get your download link" (pointer or
+// focus first, the click at the latest): the dialog stack stays off the page.
+const loadResendDialog = () =>
+  import('@/components/board/purchase-resend-dialog');
+const PurchaseResendDialog = lazy(() =>
+  loadResendDialog().then((module) => ({
+    default: module.PurchaseResendDialog,
   })),
 );
 const EmbeddedCheckout = lazy(() =>
@@ -249,10 +256,64 @@ function DownloadPageLink({
   );
 }
 
+/** Which buy button started a checkout: its spinner and error sit there. */
+type BuySource = 'card' | 'header' | 'bar';
+
+/** A checkout started straight from a buy button (no "Before you pay"). */
+type DirectBuy = {
+  source: BuySource;
+  pending: boolean;
+  error: string | null;
+};
+
+/** The pressed buy button's label, with a spinner while checkout starts. */
+function BuyLabel({ pending, label }: { pending: boolean; label: string }) {
+  return (
+    <>
+      {pending ? <Spinner data-icon="inline-start" /> : null}
+      {label}
+    </>
+  );
+}
+
+/**
+ * A refusal's wording. The error copy loads with the first refusal (it
+ * ships with the "Before you pay" form), keeping it off the product page.
+ */
+async function refusalText(refusal: ProductCheckoutRefusal): Promise<string> {
+  try {
+    const { productErrorMessage } = await import('@/lib/product-error-message');
+    return productErrorMessage(refusal);
+  } catch {
+    return m.boardError_genericText();
+  }
+}
+
+/** A checkout refusal, worded next to the button that was pressed. */
+function BuyError({
+  message,
+  className,
+}: {
+  message: string | null;
+  className?: string;
+}) {
+  if (!message) return null;
+  return (
+    <p
+      role="alert"
+      data-slot="product-buy-error"
+      className={cn('text-destructive text-sm', className)}
+    >
+      {message}
+    </p>
+  );
+}
+
 /**
  * The desktop header's actions on the product page (`lg` and up): the
  * stars, the price and the buy button, which opens the same buying step as
- * the price card. A buyer who owns the product gets their download page.
+ * the price card (or starts checkout at once when there is nothing to ask).
+ * A buyer who owns the product gets their download page.
  */
 function ProductHeaderActions({
   rating,
@@ -261,6 +322,7 @@ function ProductHeaderActions({
   soldOut,
   owned,
   onBuy,
+  buying,
 }: {
   rating: Product['rating'] | null;
   priceLabel: string;
@@ -268,7 +330,9 @@ function ProductHeaderActions({
   soldOut: boolean;
   owned: PurchaseSummary | null;
   onBuy: () => void;
+  buying: DirectBuy | null;
 }) {
+  const pressed = buying?.source === 'header' ? buying : null;
   return (
     <div
       data-slot="product-header-actions"
@@ -283,9 +347,61 @@ function ProductHeaderActions({
       ) : soldOut ? (
         <Button disabled>{m.product_soldOutLabel()}</Button>
       ) : (
-        <Button onClick={onBuy}>{ctaLabel}</Button>
+        <div className="relative">
+          <Button
+            onClick={onBuy}
+            disabled={buying?.pending}
+            aria-busy={pressed?.pending || undefined}
+          >
+            <BuyLabel pending={Boolean(pressed?.pending)} label={ctaLabel} />
+          </Button>
+          {/* Under the button, over the page: the header row has no room. */}
+          <BuyError
+            message={pressed?.error ?? null}
+            className="bg-popover border-border absolute end-0 top-full mt-2 w-72 rounded-lg border p-3 whitespace-normal shadow-md"
+          />
+        </div>
       )}
     </div>
+  );
+}
+
+/**
+ * "Get your download link": an underlined text link in the "Already bought
+ * it?" line. The first press loads the resend dialog and opens it.
+ */
+function ResendLinkButton({
+  productSlug,
+  resend,
+  defaultEmail,
+}: {
+  productSlug: string;
+  resend: ResendLinkAction;
+  defaultEmail: string | null;
+}) {
+  const [requested, setRequested] = useState(false);
+  const trigger = (onClick?: () => void) => (
+    <button
+      type="button"
+      className="text-foreground hover:text-primary underline underline-offset-4"
+      onPointerEnter={() => void loadResendDialog()}
+      onFocus={() => void loadResendDialog()}
+      onClick={onClick}
+    >
+      {m.product_getDownloadLinkAction()}
+    </button>
+  );
+  if (!requested) return trigger(() => setRequested(true));
+  return (
+    <Suspense fallback={trigger()}>
+      <PurchaseResendDialog
+        defaultOpen
+        productSlug={productSlug}
+        resend={resend}
+        defaultEmail={defaultEmail}
+        trigger={trigger()}
+      />
+    </Suspense>
   );
 }
 
@@ -300,6 +416,7 @@ export function ProductPageView({
   returnPath,
   sessionId,
   startInCheckout = false,
+  jobAlertsEnabled,
   dependencies,
   onPurchase,
 }: {
@@ -314,6 +431,8 @@ export function ProductPageView({
   sessionId: string | null;
   /** `?buy=true` from the listing: open the buying step at once. */
   startInCheckout?: boolean;
+  /** The board sends job alerts: free products offer the opt-in. */
+  jobAlertsEnabled: boolean;
   dependencies: ProductPageDependencies;
   /** Go to the purchase's download page. */
   onPurchase: (purchaseToken: string) => void;
@@ -324,6 +443,7 @@ export function ProductPageView({
   );
   const [kit, setKit] = useState<MountKit | null>(null);
   const [kitSessionId, setKitSessionId] = useState<string | null>(null);
+  const [buying, setBuying] = useState<DirectBuy | null>(null);
   const buyCardRef = useRef<HTMLDivElement>(null);
   // Elements in state, not refs: the page unmounts while Stripe Checkout
   // shows, and the observers must follow the remounted elements.
@@ -347,6 +467,37 @@ export function ProductPageView({
     onPurchase,
   );
 
+  // A signed-in buyer with a verified email and nothing to answer goes
+  // straight to payment (or to the download page for a free product).
+  const directEmail = directCheckoutEmail(product, user, { jobAlertsEnabled });
+
+  function buy(source: BuySource) {
+    if (!directEmail) {
+      openStep();
+      return;
+    }
+    void buyDirect(source, directEmail);
+  }
+
+  async function buyDirect(source: BuySource, email: string) {
+    setBuying({ source, pending: true, error: null });
+    let refusal: ProductCheckoutRefusal | null = null;
+    try {
+      const started = await startCheckout({ email, answers: [] });
+      // Free: the button keeps spinning until the download page opens.
+      if (started.outcome === 'complete') return;
+      if (started.outcome === 'refused') refusal = started.refusal;
+    } catch {
+      refusal = { code: null, message: '' };
+    }
+    if (!refusal) {
+      // Paying: cleared, so "Back to product" finds the buttons ready.
+      setBuying(null);
+      return;
+    }
+    setBuying({ source, pending: false, error: await refusalText(refusal) });
+  }
+
   function openStep() {
     setStep('details');
     // The phone's sticky bar opens the step in the price card above.
@@ -355,20 +506,39 @@ export function ProductPageView({
     );
   }
 
-  async function submit(
+  /** Free: off to the download page. Paid: the payment step mounts. */
+  async function startCheckout(
     values: ProductCheckoutValues,
-  ): Promise<ProductCheckoutRefusal | void> {
+  ): Promise<
+    | { outcome: 'refused'; refusal: ProductCheckoutRefusal }
+    | { outcome: 'complete' | 'paying' }
+  > {
     const result = await dependencies.startCheckout({
       data: { ...values, productSlug: product.slug, returnPath },
     });
-    if (!result.ok) return { code: result.code, message: result.message };
+    if (!result.ok) {
+      return {
+        outcome: 'refused',
+        refusal: { code: result.code, message: result.message },
+      };
+    }
     if (result.data.status === 'complete' && result.data.purchaseToken) {
       onPurchase(result.data.purchaseToken);
-      return;
+      return { outcome: 'complete' };
     }
     const nextKit = mountKit(result.data);
-    if (!nextKit) return { code: null, message: '' };
+    if (!nextKit) {
+      return { outcome: 'refused', refusal: { code: null, message: '' } };
+    }
     setKit(nextKit);
+    return { outcome: 'paying' };
+  }
+
+  async function submit(
+    values: ProductCheckoutValues,
+  ): Promise<ProductCheckoutRefusal | void> {
+    const started = await startCheckout(values);
+    if (started.outcome === 'refused') return started.refusal;
   }
 
   const handleStripeComplete = useCallback(() => {
@@ -480,27 +650,34 @@ export function ProductPageView({
                 {m.boardError_productSoldOutText()}
               </p>
             ) : (
-              <Button size="xl" onClick={openStep}>
-                {ctaLabel}
-              </Button>
+              <>
+                <Button
+                  size="xl"
+                  onClick={() => buy('card')}
+                  disabled={buying?.pending}
+                  aria-busy={
+                    (buying?.source === 'card' && buying.pending) || undefined
+                  }
+                >
+                  <BuyLabel
+                    pending={buying?.source === 'card' && buying.pending}
+                    label={ctaLabel}
+                  />
+                </Button>
+                <BuyError
+                  message={buying?.source === 'card' ? buying.error : null}
+                />
+              </>
             )}
             <p
               data-slot="product-already-bought"
               className="text-muted-foreground text-center text-sm"
             >
               {m.product_alreadyBoughtText()}{' '}
-              <PurchaseResendDialog
+              <ResendLinkButton
                 productSlug={product.slug}
                 resend={dependencies.resendLink}
                 defaultEmail={user?.email ?? null}
-                trigger={
-                  <button
-                    type="button"
-                    className="text-foreground hover:text-primary underline underline-offset-4"
-                  >
-                    {m.product_getDownloadLinkAction()}
-                  </button>
-                }
               />
             </p>
             {salesCount !== null ? (
@@ -700,14 +877,19 @@ export function ProductPageView({
           ctaLabel={ctaLabel}
           soldOut={product.soldOut}
           owned={owned}
-          onBuy={openStep}
+          onBuy={() => buy('header')}
+          buying={buying}
         />
       </HeaderRouteActions>
       {step === 'product' && (owned || !product.soldOut) && !buyCardInView ? (
         <div
           data-slot="product-buy-bar"
-          className="border-border bg-background fixed inset-x-0 bottom-[var(--board-floating-bottom,0px)] z-40 flex items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
+          className="border-border bg-background fixed inset-x-0 bottom-[var(--board-floating-bottom,0px)] z-40 flex flex-wrap items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
         >
+          <BuyError
+            message={buying?.source === 'bar' ? buying.error : null}
+            className="basis-full"
+          />
           <div className="flex min-w-0 flex-col">
             <span className="text-foreground text-lg font-semibold">
               {priceLabel}
@@ -723,8 +905,19 @@ export function ProductPageView({
           {owned ? (
             <DownloadPageLink purchase={owned} size="lg" className="flex-1" />
           ) : (
-            <Button size="lg" className="flex-1" onClick={openStep}>
-              {ctaLabel}
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={() => buy('bar')}
+              disabled={buying?.pending}
+              aria-busy={
+                (buying?.source === 'bar' && buying.pending) || undefined
+              }
+            >
+              <BuyLabel
+                pending={buying?.source === 'bar' && buying.pending}
+                label={ctaLabel}
+              />
             </Button>
           )}
         </div>
