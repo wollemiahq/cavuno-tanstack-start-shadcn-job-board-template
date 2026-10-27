@@ -380,7 +380,7 @@ export function CompanyProfilePageView({
                 <div className="flex flex-wrap gap-1.5">
                   {company.markets.map((market) => (
                     <Badge key={market.slug} variant="secondary">
-                      {market.name}
+                      {market.displayName}
                     </Badge>
                   ))}
                 </div>

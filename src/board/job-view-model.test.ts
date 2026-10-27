@@ -46,11 +46,27 @@ const baseJob: PublicJobCard = {
     logoUrl: null,
     customFieldValues: {},
   },
-  categories: [{ slug: 'engineering', name: 'Engineering' }],
-  skills: [{ slug: 'react', name: 'React' }],
+  categories: [
+    {
+      slug: 'engineering',
+      name: 'Engineering',
+      canonicalSlug: 'engineering',
+      displayName: 'Engineering',
+    },
+  ],
+  skills: [
+    {
+      slug: 'react',
+      name: 'React',
+      canonicalSlug: 'react',
+      displayName: 'React',
+    },
+  ],
   links: {
     public: 'https://board.example/companies/acme-co/jobs/senior-engineer',
   },
+  remotePermits: [],
+  distanceKm: null,
 };
 
 describe('toJobCardVM', () => {
@@ -137,6 +153,31 @@ describe('toJobCardVM', () => {
     ]);
   });
 
+  it('shows board-language chip names and links their canonical slugs', () => {
+    const translated = toJobCardVM(
+      {
+        ...baseJob,
+        categories: [],
+        skills: [
+          {
+            slug: 'artificial-intelligence',
+            name: 'Artificial Intelligence',
+            canonicalSlug: 'kuenstliche-intelligenz',
+            displayName: 'Künstliche Intelligenz',
+          },
+        ],
+      },
+      'de',
+    );
+    expect(translated.tags).toEqual([
+      {
+        key: 's-artificial-intelligence',
+        name: 'Künstliche Intelligenz',
+        href: '/jobs/skills/kuenstliche-intelligenz',
+      },
+    ]);
+  });
+
   it('carries the featured flag + resolved label', () => {
     expect(vm.isFeatured).toBe(true);
     expect(vm.featuredLabel.length).toBeGreaterThan(0);
@@ -186,6 +227,8 @@ describe('toSavedJobCardVM', () => {
     links: {
       public: 'https://board.example/companies/acme-co/jobs/staff-engineer',
     },
+    remotePermits: [],
+    distanceKm: null,
   };
 
   it('maps the slim saved-list card embed without requiring full-job fields', () => {
@@ -219,35 +262,45 @@ describe('worldwide remote card wording', () => {
     expect(toJobCardVM(job, 'de').locationLabel).toBe(remoteWorldwide('de'));
   });
 
-  it('composes a localized region list from permit codes (constrained remote)', () => {
+  it('names the remote scope from remotePermits in the board language', () => {
     const job = {
       ...baseJob,
       remoteOption: 'remote',
       remoteWorldwide: false,
       remoteWorkPermitCountryCodes: ['US', 'GB'],
+      remotePermits: [
+        { type: 'country', value: 'US' },
+        { type: 'country', value: 'GB' },
+      ],
       remoteLocationLabel: 'United States + 1 more',
       locationLabel: 'United States + 1 more',
     } satisfies PublicJobCard;
-    // Intl.DisplayNames + ListFormat in the viewer locale, not the
-    // board-language wire label.
-    expect(toJobCardVM(job, 'de').locationLabel).toContain(
-      'Vereinigte Staaten',
-    );
-    expect(toJobCardVM(job, 'de').locationLabel).toContain(
-      'Vereinigtes Königreich',
+    const names = new Intl.DisplayNames(['de'], { type: 'region' });
+    const place = new Intl.ListFormat(['de'], {
+      style: 'long',
+      type: 'conjunction',
+    }).format([names.of('US') ?? 'US', names.of('GB') ?? 'GB']);
+    const vm = toJobCardVM(job, 'de');
+    expect(vm.locationLabel).toContain(place);
+    expect(vm.compLine).toContain(
+      m.label_locationRemoteIn({ region: place }, localeOpt('de')),
     );
   });
 
-  it('falls back to the wire region label when the code list is long', () => {
+  it('keeps the wire region label when a permit has no language-neutral name', () => {
     const job = {
       ...baseJob,
       remoteOption: 'remote',
       remoteWorldwide: false,
-      remoteWorkPermitCountryCodes: ['US', 'GB', 'DE', 'FR', 'ES'],
-      remoteLocationLabel: 'Europe',
-      locationLabel: 'Europe',
+      remoteWorkPermitCountryCodes: ['US'],
+      remotePermits: [
+        { type: 'country', value: 'DE' },
+        { type: 'subdivision', value: 'US-NY' },
+      ],
+      remoteLocationLabel: 'Germany + 1 more',
+      locationLabel: 'Germany + 1 more',
     } satisfies PublicJobCard;
-    expect(toJobCardVM(job, 'en').locationLabel).toContain('Europe');
+    expect(toJobCardVM(job, 'de').locationLabel).toContain('Germany + 1 more');
   });
 
   it('re-words the wire "Worldwide" sentinel per viewer locale', () => {

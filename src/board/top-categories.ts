@@ -24,7 +24,9 @@ export function topCategoriesFromTaxonomy(
     tiles.push({
       type: 'category',
       slug: term.canonicalSlug,
+      canonicalSlug: term.canonicalSlug,
       term: term.displayName,
+      displayName: term.displayName,
       count: jobCount,
     });
   }

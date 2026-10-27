@@ -37,8 +37,13 @@ function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
     remoteWorkPermitCountryCodes: ['US', 'GB'],
     remoteWorkPermitSubdivisionCodes: [],
     remoteTimezones: [
-      { type: 'timezone', value: 'Europe/Berlin', plusMinus: 3 },
-      { type: 'country', value: 'DE' },
+      {
+        type: 'timezone',
+        value: 'Europe/Berlin',
+        label: 'Europe/Berlin',
+        plusMinus: 3,
+      },
+      { type: 'country', value: 'DE', label: 'Germany' },
     ],
     remoteAllowedTzOffsets: [],
     remoteSponsorship: 'unknown',
@@ -68,8 +73,22 @@ function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
         postalCode: null,
       },
     ],
-    categories: [{ slug: 'engineering', name: 'Engineering' }],
-    skills: [{ slug: 'react', name: 'React' }],
+    categories: [
+      {
+        slug: 'engineering',
+        name: 'Engineering',
+        canonicalSlug: 'engineering',
+        displayName: 'Engineering',
+      },
+    ],
+    skills: [
+      {
+        slug: 'react',
+        name: 'React',
+        canonicalSlug: 'react',
+        displayName: 'React',
+      },
+    ],
     customFieldValues: { visa: true, team: 'Platform' },
     resolvedCollectionFields: [],
     company: {
@@ -134,6 +153,8 @@ const similar: PublicJobCard[] = [
     links: {
       public: 'https://board.example/companies/beta-co/jobs/staff-engineer',
     },
+    remotePermits: [],
+    distanceKm: null,
   },
 ];
 
@@ -175,6 +196,64 @@ describe('toJobDetailVM', () => {
     expect(vm.skillChips).toEqual([
       { key: 'react', name: 'React', href: '/jobs/skills/react' },
     ]);
+  });
+
+  it('shows board-language taxonomy names and links their canonical slugs', () => {
+    const translated = toJobDetailVM(
+      createJob({
+        categories: [
+          {
+            slug: 'engineering',
+            name: 'Engineering',
+            canonicalSlug: 'technik',
+            displayName: 'Technik',
+          },
+        ],
+        skills: [
+          {
+            slug: 'artificial-intelligence',
+            name: 'Artificial Intelligence',
+            canonicalSlug: 'kuenstliche-intelligenz',
+            displayName: 'Künstliche Intelligenz',
+          },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'de',
+    );
+    expect(translated.categoryChips).toEqual([
+      { key: 'engineering', name: 'Technik', href: '/jobs/technik' },
+    ]);
+    expect(translated.skillChips).toEqual([
+      {
+        key: 'artificial-intelligence',
+        name: 'Künstliche Intelligenz',
+        href: '/jobs/skills/kuenstliche-intelligenz',
+      },
+    ]);
+  });
+
+  it('renders time zone areas by their board-language label', () => {
+    const translated = toJobDetailVM(
+      createJob({
+        remoteTimezones: [
+          { type: 'continent', value: 'Europe', label: 'Europa' },
+          { type: 'continent', value: 'Americas', label: 'Amerika' },
+        ],
+      }),
+      customFields,
+      [],
+      null,
+      'de',
+    );
+    const timezones = translated.facts.find(
+      (fact) => fact.label === copy.timezonesLabel,
+    );
+    expect(timezones?.value).toContain('Europa');
+    expect(timezones?.value).toContain('Amerika');
+    expect(timezones?.value).not.toContain('Europe');
   });
 
   // The resolves-or-omits contract: when the loader supplies the set of chips

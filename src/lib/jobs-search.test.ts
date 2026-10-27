@@ -4,6 +4,7 @@ import {
   jobsListingLoaderDeps,
   parseJobsIndexSearch,
   parseJobsSearch,
+  parseLocationJobsSearch,
 } from './jobs-search';
 
 describe('parseJobsSearch', () => {
@@ -47,6 +48,19 @@ describe('parseJobsSearch', () => {
       page: undefined,
       selectedJob: undefined,
     });
+  });
+});
+
+describe('distance sort', () => {
+  it('keeps `distance` only on a location listing', () => {
+    expect(parseLocationJobsSearch({ sort: 'distance' }).sort).toBe('distance');
+    expect(parseJobsSearch({ sort: 'distance' }).sort).toBeUndefined();
+    expect(parseJobsIndexSearch({ sort: 'distance' }).sort).toBeUndefined();
+  });
+
+  it('keeps the other sorts everywhere', () => {
+    expect(parseJobsSearch({ sort: 'newest' }).sort).toBe('newest');
+    expect(parseLocationJobsSearch({ sort: 'newest' }).sort).toBe('newest');
   });
 });
 

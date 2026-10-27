@@ -138,6 +138,7 @@ const profile = {
   languages: [],
   customFieldValues: {},
   objectReferences: [],
+  resumeUrl: null,
 } satisfies TalentProfile;
 const grant = {
   object: 'talent_access',

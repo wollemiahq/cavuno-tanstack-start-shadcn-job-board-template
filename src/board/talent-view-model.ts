@@ -37,6 +37,8 @@ export interface TalentCardVM {
   avatarName: string;
   headline: string | null;
   location: string | null;
+  /** "12 km away" from the searched place, or `null` without one. */
+  distanceLabel: string | null;
   jobSearchStatusLabel: string | null;
   /**
    * Roughly when the candidate was last active ("Active this week"). The API
@@ -62,6 +64,11 @@ export interface TalentCardMappingOptions {
    * know the board's access model (anonymous viewers get an empty grant).
    */
   profileUnlocks?: boolean;
+  /**
+   * Formats the candidate's `distanceKm` ("12 km away") on a place search;
+   * omit where no place is searched.
+   */
+  distanceLabel?: (km: number) => string | null;
 }
 
 export interface TalentExperienceVM {
@@ -266,6 +273,10 @@ export function toTalentCardVM(
     avatarName: displayName,
     headline: candidate.headline,
     location: candidate.location,
+    distanceLabel:
+      candidate.distanceKm == null
+        ? null
+        : (options?.distanceLabel?.(candidate.distanceKm) ?? null),
     jobSearchStatusLabel: enumLabel(
       candidate.jobSearchStatus,
       labels.jobSearchStatuses,
@@ -295,6 +306,7 @@ export function toTalentProfileVM(
       ...profile,
       object: 'talent_directory_entry',
       summary: null,
+      distanceKm: null,
       skills: profile.skills.map((skill) => skill.name),
       experiences: profile.experiences,
       education: profile.education,

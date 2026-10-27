@@ -65,6 +65,7 @@ export function JobSearchResult({
 
           <p className="text-muted-foreground mt-1 text-sm">
             {vm.locationLabel}
+            {vm.distanceLabel ? ` · ${vm.distanceLabel}` : null}
           </p>
           {vm.salaryLabel ? (
             <p className="text-foreground mt-2 text-sm">{vm.salaryLabel}</p>

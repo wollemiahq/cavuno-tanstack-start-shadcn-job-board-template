@@ -15,21 +15,13 @@ import {
   type UrlSearchInput,
   type UrlSearchValue,
 } from '@/lib/pagination';
-import type { TalentListMembersQuery } from '@cavuno/board';
+import type {
+  TalentListFilters as BoardTalentListFilters,
+  TalentListMembersQuery,
+} from '@cavuno/board';
 
-/** Frozen `/talent` query stored on a talent list. Matches the v1 wire. */
-export type TalentListFilters = {
-  q?: string;
-  skill?: string;
-  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
-  languages?: string[];
-  openToRelocate?: boolean;
-  place?: string;
-  sort?: 'relevance' | 'newest';
-  seniority?: string;
-  permitCountry?: string;
-  interestedRole?: string;
-};
+/** Frozen `/talent` query stored on a talent list: the v1 wire type. */
+export type TalentListFilters = BoardTalentListFilters;
 
 /** Public candidate profile-field filters ride along as `cf.<key>`. */
 export interface TalentSearch extends CustomFieldSearch {
@@ -49,7 +41,8 @@ export interface TalentSearch extends CustomFieldSearch {
    * list's filters.
    */
   within?: number;
-  sort?: 'relevance' | 'newest';
+  /** `distance` needs a place; see `sortValue`. */
+  sort?: 'relevance' | 'newest' | 'distance';
   seniority?: string;
   permitCountry?: string;
   interestedRole?: string;
@@ -97,9 +90,17 @@ function relocateValue(value: UrlSearchValue): TalentSearch['openToRelocate'] {
   return undefined;
 }
 
-function sortValue(value: UrlSearchValue): TalentSearch['sort'] {
+/**
+ * `distance` orders by distance from the place, so a search without one
+ * drops it (the API rejects it) and keeps the default order.
+ */
+function sortValue(
+  value: UrlSearchValue,
+  hasPlace: boolean,
+): TalentSearch['sort'] {
   const raw = stringSearchValue(value);
   if (raw === 'relevance' || raw === 'newest') return raw;
+  if (raw === 'distance' && hasPlace) return raw;
   return undefined;
 }
 
@@ -109,16 +110,24 @@ function savedValue(value: UrlSearchValue): true | undefined {
     : undefined;
 }
 
-export function parseTalentSearch(search: UrlSearchInput): TalentSearch {
+/**
+ * `placeInPath`: the route's path names the place (a talent location page),
+ * so the search keeps the `distance` sort without a `place` param.
+ */
+export function parseTalentSearch(
+  search: UrlSearchInput,
+  { placeInPath = false }: { placeInPath?: boolean } = {},
+): TalentSearch {
+  const place = stringSearchValue(search.place);
   return {
     q: searchQueryString(search.q),
     skill: stringSearchValue(search.skill),
     jobSearchStatus: jobSearchStatusValue(search.jobSearchStatus),
     languages: stringSearchValue(search.languages),
     openToRelocate: relocateValue(search.openToRelocate),
-    place: stringSearchValue(search.place),
+    place,
     within: parseSearchRadiusWithin(search.within),
-    sort: sortValue(search.sort),
+    sort: sortValue(search.sort, placeInPath || place !== undefined),
     seniority: stringSearchValue(search.seniority),
     permitCountry: stringSearchValue(search.permitCountry),
     interestedRole: stringSearchValue(search.interestedRole),
@@ -193,7 +202,7 @@ export function parseTalentLocationSearch(
     saved: _saved,
     stage: _stage,
     ...rest
-  } = parseTalentSearch(search);
+  } = parseTalentSearch(search, { placeInPath: true });
   return rest;
 }
 
@@ -296,7 +305,7 @@ export function listFiltersToTalentSearch(
           : 'false',
     place: filters.place,
     within: filters.place ? SEARCH_RADIUS_EXACT : undefined,
-    sort: filters.sort,
+    sort: sortValue(filters.sort, Boolean(filters.place)),
     seniority: filters.seniority,
     permitCountry: filters.permitCountry,
     interestedRole: filters.interestedRole,

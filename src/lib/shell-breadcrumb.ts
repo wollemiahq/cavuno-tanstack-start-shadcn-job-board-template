@@ -17,6 +17,14 @@ export interface ShellBreadcrumbLabels {
   privacyPolicy: string;
   cookiePolicy: string;
   talent: string;
+  /** Public static pages beyond the SDK's breadcrumb copy. Without these the
+   * trail Title-Cases the canonical English segment ("Contact") on every
+   * locale. The shell feeds them from the pages' own title messages. */
+  contact: string;
+  pricing: string;
+  employers: string;
+  jobSeekers: string;
+  memberships: string;
 }
 
 export interface ShellBreadcrumbEntities {
@@ -59,6 +67,8 @@ export interface ShellBreadcrumbPrivateLabels {
   companyMembers: string;
   employerDashboard: string;
   authConfirmEmailChange: string;
+  authOauthComplete: string;
+  employerInviteAccept: string;
 }
 
 type ShellBreadcrumbItem = { name: string; href?: string };
@@ -363,6 +373,7 @@ export function resolveShellBreadcrumb({
         'confirm-email-change',
         priv('authConfirmEmailChange', 'confirm-email-change'),
       ],
+      ['oauth-complete', priv('authOauthComplete', 'oauth-complete')],
     ]);
     const segment = rest[0] ?? section;
     const name = segment.endsWith('sign-up')
@@ -422,8 +433,18 @@ export function resolveShellBreadcrumb({
   }
 
   if (section === 'employers') {
-    if (rest[0] === 'dashboard' || rest[0] === undefined) {
+    // `/employers` itself is the public "For employers" landing, not the
+    // dashboard.
+    if (rest[0] === undefined) {
+      items.push({ name: labels.employers });
+      return finish(items);
+    }
+    if (rest[0] === 'dashboard') {
       items.push({ name: priv('employerDashboard', 'dashboard') });
+      return finish(items);
+    }
+    if (rest[0] === 'invites') {
+      items.push({ name: priv('employerInviteAccept', 'invites') });
       return finish(items);
     }
     if (rest[0] === 'onboarding') {
@@ -459,6 +480,10 @@ export function resolveShellBreadcrumb({
     'terms-of-service': labels.termsOfService,
     'privacy-policy': labels.privacyPolicy,
     'cookie-policy': labels.cookiePolicy,
+    contact: labels.contact,
+    pricing: labels.pricing,
+    'job-seekers': labels.jobSeekers,
+    memberships: labels.memberships,
   }[section];
   items.push({ name: knownPage ?? readableSegment(section) });
   return finish(items);

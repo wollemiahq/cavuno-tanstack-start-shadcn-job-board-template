@@ -41,6 +41,7 @@ import {
   listingCacheKey,
   jobsRadiusParams,
   listingRadiusKm,
+  placeListingSort,
 } from './listing-place-cache';
 import {
   noindexFollow,
@@ -676,6 +677,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const placeTreeRead = board.taxonomy.places
         .list(undefined, { headers })
         .catch(() => null);
+      filters.sort = await placeListingSort(
+        filters.sort,
+        data.locationSlug,
+        placeRead,
+      );
       const radiusParams = await jobsRadiusParams(data.within, () =>
         listingRadiusKm(data.locationSlug, placeRead, data.within),
       );
@@ -859,6 +865,11 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       // fails the page through `placeRead`, so do not also leave a rejection
       // unobserved.
       radiusKmRead.catch(() => undefined);
+      filters.sort = await placeListingSort(
+        filters.sort,
+        data.locationSlug,
+        placeRead,
+      );
       const radiusParams = await jobsRadiusParams(
         data.within,
         () => radiusKmRead,
@@ -1028,6 +1039,11 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // fails the page through `placeRead`, so do not also leave a rejection
       // unobserved.
       radiusKmRead.catch(() => undefined);
+      filters.sort = await placeListingSort(
+        filters.sort,
+        data.locationSlug,
+        placeRead,
+      );
       const radiusParams = await jobsRadiusParams(
         data.within,
         () => radiusKmRead,

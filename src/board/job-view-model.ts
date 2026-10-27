@@ -9,7 +9,10 @@
  * render from `JobCardVM` alone and import nothing from `@cavuno/board*` —
  * so restructuring a card is pure markup over this stable contract.
  */
-import { formatPublishedRelativeDate } from '@cavuno/board/format';
+import {
+  formatPublishedRelativeDate,
+  type DistanceUnit,
+} from '@cavuno/board/format';
 import {
   jobDetailPath,
   jobsCategoryPath,
@@ -22,6 +25,7 @@ import { isLocale } from '../paraglide/runtime';
 import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { cardSummary } from '@/lib/derive-summary';
+import { distanceAwayLabel } from '@/lib/distance-away';
 import { enumLabel } from '@/lib/enum-labels';
 import {
   cardLocationLabel,
@@ -68,6 +72,8 @@ export interface JobCardVM {
   publishedAt: string | null;
   /** Physical/applicant geography followed by the workplace type. */
   locationLabel: string;
+  /** "12 km away" from the searched place, or `null` without one. */
+  distanceLabel: string | null;
   /** Honest one-line teaser from the API card `summary` (or derived), or `null`. */
   summary: string | null;
   isFeatured: boolean;
@@ -82,21 +88,25 @@ export function toJobCardVM(
   job: PublicJobCard,
   language: string,
   jobForm?: JobFormSource | null,
+  /** The searched place's unit (`placeDistanceUnit`); omit for no distance. */
+  distanceUnit?: DistanceUnit | null,
 ): JobCardVM {
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
-  // pills link directly with no resolve round trip and no filtering.
+  // pills link directly with no resolve round trip and no filtering. Show
+  // the board-language `displayName` and link its `canonicalSlug` (the
+  // English `slug` page redirects on a translated board).
   const tagPill = (
     type: 'category' | 'skill',
-    term: { slug: string; name: string },
+    term: { slug: string; canonicalSlug: string; displayName: string },
   ): JobCardTagVM => {
     const prefix = type === 'category' ? 'c' : 's';
     const path = type === 'category' ? jobsCategoryPath : jobsSkillPath;
     return {
       key: `${prefix}-${term.slug}`,
-      name: term.name,
-      href: path(term.slug),
+      name: term.displayName,
+      href: path(term.canonicalSlug),
     };
   };
   const salaryVisible = resolveJobForm(jobForm).salary.visible;
@@ -113,12 +123,9 @@ export function toJobCardVM(
     ? enumLabel(job.remoteOption, language)
     : null;
   const localeOpt = isLocale(language) ? { locale: language } : undefined;
-  // The card wire model pre-resolves `remoteLocationLabel` in the BOARD
-  // language, and for unrestricted remote jobs that is the chrome word
-  // "Worldwide" — a word, not a place name. Re-word it from the catalog so
-  // /de/ reads "Remote (weltweit)". Structural fix (a `remoteWorldwide`
-  // boolean on the card model) is a platform follow-up; until then this
-  // sentinel is stable for English-language boards.
+  // Unrestricted remote jobs read as the catalog's "Remote (worldwide)";
+  // constrained ones name their scope in the board language from
+  // `remotePermits` (see `localizedRemoteRegion`).
   const worldwideRemote = isWorldwideRemote(job);
   const placeLabel =
     job.remoteOption === 'remote'
@@ -155,6 +162,7 @@ export function toJobCardVM(
     salaryTimeframe: job.salaryTimeframe ?? null,
     publishedAt: job.publishedAt ?? null,
     locationLabel,
+    distanceLabel: distanceAwayLabel(job.distanceKm, distanceUnit, language),
     // Platform card teaser only — never re-derive from description HTML.
     summary: cardSummary(job),
     isFeatured: job.isFeatured,

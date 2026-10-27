@@ -90,10 +90,11 @@ export function toCompanyDetailVM(
     companySlug: company.slug,
     descriptionHtml: company.description,
     noDescriptionText: labels.noDescriptionText,
+    // Board-language name, linked by the board-language slug.
     marketChips: company.markets.map((market) => ({
       key: market.slug,
-      name: market.name,
-      href: companyMarketPath(market.slug),
+      name: market.displayName,
+      href: companyMarketPath(market.canonicalSlug),
     })),
     marketsHeading: labels.markets,
     websiteHref,

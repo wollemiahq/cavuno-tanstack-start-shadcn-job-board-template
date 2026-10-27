@@ -10,6 +10,7 @@ export const profileVm: TalentProfileVM = {
   avatarName: 'Ada Lovelace',
   headline: 'Computing pioneer',
   location: 'London, United Kingdom',
+  distanceLabel: null,
   jobSearchStatusLabel: 'Open to offers',
   lastActiveLabel: null,
   bio: 'I translate ambitious ideas into working systems.',

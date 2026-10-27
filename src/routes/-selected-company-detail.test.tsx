@@ -30,7 +30,14 @@ const company = {
   publishedJobCount: 3,
   salarySampleCount: 12,
   membership: null,
-  markets: [{ slug: 'technology', name: 'Technology' }],
+  markets: [
+    {
+      slug: 'technology',
+      name: 'Technology',
+      canonicalSlug: 'technology',
+      displayName: 'Technology',
+    },
+  ],
   customFieldValues: {},
   customFieldMedia: {},
   objectReferences: [],
@@ -68,11 +75,20 @@ const jobs = {
       logoUrl: null,
       customFieldValues: {},
     },
-    categories: [{ slug: 'engineering', name: 'Engineering' }],
+    categories: [
+      {
+        slug: 'engineering',
+        name: 'Engineering',
+        canonicalSlug: 'engineering',
+        displayName: 'Engineering',
+      },
+    ],
     skills: [],
     links: {
       public: `https://jobs.example/companies/acme/jobs/role-${index + 1}`,
     },
+    remotePermits: [],
+    distanceKm: null,
   })),
   hasMore: false,
   nextCursor: null,

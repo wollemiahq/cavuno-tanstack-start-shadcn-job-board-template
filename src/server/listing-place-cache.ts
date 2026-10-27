@@ -7,6 +7,7 @@ import { getDataSource } from '../lib/data-source.server';
 import { createSettledCache } from '../lib/settled-cache';
 
 import {
+  placeDistanceUnit,
   placeRadiusGeo,
   placeSearchRadius,
   SEARCH_RADIUS_EXACT,
@@ -52,15 +53,40 @@ export async function listingRadiusKm(
   within: number | undefined,
 ): Promise<number | undefined> {
   if (within === SEARCH_RADIUS_EXACT) return undefined;
+  const geo = await listingPlaceGeo(locationSlug, placeRead);
+  return placeSearchRadius({ geo }, within)?.selected?.km;
+}
+
+/**
+ * The sort a place listing asks for. `distance` orders from the place's
+ * point, so without a place or a point the listing keeps the default order
+ * instead of failing (`sort_distance_requires_location`). Only that sort
+ * waits for the place, and only when this isolate has not resolved it.
+ */
+export async function placeListingSort<Sort extends string>(
+  sort: Sort | undefined,
+  locationSlug: string | undefined,
+  placeRead: Promise<TaxonomyResolution | null>,
+): Promise<Sort | undefined> {
+  if (sort !== 'distance') return sort;
+  if (!locationSlug) return undefined;
+  const geo = await listingPlaceGeo(locationSlug, placeRead);
+  return placeDistanceUnit({ geo }) ? sort : undefined;
+}
+
+/** A place slug's cached geo, or `placeRead`'s on a cold slug. */
+async function listingPlaceGeo(
+  locationSlug: string,
+  placeRead: Promise<TaxonomyResolution | null>,
+): Promise<PlaceRadiusGeo | null> {
   const key = listingCacheKey(locationSlug);
   const cached = placeRadiusGeoCache.get(key);
-  if (cached !== undefined) {
-    return placeSearchRadius({ geo: cached }, within)?.selected?.km;
-  }
+  if (cached !== undefined) return cached;
   const readAt = Date.now();
   const place = await placeRead;
-  if (place) placeRadiusGeoCache.set(key, placeRadiusGeo(place.geo), readAt);
-  return placeSearchRadius(place, within)?.selected?.km;
+  const geo = placeRadiusGeo(place?.geo);
+  if (place) placeRadiusGeoCache.set(key, geo, readAt);
+  return geo;
 }
 
 /** The distance part of a jobs list or search query for a place listing. */

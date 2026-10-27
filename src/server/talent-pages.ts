@@ -23,7 +23,7 @@ import { headTitle } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
-import { listingRadiusKm } from './listing-place-cache';
+import { listingRadiusKm, placeListingSort } from './listing-place-cache';
 import {
   noindexFollow,
   resolveOrNull,
@@ -37,6 +37,7 @@ import { toPlaceHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
 import { placeLinkSlug } from '@/board/place-link';
 import {
   isSearchRadiusViewNoindex,
+  placeDistanceUnit,
   placeSearchRadius,
   shortPlaceName,
   type PlaceSearchRadius,
@@ -112,7 +113,7 @@ export type TalentDirectoryPageInput = {
   place?: string;
   /** Search distance in the place's unit; see `@/board/search-radius`. */
   within?: number;
-  sort?: 'relevance' | 'newest';
+  sort?: 'relevance' | 'newest' | 'distance';
   seniority?: string;
   permitCountry?: string;
   interestedRole?: string;
@@ -164,11 +165,12 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
       const radius = data.place
         ? await listingRadiusKm(data.place, placeRead, data.within)
         : undefined;
+      const sort = await placeListingSort(data.sort, data.place, placeRead);
       // The directory read does not depend on the SEO base, so it starts
       // first and is awaited below — these used to be two serial waves.
       const directory = readTalentDirectory(() =>
         getBoard().talent.list(
-          talentDirectoryQuery(data, radius, custom.clauses),
+          talentDirectoryQuery({ ...data, sort }, radius, custom.clauses),
           { headers },
         ),
       );
@@ -212,6 +214,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
             jsonLd,
             customFilterFields: [],
             placeRadius: null,
+            distanceUnit: null,
             place,
           };
         }
@@ -223,6 +226,7 @@ export const getTalentIndexPage = createServerFn({ method: 'GET' })
           jsonLd,
           customFilterFields,
           placeRadius: talentPlaceRadius(place, data.within),
+          distanceUnit: placeDistanceUnit(place),
           // The header location field labels `?place=` with its name.
           place,
         };
@@ -407,6 +411,11 @@ export const getTalentLocationPage = createServerFn({ method: 'GET' })
         placeRead.catch(() => null),
         data.within,
       );
+      const sort = await placeListingSort(
+        data.sort,
+        data.locationSlug,
+        placeRead.catch(() => null),
+      );
       const [resolved, listResult, seo, placeTree, customFilterFields] =
         await Promise.all([
           // The resolve only adds geo and a fallback name; a failure other
@@ -417,7 +426,7 @@ export const getTalentLocationPage = createServerFn({ method: 'GET' })
             readTalentDirectory(() =>
               board.talent.list(
                 talentDirectoryQuery(
-                  { ...data, place: data.locationSlug },
+                  { ...data, place: data.locationSlug, sort },
                   radius,
                   custom.clauses,
                 ),
@@ -523,6 +532,7 @@ export const getTalentLocationPage = createServerFn({ method: 'GET' })
         placeRadius: restricted
           ? null
           : talentPlaceRadius(resolution, data.within),
+        distanceUnit: restricted ? null : placeDistanceUnit(resolution),
         breadcrumbTrail,
       };
     }),

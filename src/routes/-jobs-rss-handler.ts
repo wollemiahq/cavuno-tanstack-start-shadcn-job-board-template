@@ -105,7 +105,7 @@ export function createJobsRssHandler(
         const categories = job.categories
           .map(
             (category) =>
-              `      <category>${xmlEscape(category.name)}</category>`,
+              `      <category>${xmlEscape(category.displayName)}</category>`,
           )
           .join('\n');
         return `    <item>\n      <title>${xmlEscape(title)}</title>\n      <link>${xmlEscape(url)}</link>\n      <guid isPermaLink="true">${xmlEscape(url)}</guid>\n      <pubDate>${rssDate(job.publishedAt)}</pubDate>\n${description ? `      <description><![CDATA[${description}]]></description>\n` : ''}${categories ? `${categories}\n` : ''}    </item>`;

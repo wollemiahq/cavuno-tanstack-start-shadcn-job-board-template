@@ -68,6 +68,7 @@ const profile: TalentProfilePageData['profile'] = {
   languages: [],
   customFieldValues: {},
   objectReferences: [],
+  resumeUrl: null,
 };
 
 function apiError(status: number, code: string) {
@@ -152,6 +153,7 @@ beforeEach(() => {
     jsonLd: [],
     customFilterFields: [],
     placeRadius: null,
+    distanceUnit: null,
     place: null,
   });
   getTalentProfilePage.mockReset();
@@ -256,6 +258,7 @@ describe('talent directory route — query and capability contracts', () => {
       jsonLd: [],
       customFilterFields: [],
       placeRadius: null,
+      distanceUnit: null,
       place: null,
     });
 

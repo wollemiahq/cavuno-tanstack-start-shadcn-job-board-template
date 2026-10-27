@@ -15,6 +15,7 @@ import type { JobsSearch } from '@/lib/jobs-search';
 import type { CountedHeading } from '@/lib/listing-description';
 import type { UrlSearchInput } from '@/lib/pagination';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
+import type { DistanceUnit } from '@cavuno/board/format';
 
 const rootApi = getRouteApi('__root__');
 
@@ -40,6 +41,7 @@ export function ProgrammaticJobsView({
   relatedSearches,
   filters,
   location,
+  distanceUnit = null,
   listedTermSlug,
   onSaveJob,
 }: {
@@ -60,6 +62,12 @@ export function ProgrammaticJobsView({
   relatedSearches?: RelatedSearch[];
   filters: JobsSearch;
   location?: { slug: string; label: string };
+  /**
+   * The unit of the place's distances (`placeDistanceUnit`), or `null` when
+   * the place has no point. Set, the cards show each job's distance and the
+   * sort offers `distance`.
+   */
+  distanceUnit?: DistanceUnit | null;
   /**
    * The source slug of the category or skill this page lists, for its job
    * alert. Listing pages without one leave it out.
@@ -96,12 +104,15 @@ export function ProgrammaticJobsView({
         count={count}
         gatedCount={gatedCount}
         reachableCount={reachableCount}
-        jobs={jobs.map((job) => toJobCardVM(job, getLocale(), board))}
+        jobs={jobs.map((job) =>
+          toJobCardVM(job, getLocale(), board, distanceUnit),
+        )}
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}
         filters={filters}
         jobForm={board}
+        distanceSort={distanceUnit !== null}
         language={getLocale()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={onSaveJob}

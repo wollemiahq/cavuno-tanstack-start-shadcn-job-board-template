@@ -1370,6 +1370,7 @@
   "jobCard_aiRankedLabel": "Relevance",
   "jobCard_featuredLabel": "Featured",
   "jobCard_relatedSearchesTitle": "Related searches",
+  "jobCard_sortDistanceLabel": "Distance",
   "jobCard_sortNewestLabel": "Date",
   "jobCard_sortSalaryHighLabel": "Salary: high to low",
   "jobDetailHead_titleAtCompany": "{title} at {company}",
@@ -1522,6 +1523,20 @@
   "label_employmentTemporary": "Temporary",
   "label_employmentVolunteer": "Volunteer",
   "label_locationHybrid": "{place} (hybrid)",
+  "label_locationRemoteFirstAndMore": [
+    {
+      "declarations": [
+        "input first",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{first} + {count} more",
+        "countPlural=*": "{first} + {count} more"
+      }
+    }
+  ],
   "label_locationRemoteIn": "Remote · {region}",
   "label_locationRemoteWorldwide": "Remote (worldwide)",
   "label_remoteHybrid": "Hybrid",
@@ -1674,6 +1689,8 @@
   "searchRadius_withinOption": "Within {distance}",
   "searchRadius_menuLabel": "Distance",
   "searchRadius_triggerLabel": "Distance: {distance}",
+  "searchRadius_distanceAway": "{distance} away",
+  "searchRadius_distanceUnderOneAway": "< {distance} away",
   "locationSkillPage_jobsHeading": "{skill} jobs in {place}",
   "locationSkillPage_jobsCountHeading": [
     {
@@ -2431,6 +2448,7 @@
   "talentFilters_seniorityLabel": "Seniority",
   "talentFilters_skillLabel": "Skill",
   "talentFilters_sortBestMatch": "Best Match",
+  "talentFilters_sortDistance": "Distance",
   "talentFilters_sortLabel": "Sort",
   "talentFilters_sortNewest": "Newest",
   "talentFilters_statusActive": "Actively looking",

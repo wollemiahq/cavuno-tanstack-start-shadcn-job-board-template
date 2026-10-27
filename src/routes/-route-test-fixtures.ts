@@ -117,6 +117,8 @@ export function publicJobCardFixture(slug: string): PublicJobCard {
     categories: [],
     skills: [],
     links: { public: `https://jobs.example/companies/acme/jobs/${slug}` },
+    remotePermits: [],
+    distanceKm: null,
   };
 }
 

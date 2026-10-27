@@ -31,14 +31,16 @@ export function relatedSearchesTitle(): string {
 export function relatedSearchesToChips(
   related: RelatedSearch[] | undefined,
 ): TaxonomyChip[] {
+  // Show the board-language `displayName`; link the board-language
+  // `canonicalSlug` (the English `slug` page redirects on a translated board).
   return (related ?? []).map((r) => ({
     key: `${r.type}-${r.slug}`,
-    name: r.term,
+    name: r.displayName,
     href:
       r.type === 'market'
-        ? companyMarketPath(r.slug)
+        ? companyMarketPath(r.canonicalSlug)
         : r.type === 'skill'
-          ? jobsSkillPath(r.slug)
-          : jobsCategoryPath(r.slug),
+          ? jobsSkillPath(r.canonicalSlug)
+          : jobsCategoryPath(r.canonicalSlug),
   }));
 }

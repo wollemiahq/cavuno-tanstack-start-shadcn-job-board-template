@@ -18,7 +18,7 @@ import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { createJobsLocationLoader } from './-jobs-taxonomy-loaders';
 
-import { shortPlaceName } from '@/board/search-radius';
+import { placeDistanceUnit, shortPlaceName } from '@/board/search-radius';
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { SearchRadiusScope } from '@/components/board/search-radius-scope';
 import { jsonLdHeadScripts } from '@/components/json-ld';
@@ -95,6 +95,7 @@ function LocationPage() {
         await saveJob({ data: { jobId } });
       }}
       location={{ slug: location, label: place.displayName }}
+      distanceUnit={placeDistanceUnit(place)}
     />
   );
 }
