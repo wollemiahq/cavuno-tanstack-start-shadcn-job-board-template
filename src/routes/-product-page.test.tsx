@@ -266,10 +266,20 @@ describe('ProductPageView', () => {
   });
 
   it('shows the sales count only when the seller shares it', () => {
-    renderPage({ salesCount: 214 });
-    expect(
-      screen.getByText(m.product_salesCount({ count: 214 })),
-    ).toBeInTheDocument();
+    const shown = renderPage({ salesCount: 1214 });
+    const sales = shown.container.querySelector(
+      '[data-slot="product-sales-count"]',
+    );
+    // toHaveTextContent collapses the narrow no-break space some locales
+    // group digits with, so compare with plain spaces.
+    const count = new Intl.NumberFormat(getLocale())
+      .format(1214)
+      .replace(/\s/g, ' ');
+    expect(sales).toHaveTextContent(
+      `${count} ${m.product_salesNoun({ count: 1214 })}`,
+    );
+    expect(sales?.querySelector('strong')).toHaveTextContent(count);
+    expect(sales).toHaveAttribute('role', 'note');
     cleanup();
 
     const { container } = renderPage({ salesCount: null });

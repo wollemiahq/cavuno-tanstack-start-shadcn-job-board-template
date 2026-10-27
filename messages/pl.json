@@ -3091,15 +3091,15 @@
       }
     }
   ],
-  "product_salesCount": [
+  "product_salesNoun": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} sprzedaż",
-        "countPlural=few": "{count} sprzedaże",
-        "countPlural=many": "{count} sprzedaży",
-        "countPlural=*": "{count} sprzedaży"
+        "countPlural=one": "sprzedaż",
+        "countPlural=few": "sprzedaże",
+        "countPlural=many": "sprzedaży",
+        "countPlural=*": "sprzedaży"
       }
     }
   ],

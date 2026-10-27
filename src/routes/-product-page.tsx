@@ -24,7 +24,7 @@ import {
 
 import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Check, Info, X } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -58,6 +58,7 @@ import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { Prose } from '@/components/prose';
 import { useRootSession } from '@/components/root-session';
 import { Text } from '@/components/text';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -685,12 +686,15 @@ export function ProductPageView({
               />
             </p>
             {salesCount !== null ? (
-              <p
-                data-slot="product-sales-count"
-                className="text-muted-foreground text-center text-sm"
-              >
-                {m.product_salesCount({ count: salesCount })}
-              </p>
+              <Alert variant="info" role="note" data-slot="product-sales-count">
+                <Info aria-hidden="true" />
+                <AlertDescription className="text-foreground">
+                  <strong className="font-semibold">
+                    {new Intl.NumberFormat(getLocale()).format(salesCount)}
+                  </strong>{' '}
+                  {m.product_salesNoun({ count: salesCount })}
+                </AlertDescription>
+              </Alert>
             ) : null}
           </>
         )}

@@ -2967,13 +2967,13 @@
       }
     }
   ],
-  "product_salesCount": [
+  "product_salesNoun": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} vente",
-        "countPlural=*": "{count} ventes"
+        "countPlural=one": "vente",
+        "countPlural=*": "ventes"
       }
     }
   ],

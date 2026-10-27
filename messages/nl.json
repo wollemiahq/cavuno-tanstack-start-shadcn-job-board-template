@@ -2967,13 +2967,13 @@
       }
     }
   ],
-  "product_salesCount": [
+  "product_salesNoun": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} keer verkocht",
-        "countPlural=*": "{count} keer verkocht"
+        "countPlural=one": "keer verkocht",
+        "countPlural=*": "keer verkocht"
       }
     }
   ],
