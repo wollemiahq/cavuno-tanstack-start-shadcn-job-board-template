@@ -295,6 +295,7 @@ export function toTalentProfileVM(
       ...profile,
       object: 'talent_directory_entry',
       summary: null,
+      distanceKm: null,
       skills: profile.skills.map((skill) => skill.name),
       experiences: profile.experiences,
       education: profile.education,

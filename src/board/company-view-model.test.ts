@@ -81,7 +81,14 @@ describe('company view models', () => {
       {
         ...company,
         website: 'https://acme.example/',
-        markets: [{ name: 'Developer tools', slug: 'developer-tools' }],
+        markets: [
+          {
+            name: 'Developer tools',
+            slug: 'developer-tools',
+            canonicalSlug: 'developer-tools',
+            displayName: 'Developer tools',
+          },
+        ],
       } satisfies PublicCompanyDetail,
       labels,
     );

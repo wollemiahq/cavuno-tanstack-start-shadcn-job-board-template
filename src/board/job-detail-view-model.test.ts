@@ -37,8 +37,13 @@ function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
     remoteWorkPermitCountryCodes: ['US', 'GB'],
     remoteWorkPermitSubdivisionCodes: [],
     remoteTimezones: [
-      { type: 'timezone', value: 'Europe/Berlin', plusMinus: 3 },
-      { type: 'country', value: 'DE' },
+      {
+        type: 'timezone',
+        value: 'Europe/Berlin',
+        label: 'Europe/Berlin',
+        plusMinus: 3,
+      },
+      { type: 'country', value: 'DE', label: 'Germany' },
     ],
     remoteAllowedTzOffsets: [],
     remoteSponsorship: 'unknown',
@@ -68,8 +73,22 @@ function createJob(overrides: Partial<PublicJob> = {}): PublicJob {
         postalCode: null,
       },
     ],
-    categories: [{ slug: 'engineering', name: 'Engineering' }],
-    skills: [{ slug: 'react', name: 'React' }],
+    categories: [
+      {
+        slug: 'engineering',
+        name: 'Engineering',
+        canonicalSlug: 'engineering',
+        displayName: 'Engineering',
+      },
+    ],
+    skills: [
+      {
+        slug: 'react',
+        name: 'React',
+        canonicalSlug: 'react',
+        displayName: 'React',
+      },
+    ],
     customFieldValues: { visa: true, team: 'Platform' },
     resolvedCollectionFields: [],
     company: {
@@ -134,6 +153,8 @@ const similar: PublicJobCard[] = [
     links: {
       public: 'https://board.example/companies/beta-co/jobs/staff-engineer',
     },
+    remotePermits: [],
+    distanceKm: null,
   },
 ];
 

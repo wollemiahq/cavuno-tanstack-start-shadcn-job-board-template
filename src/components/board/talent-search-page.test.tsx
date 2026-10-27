@@ -52,6 +52,7 @@ const candidate = {
   education: [],
   customFieldValues: {},
   objectReferences: [],
+  distanceKm: null,
 } satisfies TalentDirectoryEntry;
 
 // The page now takes resolved `TalentCardVM[]`; the test maps the wire
@@ -241,6 +242,7 @@ const candidate2 = {
   education: [],
   customFieldValues: {},
   objectReferences: [],
+  distanceKm: null,
 } satisfies TalentDirectoryEntry;
 const candidateVm2 = toTalentCardVM(candidate2, getTalentSearchLabels());
 

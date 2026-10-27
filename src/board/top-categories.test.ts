@@ -47,13 +47,17 @@ describe('topCategoriesFromTaxonomy', () => {
       {
         type: 'category',
         slug: 'cybersecurity',
+        canonicalSlug: 'cybersecurity',
         term: 'Cybersecurity',
+        displayName: 'Cybersecurity',
         count: 412,
       },
       {
         type: 'category',
         slug: 'incident-response',
+        canonicalSlug: 'incident-response',
         term: 'Incident Response',
+        displayName: 'Incident Response',
         count: 88,
       },
     ]);

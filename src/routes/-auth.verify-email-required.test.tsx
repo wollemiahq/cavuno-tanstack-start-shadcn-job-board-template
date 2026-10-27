@@ -89,6 +89,7 @@ const emptyResume: Resume = {
   keepResumeOnFile: false,
   hasResumeOnFile: false,
   file: null,
+  shareWithEmployers: false,
 };
 
 const storedResume: Resume = {

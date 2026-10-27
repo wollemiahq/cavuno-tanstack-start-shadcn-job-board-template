@@ -32,6 +32,7 @@ function profile(handle: string): TalentProfile {
     languages: [],
     customFieldValues: {},
     objectReferences: [],
+    resumeUrl: null,
   };
 }
 

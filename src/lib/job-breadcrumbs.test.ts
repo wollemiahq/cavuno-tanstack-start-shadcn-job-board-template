@@ -10,7 +10,14 @@ function job(overrides: Partial<PublicJob> = {}): PublicJob {
   return {
     ...publicJobFixture('senior-engineer'),
     title: 'Senior Engineer',
-    categories: [{ slug: 'engineering', name: 'Engineering' }],
+    categories: [
+      {
+        slug: 'engineering',
+        name: 'Engineering',
+        canonicalSlug: 'engineering',
+        displayName: 'Engineering',
+      },
+    ],
     company: {
       id: 'company_1',
       slug: 'acme-co',

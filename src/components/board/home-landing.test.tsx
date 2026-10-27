@@ -198,6 +198,7 @@ const candidate: TalentDirectoryEntry = {
   education: [],
   customFieldValues: {},
   objectReferences: [],
+  distanceKm: null,
 };
 
 const baseProps: LandingProps = {

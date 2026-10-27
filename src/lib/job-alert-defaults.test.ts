@@ -11,8 +11,22 @@ describe('jobAlertDefaultsFromJob', () => {
     const job = publicJobFixture('media-lead');
     const defaults = jobAlertDefaultsFromJob({
       ...job,
-      categories: [{ slug: 'media', name: 'Media & Communication' }],
-      skills: [{ slug: 'copywriting', name: 'Copywriting' }],
+      categories: [
+        {
+          slug: 'media',
+          name: 'Media & Communication',
+          canonicalSlug: 'media',
+          displayName: 'Media & Communication',
+        },
+      ],
+      skills: [
+        {
+          slug: 'copywriting',
+          name: 'Copywriting',
+          canonicalSlug: 'copywriting',
+          displayName: 'Copywriting',
+        },
+      ],
     });
 
     expect(defaults.context).toEqual({

@@ -15,21 +15,13 @@ import {
   type UrlSearchInput,
   type UrlSearchValue,
 } from '@/lib/pagination';
-import type { TalentListMembersQuery } from '@cavuno/board';
+import type {
+  TalentListFilters as BoardTalentListFilters,
+  TalentListMembersQuery,
+} from '@cavuno/board';
 
-/** Frozen `/talent` query stored on a talent list. Matches the v1 wire. */
-export type TalentListFilters = {
-  q?: string;
-  skill?: string;
-  jobSearchStatus?: 'actively_looking' | 'open_to_offers' | 'not_looking';
-  languages?: string[];
-  openToRelocate?: boolean;
-  place?: string;
-  sort?: 'relevance' | 'newest';
-  seniority?: string;
-  permitCountry?: string;
-  interestedRole?: string;
-};
+/** Frozen `/talent` query stored on a talent list: the v1 wire type. */
+export type TalentListFilters = BoardTalentListFilters;
 
 /** Public candidate profile-field filters ride along as `cf.<key>`. */
 export interface TalentSearch extends CustomFieldSearch {
@@ -296,7 +288,7 @@ export function listFiltersToTalentSearch(
           : 'false',
     place: filters.place,
     within: filters.place ? SEARCH_RADIUS_EXACT : undefined,
-    sort: filters.sort,
+    sort: sortValue(filters.sort),
     seniority: filters.seniority,
     permitCountry: filters.permitCountry,
     interestedRole: filters.interestedRole,

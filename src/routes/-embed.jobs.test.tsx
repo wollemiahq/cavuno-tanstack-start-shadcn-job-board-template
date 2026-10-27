@@ -41,6 +41,8 @@ const job = {
   links: {
     public: 'https://jobs.example/companies/acme/jobs/product-designer',
   },
+  remotePermits: [],
+  distanceKm: null,
 } satisfies PublicJobCard;
 
 const dependencies: EmbedJobsViewDependencies = {

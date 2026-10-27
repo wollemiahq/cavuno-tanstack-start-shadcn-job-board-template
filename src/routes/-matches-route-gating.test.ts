@@ -45,6 +45,7 @@ beforeEach(() => {
       keepResumeOnFile: false,
       hasResumeOnFile: false,
       file: null,
+      shareWithEmployers: false,
     },
   });
   getSeoBase.mockResolvedValue({ boardName: 'Acme Board' });
