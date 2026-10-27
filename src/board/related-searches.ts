@@ -31,14 +31,32 @@ export function relatedSearchesTitle(): string {
 export function relatedSearchesToChips(
   related: RelatedSearch[] | undefined,
 ): TaxonomyChip[] {
+  // Show the board-language `displayName`; link the board-language
+  // `canonicalSlug` (the English `slug` page redirects on a translated board).
   return (related ?? []).map((r) => ({
     key: `${r.type}-${r.slug}`,
-    name: r.term,
+    name: r.displayName,
     href:
       r.type === 'market'
-        ? companyMarketPath(r.slug)
+        ? companyMarketPath(r.canonicalSlug)
         : r.type === 'skill'
-          ? jobsSkillPath(r.slug)
-          : jobsCategoryPath(r.slug),
+          ? jobsSkillPath(r.canonicalSlug)
+          : jobsCategoryPath(r.canonicalSlug),
   }));
+}
+
+/**
+ * The companies index "Browse by market" options from the list response's
+ * market `relatedSearches`, in the board language (`displayName`, linked by
+ * `canonicalSlug`). `null` when the response has none (a search, or an older
+ * API), so the caller keeps the markets taxonomy list, which carries English
+ * names only.
+ */
+export function relatedMarketOptions(
+  related: RelatedSearch[] | undefined,
+): Array<{ slug: string; name: string }> | null {
+  const markets = (related ?? [])
+    .filter((r) => r.type === 'market')
+    .map((r) => ({ slug: r.canonicalSlug, name: r.displayName }));
+  return markets.length > 0 ? markets : null;
 }

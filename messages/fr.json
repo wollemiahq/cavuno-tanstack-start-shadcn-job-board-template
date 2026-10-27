@@ -1522,6 +1522,20 @@
   "label_employmentTemporary": "Intérim",
   "label_employmentVolunteer": "Bénévolat",
   "label_locationHybrid": "{place} (hybride)",
+  "label_locationRemoteFirstAndMore": [
+    {
+      "declarations": [
+        "input first",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{first} + {count} autre",
+        "countPlural=*": "{first} + {count} autres"
+      }
+    }
+  ],
   "label_locationRemoteIn": "Télétravail · {region}",
   "label_locationRemoteWorldwide": "Télétravail (monde entier)",
   "label_remoteHybrid": "Hybride",

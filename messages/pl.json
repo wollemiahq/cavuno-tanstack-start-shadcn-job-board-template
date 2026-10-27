@@ -1582,6 +1582,22 @@
   "label_employmentTemporary": "Praca tymczasowa",
   "label_employmentVolunteer": "Wolontariat",
   "label_locationHybrid": "{place} (hybrydowo)",
+  "label_locationRemoteFirstAndMore": [
+    {
+      "declarations": [
+        "input first",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{first} + {count} inny",
+        "countPlural=few": "{first} + {count} inne",
+        "countPlural=many": "{first} + {count} innych",
+        "countPlural=*": "{first} + {count} innych"
+      }
+    }
+  ],
   "label_locationRemoteIn": "Zdalnie · {region}",
   "label_locationRemoteWorldwide": "Zdalnie (cały świat)",
   "label_remoteHybrid": "Hybrydowo",

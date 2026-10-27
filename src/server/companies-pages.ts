@@ -40,6 +40,7 @@ import { gatedRead } from './board-access';
 import { isSalaryPageNoindex, noindexFollow } from './place-listing-helpers';
 import { profileCustomFilters } from './profile-filter-fields';
 
+import { relatedMarketOptions } from '@/board/related-searches';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
 import {
@@ -187,7 +188,16 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
       return {
         page: pageResult.page,
         searchUnavailable: pageResult.searchUnavailable,
-        markets: markets?.data ?? [],
+        // Board-language market names come with the unsearched list's
+        // relatedSearches; the markets taxonomy list is English-only.
+        markets:
+          relatedMarketOptions(
+            'relatedSearches' in pageResult.page
+              ? pageResult.page.relatedSearches
+              : undefined,
+          ) ??
+          markets?.data ??
+          [],
         seo,
         head,
         jsonLd,

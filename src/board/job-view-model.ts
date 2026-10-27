@@ -86,17 +86,19 @@ export function toJobCardVM(
   const company = job.company;
 
   // Every emitted slug resolves — the platform guarantees it (ADR-0099), so
-  // pills link directly with no resolve round trip and no filtering.
+  // pills link directly with no resolve round trip and no filtering. Show
+  // the board-language `displayName` and link its `canonicalSlug` (the
+  // English `slug` page redirects on a translated board).
   const tagPill = (
     type: 'category' | 'skill',
-    term: { slug: string; name: string },
+    term: { slug: string; canonicalSlug: string; displayName: string },
   ): JobCardTagVM => {
     const prefix = type === 'category' ? 'c' : 's';
     const path = type === 'category' ? jobsCategoryPath : jobsSkillPath;
     return {
       key: `${prefix}-${term.slug}`,
-      name: term.name,
-      href: path(term.slug),
+      name: term.displayName,
+      href: path(term.canonicalSlug),
     };
   };
   const salaryVisible = resolveJobForm(jobForm).salary.visible;
@@ -113,12 +115,9 @@ export function toJobCardVM(
     ? enumLabel(job.remoteOption, language)
     : null;
   const localeOpt = isLocale(language) ? { locale: language } : undefined;
-  // The card wire model pre-resolves `remoteLocationLabel` in the BOARD
-  // language, and for unrestricted remote jobs that is the chrome word
-  // "Worldwide" — a word, not a place name. Re-word it from the catalog so
-  // /de/ reads "Remote (weltweit)". Structural fix (a `remoteWorldwide`
-  // boolean on the card model) is a platform follow-up; until then this
-  // sentinel is stable for English-language boards.
+  // Unrestricted remote jobs read as the catalog's "Remote (worldwide)";
+  // constrained ones name their scope in the board language from
+  // `remotePermits` (see `localizedRemoteRegion`).
   const worldwideRemote = isWorldwideRemote(job);
   const placeLabel =
     job.remoteOption === 'remote'
