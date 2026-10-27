@@ -113,6 +113,7 @@ export function JobSearchPage({
   filters,
   customFilters,
   jobForm,
+  distanceSort,
   language,
   heading,
   countedHeading,
@@ -147,6 +148,8 @@ export function JobSearchPage({
   customFilters?: JobsCustomFilters;
   /** The board context: its employment types become the Type options. */
   jobForm?: JobFormSource | null;
+  /** Offer the `distance` sort; see `JobsFilterControls`. */
+  distanceSort?: boolean;
   language: string;
   heading?: string;
   /** See `JobsResultsBar` `countedHeading`. */
@@ -220,6 +223,7 @@ export function JobSearchPage({
               filters={filters}
               customFilters={customFilters}
               jobForm={jobForm}
+              distanceSort={distanceSort}
               language={language}
               onChange={onFiltersChange}
             />

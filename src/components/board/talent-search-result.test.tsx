@@ -24,6 +24,7 @@ const vm: TalentCardVM = {
   avatarName: 'Ada Lovelace',
   headline: 'Computing pioneer',
   location: 'London, United Kingdom',
+  distanceLabel: null,
   jobSearchStatusLabel: 'Open to offers',
   lastActiveLabel: null,
   skills: ['Analytical engines', 'Mathematics'],
@@ -163,6 +164,25 @@ describe('TalentSearchResult', () => {
       <TalentSearchResult vm={{ ...vm, handle: null, detailHref: null }} />,
     );
     expect(screen.queryByText('Active this week')).toBeNull();
+  });
+
+  it('shows the distance from the searched place only when there is one', () => {
+    const { rerender } = render(
+      <TalentSearchResult
+        vm={{
+          ...vm,
+          handle: null,
+          detailHref: null,
+          distanceLabel: 'distance label',
+        }}
+      />,
+    );
+    expect(screen.getByText('distance label', { exact: false })).toBeVisible();
+
+    rerender(
+      <TalentSearchResult vm={{ ...vm, handle: null, detailHref: null }} />,
+    );
+    expect(screen.getByText('London, United Kingdom')).toBeVisible();
   });
 
   it('omits optional candidate facts rather than inventing placeholders', async () => {

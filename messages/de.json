@@ -1370,6 +1370,7 @@
   "jobCard_aiRankedLabel": "Relevanz",
   "jobCard_featuredLabel": "Hervorgehoben",
   "jobCard_relatedSearchesTitle": "Ähnliche Suchen",
+  "jobCard_sortDistanceLabel": "Entfernung",
   "jobCard_sortNewestLabel": "Datum",
   "jobCard_sortSalaryHighLabel": "Gehalt: absteigend",
   "jobDetailHead_titleAtCompany": "{title} bei {company}",
@@ -1674,6 +1675,8 @@
   "searchRadius_withinOption": "Im Umkreis von {distance}",
   "searchRadius_menuLabel": "Entfernung",
   "searchRadius_triggerLabel": "Entfernung: {distance}",
+  "searchRadius_distanceAway": "{distance} entfernt",
+  "searchRadius_distanceUnderOneAway": "< {distance} entfernt",
   "locationSkillPage_jobsHeading": "{skill}-Jobs in {place}",
   "locationSkillPage_jobsCountHeading": [
     {
@@ -2431,6 +2434,7 @@
   "talentFilters_seniorityLabel": "Erfahrungslevel",
   "talentFilters_skillLabel": "Fähigkeit",
   "talentFilters_sortBestMatch": "Beste Treffer",
+  "talentFilters_sortDistance": "Entfernung",
   "talentFilters_sortLabel": "Sortieren",
   "talentFilters_sortNewest": "Neueste",
   "talentFilters_statusActive": "Aktiv auf Jobsuche",

@@ -1370,6 +1370,7 @@
   "jobCard_aiRankedLabel": "Relevantie",
   "jobCard_featuredLabel": "Uitgelicht",
   "jobCard_relatedSearchesTitle": "Gerelateerde zoekopdrachten",
+  "jobCard_sortDistanceLabel": "Afstand",
   "jobCard_sortNewestLabel": "Datum",
   "jobCard_sortSalaryHighLabel": "Salaris: hoog naar laag",
   "jobDetailHead_titleAtCompany": "{title} bij {company}",
@@ -1674,6 +1675,8 @@
   "searchRadius_withinOption": "Binnen {distance}",
   "searchRadius_menuLabel": "Afstand",
   "searchRadius_triggerLabel": "Afstand: {distance}",
+  "searchRadius_distanceAway": "op {distance} afstand",
+  "searchRadius_distanceUnderOneAway": "op minder dan {distance} afstand",
   "locationSkillPage_jobsHeading": "Vacatures voor {skill} in {place}",
   "locationSkillPage_jobsCountHeading": [
     {
@@ -2431,6 +2434,7 @@
   "talentFilters_seniorityLabel": "Ervaringsniveau",
   "talentFilters_skillLabel": "Vaardigheid",
   "talentFilters_sortBestMatch": "Beste match",
+  "talentFilters_sortDistance": "Afstand",
   "talentFilters_sortLabel": "Sorteren",
   "talentFilters_sortNewest": "Nieuwste",
   "talentFilters_statusActive": "Actief op zoek",

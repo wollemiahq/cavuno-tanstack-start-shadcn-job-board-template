@@ -69,6 +69,7 @@ import {
   resolveCustomFieldFilters,
   type CustomFilterField,
 } from '@/lib/custom-field-filters';
+import { distanceAwayLabel } from '@/lib/distance-away';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
 import { createTalentListAutosave } from '@/lib/talent-list-autosave';
@@ -93,6 +94,7 @@ import {
 import type { TalentPlaceRadius } from '@/server/talent-pages';
 import { isReactComponent } from '@/utils/is-react-component';
 import type { EmployerPipeline } from '@cavuno/board';
+import type { DistanceUnit } from '@cavuno/board/format';
 
 type SavedResult =
   | { key: string; listId: string; status: 'ready'; result: SavedPeoplePage }
@@ -118,6 +120,7 @@ export function TalentSearchPage({
   ads = ADS_OFF,
   profileUnlocks = false,
   placeRadius = null,
+  distanceUnit = null,
   onWithinChange,
   heading = m.talentSearch_resultsHeading(),
 }: {
@@ -151,6 +154,12 @@ export function TalentSearchPage({
    * the "Showing X–Y of N" line with "… within 25 mi of Houston".
    */
   placeRadius?: TalentPlaceRadius | null;
+  /**
+   * The searched place's distance unit (`placeDistanceUnit`), or `null`
+   * without a place with a point. Set, the sort offers `distance` and the
+   * Saved view's cards show each candidate's distance.
+   */
+  distanceUnit?: DistanceUnit | null;
   /** The new `within` URL value; see `SearchRadiusScope`. */
   onWithinChange?: (within: number | undefined) => void;
   /** The results heading, e.g. the place on a talent location page. */
@@ -497,9 +506,10 @@ export function TalentSearchPage({
       (savedPage?.data ?? []).map((member) =>
         toTalentCardVM(member.candidate, getTalentSearchLabels(), {
           profileUnlocks,
+          distanceLabel: (km) => distanceAwayLabel(km, distanceUnit, language),
         }),
       ),
-    [savedPage, profileUnlocks],
+    [savedPage, profileUnlocks, distanceUnit, language],
   );
   const candidateVms = savedMode ? savedVms : candidates;
   function saveControl(
@@ -627,6 +637,7 @@ export function TalentSearchPage({
             <TalentFilters
               search={search}
               customFilterFields={customFilterFields}
+              distanceSort={distanceUnit !== null}
               lists={
                 workspace ? (
                   <TalentListsPicker

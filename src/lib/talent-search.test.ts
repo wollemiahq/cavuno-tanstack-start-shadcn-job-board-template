@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filtersFromJob,
   listFiltersToTalentSearch,
+  parseTalentLocationSearch,
   parseTalentSearch,
   talentListDisplayName,
   talentListFiltersEqual,
@@ -140,6 +141,47 @@ describe('talent search distance', () => {
         parseTalentSearch({ place: 'houston', within: '10' }),
       ),
     ).toEqual({ place: 'houston' });
+  });
+});
+
+describe('talent distance sort', () => {
+  it('keeps `distance` only with a place', () => {
+    expect(
+      parseTalentSearch({ place: 'houston-tx-united-states', sort: 'distance' })
+        .sort,
+    ).toBe('distance');
+    expect(parseTalentSearch({ sort: 'distance' }).sort).toBeUndefined();
+    // A talent location page's place is its path.
+    expect(parseTalentLocationSearch({ sort: 'distance' }).sort).toBe(
+      'distance',
+    );
+  });
+
+  it('drops `distance` when a header search removes the place', () => {
+    expect(
+      talentSearchFromHeader(
+        { place: 'houston-tx-united-states', sort: 'distance' },
+        { query: 'platform', place: undefined },
+      ).sort,
+    ).toBeUndefined();
+  });
+
+  it('round-trips `distance` through a saved list only with its place', () => {
+    const filters = talentSearchToListFilters(
+      parseTalentSearch({
+        place: 'houston-tx-united-states',
+        sort: 'distance',
+      }),
+    );
+
+    expect(filters).toEqual({
+      place: 'houston-tx-united-states',
+      sort: 'distance',
+    });
+    expect(listFiltersToTalentSearch(filters).sort).toBe('distance');
+    expect(
+      listFiltersToTalentSearch({ sort: 'distance' }).sort,
+    ).toBeUndefined();
   });
 });
 

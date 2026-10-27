@@ -45,6 +45,7 @@ const DEFAULT_SORT = 'relevance' as const;
 const STATUS_VALUES = [ANY, 'actively_looking', 'open_to_offers'];
 const RELOCATE_VALUES = [ANY, 'true', 'false'];
 const SORT_VALUES = ['relevance', 'newest'];
+const DISTANCE_SORT_VALUES = [...SORT_VALUES, 'distance'];
 
 function statusLabel(value: string): string {
   switch (value) {
@@ -69,9 +70,14 @@ function relocateLabel(value: string): string {
 }
 
 function sortLabel(value: string): string {
-  return value === 'newest'
-    ? m.talentFilters_sortNewest()
-    : m.talentFilters_sortBestMatch();
+  switch (value) {
+    case 'newest':
+      return m.talentFilters_sortNewest();
+    case 'distance':
+      return m.talentFilters_sortDistance();
+    default:
+      return m.talentFilters_sortBestMatch();
+  }
 }
 
 type TalentToolbarFacets = {
@@ -174,6 +180,8 @@ type TalentFiltersProps = {
   /** All / Saved switch (and stage) while a saved search is open. */
   savedView?: ReactNode;
   linkJob?: ReactNode;
+  /** Offer the `distance` sort: the search is around a place with a point. */
+  distanceSort?: boolean;
 };
 
 function talentFiltersAreEqual(
@@ -192,7 +200,8 @@ function talentFiltersAreEqual(
     prev.customFilterFields === next.customFilterFields &&
     prev.lists === next.lists &&
     prev.savedView === next.savedView &&
-    prev.linkJob === next.linkJob
+    prev.linkJob === next.linkJob &&
+    prev.distanceSort === next.distanceSort
   );
 }
 
@@ -202,6 +211,7 @@ export const TalentFilters = memo(function TalentFilters({
   lists,
   savedView,
   linkJob,
+  distanceSort = false,
 }: TalentFiltersProps) {
   const routeNavigate = useNavigate();
   // SAFETY: Only search-param updates on the current route — `/talent` or a
@@ -217,6 +227,7 @@ export const TalentFilters = memo(function TalentFilters({
   const facets = facetsFromSearch(search, customFilterFields);
   const activeCount = facetCount(facets);
   const hasCustomFields = customFilterFields.length > 0;
+  const sortValues = distanceSort ? DISTANCE_SORT_VALUES : SORT_VALUES;
 
   const commit = (
     patch: UrlSearchInput,
@@ -227,6 +238,8 @@ export const TalentFilters = memo(function TalentFilters({
         const next = { ...previous, ...patch, page: undefined };
         const parsed = parseTalentSearch(
           customFields ? withCustomFieldFilters(next, customFields) : next,
+          // A talent location page's place is in its path, not `next`.
+          { placeInPath: Boolean(search.place) },
         );
         publishTalentSearchEdit(parsed);
         return parsed;
@@ -408,13 +421,12 @@ export const TalentFilters = memo(function TalentFilters({
         {linkJob}
         <Select
           items={Object.fromEntries(
-            SORT_VALUES.map((item) => [item, sortLabel(item)]),
+            sortValues.map((item) => [item, sortLabel(item)]),
           )}
           value={search.sort ?? DEFAULT_SORT}
           itemToStringLabel={sortLabel}
           onValueChange={(sort) => {
-            const next =
-              sort === 'relevance' || sort === 'newest' ? sort : undefined;
+            const next = sort && sortValues.includes(sort) ? sort : undefined;
             if (
               next === (search.sort ?? DEFAULT_SORT) ||
               (next === DEFAULT_SORT && !search.sort)
@@ -431,7 +443,7 @@ export const TalentFilters = memo(function TalentFilters({
           </SelectTrigger>
           <SelectContent align="start">
             <SelectGroup>
-              {SORT_VALUES.map((item) => (
+              {sortValues.map((item) => (
                 <SelectItem key={item} value={item}>
                   {sortLabel(item)}
                 </SelectItem>

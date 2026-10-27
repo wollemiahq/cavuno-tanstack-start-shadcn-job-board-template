@@ -9,7 +9,10 @@
  * render from `JobCardVM` alone and import nothing from `@cavuno/board*` —
  * so restructuring a card is pure markup over this stable contract.
  */
-import { formatPublishedRelativeDate } from '@cavuno/board/format';
+import {
+  formatPublishedRelativeDate,
+  type DistanceUnit,
+} from '@cavuno/board/format';
 import {
   jobDetailPath,
   jobsCategoryPath,
@@ -22,6 +25,7 @@ import { isLocale } from '../paraglide/runtime';
 import { resolveJobForm, type JobFormSource } from '@/board/job-form';
 import { jobCardCopy } from '@/copy-groups/job-card';
 import { cardSummary } from '@/lib/derive-summary';
+import { distanceAwayLabel } from '@/lib/distance-away';
 import { enumLabel } from '@/lib/enum-labels';
 import {
   cardLocationLabel,
@@ -68,6 +72,8 @@ export interface JobCardVM {
   publishedAt: string | null;
   /** Physical/applicant geography followed by the workplace type. */
   locationLabel: string;
+  /** "12 km away" from the searched place, or `null` without one. */
+  distanceLabel: string | null;
   /** Honest one-line teaser from the API card `summary` (or derived), or `null`. */
   summary: string | null;
   isFeatured: boolean;
@@ -82,6 +88,8 @@ export function toJobCardVM(
   job: PublicJobCard,
   language: string,
   jobForm?: JobFormSource | null,
+  /** The searched place's unit (`placeDistanceUnit`); omit for no distance. */
+  distanceUnit?: DistanceUnit | null,
 ): JobCardVM {
   const company = job.company;
 
@@ -155,6 +163,7 @@ export function toJobCardVM(
     salaryTimeframe: job.salaryTimeframe ?? null,
     publishedAt: job.publishedAt ?? null,
     locationLabel,
+    distanceLabel: distanceAwayLabel(job.distanceKm, distanceUnit, language),
     // Platform card teaser only — never re-derive from description HTML.
     summary: cardSummary(job),
     isFeatured: job.isFeatured,

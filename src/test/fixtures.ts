@@ -30,6 +30,7 @@ export function makeJobCardVM(overrides: Partial<JobCardVM> = {}): JobCardVM {
     salaryTimeframe: null,
     publishedAt: null,
     locationLabel: 'place line',
+    distanceLabel: null,
     summary: 'Own the deploy platform end to end.',
     isFeatured: false,
     featuredLabel: 'Featured',

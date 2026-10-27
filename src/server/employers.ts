@@ -43,7 +43,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
-import { listingRadiusKm } from './listing-place-cache';
+import { listingRadiusKm, placeListingSort } from './listing-place-cache';
 import { withCatalogFeatures } from './post-plans';
 
 import {
@@ -854,21 +854,22 @@ export const listSavedPeople = createServerFn({ method: 'GET' })
     gatedRead(context, async (): Promise<SavedPeoplePage> => {
       const headers = authedHeaders(context);
       const { within, ...query } = data.query;
+      const placeRead = query.place
+        ? getBoard()
+            .taxonomy.places.resolve(query.place, { headers })
+            .catch(() => null)
+        : Promise.resolve(null);
       // The search distance widens a city or locality place like `/talent`.
       const radius = query.place
-        ? await listingRadiusKm(
-            query.place,
-            getBoard()
-              .taxonomy.places.resolve(query.place, { headers })
-              .catch(() => null),
-            within,
-          )
+        ? await listingRadiusKm(query.place, placeRead, within)
         : undefined;
+      const sort = await placeListingSort(query.sort, query.place, placeRead);
       const page = await getBoard().me.companies.talentLists.members.list(
         data.slug,
         data.listId,
         {
           ...query,
+          sort,
           radius,
           stage: data.stage,
           offset: data.offset,
