@@ -62,7 +62,10 @@ export function TalentSearchResult({
             </p>
           ) : null}
           {vm.location ? (
-            <p className="text-muted-foreground mt-2 text-sm">{vm.location}</p>
+            <p className="text-muted-foreground mt-2 text-sm">
+              {vm.location}
+              {vm.distanceLabel ? ` · ${vm.distanceLabel}` : null}
+            </p>
           ) : null}
           {vm.lastActiveLabel ? (
             <p

@@ -111,6 +111,19 @@ describe('JobSearchResult', () => {
     expect(screen.queryByText(vm.featuredLabel)).toBeNull();
   });
 
+  it('shows the distance from the searched place only when there is one', async () => {
+    const { unmount } = renderResult(
+      <JobSearchResult vm={{ ...vm, distanceLabel: 'distance label' }} />,
+    );
+    await screen.findByRole('link', { name: /Product designer/i });
+    expect(screen.getByText('distance label', { exact: false })).toBeVisible();
+    unmount();
+
+    renderResult(<JobSearchResult vm={vm} />);
+    await screen.findByRole('link', { name: /Product designer/i });
+    expect(screen.getByText(vm.locationLabel)).toBeVisible();
+  });
+
   it('keeps a trailing Save control above the card link without navigating', async () => {
     const onSave = vi.fn();
     renderResult(

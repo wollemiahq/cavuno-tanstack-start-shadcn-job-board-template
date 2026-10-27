@@ -107,6 +107,18 @@ export function placeSearchRadius(
 }
 
 /**
+ * The unit a place listing shows distances in, from the place's country, or
+ * `null` for a place without a point: results sort by distance only from a
+ * point, and carry a distance only when there is one.
+ */
+export function placeDistanceUnit(
+  place: { geo?: PlaceRadiusGeo | null } | null,
+): DistanceUnit | null {
+  if (place?.geo?.lat == null || place.geo.lng == null) return null;
+  return distanceUnitForCountry(place.geo.countryCode);
+}
+
+/**
  * The place's own name without its region or country ("Houston", not
  * "Houston, Texas, United States"), for the results sentence. The display
  * name is already in the board's language.

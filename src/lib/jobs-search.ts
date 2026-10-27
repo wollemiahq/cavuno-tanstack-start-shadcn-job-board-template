@@ -43,7 +43,24 @@ export interface JobsSearch extends JobsFilters {
   selectedJob?: string;
 }
 
-export function parseJobsSearch(search: UrlSearchInput): JobsSearch {
+/**
+ * `distance` orders by distance from a place, so a listing without one
+ * drops it (the API rejects it) and keeps the default order.
+ */
+function listingFilters(
+  search: UrlSearchInput,
+  hasLocation: boolean,
+): ListingFilters {
+  const filters = parseListingFilters(search);
+  return filters.sort === 'distance' && !hasLocation
+    ? { ...filters, sort: undefined }
+    : filters;
+}
+
+export function parseJobsSearch(
+  search: UrlSearchInput,
+  { hasLocation = false }: { hasLocation?: boolean } = {},
+): JobsSearch {
   const listingSearch = {
     ...search,
     q: searchQueryString(search.q) ?? searchQueryString(search.query),
@@ -51,7 +68,7 @@ export function parseJobsSearch(search: UrlSearchInput): JobsSearch {
   const selectedJob = searchString(search.selectedJob)?.trim() || undefined;
 
   return {
-    ...parseListingFilters(listingSearch),
+    ...listingFilters(listingSearch, hasLocation),
     customEmploymentType: parseCustomEmploymentType(
       search.customEmploymentType,
     ),
@@ -70,7 +87,8 @@ export function parseJobsIndexSearch(search: UrlSearchInput): JobsIndexSearch {
 /**
  * Location listings also take `within`: a search distance in the place's
  * unit, or `0` for the exact place. Anything else is dropped, so the page
- * uses the default distance.
+ * uses the default distance. Their path names a place, so they keep the
+ * `distance` sort.
  */
 export type LocationJobsSearch = JobsSearch & { within?: number };
 
@@ -78,7 +96,7 @@ export function parseLocationJobsSearch(
   search: UrlSearchInput,
 ): LocationJobsSearch {
   return {
-    ...parseJobsSearch(search),
+    ...parseJobsSearch(search, { hasLocation: true }),
     within: parseSearchRadiusWithin(search.within),
   };
 }

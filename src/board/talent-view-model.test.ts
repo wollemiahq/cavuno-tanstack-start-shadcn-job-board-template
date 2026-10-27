@@ -140,6 +140,7 @@ describe('talent view models', () => {
       avatarName: 'Ada Lovelace',
       headline: 'Computing pioneer',
       location: 'London, United Kingdom',
+      distanceLabel: null,
       jobSearchStatusLabel: 'Open to offers',
       lastActiveLabel: null,
       skills: ['Mathematics', 'Analytical engines'],

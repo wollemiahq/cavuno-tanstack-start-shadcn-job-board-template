@@ -47,12 +47,15 @@ export function JobsFilterControls({
   filters,
   customFilters,
   jobForm,
+  distanceSort = false,
   onChange,
 }: {
   filters: JobsFilters;
   customFilters?: JobsCustomFilters;
   /** The board context: its employment types become the Type options. */
   jobForm?: JobFormSource | null;
+  /** Offer the `distance` sort: the listing is around a place with a point. */
+  distanceSort?: boolean;
   language: string;
   /** `next` carries the `cf.*` URL parameters for the custom-field clauses. */
   onChange: (next: JobsFilters & CustomFieldSearch) => void;
@@ -65,7 +68,10 @@ export function JobsFilterControls({
   const sortItems = [
     { value: 'relevance', label: copy.jobCard.aiRankedLabel },
     { value: 'newest', label: copy.jobCard.sortNewestLabel },
-  ] as const;
+    ...(distanceSort
+      ? [{ value: 'distance', label: copy.jobCard.sortDistanceLabel } as const]
+      : []),
+  ];
 
   return (
     <div data-slot="jobs-filter-bar" className="flex items-center gap-2">

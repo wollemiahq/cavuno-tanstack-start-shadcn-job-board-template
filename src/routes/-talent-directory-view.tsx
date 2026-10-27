@@ -22,6 +22,7 @@ import { TalentSearchPage } from '@/components/board/talent-search-page';
 import { useRootSession } from '@/components/root-session';
 import { candidateSignInHref } from '@/lib/candidate-return-to';
 import type { CustomFilterField } from '@/lib/custom-field-filters';
+import { distanceAwayLabel } from '@/lib/distance-away';
 import { localizePath } from '@/lib/localized-path';
 import { pageSearchValue, type UrlSearchInput } from '@/lib/pagination';
 import type { TalentSearch } from '@/lib/talent-search';
@@ -30,6 +31,7 @@ import { useSelectedTalent } from '@/routes/-use-selected-talent';
 import { startConversation } from '@/server/messaging';
 import type { TalentPlaceRadius } from '@/server/talent-pages';
 import type { TalentDirectoryListEnvelope } from '@cavuno/board';
+import type { DistanceUnit } from '@cavuno/board/format';
 
 const rootApi = getRouteApi('__root__');
 
@@ -47,6 +49,8 @@ export type TalentDirectoryViewData = {
   restricted: boolean;
   customFilterFields: CustomFilterField[];
   placeRadius: TalentPlaceRadius | null;
+  /** The searched place's distance unit; `null` without a point. */
+  distanceUnit: DistanceUnit | null;
 };
 
 export function TalentDirectoryView({
@@ -60,7 +64,14 @@ export function TalentDirectoryView({
   /** The results heading; the directory's own heading when omitted. */
   heading?: string;
 }) {
-  const { seo, page, restricted, customFilterFields, placeRadius } = data;
+  const {
+    seo,
+    page,
+    restricted,
+    customFilterFields,
+    placeRadius,
+    distanceUnit,
+  } = data;
   const { board } = rootApi.useLoaderData();
   const { user, talentAccess } = useRootSession();
   const location = useLocation();
@@ -112,6 +123,8 @@ export function TalentDirectoryView({
       candidates={page.data.map((candidate) =>
         toTalentCardVM(candidate, getTalentSearchLabels(), {
           profileUnlocks,
+          distanceLabel: (km) =>
+            distanceAwayLabel(km, distanceUnit, getLocale()),
         }),
       )}
       q={search.q}
@@ -122,6 +135,7 @@ export function TalentDirectoryView({
       language={getLocale()}
       profileUnlocks={profileUnlocks}
       placeRadius={placeRadius}
+      distanceUnit={distanceUnit}
       onWithinChange={(within) =>
         navigate({
           search: (previous) => ({

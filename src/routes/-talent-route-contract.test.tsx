@@ -153,6 +153,7 @@ beforeEach(() => {
     jsonLd: [],
     customFilterFields: [],
     placeRadius: null,
+    distanceUnit: null,
     place: null,
   });
   getTalentProfilePage.mockReset();
@@ -257,6 +258,7 @@ describe('talent directory route — query and capability contracts', () => {
       jsonLd: [],
       customFilterFields: [],
       placeRadius: null,
+      distanceUnit: null,
       place: null,
     });
 
