@@ -64,7 +64,16 @@ export function companiesIndexLoaderDeps(
   };
 }
 
-type CompanyMarketOption = { slug: string; name: string };
+/**
+ * A market chip: `canonicalSlug` is the board-language page slug the chip
+ * links to, `displayName` its board-language label. The English `slug` stays
+ * the filter key.
+ */
+export type CompanyMarketOption = {
+  slug: string;
+  canonicalSlug: string;
+  displayName: string;
+};
 
 export function includeSelectedCompanyMarket(
   markets: CompanyMarketOption[],
@@ -72,7 +81,11 @@ export function includeSelectedCompanyMarket(
 ) {
   if (
     !selectedMarket ||
-    markets.some((market) => market.slug === selectedMarket.slug)
+    markets.some(
+      (market) =>
+        market.slug === selectedMarket.slug ||
+        market.canonicalSlug === selectedMarket.canonicalSlug,
+    )
   ) {
     return markets;
   }

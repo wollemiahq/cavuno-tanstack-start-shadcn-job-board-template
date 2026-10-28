@@ -582,7 +582,11 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const [salary, company, seo] = await Promise.all([
-        board.companies.salaries(data.companySlug, { headers }),
+        board.companies.salaries(
+          data.companySlug,
+          { locale: getLocale() },
+          { headers },
+        ),
         board.companies.retrieve(data.companySlug, undefined, { headers }),
         seoBase(),
       ]);
