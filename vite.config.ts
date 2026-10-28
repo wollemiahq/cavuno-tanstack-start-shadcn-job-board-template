@@ -6,6 +6,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import { paraglideBoundedFs } from './scripts/paraglide-bounded-fs.mjs';
 import {
   PARAGLIDE_VITE_IS_SERVER,
   paraglideInputsDigest,
@@ -409,7 +410,9 @@ function viteConfig(command: ConfigEnv['command']) {
     ...paraglideCompile,
   };
   const paraglide = paraglideEnabledLocalesOnly(
-    paraglideVitePlugin(paraglideOptions),
+    // Outside `paraglideOptions`: those feed the dev stamp digest, and the
+    // fs does not change what is compiled.
+    paraglideVitePlugin({ ...paraglideOptions, fs: paraglideBoundedFs }),
   );
 
   return defineConfig({
