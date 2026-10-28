@@ -83,7 +83,10 @@ const BUDGETS = {
   // fields) took the shell to 214.4 KiB gzip; main had ~0.1 KiB left.
   // Accepted by the operator on 2026-10-27; rebaselined with the usual
   // ~4 KiB headroom.
-  shell: { raw: 690_000, gzip: 228_900 },
+  // @cavuno/board 4.55.0 (board-language taxonomy names, time zones, remote
+  // labels; #320) took the shell to 673.9 KiB raw against 673.8. Accepted by
+  // the operator on 2026-10-28; raw rebaselined with ~4 KB headroom.
+  shell: { raw: 694_000, gzip: 228_900 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
