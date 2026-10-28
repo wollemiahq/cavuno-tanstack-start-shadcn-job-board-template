@@ -22,6 +22,8 @@ beforeEach(() => {
         object: 'company_market',
         slug: 'industrial-robotics',
         name: 'Industrial Robotics',
+        canonicalSlug: 'industrieroboter',
+        displayName: 'Industrieroboter',
         companyCount: 12,
       },
     ],
@@ -53,7 +55,7 @@ describe('useCompanyMarketSuggestions', () => {
       data: { search: 'indu', limit: 10 },
     });
     expect(result.current.suggestions).toEqual([
-      { slug: 'industrial-robotics', name: 'Industrial Robotics' },
+      { slug: 'industrieroboter', name: 'Industrieroboter' },
     ]);
   });
 

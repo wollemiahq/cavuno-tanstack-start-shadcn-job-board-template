@@ -54,7 +54,11 @@ function MarketPage() {
         page={page}
         pageSize={COMPANIES_PAGE_SIZE}
         markets={markets}
-        market={{ slug: params.market, name: market.displayName }}
+        market={{
+          slug: market.sourceSlug,
+          canonicalSlug: params.market,
+          displayName: market.displayName,
+        }}
         search={search}
         searchUnavailable={searchUnavailable}
       />

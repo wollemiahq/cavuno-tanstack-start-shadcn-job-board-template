@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/empty';
 import { useSearchSelection } from '@/hooks/use-search-selection';
 import { ADS_OFF, type BoardAdsConfig } from '@/lib/board-ads';
+import type { CompanyMarketOption } from '@/lib/companies-search';
 import { entityCount } from '@/lib/entity-count';
 import { clampPage, listingPageHref } from '@/lib/pagination';
 import { resultsShowingLine, type ResultsSpan } from '@/lib/results-showing';
@@ -73,7 +74,7 @@ export function CompanySearchPage({
   breadcrumb?: BreadcrumbData;
   query?: string;
   searchUnavailable?: boolean;
-  markets: Array<{ slug: string; name: string }>;
+  markets: CompanyMarketOption[];
   /** Public company profile fields for the "All filters" sheet; omit for none. */
   customFilters?: CompanyCustomFilters;
   onPageChange: (page: number) => void;
@@ -243,10 +244,12 @@ export function CompanySearchPage({
                             key={market.slug}
                             variant="outline"
                             render={
-                              <Link to={companyMarketPath(market.slug)} />
+                              <Link
+                                to={companyMarketPath(market.canonicalSlug)}
+                              />
                             }
                           >
-                            {market.name}
+                            {market.displayName}
                           </Badge>
                         ))}
                       </div>

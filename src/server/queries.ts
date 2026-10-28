@@ -1052,17 +1052,22 @@ export const getSkillLocationSalary = createServerFn({ method: 'GET' })
   );
 
 // ── Company salary pages ─────────────────────────────────────────────────────
-// The overview takes no locale — the loader localizes `byCategory` by the board
-// language internally; the company slug/name are never localized. The category
-// route passes the request locale (base locale === board language on
-// unprefixed routes — the usage that keeps name + slug consistent).
+// Both the overview and the category route pass the request locale (base
+// locale === board language on unprefixed routes — the usage that keeps name +
+// slug consistent): the overview's top-location place names/slugs and its
+// category names/slugs come back in that language. The company slug/name are
+// never localized.
 
 export const getCompanySalary = createServerFn({ method: 'GET' })
   .validator((input: { companySlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, (h) =>
-      getBoard().companies.salaries(data.companySlug, { headers: h }),
+      getBoard().companies.salaries(
+        data.companySlug,
+        { locale: getLocale() },
+        { headers: h },
+      ),
     ),
   );
 
@@ -1082,9 +1087,11 @@ export const getCompanySalaryPresence = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (h) => {
       try {
-        const salary = await getBoard().companies.salaries(data.companySlug, {
-          headers: h,
-        });
+        const salary = await getBoard().companies.salaries(
+          data.companySlug,
+          { locale: getLocale() },
+          { headers: h },
+        );
         return salary.overallSalary !== null || salary.byCategory.length > 0;
       } catch (error) {
         if (isNotFound(error)) return false;

@@ -67,12 +67,47 @@ describe('includeSelectedCompanyMarket', () => {
   it('keeps a valid selected market available when it falls outside the fetched top markets', () => {
     expect(
       includeSelectedCompanyMarket(
-        [{ slug: 'technology', name: 'Technology' }],
-        { slug: 'niche-market', name: 'Niche market' },
+        [
+          {
+            slug: 'technology',
+            canonicalSlug: 'technology',
+            displayName: 'Technology',
+          },
+        ],
+        {
+          slug: 'niche-market',
+          canonicalSlug: 'niche-market',
+          displayName: 'Niche market',
+        },
       ),
     ).toEqual([
-      { slug: 'niche-market', name: 'Niche market' },
-      { slug: 'technology', name: 'Technology' },
+      {
+        slug: 'niche-market',
+        canonicalSlug: 'niche-market',
+        displayName: 'Niche market',
+      },
+      {
+        slug: 'technology',
+        canonicalSlug: 'technology',
+        displayName: 'Technology',
+      },
     ]);
+  });
+
+  it('does not repeat a translated selected market already in the fetched list', () => {
+    const markets = [
+      {
+        slug: 'technology',
+        canonicalSlug: 'technologie',
+        displayName: 'Technologie',
+      },
+    ];
+    expect(
+      includeSelectedCompanyMarket(markets, {
+        slug: 'technology',
+        canonicalSlug: 'technologie',
+        displayName: 'Technologie',
+      }),
+    ).toBe(markets);
   });
 });
