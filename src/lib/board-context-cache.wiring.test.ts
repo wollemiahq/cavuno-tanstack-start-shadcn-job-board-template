@@ -4,6 +4,7 @@ import {
   BOARD_CONTEXT_FETCH_OPTIONS,
   CONTEXT_TTL_MS,
   OFFER_GATE_TTL_MS,
+  PRODUCTS_GATE_TTL_MS,
 } from './board-context-cache';
 import { applyReadCache } from './read-cache';
 
@@ -38,5 +39,12 @@ describe('board context memo fetch options', () => {
   it('keeps flags on a short window and the offer gate on five minutes', () => {
     expect(CONTEXT_TTL_MS).toBe(30_000);
     expect(OFFER_GATE_TTL_MS).toBe(300_000);
+  });
+
+  it('memoizes the Products link for at most 60 s on top of the API cache', () => {
+    // The memo stacks on GET /products' own shared cache (max-age=60,
+    // stale-while-revalidate=300); a longer memo kept a board that was
+    // empty at first load hiding Products long after a product listed.
+    expect(PRODUCTS_GATE_TTL_MS).toBeLessThanOrEqual(60_000);
   });
 });

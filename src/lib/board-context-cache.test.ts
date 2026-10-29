@@ -23,6 +23,7 @@ const {
   refreshBoardContext,
   readStaleBoardContext,
   readEmployerOfferGate,
+  readProductsGate,
   resetBoardContextCache,
   resetEmployerOfferGateCache,
 } = createBoardContextCache(
@@ -35,6 +36,7 @@ const {
   },
   30_000,
   300_000,
+  60_000,
 );
 
 beforeEach(() => {
@@ -198,6 +200,49 @@ describe('board context memo', () => {
     rejectFresh(new Error('fresh read unavailable'));
     await expect(refresh).rejects.toThrow('fresh read unavailable');
     await expect(readStaleBoardContext()).resolves.toEqual(previous);
+  });
+});
+
+describe('products gate memo', () => {
+  it('shows Products within the short window after a first product is listed', async () => {
+    const load = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+
+    await expect(readProductsGate(load)).resolves.toBe(false);
+    vi.advanceTimersByTime(59_000);
+    await expect(readProductsGate(load)).resolves.toBe(false);
+    expect(load).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(1_000);
+    await expect(readProductsGate(load)).resolves.toBe(true);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not remember a failed read', async () => {
+    const load = vi
+      .fn<() => Promise<boolean>>()
+      .mockRejectedValueOnce(new Error('products down'))
+      .mockResolvedValueOnce(true);
+
+    await expect(readProductsGate(load)).rejects.toThrow('products down');
+    await expect(readProductsGate(load)).resolves.toBe(true);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('is not held by the longer plan gate window', async () => {
+    const plans = vi.fn().mockResolvedValue({ hasEmployerOfferPage: true });
+    const products = vi.fn<() => Promise<boolean>>().mockResolvedValue(true);
+
+    await readEmployerOfferGate(plans);
+    await readProductsGate(products);
+    vi.advanceTimersByTime(61_000);
+    await readEmployerOfferGate(plans);
+    await readProductsGate(products);
+
+    expect(plans).toHaveBeenCalledTimes(1);
+    expect(products).toHaveBeenCalledTimes(2);
   });
 });
 

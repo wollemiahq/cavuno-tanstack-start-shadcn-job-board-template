@@ -2748,5 +2748,242 @@
   "checkout_failedText": "Je betaling is mislukt. Kies een abonnement om het opnieuw te proberen.",
   "checkout_incompleteText": "Het afrekenen is niet voltooid. Ga terug naar de abonnementen en probeer het opnieuw.",
   "checkout_pendingTitle": "Toegang nog niet bevestigd",
-  "checkout_pendingText": "De toegang is nog niet bevestigd. Controleer het zo opnieuw."
+  "checkout_pendingText": "De toegang is nog niet bevestigd. Controleer het zo opnieuw.",
+  "nav_products": "Producten",
+  "accountShell_purchasesNav": "Aankopen",
+  "boardError_productSoldOutText": "Dit product is uitverkocht.",
+  "boardError_productEmailInvalidText": "Vul een geldig e-mailadres in.",
+  "boardError_productEmailBlockedText": "Dit e-mailadres kan niet worden gebruikt voor deze aankoop.",
+  "boardError_productAmountBelowMinimumText": "Het bedrag is lager dan de minimumprijs.",
+  "boardError_productAmountInvalidText": "Vul een bedrag in, bijvoorbeeld 12 of 12,50.",
+  "boardError_productAnswersInvalidText": "Controleer je antwoorden op de vragen hierboven.",
+  "boardError_purchaseEmailMismatchText": "Dit is niet het e-mailadres waarmee is gekocht.",
+  "boardError_purchaseFilePreparingText": "Je exemplaar wordt nog voorbereid. We mailen je zodra het klaar is.",
+  "boardError_purchaseDownloadLimitText": "Je hebt geen downloads meer voor dit bestand. Neem contact op met het platform om ze te resetten.",
+  "boardError_purchaseReviewInvalidText": "Kies tussen 1 en 5 sterren.",
+  "boardError_purchaseDownloadAllText": "Deze bestanden kunnen niet samen worden gedownload. Download elk bestand los.",
+  "boardError_purchaseRefundedText": "Deze aankoop is terugbetaald.",
+  "products_metaTitle": "Producten",
+  "products_metaDescription": "Gidsen, sjablonen en rapporten van {boardName}.",
+  "productSearchBar_placeholderText": "Producten zoeken…",
+  "products_priceFilterLabel": "Prijs",
+  "products_anyPriceLabel": "Elke prijs",
+  "products_freePriceLabel": "Gratis",
+  "products_paidPriceLabel": "Betaald",
+  "products_sortLabel": "Sorteren",
+  "products_sortFeaturedLabel": "Uitgelicht",
+  "products_sortNewestLabel": "Nieuwste",
+  "products_sortRatingLabel": "Best beoordeeld",
+  "products_sortPriceLabel": "Prijs: laag naar hoog",
+  "products_resultsRegionLabel": "Producten",
+  "products_emptyText": "Nog geen producten. Kom snel terug.",
+  "products_noMatchText": "Geen producten gevonden. Probeer andere woorden of wis de filters.",
+  "product_metaDescription": "{productName} van {boardName}.",
+  "product_priceFree": "Gratis",
+  "product_pricePayWhatYouWant": "{minimum}+",
+  "product_payWhatYouWantHint": "Betaal wat je wilt",
+  "product_ratingShort": "{rating} ({count})",
+  "product_soldOutLabel": "Uitverkocht",
+  "product_detailYes": "Ja",
+  "product_detailNo": "Nee",
+  "product_youBoughtThisText": "Je hebt dit gekocht",
+  "product_openDownloadPageAction": "Downloadpagina openen",
+  "product_buyAgainAction": "Opnieuw kopen",
+  "product_linkTypeLabel": "Link",
+  "product_buyAction": "Nu kopen",
+  "product_getFreeAction": "Gratis downloaden",
+  "product_alreadyBoughtText": "Al gekocht?",
+  "product_getDownloadLinkAction": "Vraag je downloadlink op",
+  "product_shareAction": "Delen",
+  "product_youGetHeading": "Je krijgt",
+  "product_pagesLabel": "Pagina's",
+  "product_filesLabel": "Bestanden",
+  "product_refundPolicyLabel": "Terugbetalingsbeleid:",
+  "product_purchaseRegionLabel": "Dit product kopen",
+  "product_galleryLabel": "Productafbeeldingen",
+  "product_showImageLabel": "Afbeelding {index} tonen",
+  "product_reviewsHeading": "Beoordelingen",
+  "product_noReviewsText": "Nog geen beoordelingen.",
+  "product_verifiedBuyerLabel": "Geverifieerde koper",
+  "product_anonymousBuyerLabel": "Een koper",
+  "product_operatorReplyLabel": "Reactie van het platform:",
+  "product_showAllReviewsAction": "Meer beoordelingen tonen",
+  "product_freeStepTitle": "Waar mogen we het naartoe sturen?",
+  "product_paidStepTitle": "Voordat je betaalt",
+  "product_emailLabel": "E-mail",
+  "product_emailHelpText": "Je downloadlink komt hier naartoe.",
+  "product_emailSuggestionText": "Bedoelde je {email}?",
+  "product_emailSuggestionAction": "Gebruiken",
+  "product_amountLabel": "Jouw prijs",
+  "product_amountHelpText": "Betaal {minimum} of meer.",
+  "product_amountBelowMinimumText": "Het minimum is {minimum}.",
+  "product_choosePlaceholder": "Kies…",
+  "product_answerRequiredText": "Beantwoord deze vraag om verder te gaan.",
+  "product_checkboxRequiredText": "Vink dit vakje aan om verder te gaan.",
+  "product_requiredLabel": "(verplicht)",
+  "product_jobAlertOptInLabel": "Mail me ook nieuwe vacatures van dit platform",
+  "product_sendFilesAction": "Stuur me de bestanden",
+  "product_continueToPaymentAction": "Verder naar betalen",
+  "product_cancelStepAction": "Terug",
+  "product_completePurchaseTitle": "Rond je aankoop af",
+  "product_backToProductAction": "Terug naar product",
+  "product_confirmingTitle": "Je betaling wordt bevestigd…",
+  "product_confirmingText": "Dit duurt meestal een paar seconden. Daarna openen je bestanden.",
+  "product_paymentPendingText": "Je betaling is nog niet binnen. We mailen je downloadlink zodra dat zo is.",
+  "product_accessRemovedText": "De toegang tot deze aankoop is ingetrokken. Neem contact op met het platform als dit niet klopt.",
+  "product_notFoundTitle": "Product niet gevonden",
+  "product_notFoundText": "Dit product is niet meer beschikbaar.",
+  "product_previousImageLabel": "Vorige afbeelding",
+  "product_nextImageLabel": "Volgende afbeelding",
+  "product_imagePositionText": "Afbeelding {index} van {count}",
+  "product_ratingDistributionLabel": "Verdeling van de beoordelingen",
+  "purchaseResend_title": "Vraag je downloadlink op",
+  "purchaseResend_description": "Vul het e-mailadres in waarmee je hebt gekocht, dan sturen we de link opnieuw.",
+  "purchaseResend_submitAction": "Mail me de link",
+  "purchaseResend_sentText": "Als met dit e-mailadres is gekocht, is de link onderweg. Kijk in je inbox.",
+  "purchase_metaTitle": "Je download",
+  "purchase_completeLabel": "Aankoop voltooid",
+  "purchase_claimedLabel": "Het is van jou",
+  "purchase_emailedText": "We hebben deze pagina naar {email} gemaild, zodat je altijd terug kunt komen.",
+  "purchase_filesHeading": "Je bestanden",
+  "purchase_downloadAllAction": "Alles downloaden",
+  "purchase_downloadAction": "Downloaden",
+  "purchase_openAction": "Openen",
+  "purchase_opensInText": "Opent op {host}",
+  "purchase_stampedLabel": "Voor jou gemarkeerd",
+  "purchase_preparingLabel": "Je exemplaar wordt voorbereid…",
+  "purchase_preparingNote": "Je pdf krijgt je e-mailadres als stempel. We mailen je zodra hij klaar is, meestal binnen een minuut.",
+  "purchase_limitReachedLabel": "Geen downloads meer",
+  "purchase_orderRegionLabel": "Je bestelling",
+  "purchase_orderHeading": "Bestelling",
+  "purchase_paidOnLabel": "Betaald op {date}",
+  "purchase_claimedOnLabel": "Ontvangen op {date}",
+  "purchase_viewReceiptAction": "Bon bekijken",
+  "purchase_resendAction": "Mail me deze link opnieuw",
+  "purchase_resentText": "Verstuurd naar {email}.",
+  "purchase_createAccountText": "Maak een account aan om al je aankopen op één plek te bewaren.",
+  "purchase_createAccountAction": "Account aanmaken",
+  "purchase_libraryAction": "Al je aankopen",
+  "purchase_rateHeading": "Beoordeel dit product",
+  "purchase_yourReviewHeading": "Jouw beoordeling",
+  "purchase_ratingLabel": "Beoordeling",
+  "purchase_reviewCommentLabel": "Beoordeling",
+  "purchase_reviewCommentPlaceholder": "Wat vond je ervan? (optioneel)",
+  "purchase_reviewNameLabel": "Naam bij je beoordeling",
+  "purchase_reviewNameHelp": "Optioneel. Laat leeg om zonder naam te plaatsen.",
+  "purchase_postReviewAction": "Beoordeling plaatsen",
+  "purchase_updateReviewAction": "Beoordeling bijwerken",
+  "purchase_reviewSavedText": "Bedankt, je beoordeling is opgeslagen.",
+  "purchase_reviewHiddenText": "Het platform heeft deze beoordeling verborgen op de productpagina.",
+  "purchase_reviewStarsRequiredText": "Kies een aantal sterren.",
+  "purchaseConfirm_title": "Bevestig je e-mailadres",
+  "purchaseConfirm_description": "Deze downloadlink is al eerder geopend. Vul het e-mailadres in waarmee is gekocht om verder te gaan.",
+  "purchaseConfirm_submitAction": "Doorgaan",
+  "purchaseUnavailable_title": "Deze download is niet beschikbaar",
+  "purchaseUnavailable_notFoundText": "We konden deze aankoop niet vinden. Controleer de link in je e-mail.",
+  "purchaseUnavailable_refundedText": "Deze aankoop is terugbetaald, dus de bestanden zijn niet meer beschikbaar.",
+  "purchaseUnavailable_accessRemovedText": "De toegang tot deze aankoop is ingetrokken. Neem contact op met het platform als dit niet klopt.",
+  "purchaseUnavailable_awaitingPaymentText": "Deze betaling is nog niet binnen. We mailen je link zodra dat zo is.",
+  "purchaseUnavailable_unavailableText": "Dit product kan nu niet worden gedownload. Probeer het later opnieuw of neem contact op met het platform.",
+  "purchaseUnavailable_browseAction": "Producten bekijken",
+  "mePurchases_title": "Aankopen",
+  "mePurchases_subheading": "Alles wat je op dit platform hebt gekocht of ontvangen.",
+  "mePurchases_emptyText": "Producten die je met dit e-mailadres koopt of ontvangt, verschijnen hier.",
+  "mePurchases_browseAction": "Producten bekijken",
+  "mePurchases_openAction": "Openen",
+  "mePurchases_paidLine": "Gekocht op {date} · {amount}",
+  "mePurchases_freeLine": "Gratis · {date}",
+  "mePurchases_unavailableLine": "{date} · niet meer beschikbaar",
+  "products_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} product",
+        "countPlural=*": "{count} producten"
+      }
+    }
+  ],
+  "product_linkCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} link",
+        "countPlural=*": "{count} links"
+      }
+    }
+  ],
+  "product_ratingAriaLabel": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Beoordeeld met {rating} van 5 op basis van {count} beoordeling",
+        "countPlural=*": "Beoordeeld met {rating} van 5 op basis van {count} beoordelingen"
+      }
+    }
+  ],
+  "product_starsAriaLabel": [
+    {
+      "declarations": ["input stars", "local starsPlural = stars: plural"],
+      "selectors": ["starsPlural"],
+      "match": {
+        "starsPlural=one": "{stars} ster",
+        "starsPlural=*": "{stars} sterren"
+      }
+    }
+  ],
+  "product_ratingCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} beoordeling",
+        "countPlural=*": "{count} beoordelingen"
+      }
+    }
+  ],
+  "product_ratingLong": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{rating} ({count} beoordeling)",
+        "countPlural=*": "{rating} ({count} beoordelingen)"
+      }
+    }
+  ],
+  "product_salesNoun": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "keer verkocht",
+        "countPlural=*": "keer verkocht"
+      }
+    }
+  ],
+  "purchase_downloadsLeft": [
+    {
+      "declarations": [
+        "input left",
+        "input cap",
+        "local capPlural = cap: plural"
+      ],
+      "selectors": ["capPlural"],
+      "match": {
+        "capPlural=one": "nog {left} van {cap} download",
+        "capPlural=*": "nog {left} van {cap} downloads"
+      }
+    }
+  ]
 }

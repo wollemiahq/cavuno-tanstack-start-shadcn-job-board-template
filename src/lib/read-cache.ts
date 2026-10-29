@@ -35,6 +35,8 @@
  * The one explicit TTL lives here. Do not scatter `cacheTtl` literals across
  * the server functions.
  */
+import { PURCHASE_CONFIRMATION_HEADER } from '@cavuno/board';
+
 import type { BoardRequest } from '@cavuno/board';
 
 /** Read-cache TTLs, in seconds — the single source of truth. */
@@ -95,7 +97,11 @@ export function applyReadCache(req: BoardRequest): BoardRequest {
   const viewerSpecific =
     headers.has('authorization') ||
     headers.has('x-board-access') ||
-    headers.has('x-cavuno-board-capabilities');
+    headers.has('x-cavuno-board-capabilities') ||
+    // A purchase's email confirmation proves the buyer; never share it.
+    headers.has(PURCHASE_CONFIRMATION_HEADER) ||
+    // Download pages are keyed by the buyer's token, not public content.
+    new URL(req.url).pathname.includes('/purchases/');
 
   // Feature-gate/kill-switch reads may explicitly require the latest value.
   // Never layer Cloudflare's shared cache back onto those requests.

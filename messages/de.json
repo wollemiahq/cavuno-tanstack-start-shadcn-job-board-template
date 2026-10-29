@@ -2748,5 +2748,242 @@
   "checkout_failedText": "Deine Zahlung ist fehlgeschlagen. Wähle einen Tarif, um es erneut zu versuchen.",
   "checkout_incompleteText": "Der Kauf ist nicht abgeschlossen. Kehre zur Tarifauswahl zurück und versuche es erneut.",
   "checkout_pendingTitle": "Zugang noch nicht bestätigt",
-  "checkout_pendingText": "Der Zugang wurde noch nicht bestätigt. Prüfe es in Kürze erneut."
+  "checkout_pendingText": "Der Zugang wurde noch nicht bestätigt. Prüfe es in Kürze erneut.",
+  "nav_products": "Produkte",
+  "accountShell_purchasesNav": "Käufe",
+  "boardError_productSoldOutText": "Dieses Produkt ist ausverkauft.",
+  "boardError_productEmailInvalidText": "Gib eine gültige E-Mail-Adresse ein.",
+  "boardError_productEmailBlockedText": "Diese E-Mail-Adresse kann für diesen Kauf nicht verwendet werden.",
+  "boardError_productAmountBelowMinimumText": "Der Betrag liegt unter dem Mindestpreis.",
+  "boardError_productAmountInvalidText": "Gib einen Betrag ein, zum Beispiel 12 oder 12,50.",
+  "boardError_productAnswersInvalidText": "Prüfe deine Antworten auf die Fragen oben.",
+  "boardError_purchaseEmailMismatchText": "Das ist nicht die E-Mail-Adresse, mit der gekauft wurde.",
+  "boardError_purchaseFilePreparingText": "Dein Exemplar wird noch vorbereitet. Wir schicken dir eine E-Mail, sobald es fertig ist.",
+  "boardError_purchaseDownloadLimitText": "Für diese Datei sind keine Downloads mehr übrig. Kontaktiere die Plattform, um sie zurückzusetzen.",
+  "boardError_purchaseReviewInvalidText": "Wähle zwischen 1 und 5 Sternen.",
+  "boardError_purchaseDownloadAllText": "Diese Dateien können nicht zusammen heruntergeladen werden. Lade jede Datei einzeln herunter.",
+  "boardError_purchaseRefundedText": "Dieser Kauf wurde erstattet.",
+  "products_metaTitle": "Produkte",
+  "products_metaDescription": "Leitfäden, Vorlagen und Berichte von {boardName}.",
+  "productSearchBar_placeholderText": "Produkte suchen…",
+  "products_priceFilterLabel": "Preis",
+  "products_anyPriceLabel": "Jeder Preis",
+  "products_freePriceLabel": "Kostenlos",
+  "products_paidPriceLabel": "Kostenpflichtig",
+  "products_sortLabel": "Sortieren",
+  "products_sortFeaturedLabel": "Empfohlen",
+  "products_sortNewestLabel": "Neueste",
+  "products_sortRatingLabel": "Am besten bewertet",
+  "products_sortPriceLabel": "Preis: aufsteigend",
+  "products_resultsRegionLabel": "Produkte",
+  "products_emptyText": "Noch keine Produkte. Schau bald wieder vorbei.",
+  "products_noMatchText": "Keine passenden Produkte. Versuche andere Wörter oder setze die Filter zurück.",
+  "product_metaDescription": "{productName} von {boardName}.",
+  "product_priceFree": "Kostenlos",
+  "product_pricePayWhatYouWant": "{minimum}+",
+  "product_payWhatYouWantHint": "Zahl, was du willst",
+  "product_ratingShort": "{rating} ({count})",
+  "product_soldOutLabel": "Ausverkauft",
+  "product_detailYes": "Ja",
+  "product_detailNo": "Nein",
+  "product_youBoughtThisText": "Du hast das gekauft",
+  "product_openDownloadPageAction": "Download-Seite öffnen",
+  "product_buyAgainAction": "Erneut kaufen",
+  "product_linkTypeLabel": "Link",
+  "product_buyAction": "Jetzt kaufen",
+  "product_getFreeAction": "Kostenlos holen",
+  "product_alreadyBoughtText": "Schon gekauft?",
+  "product_getDownloadLinkAction": "Download-Link anfordern",
+  "product_shareAction": "Teilen",
+  "product_youGetHeading": "Du bekommst",
+  "product_pagesLabel": "Seiten",
+  "product_filesLabel": "Dateien",
+  "product_refundPolicyLabel": "Erstattungsrichtlinie:",
+  "product_purchaseRegionLabel": "Dieses Produkt kaufen",
+  "product_galleryLabel": "Produktbilder",
+  "product_showImageLabel": "Bild {index} anzeigen",
+  "product_reviewsHeading": "Bewertungen",
+  "product_noReviewsText": "Noch keine Bewertungen.",
+  "product_verifiedBuyerLabel": "Verifizierter Käufer",
+  "product_anonymousBuyerLabel": "Ein Käufer",
+  "product_operatorReplyLabel": "Antwort der Plattform:",
+  "product_showAllReviewsAction": "Weitere Bewertungen anzeigen",
+  "product_freeStepTitle": "Wohin sollen wir es schicken?",
+  "product_paidStepTitle": "Bevor du bezahlst",
+  "product_emailLabel": "E-Mail",
+  "product_emailHelpText": "Dein Download-Link geht an diese Adresse.",
+  "product_emailSuggestionText": "Meintest du {email}?",
+  "product_emailSuggestionAction": "Übernehmen",
+  "product_amountLabel": "Dein Preis",
+  "product_amountHelpText": "Zahle {minimum} oder mehr.",
+  "product_amountBelowMinimumText": "Der Mindestbetrag ist {minimum}.",
+  "product_choosePlaceholder": "Auswählen…",
+  "product_answerRequiredText": "Beantworte diese Frage, um fortzufahren.",
+  "product_checkboxRequiredText": "Setze dieses Häkchen, um fortzufahren.",
+  "product_requiredLabel": "(erforderlich)",
+  "product_jobAlertOptInLabel": "Schick mir auch neue Jobs von dieser Plattform",
+  "product_sendFilesAction": "Schick mir die Dateien",
+  "product_continueToPaymentAction": "Weiter zur Zahlung",
+  "product_cancelStepAction": "Zurück",
+  "product_completePurchaseTitle": "Kauf abschließen",
+  "product_backToProductAction": "Zurück zum Produkt",
+  "product_confirmingTitle": "Deine Zahlung wird bestätigt…",
+  "product_confirmingText": "Das dauert meist nur ein paar Sekunden. Danach öffnen sich deine Dateien.",
+  "product_paymentPendingText": "Deine Zahlung ist noch nicht eingegangen. Wir schicken dir den Download-Link, sobald sie da ist.",
+  "product_accessRemovedText": "Der Zugang zu diesem Kauf wurde entfernt. Kontaktiere die Plattform, wenn das ein Fehler ist.",
+  "product_notFoundTitle": "Produkt nicht gefunden",
+  "product_notFoundText": "Dieses Produkt ist nicht mehr verfügbar.",
+  "product_previousImageLabel": "Vorheriges Bild",
+  "product_nextImageLabel": "Nächstes Bild",
+  "product_imagePositionText": "Bild {index} von {count}",
+  "product_ratingDistributionLabel": "Verteilung der Bewertungen",
+  "purchaseResend_title": "Download-Link anfordern",
+  "purchaseResend_description": "Gib die E-Mail-Adresse ein, mit der du gekauft hast, und wir schicken den Link erneut.",
+  "purchaseResend_submitAction": "Link per E-Mail senden",
+  "purchaseResend_sentText": "Wenn mit dieser Adresse gekauft wurde, ist der Link unterwegs. Sieh in deinem Postfach nach.",
+  "purchase_metaTitle": "Dein Download",
+  "purchase_completeLabel": "Kauf abgeschlossen",
+  "purchase_claimedLabel": "Es gehört dir",
+  "purchase_emailedText": "Wir haben diese Seite an {email} geschickt, damit du jederzeit zurückkommen kannst.",
+  "purchase_filesHeading": "Deine Dateien",
+  "purchase_downloadAllAction": "Alle herunterladen",
+  "purchase_downloadAction": "Herunterladen",
+  "purchase_openAction": "Öffnen",
+  "purchase_opensInText": "Öffnet auf {host}",
+  "purchase_stampedLabel": "Für dich gestempelt",
+  "purchase_preparingLabel": "Dein Exemplar wird vorbereitet…",
+  "purchase_preparingNote": "Dein PDF wird mit deiner E-Mail-Adresse gestempelt. Wir schicken dir eine E-Mail, sobald es fertig ist, meist innerhalb einer Minute.",
+  "purchase_limitReachedLabel": "Keine Downloads mehr",
+  "purchase_orderRegionLabel": "Deine Bestellung",
+  "purchase_orderHeading": "Bestellung",
+  "purchase_paidOnLabel": "Bezahlt am {date}",
+  "purchase_claimedOnLabel": "Erhalten am {date}",
+  "purchase_viewReceiptAction": "Beleg ansehen",
+  "purchase_resendAction": "Diesen Link erneut senden",
+  "purchase_resentText": "An {email} gesendet.",
+  "purchase_createAccountText": "Erstelle ein Konto, um alle deine Käufe an einem Ort zu haben.",
+  "purchase_createAccountAction": "Konto erstellen",
+  "purchase_libraryAction": "Alle deine Käufe",
+  "purchase_rateHeading": "Bewerte dieses Produkt",
+  "purchase_yourReviewHeading": "Deine Bewertung",
+  "purchase_ratingLabel": "Bewertung",
+  "purchase_reviewCommentLabel": "Bewertung",
+  "purchase_reviewCommentPlaceholder": "Wie fandest du es? (optional)",
+  "purchase_reviewNameLabel": "Name bei deiner Bewertung",
+  "purchase_reviewNameHelp": "Optional. Leer lassen, um ohne Namen zu posten.",
+  "purchase_postReviewAction": "Bewertung posten",
+  "purchase_updateReviewAction": "Bewertung aktualisieren",
+  "purchase_reviewSavedText": "Danke, deine Bewertung ist gespeichert.",
+  "purchase_reviewHiddenText": "Die Plattform hat diese Bewertung auf der Produktseite ausgeblendet.",
+  "purchase_reviewStarsRequiredText": "Wähle eine Anzahl Sterne.",
+  "purchaseConfirm_title": "Bestätige deine E-Mail-Adresse",
+  "purchaseConfirm_description": "Dieser Download-Link wurde schon einmal geöffnet. Gib die E-Mail-Adresse ein, mit der gekauft wurde, um fortzufahren.",
+  "purchaseConfirm_submitAction": "Weiter",
+  "purchaseUnavailable_title": "Dieser Download ist nicht verfügbar",
+  "purchaseUnavailable_notFoundText": "Wir konnten diesen Kauf nicht finden. Prüfe den Link in deiner E-Mail.",
+  "purchaseUnavailable_refundedText": "Dieser Kauf wurde erstattet, daher sind die Dateien nicht mehr verfügbar.",
+  "purchaseUnavailable_accessRemovedText": "Der Zugang zu diesem Kauf wurde entfernt. Kontaktiere die Plattform, wenn das ein Fehler ist.",
+  "purchaseUnavailable_awaitingPaymentText": "Diese Zahlung ist noch nicht eingegangen. Wir schicken dir den Link, sobald sie da ist.",
+  "purchaseUnavailable_unavailableText": "Dieses Produkt kann gerade nicht heruntergeladen werden. Versuche es später erneut oder kontaktiere die Plattform.",
+  "purchaseUnavailable_browseAction": "Produkte ansehen",
+  "mePurchases_title": "Käufe",
+  "mePurchases_subheading": "Alles, was du auf dieser Plattform gekauft oder erhalten hast.",
+  "mePurchases_emptyText": "Produkte, die du mit dieser E-Mail-Adresse kaufst oder erhältst, erscheinen hier.",
+  "mePurchases_browseAction": "Produkte ansehen",
+  "mePurchases_openAction": "Öffnen",
+  "mePurchases_paidLine": "Gekauft am {date} · {amount}",
+  "mePurchases_freeLine": "Kostenlos · {date}",
+  "mePurchases_unavailableLine": "{date} · nicht mehr verfügbar",
+  "products_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} Produkt",
+        "countPlural=*": "{count} Produkte"
+      }
+    }
+  ],
+  "product_linkCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} Link",
+        "countPlural=*": "{count} Links"
+      }
+    }
+  ],
+  "product_ratingAriaLabel": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mit {rating} von 5 bewertet, aus {count} Bewertung",
+        "countPlural=*": "Mit {rating} von 5 bewertet, aus {count} Bewertungen"
+      }
+    }
+  ],
+  "product_starsAriaLabel": [
+    {
+      "declarations": ["input stars", "local starsPlural = stars: plural"],
+      "selectors": ["starsPlural"],
+      "match": {
+        "starsPlural=one": "{stars} Stern",
+        "starsPlural=*": "{stars} Sterne"
+      }
+    }
+  ],
+  "product_ratingCount": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} Bewertung",
+        "countPlural=*": "{count} Bewertungen"
+      }
+    }
+  ],
+  "product_ratingLong": [
+    {
+      "declarations": [
+        "input rating",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{rating} ({count} Bewertung)",
+        "countPlural=*": "{rating} ({count} Bewertungen)"
+      }
+    }
+  ],
+  "product_salesNoun": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Verkauf",
+        "countPlural=*": "Verkäufe"
+      }
+    }
+  ],
+  "purchase_downloadsLeft": [
+    {
+      "declarations": [
+        "input left",
+        "input cap",
+        "local capPlural = cap: plural"
+      ],
+      "selectors": ["capPlural"],
+      "match": {
+        "capPlural=one": "noch {left} von {cap} Download",
+        "capPlural=*": "noch {left} von {cap} Downloads"
+      }
+    }
+  ]
 }

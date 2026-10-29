@@ -35,6 +35,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   resolveHeaderSearchState,
+  type HeaderSearchScope,
   type HeaderSearchSubmission,
 } from '../lib/header-search';
 import { resolveSubscriptionEntryVisible } from '../lib/subscription-entry';
@@ -105,6 +106,7 @@ function renderHeader({
   user = null,
   hasAccessGrant = false,
   hasMembershipPage = false,
+  hasProductsPage = false,
   logoUrl = null,
   locationSuggestions = [],
   keywordSuggestions = [],
@@ -112,6 +114,9 @@ function renderHeader({
   resolvedKeywordLabel,
   jobRecommendationsEnabled = true,
   routePlaceNames,
+  routeSearchScope,
+  routeActionsRef,
+  routeActionsFilled,
 }: {
   initialEntry?: string;
   features?: HeaderFeatures;
@@ -119,6 +124,7 @@ function renderHeader({
   user?: React.ComponentProps<typeof Header>['user'];
   hasAccessGrant?: boolean;
   hasMembershipPage?: boolean;
+  hasProductsPage?: boolean;
   logoUrl?: string | null;
   locationSuggestions?: Array<{
     id: string;
@@ -142,6 +148,12 @@ function renderHeader({
    * loaders would (a slug missing here is a place the route cannot name).
    */
   routePlaceNames?: Record<string, string>;
+  /** The scope the route declares, as a route's `headerSearchScope` does. */
+  routeSearchScope?: HeaderSearchScope;
+  /** Set as __root.tsx does for a route with `ownsHeaderActions`. */
+  routeActionsRef?: (element: HTMLDivElement | null) => void;
+  /** The page has filled that slot. */
+  routeActionsFilled?: boolean;
 } = {}) {
   const initialUrl = new URL(initialEntry, 'https://board.example');
   const initialSearch = resolveHeaderSearchState(
@@ -149,6 +161,8 @@ function renderHeader({
     Object.fromEntries(initialUrl.searchParams),
     initialUrl.pathname.startsWith('/jobs/locations/') ? 'Sydney' : undefined,
     resolvedKeywordLabel,
+    'jobs',
+    routeSearchScope,
   );
   // Mounted once in the root route, as __root.tsx does, so navigation keeps
   // the same Header instance instead of remounting it with each page.
@@ -197,6 +211,8 @@ function renderHeader({
         });
       } else if (scope === 'blog') {
         void navigate({ to: '/blog', search: { q: query } });
+      } else if (scope === 'products') {
+        void navigate({ to: '/products', search: { q: query } });
       } else if (location && term?.type === 'skill') {
         void navigate({
           to: '/jobs/locations/$location/skills/$skill',
@@ -240,6 +256,9 @@ function renderHeader({
         signOutAction={signOutMock}
         talentDirectoryVisibility={talentDirectoryVisibility}
         hasMembershipPage={hasMembershipPage}
+        hasProductsPage={hasProductsPage}
+        routeActionsRef={routeActionsRef}
+        routeActionsFilled={routeActionsFilled}
         search={{
           ...routeSearch,
           onSubmit: submitSearch,
@@ -311,6 +330,7 @@ function renderHeader({
       route('/talent'),
       route('/p/$handle'),
       route('/blog'),
+      route('/products'),
       route('/post'),
       route('/auth/sign-in'),
       route('/auth/join'),
@@ -559,6 +579,40 @@ describe('Header — Memberships link', () => {
     expect(
       screen.queryByRole('link', { name: m.nav_memberships() }),
     ).toBeNull();
+  });
+});
+
+describe('Header — Products link', () => {
+  const buyer = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+
+  it('links to products only when the board lists one', async () => {
+    renderHeader({ hasProductsPage: true });
+    expect(
+      await screen.findByRole('link', { name: m.nav_products() }),
+    ).toHaveAttribute('href', '/products');
+    cleanup();
+
+    renderHeader({ hasProductsPage: false });
+    await screen.findByRole('link', { name: navigation.home });
+    expect(screen.queryByRole('link', { name: m.nav_products() })).toBeNull();
+  });
+
+  it('adds Purchases to the account menu on a board with products', async () => {
+    renderHeader({ hasProductsPage: true, user: buyer });
+    fireEvent.click(await findAccountButton());
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.accountShell_purchasesNav(),
+      }),
+    ).toHaveAttribute('href', '/me/purchases');
   });
 });
 
@@ -1036,6 +1090,37 @@ describe('Header — pathname-scoped submit-only search', () => {
     ).toBeNull();
   });
 
+  it('searches products by keyword alone on the product routes', async () => {
+    const router = renderHeader({
+      initialEntry: '/products?q=resume',
+      routeSearchScope: 'products',
+    });
+
+    const productsSearch = await screen.findByRole('search');
+    expect(productsSearch).toHaveAttribute('data-search-scope', 'products');
+    const searchbox = within(productsSearch).getByRole('searchbox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
+    expect(searchbox).toHaveAttribute(
+      'placeholder',
+      m.productSearchBar_placeholderText(),
+    );
+    expect(searchbox).toHaveValue('resume');
+    expect(
+      within(productsSearch).queryByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+    ).toBeNull();
+
+    fireEvent.change(searchbox, { target: { value: 'cover letter' } });
+    submitContainingForm(searchbox);
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/products'),
+    );
+    expect(router.state.location.search).toEqual({ q: 'cover letter' });
+  });
+
   it('stages a canonical Jobs suggestion and navigates only when Search is submitted', async () => {
     const router = renderHeader({
       initialEntry: '/jobs',
@@ -1466,5 +1551,83 @@ describe('Header — pathname-scoped submit-only search', () => {
     await waitFor(() =>
       expect(router.state.location.href).toBe('/jobs?q=systems'),
     );
+  });
+});
+
+describe('Header — route-owned actions (the product page)', () => {
+  const buyer = {
+    id: 'user-1',
+    object: 'board_user',
+    role: 'candidate',
+    email: 'ada@example.com',
+    displayName: 'Ada Lovelace',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+  /** Hidden from `lg` up: phones still get the element. */
+  const desktopHidden = (element: HTMLElement) =>
+    element.closest('.lg\\:hidden') !== null;
+
+  it('keeps the usual actions and no slot on other routes', async () => {
+    renderHeader();
+
+    const signIn = await screen.findByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    expect(desktopHidden(signIn)).toBe(false);
+    expect(
+      document.querySelector('[data-slot="header-route-actions"]'),
+    ).toBeNull();
+  });
+
+  it('keeps the sign-in links while the route leaves its slot empty', async () => {
+    renderHeader({ routeActionsRef: vi.fn(), routeActionsFilled: false });
+
+    const signIn = await screen.findByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    expect(desktopHidden(signIn)).toBe(false);
+    expect(
+      document.querySelector('[data-slot="header-route-actions"]'),
+    ).not.toBeNull();
+  });
+
+  it('hands the route a desktop slot in place of the sign-in links', async () => {
+    const routeActionsRef = vi.fn();
+    renderHeader({ routeActionsRef, routeActionsFilled: true });
+
+    const signIn = await screen.findByRole('link', {
+      name: m.siteHeader_signInLabel(),
+    });
+    const slot = document.querySelector<HTMLElement>(
+      '[data-slot="header-route-actions"]',
+    );
+    expect(slot).not.toBeNull();
+    expect(slot).toHaveClass('hidden', 'lg:flex');
+    expect(routeActionsRef).toHaveBeenCalledWith(slot);
+    // Phones keep Sign in / Sign up; desktops show the route's actions.
+    expect(desktopHidden(signIn)).toBe(true);
+    expect(
+      desktopHidden(
+        screen.getByRole('link', { name: m.siteHeader_signUpLabel() }),
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps the signed-in account menu after the route actions', async () => {
+    renderHeader({
+      user: buyer,
+      routeActionsRef: vi.fn(),
+      routeActionsFilled: true,
+    });
+
+    const account = await findAccountButton();
+    expect(desktopHidden(account)).toBe(false);
+    const slot = document.querySelector('[data-slot="header-route-actions"]');
+    expect(
+      slot &&
+        slot.compareDocumentPosition(account) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

@@ -5,7 +5,12 @@ import {
 } from './pagination';
 import { talentProfileParam } from './talent-profile-path';
 
-export type HeaderSearchScope = 'jobs' | 'companies' | 'talent' | 'blog';
+export type HeaderSearchScope =
+  | 'jobs'
+  | 'companies'
+  | 'talent'
+  | 'blog'
+  | 'products';
 
 export interface HeaderSearchLocation {
   slug: string;
@@ -233,8 +238,12 @@ export function resolveHeaderSearchState(
   // employers hunt talent — the shell resolves this from identity + the
   // board's talent-directory visibility.
   fallbackScope: HeaderSearchScope = 'jobs',
+  // The scope the matched route declares (its `headerSearchScope` static
+  // data), which wins over the path: the product routes declare `products`
+  // so the field searches the store whatever words their URLs use.
+  routeScope?: HeaderSearchScope,
 ): HeaderSearchState {
-  const scope = scopeFromPathname(pathname, fallbackScope);
+  const scope = routeScope ?? scopeFromPathname(pathname, fallbackScope);
   const explicitQuery = stringSearchValue(
     scope === 'companies'
       ? search.query

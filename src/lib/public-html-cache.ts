@@ -14,6 +14,7 @@ const PUBLIC_DOCUMENT_PREFIXES = [
   '/blog',
   '/companies',
   '/jobs',
+  '/products',
   '/salaries',
   '/talent',
 ] as const;

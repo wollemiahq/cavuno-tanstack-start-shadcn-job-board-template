@@ -76,6 +76,9 @@ export const CODE_MESSAGES = {
   already_invited: m.employerMembers_alreadyInvitedError,
   invalid_email: m.employerMembers_invalidEmailError,
   candidate_role: m.employerInviteAccept_candidateBody,
+  rate_limit_unavailable: m.boardError_rateLimitedText,
+  // Digital product codes live in `product-error-message.ts`, loaded only by
+  // the product, purchase and resend surfaces.
   // App-local codes (not from the SDK):
   unauthorized: m.boardError_unauthorizedText,
   invalid_file: m.postJob_chooseImageError,

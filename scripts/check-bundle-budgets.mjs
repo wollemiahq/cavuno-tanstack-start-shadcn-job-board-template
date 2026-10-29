@@ -86,7 +86,14 @@ const BUDGETS = {
   // @cavuno/board 4.55.0 (board-language taxonomy names, time zones, remote
   // labels; #320) took the shell to 673.9 KiB raw against 673.8. Accepted by
   // the operator on 2026-10-28; raw rebaselined with ~4 KB headroom.
-  shell: { raw: 694_000, gzip: 228_900 },
+  // Digital product pages (#316: products list, product page, download
+  // page, the buyer's library): their route registrations, localized route
+  // templates and the nav item ride the shell; the page code is split out.
+  // Measured 2026-10-29 with @cavuno/board 4.57.0: 699,384 B raw / 222,713 B
+  // gzip against main's 690,160 / 219,976 (+9,224 raw / +2,737 gzip). The
+  // operator approved up to +2.7 KiB gzip for #316; both budgets are raised
+  // by exactly the measured growth, keeping main's headroom.
+  shell: { raw: 703_224, gzip: 231_637 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
@@ -195,6 +202,14 @@ const BUDGETS = {
     '/matches': { raw: 150_000, gzip: 58_000 },
     '/companies/markets/$market': { raw: 121_500, gzip: 46_500 },
     '/companies/': { raw: 121_000, gzip: 46_000 },
+    // Digital products (2026-10-26). The store listing reuses the companies
+    // list-and-detail split (search, Select filters, cursor pagination), so it
+    // is budgeted like /companies/: measured 137.5 KiB raw / 52.8 KiB gzip.
+    // The product page loads its checkout form and the Stripe mount lazily,
+    // when the buyer starts buying: measured 100.9 KiB raw / 38.3 KiB gzip.
+    // Both with the usual ~4 KiB gzip headroom.
+    '/products/': { raw: 145_000, gzip: 58_000 },
+    '/products/$productSlug': { raw: 108_000, gzip: 43_500 },
     // Saved-job pagination makes the full saved collection reachable. Its
     // shared cursor controls add ~1.6 KiB gzip (42.2 -> 43.8 KiB measured);
     // retain roughly the original 1.3 KiB headroom on this private route.

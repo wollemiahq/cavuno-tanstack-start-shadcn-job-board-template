@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 /**
  * Root: loads the PUBLIC board shell once (identity, features, SEO)
@@ -55,6 +55,10 @@ import {
 } from '@/components/cookie-consent';
 import { DeferredToaster } from '@/components/deferred-toaster';
 import { FloatingStackProvider } from '@/components/floating-stack';
+import {
+  HeaderRouteActionsProvider,
+  routeOwnsHeaderActions,
+} from '@/components/header-route-actions';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
 import { NavigationProgress } from '@/components/navigation-progress';
@@ -72,6 +76,7 @@ import { cookieConsentDecidedScript } from '@/lib/cookie-consent';
 import {
   resolveHeaderRouteLabels,
   resolveHeaderSearchState,
+  type HeaderSearchScope,
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
 import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
@@ -129,6 +134,16 @@ declare module '@tanstack/react-router' {
     ownsMain?: boolean;
     /** Search workspaces fill the desktop viewport below their natural header. */
     fillsViewport?: boolean;
+    /**
+     * What the header search searches on this route, when its path does not
+     * say (the product routes: `products`, whatever words their URLs use).
+     */
+    headerSearchScope?: HeaderSearchScope;
+    /**
+     * The page fills the desktop header's actions (`<HeaderRouteActions>`)
+     * in place of the sign-in links; see src/components/header-route-actions.tsx.
+     */
+    ownsHeaderActions?: boolean;
   }
 }
 
@@ -264,6 +279,28 @@ function RootChrome({
   const fillsViewport = useRouterState({
     select: (s) => s.matches.some((match) => match.staticData?.fillsViewport),
   });
+  // A route that fills the header's actions slot itself (the product page).
+  const ownsHeaderActions = useRouterState({
+    select: (s) => routeOwnsHeaderActions(s.matches),
+  });
+  const [headerActionsSlot, setHeaderActionsSlot] =
+    useState<HTMLElement | null>(null);
+  const [headerActionsFilled, setHeaderActionsFilled] = useState(false);
+  const headerActions = useMemo(
+    () => ({
+      target: ownsHeaderActions ? headerActionsSlot : null,
+      onFilledChange: setHeaderActionsFilled,
+    }),
+    [ownsHeaderActions, headerActionsSlot],
+  );
+  // The deepest rendered route's declared header search scope, if any.
+  const routeSearchScope = useRouterState({
+    select: (s) =>
+      s.matches
+        .map((match) => match.staticData?.headerSearchScope)
+        .filter((scope) => scope !== undefined)
+        .at(-1),
+  });
   const location = useRouterState({ select: (s) => s.location });
   // The location whose matches are rendered. `location` moves to the next URL
   // as soon as a navigation starts, while `matches` (and so the header's
@@ -331,6 +368,7 @@ function RootChrome({
     isApprovedEmployer && board.talentDirectoryVisibility !== 'off'
       ? 'talent'
       : 'jobs',
+    routeSearchScope,
   );
   // On /talent the location field filters candidates, so it suggests the
   // places candidates live in rather than places with jobs. The jobs field
@@ -421,6 +459,11 @@ function RootChrome({
       return;
     }
 
+    if (scope === 'products') {
+      void navigate({ to: '/products', search: { q: query } });
+      return;
+    }
+
     if (scope === 'talent') {
       // SAFETY: the current route's search is URL-serializable input.
       const next = talentSearchFromHeader(location.search as UrlSearchInput, {
@@ -475,6 +518,9 @@ function RootChrome({
       onSignOut={clearSession}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       hasMembershipPage={offerGate.hasMembershipPage}
+      hasProductsPage={offerGate.hasProductsPage}
+      routeActionsRef={ownsHeaderActions ? setHeaderActionsSlot : undefined}
+      routeActionsFilled={ownsHeaderActions && headerActionsFilled}
       messagesNav={
         user && board.features.messaging ? (
           <Suspense fallback={null}>
@@ -496,7 +542,7 @@ function RootChrome({
       }}
     />
   );
-  const routeContent = ownsMain ? (
+  const routeContentInner = ownsMain ? (
     <MainContentTarget
       className={fillsViewport ? 'flex-1 md:h-full md:min-h-0' : 'flex-1'}
     >
@@ -518,6 +564,11 @@ function RootChrome({
         </Container>
       </main>
     </MainContentTarget>
+  );
+  const routeContent = (
+    <HeaderRouteActionsProvider value={headerActions}>
+      {routeContentInner}
+    </HeaderRouteActionsProvider>
   );
 
   return (
@@ -598,7 +649,7 @@ function RootChrome({
               <BoardAdsBoot
                 key={location.pathname}
                 adPage={isBoardAdPage(location.pathname)}
-                hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$/.test(
+                hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$|\/products\/[^/]+\/?$/.test(
                   location.pathname,
                 )}
               />

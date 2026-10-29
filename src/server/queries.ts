@@ -29,6 +29,7 @@ import {
   readStaleBoardContext,
   refreshBoardContext,
   readEmployerOfferGate,
+  readProductsGate,
 } from '../lib/board-context-cache';
 import { readBoardSeo } from '../lib/board-seo-cache';
 import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
@@ -41,6 +42,10 @@ import { readTalentDirectory } from './talent-directory-read';
 
 import type { AnchorJobPaths } from '../board/job-alert-match';
 import type { BoardContextFooter } from '../components/Footer';
+import type {
+  EmployerOfferGate,
+  PlanOfferGate,
+} from '../lib/board-context-cache-core';
 import type {
   BlogPostsListQuery,
   BlogSearchBody,
@@ -141,49 +146,76 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
  * Whether /employers has anything to sell — self-service plans, talent
  * plans, or quote-only employer-service tiers — the hosted
  * `hasEmployerOfferPage` gate the footer/nav Pricing links key on, plus
- * whether the board publishes a membership plan (the Memberships link). OPEN read on an open board; a
+ * whether the board publishes a membership plan (the Memberships link), and
+ * whether it lists a digital product (the Products link). OPEN read on an open board; a
  * password-protected board refuses ungated plan reads, so the links hide
  * until the wall is passed (the wall page renders no footer nav anyway).
+ *
+ * The Products link is decided apart from the plan gates: products are
+ * listed and unlisted at any time, so it is held only for the products
+ * list's own freshness (`PRODUCTS_GATE_TTL_MS`), never edge-cached for the
+ * board-global 5 minutes, and a failed read hides it for that request only.
  */
 export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
-  async () => {
-    try {
-      // Board-global, always-anonymous reads on the root loader's critical
-      // path — edge-cache them with the longer board-global TTL, and memo
-      // the boolean gate per isolate so soft root re-runs do not re-hit
-      // the two plans.list reads.
-      return await readEmployerOfferGate(async () => {
-        const [plans, employerServicePlans] = await Promise.all([
-          getBoard().plans.list({}, boardGlobalReadCache()),
-          getBoard().plans.list(
-            { purpose: 'employer_service' },
-            boardGlobalReadCache(),
-          ),
-        ]);
-        return {
-          hasEmployerOfferPage:
-            plans.data.some((plan) => plan.purpose !== 'job_seeker') ||
-            employerServicePlans.data.length > 0,
-          hasCandidatePricingPage: hasPaidCandidatePlans(plans.data),
-          // The Memberships link is loader-driven off the same read, so it
-          // never flashes in on a board that publishes no membership plan.
-          hasMembershipPage: plans.data.some(
-            (plan) => plan.purpose === 'membership',
-          ),
-        };
-      });
-    } catch {
-      // Fail closed: this gate runs on the root loader for every route, so a
-      // transient plan-read failure (or a password-gated board) must only
-      // hide the footer/nav Pricing links, never fault the whole page.
-      return {
-        hasEmployerOfferPage: false,
-        hasMembershipPage: false,
-        hasCandidatePricingPage: false,
-      };
-    }
+  async (): Promise<EmployerOfferGate> => {
+    const [planGate, hasProductsPage] = await Promise.all([
+      readPlanOfferGate(),
+      // Fail closed for this request only: the memo never keeps a failure.
+      readProductsGate(readProductsListed).catch(() => false),
+    ]);
+    return { ...planGate, hasProductsPage };
   },
 );
+
+async function readPlanOfferGate(): Promise<PlanOfferGate> {
+  try {
+    // Board-global, always-anonymous reads on the root loader's critical
+    // path — edge-cache them with the longer board-global TTL, and memo
+    // the boolean gate per isolate so soft root re-runs do not re-hit
+    // the two plans.list reads.
+    return await readEmployerOfferGate(async () => {
+      const [plans, employerServicePlans] = await Promise.all([
+        getBoard().plans.list({}, boardGlobalReadCache()),
+        getBoard().plans.list(
+          { purpose: 'employer_service' },
+          boardGlobalReadCache(),
+        ),
+      ]);
+      return {
+        hasEmployerOfferPage:
+          plans.data.some((plan) => plan.purpose !== 'job_seeker') ||
+          employerServicePlans.data.length > 0,
+        hasCandidatePricingPage: hasPaidCandidatePlans(plans.data),
+        // The Memberships link is loader-driven off the same read, so it
+        // never flashes in on a board that publishes no membership plan.
+        hasMembershipPage: plans.data.some(
+          (plan) => plan.purpose === 'membership',
+        ),
+      };
+    });
+  } catch {
+    // Fail closed: this gate runs on the root loader for every route, so a
+    // transient plan-read failure (or a password-gated board) must only
+    // hide the footer/nav Pricing links, never fault the whole page.
+    return {
+      hasEmployerOfferPage: false,
+      hasMembershipPage: false,
+      hasCandidatePricingPage: false,
+    };
+  }
+}
+
+/**
+ * One listed product is enough to show the Products link. No board-global
+ * edge TTL: the read follows the Board API's own short cache policy, like
+ * the /products listing, so a newly listed product shows the link within
+ * that window. A rejection (an API without products, a timeout) propagates,
+ * so the memo never keeps it.
+ */
+async function readProductsListed(): Promise<boolean> {
+  const page = await getBoard().products.list({ limit: 1 });
+  return page.data.length > 0;
+}
 
 /**
  * SEO base for a listing page's `head` — the board name + language + the

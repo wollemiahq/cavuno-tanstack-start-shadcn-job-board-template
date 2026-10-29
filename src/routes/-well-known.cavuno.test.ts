@@ -1,6 +1,7 @@
 import {
   compileManifest,
   enumerateRouteEntries,
+  extractCavunoPageMarker,
   validateManifest,
 } from '@cavuno/board/route-contract';
 import { routeEntriesFromTanStackRouteTree } from '@cavuno/board/well-known';
@@ -115,6 +116,24 @@ describe('/.well-known/cavuno.json mount', () => {
     );
     expect(manifest.roles.alertsManage).toBe('/alerts/manage');
     expect(manifest.roles.alertsConfirm).toBe('/alerts/confirm');
+  });
+
+  it('real src/routes file tree publishes the digital product roles', () => {
+    const routesDir = resolve(process.cwd(), 'src/routes');
+    const paths = readdirSync(routesDir)
+      .filter((name) => !name.startsWith('-') && /\.(tsx?|jsx?)$/.test(name))
+      .map((name) => join('src/routes', name));
+    const markers = new Map(
+      paths.flatMap((path) => {
+        const role = extractCavunoPageMarker(readFileSync(path, 'utf8'));
+        return role ? [[path, role] as const] : [];
+      }),
+    );
+    const { manifest } = compileManifest(enumerateRouteEntries(paths), markers);
+    expect(manifest.roles.products).toBe('/products');
+    expect(manifest.roles.product).toBe('/products/:productSlug');
+    expect(manifest.roles.purchase).toBe('/purchases/:purchaseToken');
+    expect(manifest.roles.mePurchases).toBe('/me/purchases');
   });
 
   it('routeEntriesFromTanStackRouteTree converts $param → :param', () => {

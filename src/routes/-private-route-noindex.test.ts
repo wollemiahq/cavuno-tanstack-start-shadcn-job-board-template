@@ -11,6 +11,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { applicationsHead } from './-me.applications-loader';
+import { purchasesHead } from './-me.purchases-loader';
+import { purchaseHead } from './-purchase-head';
 import { settingsHead } from './-settings';
 import { Route as AccountRoute } from './account';
 import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';
@@ -28,6 +30,8 @@ const privateRouteHeads = [
   ['/saved-jobs', SavedRoute.options.head?.toString()],
   ['/me/applications', applicationsHead(undefined)],
   ['/me/alerts', AlertsRoute.options.head?.toString()],
+  ['/me/purchases', purchasesHead(undefined)],
+  ['/purchases/$purchaseToken', purchaseHead(undefined)],
   ['/messages', MessagesRoute.options.head?.toString()],
   ['/settings', settingsHead(undefined)],
   ['/auth/sign-in', SignInRoute.options.head?.toString()],

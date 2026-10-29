@@ -32,6 +32,7 @@ export function HeaderAccountMenu({
   nativeApplications,
   jobRecommendationsEnabled,
   employerCompanies,
+  hasProductsPage = false,
   canPostJobs = true,
   onSignOut,
   onSignOutPendingChange,
@@ -42,6 +43,8 @@ export function HeaderAccountMenu({
   nativeApplications: boolean;
   jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
+  /** The board sells digital products: show the Purchases library. */
+  hasProductsPage?: boolean;
   /** Public job-posting SKUs exist — hide Post job when the board sells none. */
   canPostJobs?: boolean;
   onSignOut: () => void;
@@ -109,6 +112,14 @@ export function HeaderAccountMenu({
             render={<Link to="/me/applications" />}
           >
             {m.accountShell_applicationsNav()}
+          </DropdownMenuItem>
+        ) : null}
+        {hasProductsPage ? (
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link to="/me/purchases" />}
+          >
+            {m.accountShell_purchasesNav()}
           </DropdownMenuItem>
         ) : null}
         {hasAccessGrant ? (
