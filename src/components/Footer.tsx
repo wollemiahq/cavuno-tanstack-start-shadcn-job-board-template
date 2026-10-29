@@ -212,7 +212,7 @@ export default function Footer({
   footer: BoardContextFooter | null;
   contactEnabled: boolean;
   /**
-   * Whether /impressum is published (`impressumAvailable`, resolved by the
+   * Whether /impressum is published (`impressumHasContent`, resolved by the
    * root loader on the server so legal content stays out of the client
    * bundle).
    */

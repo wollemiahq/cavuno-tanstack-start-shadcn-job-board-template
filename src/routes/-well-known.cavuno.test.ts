@@ -143,7 +143,7 @@ describe('/.well-known/cavuno.json mount', () => {
     );
   });
 
-  it('omits the Impressum role when the page feature is disabled', async () => {
+  it('omits the Impressum role while the impressum has no content', async () => {
     const handler = createWellKnownRouteHandler(
       () => starterRoleTree,
       async () => false,
@@ -157,7 +157,7 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(parsed.manifest.roles.impressum).toBeUndefined();
   });
 
-  it('publishes the Impressum role when the page feature is enabled', async () => {
+  it('publishes the Impressum role once the impressum has content', async () => {
     const handler = createWellKnownRouteHandler(
       () => starterRoleTree,
       async () => true,

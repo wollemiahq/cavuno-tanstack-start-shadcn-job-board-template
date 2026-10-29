@@ -508,6 +508,17 @@ describe('impressum in the sitemap', () => {
     impressum.hasContent.mockReturnValue(true);
     const context = await buildSitemapContext(board, ORIGIN, source({ build }));
     const urls = findSitemapChunk(context, 'marketing', 0)!.map((e) => e.url);
+    expect(urls.filter((url) => url === `${ORIGIN}/impressum`)).toHaveLength(1);
+  });
+
+  it('lists a written /impressum the board context flag left out', async () => {
+    impressum.hasContent.mockReturnValue(true);
+    const context = await buildSitemapContext(
+      board,
+      ORIGIN,
+      source({ build: async () => [`${ORIGIN}/about`] }),
+    );
+    const urls = findSitemapChunk(context, 'marketing', 0)!.map((e) => e.url);
     expect(urls).toContain(`${ORIGIN}/impressum`);
   });
 });
