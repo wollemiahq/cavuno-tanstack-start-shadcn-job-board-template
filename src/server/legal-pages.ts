@@ -55,8 +55,8 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
 
       // The Impressum is published once the operator has written it, in
       // any language (`impressumHasContent`, the rule the footer link,
-      // sitemap and well-known manifest share). Checked before any other
-      // work so an unwritten one 404s cheaply.
+      // sitemap and well-known manifest share). Checked before the origin
+      // read and metadata so an unwritten one 404s cheaply.
       if (data.type === 'impressum' && !impressumHasContent()) {
         throw notFound();
       }
