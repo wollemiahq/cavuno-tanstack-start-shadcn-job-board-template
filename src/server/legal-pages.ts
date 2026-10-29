@@ -3,7 +3,7 @@ import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 
 import { resolveLegalContent, resolveLegalEntity } from '../content/legal';
-import { impressumAvailable } from '../content/legal/impressum-availability';
+import { impressumHasContent } from '../content/legal/impressum-availability';
 import { renderLegalHtml, renderLegalText } from '../content/legal/render';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
@@ -18,9 +18,8 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
  *
  * Prose is application-owned (`src/content/legal/`) — this function no longer
  * calls `board.legal.retrieve`. It still reads board context for name /
- * language and enforces the `features.impressum` gate here — the prose is
- * local, so nothing else 404s a disabled Impressum. It also builds head
- * meta +
+ * language. Every page 404s here until it has content; the prose is local,
+ * so nothing else 404s an unwritten Impressum. It also builds head meta +
  * AboutPage/WebPage + breadcrumb JSON-LD so route modules and LegalPageView
  * do not import `@cavuno/board/seo` into the universal client entry.
  *
@@ -54,16 +53,11 @@ export const getLegalPageView = createServerFn({ method: 'GET' })
       const meta = LEGAL_PAGES[data.type];
       const boardContext = await readBoardContext();
 
-      // The Impressum gate. Hosted hides the footer link AND does not serve
-      // the page; the starter only hid the link (Footer.tsx), so a disabled
-      // Impressum still rendered — and stayed indexable — on a direct hit.
-      // Prose moved to `src/content/legal/`, so no API 404 gates it any more.
-      // The starter ships no impressum text, so an enabled one also needs the
-      // operator's own content.
-      if (
-        data.type === 'impressum' &&
-        !impressumAvailable(boardContext.features)
-      ) {
+      // The Impressum is published once the operator has written it, in
+      // any language (`impressumHasContent`, the rule the footer link,
+      // sitemap and well-known manifest share). Checked before any other
+      // work so an unwritten one 404s cheaply.
+      if (data.type === 'impressum' && !impressumHasContent()) {
         throw notFound();
       }
       // A page with no content in any language is not published.

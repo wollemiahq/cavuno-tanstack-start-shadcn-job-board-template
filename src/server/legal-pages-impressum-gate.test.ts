@@ -39,7 +39,6 @@ vi.mock('./board-access', () => ({
   gatedRead: <TResult>(_context: Record<string, never>, read: () => TResult) =>
     read(),
 }));
-import { impressumAvailable } from '../content/legal/impressum-availability';
 import { getLegalPageView } from './legal-pages';
 const OPERATOR_IMPRESSUM = {
   title: 'Impressum',
@@ -51,17 +50,8 @@ beforeEach(() => {
   mocks.impressum.locales = { en: OPERATOR_IMPRESSUM };
   mocks.origin.mockResolvedValue('https://fixture.example');
 });
-describe('direct legal page feature gate', () => {
-  it('disabled Impressum rejects before origin and metadata construction', async () => {
-    mocks.board.mockResolvedValue({ features: { impressum: false } });
-    await expect(
-      getLegalPageView({ data: { type: 'impressum' } }),
-    ).rejects.toMatchObject({
-      isNotFound: true,
-    });
-    expect(mocks.origin).not.toHaveBeenCalled();
-  });
-  it('enabled Impressum without operator content is not published', async () => {
+describe('direct impressum gate', () => {
+  it('an impressum without operator content 404s before origin and metadata construction', async () => {
     mocks.impressum.locales = {};
     mocks.board.mockResolvedValue({
       name: 'Fixture',
@@ -73,12 +63,13 @@ describe('direct legal page feature gate', () => {
     ).rejects.toMatchObject({
       isNotFound: true,
     });
+    expect(mocks.origin).not.toHaveBeenCalled();
   });
-  it('enabled Impressum returns page and metadata', async () => {
+  it('serves a written impressum even when the board context flag is off', async () => {
     mocks.board.mockResolvedValue({
       name: 'Fixture',
       language: 'en',
-      features: { impressum: true },
+      features: { impressum: false },
     });
     expect(
       await getLegalPageView({ data: { type: 'impressum' } }),
@@ -87,7 +78,8 @@ describe('direct legal page feature gate', () => {
       head: expect.any(Object),
     });
   });
-  it('disabled Impressum does not disable other legal pages', async () => {
+  it('an unwritten impressum does not unpublish other legal pages', async () => {
+    mocks.impressum.locales = {};
     mocks.board.mockResolvedValue({
       name: 'Fixture',
       language: 'en',
@@ -104,9 +96,8 @@ describe('direct legal page feature gate', () => {
     mocks.board.mockResolvedValue({
       name: 'Fixture',
       language: 'en',
-      features: { impressum: true },
+      features: { impressum: false },
     });
-    expect(impressumAvailable({ impressum: true })).toBe(true);
     expect(
       await getLegalPageView({ data: { type: 'impressum' } }),
     ).toMatchObject({

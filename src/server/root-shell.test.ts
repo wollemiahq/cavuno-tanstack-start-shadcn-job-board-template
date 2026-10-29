@@ -60,7 +60,7 @@ vi.mock('./queries', () => ({
 }));
 vi.mock('./talent-access', () => ({ EMPTY_GRANT: {} }));
 vi.mock('../content/legal/impressum-availability', () => ({
-  impressumAvailable: mocks.impressum,
+  impressumHasContent: mocks.impressum,
 }));
 import { getRootShellData, getRootSessionShellData } from './root-shell';
 beforeEach(() => {
@@ -103,12 +103,15 @@ describe('public and session shells', () => {
     expect(await getRootShellData()).toMatchObject({ contactEnabled: false });
     expect(mocks.contact).not.toHaveBeenCalled();
   });
-  it('decides the footer impressum link on the server', async () => {
+  it('links the footer impressum from its content alone', async () => {
     mocks.impressum.mockReturnValue(true);
+    mocks.boardContext.mockResolvedValue({
+      name: 'Fixture board',
+      features: { contactPage: true, impressum: false },
+    });
     expect(await getRootShellData()).toMatchObject({
       impressumAvailable: true,
     });
-    expect(mocks.impressum).toHaveBeenCalledWith({ contactPage: true });
   });
   it('a context without the Contact flag falls back to one /contact read', async () => {
     mocks.boardContext.mockResolvedValue({

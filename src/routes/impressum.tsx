@@ -10,8 +10,8 @@ import { PageLayout } from '@/components/layout/page-layout';
 export const Route = createFileRoute('/impressum')({
   // The shared page layout owns the full-width route geometry.
   staticData: { fullBleed: true, ownsMain: true },
-  // `getLegalPageView` throws `notFound()` itself when the board's
-  // `features.impressum` is off — the route renders notFoundComponent.
+  // `getLegalPageView` throws `notFound()` itself until the operator has
+  // written an impressum — the route renders notFoundComponent.
   loader: () => getLegalPageView({ data: { type: 'impressum' } }),
   head: ({ loaderData }) =>
     loaderData

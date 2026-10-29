@@ -39,13 +39,13 @@ function localizeManifest(
  */
 export function createWellKnownRouteHandler(
   getRouteTree: () => TanStackRouteNode | Promise<TanStackRouteNode>,
-  impressumEnabled: () => boolean | Promise<boolean> = () => true,
+  impressumPublished: () => boolean | Promise<boolean> = () => true,
   words: LocaleUrlWords = BOARD_URL_WORDS[baseLocale],
 ) {
   return async (_request: Request): Promise<Response> => {
     try {
       const entries = routeEntriesFromTanStackRouteTree(await getRouteTree());
-      const routes = (await impressumEnabled())
+      const routes = (await impressumPublished())
         ? entries
         : entries.filter((route) => route.template !== '/impressum');
       const { manifest } = compileManifest(routes);

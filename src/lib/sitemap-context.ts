@@ -247,21 +247,23 @@ function withLocalMarketingPages(
   talentPaths: readonly string[],
 ): SitemapEntry[] {
   if (bucket !== 'marketing') return entries;
-  // The SDK lists `/impressum` whenever the feature is on; the page itself
-  // also needs the operator's text (`impressumAvailable`).
+  // `/impressum` is listed exactly when the operator has written one
+  // (`impressumHasContent`). Whatever the SDK or the published sitemap says
+  // about it, from the board context's `features.impressum`, is dropped.
   const impressumUrl = `${origin}${BOARD_PATHS.impressum}`;
-  const listed = impressumHasContent()
-    ? entries
-    : entries.filter((entry) => entry.url !== impressumUrl);
+  const listed = entries.filter((entry) => entry.url !== impressumUrl);
+  const impressumPaths = impressumHasContent() ? [BOARD_PATHS.impressum] : [];
   const urls = new Set(listed.map((entry) => entry.url));
   return [
     ...listed,
-    ...[...LOCAL_MARKETING_PATHS, ...talentPaths].flatMap((path) => {
-      const url = `${origin}${path}`;
-      if (urls.has(url)) return [];
-      urls.add(url);
-      return [{ url }];
-    }),
+    ...[...LOCAL_MARKETING_PATHS, ...impressumPaths, ...talentPaths].flatMap(
+      (path) => {
+        const url = `${origin}${path}`;
+        if (urls.has(url)) return [];
+        urls.add(url);
+        return [{ url }];
+      },
+    ),
   ];
 }
 

@@ -84,4 +84,6 @@ Legal/about pages are data: `src/content/legal/<page>.json` holds `title`,
 was written in. Edit the text there; `{{board_name}}` is filled in at request
 time and the body is sanitized by `src/content/legal/render.ts`. The shipped
 text is a standard sample the operator adapts. The impressum ships empty and
-stays unpublished until the operator writes one.
+stays unpublished until the operator writes one, in any language; writing it
+publishes the page, its footer link, its sitemap entry and its well-known
+role. The board context's `features.impressum` plays no part.

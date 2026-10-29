@@ -5,7 +5,7 @@ import {
   failClosedJobRecommendations,
   readContactPageFlag,
 } from '../board/board-feature-flags';
-import { impressumAvailable } from '../content/legal/impressum-availability';
+import { impressumHasContent } from '../content/legal/impressum-availability';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import {
@@ -87,7 +87,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       contactEnabled,
       // Decided here so no client chunk imports legal content: the rule reads
       // every translation file.
-      impressumAvailable: impressumAvailable(board.features),
+      impressumAvailable: impressumHasContent(),
     };
   },
 );

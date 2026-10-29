@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { impressumAvailable } from './impressum-availability';
+import { impressumHasContent } from './impressum-availability';
 import { resolveLegalContent } from './index';
 
 import type { LegalLocale, LegalPageType } from './types';
@@ -49,8 +49,7 @@ describe('legal content', () => {
 
   it('publishes the impressum exactly when it has content', () => {
     const hasContent = resolveLegalContent('impressum', 'en') !== null;
-    expect(impressumAvailable({ impressum: true })).toBe(hasContent);
-    expect(impressumAvailable({ impressum: false })).toBe(false);
+    expect(impressumHasContent()).toBe(hasContent);
     for (const locale of BUILT_IN_LOCALES) {
       expect(resolveLegalContent('impressum', locale) !== null, locale).toBe(
         hasContent,

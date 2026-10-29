@@ -36,9 +36,11 @@ const contact: BoardContextFooter = {
 
 function renderFooter(
   footer: BoardContextFooter,
-  membership: Pick<
-    React.ComponentProps<typeof Footer>,
-    'hasMembershipPage' | 'viewerRole'
+  membership: Partial<
+    Pick<
+      React.ComponentProps<typeof Footer>,
+      'hasMembershipPage' | 'viewerRole' | 'impressumAvailable'
+    >
   > = {},
 ) {
   return render(
@@ -102,5 +104,24 @@ describe('Footer Memberships link', () => {
     expect(
       screen.queryByRole('link', { name: m.nav_memberships() }),
     ).toBeNull();
+  });
+});
+
+describe('Footer Impressum link', () => {
+  const impressumLinks = () =>
+    screen
+      .queryAllByRole('link')
+      .filter((link) => link.getAttribute('href') === '/impressum');
+
+  it('links /impressum when it is published', () => {
+    renderFooter(contact, { impressumAvailable: true });
+
+    expect(impressumLinks()).toHaveLength(1);
+  });
+
+  it('omits /impressum when it is not published', () => {
+    renderFooter(contact);
+
+    expect(impressumLinks()).toHaveLength(0);
   });
 });
