@@ -100,7 +100,13 @@ describe('CompanySearchPage — search results pattern', () => {
           }}
           query="acme"
           heading="Companies"
-          markets={[{ slug: 'technology', name: 'Technology' }]}
+          markets={[
+            {
+              slug: 'technology',
+              canonicalSlug: 'technologie',
+              displayName: 'Technologie',
+            },
+          ]}
           startAd={{ label: 'Sponsored start', content: <p>Start creative</p> }}
           endAd={{ label: 'Sponsored end', content: <p>End creative</p> }}
           onPageChange={vi.fn()}
@@ -160,8 +166,8 @@ describe('CompanySearchPage — search results pattern', () => {
         screen.getByRole('region', {
           name: m.companiesIndex_browseByMarketHeading(),
         }),
-      ).getByRole('link', { name: 'Technology' }),
-    ).toHaveAttribute('href', '/companies/markets/technology');
+      ).getByRole('link', { name: 'Technologie' }),
+    ).toHaveAttribute('href', '/companies/markets/technologie');
     expect(
       screen.getByRole('complementary', { name: 'Sponsored start' }),
     ).toHaveTextContent('Start creative');

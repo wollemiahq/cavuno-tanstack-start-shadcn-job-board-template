@@ -83,14 +83,17 @@ const BUDGETS = {
   // fields) took the shell to 214.4 KiB gzip; main had ~0.1 KiB left.
   // Accepted by the operator on 2026-10-27; rebaselined with the usual
   // ~4 KiB headroom.
-  // Digital product routes (products, product page, download page, the
-  // buyer's library): their four route registrations, localized route
+  // @cavuno/board 4.55.0 (board-language taxonomy names, time zones, remote
+  // labels; #320) took the shell to 673.9 KiB raw against 673.8. Accepted by
+  // the operator on 2026-10-28; raw rebaselined with ~4 KB headroom.
+  // Digital product pages (#316: products list, product page, download
+  // page, the buyer's library): their route registrations, localized route
   // templates and the nav item ride the shell; the page code is split out.
-  // Accepted by the operator on 2026-10-26: gzip raised by 2.5 KiB (2,560 B)
-  // on top of main's budget. Measured 2026-10-27 with the product page:
-  // 682.9 KiB raw / 217.5 KiB gzip against main's 673.9 / 214.8 (+9.0 KiB
-  // raw / +2.7 KiB gzip); raw is the measurement plus ~0.7 KiB.
-  shell: { raw: 700_000, gzip: 231_460 },
+  // Measured 2026-10-29 with @cavuno/board 4.57.0: 699,384 B raw / 222,713 B
+  // gzip against main's 690,160 / 219,976 (+9,224 raw / +2,737 gzip). The
+  // operator approved up to +2.7 KiB gzip for #316; both budgets are raised
+  // by exactly the measured growth, keeping main's headroom.
+  shell: { raw: 703_224, gzip: 231_637 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).

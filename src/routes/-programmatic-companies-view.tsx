@@ -8,6 +8,7 @@ import { jobDetailCopy } from '@/copy-groups/job-detail';
 import {
   includeSelectedCompanyMarket,
   type CompaniesSearch,
+  type CompanyMarketOption,
 } from '@/lib/companies-search';
 import {
   resolveCustomFieldFilters,
@@ -49,8 +50,8 @@ export function ProgrammaticCompaniesView({
   heading: string;
   page: CompaniesPageData;
   pageSize: number;
-  markets: Array<{ slug: string; name: string }>;
-  market?: { slug: string; name: string };
+  markets: CompanyMarketOption[];
+  market?: CompanyMarketOption;
   search: CompaniesSearch;
   searchUnavailable?: boolean;
   /** Public company profile fields for the sheet, and the URL's `cf.*`. */

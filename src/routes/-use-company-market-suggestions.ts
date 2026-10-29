@@ -47,8 +47,10 @@ export function useCompanyMarketSuggestions(
           if (!cancelled) {
             setSuggestions(
               response.data.map((market) => ({
-                slug: market.slug,
-                name: market.name,
+                // The suggestion only navigates to the market page, so it
+                // carries the board-language page slug and label.
+                slug: market.canonicalSlug,
+                name: market.displayName,
               })),
             );
           }
