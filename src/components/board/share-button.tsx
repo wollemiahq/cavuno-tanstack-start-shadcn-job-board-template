@@ -45,7 +45,7 @@ export function ShareButton({
   return (
     <>
       <Button
-        variant="outline"
+        variant="ghost"
         size="lg"
         className={className}
         onClick={() => void share()}

@@ -2824,7 +2824,7 @@
   "product_jobAlertOptInLabel": "Schick mir auch neue Jobs von dieser Plattform",
   "product_sendFilesAction": "Schick mir die Dateien",
   "product_continueToPaymentAction": "Weiter zur Zahlung",
-  "product_cancelStepAction": "Zurück",
+  "product_checkoutDialogDescription": "{productName} · {price}",
   "product_completePurchaseTitle": "Kauf abschließen",
   "product_backToProductAction": "Zurück zum Produkt",
   "product_confirmingTitle": "Deine Zahlung wird bestätigt…",

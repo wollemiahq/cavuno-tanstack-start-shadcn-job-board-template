@@ -2824,7 +2824,7 @@
   "product_jobAlertOptInLabel": "Envíame también las nuevas ofertas de este sitio",
   "product_sendFilesAction": "Envíame los archivos",
   "product_continueToPaymentAction": "Continuar al pago",
-  "product_cancelStepAction": "Volver",
+  "product_checkoutDialogDescription": "{productName} · {price}",
   "product_completePurchaseTitle": "Completa tu compra",
   "product_backToProductAction": "Volver al producto",
   "product_confirmingTitle": "Confirmando tu pago…",
