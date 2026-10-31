@@ -2824,7 +2824,7 @@
   "product_jobAlertOptInLabel": "Also email me new jobs from this board",
   "product_sendFilesAction": "Send me the files",
   "product_continueToPaymentAction": "Continue to payment",
-  "product_cancelStepAction": "Back",
+  "product_checkoutDialogDescription": "{productName} · {price}",
   "product_completePurchaseTitle": "Complete your purchase",
   "product_backToProductAction": "Back to product",
   "product_confirmingTitle": "Confirming your payment…",

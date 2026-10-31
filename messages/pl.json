@@ -2936,7 +2936,7 @@
   "product_jobAlertOptInLabel": "Wysyłaj mi też nowe oferty pracy z tego serwisu",
   "product_sendFilesAction": "Wyślij mi pliki",
   "product_continueToPaymentAction": "Przejdź do płatności",
-  "product_cancelStepAction": "Wstecz",
+  "product_checkoutDialogDescription": "{productName} · {price}",
   "product_completePurchaseTitle": "Dokończ zakup",
   "product_backToProductAction": "Wróć do produktu",
   "product_confirmingTitle": "Potwierdzamy płatność…",

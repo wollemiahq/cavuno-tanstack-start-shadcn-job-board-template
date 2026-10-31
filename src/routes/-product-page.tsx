@@ -7,8 +7,10 @@
  * phone the order is cover, title, price card, description, facts, reviews,
  * with a buy bar at the bottom once the price card has scrolled away.
  *
- * Buying: the price card turns into a short step (email, amount, questions).
- * A free claim goes straight to the download page; a paid product mounts the
+ * Buying: the buy buttons open the "Before you pay" dialog (a bottom sheet on
+ * a phone) with the email, amount and questions; the price card itself never
+ * changes. A signed-in buyer with nothing to answer skips the dialog. A free
+ * claim goes straight to the download page; a paid product mounts the
  * embedded Stripe Checkout in place of the page, Stripe returns the buyer
  * here with `session_id`, and the page polls until the payment lands.
  */
@@ -18,7 +20,6 @@ import {
   useCallback,
   useEffect,
   useEffectEvent,
-  useRef,
   useState,
 } from 'react';
 
@@ -75,12 +76,19 @@ import type {
   PurchaseSummaryListEnvelope,
 } from '@cavuno/board';
 
-// Loaded when the buyer starts buying: the product page itself stays light.
-const ProductCheckoutForm = lazy(() =>
-  import('@/components/board/product-checkout-form').then((module) => ({
-    default: module.ProductCheckoutForm,
+// Loaded when the visitor reaches for a buy button (pointer or focus first,
+// the click at the latest): the dialog and its form stay off the page.
+const loadCheckoutDialog = () =>
+  import('@/components/board/product-checkout-dialog');
+const ProductCheckoutDialog = lazy(() =>
+  loadCheckoutDialog().then((module) => ({
+    default: module.ProductCheckoutDialog,
   })),
 );
+/** Starts loading the buy dialog early; a failed preload retries on click. */
+function preloadCheckoutDialog() {
+  loadCheckoutDialog().catch(() => {});
+}
 // Only a buyer coming back from Stripe sees the confirming states.
 const CheckoutReturnState = lazy(() =>
   import('@/components/board/product-checkout-return').then((module) => ({
@@ -313,7 +321,7 @@ function BuyError({
 
 /**
  * The desktop header's actions on the product page (`lg` and up): the
- * stars, the price and the buy button, which opens the same buying step as
+ * stars, the price and the buy button, which opens the same buy dialog as
  * the price card (or starts checkout at once when there is nothing to ask).
  * A buyer who owns the product gets their download page.
  */
@@ -352,6 +360,8 @@ function ProductHeaderActions({
         <div className="relative">
           <Button
             onClick={onBuy}
+            onPointerEnter={preloadCheckoutDialog}
+            onFocus={preloadCheckoutDialog}
             disabled={buying?.pending}
             aria-busy={pressed?.pending || undefined}
           >
@@ -418,6 +428,7 @@ export function ProductPageView({
   returnPath,
   sessionId,
   startInCheckout = false,
+  showProductsLink = true,
   jobAlertsEnabled,
   dependencies,
   onPurchase,
@@ -431,8 +442,14 @@ export function ProductPageView({
   returnPath: string;
   /** Set when Stripe sent the buyer back. */
   sessionId: string | null;
-  /** `?buy=true` from the listing: open the buying step at once. */
+  /** `?buy=true` from the listing: open the buy dialog at once. */
   startInCheckout?: boolean;
+  /**
+   * The board lists products, so `/products` exists: show the back link to
+   * it. An unlisted product on a board with no listed ones has nowhere to
+   * go back to.
+   */
+  showProductsLink?: boolean;
   /** The board sends job alerts: free products offer the opt-in. */
   jobAlertsEnabled: boolean;
   dependencies: ProductPageDependencies;
@@ -440,13 +457,12 @@ export function ProductPageView({
   onPurchase: (purchaseToken: string) => void;
 }) {
   const { user } = useRootSession();
-  const [step, setStep] = useState<'product' | 'details'>(
-    startInCheckout && !product.soldOut ? 'details' : 'product',
-  );
+  // Mounted on the first open and kept, so closing can animate out.
+  const [dialogMounted, setDialogMounted] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [kit, setKit] = useState<MountKit | null>(null);
   const [kitSessionId, setKitSessionId] = useState<string | null>(null);
   const [buying, setBuying] = useState<DirectBuy | null>(null);
-  const buyCardRef = useRef<HTMLDivElement>(null);
   // Elements in state, not refs: the page unmounts while Stripe Checkout
   // shows, and the observers must follow the remounted elements.
   const [buyCardElement, setBuyCardElement] = useState<HTMLDivElement | null>(
@@ -475,7 +491,7 @@ export function ProductPageView({
 
   function buy(source: BuySource) {
     if (!directEmail) {
-      openStep();
+      openDialog();
       return;
     }
     void buyDirect(source, directEmail);
@@ -500,13 +516,17 @@ export function ProductPageView({
     setBuying({ source, pending: false, error: await refusalText(refusal) });
   }
 
-  function openStep() {
-    setStep('details');
-    // The phone's sticky bar opens the step in the price card above.
-    requestAnimationFrame(() =>
-      buyCardRef.current?.scrollIntoView({ block: 'nearest' }),
-    );
+  function openDialog() {
+    setDialogMounted(true);
+    setDialogOpen(true);
   }
+
+  // `?buy=true` from the listing's Buy button: opened after hydration, since
+  // the dialog renders in the browser only.
+  const openFromListing = useEffectEvent(() => {
+    if (startInCheckout && !product.soldOut) openDialog();
+  });
+  useEffect(() => openFromListing(), []);
 
   /** Free: off to the download page. Paid: the payment step mounts. */
   async function startCheckout(
@@ -525,6 +545,7 @@ export function ProductPageView({
       };
     }
     if (result.data.status === 'complete' && result.data.purchaseToken) {
+      setDialogOpen(false);
       onPurchase(result.data.purchaseToken);
       return { outcome: 'complete' };
     }
@@ -532,6 +553,8 @@ export function ProductPageView({
     if (!nextKit) {
       return { outcome: 'refused', refusal: { code: null, message: '' } };
     }
+    // "Back to product" returns to the page with the dialog closed.
+    setDialogOpen(false);
     setKit(nextKit);
     return { outcome: 'paying' };
   }
@@ -601,19 +624,7 @@ export function ProductPageView({
   const buyCard = (
     <Card size="sm" className="gap-0 py-0" data-slot="product-buy-card">
       <CardContent className="flex flex-col gap-3 p-4">
-        {step === 'details' && !product.soldOut ? (
-          <Suspense fallback={<Spinner className="mx-auto size-5" />}>
-            <ProductCheckoutForm
-              product={product}
-              defaultEmail={user?.email ?? null}
-              offerJobAlertOptIn={offersJobAlertOptIn(product, {
-                jobAlertsEnabled,
-              })}
-              onSubmit={submit}
-              onCancel={() => setStep('product')}
-            />
-          </Suspense>
-        ) : owned ? (
+        {owned ? (
           // The signed-in buyer already owns it: their download page first,
           // buying another copy stays possible.
           <>
@@ -629,7 +640,9 @@ export function ProductPageView({
                 variant="link"
                 size="sm"
                 className="self-center"
-                onClick={openStep}
+                onPointerEnter={preloadCheckoutDialog}
+                onFocus={preloadCheckoutDialog}
+                onClick={openDialog}
               >
                 {m.product_buyAgainAction()}
               </Button>
@@ -659,6 +672,8 @@ export function ProductPageView({
                 <Button
                   size="xl"
                   onClick={() => buy('card')}
+                  onPointerEnter={preloadCheckoutDialog}
+                  onFocus={preloadCheckoutDialog}
                   disabled={buying?.pending}
                   aria-busy={
                     (buying?.source === 'card' && buying.pending) || undefined
@@ -774,16 +789,18 @@ export function ProductPageView({
                 full width; the rail starts beside the description below
                 the divider. Phones stack everything in reading order. */}
             <div className="mx-auto flex w-full max-w-[77rem] flex-col gap-4 pt-8 pb-32 md:pt-10 lg:pt-6 lg:pb-16">
-              <Link
-                to="/products"
-                className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
-              >
-                <ArrowLeft
-                  aria-hidden="true"
-                  className="size-4 rtl:rotate-180"
-                />
-                {m.products_metaTitle()}
-              </Link>
+              {showProductsLink ? (
+                <Link
+                  to="/products"
+                  className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm"
+                >
+                  <ArrowLeft
+                    aria-hidden="true"
+                    className="size-4 rtl:rotate-180"
+                  />
+                  {m.products_metaTitle()}
+                </Link>
+              ) : null}
               <div className="flex flex-col gap-6 lg:gap-0">
                 {product.images.length > 0 ? (
                   <ProductCarousel images={product.images} />
@@ -820,15 +837,7 @@ export function ProductPageView({
                     data-sticky={railFits ? 'true' : 'false'}
                     className="flex flex-col gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:data-[sticky=true]:sticky lg:data-[sticky=true]:top-24"
                   >
-                    <div
-                      ref={(element) => {
-                        buyCardRef.current = element;
-                        setBuyCardElement(element);
-                      }}
-                      className="scroll-mt-24"
-                    >
-                      {buyCard}
-                    </div>
+                    <div ref={setBuyCardElement}>{buyCard}</div>
                     {/* The rail's copy; phones read it after the description. */}
                     <div className="hidden flex-col gap-4 lg:flex">
                       {factsCard}
@@ -889,7 +898,25 @@ export function ProductPageView({
           buying={buying}
         />
       </HeaderRouteActions>
-      {step === 'product' && (owned || !product.soldOut) && !buyCardInView ? (
+      {dialogMounted && !product.soldOut ? (
+        <Suspense fallback={null}>
+          <ProductCheckoutDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            description={m.product_checkoutDialogDescription({
+              productName: product.name,
+              price: priceLabel,
+            })}
+            product={product}
+            defaultEmail={user?.email ?? null}
+            offerJobAlertOptIn={offersJobAlertOptIn(product, {
+              jobAlertsEnabled,
+            })}
+            onSubmit={submit}
+          />
+        </Suspense>
+      ) : null}
+      {(owned || !product.soldOut) && !buyCardInView ? (
         <div
           data-slot="product-buy-bar"
           className="border-border bg-background fixed inset-x-0 bottom-[var(--board-floating-bottom,0px)] z-40 flex flex-wrap items-center gap-3 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
@@ -917,6 +944,8 @@ export function ProductPageView({
               size="lg"
               className="flex-1"
               onClick={() => buy('bar')}
+              onPointerEnter={preloadCheckoutDialog}
+              onFocus={preloadCheckoutDialog}
               disabled={buying?.pending}
               aria-busy={
                 (buying?.source === 'bar' && buying.pending) || undefined

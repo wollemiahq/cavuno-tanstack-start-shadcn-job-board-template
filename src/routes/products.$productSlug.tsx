@@ -32,7 +32,7 @@ export const cavunoPage = 'product';
 type ProductSearch = {
   /** Stripe's return: the Checkout Session to confirm. */
   session_id?: string;
-  /** Open the buying step at once (the listing's Buy button). */
+  /** Open the buy dialog at once (the listing's Buy button). */
   buy?: boolean;
 };
 
@@ -79,7 +79,7 @@ export const Route = createFileRoute('/products/$productSlug')({
 function ProductPage() {
   const { product, reviews, canonical } = Route.useLoaderData();
   const { session_id: sessionId, buy } = Route.useSearch();
-  const { board } = rootApi.useLoaderData();
+  const { board, offerGate } = rootApi.useLoaderData();
   const pathname = useLocation({ select: (location) => location.pathname });
   const navigate = useNavigate();
 
@@ -93,6 +93,7 @@ function ProductPage() {
       returnPath={pathname}
       sessionId={sessionId ?? null}
       startInCheckout={buy === true}
+      showProductsLink={offerGate.hasProductsPage}
       jobAlertsEnabled={board.features.jobAlerts}
       dependencies={dependencies}
       onPurchase={(purchaseToken) =>

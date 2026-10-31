@@ -65,6 +65,20 @@ export type ProductsListInput = {
   cursor?: string;
 };
 
+/**
+ * Whether the board lists any product, asked after a page came back empty.
+ * An unfiltered first page already answers it (the sort only reorders); a
+ * search, price filter or page cursor needs one unfiltered read.
+ */
+async function boardListsProducts(
+  data: ProductsListInput,
+  headers: Record<string, string>,
+): Promise<boolean> {
+  if (!data.q && !data.price && !data.cursor) return false;
+  const any = await getBoard().products.list({ limit: 1 }, { headers });
+  return any.data.length > 0;
+}
+
 /** `/products` — one page of listed products plus head + breadcrumb JSON-LD. */
 export const getProductsPage = createServerFn({ method: 'GET' })
   .validator((input: ProductsListInput) => input)
@@ -84,6 +98,15 @@ export const getProductsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // A board with no listed products has no store: /products is a 404,
+      // like /memberships without a membership plan. An empty filtered page
+      // only 404s when the board has nothing listed at all.
+      if (
+        page.data.length === 0 &&
+        !(await boardListsProducts(data, headers))
+      ) {
+        throw notFound();
+      }
       const canonical = selfUrl(seo.origin, BOARD_PATHS.products);
       const filtered = Boolean(
         data.q || data.price || data.sort || data.cursor,

@@ -44,8 +44,20 @@ vi.mock('@/components/root-session', () => ({
   useRootSession: () => ({ ready: true, user: session.user }),
 }));
 
+/** The buy dialog asks for the viewport: a desktop one unless a test says. */
+function stubViewport({ phone }: { phone: boolean }) {
+  vi.stubGlobal('matchMedia', () => ({
+    matches: phone,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
+}
+
+beforeEach(() => stubViewport({ phone: false }));
+
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   session.user = null;
   vi.mocked(dependencies.loadMyPurchases).mockReset();
   vi.mocked(dependencies.startCheckout).mockReset();
@@ -98,7 +110,9 @@ function page(
     sessionId = null,
     jobAlertsEnabled = false,
     onPurchase = vi.fn(),
+    showProductsLink = true,
   }: {
+    showProductsLink?: boolean;
     onFilledChange?: (filled: boolean) => void;
     sessionId?: string | null;
     jobAlertsEnabled?: boolean;
@@ -115,6 +129,7 @@ function page(
         returnPath="/products/resume-pack"
         sessionId={sessionId}
         jobAlertsEnabled={jobAlertsEnabled}
+        showProductsLink={showProductsLink}
         dependencies={dependencies}
         onPurchase={onPurchase}
       />
@@ -132,12 +147,32 @@ function rail() {
   });
 }
 
+/** The rail while the modal buy dialog hides the page from assistive tech. */
+function railBehindDialog() {
+  return screen.getByRole('complementary', {
+    name: m.product_purchaseRegionLabel(),
+    hidden: true,
+  });
+}
+
 /** The rail's facts table (phones get a second copy after the description). */
 function facts() {
   return within(rail()).getByText((_, element) => element?.tagName === 'DL');
 }
 
 describe('ProductPageView', () => {
+  it('links back to the products only when the board lists products', () => {
+    const view = renderPage();
+    expect(
+      screen.getByRole('link', { name: m.products_metaTitle() }),
+    ).toHaveAttribute('href', '/products');
+
+    view.rerender(page({}, null, { showProductsLink: false }));
+    expect(
+      screen.queryByRole('link', { name: m.products_metaTitle() }),
+    ).toBeNull();
+  });
+
   it('renders the formatted description instead of the plain one', () => {
     const { container } = renderPage({
       descriptionHtml: '<h2>What is inside</h2><p>Six templates</p>',
@@ -470,17 +505,10 @@ describe('ProductPageView — already bought', () => {
 });
 
 describe('ProductPageView — desktop header actions', () => {
-  beforeEach(() => {
-    // jsdom has no layout: opening the buying step scrolls the price card.
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: vi.fn(),
-    });
-  });
-
   afterEach(() => {
+    // Unmount first: the buy dialog portals into the body.
+    cleanup();
     document.body.replaceChildren();
-    Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
   });
 
   it('fills the header with the stars, the price and the buy button', async () => {
@@ -509,14 +537,10 @@ describe('ProductPageView — desktop header actions', () => {
     fireEvent.click(
       header.getByRole('button', { name: m.product_buyAction() }),
     );
-    // The header button opens the price card's own buying step.
-    await waitFor(() =>
-      expect(
-        within(rail()).queryByRole('button', {
-          name: m.product_buyAction(),
-        }),
-      ).toBeNull(),
-    );
+    // The header button opens the same buy dialog as the price card.
+    expect(
+      await screen.findByRole('dialog', { name: m.product_paidStepTitle() }),
+    ).toBeInTheDocument();
   });
 
   it('tells the header while it fills the slot, and not while paying', () => {
@@ -609,15 +633,12 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
   beforeEach(() => {
     session.user = verified;
     vi.mocked(dependencies.loadMyPurchases).mockResolvedValue(library([]));
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: vi.fn(),
-    });
   });
 
   afterEach(() => {
+    // Unmount first: the buy dialog portals into the body.
+    cleanup();
     document.body.replaceChildren();
-    Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
     Reflect.deleteProperty(window, 'IntersectionObserver');
   });
 
@@ -705,28 +726,136 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
   ];
 
   it.each(keepsStep)(
-    'keeps the step for %s',
+    'asks in the "Before you pay" dialog for %s, leaving the price card as it was',
     async (_, user, overrides, options) => {
       session.user = user;
       const freeProduct = overrides.price?.kind === 'free';
       renderPage(overrides, null, options);
+      const buyLabel = freeProduct
+        ? m.product_getFreeAction()
+        : m.product_buyAction();
 
-      fireEvent.click(
-        within(rail()).getByRole('button', {
-          name: freeProduct ? m.product_getFreeAction() : m.product_buyAction(),
-        }),
-      );
+      fireEvent.click(within(rail()).getByRole('button', { name: buyLabel }));
 
+      const dialog = await screen.findByRole('dialog', {
+        name: freeProduct
+          ? m.product_freeStepTitle()
+          : m.product_paidStepTitle(),
+      });
+      expect(within(dialog).getByRole('form')).toBeInTheDocument();
       expect(
-        await screen.findByRole('form', {
-          name: freeProduct
-            ? m.product_freeStepTitle()
-            : m.product_paidStepTitle(),
+        within(railBehindDialog()).getByRole('button', {
+          name: buyLabel,
+          hidden: true,
         }),
       ).toBeInTheDocument();
       expect(dependencies.startCheckout).not.toHaveBeenCalled();
     },
   );
+
+  it('asks in a bottom sheet on a phone', async () => {
+    session.user = null;
+    stubViewport({ phone: true });
+    renderPage();
+
+    fireEvent.click(buyButton());
+    const sheet = await screen.findByRole('dialog', {
+      name: m.product_paidStepTitle(),
+    });
+    expect(sheet).toHaveAttribute('data-side', 'bottom');
+    expect(
+      within(sheet).getByRole('button', {
+        name: m.product_continueToPaymentAction(),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('closes the dialog on Escape and opens it again from the buy button', async () => {
+    session.user = null;
+    renderPage();
+
+    fireEvent.click(buyButton());
+    const dialog = await screen.findByRole('dialog', {
+      name: m.product_paidStepTitle(),
+    });
+    await waitFor(() =>
+      expect(
+        within(dialog).getByLabelText(m.product_emailLabel()),
+      ).toHaveFocus(),
+    );
+
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
+    fireEvent.click(buyButton());
+    expect(
+      await screen.findByRole('dialog', { name: m.product_paidStepTitle() }),
+    ).toBeInTheDocument();
+  });
+
+  it('closes the dialog and shows Complete your purchase once checkout opens', async () => {
+    session.user = null;
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: true,
+      data: openCheckout,
+    });
+    renderPage({ questions: [question] });
+
+    fireEvent.click(buyButton());
+    const dialog = await screen.findByRole('dialog', {
+      name: m.product_paidStepTitle(),
+    });
+    fireEvent.change(within(dialog).getByLabelText(m.product_emailLabel()), {
+      target: { value: 'ada@example.com' },
+    });
+    fireEvent.click(
+      within(dialog).getByRole('button', {
+        name: m.product_continueToPaymentAction(),
+      }),
+    );
+
+    expect(
+      await screen.findByText(m.product_completePurchaseTitle()),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    // Back on the page, the dialog stays closed.
+    fireEvent.click(
+      screen.getByRole('button', { name: m.product_backToProductAction() }),
+    );
+    expect(buyButton()).toBeEnabled();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('keeps a refusal inside the dialog, under its button', async () => {
+    session.user = null;
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: false,
+      code: 'stripe_not_connected',
+      message: 'Payments are not set up',
+    });
+    renderPage();
+
+    fireEvent.click(buyButton());
+    const dialog = await screen.findByRole('dialog', {
+      name: m.product_paidStepTitle(),
+    });
+    fireEvent.change(within(dialog).getByLabelText(m.product_emailLabel()), {
+      target: { value: 'ada@example.com' },
+    });
+    fireEvent.click(
+      within(dialog).getByRole('button', {
+        name: m.product_continueToPaymentAction(),
+      }),
+    );
+
+    expect(
+      await within(dialog).findByText(m.boardError_stripeNotConnectedText()),
+    ).toBeInTheDocument();
+    expect(
+      within(railBehindDialog()).queryByRole('alert', { hidden: true }),
+    ).toBeNull();
+  });
 
   it('spins the pressed button and holds the others while checkout starts', async () => {
     vi.mocked(dependencies.startCheckout).mockReturnValue(

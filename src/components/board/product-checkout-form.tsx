@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * The short step before payment (or before a free download): the email the
- * link goes to, the amount for pay what you want, the product's buyer
- * questions (a required checkbox covers the EU right-to-cancel waiver), the
- * job-alert opt-in on free products of a board that sends job alerts, and a hidden honeypot field. Refusals
- * from the Board API are worded under the field they concern.
+ * The "Before you pay" form, shown in the product page's buy dialog (which
+ * owns the title): the email the link goes to, the amount for pay what you
+ * want, the product's buyer questions (a required checkbox covers the EU
+ * right-to-cancel waiver), the job-alert opt-in on free products of a board
+ * that sends job alerts, and a hidden honeypot field. Refusals from the Board
+ * API are worded under the field they concern.
  */
 import { useId, useState, type FormEvent } from 'react';
 
@@ -79,7 +80,6 @@ export function ProductCheckoutForm({
   defaultEmail,
   offerJobAlertOptIn,
   onSubmit,
-  onCancel,
 }: {
   product: Product;
   defaultEmail?: string | null;
@@ -89,7 +89,6 @@ export function ProductCheckoutForm({
   onSubmit: (
     values: ProductCheckoutValues,
   ) => Promise<ProductCheckoutRefusal | void>;
-  onCancel: () => void;
 }) {
   const id = useId();
   const locale = getLocale();
@@ -204,9 +203,6 @@ export function ProductCheckoutForm({
       className="flex flex-col gap-4"
       data-test="product-checkout-form"
     >
-      <h2 className="text-foreground text-base font-semibold">
-        {free ? m.product_freeStepTitle() : m.product_paidStepTitle()}
-      </h2>
       <FieldGroup className="gap-4">
         <Field data-invalid={Boolean(errors.email) || undefined}>
           <FieldLabel htmlFor={`${id}-email`}>
@@ -384,7 +380,7 @@ export function ProductCheckoutForm({
       </FieldGroup>
 
       <div className="flex flex-col gap-2">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button type="submit" size="xl" disabled={pending}>
           {pending ? <Spinner data-icon="inline-start" /> : null}
           {ctaLabel}
         </Button>
@@ -393,15 +389,6 @@ export function ProductCheckoutForm({
             {errors.form}
           </FieldError>
         ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={pending}
-          onClick={onCancel}
-        >
-          {m.product_cancelStepAction()}
-        </Button>
       </div>
     </form>
   );

@@ -2824,7 +2824,7 @@
   "product_jobAlertOptInLabel": "Mail me ook nieuwe vacatures van dit platform",
   "product_sendFilesAction": "Stuur me de bestanden",
   "product_continueToPaymentAction": "Verder naar betalen",
-  "product_cancelStepAction": "Terug",
+  "product_checkoutDialogDescription": "{productName} · {price}",
   "product_completePurchaseTitle": "Rond je aankoop af",
   "product_backToProductAction": "Terug naar product",
   "product_confirmingTitle": "Je betaling wordt bevestigd…",

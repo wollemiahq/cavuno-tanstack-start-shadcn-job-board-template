@@ -77,7 +77,6 @@ describe('ProductCheckoutForm', () => {
       <ProductCheckoutForm
         product={product()}
         onSubmit={onSubmit}
-        onCancel={() => {}}
         offerJobAlertOptIn
       />,
     );
@@ -113,7 +112,6 @@ describe('ProductCheckoutForm', () => {
           },
         })}
         onSubmit={onSubmit}
-        onCancel={() => {}}
         offerJobAlertOptIn
       />,
     );
@@ -137,7 +135,6 @@ describe('ProductCheckoutForm', () => {
       <ProductCheckoutForm
         product={product({ questions: [] })}
         onSubmit={onSubmit}
-        onCancel={() => {}}
         offerJobAlertOptIn
       />,
     );
@@ -156,7 +153,6 @@ describe('ProductCheckoutForm', () => {
           price: { kind: 'free', currency: null, amountCents: 0 },
         })}
         onSubmit={vi.fn()}
-        onCancel={() => {}}
         offerJobAlertOptIn
       />,
     );
@@ -175,7 +171,6 @@ describe('ProductCheckoutForm', () => {
         })}
         defaultEmail="ada@example.com"
         onSubmit={onSubmit}
-        onCancel={() => {}}
         offerJobAlertOptIn={false}
       />,
     );
