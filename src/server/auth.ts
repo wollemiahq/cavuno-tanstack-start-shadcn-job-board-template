@@ -2,6 +2,7 @@ import {
   BoardApiError,
   isBoardApiError,
   type BoardAuthSession,
+  type OAuthAuthorizationQuery,
 } from '@cavuno/board';
 /**
  * Auth server functions. The SDK never
@@ -36,9 +37,12 @@ import {
   clearMagicLinkIntentCookie,
 } from '../lib/magic-link-intent';
 import {
+  createOAuthBrowserProof,
   matchesOAuthBrowser,
   oauthBrowserCookie,
+  oauthProofCookie,
   OAUTH_BROWSER_BINDING_PARAM,
+  readOAuthProof,
 } from '../lib/oauth-browser-binding';
 import { safeRedirectPath } from '../lib/safe-redirect-path';
 import { sessionMiddleware } from '../lib/session-middleware';
@@ -455,11 +459,22 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
         'https://board.invalid',
       );
       returnTo.searchParams.set(OAUTH_BROWSER_BINDING_PARAM, binding);
-      const result = await getBoard().auth.getOAuthAuthorizationUrl(provider, {
+      const proof = await createOAuthBrowserProof();
+      // TODO: drop the intersection once `OAuthAuthorizationQuery` declares
+      // `browserBindingHash`; the SDK already forwards every query key.
+      const authorizationQuery: OAuthAuthorizationQuery & {
+        browserBindingHash: string;
+      } = {
         ...query,
         returnTo: `${returnTo.pathname}${returnTo.search}${returnTo.hash}`,
-      });
+        browserBindingHash: proof.hash,
+      };
+      const result = await getBoard().auth.getOAuthAuthorizationUrl(
+        provider,
+        authorizationQuery,
+      );
       appendResponseHeader('Set-Cookie', oauthBrowserCookie(binding));
+      appendResponseHeader('Set-Cookie', oauthProofCookie(proof.secret));
       return { ok: true as const, authorizeUrl: result.authorizeUrl };
     } catch (error) {
       return authError(error);
@@ -470,9 +485,8 @@ export const exchangeOAuth = createServerFn({ method: 'POST' })
   .validator((input: { token: string; browserBinding?: string }) => input)
   .handler(async ({ data }) => {
     try {
-      if (
-        !matchesOAuthBrowser(getRequestHeader('cookie'), data.browserBinding)
-      ) {
+      const cookie = getRequestHeader('cookie');
+      if (!matchesOAuthBrowser(cookie, data.browserBinding)) {
         throw new BoardApiError({
           status: 401,
           code: 'board_auth_invalid_token',
@@ -482,9 +496,11 @@ export const exchangeOAuth = createServerFn({ method: 'POST' })
       }
       const session = await getBoard().auth.exchangeOAuth({
         token: resolveAuthFlowToken('oauth-complete', data.token),
+        browserBinding: readOAuthProof(cookie),
       });
       finishAuthFlow('oauth-complete');
       appendResponseHeader('Set-Cookie', oauthBrowserCookie(''));
+      appendResponseHeader('Set-Cookie', oauthProofCookie(''));
       persistAuthSession(session);
       return {
         ok: true as const,
