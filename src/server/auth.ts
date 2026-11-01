@@ -460,11 +460,7 @@ export const getOAuthAuthorizationUrl = createServerFn({ method: 'GET' })
       );
       returnTo.searchParams.set(OAUTH_BROWSER_BINDING_PARAM, binding);
       const proof = await createOAuthBrowserProof();
-      // TODO: drop the intersection once `OAuthAuthorizationQuery` declares
-      // `browserBindingHash`; the SDK already forwards every query key.
-      const authorizationQuery: OAuthAuthorizationQuery & {
-        browserBindingHash: string;
-      } = {
+      const authorizationQuery: OAuthAuthorizationQuery = {
         ...query,
         returnTo: `${returnTo.pathname}${returnTo.search}${returnTo.hash}`,
         browserBindingHash: proof.hash,
