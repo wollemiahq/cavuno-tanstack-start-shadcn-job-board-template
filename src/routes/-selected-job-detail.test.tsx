@@ -155,6 +155,8 @@ const board = {
     facebookUrl: null,
     linkedinUrl: null,
     instagramUrl: null,
+    tiktokUrl: null,
+    youtubeUrl: null,
   },
   footer: {
     contactEmail: null,
@@ -163,6 +165,8 @@ const board = {
     facebookUrl: null,
     linkedinUrl: null,
     instagramUrl: null,
+    tiktokUrl: null,
+    youtubeUrl: null,
   },
   talentDirectoryVisibility: 'public',
   talentAccessModel: null,
