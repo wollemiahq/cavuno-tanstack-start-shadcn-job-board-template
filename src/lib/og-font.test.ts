@@ -161,8 +161,19 @@ describe('script font coverage', () => {
     const font = await loadOgFont('東京', fetchImpl, 'ja');
     expect(font.fallbacks?.[0].name).toBe('Noto Sans JP');
     expect(font.fallbacks?.[0].data.byteLength).toBe(3);
-    expect(ogFontStack(font)).toContain(', Noto Sans JP');
+    expect(ogFontStack(font)).toContain(", 'Noto Sans JP'");
     expect(calls.some(({ url }) => url.includes('Noto+Sans+JP'))).toBe(true);
+  });
+
+  it('quotes every family so digit-led names stay valid CSS', () => {
+    const data = new ArrayBuffer(0);
+    expect(
+      ogFontStack({
+        name: 'Source Serif 4',
+        data,
+        fallbacks: [{ name: 'Noto Sans JP', data }],
+      }),
+    ).toBe("'Source Serif 4', 'Noto Sans JP'");
   });
 
   it('fails rather than silently dropping a required script font', async () => {
