@@ -10,7 +10,9 @@ import {
   FacebookIcon,
   InstagramIcon,
   LinkedInIcon,
+  TikTokIcon,
   XIcon,
+  YouTubeIcon,
 } from '@/components/brand-icons';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Box } from '@/components/layout/box';
@@ -41,6 +43,8 @@ export interface BoardContextFooter {
   facebookUrl: string | null;
   linkedinUrl: string | null;
   instagramUrl: string | null;
+  tiktokUrl: string | null;
+  youtubeUrl: string | null;
 }
 
 interface FooterLink {
@@ -366,6 +370,12 @@ export default function Footer({
           label: 'Instagram',
           icon: <InstagramIcon />,
         }
+      : null,
+    footer?.tiktokUrl
+      ? { href: footer.tiktokUrl, label: 'TikTok', icon: <TikTokIcon /> }
+      : null,
+    footer?.youtubeUrl
+      ? { href: footer.youtubeUrl, label: 'YouTube', icon: <YouTubeIcon /> }
       : null,
   ].filter((link) => link !== null);
 

@@ -32,6 +32,8 @@ const contact: BoardContextFooter = {
   facebookUrl: null,
   linkedinUrl: null,
   instagramUrl: null,
+  tiktokUrl: null,
+  youtubeUrl: null,
 };
 
 function renderFooter(
@@ -77,6 +79,29 @@ describe('Footer social links', () => {
       'href',
       'https://www.instagram.com/example.jobs/',
     );
+  });
+
+  it('links TikTok and YouTube after the other networks', () => {
+    renderFooter({
+      ...contact,
+      xUrl: 'https://x.com/examplejobs',
+      tiktokUrl: 'https://www.tiktok.com/@examplejobs',
+      youtubeUrl: 'https://www.youtube.com/@examplejobs',
+    });
+
+    expect(screen.getByRole('link', { name: 'TikTok' })).toHaveAttribute(
+      'href',
+      'https://www.tiktok.com/@examplejobs',
+    );
+    expect(screen.getByRole('link', { name: 'YouTube' })).toHaveAttribute(
+      'href',
+      'https://www.youtube.com/@examplejobs',
+    );
+    expect(
+      screen
+        .getAllByRole('link', { name: /^(X|TikTok|YouTube)$/ })
+        .map((link) => link.getAttribute('aria-label')),
+    ).toEqual(['X', 'TikTok', 'YouTube']);
   });
 
   it('omits Instagram when the board has no profile configured', () => {
