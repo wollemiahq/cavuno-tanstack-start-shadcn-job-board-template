@@ -167,8 +167,13 @@ export async function loadOgFont(
   return { ...primary, fallbacks, language };
 }
 
+/**
+ * Quote every family: an unquoted name with a digit-led word (`Source Serif
+ * 4`) is not a valid CSS family-name, and Takumi rejects the whole card.
+ * Single quotes, because `ogStyleValue` strips double quotes.
+ */
 export function ogFontStack(font: OgFont): string {
-  return [font.name, ...(font.fallbacks ?? []).map(({ name }) => name)].join(
-    ', ',
-  );
+  return [font.name, ...(font.fallbacks ?? []).map(({ name }) => name)]
+    .map((name) => `'${name.replaceAll("'", '')}'`)
+    .join(', ');
 }
