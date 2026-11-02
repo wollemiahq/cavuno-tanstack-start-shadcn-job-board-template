@@ -3,11 +3,183 @@ import { describe, expect, it } from 'vitest';
 import { m } from '../paraglide/messages';
 import { planFeatureLines, planOffersFeaturedChoice } from './plan-view-model';
 
-const plan = (features: { key: string | null; value: string | null }[]) => ({
-  features,
+const plan = (
+  features: { key: string | null; value: string | null }[],
+  kind?: string,
+) => ({ features, kind });
+
+const kindPlan = (kind: string, values: Record<string, string>) =>
+  plan(
+    Object.entries(values).map(([key, value]) => ({ key, value })),
+    kind,
+  );
+
+describe('planFeatureLines for a single post', () => {
+  it.each(['one_time', 'free'])(
+    'drops the capacity line and describes auto featuring for %s',
+    (kind) => {
+      expect(
+        planFeatureLines(
+          kindPlan(kind, {
+            'jobs.duration_days': '30',
+            'jobs.max_active': '1',
+            'jobs.featured_slots': '1',
+            'jobs.feature_selection_mode': 'auto',
+          }),
+        ),
+      ).toEqual([
+        m.planFeature_listedDays({ days: '30' }),
+        m.planFeature_featuredAbove(),
+        m.planFeature_featuredBadge(),
+      ]);
+    },
+  );
+
+  it('treats a missing selection mode as auto and unlimited as featured', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('one_time', { 'jobs.featured_slots': 'unlimited' }),
+      ),
+    ).toEqual([m.planFeature_featuredAbove(), m.planFeature_featuredBadge()]);
+  });
+
+  it('leaves manual featuring to the checkbox and skips unfeatured plans', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('one_time', {
+          'jobs.duration_days': '30',
+          'jobs.max_active': '1',
+          'jobs.featured_slots': '1',
+          'jobs.feature_selection_mode': 'manual',
+        }),
+      ),
+    ).toEqual([m.planFeature_listedDays({ days: '30' })]);
+    expect(
+      planFeatureLines(
+        kindPlan('one_time', {
+          'jobs.max_active': '1',
+          'jobs.featured_slots': '0',
+          'jobs.feature_selection_mode': 'auto',
+        }),
+      ),
+    ).toEqual([]);
+  });
 });
 
-describe('planFeatureLines', () => {
+describe('planFeatureLines for a bundle', () => {
+  it('counts posts and features all of them when slots cover the bundle', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('bundle', {
+          'jobs.duration_days': '30',
+          'jobs.max_active': '5',
+          'jobs.featured_slots': '5',
+          'jobs.feature_selection_mode': 'auto',
+        }),
+      ),
+    ).toEqual([
+      m.planFeature_bundlePosts({ count: 5, countLabel: '5' }),
+      m.planFeature_eachListedDays({ days: '30' }),
+      m.planFeature_allFeatured(),
+    ]);
+    expect(
+      planFeatureLines(
+        kindPlan('bundle', {
+          'jobs.max_active': '1',
+          'jobs.featured_slots': 'unlimited',
+        }),
+      ),
+    ).toEqual([
+      m.planFeature_bundlePosts({ count: 1, countLabel: '1' }),
+      m.planFeature_allFeatured(),
+    ]);
+  });
+
+  it('says how many can be featured when slots fall short or are chosen', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('bundle', {
+          'jobs.max_active': '10',
+          'jobs.featured_slots': '2',
+          'jobs.feature_selection_mode': 'auto',
+        }),
+      ),
+    ).toEqual([
+      m.planFeature_bundlePosts({ count: 10, countLabel: '10' }),
+      m.planFeature_bundleFeatured({ count: 2, countLabel: '2' }),
+    ]);
+    expect(
+      planFeatureLines(
+        kindPlan('bundle', {
+          'jobs.max_active': '3',
+          'jobs.featured_slots': '3',
+          'jobs.feature_selection_mode': 'manual',
+        }),
+      ),
+    ).toEqual([
+      m.planFeature_bundlePosts({ count: 3, countLabel: '3' }),
+      m.planFeature_bundleFeatured({ count: 3, countLabel: '3' }),
+    ]);
+  });
+
+  it('skips a missing or malformed post count', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('bundle', {
+          'jobs.max_active': 'lots',
+          'jobs.duration_days': '14',
+        }),
+      ),
+    ).toEqual([m.planFeature_eachListedDays({ days: '14' })]);
+  });
+});
+
+describe('planFeatureLines for a subscription', () => {
+  it('describes concurrent slots and partial featuring', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('subscription', {
+          'jobs.duration_days': '30',
+          'jobs.max_active': '5',
+          'jobs.featured_slots': '1',
+          'jobs.feature_selection_mode': 'manual',
+        }),
+      ),
+    ).toEqual([
+      m.planFeature_liveAtOnce({ count: 5, countLabel: '5' }),
+      m.planFeature_eachListedDays({ days: '30' }),
+      m.planFeature_featuredAtATime({ count: 1, countLabel: '1' }),
+    ]);
+    expect(
+      planFeatureLines(kindPlan('subscription', { 'jobs.max_active': '1' })),
+    ).toEqual([m.planFeature_liveAtOnce({ count: 1, countLabel: '1' })]);
+  });
+
+  it('features all of them when slots are unlimited or cover the cap', () => {
+    expect(
+      planFeatureLines(
+        kindPlan('subscription', {
+          'jobs.max_active': 'unlimited',
+          'jobs.featured_slots': 'unlimited',
+        }),
+      ),
+    ).toEqual([m.planFeature_unlimitedLive(), m.planFeature_allFeatured()]);
+    expect(
+      planFeatureLines(
+        kindPlan('subscription', {
+          'jobs.max_active': '3',
+          'jobs.featured_slots': '3',
+          'jobs.feature_selection_mode': 'auto',
+        }),
+      ),
+    ).toEqual([
+      m.planFeature_liveAtOnce({ count: 3, countLabel: '3' }),
+      m.planFeature_allFeatured(),
+    ]);
+  });
+});
+
+describe('planFeatureLines for an unknown kind', () => {
   it('maps the full job-posting feature set to readable lines', () => {
     expect(
       planFeatureLines(
