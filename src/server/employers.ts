@@ -230,7 +230,8 @@ export const updateCompany = createServerFn({ method: 'POST' })
 
 /**
  * The company's owner-editable custom fields and collection selections
- * (`retrieveCustomFields` / `retrieveObjectReferences`), including private
+ * (`retrieveCustomFields` / `retrieveObjectReferences`) and their item
+ * verification statuses (`listVerifications`), including private
  * fields the public form layout never lists. Each read degrades to `null`
  * on its own, so an API without them still renders the built-in form.
  */
@@ -241,15 +242,19 @@ export const getCompanyProfileFields = createServerFn({ method: 'GET' })
     gatedRead(context, async () => {
       const headers = authedHeaders(context);
       const companies = getBoard().me.companies;
-      const [customFields, objectReferences] = await Promise.all([
-        companies
-          .retrieveCustomFields(data.slug, { headers })
-          .catch(() => null),
-        companies
-          .retrieveObjectReferences(data.slug, { headers })
-          .catch(() => null),
-      ]);
-      return { customFields, objectReferences };
+      const [customFields, objectReferences, verifications] = await Promise.all(
+        [
+          companies
+            .retrieveCustomFields(data.slug, { headers })
+            .catch(() => null),
+          companies
+            .retrieveObjectReferences(data.slug, { headers })
+            .catch(() => null),
+          // Item verification statuses; empty when the board verifies none.
+          companies.listVerifications(data.slug, { headers }).catch(() => null),
+        ],
+      );
+      return { customFields, objectReferences, verifications };
     }),
   );
 

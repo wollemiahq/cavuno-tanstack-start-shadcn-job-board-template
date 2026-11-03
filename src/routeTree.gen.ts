@@ -48,6 +48,7 @@ import { Route as AuthSignInRouteImport } from './routes/auth.sign-in'
 import { Route as AuthSignUpRouteImport } from './routes/auth.sign-up'
 import { Route as AuthVerifyEmailRouteImport } from './routes/auth.verify-email'
 import { Route as AuthVerifyEmailRequiredRouteImport } from './routes/auth.verify-email-required'
+import { Route as AuthVerifyItemEmailRouteImport } from './routes/auth.verify-item-email'
 import { Route as AuthVerifyWorkEmailRouteImport } from './routes/auth.verify-work-email'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogPostSlugRouteImport } from './routes/blog.$postSlug'
@@ -313,6 +314,11 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
 const AuthVerifyEmailRequiredRoute = AuthVerifyEmailRequiredRouteImport.update({
   id: '/auth/verify-email-required',
   path: '/auth/verify-email-required',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyItemEmailRoute = AuthVerifyItemEmailRouteImport.update({
+  id: '/auth/verify-item-email',
+  path: '/auth/verify-item-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthVerifyWorkEmailRoute = AuthVerifyWorkEmailRouteImport.update({
@@ -730,6 +736,7 @@ export interface FileRoutesByFullPath {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/auth/verify-email-required': typeof AuthVerifyEmailRequiredRoute
+  '/auth/verify-item-email': typeof AuthVerifyItemEmailRoute
   '/auth/verify-work-email': typeof AuthVerifyWorkEmailRoute
   '/blog/$postSlug': typeof BlogPostSlugRouteWithChildren
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
@@ -841,6 +848,7 @@ export interface FileRoutesByTo {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/auth/verify-email-required': typeof AuthVerifyEmailRequiredRoute
+  '/auth/verify-item-email': typeof AuthVerifyItemEmailRoute
   '/auth/verify-work-email': typeof AuthVerifyWorkEmailRoute
   '/blog/$postSlug': typeof BlogPostSlugRouteWithChildren
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
@@ -953,6 +961,7 @@ export interface FileRoutesById {
   '/auth/sign-up': typeof AuthSignUpRoute
   '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/auth/verify-email-required': typeof AuthVerifyEmailRequiredRoute
+  '/auth/verify-item-email': typeof AuthVerifyItemEmailRoute
   '/auth/verify-work-email': typeof AuthVerifyWorkEmailRoute
   '/blog/$postSlug': typeof BlogPostSlugRouteWithChildren
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
@@ -1066,6 +1075,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/auth/verify-email'
     | '/auth/verify-email-required'
+    | '/auth/verify-item-email'
     | '/auth/verify-work-email'
     | '/blog/$postSlug'
     | '/blog/rss.xml'
@@ -1177,6 +1187,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/auth/verify-email'
     | '/auth/verify-email-required'
+    | '/auth/verify-item-email'
     | '/auth/verify-work-email'
     | '/blog/$postSlug'
     | '/blog/rss.xml'
@@ -1288,6 +1299,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/auth/verify-email'
     | '/auth/verify-email-required'
+    | '/auth/verify-item-email'
     | '/auth/verify-work-email'
     | '/blog/$postSlug'
     | '/blog/rss.xml'
@@ -1400,6 +1412,7 @@ export interface RootRouteChildren {
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   AuthVerifyEmailRequiredRoute: typeof AuthVerifyEmailRequiredRoute
+  AuthVerifyItemEmailRoute: typeof AuthVerifyItemEmailRoute
   AuthVerifyWorkEmailRoute: typeof AuthVerifyWorkEmailRoute
   BlogPostSlugRoute: typeof BlogPostSlugRouteWithChildren
   BlogRssDotxmlRoute: typeof BlogRssDotxmlRoute
@@ -1742,6 +1755,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/verify-email-required'
       fullPath: '/auth/verify-email-required'
       preLoaderRoute: typeof AuthVerifyEmailRequiredRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify-item-email': {
+      id: '/auth/verify-item-email'
+      path: '/auth/verify-item-email'
+      fullPath: '/auth/verify-item-email'
+      preLoaderRoute: typeof AuthVerifyItemEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/verify-work-email': {
@@ -2316,6 +2336,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   AuthVerifyEmailRequiredRoute: AuthVerifyEmailRequiredRoute,
+  AuthVerifyItemEmailRoute: AuthVerifyItemEmailRoute,
   AuthVerifyWorkEmailRoute: AuthVerifyWorkEmailRoute,
   BlogPostSlugRoute: BlogPostSlugRouteWithChildren,
   BlogRssDotxmlRoute: BlogRssDotxmlRoute,

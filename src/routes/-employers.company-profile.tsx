@@ -47,6 +47,7 @@ import {
   updateCompanyCustomFields,
   updateCompanyObjectReferences,
 } from '../server/form-fields';
+import { submitCompanyItemVerification } from '../server/item-verification';
 import { getSeoBase, getCompany } from '../server/queries';
 
 import { customFieldLabel } from '@/board/custom-field-labels';
@@ -62,6 +63,10 @@ import {
   type CompanyFormBuiltinKey,
   type ProfileFormEntry,
 } from '@/board/form-layout';
+import {
+  collectionVerifiableItems,
+  verificationsByKey,
+} from '@/board/item-verification';
 import {
   initialProfileSelections,
   profileCustomFieldsBody,
@@ -79,6 +84,7 @@ import {
   EmployerProfileViewsStat,
   EmployerProfileViewsStatPending,
 } from '@/components/employer/employer-profile-views-stat';
+import { ItemVerificationCard } from '@/components/item-verification';
 import { Page, PageContent } from '@/components/layout/page';
 import { LogoUpload } from '@/components/logo-upload';
 import {
@@ -277,6 +283,10 @@ export type CompanyProfileViewActions = {
   listCompanyObjectReferenceChoices?: (
     ...args: Parameters<typeof listCompanyObjectReferenceChoices>
   ) => Promise<{ data: { id: string; name: string }[] }>;
+  /** Asks the board team to verify a company item; the server function by default. */
+  submitCompanyItemVerification?: (
+    ...args: Parameters<typeof submitCompanyItemVerification>
+  ) => Promise<{ ok: true; data: unknown } | { ok: false; code: string }>;
   invalidate: () => Promise<void>;
   navigateToDashboard: () => Promise<void>;
   toastError: (message: string) => void;
@@ -356,6 +366,21 @@ export function CompanyProfilePageView({
             profileFields={profileFields ?? null}
             formLayout={formLayout ?? null}
             actions={actions}
+          />
+
+          <ItemVerificationCard
+            items={collectionVerifiableItems(
+              profileFields?.objectReferences,
+              verificationsByKey(profileFields?.verifications),
+              { emailDomain: false },
+            )}
+            actions={{
+              requestReview: (itemKey) =>
+                (
+                  actions.submitCompanyItemVerification ??
+                  submitCompanyItemVerification
+                )({ data: { slug: workspace.slug, itemKey } }),
+            }}
           />
 
           <CompanyDeleteDangerZone

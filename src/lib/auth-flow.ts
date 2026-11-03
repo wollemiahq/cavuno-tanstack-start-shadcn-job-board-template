@@ -5,6 +5,7 @@ export const AUTH_FLOW_KINDS = [
   'oauth-complete',
   'reset-password',
   'confirm-email-change',
+  'verify-item-email',
 ] as const;
 export type AuthFlowKind = (typeof AUTH_FLOW_KINDS)[number];
 export const STORED_AUTH_FLOW_TOKEN = 'stored-auth-flow';

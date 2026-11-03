@@ -1966,6 +1966,7 @@ describe('Company profile — operator form layout', () => {
   const profileFields = {
     customFields: { definitions: [motto], values: { motto: 'Onward' } },
     objectReferences: { definitions: [], selections: [] },
+    verifications: null,
   };
 
   it('renders the layout order, leaves hidden fields out and keeps their stored values', async () => {

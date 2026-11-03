@@ -12,7 +12,9 @@ import {
   updateEducation,
 } from '../server/account';
 
+import { educationVerifiableItem } from '@/board/item-verification';
 import { profileMonthLabel } from '@/board/profile-view-model';
+import { ItemVerificationControl } from '@/components/item-verification';
 import { MonthYearField } from '@/components/month-year-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,7 +55,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
-import type { CandidateEducation } from '@cavuno/board';
+import type { CandidateEducation, ItemVerification } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
 
@@ -95,9 +97,12 @@ function toDraft(item: CandidateEducation): Draft {
 export function EducationSection({
   items,
   language,
+  verifications = new Map(),
 }: {
   items: CandidateEducation[];
   language: string;
+  /** Item verification statuses by item key; empty when none apply. */
+  verifications?: ReadonlyMap<string, ItemVerification>;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
@@ -305,6 +310,10 @@ export function EducationSection({
                         : entityCopy().candidatePresent}
                     </ItemDescription>
                   ) : null}
+                  <EducationVerification
+                    item={item}
+                    verifications={verifications}
+                  />
                 </ItemContent>
                 <ItemActions>
                   <Button
@@ -374,4 +383,15 @@ export function EducationSection({
       </CardContent>
     </Card>
   );
+}
+
+function EducationVerification({
+  item,
+  verifications,
+}: {
+  item: CandidateEducation;
+  verifications: ReadonlyMap<string, ItemVerification>;
+}) {
+  const verifiable = educationVerifiableItem(item, verifications);
+  return verifiable ? <ItemVerificationControl item={verifiable} /> : null;
 }
