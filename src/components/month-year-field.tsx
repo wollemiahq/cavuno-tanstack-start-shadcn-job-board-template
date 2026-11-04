@@ -69,6 +69,7 @@ export function MonthYearField({
   yearPlaceholder: string;
 }) {
   const [parts, setParts] = useState(() => parseParts(defaultValue));
+  // The minimum widths fit the longest month name and a 4-digit year.
 
   // Arrays, deliberately NOT keyed records: JS object key ordering puts
   // integer-like keys ('10'–'12', years) before zero-padded strings and
@@ -116,7 +117,7 @@ export function MonthYearField({
           <SelectTrigger
             id={`${idPrefix}-month`}
             aria-label={monthAriaLabel}
-            className="w-full min-w-0 flex-[3]"
+            className="w-full min-w-32 flex-[3]"
           >
             <SelectValue placeholder={monthPlaceholder} />
           </SelectTrigger>
@@ -139,7 +140,7 @@ export function MonthYearField({
           <SelectTrigger
             id={`${idPrefix}-year`}
             aria-label={yearAriaLabel}
-            className="w-full min-w-0 flex-[2]"
+            className="w-full min-w-20 flex-[2]"
           >
             <SelectValue placeholder={yearPlaceholder} />
           </SelectTrigger>

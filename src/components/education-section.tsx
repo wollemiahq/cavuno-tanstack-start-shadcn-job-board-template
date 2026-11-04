@@ -14,7 +14,7 @@ import {
 
 import { educationVerifiableItem } from '@/board/item-verification';
 import { profileMonthLabel } from '@/board/profile-view-model';
-import { ItemVerificationControl } from '@/components/item-verification';
+import { ItemVerificationTick } from '@/components/item-verification';
 import { MonthYearField } from '@/components/month-year-field';
 import { Button } from '@/components/ui/button';
 import {
@@ -197,6 +197,8 @@ export function EducationSection({
                 </InputGroupAddon>
                 <InputGroupInput
                   id="education-website"
+                  // Flush against the https:// prefix, so it reads as one URL.
+                  className="ps-0!"
                   inputMode="url"
                   autoComplete="url"
                   autoCapitalize="none"
@@ -236,30 +238,38 @@ export function EducationSection({
                 }
               />
             </Field>
-            <MonthYearField
-              idPrefix="education-start"
-              label={m.educationSection_startLabel()}
-              language={language}
-              defaultValue={draft.startDate}
-              onChange={(startDate) =>
-                setDraft((prev) => ({ ...prev, startDate }))
-              }
-              monthAriaLabel={m.monthYearField_monthPlaceholder()}
-              yearAriaLabel={m.monthYearField_yearPlaceholder()}
-              monthPlaceholder={m.monthYearField_monthPlaceholder()}
-              yearPlaceholder={m.monthYearField_yearPlaceholder()}
-            />
-            <MonthYearField
-              idPrefix="education-end"
-              label={m.educationSection_endLabel()}
-              language={language}
-              defaultValue={draft.endDate}
-              onChange={(endDate) => setDraft((prev) => ({ ...prev, endDate }))}
-              monthAriaLabel={m.monthYearField_monthPlaceholder()}
-              yearAriaLabel={m.monthYearField_yearPlaceholder()}
-              monthPlaceholder={m.monthYearField_monthPlaceholder()}
-              yearPlaceholder={m.monthYearField_yearPlaceholder()}
-            />
+            {/* Start and end sit side by side only when there is room for
+                a full month name and year in each. */}
+            <div className="@container sm:col-span-2">
+              <div className="grid gap-3 @md:grid-cols-2">
+                <MonthYearField
+                  idPrefix="education-start"
+                  label={m.educationSection_startLabel()}
+                  language={language}
+                  defaultValue={draft.startDate}
+                  onChange={(startDate) =>
+                    setDraft((prev) => ({ ...prev, startDate }))
+                  }
+                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
+                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
+                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
+                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
+                />
+                <MonthYearField
+                  idPrefix="education-end"
+                  label={m.educationSection_endLabel()}
+                  language={language}
+                  defaultValue={draft.endDate}
+                  onChange={(endDate) =>
+                    setDraft((prev) => ({ ...prev, endDate }))
+                  }
+                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
+                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
+                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
+                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
+                />
+              </div>
+            </div>
           </div>
           <Field className="gap-1.5">
             <FieldLabel htmlFor="education-description">
@@ -338,7 +348,13 @@ export function EducationSection({
             {items.map((item) => (
               <Item key={item.id} variant="outline" size="sm" render={<li />}>
                 <ItemContent>
-                  <ItemTitle>{item.institutionName}</ItemTitle>
+                  <ItemTitle className="gap-1">
+                    {item.institutionName}
+                    <EducationVerification
+                      item={item}
+                      verifications={verifications}
+                    />
+                  </ItemTitle>
                   <ItemDescription>
                     {[
                       [item.degree, item.fieldOfStudy]
@@ -357,12 +373,7 @@ export function EducationSection({
                         : entityCopy().candidatePresent}
                     </ItemDescription>
                   ) : null}
-                  <EducationVerification
-                    item={item}
-                    verifications={verifications}
-                  />
                 </ItemContent>
-                {/* Top-aligned, so an open email check doesn't move them. */}
                 <ItemActions className="self-start">
                   <Button
                     variant="ghost"
@@ -441,5 +452,5 @@ function EducationVerification({
   verifications: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const verifiable = educationVerifiableItem(item, verifications);
-  return verifiable ? <ItemVerificationControl item={verifiable} /> : null;
+  return verifiable ? <ItemVerificationTick item={verifiable} /> : null;
 }

@@ -14,7 +14,7 @@ import {
 
 import { experienceVerifiableItem } from '@/board/item-verification';
 import { profileMonthLabel } from '@/board/profile-view-model';
-import { ItemVerificationControl } from '@/components/item-verification';
+import { ItemVerificationTick } from '@/components/item-verification';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
 import { MonthYearField } from '@/components/month-year-field';
@@ -231,6 +231,8 @@ export function ExperienceSection({
                 </InputGroupAddon>
                 <InputGroupInput
                   id="experience-website"
+                  // Flush against the https:// prefix, so it reads as one URL.
+                  className="ps-0!"
                   inputMode="url"
                   autoComplete="url"
                   autoCapitalize="none"
@@ -283,36 +285,42 @@ export function ExperienceSection({
                 </FieldError>
               ) : null}
             </Field>
-            <MonthYearField
-              idPrefix="experience-start"
-              label={m.experienceSection_startLabel()}
-              language={language}
-              required
-              defaultValue={draft.startDate}
-              onChange={(startDate) =>
-                setDraft((prev) => ({ ...prev, startDate }))
-              }
-              monthAriaLabel={m.monthYearField_monthPlaceholder()}
-              yearAriaLabel={m.monthYearField_yearPlaceholder()}
-              monthPlaceholder={m.monthYearField_monthPlaceholder()}
-              yearPlaceholder={m.monthYearField_yearPlaceholder()}
-            />
-            {draft.current ? null : (
-              <MonthYearField
-                key={`end-${editing.id ?? 'new'}`}
-                idPrefix="experience-end"
-                label={m.experienceSection_endLabel()}
-                language={language}
-                defaultValue={draft.endDate}
-                onChange={(endDate) =>
-                  setDraft((prev) => ({ ...prev, endDate }))
-                }
-                monthAriaLabel={m.monthYearField_monthPlaceholder()}
-                yearAriaLabel={m.monthYearField_yearPlaceholder()}
-                monthPlaceholder={m.monthYearField_monthPlaceholder()}
-                yearPlaceholder={m.monthYearField_yearPlaceholder()}
-              />
-            )}
+            {/* Start and end sit side by side only when there is room for
+                a full month name and year in each. */}
+            <div className="@container sm:col-span-2">
+              <div className="grid gap-3 @md:grid-cols-2">
+                <MonthYearField
+                  idPrefix="experience-start"
+                  label={m.experienceSection_startLabel()}
+                  language={language}
+                  required
+                  defaultValue={draft.startDate}
+                  onChange={(startDate) =>
+                    setDraft((prev) => ({ ...prev, startDate }))
+                  }
+                  monthAriaLabel={m.monthYearField_monthPlaceholder()}
+                  yearAriaLabel={m.monthYearField_yearPlaceholder()}
+                  monthPlaceholder={m.monthYearField_monthPlaceholder()}
+                  yearPlaceholder={m.monthYearField_yearPlaceholder()}
+                />
+                {draft.current ? null : (
+                  <MonthYearField
+                    key={`end-${editing.id ?? 'new'}`}
+                    idPrefix="experience-end"
+                    label={m.experienceSection_endLabel()}
+                    language={language}
+                    defaultValue={draft.endDate}
+                    onChange={(endDate) =>
+                      setDraft((prev) => ({ ...prev, endDate }))
+                    }
+                    monthAriaLabel={m.monthYearField_monthPlaceholder()}
+                    yearAriaLabel={m.monthYearField_yearPlaceholder()}
+                    monthPlaceholder={m.monthYearField_monthPlaceholder()}
+                    yearPlaceholder={m.monthYearField_yearPlaceholder()}
+                  />
+                )}
+              </div>
+            </div>
             <Label className="w-fit cursor-pointer sm:col-span-2">
               <Checkbox
                 checked={draft.current}
@@ -410,13 +418,15 @@ export function ExperienceSection({
                 <ItemContent>
                   <ItemTitle>{item.title}</ItemTitle>
                   <ItemDescription>
-                    {[
-                      item.companyName,
-                      websiteDomain(item.companyUrl),
-                      item.location,
-                    ]
+                    {item.companyName}
+                    <ExperienceVerification
+                      item={item}
+                      verifications={verifications}
+                    />
+                    {[websiteDomain(item.companyUrl), item.location]
                       .filter(Boolean)
-                      .join(' · ')}
+                      .map((part) => ` · ${part}`)
+                      .join('')}
                   </ItemDescription>
                   <ItemDescription className="text-xs">
                     {profileMonthLabel(language, item.startDate)}
@@ -425,12 +435,7 @@ export function ExperienceSection({
                       ? profileMonthLabel(language, item.endDate)
                       : entityCopy().candidatePresent}
                   </ItemDescription>
-                  <ExperienceVerification
-                    item={item}
-                    verifications={verifications}
-                  />
                 </ItemContent>
-                {/* Top-aligned, so an open email check doesn't move them. */}
                 <ItemActions className="self-start">
                   <Button
                     variant="ghost"
@@ -509,5 +514,5 @@ function ExperienceVerification({
   verifications: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const verifiable = experienceVerifiableItem(item, verifications);
-  return verifiable ? <ItemVerificationControl item={verifiable} /> : null;
+  return verifiable ? <ItemVerificationTick item={verifiable} /> : null;
 }
