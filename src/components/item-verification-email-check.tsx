@@ -191,7 +191,8 @@ export function EmailCheckPanel({
         );
         setCode('');
         end();
-        codeInput.current?.focus();
+        // The input is still disabled until the next render.
+        requestAnimationFrame(() => codeInput.current?.focus());
         return;
       }
     } catch {
@@ -399,6 +400,15 @@ export function EmailCheckPanel({
           }}
         >
           {m.itemVerification_changeEmailLabel()}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={pending}
+          onClick={onCancel}
+        >
+          {m.itemVerification_cancelLabel()}
         </Button>
       </div>
     </form>

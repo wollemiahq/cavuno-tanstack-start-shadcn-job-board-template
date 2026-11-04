@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 
 import {
   RouterProvider,
@@ -248,6 +248,41 @@ describe('ItemVerificationControl', () => {
     expect(
       screen.getByRole('button', {
         name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers the board when an edit removes the website mid-check', async () => {
+    const actions = {
+      requestReview: vi.fn(),
+      startEmailCheck: vi.fn(),
+      confirmEmailCode: vi.fn(),
+    };
+    function Harness() {
+      const [item, setItem] = useState(emailItem);
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() => setItem({ ...emailItem, method: 'team' })}
+          >
+            edit
+          </button>
+          <ItemVerificationControl item={item} actions={actions} />
+        </>
+      );
+    }
+    await mount(<Harness />);
+
+    clickVerify();
+    await screen.findByLabelText(m.itemVerification_emailLabel());
+    fireEvent.click(screen.getByRole('button', { name: 'edit' }));
+    expect(
+      screen.queryByLabelText(m.itemVerification_emailLabel()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_askBoardAriaLabel({ item: 'Acme' }),
       }),
     ).toBeInTheDocument();
   });

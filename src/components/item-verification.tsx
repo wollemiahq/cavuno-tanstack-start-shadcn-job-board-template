@@ -182,7 +182,9 @@ export function ItemVerificationControl({
     setPending(false);
   };
 
-  const showAction = requestable && !checking;
+  // An edit that removes the website closes the email check, so the
+  // action comes back instead of leaving the item with neither.
+  const showAction = requestable && !(checking && emailActions);
   const showStatusRow =
     showAction || itemVerificationStatusLabel(item.verification) !== null;
   if (!showStatusRow && !checking) return null;
