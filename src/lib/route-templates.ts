@@ -42,6 +42,7 @@ export const ROUTE_TEMPLATES = [
   '/site.webmanifest',
   '/sitemap.xml',
   '/terms-of-service',
+  '/tip',
   '/.well-known/cavuno.json',
   '/account/access',
   '/alerts/confirm',

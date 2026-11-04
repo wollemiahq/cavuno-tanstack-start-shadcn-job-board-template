@@ -1321,6 +1321,7 @@
   "footer_impressumLabel": "Juridische informatie",
   "footer_locationsLabel": "Locaties",
   "footer_talentLocationsLabel": "Talent per locatie",
+  "footer_tipLabel": "Geef een fooi",
   "footer_poweredByText": "Mogelijk gemaakt door",
   "footer_privacyPolicyLabel": "Privacybeleid",
   "footer_resourcesHeading": "Bronnen",
@@ -3040,5 +3041,48 @@
   "itemVerification_resendLabel": "Code opnieuw sturen",
   "itemVerification_resendInLabel": "Code opnieuw sturen over {seconds} s",
   "itemVerification_codeExpiredError": "Deze code is verlopen. Vraag een nieuwe aan.",
-  "itemVerification_emailPlaceholder": "naam"
+  "itemVerification_emailPlaceholder": "naam",
+  "tip_metaDescription": "Steun {boardName} met een fooi.",
+  "tip_countText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Tot nu toe {countLabel} fooi",
+        "countPlural=*": "Tot nu toe {countLabel} fooien"
+      }
+    }
+  ],
+  "tip_amountLegend": "Kies een bedrag",
+  "tip_otherAmountOption": "Anders",
+  "tip_otherAmountLabel": "Jouw bedrag",
+  "tip_amountHelpText": "Minimaal {minimum}.",
+  "tip_amountInvalidText": "Vul een bedrag in zoals 5 of 5,50.",
+  "tip_amountBelowMinimumText": "De kleinste fooi is {minimum}.",
+  "tip_amountAboveMaximumText": "De grootste fooi is {maximum}.",
+  "tip_noteLabel": "Voeg een bericht toe (optioneel)",
+  "tip_noteCountText": "{count} van {max} tekens",
+  "tip_noteTooLongText": "Je bericht mag maximaal {max} tekens lang zijn.",
+  "tip_noteNotAllowedText": "Deze fooienpot neemt geen berichten aan. Haal je bericht weg en probeer het opnieuw.",
+  "tip_submitAction": "Geef {amount}",
+  "tip_continueAction": "Verder naar betalen",
+  "tip_paymentHelpText": "In de volgende stap betaal je veilig via Stripe.",
+  "tip_checkoutTitle": "Rond je fooi af",
+  "tip_backAction": "Terug",
+  "tip_confirmingTitle": "Je fooi wordt bevestigd…",
+  "tip_confirmingText": "Dit duurt meestal een paar seconden.",
+  "tip_thankYouTitle": "Bedankt!",
+  "tip_thankYouAmountText": "Je gaf {boardName} {amount}.",
+  "tip_receiptSentText": "Bon verstuurd naar {email}",
+  "tip_processingTitle": "Je fooi wordt verwerkt",
+  "tip_processingText": "We mailen je de bon zodra de betaling binnen is.",
+  "tip_checkAgainAction": "Opnieuw controleren",
+  "tip_checkoutMissingTitle": "We konden deze fooi niet vinden",
+  "tip_checkoutMissingText": "De betaling is misschien verlopen. Je kunt een nieuwe fooi geven.",
+  "tip_startOverAction": "Terug naar de fooienpagina",
+  "tip_browseJobsAction": "Bekijk vacatures"
 }

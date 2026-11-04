@@ -27,6 +27,7 @@ const labels = {
   employers: 'Employers label',
   jobSeekers: 'Job seekers label',
   memberships: 'Memberships label',
+  tip: 'Tip label',
 };
 
 describe('shell breadcrumb resolver', () => {

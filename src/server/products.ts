@@ -239,7 +239,7 @@ export type ProductActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; code: string | null; message: string };
 
-async function asResult<T>(
+export async function asResult<T>(
   run: () => Promise<T>,
 ): Promise<ProductActionResult<T>> {
   try {
@@ -253,7 +253,7 @@ async function asResult<T>(
 }
 
 /** Never let a foreign URL become Stripe's `return_url`. */
-function assertRelative(path: string): string {
+export function assertRelative(path: string): string {
   if (!path.startsWith('/') || path.startsWith('//')) {
     throw new Error('returnPath must be a relative path');
   }

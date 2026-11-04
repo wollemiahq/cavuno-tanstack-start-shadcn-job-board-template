@@ -25,6 +25,7 @@ export interface ShellBreadcrumbLabels {
   employers: string;
   jobSeekers: string;
   memberships: string;
+  tip: string;
 }
 
 export interface ShellBreadcrumbEntities {
@@ -484,6 +485,7 @@ export function resolveShellBreadcrumb({
     pricing: labels.pricing,
     'job-seekers': labels.jobSeekers,
     memberships: labels.memberships,
+    tip: labels.tip,
   }[section];
   items.push({ name: knownPage ?? readableSegment(section) });
   return finish(items);
