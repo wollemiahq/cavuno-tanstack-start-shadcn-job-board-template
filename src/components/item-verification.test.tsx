@@ -25,6 +25,7 @@ import {
 
 import type { VerifiableItem } from '@/board/item-verification';
 import { m } from '@/paraglide/messages';
+import type { ItemVerification } from '@cavuno/board';
 
 vi.mock('@/server/item-verification', () => ({
   submitProfileItemVerification: vi.fn(),
@@ -57,6 +58,22 @@ const emailItem: VerifiableItem = {
   method: 'email_domain',
   verification: null,
 };
+
+function row(status: ItemVerification['status']): ItemVerification {
+  return {
+    id: 'iv1',
+    object: 'item_verification',
+    itemKey: 'experience:exp1',
+    status,
+    lapseReason: null,
+    reasonCode: null,
+    verifiedAt: null,
+    expiresAt: null,
+    hasProof: false,
+    verifiedDomain: null,
+    updatedAt: '2026-11-01T00:00:00.000Z',
+  };
+}
 
 describe('ItemVerificationControl', () => {
   it('sends a code to the work email, then verifies with it', async () => {
@@ -138,25 +155,76 @@ describe('ItemVerificationControl', () => {
     expect(actions.requestReview).toHaveBeenCalledWith('experience:exp1');
   });
 
+  it.each(['rejected', 'needs_info'] as const)(
+    'asks the board team for a %s email-domain item',
+    async (status) => {
+      const actions = {
+        requestReview: vi.fn().mockResolvedValue({ ok: true, data: {} }),
+        startEmailCheck: vi.fn(),
+        confirmEmailCode: vi.fn(),
+      };
+      const router = await mount(
+        <ItemVerificationControl
+          item={{ ...emailItem, verification: row(status) }}
+          actions={actions}
+        />,
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
+        }),
+      );
+      await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
+      expect(actions.requestReview).toHaveBeenCalledWith('experience:exp1');
+      expect(
+        screen.queryByLabelText(m.itemVerification_emailLabel()),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it('offers team review when the item has no domain to email', async () => {
+    const actions = {
+      requestReview: vi.fn().mockResolvedValue({ ok: true, data: {} }),
+      startEmailCheck: vi
+        .fn()
+        .mockResolvedValue({ ok: false, code: 'item_verification_no_domain' }),
+      confirmEmailCode: vi.fn(),
+    };
+    const router = await mount(
+      <ItemVerificationControl item={emailItem} actions={actions} />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
+      }),
+    );
+    fireEvent.change(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+      { target: { value: 'ada@acme.com' } },
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_sendCodeLabel() }),
+    );
+
+    expect(
+      await screen.findByText(m.itemVerification_noEmailCheckBody()),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_requestLabel() }),
+    );
+    await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
+    expect(actions.requestReview).toHaveBeenCalledWith('experience:exp1');
+    expect(
+      screen.queryByText(m.itemVerification_noEmailCheckBody()),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows a pending status without an action', async () => {
     await mount(
       <ItemVerificationControl
-        item={{
-          ...emailItem,
-          verification: {
-            id: 'iv1',
-            object: 'item_verification',
-            itemKey: 'experience:exp1',
-            status: 'pending',
-            lapseReason: null,
-            reasonCode: null,
-            verifiedAt: null,
-            expiresAt: null,
-            hasProof: false,
-            verifiedDomain: null,
-            updatedAt: '2026-11-01T00:00:00.000Z',
-          },
-        }}
+        item={{ ...emailItem, verification: row('pending') }}
         actions={{ requestReview: vi.fn() }}
       />,
     );

@@ -12,11 +12,21 @@ type ConfirmResult = { ok: true } | { ok: false; code: string };
 
 type Outcome = 'verified' | 'expired' | 'changed' | 'unavailable';
 
-/** The page state for a refused link, from the Board API error code. */
-export function verifyItemEmailOutcome(code: string): Outcome {
+const UNAVAILABLE = new Set([
+  'item_verification_conflict',
+  'item_verification_disabled',
+  'item_verification_method_mismatch',
+]);
+
+/**
+ * The page state for a refused link, from the Board API error code, or null
+ * when the failure may pass (rate limit, outage) and the form should stay.
+ */
+export function verifyItemEmailOutcome(code: string): Outcome | null {
   if (code === 'board_auth_invalid_token') return 'expired';
   if (code === 'item_verification_changed') return 'changed';
-  return 'unavailable';
+  if (UNAVAILABLE.has(code)) return 'unavailable';
+  return null;
 }
 
 function BackToProfile({ primary = false }: { primary?: boolean }) {
@@ -102,9 +112,11 @@ export function VerifyItemEmailView({
           setFailed(false);
           try {
             const result = await confirmAction({ data: { token } });
-            setOutcome(
-              result.ok ? 'verified' : verifyItemEmailOutcome(result.code),
-            );
+            const next = result.ok
+              ? 'verified'
+              : verifyItemEmailOutcome(result.code);
+            if (next) setOutcome(next);
+            else setFailed(true);
           } catch {
             setFailed(true);
           } finally {

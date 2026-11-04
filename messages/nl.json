@@ -3028,7 +3028,7 @@
   "itemVerification_changeEmailLabel": "Ander e-mailadres gebruiken",
   "itemVerification_emailMismatchError": "Gebruik een e-mailadres op het domein van deze organisatie.",
   "itemVerification_emailInvalidError": "Vul een e-mailadres van werk of school in. Persoonlijke adressen werken niet.",
-  "itemVerification_noDomainError": "Dit item heeft een website nodig om via e-mail te verifiëren.",
+  "itemVerification_noEmailCheckBody": "Dit item kan niet via e-mail worden geverifieerd.",
   "itemVerification_rateLimitedError": "Te veel pogingen. Probeer het later opnieuw.",
   "itemVerification_codeInvalidError": "Die code is onjuist of verlopen.",
   "itemVerification_changedError": "Dit item is gewijzigd. Vraag een nieuwe code aan."

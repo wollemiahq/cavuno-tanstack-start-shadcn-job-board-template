@@ -3028,7 +3028,7 @@
   "itemVerification_changeEmailLabel": "Andere E-Mail verwenden",
   "itemVerification_emailMismatchError": "Verwende eine E-Mail-Adresse mit der Domain dieser Organisation.",
   "itemVerification_emailInvalidError": "Gib eine E-Mail-Adresse von Arbeit oder Hochschule ein. Private Adressen gehen nicht.",
-  "itemVerification_noDomainError": "Dieser Eintrag braucht eine Website, um per E-Mail verifiziert zu werden.",
+  "itemVerification_noEmailCheckBody": "Dieser Eintrag kann nicht per E-Mail geprüft werden.",
   "itemVerification_rateLimitedError": "Zu viele Versuche. Versuche es später erneut.",
   "itemVerification_codeInvalidError": "Der Code ist falsch oder abgelaufen.",
   "itemVerification_changedError": "Dieser Eintrag wurde geändert. Fordere einen neuen Code an."

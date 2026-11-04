@@ -3028,7 +3028,7 @@
   "itemVerification_changeEmailLabel": "Utiliser un autre e-mail",
   "itemVerification_emailMismatchError": "Utilisez un e-mail du domaine de cette organisation.",
   "itemVerification_emailInvalidError": "Saisissez un e-mail professionnel ou scolaire. Les adresses personnelles ne fonctionnent pas.",
-  "itemVerification_noDomainError": "Cet élément doit avoir un site web pour être vérifié par e-mail.",
+  "itemVerification_noEmailCheckBody": "Cet élément ne peut pas être vérifié par e-mail.",
   "itemVerification_rateLimitedError": "Trop de tentatives. Réessayez plus tard.",
   "itemVerification_codeInvalidError": "Ce code est incorrect ou expiré.",
   "itemVerification_changedError": "Cet élément a changé. Envoyez un nouveau code."

@@ -58,6 +58,21 @@ export function canRequestVerification(
   return REQUESTABLE.has(verification?.status ?? 'unverified');
 }
 
+/** Statuses from which the Board API accepts an email-domain check. */
+const EMAIL_CHECKABLE: ReadonlySet<ItemVerificationStatus> = new Set([
+  'unverified',
+  'changed',
+  'lapsed',
+  'unable_to_verify',
+]);
+
+/** Whether an email-domain item may start an email check now; otherwise it goes to the team. */
+export function canCheckByEmail(
+  verification: Pick<ItemVerification, 'status'> | null,
+): boolean {
+  return EMAIL_CHECKABLE.has(verification?.status ?? 'unverified');
+}
+
 /**
  * A built-in experience entry, when the board verifies experience
  * (`board.context().verification.experience`). Pass `null` verifications when

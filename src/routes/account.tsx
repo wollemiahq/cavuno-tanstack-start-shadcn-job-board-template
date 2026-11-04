@@ -129,14 +129,14 @@ function CandidateAccountPage({
         items={experience.data}
         language={getLocale()}
         locationSuggestions={experienceLocationSuggestions}
-        verifications={board.verification.experience ? verifications : null}
+        verifications={board.verification?.experience ? verifications : null}
       />
     ),
     education: (
       <EducationSection
         items={education.data}
         language={getLocale()}
-        verifications={board.verification.education ? verifications : null}
+        verifications={board.verification?.education ? verifications : null}
       />
     ),
     skills: <SkillsSection skills={skills.data.map((skill) => skill.name)} />,

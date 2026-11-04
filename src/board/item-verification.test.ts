@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  canCheckByEmail,
   canRequestVerification,
   collectionVerifiableItems,
   educationVerifiableItem,
@@ -105,6 +106,27 @@ describe('built-in item verification', () => {
     expect(canRequestVerification({ status: 'pending' })).toBe(false);
     expect(canRequestVerification({ status: 'verified' })).toBe(false);
     expect(canRequestVerification({ status: 'revoked' })).toBe(false);
+  });
+
+  it('starts an email check only from a status the API accepts for it', () => {
+    expect(canCheckByEmail(null)).toBe(true);
+    for (const status of [
+      'unverified',
+      'changed',
+      'lapsed',
+      'unable_to_verify',
+    ] as const) {
+      expect(canCheckByEmail({ status })).toBe(true);
+    }
+    for (const status of [
+      'rejected',
+      'needs_info',
+      'pending',
+      'verified',
+      'revoked',
+    ] as const) {
+      expect(canCheckByEmail({ status })).toBe(false);
+    }
   });
 });
 

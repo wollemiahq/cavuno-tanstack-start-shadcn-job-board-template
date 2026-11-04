@@ -13,6 +13,7 @@ import {
 } from '../server/item-verification';
 
 import {
+  canCheckByEmail,
   canRequestVerification,
   type VerifiableItem,
 } from '@/board/item-verification';
@@ -142,8 +143,6 @@ function startErrorText(code: string): string {
   switch (code) {
     case 'item_verification_email_mismatch':
       return m.itemVerification_emailMismatchError();
-    case 'item_verification_no_domain':
-      return m.itemVerification_noDomainError();
     case 'validation_bad_request':
       return m.itemVerification_emailInvalidError();
     case 'item_verification_rate_limited':
@@ -170,7 +169,14 @@ function confirmErrorText(code: string): string {
 
 type EmailStep =
   | { step: 'email' }
-  | { step: 'code'; emailDomain: string; sent: boolean };
+  | { step: 'code'; emailDomain: string; sent: boolean }
+  | { step: 'team' };
+
+/** Refusals that mean this item can't be checked by email at all. */
+const NO_EMAIL_CHECK = new Set([
+  'item_verification_no_domain',
+  'item_verification_conflict',
+]);
 
 /** Work or school email check: enter the address, then the emailed code. */
 function EmailCheckDialog({
@@ -179,12 +185,14 @@ function EmailCheckDialog({
   open,
   onOpenChange,
   onVerified,
+  onRequestReview,
 }: {
   item: VerifiableItem;
   actions: Required<ItemVerificationActions>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onVerified: () => Promise<void>;
+  onRequestReview: () => void;
 }) {
   const [state, setState] = useState<EmailStep>({ step: 'email' });
   const [email, setEmail] = useState('');
@@ -209,6 +217,8 @@ function EmailCheckDialog({
           emailDomain: result.data.emailDomain,
           sent: result.data.sent,
         });
+      } else if (NO_EMAIL_CHECK.has(result.code)) {
+        setState({ step: 'team' });
       } else {
         setError(startErrorText(result.code));
       }
@@ -258,10 +268,25 @@ function EmailCheckDialog({
           <DialogDescription>
             {state.step === 'email'
               ? m.itemVerification_emailIntro()
-              : m.itemVerification_codeIntro({ domain: state.emailDomain })}
+              : state.step === 'team'
+                ? m.itemVerification_noEmailCheckBody()
+                : m.itemVerification_codeIntro({ domain: state.emailDomain })}
           </DialogDescription>
         </DialogHeader>
-        {state.step === 'email' ? (
+        {state.step === 'team' ? (
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => {
+                onOpenChange(false);
+                reset();
+                onRequestReview();
+              }}
+            >
+              {m.itemVerification_requestLabel()}
+            </Button>
+          </DialogFooter>
+        ) : state.step === 'email' ? (
           <form
             className="grid gap-4"
             onSubmit={(event) => {
@@ -374,7 +399,10 @@ export function ItemVerificationControl({
   const requestable = canRequestVerification(item.verification);
   const { startEmailCheck, confirmEmailCode } = actions;
   const emailActions =
-    item.method === 'email_domain' && startEmailCheck && confirmEmailCode
+    item.method === 'email_domain' &&
+    canCheckByEmail(item.verification) &&
+    startEmailCheck &&
+    confirmEmailCode
       ? { ...actions, startEmailCheck, confirmEmailCode }
       : null;
 
@@ -425,6 +453,7 @@ export function ItemVerificationControl({
             void toastActionSuccess(m.itemVerification_verifiedToast());
             await reconcileCommittedAction(() => router.invalidate());
           }}
+          onRequestReview={() => void requestReview()}
         />
       ) : null}
     </div>

@@ -88,4 +88,20 @@ describe('/auth/verify-item-email', () => {
       await screen.findByText(m.authVerifyItemEmail_changedBody()),
     ).toBeInTheDocument();
   });
+
+  it('keeps the form with a retryable error when the failure may pass', async () => {
+    await confirmWith({ ok: false, code: 'rate_limited' });
+    expect(
+      await screen.findByText(m.candidateAction_errorText()),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: m.authVerifyItemEmail_submitLabel() }),
+    ).toBeEnabled();
+    cleanup();
+
+    await confirmWith({ ok: false, code: 'item_verification_disabled' });
+    expect(
+      await screen.findByText(m.authVerifyItemEmail_unavailableBody()),
+    ).toBeInTheDocument();
+  });
 });

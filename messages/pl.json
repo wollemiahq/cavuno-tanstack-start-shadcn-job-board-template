@@ -3156,7 +3156,7 @@
   "itemVerification_changeEmailLabel": "Użyj innego e-maila",
   "itemVerification_emailMismatchError": "Użyj e-maila w domenie tej organizacji.",
   "itemVerification_emailInvalidError": "Podaj e-mail służbowy lub uczelniany. Prywatne adresy nie działają.",
-  "itemVerification_noDomainError": "Ta pozycja wymaga strony internetowej, by zweryfikować ją e-mailem.",
+  "itemVerification_noEmailCheckBody": "Tej pozycji nie można zweryfikować e-mailem.",
   "itemVerification_rateLimitedError": "Zbyt wiele prób. Spróbuj później.",
   "itemVerification_codeInvalidError": "Kod jest błędny lub wygasł.",
   "itemVerification_changedError": "Pozycja się zmieniła. Wyślij nowy kod."
