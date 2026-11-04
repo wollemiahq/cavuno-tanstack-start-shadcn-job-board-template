@@ -103,6 +103,7 @@ describe('/auth/verify-item-email', () => {
       'item_verification_disabled',
       'item_verification_not_found',
       'item_verification_email_mismatch',
+      'item_verification_no_domain',
     ]) {
       cleanup();
       await confirmWith({ ok: false, code });
