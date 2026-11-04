@@ -3063,7 +3063,6 @@
   "tip_amountHelpText": "At least {minimum}.",
   "tip_amountInvalidText": "Enter an amount like 5 or 5.50.",
   "tip_amountBelowMinimumText": "The smallest tip is {minimum}.",
-  "tip_amountAboveMaximumText": "The largest tip is {maximum}.",
   "tip_noteLabel": "Add a note (optional)",
   "tip_noteCountText": "{count} of {max} characters",
   "tip_noteTooLongText": "Keep your note to {max} characters.",

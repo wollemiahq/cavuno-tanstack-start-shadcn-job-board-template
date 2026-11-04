@@ -3063,7 +3063,6 @@
   "tip_amountHelpText": "Minimaal {minimum}.",
   "tip_amountInvalidText": "Vul een bedrag in zoals 5 of 5,50.",
   "tip_amountBelowMinimumText": "De kleinste fooi is {minimum}.",
-  "tip_amountAboveMaximumText": "De grootste fooi is {maximum}.",
   "tip_noteLabel": "Voeg een bericht toe (optioneel)",
   "tip_noteCountText": "{count} van {max} tekens",
   "tip_noteTooLongText": "Je bericht mag maximaal {max} tekens lang zijn.",

@@ -69,12 +69,6 @@ const EmbeddedCheckout = lazy(() =>
   })),
 );
 
-/**
- * The largest tip the Board API takes, in minor units. The API does not
- * send it; it refuses anything above with `tip_amount_invalid`.
- */
-export const MAX_TIP_CENTS = 100_000_000;
-
 /** Polls after Stripe returns: every 2 s for about a minute. */
 const POLL_ATTEMPTS = 30;
 
@@ -161,7 +155,9 @@ function tipRefusalText(
 /**
  * The amount the tipper chose, or why it can't be taken. Suggested amounts
  * come from the API and are always valid; "Other" is checked here against
- * the minimum, whole minor units and the API's largest tip.
+ * the minimum and whole minor units. There is no maximum here: Stripe's
+ * depends on the currency and payment method, and the API returns
+ * `tip_amount_invalid` when Stripe refuses an amount as too large.
  */
 export function resolveTipAmount(
   tipJar: TipJar,
@@ -180,14 +176,6 @@ export function resolveTipAmount(
       ok: false,
       error: m.tip_amountBelowMinimumText({
         minimum: formatMoney(locale, tipJar.minimumCents, tipJar.currency),
-      }),
-    };
-  }
-  if (parsed > MAX_TIP_CENTS) {
-    return {
-      ok: false,
-      error: m.tip_amountAboveMaximumText({
-        maximum: formatMoney(locale, MAX_TIP_CENTS, tipJar.currency),
       }),
     };
   }

@@ -3193,7 +3193,6 @@
   "tip_amountHelpText": "Co najmniej {minimum}.",
   "tip_amountInvalidText": "Wpisz kwotę, np. 5 lub 5,50.",
   "tip_amountBelowMinimumText": "Najmniejszy napiwek to {minimum}.",
-  "tip_amountAboveMaximumText": "Największy napiwek to {maximum}.",
   "tip_noteLabel": "Dodaj wiadomość (opcjonalnie)",
   "tip_noteCountText": "{count} z {max} znaków",
   "tip_noteTooLongText": "Wiadomość może mieć najwyżej {max} znaków.",

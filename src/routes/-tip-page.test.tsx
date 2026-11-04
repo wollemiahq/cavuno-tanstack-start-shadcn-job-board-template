@@ -11,7 +11,6 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  MAX_TIP_CENTS,
   resolveTipAmount,
   TipPageView,
   type TipPageDependencies,
@@ -105,7 +104,7 @@ describe('resolveTipAmount', () => {
     });
   });
 
-  it('checks Other against the minimum, whole minor units and the cap', () => {
+  it('checks Other against the minimum and whole minor units, with no cap of its own', () => {
     expect(resolveTipAmount(jar, 'other', '7.25', 'en')).toEqual({
       ok: true,
       amountCents: 725,
@@ -113,9 +112,10 @@ describe('resolveTipAmount', () => {
     expect(resolveTipAmount(jar, 'other', '0.50', 'en').ok).toBe(false);
     expect(resolveTipAmount(jar, 'other', '1.234', 'en').ok).toBe(false);
     expect(resolveTipAmount(jar, 'other', '', 'en').ok).toBe(false);
-    expect(
-      resolveTipAmount(jar, 'other', String(MAX_TIP_CENTS / 100 + 1), 'en').ok,
-    ).toBe(false);
+    expect(resolveTipAmount(jar, 'other', '5000000', 'en')).toEqual({
+      ok: true,
+      amountCents: 500_000_000,
+    });
   });
 });
 

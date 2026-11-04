@@ -3063,7 +3063,6 @@
   "tip_amountHelpText": "Au moins {minimum}.",
   "tip_amountInvalidText": "Saisissez un montant comme 5 ou 5,50.",
   "tip_amountBelowMinimumText": "Le plus petit pourboire est de {minimum}.",
-  "tip_amountAboveMaximumText": "Le plus gros pourboire est de {maximum}.",
   "tip_noteLabel": "Ajouter un mot (facultatif)",
   "tip_noteCountText": "{count} sur {max} caractères",
   "tip_noteTooLongText": "Votre mot ne doit pas dépasser {max} caractères.",

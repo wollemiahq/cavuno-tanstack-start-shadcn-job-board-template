@@ -3063,7 +3063,6 @@
   "tip_amountHelpText": "Mindestens {minimum}.",
   "tip_amountInvalidText": "Gib einen Betrag wie 5 oder 5,50 ein.",
   "tip_amountBelowMinimumText": "Das kleinste Trinkgeld ist {minimum}.",
-  "tip_amountAboveMaximumText": "Das größte Trinkgeld ist {maximum}.",
   "tip_noteLabel": "Nachricht hinzufügen (optional)",
   "tip_noteCountText": "{count} von {max} Zeichen",
   "tip_noteTooLongText": "Deine Nachricht darf höchstens {max} Zeichen lang sein.",

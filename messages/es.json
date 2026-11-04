@@ -3063,7 +3063,6 @@
   "tip_amountHelpText": "Mínimo {minimum}.",
   "tip_amountInvalidText": "Escribe un importe como 5 o 5,50.",
   "tip_amountBelowMinimumText": "La propina mínima es {minimum}.",
-  "tip_amountAboveMaximumText": "La propina máxima es {maximum}.",
   "tip_noteLabel": "Añade una nota (opcional)",
   "tip_noteCountText": "{count} de {max} caracteres",
   "tip_noteTooLongText": "Tu nota puede tener como máximo {max} caracteres.",
