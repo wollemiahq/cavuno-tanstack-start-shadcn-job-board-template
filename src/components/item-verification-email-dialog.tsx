@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { m } from '../paraglide/messages';
 
@@ -87,6 +87,19 @@ export function EmailCheckDialog({
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // State lags a render: a pasted code (auto-submit) plus Enter would both
+  // pass a `pending` check, so the in-flight guard is a ref.
+  const inFlight = useRef(false);
+  const begin = () => {
+    if (inFlight.current) return false;
+    inFlight.current = true;
+    setPending(true);
+    return true;
+  };
+  const end = () => {
+    inFlight.current = false;
+    setPending(false);
+  };
   const idPrefix = `verify-${item.itemKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
   const reset = () => {
@@ -95,8 +108,7 @@ export function EmailCheckDialog({
   };
 
   const send = async () => {
-    if (pending) return;
-    setPending(true);
+    if (!begin()) return;
     setError(null);
     try {
       const result = await actions.startEmailCheck(item.itemKey, email.trim());
@@ -114,30 +126,32 @@ export function EmailCheckDialog({
     } catch {
       setError(m.candidateAction_errorText());
     } finally {
-      setPending(false);
+      end();
     }
   };
 
   const confirm = async (code: string) => {
-    if (pending) return;
-    setPending(true);
+    if (!begin()) return;
     setError(null);
     try {
       const result = await actions.confirmEmailCode(item.itemKey, code);
       if (!result.ok) {
         setError(confirmErrorText(result.code));
-        setPending(false);
+        end();
         return;
       }
     } catch {
       setError(m.candidateAction_errorText());
-      setPending(false);
+      end();
       return;
     }
     onOpenChange(false);
     reset();
-    await onVerified();
-    setPending(false);
+    try {
+      await onVerified();
+    } finally {
+      end();
+    }
   };
 
   return (

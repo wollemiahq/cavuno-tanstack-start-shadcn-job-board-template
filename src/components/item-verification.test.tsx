@@ -123,6 +123,7 @@ describe('ItemVerificationControl', () => {
     expect(
       await screen.findByText(m.itemVerification_codeInvalidError()),
     ).toBeInTheDocument();
+    expect(actions.confirmEmailCode).toHaveBeenCalledTimes(1);
 
     fireEvent.click(
       screen.getByRole('button', { name: m.itemVerification_verifyLabel() }),
