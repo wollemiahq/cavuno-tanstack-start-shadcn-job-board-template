@@ -1,6 +1,6 @@
 import { formatMonthYear, normalizeWebsiteUrl } from '@cavuno/board/format';
 
-import { verificationBadge } from './item-verification';
+import { verificationBadge } from './verification-badge';
 
 import {
   talentProfileParam,

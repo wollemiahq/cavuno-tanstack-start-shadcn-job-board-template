@@ -181,12 +181,3 @@ export function collectionVerifiableItems(
   }
   return items;
 }
-
-/** The public badge's domain line, when it was verified by email domain. */
-export function verificationBadge(
-  badge: { status: 'verified'; verifiedDomain: string | null } | undefined,
-): { verifiedDomain: string | null } | null {
-  return badge?.status === 'verified'
-    ? { verifiedDomain: badge.verifiedDomain }
-    : null;
-}
