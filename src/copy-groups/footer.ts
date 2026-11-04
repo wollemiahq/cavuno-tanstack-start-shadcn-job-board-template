@@ -38,6 +38,7 @@ export function footerCopy() {
     salariesLabel: chrome.salariesLabel ?? m.footer_salariesLabel(),
     sitemapLabel: chrome.sitemapLabel ?? m.footer_sitemapLabel(),
     talentLocationsLabel: m.footer_talentLocationsLabel(),
+    tipLabel: m.footer_tipLabel(),
     termsOfServiceLabel:
       chrome.termsOfServiceLabel ?? m.footer_termsOfServiceLabel(),
     websiteLabel: chrome.websiteLabel ?? m.footer_websiteLabel(),

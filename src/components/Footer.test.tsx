@@ -41,7 +41,7 @@ function renderFooter(
   membership: Partial<
     Pick<
       React.ComponentProps<typeof Footer>,
-      'hasMembershipPage' | 'viewerRole' | 'impressumAvailable'
+      'hasMembershipPage' | 'viewerRole' | 'impressumAvailable' | 'hasTipPage'
     >
   > = {},
 ) {
@@ -148,5 +148,25 @@ describe('Footer Impressum link', () => {
     renderFooter(contact);
 
     expect(impressumLinks()).toHaveLength(0);
+  });
+
+  it('ends the About column with the tip page while the tip jar is on', () => {
+    renderFooter(contact, { hasTipPage: true });
+
+    const about = screen
+      .getByRole('heading', { name: m.footer_aboutHeading() })
+      .closest('div');
+    const links = about?.querySelectorAll('a') ?? [];
+    const last = links[links.length - 1];
+    expect(last).toHaveTextContent(m.footer_tipLabel());
+    expect(last).toHaveAttribute('href', '/tip');
+  });
+
+  it('hides the tip page link while the tip jar is off', () => {
+    renderFooter(contact);
+
+    expect(
+      screen.queryByRole('link', { name: m.footer_tipLabel() }),
+    ).not.toBeInTheDocument();
   });
 });
