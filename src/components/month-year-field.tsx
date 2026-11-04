@@ -116,7 +116,8 @@ export function MonthYearField({
           <SelectTrigger
             id={`${idPrefix}-month`}
             aria-label={monthAriaLabel}
-            className="w-full min-w-0 flex-[3]"
+            // The minimum widths fit the longest month name and a 4-digit year.
+            className="w-full min-w-32 flex-[3]"
           >
             <SelectValue placeholder={monthPlaceholder} />
           </SelectTrigger>
@@ -139,7 +140,7 @@ export function MonthYearField({
           <SelectTrigger
             id={`${idPrefix}-year`}
             aria-label={yearAriaLabel}
-            className="w-full min-w-0 flex-[2]"
+            className="w-full min-w-20 flex-[2]"
           >
             <SelectValue placeholder={yearPlaceholder} />
           </SelectTrigger>

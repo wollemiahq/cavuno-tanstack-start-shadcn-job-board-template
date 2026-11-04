@@ -2,8 +2,7 @@
 
 import { lazy, Suspense, useRef, useState } from 'react';
 
-import { useRouter } from '@tanstack/react-router';
-import { BadgeCheck, MailCheck } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -13,11 +12,9 @@ import {
 } from '../server/item-verification';
 
 import {
-  canCheckByEmail,
   canRequestVerification,
   type VerifiableItem,
 } from '@/board/item-verification';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -27,25 +24,23 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
-import {
-  reconcileCommittedAction,
-  toastActionError,
-  toastActionSuccess,
-} from '@/lib/action-toast';
+import { cn } from '@/lib/utils';
 import type { ItemVerification } from '@cavuno/board';
 
-type Failure = { ok: false; code: string };
+type Failure = { ok: false; code: string; retryAfterSeconds?: number };
 type Result<T> = { ok: true; data: T } | Failure;
 
-// The email check (its form and the one-time code input) loads when the
-// worker opens it, so the profile pages do not carry it up front.
-const EmailCheckPanel = lazy(() =>
-  import('./item-verification-email-check').then((module) => ({
-    default: module.EmailCheckPanel,
+// The verification dialog (the email check, its one-time code input, and
+// the request to the board team) loads when the worker opens it, so the
+// profile pages do not carry it up front.
+
+const VerificationDialog = lazy(() =>
+  import('./item-verification-dialog').then((module) => ({
+    default: module.ItemVerificationDialog,
   })),
 );
 
-/** The writes behind the controls; the candidate profile's by default. */
+/** The writes behind the dialog; the candidate profile's by default. */
 export type ItemVerificationActions = {
   requestReview: (itemKey: string) => Promise<Result<unknown>>;
   startEmailCheck?: (
@@ -109,139 +104,98 @@ export function itemVerificationStatusLabel(
   }
 }
 
-export function ItemVerificationStatus({
-  verification,
-}: {
-  verification: ItemVerification | null;
-}) {
-  const label = itemVerificationStatusLabel(verification);
-  if (!label) return null;
-  if (verification?.status === 'verified') {
-    return (
-      <Badge variant="secondary">
-        <BadgeCheck aria-hidden data-icon="inline-start" />
-        {label}
-      </Badge>
-    );
+/** How the tick looks: verified, with the board team, or not verified. */
+export type TickTone = 'verified' | 'review' | 'none';
+
+export function tickTone(
+  verification: Pick<ItemVerification, 'status'> | null,
+): TickTone {
+  switch (verification?.status) {
+    case 'verified':
+      return 'verified';
+    case 'pending':
+    case 'needs_info':
+      return 'review';
+    default:
+      return 'none';
   }
-  const negative =
-    verification?.status === 'rejected' || verification?.status === 'revoked';
-  return <Badge variant={negative ? 'destructive' : 'outline'}>{label}</Badge>;
 }
 
+const TICK_ICON_CLASS = {
+  verified: 'fill-primary text-primary-foreground',
+  review: 'text-primary',
+  none: 'text-muted-foreground opacity-60',
+} satisfies Record<TickTone, string>;
+
 /**
- * An item's verification status and, while the worker may ask, its action:
- * "Verify" opens the work or school email check in place when the item can
- * be checked by email; otherwise the action asks the board team.
+ * The verification tick after an item's name. Its look follows the status.
+ * It always opens the verification dialog: the steps while the worker may
+ * ask, otherwise the status.
  */
-export function ItemVerificationControl({
+export function ItemVerificationTick({
   item,
   actions = profileItemVerificationActions,
 }: {
   item: VerifiableItem;
   actions?: ItemVerificationActions;
 }) {
-  const router = useRouter();
-  const [checking, setChecking] = useState(false);
-  const [pending, setPending] = useState(false);
-  const actionButton = useRef<HTMLButtonElement>(null);
-  const requestable = canRequestVerification(item.verification);
-  const { startEmailCheck, confirmEmailCode } = actions;
-  const emailActions =
-    item.method === 'email_domain' &&
-    canCheckByEmail(item.verification) &&
-    startEmailCheck &&
-    confirmEmailCode
-      ? { ...actions, startEmailCheck, confirmEmailCode }
-      : null;
-
-  const close = () => {
-    setChecking(false);
-    // The action button renders again once the panel closes.
-    requestAnimationFrame(() => actionButton.current?.focus());
-  };
-
-  const requestReview = async () => {
-    if (pending) return;
-    setPending(true);
-    try {
-      const result = await actions.requestReview(item.itemKey);
-      if (!result.ok) {
-        void toastActionError();
-        setPending(false);
-        return;
-      }
-    } catch {
-      void toastActionError();
-      setPending(false);
-      return;
-    }
-    setChecking(false);
-    void toastActionSuccess(m.itemVerification_requestedToast());
-    await reconcileCommittedAction(() => router.invalidate());
-    setPending(false);
-  };
-
-  // An edit that removes the website closes the email check, so the
-  // action comes back instead of leaving the item with neither.
-  const showAction = requestable && !(checking && emailActions);
-  const showStatusRow =
-    showAction || itemVerificationStatusLabel(item.verification) !== null;
-  if (!showStatusRow && !checking) return null;
+  const [open, setOpen] = useState(false);
+  // Stays mounted after the first open so closing keeps its exit animation.
+  const [dialogLoaded, setDialogLoaded] = useState(false);
+  const tick = useRef<HTMLElement | null>(null);
+  const actionable = canRequestVerification(item.verification);
+  const tone = tickTone(item.verification);
+  const statusLabel = actionable
+    ? null
+    : itemVerificationStatusLabel(item.verification);
+  const name = statusLabel
+    ? m.itemVerification_statusAriaLabel({
+        status: statusLabel,
+        item: item.label,
+      })
+    : m.itemVerification_actionAriaLabel({ item: item.label });
 
   return (
-    <div className="flex flex-col gap-3 pt-1">
-      {showStatusRow ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <ItemVerificationStatus verification={item.verification} />
-          {showAction ? (
-            <Button
-              ref={actionButton}
-              type="button"
-              variant="outline"
-              size="xs"
-              disabled={pending}
-              aria-label={
-                emailActions
-                  ? m.itemVerification_actionAriaLabel({ item: item.label })
-                  : m.itemVerification_askBoardAriaLabel({ item: item.label })
-              }
-              onClick={() => {
-                if (emailActions) setChecking(true);
-                else void requestReview();
-              }}
-            >
-              {emailActions ? (
-                <MailCheck aria-hidden data-icon="inline-start" />
-              ) : null}
-              {emailActions
-                ? m.itemVerification_verifyLabel()
-                : m.itemVerification_askBoardLabel()}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-      {emailActions && checking ? (
+    <>
+      <Button
+        ref={(element: HTMLElement | null) => {
+          tick.current = element;
+        }}
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        className="-my-1 align-middle"
+        aria-label={name}
+        title={statusLabel ?? m.itemVerification_verifyLabel()}
+        data-test="item-verification-tick"
+        data-tone={tone}
+        onClick={() => {
+          setDialogLoaded(true);
+          setOpen(true);
+        }}
+      >
+        <BadgeCheck
+          aria-hidden
+          className={cn('size-4', TICK_ICON_CLASS[tone])}
+        />
+      </Button>
+      {dialogLoaded ? (
         <Suspense fallback={null}>
-          <EmailCheckPanel
+          <VerificationDialog
             item={item}
-            actions={emailActions}
-            onCancel={close}
-            onVerified={async () => {
-              void toastActionSuccess(m.itemVerification_verifiedToast());
-              await reconcileCommittedAction(() => router.invalidate());
-              setChecking(false);
-            }}
-            onRequestReview={() => void requestReview()}
+            actions={actions}
+            open={open}
+            onOpenChange={setOpen}
+            finalFocus={tick}
           />
         </Suspense>
       ) : null}
-    </div>
+    </>
   );
 }
 
 /**
- * The collection items a board verifies, each with its status and action.
+ * The collection items a board verifies, each with its tick.
  * Renders nothing when the board verifies none of the stored selections.
  */
 export function ItemVerificationCard({
@@ -269,9 +223,11 @@ export function ItemVerificationCard({
               size="sm"
               render={<li />}
             >
-              <ItemContent className="gap-2">
-                <ItemTitle>{item.label}</ItemTitle>
-                <ItemVerificationControl item={item} actions={actions} />
+              <ItemContent>
+                <ItemTitle className="gap-1">
+                  {item.label}
+                  <ItemVerificationTick item={item} actions={actions} />
+                </ItemTitle>
               </ItemContent>
             </Item>
           ))}
