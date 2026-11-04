@@ -18,6 +18,7 @@ import {
 
 import {
   canCheckByEmail,
+  canRequestVerification,
   type VerifiableItem,
 } from '@/board/item-verification';
 import { Badge } from '@/components/ui/badge';
@@ -118,6 +119,16 @@ type Step =
   /** The board team already handles or decided this item. */
   | { step: 'conflict' };
 
+/** What the status view says for an item the worker can't act on. */
+function statusText(item: VerifiableItem): string {
+  const status = item.verification?.status;
+  if (status !== 'pending' && !canRequestVerification(item.verification)) {
+    const label = itemVerificationStatusLabel(item.verification);
+    if (label) return label;
+  }
+  return m.itemVerification_conflictError();
+}
+
 type Busy = 'send' | 'confirm' | 'request' | null;
 
 const CODE_SLOTS = [0, 1, 2, 3, 4, 5] as const;
@@ -180,8 +191,8 @@ export function ItemVerificationDialog({
   }
 
   const { startEmailCheck, confirmEmailCode } = actions;
-  // Re-derived each render: an edit that removes the website, or a status
-  // change, moves an open dialog to the board team.
+  // Re-derived each render: an edit that removes the website moves an open
+  // dialog to the board team; a status the worker can't act on shows it.
   const emailCheck =
     item.method === 'email_domain' &&
     canCheckByEmail(item.verification) &&
@@ -190,8 +201,8 @@ export function ItemVerificationDialog({
       ? { startEmailCheck, confirmEmailCode }
       : null;
   const view =
-    state.step === 'conflict'
-      ? 'conflict'
+    state.step === 'conflict' || !canRequestVerification(item.verification)
+      ? 'status'
       : !emailCheck || state.step === 'team'
         ? 'team'
         : state.step;
@@ -346,15 +357,15 @@ export function ItemVerificationDialog({
   );
 
   let body: ReactNode;
-  if (view === 'conflict') {
+  if (view === 'status') {
     body = (
       <>
         <DialogHeader>
-          <DialogTitle>
-            {m.itemVerification_actionAriaLabel({ item: item.label })}
-          </DialogTitle>
-          <DialogDescription role="alert">
-            {m.itemVerification_conflictError()}
+          <DialogTitle className="pe-8">{item.label}</DialogTitle>
+          <DialogDescription
+            role={state.step === 'conflict' ? 'alert' : undefined}
+          >
+            {statusText(item)}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

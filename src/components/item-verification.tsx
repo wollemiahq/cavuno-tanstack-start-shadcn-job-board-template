@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  type FocusEvent,
-  type KeyboardEvent,
-  lazy,
-  Suspense,
-  useRef,
-  useState,
-} from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 
 import { BadgeCheck } from 'lucide-react';
 
@@ -40,12 +33,6 @@ type Result<T> = { ok: true; data: T } | Failure;
 // The verification dialog (the email check, its one-time code input, and
 // the request to the board team) loads when the worker opens it, so the
 // profile pages do not carry it up front.
-// The tick's tooltip loads on the first hover or keyboard focus.
-const VerificationTooltip = lazy(() =>
-  import('./item-verification-tooltip').then((module) => ({
-    default: module.ItemVerificationTooltip,
-  })),
-);
 
 const VerificationDialog = lazy(() =>
   import('./item-verification-dialog').then((module) => ({
@@ -141,8 +128,9 @@ const TICK_ICON_CLASS = {
 } satisfies Record<TickTone, string>;
 
 /**
- * The verification tick after an item's name. Its look follows the status;
- * while the worker may ask, it opens the verification dialog.
+ * The verification tick after an item's name. Its look follows the status.
+ * It always opens the verification dialog: the steps while the worker may
+ * ask, otherwise the status.
  */
 export function ItemVerificationTick({
   item,
@@ -154,80 +142,43 @@ export function ItemVerificationTick({
   const [open, setOpen] = useState(false);
   // Stays mounted after the first open so closing keeps its exit animation.
   const [dialogLoaded, setDialogLoaded] = useState(false);
-  const [tip, setTip] = useState(false);
-  const [tipLoaded, setTipLoaded] = useState(false);
   const tick = useRef<HTMLElement | null>(null);
   const actionable = canRequestVerification(item.verification);
   const tone = tickTone(item.verification);
-  const statusLabel = itemVerificationStatusLabel(item.verification);
-  const name = actionable
-    ? m.itemVerification_actionAriaLabel({ item: item.label })
-    : (statusLabel ?? m.itemVerification_actionAriaLabel({ item: item.label }));
-  const showTip = () => {
-    setTipLoaded(true);
-    setTip(true);
-  };
-  const tipEvents = {
-    onPointerEnter: showTip,
-    onPointerLeave: () => setTip(false),
-    onFocus: (event: FocusEvent<HTMLElement>) => {
-      if (event.currentTarget.matches(':focus-visible')) showTip();
-    },
-    onBlur: () => setTip(false),
-    onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
-      if (event.key === 'Escape') setTip(false);
-    },
-  };
-  const icon = (
-    <BadgeCheck aria-hidden className={cn('size-4', TICK_ICON_CLASS[tone])} />
-  );
+  const statusLabel = actionable
+    ? null
+    : itemVerificationStatusLabel(item.verification);
+  const name = statusLabel
+    ? m.itemVerification_statusAriaLabel({
+        status: statusLabel,
+        item: item.label,
+      })
+    : m.itemVerification_actionAriaLabel({ item: item.label });
 
   return (
     <>
-      {actionable ? (
-        <Button
-          ref={(element: HTMLElement | null) => {
-            tick.current = element;
-          }}
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          className="-my-1 align-middle"
-          aria-label={name}
-          data-test="item-verification-tick"
-          data-tone={tone}
-          {...tipEvents}
-          onClick={() => {
-            setTip(false);
-            setDialogLoaded(true);
-            setOpen(true);
-          }}
-        >
-          {icon}
-        </Button>
-      ) : (
-        <span
-          ref={(element: HTMLElement | null) => {
-            tick.current = element;
-          }}
-          role="img"
-          // Focusable by script only, so focus can come back here when the
-          // dialog closes on a status the worker can't act on.
-          tabIndex={-1}
-          aria-label={name}
-          data-test="item-verification-tick"
-          data-tone={tone}
-          className="-my-1 inline-flex size-6 shrink-0 items-center justify-center align-middle outline-none"
-          {...tipEvents}
-        >
-          {icon}
-        </span>
-      )}
-      {tipLoaded ? (
-        <Suspense fallback={null}>
-          <VerificationTooltip anchor={tick} open={tip} label={name} />
-        </Suspense>
-      ) : null}
+      <Button
+        ref={(element: HTMLElement | null) => {
+          tick.current = element;
+        }}
+        type="button"
+        variant="ghost"
+        size="icon-xs"
+        className="-my-1 align-middle"
+        aria-label={name}
+        title={statusLabel ?? m.itemVerification_verifyLabel()}
+        data-test="item-verification-tick"
+        data-tone={tone}
+        onClick={() => {
+          setDialogLoaded(true);
+          setOpen(true);
+        }}
+      >
+        <BadgeCheck
+          aria-hidden
+          className={cn('size-4', TICK_ICON_CLASS[tone])}
+        />
+      </Button>
       {dialogLoaded ? (
         <Suspense fallback={null}>
           <VerificationDialog

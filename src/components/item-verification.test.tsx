@@ -15,6 +15,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -128,61 +129,92 @@ function emailActions(
 }
 
 describe('ItemVerificationTick', () => {
-  it.each([
-    [null, 'none'],
-    ['changed', 'none'],
-    ['rejected', 'none'],
-    ['needs_info', 'review'],
-  ] as const)(
-    'a %s item is a "Verify" button with the %s look',
-    async (status, tone) => {
+  it.each([null, 'changed', 'rejected', 'needs_info'] as const)(
+    'a %s item is a "Verify" button',
+    async (status) => {
       await mount(
         <ItemVerificationTick
           item={{ ...emailItem, verification: status ? row(status) : null }}
           actions={emailActions()}
         />,
       );
-      const tick = screen.getByRole('button', { name: verifyName() });
-      expect(tick).toHaveAttribute('data-tone', tone);
+      expect(
+        screen.getByRole('button', { name: verifyName() }),
+      ).toHaveAttribute('title', m.itemVerification_verifyLabel());
     },
   );
 
   it.each([
-    ['verified', 'verified', () => m.itemVerification_verifiedLabel()],
-    ['pending', 'review', () => m.itemVerification_pendingLabel()],
-    ['revoked', 'none', () => m.itemVerification_revokedLabel()],
+    [
+      'verified',
+      () => m.itemVerification_verifiedLabel(),
+      () => m.itemVerification_verifiedLabel(),
+    ],
+    [
+      'pending',
+      () => m.itemVerification_pendingLabel(),
+      () => m.itemVerification_conflictError(),
+    ],
+    [
+      'revoked',
+      () => m.itemVerification_revokedLabel(),
+      () => m.itemVerification_revokedLabel(),
+    ],
   ] as const)(
-    'a %s item shows its status, not a button',
-    async (status, tone, label) => {
+    'a %s item names its status and opens it, with Close only',
+    async (status, label, text) => {
+      const actions = emailActions();
       await mount(
         <ItemVerificationTick
           item={{ ...emailItem, verification: row(status) }}
-          actions={emailActions()}
+          actions={actions}
         />,
       );
-      expect(screen.queryByRole('button')).not.toBeInTheDocument();
-      expect(screen.getByRole('img', { name: label() })).toHaveAttribute(
-        'data-tone',
-        tone,
-      );
+      const tick = screen.getByRole('button', {
+        name: m.itemVerification_statusAriaLabel({
+          status: label(),
+          item: 'Acme',
+        }),
+      });
+      expect(tick).toHaveAttribute('title', label());
+
+      fireEvent.click(tick);
+      const dialog = await screen.findByRole('dialog', { name: 'Acme' });
+      expect(dialog).toHaveTextContent(text());
+      expect(
+        within(dialog)
+          .getAllByRole('button')
+          .every((button) => button.textContent === m.common_closeLabel()),
+      ).toBe(true);
+      expect(
+        screen.queryByLabelText(m.itemVerification_emailLabel()),
+      ).not.toBeInTheDocument();
+      expect(actions.requestReview).not.toHaveBeenCalled();
     },
   );
 
-  it('names the status in a tooltip on hover', async () => {
+  it('shows the domain a verified item was checked at', async () => {
     await mount(
       <ItemVerificationTick
-        item={{ ...emailItem, verification: row('pending') }}
+        item={{
+          ...emailItem,
+          verification: { ...row('verified'), verifiedDomain: 'acme.com' },
+        }}
         actions={emailActions()}
       />,
     );
-    fireEvent.pointerEnter(
-      screen.getByRole('img', { name: m.itemVerification_pendingLabel() }),
-    );
-    expect(
-      await screen.findByText(m.itemVerification_pendingLabel(), {
-        selector: '[data-slot=tooltip-content]',
+    const label = m.itemVerification_verifiedDomainLabel({
+      domain: 'acme.com',
+    });
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_statusAriaLabel({
+          status: label,
+          item: 'Acme',
+        }),
       }),
-    ).toBeInTheDocument();
+    );
+    expect(await screen.findByRole('dialog')).toHaveTextContent(label);
   });
 
   it('checks the work email in a dialog: address, code, verified', async () => {
@@ -413,6 +445,41 @@ describe('ItemVerificationTick', () => {
     expect(
       screen.getByRole('button', { name: m.itemVerification_askBoardLabel() }),
     ).toBeInTheDocument();
+  });
+
+  it('shows the status when the item becomes verified while open', async () => {
+    const actions = emailActions();
+    function Harness() {
+      const [item, setItem] = useState<VerifiableItem>({
+        ...emailItem,
+        method: 'team',
+      });
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() => setItem({ ...item, verification: row('verified') })}
+          >
+            refresh
+          </button>
+          <ItemVerificationTick item={item} actions={actions} />
+        </>
+      );
+    }
+    await mount(<Harness />);
+
+    await openDialog();
+    act(() => {
+      screen.getByRole('button', { name: 'refresh', hidden: true }).click();
+    });
+    expect(
+      screen.queryByRole('button', {
+        name: m.itemVerification_askBoardLabel(),
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent(
+      m.itemVerification_verifiedLabel(),
+    );
   });
 });
 
