@@ -7,8 +7,9 @@ import type {
 
 /**
  * Profile item verification view-model seam. A board switches verification
- * on per item type; the API then reports each item's status through
- * `listVerifications`. Everything here turns those reads into what the
+ * on per item type: experience and education in `board.context().verification`,
+ * collection fields in their definition. The API reports each item's status
+ * through `listVerifications`. Everything here turns those reads into what the
  * editor renders, and renders nothing for an item the board does not verify.
  */
 
@@ -58,42 +59,44 @@ export function canRequestVerification(
 }
 
 /**
- * A built-in experience entry, when the board verifies it. The Board API
- * does not say whether experience verification is switched on, so an entry
- * counts only once the API lists a verification for it. A current job with a
- * company website is checked by work email; any other entry goes to the team.
+ * A built-in experience entry, when the board verifies experience
+ * (`board.context().verification.experience`). Pass `null` verifications when
+ * it does not. Every entry then shows its status, unverified until the API
+ * lists one. A current job with a company website is checked by work email;
+ * any other entry goes to the team.
  */
 export function experienceVerifiableItem(
   item: Pick<
     CandidateExperience,
     'id' | 'companyName' | 'companyUrl' | 'endDate'
   >,
-  verifications: ReadonlyMap<string, ItemVerification>,
+  verifications: ReadonlyMap<string, ItemVerification> | null,
 ): VerifiableItem | null {
+  if (!verifications) return null;
   const itemKey = experienceItemKey(item.id);
-  const verification = verifications.get(itemKey);
-  if (!verification) return null;
   return {
     itemKey,
     label: item.companyName,
     method: !item.endDate && item.companyUrl ? 'email_domain' : 'team',
-    verification,
+    verification: verifications.get(itemKey) ?? null,
   };
 }
 
-/** A built-in education entry, on the same terms as experience. */
+/**
+ * A built-in education entry, when the board verifies education
+ * (`board.context().verification.education`), on the same terms as experience.
+ */
 export function educationVerifiableItem(
   item: Pick<CandidateEducation, 'id' | 'institutionName' | 'institutionUrl'>,
-  verifications: ReadonlyMap<string, ItemVerification>,
+  verifications: ReadonlyMap<string, ItemVerification> | null,
 ): VerifiableItem | null {
+  if (!verifications) return null;
   const itemKey = educationItemKey(item.id);
-  const verification = verifications.get(itemKey);
-  if (!verification) return null;
   return {
     itemKey,
     label: item.institutionName,
     method: item.institutionUrl ? 'email_domain' : 'team',
-    verification,
+    verification: verifications.get(itemKey) ?? null,
   };
 }
 

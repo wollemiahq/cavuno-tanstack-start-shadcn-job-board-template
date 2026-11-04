@@ -97,12 +97,15 @@ function toDraft(item: CandidateEducation): Draft {
 export function EducationSection({
   items,
   language,
-  verifications = new Map(),
+  verifications = null,
 }: {
   items: CandidateEducation[];
   language: string;
-  /** Item verification statuses by item key; empty when none apply. */
-  verifications?: ReadonlyMap<string, ItemVerification>;
+  /**
+   * Item verification statuses by item key, or `null` when the board does
+   * not verify education (`board.context().verification.education`).
+   */
+  verifications?: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
@@ -390,7 +393,7 @@ function EducationVerification({
   verifications,
 }: {
   item: CandidateEducation;
-  verifications: ReadonlyMap<string, ItemVerification>;
+  verifications: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const verifiable = educationVerifiableItem(item, verifications);
   return verifiable ? <ItemVerificationControl item={verifiable} /> : null;

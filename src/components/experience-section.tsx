@@ -107,13 +107,16 @@ export function ExperienceSection({
   items,
   language,
   locationSuggestions,
-  verifications = new Map(),
+  verifications = null,
 }: {
   items: CandidateExperience[];
   language: string;
   locationSuggestions: LocationSuggestionState;
-  /** Item verification statuses by item key; empty when none apply. */
-  verifications?: ReadonlyMap<string, ItemVerification>;
+  /**
+   * Item verification statuses by item key, or `null` when the board does
+   * not verify experience (`board.context().verification.experience`).
+   */
+  verifications?: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
@@ -458,7 +461,7 @@ function ExperienceVerification({
   verifications,
 }: {
   item: CandidateExperience;
-  verifications: ReadonlyMap<string, ItemVerification>;
+  verifications: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const verifiable = experienceVerifiableItem(item, verifications);
   return verifiable ? <ItemVerificationControl item={verifiable} /> : null;

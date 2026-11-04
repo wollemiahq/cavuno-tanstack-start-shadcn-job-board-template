@@ -61,14 +61,24 @@ describe('built-in item verification', () => {
     endDate: null,
   };
 
-  it('shows nothing for an entry the API lists no verification for', () => {
-    expect(experienceVerifiableItem(job, list())).toBeNull();
-    expect(
-      educationVerifiableItem(
-        { id: 'edu1', institutionName: 'MIT', institutionUrl: null },
-        list(),
-      ),
-    ).toBeNull();
+  const school = { id: 'edu1', institutionName: 'MIT', institutionUrl: null };
+
+  it('shows nothing when the board does not verify the type', () => {
+    expect(experienceVerifiableItem(job, null)).toBeNull();
+    expect(educationVerifiableItem(school, null)).toBeNull();
+  });
+
+  it('shows every entry as unverified when the board verifies the type and the API lists no row', () => {
+    expect(experienceVerifiableItem(job, list())).toMatchObject({
+      itemKey: 'experience:exp1',
+      verification: null,
+    });
+    expect(educationVerifiableItem(school, list())).toMatchObject({
+      itemKey: 'education:edu1',
+      method: 'team',
+      verification: null,
+    });
+    expect(canRequestVerification(null)).toBe(true);
   });
 
   it('checks a current job with a website by work email, and a past job by the team', () => {

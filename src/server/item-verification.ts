@@ -2,8 +2,7 @@
  * Profile item verification server functions: ask the board team to check an
  * item, confirm a work or school email by code, and consume the emailed link.
  * Auth is enforced per function by the session middleware, like every other
- * `/me/*` write. The email-domain endpoints have no `@cavuno/board` method
- * yet, so they go through the SDK's typed `client.fetch`.
+ * `/me/*` write.
  */
 import { createServerFn } from '@tanstack/react-start';
 
@@ -20,19 +19,11 @@ import {
 import { run } from './employers';
 import { requireVerifiedBoardUser } from './me-verification';
 
-import type { ItemVerification } from '@cavuno/board';
-
-/** `POST /me/profile/verifications/email-domain`: the check that was sent. */
-export type ItemEmailDomainCheck = {
-  object: 'item_email_domain_verification';
-  itemKey: string;
-  emailDomain: string;
-  /** False when an email for this item went out under a minute ago. */
-  sent: boolean;
-  retryAfterSeconds: number;
-  codeExpiresAt: string;
-  linkExpiresAt: string;
-};
+import type {
+  ConfirmItemEmailDomainVerificationBody,
+  ConfirmItemEmailDomainVerificationLinkBody,
+  SubmitItemEmailDomainVerificationBody,
+} from '@cavuno/board';
 
 function authedHeaders(context: SessionContext & BoardAccessContext) {
   return { ...context.authHeaders, ...context.boardAccessHeaders };
@@ -57,38 +48,30 @@ export const submitProfileItemVerification = createServerFn({
 
 /** Email a code and a link to an address at the item's domain. */
 export const startProfileItemEmailCheck = createServerFn({ method: 'POST' })
-  .validator((input: { itemKey: string; email: string }) => input)
+  .validator((input: SubmitItemEmailDomainVerificationBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
     return run(() =>
-      getBoard().client.fetch<ItemEmailDomainCheck>(
-        '/me/profile/verifications/email-domain',
-        {
-          method: 'POST',
-          body: { itemKey: data.itemKey, email: data.email },
-          headers,
-        },
+      getBoard().me.profile.submitEmailDomainVerification(
+        { itemKey: data.itemKey, email: data.email },
+        { headers },
       ),
     );
   });
 
 /** Verify the item with the 6-digit code from the email. */
 export const confirmProfileItemEmailCode = createServerFn({ method: 'POST' })
-  .validator((input: { itemKey: string; code: string }) => input)
+  .validator((input: ConfirmItemEmailDomainVerificationBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
     return run(() =>
-      getBoard().client.fetch<ItemVerification>(
-        '/me/profile/verifications/email-domain/confirm',
-        {
-          method: 'POST',
-          body: { itemKey: data.itemKey, code: data.code },
-          headers,
-        },
+      getBoard().me.profile.confirmEmailDomainVerification(
+        { itemKey: data.itemKey, code: data.code },
+        { headers },
       ),
     );
   });
@@ -99,12 +82,11 @@ export const confirmProfileItemEmailCode = createServerFn({ method: 'POST' })
  * handler moved it into, never the URL.
  */
 export const confirmItemEmailLink = createServerFn({ method: 'POST' })
-  .validator((input: { token: string }) => input)
+  .validator((input: ConfirmItemEmailDomainVerificationLinkBody) => input)
   .handler(async ({ data }) => {
     const result = await run(async () =>
-      getBoard().client.fetch<ItemVerification>('/auth/verify-item-email', {
-        method: 'POST',
-        body: { token: resolveAuthFlowToken('verify-item-email', data.token) },
+      getBoard().auth.verifyItemEmail({
+        token: resolveAuthFlowToken('verify-item-email', data.token),
       }),
     );
     if (result.ok) finishAuthFlow('verify-item-email');
