@@ -8,6 +8,7 @@ describe('credential landing URLs', () => {
     'oauth-complete',
     'reset-password',
     'confirm-email-change',
+    'verify-item-email',
   ] as const)(
     'moves %s credentials into an httpOnly cookie before rendering',
     (kind) => {

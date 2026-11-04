@@ -12,7 +12,9 @@ import {
   updateExperience,
 } from '../server/account';
 
+import { experienceVerifiableItem } from '@/board/item-verification';
 import { profileMonthLabel } from '@/board/profile-view-model';
+import { ItemVerificationControl } from '@/components/item-verification';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
 import { MonthYearField } from '@/components/month-year-field';
@@ -57,7 +59,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
-import type { CandidateExperience } from '@cavuno/board';
+import type { CandidateExperience, ItemVerification } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
 
@@ -105,10 +107,16 @@ export function ExperienceSection({
   items,
   language,
   locationSuggestions,
+  verifications = null,
 }: {
   items: CandidateExperience[];
   language: string;
   locationSuggestions: LocationSuggestionState;
+  /**
+   * Item verification statuses by item key, or `null` when the board does
+   * not verify experience (`board.context().verification.experience`).
+   */
+  verifications?: ReadonlyMap<string, ItemVerification> | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
@@ -373,6 +381,10 @@ export function ExperienceSection({
                       ? profileMonthLabel(language, item.endDate)
                       : entityCopy().candidatePresent}
                   </ItemDescription>
+                  <ExperienceVerification
+                    item={item}
+                    verifications={verifications}
+                  />
                 </ItemContent>
                 <ItemActions>
                   <Button
@@ -442,4 +454,15 @@ export function ExperienceSection({
       </CardContent>
     </Card>
   );
+}
+
+function ExperienceVerification({
+  item,
+  verifications,
+}: {
+  item: CandidateExperience;
+  verifications: ReadonlyMap<string, ItemVerification> | null;
+}) {
+  const verifiable = experienceVerifiableItem(item, verifications);
+  return verifiable ? <ItemVerificationControl item={verifiable} /> : null;
 }

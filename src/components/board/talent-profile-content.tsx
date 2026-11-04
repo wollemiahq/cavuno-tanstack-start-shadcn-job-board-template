@@ -1,6 +1,7 @@
 import type { ElementType } from 'react';
 
 import { Link } from '@tanstack/react-router';
+import { BadgeCheck } from 'lucide-react';
 
 import type { TalentProfileVM } from '@/board/talent-view-model';
 
@@ -11,6 +12,7 @@ import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { initialsOf } from '@/lib/initials';
+import { m } from '@/paraglide/messages';
 
 function ProfileLink({
   href,
@@ -180,6 +182,7 @@ export function TalentProfileContent({
                     >
                       {experience.companyName}
                     </ProfileLink>
+                    <VerifiedBadge verification={experience.verification} />
                   </div>
                   {experience.dateRangeLabel ? (
                     <p className="text-muted-foreground text-sm">
@@ -259,6 +262,7 @@ export function TalentProfileContent({
                   >
                     {education.institutionName}
                   </ProfileLink>
+                  <VerifiedBadge verification={education.verification} />
                   {education.qualificationLabel ? (
                     <p className="text-foreground font-medium">
                       {education.qualificationLabel}
@@ -329,6 +333,27 @@ export function TalentProfileContent({
           </dl>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+/** The board's "Verified" mark on a verified entry, with the confirmed email domain. */
+function VerifiedBadge({
+  verification,
+}: {
+  verification: { verifiedDomain: string | null } | null;
+}) {
+  if (!verification) return null;
+  return (
+    <div>
+      <Badge variant="secondary" data-test="verified-badge">
+        <BadgeCheck aria-hidden data-icon="inline-start" />
+        {verification.verifiedDomain
+          ? m.itemVerification_verifiedDomainLabel({
+              domain: verification.verifiedDomain,
+            })
+          : m.itemVerification_verifiedLabel()}
+      </Badge>
     </div>
   );
 }

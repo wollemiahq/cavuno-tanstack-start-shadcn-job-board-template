@@ -56,6 +56,7 @@ export const ROUTE_TEMPLATES = [
   '/auth/sign-up',
   '/auth/verify-email',
   '/auth/verify-email-required',
+  '/auth/verify-item-email',
   '/auth/verify-work-email',
   '/blog/$postSlug',
   '/products/$productSlug',

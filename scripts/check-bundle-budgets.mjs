@@ -144,7 +144,13 @@ const BUDGETS = {
     // Desktop-only enhanced search is lazy shell work. Removing the shared
     // Base UI footer menu also made TanStack attribute more of the remaining
     // dynamic graph here, though this route's total first load still fell.
-    '/account': { raw: 290_000, gzip: 106_500 },
+    // Profile item verification (#332): each item's status badge, its
+    // verify or request-review button and the collection verification card
+    // render with the page; the email check dialog and its one-time code
+    // input load on click. Measured 290,363 B raw / 106,871 B gzip against
+    // main's 283,057 / 103,998 (+7,306 / +2,873); both budgets are raised by
+    // exactly the measured growth, keeping main's headroom.
+    '/account': { raw: 297_306, gzip: 109_373 },
     // Pre-existing overflow on main after board-user self-service (#40):
     // this route used the default 80 KiB increment and landed at 113.7 /
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
@@ -215,7 +221,11 @@ const BUDGETS = {
     // retain roughly the original 1.3 KiB headroom on this private route.
     '/saved-jobs': { raw: 123_000, gzip: 46_000 },
     '/companies/$companySlug/jobs/$jobSlug': { raw: 112_500, gzip: 44_500 },
-    '/p/$handle': { raw: 113_500, gzip: 43_000 },
+    // The public profile's "Verified" badge on experience and education
+    // (#332), with its two labels: measured 113,502 B raw / 43,120 B gzip
+    // against main's 112,747 / 42,815 (+755 / +305). Raised by exactly the
+    // measured growth, keeping main's headroom.
+    '/p/$handle': { raw: 114_255, gzip: 43_305 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

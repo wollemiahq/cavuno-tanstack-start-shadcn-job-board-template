@@ -40,10 +40,15 @@ import { useGlobalLocationSuggestions } from './-use-global-location-suggestions
 
 import { boardForms } from '@/board/form-layout';
 import {
+  collectionVerifiableItems,
+  verificationsByKey,
+} from '@/board/item-verification';
+import {
   CandidateProfilePendingPage,
   CandidateRouteErrorPage,
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
+import { ItemVerificationCard } from '@/components/item-verification';
 import {
   ProfileCompletenessCard,
   type ProfileChecklistItem,
@@ -89,8 +94,15 @@ function CandidateAccountPage({
     resume,
     customFields,
     objectReferences,
+    verifications: verificationList,
   } = account;
   const { board } = rootApi.useLoaderData();
+  const verifications = verificationsByKey(verificationList);
+  const collectionItems = collectionVerifiableItems(
+    objectReferences,
+    verifications,
+    { emailDomain: true },
+  );
   const profileLocationSuggestions = useGlobalLocationSuggestions();
   const experienceLocationSuggestions = useGlobalLocationSuggestions();
 
@@ -117,10 +129,15 @@ function CandidateAccountPage({
         items={experience.data}
         language={getLocale()}
         locationSuggestions={experienceLocationSuggestions}
+        verifications={board.verification?.experience ? verifications : null}
       />
     ),
     education: (
-      <EducationSection items={education.data} language={getLocale()} />
+      <EducationSection
+        items={education.data}
+        language={getLocale()}
+        verifications={board.verification?.education ? verifications : null}
+      />
     ),
     skills: <SkillsSection skills={skills.data.map((skill) => skill.name)} />,
     languages: (
@@ -233,6 +250,8 @@ function CandidateAccountPage({
             />
           </CardContent>
         </Card>
+
+        <ItemVerificationCard items={collectionItems} />
 
         {sectionOrder.map((key) => (
           <Fragment key={key}>{sections[key]}</Fragment>

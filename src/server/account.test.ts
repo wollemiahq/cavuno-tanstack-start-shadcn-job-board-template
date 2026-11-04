@@ -19,6 +19,7 @@ const candidateReads = {
   listLanguages: vi.fn(),
   retrieveCustomFields: vi.fn(),
   retrieveObjectReferences: vi.fn(),
+  listVerifications: vi.fn(),
 };
 const listSavedJobs = vi.fn();
 const retrieveResume = vi.fn();
@@ -60,6 +61,7 @@ beforeEach(() => {
   candidateReads.listLanguages.mockResolvedValue(emptyList);
   candidateReads.retrieveCustomFields.mockResolvedValue(null);
   candidateReads.retrieveObjectReferences.mockResolvedValue(null);
+  candidateReads.listVerifications.mockResolvedValue(emptyList);
   listSavedJobs.mockResolvedValue(emptyList);
   retrieveResume.mockResolvedValue({ object: 'resume' });
 });
@@ -114,6 +116,7 @@ describe('readAccount', () => {
       resume: { object: 'resume' },
       customFields: null,
       objectReferences: null,
+      verifications: emptyList,
     });
     for (const read of Object.values(candidateReads)) {
       expect(read).toHaveBeenCalledTimes(1);
@@ -169,9 +172,13 @@ describe('readAccount resume ordering', () => {
     candidateReads.retrieveObjectReferences.mockRejectedValueOnce(
       new Error('unavailable'),
     );
+    candidateReads.listVerifications.mockRejectedValueOnce(
+      new Error('unavailable'),
+    );
     expect(await readAccount(board, headers)).toMatchObject({
       customFields: null,
       objectReferences: null,
+      verifications: null,
     });
   });
 });

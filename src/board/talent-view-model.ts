@@ -1,5 +1,7 @@
 import { formatMonthYear, normalizeWebsiteUrl } from '@cavuno/board/format';
 
+import { verificationBadge } from './verification-badge';
+
 import {
   talentProfileParam,
   talentProfilePath,
@@ -91,6 +93,8 @@ export interface TalentExperienceVM {
   foundViaLabel: string | null;
   description: string | null;
   skills: string[];
+  /** Set when the board verified this entry; carries the confirmed email domain, if any. */
+  verification: { verifiedDomain: string | null } | null;
 }
 
 export interface TalentEducationVM {
@@ -104,6 +108,8 @@ export interface TalentEducationVM {
   activitiesAndSocieties: string | null;
   dateRangeLabel: string | null;
   description: string | null;
+  /** Set when the board verified this entry; carries the confirmed email domain, if any. */
+  verification: { verifiedDomain: string | null } | null;
 }
 
 export interface TalentLanguageVM {
@@ -347,6 +353,7 @@ export function toTalentProfileVM(
       foundViaLabel: enumLabel(experience.foundVia, labels.foundVia),
       description: experience.description,
       skills: experience.experienceSkills,
+      verification: verificationBadge(experience.verification),
     })),
     educationHeading: labels.educationHeading,
     education: profile.education.map((education) => ({
@@ -366,6 +373,7 @@ export function toTalentProfileVM(
         labels.present,
       ),
       description: education.description,
+      verification: verificationBadge(education.verification),
     })),
     skillsHeading: labels.skillsHeading,
     skills: profile.skills.map((skill) => skill.name),

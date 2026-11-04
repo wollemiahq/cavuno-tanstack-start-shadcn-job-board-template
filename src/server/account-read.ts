@@ -22,6 +22,7 @@ export type AccountBoard = {
       | 'listLanguages'
       | 'retrieveCustomFields'
       | 'retrieveObjectReferences'
+      | 'listVerifications'
     >;
     savedJobs: Pick<BoardMe['savedJobs'], 'list'>;
     resume: Pick<BoardMe['resume'], 'retrieve'>;
@@ -61,6 +62,7 @@ export async function readAccount(
     savedJobs,
     customFields,
     objectReferences,
+    verifications,
   ] = await Promise.all([
     board.me.profile.retrieve(undefined, { headers }),
     board.me.profile.listExperience({ headers }),
@@ -73,6 +75,8 @@ export async function readAccount(
     // to `null` so an API without them still renders the profile.
     board.me.profile.retrieveCustomFields({ headers }).catch(() => null),
     board.me.profile.retrieveObjectReferences({ headers }).catch(() => null),
+    // Item verification statuses; empty on a board that verifies nothing.
+    board.me.profile.listVerifications({ headers }).catch(() => null),
   ]);
   return {
     role: 'candidate' as const,
@@ -86,6 +90,7 @@ export async function readAccount(
     resume,
     customFields,
     objectReferences,
+    verifications,
   };
 }
 

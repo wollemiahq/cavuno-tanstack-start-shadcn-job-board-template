@@ -207,6 +207,7 @@ describe('talent view models', () => {
         foundViaLabel: 'Found via referral',
         description: 'Designed the first general-purpose computing programs.',
         skills: ['TypeScript', 'Mathematics'],
+        verification: null,
       },
     ]);
     expect(vm.education).toEqual([
@@ -220,11 +221,43 @@ describe('talent view models', () => {
         activitiesAndSocieties: 'Analytical Society',
         dateRangeLabel: 'sept. 2018 – juin 2021',
         description: 'Studied mathematical foundations of computation.',
+        verification: null,
       },
     ]);
     expect(vm.skills).toEqual(['TypeScript', 'Mathematics']);
     expect(vm.languages).toEqual([
       { key: 'english', name: 'English', proficiencyLabel: 'Fluent' },
+    ]);
+  });
+
+  it('carries the verified badge and its email domain on verified entries only', () => {
+    const vm = toTalentProfileVM(
+      {
+        ...profile,
+        experiences: [
+          {
+            ...profile.experiences[0],
+            verification: { status: 'verified', verifiedDomain: 'acme.com' },
+          },
+        ],
+        education: [
+          {
+            ...profile.education[0],
+            verification: { status: 'verified', verifiedDomain: null },
+          },
+          profile.education[0],
+        ],
+      },
+      'fr',
+      labels,
+    );
+
+    expect(vm.experiences[0]?.verification).toEqual({
+      verifiedDomain: 'acme.com',
+    });
+    expect(vm.education.map((entry) => entry.verification)).toEqual([
+      { verifiedDomain: null },
+      null,
     ]);
   });
 
