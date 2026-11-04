@@ -43,6 +43,12 @@ import {
 import { Field, FieldError, FieldSet, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
+import {
   Item,
   ItemActions,
   ItemContent,
@@ -59,6 +65,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
+import { stripProtocol, websiteDomain, websiteUrl } from '@/lib/website-domain';
 import type { CandidateExperience, ItemVerification } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
@@ -66,6 +73,8 @@ type Editing = { id: string | null } | null;
 type Draft = {
   title: string;
   companyName: string;
+  /** The company website without its protocol, as typed after `https://`. */
+  website: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -77,6 +86,7 @@ type Draft = {
 const EMPTY: Draft = {
   title: '',
   companyName: '',
+  website: '',
   location: '',
   startDate: '',
   endDate: '',
@@ -88,6 +98,7 @@ function toDraft(item: CandidateExperience): Draft {
   return {
     title: item.title,
     companyName: item.companyName,
+    website: stripProtocol(item.companyUrl ?? ''),
     location: item.location ?? '',
     startDate: item.startDate,
     endDate: item.endDate ?? '',
@@ -147,6 +158,7 @@ export function ExperienceSection({
     const body = {
       title: draft.title.trim(),
       companyName: draft.companyName.trim(),
+      companyUrl: websiteUrl(draft.website),
       location: draft.location.trim(),
       startDate: draft.startDate,
       endDate: draft.current ? '' : draft.endDate,
@@ -206,6 +218,33 @@ export function ExperienceSection({
                   setDraft({ ...draft, companyName: event.target.value })
                 }
               />
+            </Field>
+            <Field className="gap-1.5 sm:col-span-2">
+              <FieldLabel htmlFor="experience-website">
+                {m.experienceSection_websiteLabel()}
+              </FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>
+                    {m.employerDashboard_websiteProtocolPrefix()}
+                  </InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="experience-website"
+                  inputMode="url"
+                  autoComplete="url"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder={m.experienceSection_websitePlaceholder()}
+                  value={draft.website}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      website: stripProtocol(event.currentTarget.value),
+                    })
+                  }
+                />
+              </InputGroup>
             </Field>
             <Field
               className="gap-1.5 sm:col-span-2"
@@ -371,8 +410,13 @@ export function ExperienceSection({
                 <ItemContent>
                   <ItemTitle>{item.title}</ItemTitle>
                   <ItemDescription>
-                    {item.companyName}
-                    {item.location ? ` · ${item.location}` : ''}
+                    {[
+                      item.companyName,
+                      websiteDomain(item.companyUrl),
+                      item.location,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </ItemDescription>
                   <ItemDescription className="text-xs">
                     {profileMonthLabel(language, item.startDate)}
@@ -386,7 +430,8 @@ export function ExperienceSection({
                     verifications={verifications}
                   />
                 </ItemContent>
-                <ItemActions>
+                {/* Top-aligned, so an open email check doesn't move them. */}
+                <ItemActions className="self-start">
                   <Button
                     variant="ghost"
                     size="icon-sm"

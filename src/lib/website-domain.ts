@@ -17,3 +17,17 @@ export function websiteDomain(
     .replace(/\.+$/, '');
   return domain === '' ? undefined : domain;
 }
+
+/** A website as typed into a field that shows `https://` before it. */
+export function stripProtocol(url: string): string {
+  return url.trim().replace(/^https?:\/\//i, '');
+}
+
+/**
+ * The URL to save for a website typed after an `https://` prefix: `''` when
+ * empty, which clears it on an edit.
+ */
+export function websiteUrl(typed: string): string {
+  const host = stripProtocol(typed);
+  return host ? `https://${host}` : '';
+}

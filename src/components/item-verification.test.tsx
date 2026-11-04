@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 
 import {
   RouterProvider,
@@ -16,7 +16,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   ItemVerificationCard,
@@ -32,6 +32,12 @@ vi.mock('@/server/item-verification', () => ({
   startProfileItemEmailCheck: vi.fn(),
   confirmProfileItemEmailCode: vi.fn(),
 }));
+
+beforeAll(() => {
+  // jsdom has no layout; the one-time code input probes it for password
+  // manager badges once focused.
+  document.elementFromPoint = () => null;
+});
 
 afterEach(() => {
   cleanup();
@@ -75,14 +81,44 @@ function row(status: ItemVerification['status']): ItemVerification {
   };
 }
 
+function sent(
+  overrides: { retryAfterSeconds?: number; codeExpiresAt?: string } = {},
+) {
+  return {
+    ok: true,
+    data: {
+      emailDomain: 'acme.com',
+      sent: true,
+      retryAfterSeconds: 60,
+      codeExpiresAt: new Date(Date.now() + 600_000).toISOString(),
+      ...overrides,
+    },
+  };
+}
+
+function clickVerify() {
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
+    }),
+  );
+}
+
+async function sendCodeTo(address: string) {
+  fireEvent.change(
+    await screen.findByLabelText(m.itemVerification_emailLabel()),
+    { target: { value: address } },
+  );
+  fireEvent.click(
+    screen.getByRole('button', { name: m.itemVerification_sendCodeLabel() }),
+  );
+}
+
 describe('ItemVerificationControl', () => {
-  it('sends a code to the work email, then verifies with it', async () => {
+  it('checks the work email in place: address, code, verified', async () => {
     const actions = {
       requestReview: vi.fn(),
-      startEmailCheck: vi.fn().mockResolvedValue({
-        ok: true,
-        data: { emailDomain: 'acme.com', sent: true },
-      }),
+      startEmailCheck: vi.fn().mockResolvedValue(sent()),
       confirmEmailCode: vi
         .fn()
         .mockResolvedValueOnce({
@@ -92,51 +128,166 @@ describe('ItemVerificationControl', () => {
         .mockResolvedValueOnce({ ok: true, data: {} }),
     };
     const router = await mount(
-      <ItemVerificationControl item={emailItem} actions={actions} />,
+      <ItemVerificationControl
+        item={{ ...emailItem, emailDomain: 'acme.com' }}
+        actions={actions}
+      />,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
-      }),
-    );
-    fireEvent.change(
-      await screen.findByLabelText(m.itemVerification_emailLabel()),
-      { target: { value: 'ada@acme.com' } },
-    );
-    fireEvent.click(
-      screen.getByRole('button', { name: m.itemVerification_sendCodeLabel() }),
-    );
+    clickVerify();
+    // The item's domain completes the address.
+    expect(await screen.findByText('@acme.com')).toBeInTheDocument();
+    await sendCodeTo('ada');
 
     expect(
       await screen.findByText(
-        m.itemVerification_codeIntro({ domain: 'acme.com' }),
+        m.itemVerification_codeIntro({ email: 'ada@acme.com' }),
+        { exact: false },
       ),
     ).toBeInTheDocument();
     expect(actions.startEmailCheck).toHaveBeenCalledWith(
       'experience:exp1',
       'ada@acme.com',
     );
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_resendInLabel({ seconds: 60 }),
+      }),
+    ).toBeDisabled();
 
     const code = screen.getByLabelText(m.itemVerification_codeLabel());
     fireEvent.change(code, { target: { value: '123456' } });
     expect(
       await screen.findByText(m.itemVerification_codeInvalidError()),
     ).toBeInTheDocument();
-    expect(actions.confirmEmailCode).toHaveBeenCalledTimes(1);
+    // A wrong code clears the input for the next try.
+    expect(code).toHaveValue('');
 
-    fireEvent.click(
-      screen.getByRole('button', { name: m.itemVerification_verifyLabel() }),
-    );
+    fireEvent.change(code, { target: { value: '654321' } });
     await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
     expect(actions.confirmEmailCode).toHaveBeenLastCalledWith(
       'experience:exp1',
-      '123456',
+      '654321',
     );
     expect(actions.requestReview).not.toHaveBeenCalled();
   });
 
-  it('asks the board team when the item has no email check', async () => {
+  it('uses a full address as typed', async () => {
+    const actions = {
+      requestReview: vi.fn(),
+      startEmailCheck: vi.fn().mockResolvedValue(sent()),
+      confirmEmailCode: vi.fn(),
+    };
+    await mount(
+      <ItemVerificationControl
+        item={{ ...emailItem, emailDomain: 'acme.com' }}
+        actions={actions}
+      />,
+    );
+
+    clickVerify();
+    await sendCodeTo('ada@eu.acme.com');
+    await waitFor(() =>
+      expect(actions.startEmailCheck).toHaveBeenCalledWith(
+        'experience:exp1',
+        'ada@eu.acme.com',
+      ),
+    );
+  });
+
+  it('says when the code expired and sends a new one', async () => {
+    const actions = {
+      requestReview: vi.fn(),
+      startEmailCheck: vi
+        .fn()
+        .mockResolvedValueOnce(
+          sent({
+            retryAfterSeconds: 0,
+            codeExpiresAt: new Date(Date.now() - 1000).toISOString(),
+          }),
+        )
+        .mockResolvedValueOnce(sent()),
+      confirmEmailCode: vi.fn(),
+    };
+    await mount(<ItemVerificationControl item={emailItem} actions={actions} />);
+
+    clickVerify();
+    await sendCodeTo('ada@acme.com');
+    expect(
+      await screen.findByText(m.itemVerification_codeExpiredError()),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_resendLabel() }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByText(m.itemVerification_codeExpiredError()),
+      ).not.toBeInTheDocument(),
+    );
+    expect(actions.startEmailCheck).toHaveBeenCalledTimes(2);
+    expect(actions.confirmEmailCode).not.toHaveBeenCalled();
+  });
+
+  it('closes the email check on cancel', async () => {
+    const actions = {
+      requestReview: vi.fn(),
+      startEmailCheck: vi.fn(),
+      confirmEmailCode: vi.fn(),
+    };
+    await mount(<ItemVerificationControl item={emailItem} actions={actions} />);
+
+    clickVerify();
+    await screen.findByLabelText(m.itemVerification_emailLabel());
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_cancelLabel() }),
+    );
+    expect(
+      screen.queryByLabelText(m.itemVerification_emailLabel()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers the board when an edit removes the website mid-check', async () => {
+    const actions = {
+      requestReview: vi.fn(),
+      startEmailCheck: vi.fn(),
+      confirmEmailCode: vi.fn(),
+    };
+    function Harness() {
+      const [item, setItem] = useState(emailItem);
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() => setItem({ ...emailItem, method: 'team' })}
+          >
+            edit
+          </button>
+          <ItemVerificationControl item={item} actions={actions} />
+        </>
+      );
+    }
+    await mount(<Harness />);
+
+    clickVerify();
+    await screen.findByLabelText(m.itemVerification_emailLabel());
+    fireEvent.click(screen.getByRole('button', { name: 'edit' }));
+    expect(
+      screen.queryByLabelText(m.itemVerification_emailLabel()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_askBoardAriaLabel({ item: 'Acme' }),
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('asks the board to verify an item with no email check', async () => {
     const actions = {
       requestReview: vi.fn().mockResolvedValue({ ok: true, data: {} }),
     };
@@ -147,17 +298,17 @@ describe('ItemVerificationControl', () => {
       />,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
-      }),
-    );
+    const button = screen.getByRole('button', {
+      name: m.itemVerification_askBoardAriaLabel({ item: 'Acme' }),
+    });
+    expect(button).toHaveTextContent(m.itemVerification_askBoardLabel());
+    fireEvent.click(button);
     await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
     expect(actions.requestReview).toHaveBeenCalledWith('experience:exp1');
   });
 
   it.each(['rejected', 'needs_info'] as const)(
-    'asks the board team for a %s email-domain item',
+    'asks the board to verify a %s email-domain item',
     async (status) => {
       const actions = {
         requestReview: vi.fn().mockResolvedValue({ ok: true, data: {} }),
@@ -173,7 +324,7 @@ describe('ItemVerificationControl', () => {
 
       fireEvent.click(
         screen.getByRole('button', {
-          name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
+          name: m.itemVerification_askBoardAriaLabel({ item: 'Acme' }),
         }),
       );
       await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
@@ -184,7 +335,7 @@ describe('ItemVerificationControl', () => {
     },
   );
 
-  it('offers team review when the item has no domain to email', async () => {
+  it('offers the board team when the item has no domain to email', async () => {
     const actions = {
       requestReview: vi.fn().mockResolvedValue({ ok: true, data: {} }),
       startEmailCheck: vi
@@ -196,24 +347,14 @@ describe('ItemVerificationControl', () => {
       <ItemVerificationControl item={emailItem} actions={actions} />,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.itemVerification_actionAriaLabel({ item: 'Acme' }),
-      }),
-    );
-    fireEvent.change(
-      await screen.findByLabelText(m.itemVerification_emailLabel()),
-      { target: { value: 'ada@acme.com' } },
-    );
-    fireEvent.click(
-      screen.getByRole('button', { name: m.itemVerification_sendCodeLabel() }),
-    );
+    clickVerify();
+    await sendCodeTo('ada@acme.com');
 
     expect(
       await screen.findByText(m.itemVerification_noEmailCheckBody()),
     ).toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole('button', { name: m.itemVerification_requestLabel() }),
+      screen.getByRole('button', { name: m.itemVerification_askBoardLabel() }),
     );
     await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
     expect(actions.requestReview).toHaveBeenCalledWith('experience:exp1');

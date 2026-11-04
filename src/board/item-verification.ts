@@ -1,3 +1,4 @@
+import { websiteDomain } from '@/lib/website-domain';
 import type {
   CandidateEducation,
   CandidateExperience,
@@ -24,6 +25,12 @@ export type VerifiableItem = {
   label: string;
   method: ItemVerificationMethod;
   verification: ItemVerification | null;
+  /**
+   * The domain the work or school email should be at, when the item names a
+   * website. A suggestion for the email field, not a rule: the Board API also
+   * accepts a subdomain of it.
+   */
+  emailDomain?: string | null;
 };
 
 /** The API's item keys for built-in entries. */
@@ -89,11 +96,13 @@ export function experienceVerifiableItem(
 ): VerifiableItem | null {
   if (!verifications) return null;
   const itemKey = experienceItemKey(item.id);
+  const emailDomain = websiteDomain(item.companyUrl);
   return {
     itemKey,
     label: item.companyName,
-    method: !item.endDate && item.companyUrl ? 'email_domain' : 'team',
+    method: !item.endDate && emailDomain ? 'email_domain' : 'team',
     verification: verifications.get(itemKey) ?? null,
+    emailDomain: emailDomain ?? null,
   };
 }
 
@@ -107,11 +116,13 @@ export function educationVerifiableItem(
 ): VerifiableItem | null {
   if (!verifications) return null;
   const itemKey = educationItemKey(item.id);
+  const emailDomain = websiteDomain(item.institutionUrl);
   return {
     itemKey,
     label: item.institutionName,
-    method: item.institutionUrl ? 'email_domain' : 'team',
+    method: emailDomain ? 'email_domain' : 'team',
     verification: verifications.get(itemKey) ?? null,
+    emailDomain: emailDomain ?? null,
   };
 }
 

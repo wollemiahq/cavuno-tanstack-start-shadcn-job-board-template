@@ -90,6 +90,7 @@ describe('built-in item verification', () => {
     expect(experienceVerifiableItem(job, rows)).toMatchObject({
       itemKey: 'experience:exp1',
       method: 'email_domain',
+      emailDomain: 'acme.com',
     });
     expect(
       experienceVerifiableItem(
@@ -97,6 +98,15 @@ describe('built-in item verification', () => {
         rows,
       ),
     ).toMatchObject({ method: 'team' });
+  });
+
+  it('checks education with a website by school email', () => {
+    expect(
+      educationVerifiableItem(
+        { ...school, institutionUrl: 'https://www.mit.edu/' },
+        list(),
+      ),
+    ).toMatchObject({ method: 'email_domain', emailDomain: 'mit.edu' });
   });
 
   it('lets the worker ask again only from a status the API accepts', () => {
