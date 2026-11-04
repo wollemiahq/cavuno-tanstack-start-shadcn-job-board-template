@@ -40,6 +40,12 @@ import {
 import { Field, FieldSet, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
+import {
   Item,
   ItemActions,
   ItemContent,
@@ -55,12 +61,15 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
+import { stripProtocol, websiteDomain, websiteUrl } from '@/lib/website-domain';
 import type { CandidateEducation, ItemVerification } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
 
 type Draft = {
   institutionName: string;
+  /** The institution website without its protocol, as typed after `https://`. */
+  website: string;
   degree: string;
   fieldOfStudy: string;
   startDate: string;
@@ -71,6 +80,7 @@ type Draft = {
 
 const EMPTY: Draft = {
   institutionName: '',
+  website: '',
   degree: '',
   fieldOfStudy: '',
   startDate: '',
@@ -81,6 +91,7 @@ const EMPTY: Draft = {
 function toDraft(item: CandidateEducation): Draft {
   return {
     institutionName: item.institutionName,
+    website: stripProtocol(item.institutionUrl ?? ''),
     degree: item.degree ?? '',
     fieldOfStudy: item.fieldOfStudy ?? '',
     startDate: item.startDate ?? '',
@@ -123,6 +134,7 @@ export function EducationSection({
     setPending(true);
     const body = {
       institutionName: draft.institutionName.trim(),
+      institutionUrl: websiteUrl(draft.website),
       degree: draft.degree.trim(),
       fieldOfStudy: draft.fieldOfStudy.trim(),
       startDate: draft.startDate,
@@ -174,6 +186,33 @@ export function EducationSection({
               />
             </Field>
             <Field className="gap-1.5">
+              <FieldLabel htmlFor="education-website">
+                {m.educationSection_websiteLabel()}
+              </FieldLabel>
+              <InputGroup>
+                <InputGroupAddon>
+                  <InputGroupText>
+                    {m.employerDashboard_websiteProtocolPrefix()}
+                  </InputGroupText>
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="education-website"
+                  inputMode="url"
+                  autoComplete="url"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder={m.educationSection_websitePlaceholder()}
+                  value={draft.website}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      website: stripProtocol(event.currentTarget.value),
+                    })
+                  }
+                />
+              </InputGroup>
+            </Field>
+            <Field className="gap-1.5">
               <FieldLabel htmlFor="education-degree">
                 {m.educationSection_degreeLabel()}
               </FieldLabel>
@@ -185,7 +224,7 @@ export function EducationSection({
                 }
               />
             </Field>
-            <Field className="gap-1.5 sm:col-span-2">
+            <Field className="gap-1.5">
               <FieldLabel htmlFor="education-field">
                 {m.educationSection_fieldOfStudyLabel()}
               </FieldLabel>
@@ -301,9 +340,14 @@ export function EducationSection({
                 <ItemContent>
                   <ItemTitle>{item.institutionName}</ItemTitle>
                   <ItemDescription>
-                    {[item.degree, item.fieldOfStudy]
+                    {[
+                      [item.degree, item.fieldOfStudy]
+                        .filter(Boolean)
+                        .join(', '),
+                      websiteDomain(item.institutionUrl),
+                    ]
                       .filter(Boolean)
-                      .join(', ')}
+                      .join(' · ')}
                   </ItemDescription>
                   {item.startDate || item.endDate ? (
                     <ItemDescription className="text-xs">
@@ -318,7 +362,8 @@ export function EducationSection({
                     verifications={verifications}
                   />
                 </ItemContent>
-                <ItemActions>
+                {/* Top-aligned, so an open email check doesn't move them. */}
+                <ItemActions className="self-start">
                   <Button
                     variant="ghost"
                     size="icon-sm"

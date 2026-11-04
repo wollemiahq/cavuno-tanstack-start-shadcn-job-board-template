@@ -1,9 +1,9 @@
 'use client';
 
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, MailCheck } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -26,12 +26,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemTitle,
-} from '@/components/ui/item';
+import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
 import {
   reconcileCommittedAction,
   toastActionError,
@@ -44,9 +39,9 @@ type Result<T> = { ok: true; data: T } | Failure;
 
 // The email check (its form and the one-time code input) loads when the
 // worker opens it, so the profile pages do not carry it up front.
-const EmailCheckDialog = lazy(() =>
-  import('./item-verification-email-dialog').then((module) => ({
-    default: module.EmailCheckDialog,
+const EmailCheckPanel = lazy(() =>
+  import('./item-verification-email-check').then((module) => ({
+    default: module.EmailCheckPanel,
   })),
 );
 
@@ -56,7 +51,14 @@ export type ItemVerificationActions = {
   startEmailCheck?: (
     itemKey: string,
     email: string,
-  ) => Promise<Result<{ emailDomain: string; sent: boolean }>>;
+  ) => Promise<
+    Result<{
+      emailDomain: string;
+      sent: boolean;
+      retryAfterSeconds?: number;
+      codeExpiresAt?: string;
+    }>
+  >;
   confirmEmailCode?: (
     itemKey: string,
     code: string,
@@ -129,8 +131,8 @@ export function ItemVerificationStatus({
 
 /**
  * An item's verification status and, while the worker may ask, its action:
- * the email check for an item verified by email domain, otherwise a request
- * for the board team to review it.
+ * "Verify" opens the work or school email check in place when the item can
+ * be checked by email; otherwise the action asks the board team.
  */
 export function ItemVerificationControl({
   item,
@@ -140,10 +142,9 @@ export function ItemVerificationControl({
   actions?: ItemVerificationActions;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  // Stays mounted after the first open so closing keeps its exit animation.
-  const [dialogLoaded, setDialogLoaded] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [pending, setPending] = useState(false);
+  const actionButton = useRef<HTMLButtonElement>(null);
   const requestable = canRequestVerification(item.verification);
   const { startEmailCheck, confirmEmailCode } = actions;
   const emailActions =
@@ -153,6 +154,12 @@ export function ItemVerificationControl({
     confirmEmailCode
       ? { ...actions, startEmailCheck, confirmEmailCode }
       : null;
+
+  const close = () => {
+    setChecking(false);
+    // The action button renders again once the panel closes.
+    requestAnimationFrame(() => actionButton.current?.focus());
+  };
 
   const requestReview = async () => {
     if (pending) return;
@@ -169,45 +176,59 @@ export function ItemVerificationControl({
       setPending(false);
       return;
     }
+    setChecking(false);
     void toastActionSuccess(m.itemVerification_requestedToast());
     await reconcileCommittedAction(() => router.invalidate());
     setPending(false);
   };
 
+  const showAction = requestable && !checking;
+  const showStatusRow =
+    showAction || itemVerificationStatusLabel(item.verification) !== null;
+  if (!showStatusRow && !checking) return null;
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <ItemVerificationStatus verification={item.verification} />
-      {requestable ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="xs"
-          disabled={pending}
-          aria-label={m.itemVerification_actionAriaLabel({ item: item.label })}
-          onClick={() => {
-            if (emailActions) {
-              setDialogLoaded(true);
-              setOpen(true);
-            } else {
-              void requestReview();
-            }
-          }}
-        >
-          {emailActions
-            ? m.itemVerification_verifyLabel()
-            : m.itemVerification_requestLabel()}
-        </Button>
+    <div className="flex flex-col gap-3 pt-1">
+      {showStatusRow ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <ItemVerificationStatus verification={item.verification} />
+          {showAction ? (
+            <Button
+              ref={actionButton}
+              type="button"
+              variant="outline"
+              size="xs"
+              disabled={pending}
+              aria-label={
+                emailActions
+                  ? m.itemVerification_actionAriaLabel({ item: item.label })
+                  : m.itemVerification_askBoardAriaLabel({ item: item.label })
+              }
+              onClick={() => {
+                if (emailActions) setChecking(true);
+                else void requestReview();
+              }}
+            >
+              {emailActions ? (
+                <MailCheck aria-hidden data-icon="inline-start" />
+              ) : null}
+              {emailActions
+                ? m.itemVerification_verifyLabel()
+                : m.itemVerification_askBoardLabel()}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
-      {emailActions && dialogLoaded ? (
+      {emailActions && checking ? (
         <Suspense fallback={null}>
-          <EmailCheckDialog
+          <EmailCheckPanel
             item={item}
             actions={emailActions}
-            open={open}
-            onOpenChange={setOpen}
+            onCancel={close}
             onVerified={async () => {
               void toastActionSuccess(m.itemVerification_verifiedToast());
               await reconcileCommittedAction(() => router.invalidate());
+              setChecking(false);
             }}
             onRequestReview={() => void requestReview()}
           />
@@ -246,12 +267,10 @@ export function ItemVerificationCard({
               size="sm"
               render={<li />}
             >
-              <ItemContent>
+              <ItemContent className="gap-2">
                 <ItemTitle>{item.label}</ItemTitle>
-              </ItemContent>
-              <ItemActions>
                 <ItemVerificationControl item={item} actions={actions} />
-              </ItemActions>
+              </ItemContent>
             </Item>
           ))}
         </ul>
