@@ -99,9 +99,16 @@ describe('/auth/verify-item-email', () => {
     ).toBeEnabled();
     cleanup();
 
-    await confirmWith({ ok: false, code: 'item_verification_disabled' });
-    expect(
-      await screen.findByText(m.authVerifyItemEmail_unavailableBody()),
-    ).toBeInTheDocument();
+    for (const code of [
+      'item_verification_disabled',
+      'item_verification_not_found',
+      'item_verification_email_mismatch',
+    ]) {
+      cleanup();
+      await confirmWith({ ok: false, code });
+      expect(
+        await screen.findByText(m.authVerifyItemEmail_unavailableBody()),
+      ).toBeInTheDocument();
+    }
   });
 });

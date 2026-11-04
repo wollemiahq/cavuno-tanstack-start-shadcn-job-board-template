@@ -16,6 +16,9 @@ const UNAVAILABLE = new Set([
   'item_verification_conflict',
   'item_verification_disabled',
   'item_verification_method_mismatch',
+  'item_verification_not_found',
+  'item_verification_email_mismatch',
+  'item_verification_no_domain',
 ]);
 
 /**
