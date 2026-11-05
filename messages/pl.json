@@ -3135,6 +3135,8 @@
   "itemVerification_intro": "Zweryfikowane pozycje mają odznakę w profilu publicznym.",
   "itemVerification_verifiedLabel": "Zweryfikowano",
   "itemVerification_verifiedDomainLabel": "Zweryfikowano · {domain}",
+  "itemVerification_verifiedWorkEmailTooltip": "Zweryfikowany e-mail służbowy",
+  "itemVerification_verifiedSchoolEmailTooltip": "Zweryfikowany e-mail szkolny",
   "itemVerification_pendingLabel": "W weryfikacji",
   "itemVerification_needsInfoLabel": "Potrzeba więcej informacji",
   "itemVerification_rejectedLabel": "Odrzucono",

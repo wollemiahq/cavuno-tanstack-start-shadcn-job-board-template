@@ -3007,6 +3007,8 @@
   "itemVerification_intro": "Verifizierte Einträge zeigen ein Abzeichen in deinem öffentlichen Profil.",
   "itemVerification_verifiedLabel": "Verifiziert",
   "itemVerification_verifiedDomainLabel": "Verifiziert · {domain}",
+  "itemVerification_verifiedWorkEmailTooltip": "Geschäftliche E-Mail verifiziert",
+  "itemVerification_verifiedSchoolEmailTooltip": "Schul-E-Mail verifiziert",
   "itemVerification_pendingLabel": "In Prüfung",
   "itemVerification_needsInfoLabel": "Mehr Infos nötig",
   "itemVerification_rejectedLabel": "Abgelehnt",

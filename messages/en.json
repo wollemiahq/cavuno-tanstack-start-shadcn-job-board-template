@@ -3007,6 +3007,8 @@
   "itemVerification_intro": "Verified items show a badge on your public profile.",
   "itemVerification_verifiedLabel": "Verified",
   "itemVerification_verifiedDomainLabel": "Verified · {domain}",
+  "itemVerification_verifiedWorkEmailTooltip": "Verified work email",
+  "itemVerification_verifiedSchoolEmailTooltip": "Verified school email",
   "itemVerification_pendingLabel": "In review",
   "itemVerification_needsInfoLabel": "More info needed",
   "itemVerification_rejectedLabel": "Declined",

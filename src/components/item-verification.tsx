@@ -16,7 +16,6 @@ import {
   type VerifiableItem,
 } from '@/board/item-verification';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -33,6 +32,12 @@ type Result<T> = { ok: true; data: T } | Failure;
 // The verification dialog (the email check, its one-time code input, and
 // the request to the board team) loads when the worker opens it, so the
 // profile pages do not carry it up front.
+
+const VerifiedTickTooltip = lazy(() =>
+  import('./item-verification-verified-tick').then((module) => ({
+    default: module.VerifiedTickTooltip,
+  })),
+);
 
 const VerificationDialog = lazy(() =>
   import('./item-verification-dialog').then((module) => ({
@@ -104,11 +109,42 @@ export function itemVerificationStatusLabel(
   }
 }
 
+/** What the verified tick's tooltip says: how the item was verified. */
+function verifiedTooltip(item: VerifiableItem): string {
+  if (item.verification?.verifiedDomain) {
+    if (item.itemKey.startsWith('experience:'))
+      return m.itemVerification_verifiedWorkEmailTooltip();
+    if (item.itemKey.startsWith('education:'))
+      return m.itemVerification_verifiedSchoolEmailTooltip();
+  }
+  return m.itemVerification_verifiedLabel();
+}
+
+/** The filled verified tick, named by how the item was verified. */
+function verifiedTick(item: VerifiableItem, tooltip: string) {
+  return (
+    <span
+      className="inline-flex"
+      tabIndex={0}
+      role="img"
+      aria-label={m.itemVerification_statusAriaLabel({
+        status: tooltip,
+        item: item.label,
+      })}
+      data-test="item-verification-tick"
+    >
+      <BadgeCheck
+        aria-hidden
+        className="fill-verified text-verified-foreground size-4"
+      />
+    </span>
+  );
+}
+
 /**
  * The verification indicator beside an item's title. While the worker may
- * ask, a "Verify" badge; once verified, a filled tick; otherwise the status.
- * Each opens the verification dialog: the steps while the worker may ask,
- * otherwise the status.
+ * ask, a "Verify" badge; otherwise the status, which opens the dialog. Once
+ * verified, a filled tick with a tooltip saying how, and nothing to open.
  */
 export function ItemVerificationTick({
   item,
@@ -121,48 +157,47 @@ export function ItemVerificationTick({
   // Stays mounted after the first open so closing keeps its exit animation.
   const [dialogLoaded, setDialogLoaded] = useState(false);
   const trigger = useRef<HTMLElement | null>(null);
+
+  const verified = item.verification?.status === 'verified';
   const actionable = canRequestVerification(item.verification);
   const statusLabel = actionable
     ? null
     : itemVerificationStatusLabel(item.verification);
-  const verified = item.verification?.status === 'verified';
-  const shared = {
-    ref: (element: HTMLElement | null) => {
-      trigger.current = element;
-    },
-    type: 'button' as const,
-    'aria-label': statusLabel
-      ? m.itemVerification_statusAriaLabel({
-          status: statusLabel,
-          item: item.label,
-        })
-      : m.itemVerification_actionAriaLabel({ item: item.label }),
-    'data-test': 'item-verification-tick',
-    onClick: () => {
-      setDialogLoaded(true);
-      setOpen(true);
-    },
-  };
+  const tooltip = verified ? verifiedTooltip(item) : null;
 
   return (
     <>
-      {verified ? (
-        <Button
-          {...shared}
-          variant="ghost"
-          size="icon-xs"
-          className="-m-1"
-          title={statusLabel ?? undefined}
-        >
-          <BadgeCheck
-            aria-hidden
-            className="fill-verified text-verified-foreground size-4"
+      {tooltip ? (
+        <Suspense fallback={verifiedTick(item, tooltip)}>
+          <VerifiedTickTooltip
+            tick={verifiedTick(item, tooltip)}
+            text={tooltip}
           />
-        </Button>
+        </Suspense>
       ) : (
         <Badge
           variant={statusLabel ? 'secondary' : 'outline'}
-          render={<button {...shared} />}
+          render={
+            <button
+              ref={(element: HTMLElement | null) => {
+                trigger.current = element;
+              }}
+              type="button"
+              aria-label={
+                statusLabel
+                  ? m.itemVerification_statusAriaLabel({
+                      status: statusLabel,
+                      item: item.label,
+                    })
+                  : m.itemVerification_actionAriaLabel({ item: item.label })
+              }
+              data-test="item-verification-tick"
+              onClick={() => {
+                setDialogLoaded(true);
+                setOpen(true);
+              }}
+            />
+          }
         >
           {statusLabel ?? m.itemVerification_verifyLabel()}
         </Badge>

@@ -3007,6 +3007,8 @@
   "itemVerification_intro": "Los elementos verificados muestran una insignia en tu perfil público.",
   "itemVerification_verifiedLabel": "Verificado",
   "itemVerification_verifiedDomainLabel": "Verificado · {domain}",
+  "itemVerification_verifiedWorkEmailTooltip": "Correo de trabajo verificado",
+  "itemVerification_verifiedSchoolEmailTooltip": "Correo educativo verificado",
   "itemVerification_pendingLabel": "En revisión",
   "itemVerification_needsInfoLabel": "Falta información",
   "itemVerification_rejectedLabel": "Rechazado",

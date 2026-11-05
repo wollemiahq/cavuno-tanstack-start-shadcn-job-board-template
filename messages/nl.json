@@ -3007,6 +3007,8 @@
   "itemVerification_intro": "Geverifieerde items tonen een badge op je openbare profiel.",
   "itemVerification_verifiedLabel": "Geverifieerd",
   "itemVerification_verifiedDomainLabel": "Geverifieerd · {domain}",
+  "itemVerification_verifiedWorkEmailTooltip": "Werkmail geverifieerd",
+  "itemVerification_verifiedSchoolEmailTooltip": "Schoolmail geverifieerd",
   "itemVerification_pendingLabel": "In behandeling",
   "itemVerification_needsInfoLabel": "Meer info nodig",
   "itemVerification_rejectedLabel": "Afgewezen",
