@@ -351,7 +351,7 @@ export function EducationSection({
             {items.map((item) => (
               <Item key={item.id} variant="outline" size="sm" render={<li />}>
                 <ItemContent>
-                  <ItemTitle className="flex-wrap">
+                  <ItemTitle className="flex-wrap gap-1.5">
                     {item.institutionName}
                     <EducationVerification
                       item={item}
