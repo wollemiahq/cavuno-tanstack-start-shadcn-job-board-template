@@ -129,7 +129,7 @@ function emailActions(
 }
 
 describe('ItemVerificationTick', () => {
-  it.each([null, 'changed', 'rejected', 'needs_info'] as const)(
+  it.each([null, 'changed', 'needs_info'] as const)(
     'a %s item is a "Verify" badge',
     async (status) => {
       await mount(
@@ -176,6 +176,11 @@ describe('ItemVerificationTick', () => {
       'revoked',
       () => m.itemVerification_revokedLabel(),
       () => m.itemVerification_revokedLabel(),
+    ],
+    [
+      'rejected',
+      () => m.itemVerification_rejectedLabel(),
+      () => m.itemVerification_rejectedLabel(),
     ],
   ] as const)(
     'a %s item names its status and opens it, with Close only',

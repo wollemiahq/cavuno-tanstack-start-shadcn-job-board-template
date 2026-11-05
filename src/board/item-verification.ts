@@ -49,12 +49,14 @@ export function verificationsByKey(
   return new Map((list?.data ?? []).map((row) => [row.itemKey, row]));
 }
 
-/** Statuses from which the worker may ask again, per the Board API. */
+/**
+ * Statuses from which the worker may ask again, per the Board API. A rejected
+ * item stays rejected until its checked details change (then it is `changed`).
+ */
 const REQUESTABLE: ReadonlySet<ItemVerificationStatus> = new Set([
   'unverified',
   'changed',
   'lapsed',
-  'rejected',
   'needs_info',
   'unable_to_verify',
 ]);

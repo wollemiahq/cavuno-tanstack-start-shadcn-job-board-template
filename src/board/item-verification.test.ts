@@ -116,6 +116,7 @@ describe('built-in item verification', () => {
     expect(canRequestVerification({ status: 'pending' })).toBe(false);
     expect(canRequestVerification({ status: 'verified' })).toBe(false);
     expect(canRequestVerification({ status: 'revoked' })).toBe(false);
+    expect(canRequestVerification({ status: 'rejected' })).toBe(false);
   });
 
   it('starts an email check only from a status the API accepts for it', () => {
