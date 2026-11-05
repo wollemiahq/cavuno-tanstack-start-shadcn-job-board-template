@@ -3028,6 +3028,7 @@
   "itemVerification_sendCodeLabel": "Envoyer le code",
   "itemVerification_sendingLabel": "Envoi…",
   "itemVerification_codeIntro": "Saisissez le code à 6 chiffres envoyé à {email}.",
+  "itemVerification_codeIntroDomain": "Saisissez le code à 6 chiffres envoyé à votre adresse {domain}.",
   "itemVerification_codeLabel": "Code à 6 chiffres",
   "itemVerification_linkHint": "Ou ouvrez le lien de l’e-mail.",
   "itemVerification_alreadySentHint": "Nous avons envoyé un code il y a moins d’une minute. Vérifiez votre boîte de réception.",

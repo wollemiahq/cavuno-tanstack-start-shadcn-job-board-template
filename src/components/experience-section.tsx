@@ -12,7 +12,10 @@ import {
   updateExperience,
 } from '../server/account';
 
-import { experienceVerifiableItem } from '@/board/item-verification';
+import {
+  experienceVerifiableItem,
+  type ItemVerificationRow,
+} from '@/board/item-verification';
 import { profileMonthLabel } from '@/board/profile-view-model';
 import { ItemVerificationTick } from '@/components/item-verification';
 import type { LocationSuggestionState } from '@/components/location-combobox';
@@ -66,7 +69,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 import { stripProtocol, websiteDomain, websiteUrl } from '@/lib/website-domain';
-import type { CandidateExperience, ItemVerification } from '@cavuno/board';
+import type { CandidateExperience } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
 
@@ -127,7 +130,7 @@ export function ExperienceSection({
    * Item verification statuses by item key, or `null` when the board does
    * not verify experience (`board.context().verification.experience`).
    */
-  verifications?: ReadonlyMap<string, ItemVerification> | null;
+  verifications?: ReadonlyMap<string, ItemVerificationRow> | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
@@ -513,7 +516,7 @@ function ExperienceVerification({
   verifications,
 }: {
   item: CandidateExperience;
-  verifications: ReadonlyMap<string, ItemVerification> | null;
+  verifications: ReadonlyMap<string, ItemVerificationRow> | null;
 }) {
   const verifiable = experienceVerifiableItem(item, verifications);
   return verifiable ? <ItemVerificationTick item={verifiable} /> : null;

@@ -3156,6 +3156,7 @@
   "itemVerification_sendCodeLabel": "Wyślij kod",
   "itemVerification_sendingLabel": "Wysyłanie…",
   "itemVerification_codeIntro": "Wpisz 6-cyfrowy kod wysłany na adres {email}.",
+  "itemVerification_codeIntroDomain": "Wpisz 6-cyfrowy kod wysłany na Twój adres w domenie {domain}.",
   "itemVerification_codeLabel": "6-cyfrowy kod",
   "itemVerification_linkHint": "Lub otwórz link z e-maila.",
   "itemVerification_alreadySentHint": "Kod wysłaliśmy mniej niż minutę temu. Sprawdź skrzynkę.",

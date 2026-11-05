@@ -16,6 +16,22 @@ import type {
 
 export type ItemVerificationStatus = ItemVerification['status'];
 
+/**
+ * A `listVerifications` row. `nextStep` says what the worker can do now:
+ * check by email (or ask the board), only ask the board, or nothing.
+ * `emailCheck` is set while an emailed code can still be typed; it names
+ * only the address's domain. Both are optional so an older API still reads,
+ * and the status alone decides as before.
+ */
+export type ItemVerificationRow = ItemVerification & {
+  nextStep?: 'email' | 'team' | 'none';
+  emailCheck?: {
+    domain: string;
+    codeExpiresAt: string;
+    resendAvailableAt: string;
+  } | null;
+};
+
 /** How the worker confirms an item: by work or school email, or by asking the team. */
 export type ItemVerificationMethod = 'email_domain' | 'team';
 
@@ -24,7 +40,7 @@ export type VerifiableItem = {
   itemKey: string;
   label: string;
   method: ItemVerificationMethod;
-  verification: ItemVerification | null;
+  verification: ItemVerificationRow | null;
   /**
    * The domain the work or school email should be at, when the item names a
    * website. A suggestion for the email field, not a rule: the Board API also
@@ -44,8 +60,8 @@ export function educationItemKey(id: string): string {
 
 /** Verifications by item key; an unreadable list reads as empty. */
 export function verificationsByKey(
-  list: { data: ItemVerification[] } | null | undefined,
-): ReadonlyMap<string, ItemVerification> {
+  list: { data: ItemVerificationRow[] } | null | undefined,
+): ReadonlyMap<string, ItemVerificationRow> {
   return new Map((list?.data ?? []).map((row) => [row.itemKey, row]));
 }
 
@@ -62,8 +78,9 @@ const REQUESTABLE: ReadonlySet<ItemVerificationStatus> = new Set([
 ]);
 
 export function canRequestVerification(
-  verification: Pick<ItemVerification, 'status'> | null,
+  verification: Pick<ItemVerificationRow, 'status' | 'nextStep'> | null,
 ): boolean {
+  if (verification?.nextStep) return verification.nextStep !== 'none';
   return REQUESTABLE.has(verification?.status ?? 'unverified');
 }
 
@@ -77,9 +94,21 @@ const EMAIL_CHECKABLE: ReadonlySet<ItemVerificationStatus> = new Set([
 
 /** Whether an email-domain item may start an email check now; otherwise it goes to the team. */
 export function canCheckByEmail(
-  verification: Pick<ItemVerification, 'status'> | null,
+  verification: Pick<ItemVerificationRow, 'status' | 'nextStep'> | null,
 ): boolean {
+  if (verification?.nextStep) return verification.nextStep === 'email';
   return EMAIL_CHECKABLE.has(verification?.status ?? 'unverified');
+}
+
+/**
+ * Whether the item is checked by email now. The API's `nextStep` decides
+ * when it is there; otherwise the item's method and status do.
+ */
+export function checksByEmail(
+  item: Pick<VerifiableItem, 'method' | 'verification'>,
+): boolean {
+  if (item.verification?.nextStep) return canCheckByEmail(item.verification);
+  return item.method === 'email_domain' && canCheckByEmail(item.verification);
 }
 
 /**
@@ -94,7 +123,7 @@ export function experienceVerifiableItem(
     CandidateExperience,
     'id' | 'companyName' | 'companyUrl' | 'endDate'
   >,
-  verifications: ReadonlyMap<string, ItemVerification> | null,
+  verifications: ReadonlyMap<string, ItemVerificationRow> | null,
 ): VerifiableItem | null {
   if (!verifications) return null;
   const itemKey = experienceItemKey(item.id);
@@ -114,7 +143,7 @@ export function experienceVerifiableItem(
  */
 export function educationVerifiableItem(
   item: Pick<CandidateEducation, 'id' | 'institutionName' | 'institutionUrl'>,
-  verifications: ReadonlyMap<string, ItemVerification> | null,
+  verifications: ReadonlyMap<string, ItemVerificationRow> | null,
 ): VerifiableItem | null {
   if (!verifications) return null;
   const itemKey = educationItemKey(item.id);
@@ -156,7 +185,7 @@ function entryLabel(
  */
 export function collectionVerifiableItems(
   objectReferences: ProfileObjectReferences | null | undefined,
-  verifications: ReadonlyMap<string, ItemVerification>,
+  verifications: ReadonlyMap<string, ItemVerificationRow>,
   options: { emailDomain: boolean },
 ): VerifiableItem[] {
   if (!objectReferences) return [];

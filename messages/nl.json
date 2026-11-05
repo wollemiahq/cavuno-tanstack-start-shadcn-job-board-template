@@ -3028,6 +3028,7 @@
   "itemVerification_sendCodeLabel": "Code versturen",
   "itemVerification_sendingLabel": "Bezig met versturen…",
   "itemVerification_codeIntro": "Vul de 6-cijferige code in die we naar {email} stuurden.",
+  "itemVerification_codeIntroDomain": "Vul de 6-cijferige code in die we naar je {domain}-adres stuurden.",
   "itemVerification_codeLabel": "6-cijferige code",
   "itemVerification_linkHint": "Of open de link in de e-mail.",
   "itemVerification_alreadySentHint": "We stuurden minder dan een minuut geleden een code. Kijk in je inbox.",

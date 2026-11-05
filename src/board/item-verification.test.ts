@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canCheckByEmail,
   canRequestVerification,
+  checksByEmail,
   collectionVerifiableItems,
   educationVerifiableItem,
   experienceVerifiableItem,
@@ -138,6 +139,43 @@ describe('built-in item verification', () => {
     ] as const) {
       expect(canCheckByEmail({ status })).toBe(false);
     }
+  });
+});
+
+describe('the API next step', () => {
+  it('decides when present, over the status', () => {
+    expect(
+      canRequestVerification({ status: 'needs_info', nextStep: 'none' }),
+    ).toBe(false);
+    expect(
+      canRequestVerification({ status: 'rejected', nextStep: 'team' }),
+    ).toBe(true);
+    expect(canCheckByEmail({ status: 'needs_info', nextStep: 'email' })).toBe(
+      true,
+    );
+    expect(canCheckByEmail({ status: 'unverified', nextStep: 'team' })).toBe(
+      false,
+    );
+  });
+
+  it('checks by email by the next step, else by method and status', () => {
+    const row = (nextStep?: 'email' | 'team' | 'none') => ({
+      ...verification('experience:exp1', 'unverified'),
+      nextStep,
+    });
+    expect(checksByEmail({ method: 'team', verification: row('email') })).toBe(
+      true,
+    );
+    expect(
+      checksByEmail({ method: 'email_domain', verification: row('team') }),
+    ).toBe(false);
+    expect(checksByEmail({ method: 'email_domain', verification: row() })).toBe(
+      true,
+    );
+    expect(checksByEmail({ method: 'team', verification: row() })).toBe(false);
+    expect(checksByEmail({ method: 'email_domain', verification: null })).toBe(
+      true,
+    );
   });
 });
 

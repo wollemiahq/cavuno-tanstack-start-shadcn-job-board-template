@@ -3028,6 +3028,7 @@
   "itemVerification_sendCodeLabel": "Code senden",
   "itemVerification_sendingLabel": "Wird gesendet…",
   "itemVerification_codeIntro": "Gib den 6-stelligen Code ein, den wir an {email} gesendet haben.",
+  "itemVerification_codeIntroDomain": "Gib den 6-stelligen Code ein, den wir an deine Adresse bei {domain} gesendet haben.",
   "itemVerification_codeLabel": "6-stelliger Code",
   "itemVerification_linkHint": "Oder öffne den Link in der E-Mail.",
   "itemVerification_alreadySentHint": "Wir haben vor weniger als einer Minute einen Code gesendet. Sieh in deinem Postfach nach.",

@@ -25,7 +25,10 @@ import {
   ItemVerificationTick,
 } from './item-verification';
 
-import type { VerifiableItem } from '@/board/item-verification';
+import type {
+  ItemVerificationRow,
+  VerifiableItem,
+} from '@/board/item-verification';
 import { m } from '@/paraglide/messages';
 import type { ItemVerification } from '@cavuno/board';
 
@@ -279,8 +282,10 @@ describe('ItemVerificationTick', () => {
     // A wrong code clears the input for the next try.
     expect(code).toHaveValue('');
 
+    // The sent code refreshes the list, so a reopen resumes at the code.
+    expect(router.invalidate).toHaveBeenCalledTimes(1);
     fireEvent.change(code, { target: { value: '654321' } });
-    await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
+    await waitFor(() => expect(router.invalidate).toHaveBeenCalledTimes(2));
     expect(actions.confirmEmailCode).toHaveBeenLastCalledWith(
       'experience:exp1',
       '654321',
@@ -495,6 +500,175 @@ describe('ItemVerificationTick', () => {
     expect(screen.getByRole('dialog')).toHaveTextContent(
       m.itemVerification_verifiedLabel(),
     );
+  });
+});
+
+describe('the step the API says', () => {
+  function next(
+    status: ItemVerification['status'],
+    nextStep: ItemVerificationRow['nextStep'],
+    emailCheck: ItemVerificationRow['emailCheck'] = null,
+  ): ItemVerificationRow {
+    return { ...row(status), nextStep, emailCheck };
+  }
+
+  it('a nextStep decides whether the badge says "Verify"', async () => {
+    await mount(
+      <>
+        <ItemVerificationTick
+          item={{ ...emailItem, verification: next('needs_info', 'none') }}
+          actions={emailActions()}
+        />
+        <ItemVerificationTick
+          item={{
+            ...emailItem,
+            label: 'Globex',
+            verification: next('rejected', 'team'),
+          }}
+          actions={emailActions()}
+        />
+      </>,
+    );
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_statusAriaLabel({
+          status: m.itemVerification_needsInfoLabel(),
+          item: 'Acme',
+        }),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: verifyName('Globex') }),
+    ).toHaveTextContent(m.itemVerification_verifyLabel());
+  });
+
+  it('resumes an emailed code: resend asks for the address again', async () => {
+    const actions = emailActions();
+    await mount(
+      <ItemVerificationTick
+        item={{
+          ...emailItem,
+          emailDomain: 'acme.com',
+          verification: next('unverified', 'email', {
+            domain: 'acme.com',
+            codeExpiresAt: new Date(Date.now() + 600_000).toISOString(),
+            resendAvailableAt: new Date(Date.now() - 1000).toISOString(),
+          }),
+        }}
+        actions={actions}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      screen.getByText(
+        m.itemVerification_codeIntroDomain({ domain: 'acme.com' }),
+        { exact: false },
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(m.itemVerification_codeLabel()),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_resendLabel() }),
+    );
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toBeInTheDocument();
+    expect(actions.startEmailCheck).not.toHaveBeenCalled();
+  });
+
+  it('waits for the resend time the API gives', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{
+          ...emailItem,
+          verification: next('unverified', 'email', {
+            domain: 'acme.com',
+            codeExpiresAt: new Date(Date.now() + 600_000).toISOString(),
+            resendAvailableAt: new Date(Date.now() + 30_500).toISOString(),
+          }),
+        }}
+        actions={emailActions()}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_resendInLabel({ seconds: 31 }),
+      }),
+    ).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_changeEmailLabel(),
+      }),
+    );
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toBeInTheDocument();
+  });
+
+  it('goes straight to the board team when the API refuses email', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{ ...emailItem, verification: next('changed', 'team') }}
+        actions={emailActions()}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      screen.getByRole('button', { name: m.itemVerification_askBoardLabel() }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(m.itemVerification_emailLabel()),
+    ).not.toBeInTheDocument();
+  });
+
+  it('asks for the email when the API allows it, whatever the status', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{ ...emailItem, verification: next('needs_info', 'email') }}
+        actions={emailActions()}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps a code sent from this page across close and reopen', async () => {
+    const actions = emailActions();
+    await mount(<ItemVerificationTick item={emailItem} actions={actions} />);
+
+    await openDialog();
+    await sendCodeTo('ada@acme.com');
+    await screen.findByLabelText(m.itemVerification_codeLabel());
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_cancelLabel() }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
+    await openDialog();
+    expect(
+      screen.getByText(
+        m.itemVerification_codeIntro({ email: 'ada@acme.com' }),
+        { exact: false },
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_changeEmailLabel(),
+      }),
+    );
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toHaveValue('ada@acme.com');
   });
 });
 
