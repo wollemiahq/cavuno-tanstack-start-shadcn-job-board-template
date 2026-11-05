@@ -26,7 +26,7 @@ import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 import { asResult, assertRelative } from './products';
 
-import type { TipJar, TipJarCheckout } from '@cavuno/board';
+import type { TipJar, TipJarCheckout, TipJarCheckoutBody } from '@cavuno/board';
 
 /** `/tip` — the tip jar and the page's head. */
 export const getTipPage = createServerFn({ method: 'GET' })
@@ -78,6 +78,8 @@ export type TipCheckoutInput = {
   amountCents: number;
   note?: string;
   website?: string;
+  /** Only when the tipper ticked "cover the card fee". */
+  coverFee?: true;
   returnPath: string;
 };
 
@@ -89,18 +91,21 @@ export const startTipCheckout = createServerFn({ method: 'POST' })
   })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
-    asResult<TipJarCheckout>(() =>
-      getBoard().tipJar.checkout(
-        {
-          amountCents: data.amountCents,
-          note: data.note || undefined,
-          // Omitted unless a bot filled the hidden field.
-          website: data.website || undefined,
-          returnPath: data.returnPath,
-        },
-        { headers: viewerHeaders(context), cache: 'no-store' },
-      ),
-    ),
+    asResult<TipJarCheckout>(() => {
+      const body: TipJarCheckoutBody = {
+        amountCents: data.amountCents,
+        note: data.note || undefined,
+        // Omitted unless a bot filled the hidden field.
+        website: data.website || undefined,
+        returnPath: data.returnPath,
+      };
+      // Left out unless ticked, so other tips send the same body as before.
+      if (data.coverFee === true) body.coverFee = true;
+      return getBoard().tipJar.checkout(body, {
+        headers: viewerHeaders(context),
+        cache: 'no-store',
+      });
+    }),
   );
 
 /** After Stripe returns the tipper: `processing` until it is `paid`. */

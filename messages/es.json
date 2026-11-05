@@ -3075,6 +3075,8 @@
   "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Tu nota puede tener como máximo {max} caracteres.",
   "tip_noteNotAllowedText": "Este bote de propinas no admite notas. Quita tu nota e inténtalo de nuevo.",
+  "tip_coverFeeLabel": "Añadir {fee} para cubrir la comisión de la tarjeta",
+  "tip_coverFeeNotAllowedText": "Este portal ya no ofrece cubrir la comisión de la tarjeta.",
   "tip_submitAction": "Dar {amount}",
   "tip_continueAction": "Continuar al pago",
   "tip_secureCheckoutText": "Pago seguro con Stripe",

@@ -3075,6 +3075,8 @@
   "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Votre mot ne doit pas dépasser {max} caractères.",
   "tip_noteNotAllowedText": "Cette cagnotte n'accepte pas de mot. Retirez votre mot et réessayez.",
+  "tip_coverFeeLabel": "Ajouter {fee} pour couvrir les frais de carte",
+  "tip_coverFeeNotAllowedText": "Ce site ne propose plus de couvrir les frais de carte.",
   "tip_submitAction": "Donner {amount}",
   "tip_continueAction": "Continuer vers le paiement",
   "tip_secureCheckoutText": "Paiement sécurisé par Stripe",

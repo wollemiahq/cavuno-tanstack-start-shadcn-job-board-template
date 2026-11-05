@@ -3075,6 +3075,8 @@
   "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Deine Nachricht darf höchstens {max} Zeichen lang sein.",
   "tip_noteNotAllowedText": "Diese Trinkgeldkasse nimmt keine Nachrichten an. Entferne deine Nachricht und versuche es erneut.",
+  "tip_coverFeeLabel": "{fee} hinzufügen, um die Kartengebühr zu decken",
+  "tip_coverFeeNotAllowedText": "Dieses Board bietet die Übernahme der Kartengebühr nicht mehr an.",
   "tip_submitAction": "{amount} geben",
   "tip_continueAction": "Weiter zur Zahlung",
   "tip_secureCheckoutText": "Sichere Zahlung über Stripe",

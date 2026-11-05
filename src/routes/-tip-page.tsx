@@ -17,6 +17,12 @@ import {
   type FormEvent,
 } from 'react';
 
+import {
+  tipCoverFeeCents,
+  type TipJar,
+  type TipJarCheckout,
+  type TipJarCheckoutStatus,
+} from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
 import {
   CircleCheck,
@@ -36,6 +42,7 @@ import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Empty,
   EmptyContent,
@@ -64,11 +71,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { cn } from '@/lib/utils';
-import type {
-  TipJar,
-  TipJarCheckout,
-  TipJarCheckoutStatus,
-} from '@cavuno/board';
 
 const EmbeddedCheckout = lazy(() =>
   import('@/components/paywall/embedded-checkout').then((module) => ({
@@ -87,6 +89,8 @@ export type TipCheckoutValues = {
   amountCents: number;
   note?: string;
   website?: string;
+  /** Only when the tipper ticked "cover the card fee"; never `false`. */
+  coverFee?: true;
 };
 
 export type TipPageDependencies = {
@@ -121,7 +125,7 @@ function mountKit(checkout: TipJarCheckout): MountKit | null {
   };
 }
 
-type FieldKey = 'amount' | 'note' | 'form';
+type FieldKey = 'amount' | 'note' | 'coverFee' | 'form';
 
 /** Which field a Board API refusal belongs under. */
 export function tipRefusalField(code: string | null): FieldKey {
@@ -132,6 +136,8 @@ export function tipRefusalField(code: string | null): FieldKey {
     case 'tip_note_not_allowed':
     case 'tip_note_too_long':
       return 'note';
+    case 'tip_fee_cover_not_allowed':
+      return 'coverFee';
     default:
       return 'form';
   }
@@ -153,6 +159,8 @@ function tipRefusalText(
       return m.tip_noteTooLongText({ max: String(tipJar.noteMaxLength) });
     case 'tip_note_not_allowed':
       return m.tip_noteNotAllowedText();
+    case 'tip_fee_cover_not_allowed':
+      return m.tip_coverFeeNotAllowedText();
     default:
       // stripe_not_connected, rate_limited, … and the generic fallback.
       return boardErrorMessage(refusal);
@@ -332,7 +340,12 @@ export function TipPageView({
         if (!result.ok) return { code: result.code, message: result.message };
         const nextKit = mountKit(result.data);
         if (!nextKit) return { code: null, message: '' };
-        setKitAmountCents(values.amountCents);
+        setKitAmountCents(
+          values.amountCents +
+            (values.coverFee
+              ? tipCoverFeeCents(values.amountCents, tipJar.coverFee)
+              : 0),
+        );
         setKit(nextKit);
       }}
     />
@@ -365,6 +378,8 @@ function TipForm({
   const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState('');
   const [website, setWebsite] = useState('');
+  // Unticked by default; offered only when the board passes the fee on.
+  const [coverFee, setCoverFee] = useState(false);
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const focusOther = useEffectEvent(() => otherInput.current?.focus());
@@ -383,6 +398,15 @@ function TipForm({
 
   const resolved = resolveTipAmount(tipJar, choice, otherText, locale);
   const money = (cents: number) => formatMoney(locale, cents, tipJar.currency);
+  // The exact fee the checkout adds for `coverFee: true`.
+  const feeCents =
+    tipJar.coverFee && resolved.ok
+      ? tipCoverFeeCents(resolved.amountCents, tipJar.coverFee)
+      : 0;
+  const offerCoverFee = feeCents > 0;
+  const chargeCents = resolved.ok
+    ? resolved.amountCents + (offerCoverFee && coverFee ? feeCents : 0)
+    : 0;
 
   function toggleNote(open: boolean) {
     noteToggled.current = true;
@@ -402,14 +426,17 @@ function TipForm({
     }
     setErrors({});
     setPending(true);
+    const values: TipCheckoutValues = {
+      amountCents: resolved.amountCents,
+      note: tipJar.allowNote && noteOpen ? note.trim() || undefined : undefined,
+      website: website || undefined,
+    };
+    // Unticked tips send the same request as before: no coverFee at all.
+    if (offerCoverFee && coverFee) values.coverFee = true;
     try {
-      const refusal = await onStart({
-        amountCents: resolved.amountCents,
-        note:
-          tipJar.allowNote && noteOpen ? note.trim() || undefined : undefined,
-        website: website || undefined,
-      });
+      const refusal = await onStart(values);
       if (refusal) {
+        if (refusal.code === 'tip_fee_cover_not_allowed') setCoverFee(false);
         setErrors({
           [tipRefusalField(refusal.code)]: tipRefusalText(
             refusal,
@@ -574,6 +601,41 @@ function TipForm({
                     ) : null}
                   </FieldSet>
 
+                  {offerCoverFee || errors.coverFee ? (
+                    <Field
+                      orientation="horizontal"
+                      data-invalid={Boolean(errors.coverFee) || undefined}
+                      className="flex-wrap"
+                    >
+                      {offerCoverFee ? (
+                        <>
+                          <Checkbox
+                            id={`${id}-cover-fee`}
+                            name="coverFee"
+                            checked={coverFee}
+                            onCheckedChange={(checked) => {
+                              setCoverFee(checked === true);
+                              if (errors.coverFee) {
+                                setErrors({ ...errors, coverFee: undefined });
+                              }
+                            }}
+                          />
+                          <FieldLabel
+                            htmlFor={`${id}-cover-fee`}
+                            className="font-normal"
+                          >
+                            {m.tip_coverFeeLabel({ fee: money(feeCents) })}
+                          </FieldLabel>
+                        </>
+                      ) : null}
+                      {errors.coverFee ? (
+                        <FieldError className="basis-full">
+                          {errors.coverFee}
+                        </FieldError>
+                      ) : null}
+                    </Field>
+                  ) : null}
+
                   {tipJar.allowNote && !noteOpen ? (
                     <div>
                       <Button
@@ -679,9 +741,7 @@ function TipForm({
                   >
                     {pending ? <Spinner data-icon="inline-start" /> : null}
                     {resolved.ok
-                      ? m.tip_submitAction({
-                          amount: money(resolved.amountCents),
-                        })
+                      ? m.tip_submitAction({ amount: money(chargeCents) })
                       : m.tip_continueAction()}
                   </Button>
                   {errors.form ? (

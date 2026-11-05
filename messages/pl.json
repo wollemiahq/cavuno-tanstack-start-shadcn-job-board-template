@@ -3205,6 +3205,8 @@
   "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Wiadomość może mieć najwyżej {max} znaków.",
   "tip_noteNotAllowedText": "Ta skarbonka nie przyjmuje wiadomości. Usuń wiadomość i spróbuj ponownie.",
+  "tip_coverFeeLabel": "Dodaj {fee}, aby pokryć opłatę za kartę",
+  "tip_coverFeeNotAllowedText": "Ten portal nie oferuje już pokrycia opłaty za kartę.",
   "tip_submitAction": "Daj {amount}",
   "tip_continueAction": "Przejdź do płatności",
   "tip_secureCheckoutText": "Bezpieczna płatność przez Stripe",

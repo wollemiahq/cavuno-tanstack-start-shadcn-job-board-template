@@ -3075,6 +3075,8 @@
   "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Keep your note to {max} characters.",
   "tip_noteNotAllowedText": "This tip jar doesn't take notes. Remove your note and try again.",
+  "tip_coverFeeLabel": "Add {fee} to cover the card fee",
+  "tip_coverFeeNotAllowedText": "This board no longer offers covering the card fee.",
   "tip_submitAction": "Tip {amount}",
   "tip_continueAction": "Continue to payment",
   "tip_secureCheckoutText": "Secure checkout by Stripe",

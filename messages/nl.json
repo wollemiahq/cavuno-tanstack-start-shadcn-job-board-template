@@ -3075,6 +3075,8 @@
   "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Je bericht mag maximaal {max} tekens lang zijn.",
   "tip_noteNotAllowedText": "Deze fooienpot neemt geen berichten aan. Haal je bericht weg en probeer het opnieuw.",
+  "tip_coverFeeLabel": "{fee} toevoegen om de kaartkosten te dekken",
+  "tip_coverFeeNotAllowedText": "Dit board biedt het dekken van de kaartkosten niet meer aan.",
   "tip_submitAction": "Geef {amount}",
   "tip_continueAction": "Verder naar betalen",
   "tip_secureCheckoutText": "Veilig betalen via Stripe",
