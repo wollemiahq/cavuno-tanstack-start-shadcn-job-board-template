@@ -212,7 +212,7 @@ export function ItemVerificationCard({
               render={<li />}
             >
               <ItemContent>
-                <ItemTitle>
+                <ItemTitle className="flex-wrap">
                   {item.label}
                   <ItemVerificationTick item={item} actions={actions} />
                 </ItemTitle>
