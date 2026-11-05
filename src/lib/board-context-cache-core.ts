@@ -12,11 +12,14 @@ export interface BoardContextCacheDependencies<Context> {
 /**
  * Which operator-facing pages the board actually has. The plan gates ride the
  * same plan reads, so they are memoized together ({@link PlanOfferGate}); the
- * Products link has its own short memo ({@link readProductsGate}).
+ * Products and Tip links have their own short memos ({@link readProductsGate},
+ * {@link readTipJarGate}).
  */
 export type EmployerOfferGate = PlanOfferGate & {
   /** The board lists at least one digital product (the Products link). */
   hasProductsPage: boolean;
+  /** The board's tip jar is on, so `/tip` exists (the footer Tip link). */
+  hasTipPage: boolean;
 };
 
 /** The gates decided by the board's plan catalogue. */
@@ -44,6 +47,11 @@ export function createBoardContextCache<Context>(
    * context TTL.
    */
   productsGateTtlMs: number = ttlMs,
+  /**
+   * The tip jar is turned on and archived from the dashboard at any time;
+   * like the products memo, keep this short. Defaults to the context TTL.
+   */
+  tipJarGateTtlMs: number = ttlMs,
 ) {
   const contextCache = createSettledCache<DataSource, Context>({
     ttlMs,
@@ -55,6 +63,10 @@ export function createBoardContextCache<Context>(
   });
   const productsGateCache = createSettledCache<DataSource, boolean>({
     ttlMs: productsGateTtlMs,
+    now: dependencies.now,
+  });
+  const tipJarGateCache = createSettledCache<DataSource, boolean>({
+    ttlMs: tipJarGateTtlMs,
     now: dependencies.now,
   });
 
@@ -111,9 +123,11 @@ export function createBoardContextCache<Context>(
     if (source) {
       offerGateCache.delete(source);
       productsGateCache.delete(source);
+      tipJarGateCache.delete(source);
     } else {
       offerGateCache.clear();
       productsGateCache.clear();
+      tipJarGateCache.clear();
     }
   }
 
@@ -135,12 +149,31 @@ export function createBoardContextCache<Context>(
     return listed;
   }
 
+  /**
+   * Whether the board's tip jar is on (the footer Tip link). Same rules as
+   * {@link readProductsGate}: only a successful read is kept, for
+   * `tipJarGateTtlMs`; a failed read rejects and is never remembered.
+   */
+  async function readTipJarGate(
+    load: () => Promise<boolean>,
+  ): Promise<boolean> {
+    const source = dependencies.getDataSource();
+    const hit = tipJarGateCache.get(source);
+    if (hit !== undefined) return hit;
+
+    const readAt = dependencies.now();
+    const on = await load();
+    tipJarGateCache.set(source, on, readAt);
+    return on;
+  }
+
   return {
     readBoardContext,
     refreshBoardContext,
     readStaleBoardContext,
     readEmployerOfferGate,
     readProductsGate,
+    readTipJarGate,
     resetBoardContextCache,
     resetEmployerOfferGateCache,
   };

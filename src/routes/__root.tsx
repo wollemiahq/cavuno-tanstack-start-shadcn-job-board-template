@@ -399,6 +399,7 @@ function RootChrome({
     employers: m.employerLanding_title(),
     jobSeekers: m.candidateLanding_title(),
     memberships: m.memberships_title(),
+    tip: m.footer_tipLabel(),
   };
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
@@ -642,6 +643,7 @@ function RootChrome({
                   hasMembershipPage={offerGate.hasMembershipPage}
                   viewerRole={user?.role ?? null}
                   hasCandidatePricingPage={offerGate.hasCandidatePricingPage}
+                  hasTipPage={offerGate.hasTipPage}
                   cookiePreferencesAction={<CookiePreferencesFooterAction />}
                 />
               </Suspense>

@@ -1321,6 +1321,7 @@
   "footer_impressumLabel": "Impressum",
   "footer_locationsLabel": "Standorte",
   "footer_talentLocationsLabel": "Talente nach Standort",
+  "footer_tipLabel": "Trinkgeld geben",
   "footer_poweredByText": "Bereitgestellt von",
   "footer_privacyPolicyLabel": "Datenschutzerklärung",
   "footer_resourcesHeading": "Ressourcen",
@@ -3043,5 +3044,47 @@
   "itemVerification_resendLabel": "Code erneut senden",
   "itemVerification_resendInLabel": "Code erneut senden in {seconds} s",
   "itemVerification_codeExpiredError": "Der Code ist abgelaufen. Fordere einen neuen an.",
-  "itemVerification_emailPlaceholder": "name"
+  "itemVerification_emailPlaceholder": "name",
+  "tip_metaDescription": "Unterstütze {boardName} mit einem Trinkgeld.",
+  "tip_countText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Bisher {countLabel} Trinkgeld",
+        "countPlural=*": "Bisher {countLabel} Trinkgelder"
+      }
+    }
+  ],
+  "tip_amountLegend": "Betrag wählen",
+  "tip_otherAmountOption": "Anderer",
+  "tip_otherAmountLabel": "Dein Betrag",
+  "tip_amountHelpText": "Mindestens {minimum}.",
+  "tip_amountInvalidText": "Gib einen Betrag wie 5 oder 5,50 ein.",
+  "tip_amountBelowMinimumText": "Das kleinste Trinkgeld ist {minimum}.",
+  "tip_noteLabel": "Nachricht hinzufügen (optional)",
+  "tip_noteCountText": "{count} von {max} Zeichen",
+  "tip_noteTooLongText": "Deine Nachricht darf höchstens {max} Zeichen lang sein.",
+  "tip_noteNotAllowedText": "Diese Trinkgeldkasse nimmt keine Nachrichten an. Entferne deine Nachricht und versuche es erneut.",
+  "tip_submitAction": "{amount} geben",
+  "tip_continueAction": "Weiter zur Zahlung",
+  "tip_paymentHelpText": "Im nächsten Schritt zahlst du sicher über Stripe.",
+  "tip_checkoutTitle": "Trinkgeld abschließen",
+  "tip_backAction": "Zurück",
+  "tip_confirmingTitle": "Dein Trinkgeld wird bestätigt…",
+  "tip_confirmingText": "Das dauert meist nur ein paar Sekunden.",
+  "tip_thankYouTitle": "Danke!",
+  "tip_thankYouAmountText": "Du hast {boardName} {amount} gegeben.",
+  "tip_receiptSentText": "Beleg gesendet an {email}",
+  "tip_processingTitle": "Dein Trinkgeld wird verarbeitet",
+  "tip_processingText": "Wir schicken dir den Beleg, sobald die Zahlung eingegangen ist.",
+  "tip_checkAgainAction": "Erneut prüfen",
+  "tip_checkoutMissingTitle": "Wir konnten dieses Trinkgeld nicht finden",
+  "tip_checkoutMissingText": "Die Zahlung ist vielleicht abgelaufen. Du kannst ein neues Trinkgeld geben.",
+  "tip_startOverAction": "Zurück zur Trinkgeldseite",
+  "tip_browseJobsAction": "Jobs durchstöbern"
 }

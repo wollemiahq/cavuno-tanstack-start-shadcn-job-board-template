@@ -1321,6 +1321,7 @@
   "footer_impressumLabel": "Mentions légales",
   "footer_locationsLabel": "Lieux",
   "footer_talentLocationsLabel": "Talents par lieu",
+  "footer_tipLabel": "Laisser un pourboire",
   "footer_poweredByText": "Propulsé par",
   "footer_privacyPolicyLabel": "Politique de confidentialité",
   "footer_resourcesHeading": "Ressources",
@@ -3043,5 +3044,47 @@
   "itemVerification_resendLabel": "Renvoyer le code",
   "itemVerification_resendInLabel": "Renvoyer le code dans {seconds} s",
   "itemVerification_codeExpiredError": "Ce code a expiré. Demandez-en un nouveau.",
-  "itemVerification_emailPlaceholder": "nom"
+  "itemVerification_emailPlaceholder": "nom",
+  "tip_metaDescription": "Soutenez {boardName} avec un pourboire.",
+  "tip_countText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} pourboire jusqu'ici",
+        "countPlural=*": "{countLabel} pourboires jusqu'ici"
+      }
+    }
+  ],
+  "tip_amountLegend": "Choisissez un montant",
+  "tip_otherAmountOption": "Autre",
+  "tip_otherAmountLabel": "Votre montant",
+  "tip_amountHelpText": "Au moins {minimum}.",
+  "tip_amountInvalidText": "Saisissez un montant comme 5 ou 5,50.",
+  "tip_amountBelowMinimumText": "Le plus petit pourboire est de {minimum}.",
+  "tip_noteLabel": "Ajouter un mot (facultatif)",
+  "tip_noteCountText": "{count} sur {max} caractères",
+  "tip_noteTooLongText": "Votre mot ne doit pas dépasser {max} caractères.",
+  "tip_noteNotAllowedText": "Cette cagnotte n'accepte pas de mot. Retirez votre mot et réessayez.",
+  "tip_submitAction": "Donner {amount}",
+  "tip_continueAction": "Continuer vers le paiement",
+  "tip_paymentHelpText": "À l'étape suivante, vous payez en toute sécurité avec Stripe.",
+  "tip_checkoutTitle": "Finaliser votre pourboire",
+  "tip_backAction": "Retour",
+  "tip_confirmingTitle": "Confirmation de votre pourboire…",
+  "tip_confirmingText": "Cela prend généralement quelques secondes.",
+  "tip_thankYouTitle": "Merci !",
+  "tip_thankYouAmountText": "Vous avez donné {amount} à {boardName}.",
+  "tip_receiptSentText": "Reçu envoyé à {email}",
+  "tip_processingTitle": "Votre pourboire est en cours de traitement",
+  "tip_processingText": "Nous vous enverrons le reçu dès que le paiement sera confirmé.",
+  "tip_checkAgainAction": "Vérifier à nouveau",
+  "tip_checkoutMissingTitle": "Pourboire introuvable",
+  "tip_checkoutMissingText": "Le paiement a peut-être expiré. Vous pouvez laisser un nouveau pourboire.",
+  "tip_startOverAction": "Retour à la page des pourboires",
+  "tip_browseJobsAction": "Parcourir les offres"
 }

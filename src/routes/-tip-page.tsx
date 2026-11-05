@@ -1,0 +1,723 @@
+/**
+ * The tip page: the board's tip jar with three suggested amounts plus
+ * "Other", an optional note, and the tip count when the board shows it.
+ * "Tip" mounts the embedded Stripe Checkout in place of the form; Stripe
+ * returns the tipper here with `session_id`, and the page polls the checkout
+ * until it is paid (thank-you) or shows that the payment is processing.
+ */
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react';
+
+import { Link } from '@tanstack/react-router';
+import { CircleCheck, Clock, SearchX } from 'lucide-react';
+
+import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
+
+import { formatMoney, parseAmountCents } from '@/board/product-view-model';
+import { Page, PageContent, PageHeader } from '@/components/layout/page';
+import { Prose } from '@/components/prose';
+import { Text } from '@/components/text';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from '@/components/ui/empty';
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from '@/components/ui/field';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { boardErrorMessage } from '@/lib/board-error-message';
+import { cn } from '@/lib/utils';
+import type {
+  TipJar,
+  TipJarCheckout,
+  TipJarCheckoutStatus,
+} from '@cavuno/board';
+
+const EmbeddedCheckout = lazy(() =>
+  import('@/components/paywall/embedded-checkout').then((module) => ({
+    default: module.EmbeddedCheckout,
+  })),
+);
+
+/** Polls after Stripe returns: every 2 s for about a minute. */
+const POLL_ATTEMPTS = 30;
+
+type ActionResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; code: string | null; message: string };
+
+export type TipCheckoutValues = {
+  amountCents: number;
+  note?: string;
+  website?: string;
+};
+
+export type TipPageDependencies = {
+  startCheckout: (input: {
+    data: TipCheckoutValues & { returnPath: string };
+  }) => Promise<ActionResult<TipJarCheckout>>;
+  getCheckoutState: (input: {
+    data: { sessionId: string };
+  }) => Promise<ActionResult<TipJarCheckoutStatus>>;
+};
+
+type MountKit = {
+  publishableKey: string;
+  stripeAccountId: string;
+  clientSecret: string;
+  sessionId: string | null;
+};
+
+function mountKit(checkout: TipJarCheckout): MountKit | null {
+  if (
+    !checkout.publishableKey ||
+    !checkout.stripeAccountId ||
+    !checkout.clientSecret
+  ) {
+    return null;
+  }
+  return {
+    publishableKey: checkout.publishableKey,
+    stripeAccountId: checkout.stripeAccountId,
+    clientSecret: checkout.clientSecret,
+    sessionId: checkout.sessionId,
+  };
+}
+
+type FieldKey = 'amount' | 'note' | 'form';
+
+/** Which field a Board API refusal belongs under. */
+export function tipRefusalField(code: string | null): FieldKey {
+  switch (code) {
+    case 'tip_amount_below_minimum':
+    case 'tip_amount_invalid':
+      return 'amount';
+    case 'tip_note_not_allowed':
+    case 'tip_note_too_long':
+      return 'note';
+    default:
+      return 'form';
+  }
+}
+
+function tipRefusalText(
+  refusal: { code: string | null; message: string },
+  tipJar: TipJar,
+  locale: string,
+): string {
+  switch (refusal.code) {
+    case 'tip_amount_below_minimum':
+      return m.tip_amountBelowMinimumText({
+        minimum: formatMoney(locale, tipJar.minimumCents, tipJar.currency),
+      });
+    case 'tip_amount_invalid':
+      return m.tip_amountInvalidText();
+    case 'tip_note_too_long':
+      return m.tip_noteTooLongText({ max: String(tipJar.noteMaxLength) });
+    case 'tip_note_not_allowed':
+      return m.tip_noteNotAllowedText();
+    default:
+      // stripe_not_connected, rate_limited, … and the generic fallback.
+      return boardErrorMessage(refusal);
+  }
+}
+
+/**
+ * The amount the tipper chose, or why it can't be taken. Suggested amounts
+ * come from the API and are always valid; "Other" is checked here against
+ * the minimum and whole minor units. There is no maximum here: Stripe's
+ * depends on the currency and payment method, and the API returns
+ * `tip_amount_invalid` when Stripe refuses an amount as too large.
+ */
+export function resolveTipAmount(
+  tipJar: TipJar,
+  choice: string,
+  otherText: string,
+  locale: string,
+): { ok: true; amountCents: number } | { ok: false; error: string } {
+  if (choice !== 'other') {
+    const suggested = tipJar.suggestedCents[Number(choice)];
+    if (suggested !== undefined) return { ok: true, amountCents: suggested };
+  }
+  const parsed = parseAmountCents(otherText);
+  if (parsed === null) return { ok: false, error: m.tip_amountInvalidText() };
+  if (parsed < tipJar.minimumCents) {
+    return {
+      ok: false,
+      error: m.tip_amountBelowMinimumText({
+        minimum: formatMoney(locale, tipJar.minimumCents, tipJar.currency),
+      }),
+    };
+  }
+  return { ok: true, amountCents: parsed };
+}
+
+type ReturnState =
+  | { kind: 'idle' }
+  | { kind: 'confirming' }
+  /** Still clearing; `polling` false once the minute of polls ran out. */
+  | { kind: 'processing'; polling: boolean }
+  | { kind: 'paid'; status: TipJarCheckoutStatus }
+  | { kind: 'missing' };
+
+/** Poll the tip checkout until it is paid; ~60 s, then offer a re-check. */
+function useTipCheckoutReturn(
+  sessionId: string | null,
+  getCheckoutState: TipPageDependencies['getCheckoutState'],
+) {
+  const [state, setState] = useState<ReturnState>(
+    sessionId ? { kind: 'confirming' } : { kind: 'idle' },
+  );
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let stop = false;
+    let attempts = 0;
+    let timer: number;
+    const tick = async () => {
+      attempts += 1;
+      let result: ActionResult<TipJarCheckoutStatus> | null = null;
+      try {
+        result = await getCheckoutState({ data: { sessionId } });
+      } catch {
+        result = null;
+      }
+      if (stop) return;
+      if (result?.ok && result.data.status === 'paid') {
+        setState({ kind: 'paid', status: result.data });
+        return;
+      }
+      if (result && !result.ok && result.code === 'tip_checkout_not_found') {
+        setState({ kind: 'missing' });
+        return;
+      }
+      if (result?.ok) setState({ kind: 'processing', polling: true });
+      if (attempts >= POLL_ATTEMPTS) {
+        setState({ kind: 'processing', polling: false });
+        return;
+      }
+      timer = window.setTimeout(tick, 2000);
+    };
+    timer = window.setTimeout(tick, 500);
+    return () => {
+      stop = true;
+      window.clearTimeout(timer);
+    };
+  }, [attempt, getCheckoutState, sessionId]);
+
+  return {
+    state,
+    retry: () => {
+      setState({ kind: 'processing', polling: true });
+      setAttempt((value) => value + 1);
+    },
+  };
+}
+
+export function TipPageView({
+  tipJar,
+  boardName,
+  returnPath,
+  sessionId,
+  dependencies,
+}: {
+  tipJar: TipJar;
+  boardName: string;
+  /** This page's own path, where Stripe sends the tipper back. */
+  returnPath: string;
+  /** Set when Stripe sent the tipper back. */
+  sessionId: string | null;
+  dependencies: TipPageDependencies;
+}) {
+  const [kit, setKit] = useState<MountKit | null>(null);
+  const [kitAmountCents, setKitAmountCents] = useState(0);
+  const [kitSessionId, setKitSessionId] = useState<string | null>(null);
+  const returning = useTipCheckoutReturn(
+    sessionId ?? kitSessionId,
+    dependencies.getCheckoutState,
+  );
+
+  const handleStripeComplete = useCallback(() => {
+    // Stripe normally redirects to the return URL; if it completes in place,
+    // start confirming the tip here.
+    setKitSessionId((current) => current ?? kit?.sessionId ?? null);
+    setKit(null);
+  }, [kit]);
+
+  if (returning.state.kind !== 'idle') {
+    return (
+      <TipReturnState
+        state={returning.state}
+        boardName={boardName}
+        onRetry={returning.retry}
+      />
+    );
+  }
+
+  if (kit) {
+    return (
+      <Page width="content">
+        <PageContent
+          header={
+            <PageHeader
+              title={m.tip_checkoutTitle()}
+              description={`${tipJar.name} · ${formatMoney(getLocale(), kitAmountCents, tipJar.currency)}`}
+              actions={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setKit(null)}
+                >
+                  {m.tip_backAction()}
+                </Button>
+              }
+            />
+          }
+        >
+          <Suspense fallback={<Spinner className="mx-auto size-6" />}>
+            <EmbeddedCheckout kit={kit} onComplete={handleStripeComplete} />
+          </Suspense>
+        </PageContent>
+      </Page>
+    );
+  }
+
+  return (
+    <TipForm
+      tipJar={tipJar}
+      onStart={async (values) => {
+        const result = await dependencies.startCheckout({
+          data: { ...values, returnPath },
+        });
+        if (!result.ok) return { code: result.code, message: result.message };
+        const nextKit = mountKit(result.data);
+        if (!nextKit) return { code: null, message: '' };
+        setKitAmountCents(values.amountCents);
+        setKit(nextKit);
+      }}
+    />
+  );
+}
+
+function TipForm({
+  tipJar,
+  onStart,
+}: {
+  tipJar: TipJar;
+  /** Resolves with a refusal to show, or nothing once checkout mounts. */
+  onStart: (
+    values: TipCheckoutValues,
+  ) => Promise<{ code: string | null; message: string } | void>;
+}) {
+  const id = useId();
+  const locale = getLocale();
+  const otherInput = useRef<HTMLInputElement>(null);
+  // The middle suggestion starts selected, like most tip jars.
+  const [choice, setChoice] = useState(
+    tipJar.suggestedCents.length > 1 ? '1' : '0',
+  );
+  const [otherText, setOtherText] = useState('');
+  const [note, setNote] = useState('');
+  const [website, setWebsite] = useState('');
+  const [pending, setPending] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const focusOther = useEffectEvent(() => otherInput.current?.focus());
+  const [otherPicked, setOtherPicked] = useState(0);
+  useEffect(() => {
+    if (otherPicked > 0) focusOther();
+  }, [otherPicked]);
+
+  const resolved = resolveTipAmount(tipJar, choice, otherText, locale);
+  const money = (cents: number) => formatMoney(locale, cents, tipJar.currency);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!resolved.ok) {
+      setErrors({ amount: resolved.error });
+      otherInput.current?.focus();
+      return;
+    }
+    setErrors({});
+    setPending(true);
+    try {
+      const refusal = await onStart({
+        amountCents: resolved.amountCents,
+        note: tipJar.allowNote ? note.trim() || undefined : undefined,
+        website: website || undefined,
+      });
+      if (refusal) {
+        setErrors({
+          [tipRefusalField(refusal.code)]: tipRefusalText(
+            refusal,
+            tipJar,
+            locale,
+          ),
+        });
+      }
+    } catch {
+      setErrors({ form: boardErrorMessage({}) });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Page width="narrow">
+      <PageContent
+        header={
+          <PageHeader
+            title={tipJar.name}
+            description={
+              tipJar.tipCount !== null ? (
+                <span data-test="tip-count">
+                  {m.tip_countText({
+                    count: tipJar.tipCount,
+                    countLabel: new Intl.NumberFormat(locale).format(
+                      tipJar.tipCount,
+                    ),
+                  })}
+                </span>
+              ) : undefined
+            }
+          />
+        }
+      >
+        <div className="flex flex-col gap-8">
+          {tipJar.descriptionHtml ? (
+            <Prose html={tipJar.descriptionHtml} />
+          ) : tipJar.description ? (
+            <div
+              className="text-foreground leading-relaxed whitespace-pre-line"
+              dir="auto"
+            >
+              {tipJar.description}
+            </div>
+          ) : null}
+
+          <Card>
+            <CardContent>
+              <form
+                noValidate
+                onSubmit={submit}
+                aria-label={tipJar.name}
+                className="flex flex-col gap-6"
+                data-test="tip-form"
+              >
+                <FieldGroup className="gap-6">
+                  <FieldSet data-invalid={Boolean(errors.amount) || undefined}>
+                    <FieldLegend>{m.tip_amountLegend()}</FieldLegend>
+                    <RadioGroup
+                      name="amount"
+                      value={choice}
+                      onValueChange={(value: string | null) => {
+                        if (value === null) return;
+                        setChoice(value);
+                        if (errors.amount) {
+                          setErrors({ ...errors, amount: undefined });
+                        }
+                        if (value === 'other') setOtherPicked((n) => n + 1);
+                      }}
+                      className="grid-cols-2 sm:grid-cols-4"
+                    >
+                      {[
+                        ...tipJar.suggestedCents.map((cents, index) => ({
+                          value: String(index),
+                          label: money(cents),
+                        })),
+                        { value: 'other', label: m.tip_otherAmountOption() },
+                      ].map((option) => (
+                        <FieldLabel
+                          key={option.value}
+                          htmlFor={`${id}-amount-${option.value}`}
+                          className="hover:bg-muted cursor-pointer transition-colors"
+                        >
+                          <Field orientation="horizontal">
+                            <RadioGroupItem
+                              id={`${id}-amount-${option.value}`}
+                              value={option.value}
+                            />
+                            <FieldTitle>{option.label}</FieldTitle>
+                          </Field>
+                        </FieldLabel>
+                      ))}
+                    </RadioGroup>
+                    {choice === 'other' ? (
+                      <Field data-invalid={Boolean(errors.amount) || undefined}>
+                        <FieldLabel htmlFor={`${id}-other`}>
+                          {m.tip_otherAmountLabel()}
+                        </FieldLabel>
+                        <InputGroup>
+                          <InputGroupAddon>
+                            <InputGroupText>
+                              {tipJar.currency.toUpperCase()}
+                            </InputGroupText>
+                          </InputGroupAddon>
+                          <InputGroupInput
+                            ref={otherInput}
+                            id={`${id}-other`}
+                            name="otherAmount"
+                            inputMode="decimal"
+                            autoComplete="off"
+                            value={otherText}
+                            aria-invalid={Boolean(errors.amount) || undefined}
+                            aria-describedby={`${id}-other-help`}
+                            onChange={(event) => {
+                              setOtherText(event.target.value);
+                              if (errors.amount) {
+                                setErrors({ ...errors, amount: undefined });
+                              }
+                            }}
+                          />
+                        </InputGroup>
+                        {errors.amount ? (
+                          <FieldError id={`${id}-other-help`}>
+                            {errors.amount}
+                          </FieldError>
+                        ) : (
+                          <FieldDescription id={`${id}-other-help`}>
+                            {m.tip_amountHelpText({
+                              minimum: money(tipJar.minimumCents),
+                            })}
+                          </FieldDescription>
+                        )}
+                      </Field>
+                    ) : errors.amount ? (
+                      <FieldError>{errors.amount}</FieldError>
+                    ) : null}
+                  </FieldSet>
+
+                  {tipJar.allowNote ? (
+                    <Field data-invalid={Boolean(errors.note) || undefined}>
+                      <FieldLabel htmlFor={`${id}-note`}>
+                        {m.tip_noteLabel()}
+                      </FieldLabel>
+                      <Textarea
+                        id={`${id}-note`}
+                        name="note"
+                        rows={3}
+                        maxLength={tipJar.noteMaxLength}
+                        value={note}
+                        dir="auto"
+                        aria-invalid={Boolean(errors.note) || undefined}
+                        aria-describedby={`${id}-note-help`}
+                        onChange={(event) => {
+                          setNote(event.target.value);
+                          if (errors.note) {
+                            setErrors({ ...errors, note: undefined });
+                          }
+                        }}
+                      />
+                      {errors.note ? (
+                        <FieldError id={`${id}-note-help`}>
+                          {errors.note}
+                        </FieldError>
+                      ) : (
+                        <FieldDescription id={`${id}-note-help`}>
+                          {m.tip_noteCountText({
+                            count: String(note.length),
+                            max: String(tipJar.noteMaxLength),
+                          })}
+                        </FieldDescription>
+                      )}
+                    </Field>
+                  ) : null}
+
+                  {/* Honeypot: hidden from people and assistive tech, left empty. */}
+                  <div aria-hidden="true" className="sr-only">
+                    <label htmlFor={`${id}-website`}>
+                      {m.contact_websiteLabel()}
+                    </label>
+                    <input
+                      id={`${id}-website`}
+                      name="website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={website}
+                      onChange={(event) => setWebsite(event.target.value)}
+                    />
+                  </div>
+                </FieldGroup>
+
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="submit"
+                    size="xl"
+                    disabled={pending}
+                    aria-busy={pending || undefined}
+                  >
+                    {pending ? <Spinner data-icon="inline-start" /> : null}
+                    {resolved.ok
+                      ? m.tip_submitAction({
+                          amount: money(resolved.amountCents),
+                        })
+                      : m.tip_continueAction()}
+                  </Button>
+                  {errors.form ? (
+                    <FieldError data-test="tip-checkout-error">
+                      {errors.form}
+                    </FieldError>
+                  ) : (
+                    <p className="text-muted-foreground text-center text-sm">
+                      {m.tip_paymentHelpText()}
+                    </p>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </PageContent>
+    </Page>
+  );
+}
+
+function TipReturnState({
+  state,
+  boardName,
+  onRetry,
+}: {
+  state: Exclude<ReturnState, { kind: 'idle' }>;
+  boardName: string;
+  onRetry: () => void;
+}) {
+  const locale = getLocale();
+  return (
+    <Page width="narrow">
+      <PageContent>
+        <Empty className="min-h-96 border-0" data-test={`tip-${state.kind}`}>
+          {state.kind === 'confirming' ? (
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Spinner className="size-5" />
+              </EmptyMedia>
+              <Text variant="heading2" as="h1">
+                {m.tip_confirmingTitle()}
+              </Text>
+              <EmptyDescription>{m.tip_confirmingText()}</EmptyDescription>
+            </EmptyHeader>
+          ) : state.kind === 'paid' ? (
+            <>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CircleCheck aria-hidden="true" />
+                </EmptyMedia>
+                <Text variant="heading2" as="h1">
+                  {m.tip_thankYouTitle()}
+                </Text>
+                <EmptyDescription>
+                  {m.tip_thankYouAmountText({
+                    boardName,
+                    amount: formatMoney(
+                      locale,
+                      state.status.amountCents,
+                      state.status.currency,
+                    ),
+                  })}
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                {state.status.thankYouMessage ? (
+                  <p
+                    className="text-foreground leading-relaxed whitespace-pre-line"
+                    dir="auto"
+                  >
+                    {state.status.thankYouMessage}
+                  </p>
+                ) : null}
+                {state.status.receiptEmail ? (
+                  <p className="text-muted-foreground text-sm">
+                    {m.tip_receiptSentText({
+                      email: state.status.receiptEmail,
+                    })}
+                  </p>
+                ) : null}
+                <Link
+                  to="/jobs"
+                  className={cn(buttonVariants({ variant: 'outline' }))}
+                >
+                  {m.tip_browseJobsAction()}
+                </Link>
+              </EmptyContent>
+            </>
+          ) : state.kind === 'processing' ? (
+            <>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Clock aria-hidden="true" />
+                </EmptyMedia>
+                <Text variant="heading2" as="h1">
+                  {m.tip_processingTitle()}
+                </Text>
+                <EmptyDescription>{m.tip_processingText()}</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                {state.polling ? (
+                  <Spinner className="size-5" />
+                ) : (
+                  <Button variant="outline" onClick={onRetry}>
+                    {m.tip_checkAgainAction()}
+                  </Button>
+                )}
+              </EmptyContent>
+            </>
+          ) : (
+            <>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <SearchX aria-hidden="true" />
+                </EmptyMedia>
+                <Text variant="heading2" as="h1">
+                  {m.tip_checkoutMissingTitle()}
+                </Text>
+                <EmptyDescription>
+                  {m.tip_checkoutMissingText()}
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link
+                  to="/tip"
+                  className={cn(buttonVariants({ variant: 'outline' }))}
+                >
+                  {m.tip_startOverAction()}
+                </Link>
+              </EmptyContent>
+            </>
+          )}
+        </Empty>
+      </PageContent>
+    </Page>
+  );
+}

@@ -30,6 +30,7 @@ import {
   refreshBoardContext,
   readEmployerOfferGate,
   readProductsGate,
+  readTipJarGate,
 } from '../lib/board-context-cache';
 import { readBoardSeo } from '../lib/board-seo-cache';
 import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
@@ -149,7 +150,8 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
  * plans, or quote-only employer-service tiers — the hosted
  * `hasEmployerOfferPage` gate the footer/nav Pricing links key on, plus
  * whether the board publishes a membership plan (the Memberships link), and
- * whether it lists a digital product (the Products link). OPEN read on an open board; a
+ * whether it lists a digital product (the Products link), and whether its tip
+ * jar is on (the footer Tip link). OPEN read on an open board; a
  * password-protected board refuses ungated plan reads, so the links hide
  * until the wall is passed (the wall page renders no footer nav anyway).
  *
@@ -160,12 +162,13 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
  */
 export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
   async (): Promise<EmployerOfferGate> => {
-    const [planGate, hasProductsPage] = await Promise.all([
+    const [planGate, hasProductsPage, hasTipPage] = await Promise.all([
       readPlanOfferGate(),
       // Fail closed for this request only: the memo never keeps a failure.
       readProductsGate(readProductsListed).catch(() => false),
+      readTipJarGate(readTipJarOn).catch(() => false),
     ]);
-    return { ...planGate, hasProductsPage };
+    return { ...planGate, hasProductsPage, hasTipPage };
   },
 );
 
@@ -217,6 +220,21 @@ async function readPlanOfferGate(): Promise<PlanOfferGate> {
 async function readProductsListed(): Promise<boolean> {
   const page = await getBoard().products.list({ limit: 1 });
   return page.data.length > 0;
+}
+
+/**
+ * The tip jar is on unless the Board API answers `tip_jar_not_found` (no tip
+ * jar, or an archived one). Any other failure propagates, so the memo never
+ * keeps it.
+ */
+async function readTipJarOn(): Promise<boolean> {
+  try {
+    await getBoard().tipJar.get();
+    return true;
+  } catch (error) {
+    if (isNotFound(error)) return false;
+    throw error;
+  }
 }
 
 /**

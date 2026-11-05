@@ -1321,6 +1321,7 @@
   "footer_impressumLabel": "Impressum",
   "footer_locationsLabel": "Locations",
   "footer_talentLocationsLabel": "Talent by location",
+  "footer_tipLabel": "Leave a tip",
   "footer_poweredByText": "Powered by",
   "footer_privacyPolicyLabel": "Privacy Policy",
   "footer_resourcesHeading": "Resources",
@@ -3043,5 +3044,47 @@
   "itemVerification_resendLabel": "Resend code",
   "itemVerification_resendInLabel": "Resend code in {seconds}s",
   "itemVerification_codeExpiredError": "This code expired. Send a new one.",
-  "itemVerification_emailPlaceholder": "name"
+  "itemVerification_emailPlaceholder": "name",
+  "tip_metaDescription": "Support {boardName} with a tip.",
+  "tip_countText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} tip so far",
+        "countPlural=*": "{countLabel} tips so far"
+      }
+    }
+  ],
+  "tip_amountLegend": "Choose an amount",
+  "tip_otherAmountOption": "Other",
+  "tip_otherAmountLabel": "Your amount",
+  "tip_amountHelpText": "At least {minimum}.",
+  "tip_amountInvalidText": "Enter an amount like 5 or 5.50.",
+  "tip_amountBelowMinimumText": "The smallest tip is {minimum}.",
+  "tip_noteLabel": "Add a note (optional)",
+  "tip_noteCountText": "{count} of {max} characters",
+  "tip_noteTooLongText": "Keep your note to {max} characters.",
+  "tip_noteNotAllowedText": "This tip jar doesn't take notes. Remove your note and try again.",
+  "tip_submitAction": "Tip {amount}",
+  "tip_continueAction": "Continue to payment",
+  "tip_paymentHelpText": "You'll pay securely with Stripe on the next step.",
+  "tip_checkoutTitle": "Complete your tip",
+  "tip_backAction": "Back",
+  "tip_confirmingTitle": "Confirming your tip…",
+  "tip_confirmingText": "This usually takes a few seconds.",
+  "tip_thankYouTitle": "Thank you!",
+  "tip_thankYouAmountText": "You tipped {boardName} {amount}.",
+  "tip_receiptSentText": "Receipt sent to {email}",
+  "tip_processingTitle": "Your tip is processing",
+  "tip_processingText": "We'll email your receipt as soon as the payment clears.",
+  "tip_checkAgainAction": "Check again",
+  "tip_checkoutMissingTitle": "We couldn't find this tip",
+  "tip_checkoutMissingText": "The payment may have expired. You can start a new tip.",
+  "tip_startOverAction": "Back to the tip page",
+  "tip_browseJobsAction": "Browse jobs"
 }

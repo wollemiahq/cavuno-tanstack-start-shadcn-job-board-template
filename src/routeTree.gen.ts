@@ -34,6 +34,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SiteDotwebmanifestRouteImport } from './routes/site[.]webmanifest'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
+import { Route as TipRouteImport } from './routes/tip'
 import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
 import { Route as AccountAccessRouteImport } from './routes/account_.access'
 import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
@@ -243,6 +244,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TipRoute = TipRouteImport.update({
+  id: '/tip',
+  path: '/tip',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotwellKnownCavunoDotjsonRoute =
@@ -722,6 +728,7 @@ export interface FileRoutesByFullPath {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/tip': typeof TipRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -834,6 +841,7 @@ export interface FileRoutesByTo {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/tip': typeof TipRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -947,6 +955,7 @@ export interface FileRoutesById {
   '/site.webmanifest': typeof SiteDotwebmanifestRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/tip': typeof TipRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account_/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -1061,6 +1070,7 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
+    | '/tip'
     | '/.well-known/cavuno.json'
     | '/account/access'
     | '/alerts/confirm'
@@ -1173,6 +1183,7 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
+    | '/tip'
     | '/.well-known/cavuno.json'
     | '/account/access'
     | '/alerts/confirm'
@@ -1285,6 +1296,7 @@ export interface FileRouteTypes {
     | '/site.webmanifest'
     | '/sitemap.xml'
     | '/terms-of-service'
+    | '/tip'
     | '/.well-known/cavuno.json'
     | '/account_/access'
     | '/alerts/confirm'
@@ -1398,6 +1410,7 @@ export interface RootRouteChildren {
   SiteDotwebmanifestRoute: typeof SiteDotwebmanifestRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  TipRoute: typeof TipRoute
   DotwellKnownCavunoDotjsonRoute: typeof DotwellKnownCavunoDotjsonRoute
   AccountAccessRoute: typeof AccountAccessRoute
   AlertsConfirmRoute: typeof AlertsConfirmRoute
@@ -1657,6 +1670,13 @@ declare module '@tanstack/react-router' {
       path: '/terms-of-service'
       fullPath: '/terms-of-service'
       preLoaderRoute: typeof TermsOfServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tip': {
+      id: '/tip'
+      path: '/tip'
+      fullPath: '/tip'
+      preLoaderRoute: typeof TipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/cavuno.json': {
@@ -2322,6 +2342,7 @@ const rootRouteChildren: RootRouteChildren = {
   SiteDotwebmanifestRoute: SiteDotwebmanifestRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  TipRoute: TipRoute,
   DotwellKnownCavunoDotjsonRoute: DotwellKnownCavunoDotjsonRoute,
   AccountAccessRoute: AccountAccessRoute,
   AlertsConfirmRoute: AlertsConfirmRoute,

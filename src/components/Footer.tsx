@@ -189,6 +189,7 @@ export default function Footer({
   hasMembershipPage = false,
   viewerRole = null,
   hasCandidatePricingPage = false,
+  hasTipPage = false,
   flush = false,
   breadcrumb,
   cookiePreferencesAction,
@@ -248,6 +249,11 @@ export default function Footer({
    * no Memberships link (memberships are an employer product).
    */
   viewerRole?: BoardUser['role'] | null;
+  /**
+   * Whether the board's tip jar is on (`board.tipJar.get()` succeeds), so
+   * `/tip` exists. Loader-driven like `hasMembershipPage`.
+   */
+  hasTipPage?: boolean;
   /** Remove the outer gap when the preceding route already fills a viewport. */
   flush?: boolean;
   /** Optional compact navigation trail rendered as the footer's first row. */
@@ -354,6 +360,9 @@ export default function Footer({
             external: true,
           },
         ]
+      : []),
+    ...(hasTipPage
+      ? [{ href: BOARD_PATHS.tip, label: copy.footer.tipLabel }]
       : []),
   ];
   const socialLinks = [

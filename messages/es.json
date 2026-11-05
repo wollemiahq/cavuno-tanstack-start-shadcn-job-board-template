@@ -1321,6 +1321,7 @@
   "footer_impressumLabel": "Aviso legal",
   "footer_locationsLabel": "Ubicaciones",
   "footer_talentLocationsLabel": "Talento por ubicación",
+  "footer_tipLabel": "Deja una propina",
   "footer_poweredByText": "Con la tecnología de",
   "footer_privacyPolicyLabel": "Política de privacidad",
   "footer_resourcesHeading": "Recursos",
@@ -3043,5 +3044,47 @@
   "itemVerification_resendLabel": "Reenviar código",
   "itemVerification_resendInLabel": "Reenviar código en {seconds} s",
   "itemVerification_codeExpiredError": "El código ha caducado. Pide uno nuevo.",
-  "itemVerification_emailPlaceholder": "nombre"
+  "itemVerification_emailPlaceholder": "nombre",
+  "tip_metaDescription": "Apoya a {boardName} con una propina.",
+  "tip_countText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} propina hasta ahora",
+        "countPlural=*": "{countLabel} propinas hasta ahora"
+      }
+    }
+  ],
+  "tip_amountLegend": "Elige un importe",
+  "tip_otherAmountOption": "Otro",
+  "tip_otherAmountLabel": "Tu importe",
+  "tip_amountHelpText": "Mínimo {minimum}.",
+  "tip_amountInvalidText": "Escribe un importe como 5 o 5,50.",
+  "tip_amountBelowMinimumText": "La propina mínima es {minimum}.",
+  "tip_noteLabel": "Añade una nota (opcional)",
+  "tip_noteCountText": "{count} de {max} caracteres",
+  "tip_noteTooLongText": "Tu nota puede tener como máximo {max} caracteres.",
+  "tip_noteNotAllowedText": "Este bote de propinas no admite notas. Quita tu nota e inténtalo de nuevo.",
+  "tip_submitAction": "Dar {amount}",
+  "tip_continueAction": "Continuar al pago",
+  "tip_paymentHelpText": "En el siguiente paso pagarás de forma segura con Stripe.",
+  "tip_checkoutTitle": "Completa tu propina",
+  "tip_backAction": "Volver",
+  "tip_confirmingTitle": "Confirmando tu propina…",
+  "tip_confirmingText": "Suele tardar unos segundos.",
+  "tip_thankYouTitle": "¡Gracias!",
+  "tip_thankYouAmountText": "Le has dado {amount} a {boardName}.",
+  "tip_receiptSentText": "Recibo enviado a {email}",
+  "tip_processingTitle": "Tu propina se está procesando",
+  "tip_processingText": "Te enviaremos el recibo en cuanto se confirme el pago.",
+  "tip_checkAgainAction": "Comprobar de nuevo",
+  "tip_checkoutMissingTitle": "No encontramos esta propina",
+  "tip_checkoutMissingText": "Puede que el pago haya caducado. Puedes dar una nueva propina.",
+  "tip_startOverAction": "Volver a la página de propinas",
+  "tip_browseJobsAction": "Ver ofertas"
 }

@@ -70,6 +70,13 @@ export const OFFER_GATE_TTL_MS = 300_000;
 export const PRODUCTS_GATE_TTL_MS = 60_000;
 
 /**
+ * How long an isolate reuses "is the tip jar on" (the footer Tip link). The
+ * operator turns the tip jar on and archives it at any time, so this is as
+ * short as the products memo.
+ */
+export const TIP_JAR_GATE_TTL_MS = 60_000;
+
+/**
  * Both readers bypass the shared edge cache — see the module comment.
  * Exported so a test can pin it; `applyReadCache` strips any `cf` directive
  * when it sees `cache: 'no-store'`.
@@ -86,6 +93,7 @@ const cache = createBoardContextCache<BoardContext>(
   CONTEXT_TTL_MS,
   OFFER_GATE_TTL_MS,
   PRODUCTS_GATE_TTL_MS,
+  TIP_JAR_GATE_TTL_MS,
 );
 
 export const readBoardContext = cache.readBoardContext;
@@ -121,6 +129,14 @@ export function readProductsGate(
   load: () => Promise<boolean>,
 ): Promise<boolean> {
   return cache.readProductsGate(load);
+}
+
+/**
+ * Per-isolate memo for the footer's Tip link, held for
+ * `TIP_JAR_GATE_TTL_MS`. A failed read is never kept.
+ */
+export function readTipJarGate(load: () => Promise<boolean>): Promise<boolean> {
+  return cache.readTipJarGate(load);
 }
 
 export function resetEmployerOfferGateCache(source?: DataSource): void {

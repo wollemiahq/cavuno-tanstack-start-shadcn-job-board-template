@@ -1373,6 +1373,7 @@
   "footer_impressumLabel": "Nota prawna",
   "footer_locationsLabel": "Lokalizacje",
   "footer_talentLocationsLabel": "Kandydaci według lokalizacji",
+  "footer_tipLabel": "Zostaw napiwek",
   "footer_poweredByText": "Obsługiwane przez",
   "footer_privacyPolicyLabel": "Polityka prywatności",
   "footer_resourcesHeading": "Materiały",
@@ -3171,5 +3172,49 @@
   "itemVerification_resendLabel": "Wyślij kod ponownie",
   "itemVerification_resendInLabel": "Wyślij kod ponownie za {seconds} s",
   "itemVerification_codeExpiredError": "Kod wygasł. Poproś o nowy.",
-  "itemVerification_emailPlaceholder": "imie.nazwisko"
+  "itemVerification_emailPlaceholder": "imie.nazwisko",
+  "tip_metaDescription": "Wesprzyj {boardName} napiwkiem.",
+  "tip_countText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dotąd {countLabel} napiwek",
+        "countPlural=few": "Dotąd {countLabel} napiwki",
+        "countPlural=many": "Dotąd {countLabel} napiwków",
+        "countPlural=*": "Dotąd {countLabel} napiwku"
+      }
+    }
+  ],
+  "tip_amountLegend": "Wybierz kwotę",
+  "tip_otherAmountOption": "Inna",
+  "tip_otherAmountLabel": "Twoja kwota",
+  "tip_amountHelpText": "Co najmniej {minimum}.",
+  "tip_amountInvalidText": "Wpisz kwotę, np. 5 lub 5,50.",
+  "tip_amountBelowMinimumText": "Najmniejszy napiwek to {minimum}.",
+  "tip_noteLabel": "Dodaj wiadomość (opcjonalnie)",
+  "tip_noteCountText": "{count} z {max} znaków",
+  "tip_noteTooLongText": "Wiadomość może mieć najwyżej {max} znaków.",
+  "tip_noteNotAllowedText": "Ta skarbonka nie przyjmuje wiadomości. Usuń wiadomość i spróbuj ponownie.",
+  "tip_submitAction": "Daj {amount}",
+  "tip_continueAction": "Przejdź do płatności",
+  "tip_paymentHelpText": "W następnym kroku zapłacisz bezpiecznie przez Stripe.",
+  "tip_checkoutTitle": "Dokończ napiwek",
+  "tip_backAction": "Wróć",
+  "tip_confirmingTitle": "Potwierdzamy napiwek…",
+  "tip_confirmingText": "Zwykle trwa to kilka sekund.",
+  "tip_thankYouTitle": "Dziękujemy!",
+  "tip_thankYouAmountText": "Dałeś(-aś) {boardName} {amount}.",
+  "tip_receiptSentText": "Potwierdzenie wysłane na {email}",
+  "tip_processingTitle": "Napiwek jest przetwarzany",
+  "tip_processingText": "Wyślemy potwierdzenie, gdy tylko płatność dotrze.",
+  "tip_checkAgainAction": "Sprawdź ponownie",
+  "tip_checkoutMissingTitle": "Nie znaleźliśmy tego napiwku",
+  "tip_checkoutMissingText": "Płatność mogła wygasnąć. Możesz dać nowy napiwek.",
+  "tip_startOverAction": "Wróć do strony napiwków",
+  "tip_browseJobsAction": "Przeglądaj oferty"
 }
