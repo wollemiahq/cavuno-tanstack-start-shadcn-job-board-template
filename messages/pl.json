@@ -3216,6 +3216,7 @@
   "tip_confirmingText": "Zwykle trwa to kilka sekund.",
   "tip_thankYouTitle": "Dziękujemy!",
   "tip_thankYouAmountText": "Dałeś(-aś) {boardName} {amount}.",
+  "tip_chargedWithFeeText": "Z Twojej karty pobrano {total}, w tym {fee} opłaty za kartę.",
   "tip_receiptSentText": "Potwierdzenie wysłane na {email}",
   "tip_processingTitle": "Napiwek jest przetwarzany",
   "tip_processingText": "Wyślemy potwierdzenie, gdy tylko płatność dotrze.",

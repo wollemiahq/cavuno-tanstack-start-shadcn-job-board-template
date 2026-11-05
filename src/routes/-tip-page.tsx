@@ -806,6 +806,22 @@ function TipReturnState({
                     ),
                   })}
                 </EmptyDescription>
+                {state.status.coverFeeCents > 0 ? (
+                  <EmptyDescription>
+                    {m.tip_chargedWithFeeText({
+                      total: formatMoney(
+                        locale,
+                        state.status.amountCents + state.status.coverFeeCents,
+                        state.status.currency,
+                      ),
+                      fee: formatMoney(
+                        locale,
+                        state.status.coverFeeCents,
+                        state.status.currency,
+                      ),
+                    })}
+                  </EmptyDescription>
+                ) : null}
               </EmptyHeader>
               <EmptyContent>
                 {state.status.thankYouMessage ? (

@@ -3086,6 +3086,7 @@
   "tip_confirmingText": "This usually takes a few seconds.",
   "tip_thankYouTitle": "Thank you!",
   "tip_thankYouAmountText": "You tipped {boardName} {amount}.",
+  "tip_chargedWithFeeText": "Your card was charged {total}, including the {fee} card fee.",
   "tip_receiptSentText": "Receipt sent to {email}",
   "tip_processingTitle": "Your tip is processing",
   "tip_processingText": "We'll email your receipt as soon as the payment clears.",

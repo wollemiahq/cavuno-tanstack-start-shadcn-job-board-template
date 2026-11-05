@@ -3086,6 +3086,7 @@
   "tip_confirmingText": "Dit duurt meestal een paar seconden.",
   "tip_thankYouTitle": "Bedankt!",
   "tip_thankYouAmountText": "Je gaf {boardName} {amount}.",
+  "tip_chargedWithFeeText": "Je kaart is belast met {total}, inclusief {fee} aan kaartkosten.",
   "tip_receiptSentText": "Bon verstuurd naar {email}",
   "tip_processingTitle": "Je fooi wordt verwerkt",
   "tip_processingText": "We mailen je de bon zodra de betaling binnen is.",

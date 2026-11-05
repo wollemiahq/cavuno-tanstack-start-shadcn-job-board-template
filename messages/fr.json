@@ -3086,6 +3086,7 @@
   "tip_confirmingText": "Cela prend généralement quelques secondes.",
   "tip_thankYouTitle": "Merci !",
   "tip_thankYouAmountText": "Vous avez donné {amount} à {boardName}.",
+  "tip_chargedWithFeeText": "Votre carte a été débitée de {total}, frais de carte de {fee} inclus.",
   "tip_receiptSentText": "Reçu envoyé à {email}",
   "tip_processingTitle": "Votre pourboire est en cours de traitement",
   "tip_processingText": "Nous vous enverrons le reçu dès que le paiement sera confirmé.",

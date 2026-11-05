@@ -3086,6 +3086,7 @@
   "tip_confirmingText": "Suele tardar unos segundos.",
   "tip_thankYouTitle": "¡Gracias!",
   "tip_thankYouAmountText": "Le has dado {amount} a {boardName}.",
+  "tip_chargedWithFeeText": "Se cargaron {total} a tu tarjeta, incluida la comisión de la tarjeta de {fee}.",
   "tip_receiptSentText": "Recibo enviado a {email}",
   "tip_processingTitle": "Tu propina se está procesando",
   "tip_processingText": "Te enviaremos el recibo en cuanto se confirme el pago.",

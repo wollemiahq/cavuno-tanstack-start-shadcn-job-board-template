@@ -312,12 +312,49 @@ describe('TipPageView', () => {
       await screen.findByRole('heading', { name: m.tip_thankYouTitle() }),
     ).toBeInTheDocument();
     expect(screen.getByText('Thanks a lot')).toBeInTheDocument();
+    expect(screen.queryByText(/card was charged/)).not.toBeInTheDocument();
     expect(
       screen.getByText(m.tip_receiptSentText({ email: 'm•••@gmail.com' })),
     ).toBeInTheDocument();
     expect(deps.getCheckoutState).toHaveBeenCalledWith({
       data: { sessionId: 'cs_paid' },
     });
+  });
+
+  it('says what the card was charged when the tipper covered the fee', async () => {
+    const status: TipJarCheckoutStatus = {
+      object: 'tip_jar_checkout_status',
+      status: 'paid',
+      amountCents: 500,
+      coverFeeCents: 46,
+      currency: 'usd',
+      receiptEmail: null,
+      thankYouMessage: null,
+    };
+    const deps = dependencies({
+      getCheckoutState: vi.fn().mockResolvedValue({ ok: true, data: status }),
+    });
+    page(tipJar(), deps, 'cs_paid_fee');
+
+    expect(
+      await screen.findByRole('heading', { name: m.tip_thankYouTitle() }),
+    ).toBeInTheDocument();
+    // The tip stays the tip; the charge is tip + fee.
+    expect(
+      screen.getByText(
+        m.tip_thankYouAmountText({
+          boardName: 'Example Jobs',
+          amount: money(500),
+        }),
+        exactText,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        m.tip_chargedWithFeeText({ total: money(546), fee: money(46) }),
+        exactText,
+      ),
+    ).toBeInTheDocument();
   });
 
   describe('covering the card fee', () => {
