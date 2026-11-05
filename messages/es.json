@@ -3046,7 +3046,8 @@
   "itemVerification_codeExpiredError": "El código ha caducado. Pide uno nuevo.",
   "itemVerification_emailPlaceholder": "nombre",
   "tip_metaDescription": "Apoya a {boardName} con una propina.",
-  "tip_countText": [
+  "tip_cardTitle": "Bote de propinas",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3055,24 +3056,28 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{countLabel} propina hasta ahora",
-        "countPlural=*": "{countLabel} propinas hasta ahora"
+        "countPlural=one": "{countLabel} persona ha dejado propina",
+        "countPlural=*": "{countLabel} personas han dejado propina"
       }
     }
   ],
   "tip_amountLegend": "Elige un importe",
-  "tip_otherAmountOption": "Otro",
+  "tip_otherAmountOption": "Otro importe",
   "tip_otherAmountLabel": "Tu importe",
   "tip_amountHelpText": "Mínimo {minimum}.",
   "tip_amountInvalidText": "Escribe un importe como 5 o 5,50.",
   "tip_amountBelowMinimumText": "La propina mínima es {minimum}.",
-  "tip_noteLabel": "Añade una nota (opcional)",
-  "tip_noteCountText": "{count} de {max} caracteres",
+  "tip_addNoteAction": "Añadir una nota",
+  "tip_noteLabel": "Añade una nota para {boardName} (opcional)",
+  "tip_removeNoteAction": "Quitar la nota",
+  "tip_notePlaceholder": "Cuenta por qué dejas propina",
+  "tip_notePrivacyText": "Solo {boardName} ve tu nota. No se muestra en el sitio.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Tu nota puede tener como máximo {max} caracteres.",
   "tip_noteNotAllowedText": "Este bote de propinas no admite notas. Quita tu nota e inténtalo de nuevo.",
   "tip_submitAction": "Dar {amount}",
   "tip_continueAction": "Continuar al pago",
-  "tip_paymentHelpText": "En el siguiente paso pagarás de forma segura con Stripe.",
+  "tip_secureCheckoutText": "Pago seguro con Stripe",
   "tip_checkoutTitle": "Completa tu propina",
   "tip_backAction": "Volver",
   "tip_confirmingTitle": "Confirmando tu propina…",

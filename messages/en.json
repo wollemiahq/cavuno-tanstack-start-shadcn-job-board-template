@@ -3046,7 +3046,8 @@
   "itemVerification_codeExpiredError": "This code expired. Send a new one.",
   "itemVerification_emailPlaceholder": "name",
   "tip_metaDescription": "Support {boardName} with a tip.",
-  "tip_countText": [
+  "tip_cardTitle": "Tip jar",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3055,24 +3056,28 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{countLabel} tip so far",
-        "countPlural=*": "{countLabel} tips so far"
+        "countPlural=one": "{countLabel} person has tipped",
+        "countPlural=*": "{countLabel} people have tipped"
       }
     }
   ],
   "tip_amountLegend": "Choose an amount",
-  "tip_otherAmountOption": "Other",
+  "tip_otherAmountOption": "Other amount",
   "tip_otherAmountLabel": "Your amount",
   "tip_amountHelpText": "At least {minimum}.",
   "tip_amountInvalidText": "Enter an amount like 5 or 5.50.",
   "tip_amountBelowMinimumText": "The smallest tip is {minimum}.",
-  "tip_noteLabel": "Add a note (optional)",
-  "tip_noteCountText": "{count} of {max} characters",
+  "tip_addNoteAction": "Add a note",
+  "tip_noteLabel": "Add a note for {boardName} (optional)",
+  "tip_removeNoteAction": "Remove note",
+  "tip_notePlaceholder": "Say why you're tipping",
+  "tip_notePrivacyText": "Only {boardName} sees your note. It isn't shown on the site.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Keep your note to {max} characters.",
   "tip_noteNotAllowedText": "This tip jar doesn't take notes. Remove your note and try again.",
   "tip_submitAction": "Tip {amount}",
   "tip_continueAction": "Continue to payment",
-  "tip_paymentHelpText": "You'll pay securely with Stripe on the next step.",
+  "tip_secureCheckoutText": "Secure checkout by Stripe",
   "tip_checkoutTitle": "Complete your tip",
   "tip_backAction": "Back",
   "tip_confirmingTitle": "Confirming your tip…",
