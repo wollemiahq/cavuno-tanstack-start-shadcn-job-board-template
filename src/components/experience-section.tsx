@@ -416,13 +416,15 @@ export function ExperienceSection({
             {items.map((item) => (
               <Item key={item.id} variant="outline" size="sm" render={<li />}>
                 <ItemContent>
-                  <ItemTitle>{item.title}</ItemTitle>
-                  <ItemDescription>
-                    {item.companyName}
+                  <ItemTitle className="flex-wrap">
+                    {item.title}
                     <ExperienceVerification
                       item={item}
                       verifications={verifications}
                     />
+                  </ItemTitle>
+                  <ItemDescription>
+                    {item.companyName}
                     {[websiteDomain(item.companyUrl), item.location]
                       .filter(Boolean)
                       .map((part) => ` · ${part}`)

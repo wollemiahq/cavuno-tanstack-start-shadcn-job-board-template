@@ -130,7 +130,7 @@ function emailActions(
 
 describe('ItemVerificationTick', () => {
   it.each([null, 'changed', 'rejected', 'needs_info'] as const)(
-    'a %s item is a "Verify" button',
+    'a %s item is a "Verify" badge',
     async (status) => {
       await mount(
         <ItemVerificationTick
@@ -140,9 +140,26 @@ describe('ItemVerificationTick', () => {
       );
       expect(
         screen.getByRole('button', { name: verifyName() }),
-      ).toHaveAttribute('title', m.itemVerification_verifyLabel());
+      ).toHaveTextContent(m.itemVerification_verifyLabel());
     },
   );
+
+  it('a verified item is a tick with no text', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{ ...emailItem, verification: row('verified') }}
+        actions={emailActions()}
+      />,
+    );
+    const tick = screen.getByRole('button', {
+      name: m.itemVerification_statusAriaLabel({
+        status: m.itemVerification_verifiedLabel(),
+        item: 'Acme',
+      }),
+    });
+    expect(tick.textContent).toBe('');
+    expect(tick).toHaveAttribute('title', m.itemVerification_verifiedLabel());
+  });
 
   it.each([
     [
@@ -176,7 +193,7 @@ describe('ItemVerificationTick', () => {
           item: 'Acme',
         }),
       });
-      expect(tick).toHaveAttribute('title', label());
+      expect(tick.textContent).toBe(status === 'verified' ? '' : label());
 
       fireEvent.click(tick);
       const dialog = await screen.findByRole('dialog', { name: 'Acme' });
@@ -491,7 +508,7 @@ describe('ItemVerificationCard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('puts a tick after each item', async () => {
+  it('puts an indicator on each item', async () => {
     await mount(
       <ItemVerificationCard
         items={[emailItem]}
