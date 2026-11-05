@@ -3046,7 +3046,8 @@
   "itemVerification_codeExpiredError": "Deze code is verlopen. Vraag een nieuwe aan.",
   "itemVerification_emailPlaceholder": "naam",
   "tip_metaDescription": "Steun {boardName} met een fooi.",
-  "tip_countText": [
+  "tip_cardTitle": "Fooienpot",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3055,24 +3056,28 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Tot nu toe {countLabel} fooi",
-        "countPlural=*": "Tot nu toe {countLabel} fooien"
+        "countPlural=one": "{countLabel} persoon heeft een fooi gegeven",
+        "countPlural=*": "{countLabel} mensen hebben een fooi gegeven"
       }
     }
   ],
   "tip_amountLegend": "Kies een bedrag",
-  "tip_otherAmountOption": "Anders",
+  "tip_otherAmountOption": "Ander bedrag",
   "tip_otherAmountLabel": "Jouw bedrag",
   "tip_amountHelpText": "Minimaal {minimum}.",
   "tip_amountInvalidText": "Vul een bedrag in zoals 5 of 5,50.",
   "tip_amountBelowMinimumText": "De kleinste fooi is {minimum}.",
-  "tip_noteLabel": "Voeg een bericht toe (optioneel)",
-  "tip_noteCountText": "{count} van {max} tekens",
+  "tip_addNoteAction": "Bericht toevoegen",
+  "tip_noteLabel": "Bericht voor {boardName} (optioneel)",
+  "tip_removeNoteAction": "Bericht verwijderen",
+  "tip_notePlaceholder": "Vertel waarom je een fooi geeft",
+  "tip_notePrivacyText": "Alleen {boardName} ziet je bericht. Het wordt niet op de site getoond.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Je bericht mag maximaal {max} tekens lang zijn.",
   "tip_noteNotAllowedText": "Deze fooienpot neemt geen berichten aan. Haal je bericht weg en probeer het opnieuw.",
   "tip_submitAction": "Geef {amount}",
   "tip_continueAction": "Verder naar betalen",
-  "tip_paymentHelpText": "In de volgende stap betaal je veilig via Stripe.",
+  "tip_secureCheckoutText": "Veilig betalen via Stripe",
   "tip_checkoutTitle": "Rond je fooi af",
   "tip_backAction": "Terug",
   "tip_confirmingTitle": "Je fooi wordt bevestigd…",

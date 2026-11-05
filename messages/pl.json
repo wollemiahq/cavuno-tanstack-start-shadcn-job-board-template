@@ -3174,7 +3174,8 @@
   "itemVerification_codeExpiredError": "Kod wygasł. Poproś o nowy.",
   "itemVerification_emailPlaceholder": "imie.nazwisko",
   "tip_metaDescription": "Wesprzyj {boardName} napiwkiem.",
-  "tip_countText": [
+  "tip_cardTitle": "Skarbonka",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3183,26 +3184,30 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Dotąd {countLabel} napiwek",
-        "countPlural=few": "Dotąd {countLabel} napiwki",
-        "countPlural=many": "Dotąd {countLabel} napiwków",
-        "countPlural=*": "Dotąd {countLabel} napiwku"
+        "countPlural=one": "{countLabel} osoba dała napiwek",
+        "countPlural=few": "{countLabel} osoby dały napiwek",
+        "countPlural=many": "{countLabel} osób dało napiwek",
+        "countPlural=*": "{countLabel} osoby dały napiwek"
       }
     }
   ],
   "tip_amountLegend": "Wybierz kwotę",
-  "tip_otherAmountOption": "Inna",
+  "tip_otherAmountOption": "Inna kwota",
   "tip_otherAmountLabel": "Twoja kwota",
   "tip_amountHelpText": "Co najmniej {minimum}.",
   "tip_amountInvalidText": "Wpisz kwotę, np. 5 lub 5,50.",
   "tip_amountBelowMinimumText": "Najmniejszy napiwek to {minimum}.",
-  "tip_noteLabel": "Dodaj wiadomość (opcjonalnie)",
-  "tip_noteCountText": "{count} z {max} znaków",
+  "tip_addNoteAction": "Dodaj wiadomość",
+  "tip_noteLabel": "Wiadomość dla {boardName} (opcjonalnie)",
+  "tip_removeNoteAction": "Usuń wiadomość",
+  "tip_notePlaceholder": "Napisz, dlaczego dajesz napiwek",
+  "tip_notePrivacyText": "Tylko {boardName} widzi Twoją wiadomość. Nie pojawia się na stronie.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Wiadomość może mieć najwyżej {max} znaków.",
   "tip_noteNotAllowedText": "Ta skarbonka nie przyjmuje wiadomości. Usuń wiadomość i spróbuj ponownie.",
   "tip_submitAction": "Daj {amount}",
   "tip_continueAction": "Przejdź do płatności",
-  "tip_paymentHelpText": "W następnym kroku zapłacisz bezpiecznie przez Stripe.",
+  "tip_secureCheckoutText": "Bezpieczna płatność przez Stripe",
   "tip_checkoutTitle": "Dokończ napiwek",
   "tip_backAction": "Wróć",
   "tip_confirmingTitle": "Potwierdzamy napiwek…",

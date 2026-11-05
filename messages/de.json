@@ -3046,7 +3046,8 @@
   "itemVerification_codeExpiredError": "Der Code ist abgelaufen. Fordere einen neuen an.",
   "itemVerification_emailPlaceholder": "name",
   "tip_metaDescription": "Unterstütze {boardName} mit einem Trinkgeld.",
-  "tip_countText": [
+  "tip_cardTitle": "Trinkgeldkasse",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3055,24 +3056,28 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Bisher {countLabel} Trinkgeld",
-        "countPlural=*": "Bisher {countLabel} Trinkgelder"
+        "countPlural=one": "{countLabel} Person hat Trinkgeld gegeben",
+        "countPlural=*": "{countLabel} Personen haben Trinkgeld gegeben"
       }
     }
   ],
   "tip_amountLegend": "Betrag wählen",
-  "tip_otherAmountOption": "Anderer",
+  "tip_otherAmountOption": "Anderer Betrag",
   "tip_otherAmountLabel": "Dein Betrag",
   "tip_amountHelpText": "Mindestens {minimum}.",
   "tip_amountInvalidText": "Gib einen Betrag wie 5 oder 5,50 ein.",
   "tip_amountBelowMinimumText": "Das kleinste Trinkgeld ist {minimum}.",
-  "tip_noteLabel": "Nachricht hinzufügen (optional)",
-  "tip_noteCountText": "{count} von {max} Zeichen",
+  "tip_addNoteAction": "Nachricht hinzufügen",
+  "tip_noteLabel": "Nachricht an {boardName} (optional)",
+  "tip_removeNoteAction": "Nachricht entfernen",
+  "tip_notePlaceholder": "Schreib, warum du Trinkgeld gibst",
+  "tip_notePrivacyText": "Nur {boardName} sieht deine Nachricht. Sie wird nicht auf der Website angezeigt.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Deine Nachricht darf höchstens {max} Zeichen lang sein.",
   "tip_noteNotAllowedText": "Diese Trinkgeldkasse nimmt keine Nachrichten an. Entferne deine Nachricht und versuche es erneut.",
   "tip_submitAction": "{amount} geben",
   "tip_continueAction": "Weiter zur Zahlung",
-  "tip_paymentHelpText": "Im nächsten Schritt zahlst du sicher über Stripe.",
+  "tip_secureCheckoutText": "Sichere Zahlung über Stripe",
   "tip_checkoutTitle": "Trinkgeld abschließen",
   "tip_backAction": "Zurück",
   "tip_confirmingTitle": "Dein Trinkgeld wird bestätigt…",

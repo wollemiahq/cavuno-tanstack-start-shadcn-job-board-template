@@ -3046,7 +3046,8 @@
   "itemVerification_codeExpiredError": "Ce code a expiré. Demandez-en un nouveau.",
   "itemVerification_emailPlaceholder": "nom",
   "tip_metaDescription": "Soutenez {boardName} avec un pourboire.",
-  "tip_countText": [
+  "tip_cardTitle": "Cagnotte",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3055,24 +3056,28 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{countLabel} pourboire jusqu'ici",
-        "countPlural=*": "{countLabel} pourboires jusqu'ici"
+        "countPlural=one": "{countLabel} personne a laissé un pourboire",
+        "countPlural=*": "{countLabel} personnes ont laissé un pourboire"
       }
     }
   ],
   "tip_amountLegend": "Choisissez un montant",
-  "tip_otherAmountOption": "Autre",
+  "tip_otherAmountOption": "Autre montant",
   "tip_otherAmountLabel": "Votre montant",
   "tip_amountHelpText": "Au moins {minimum}.",
   "tip_amountInvalidText": "Saisissez un montant comme 5 ou 5,50.",
   "tip_amountBelowMinimumText": "Le plus petit pourboire est de {minimum}.",
-  "tip_noteLabel": "Ajouter un mot (facultatif)",
-  "tip_noteCountText": "{count} sur {max} caractères",
+  "tip_addNoteAction": "Ajouter un mot",
+  "tip_noteLabel": "Ajouter un mot pour {boardName} (facultatif)",
+  "tip_removeNoteAction": "Retirer le mot",
+  "tip_notePlaceholder": "Dites pourquoi vous laissez un pourboire",
+  "tip_notePrivacyText": "Seul {boardName} voit votre mot. Il n'est pas affiché sur le site.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Votre mot ne doit pas dépasser {max} caractères.",
   "tip_noteNotAllowedText": "Cette cagnotte n'accepte pas de mot. Retirez votre mot et réessayez.",
   "tip_submitAction": "Donner {amount}",
   "tip_continueAction": "Continuer vers le paiement",
-  "tip_paymentHelpText": "À l'étape suivante, vous payez en toute sécurité avec Stripe.",
+  "tip_secureCheckoutText": "Paiement sécurisé par Stripe",
   "tip_checkoutTitle": "Finaliser votre pourboire",
   "tip_backAction": "Retour",
   "tip_confirmingTitle": "Confirmation de votre pourboire…",

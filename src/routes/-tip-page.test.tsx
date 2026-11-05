@@ -87,6 +87,9 @@ function page(
   );
 }
 
+const noteField = () =>
+  screen.getByLabelText(m.tip_noteLabel({ boardName: 'Example Jobs' }));
+
 const money = (cents: number) => formatMoney(getLocale(), cents, 'usd');
 
 // Prices carry no-break spaces in some languages: compare them as written.
@@ -120,16 +123,84 @@ describe('resolveTipAmount', () => {
 });
 
 describe('TipPageView', () => {
-  it('shows the tip count and note only when the board allows them', () => {
-    page(tipJar({ tipCount: null, allowNote: false }), dependencies());
+  it('shows how many people tipped only while the board shows the count', () => {
+    const countText = (count: number) =>
+      m.tip_tippedCountText({
+        count,
+        countLabel: new Intl.NumberFormat(getLocale()).format(count),
+      });
 
-    expect(screen.queryByLabelText(m.tip_noteLabel())).not.toBeInTheDocument();
+    page(tipJar({ tipCount: null }), dependencies());
     expect(document.querySelector('[data-test="tip-count"]')).toBeNull();
 
     cleanup();
-    page(tipJar(), dependencies());
-    expect(screen.getByLabelText(m.tip_noteLabel())).toBeInTheDocument();
-    expect(document.querySelector('[data-test="tip-count"]')).not.toBeNull();
+    page(tipJar({ tipCount: 1 }), dependencies());
+    expect(screen.getByText(countText(1), exactText)).toBeInTheDocument();
+
+    cleanup();
+    page(tipJar({ tipCount: 128 }), dependencies());
+    expect(screen.getByText(countText(128), exactText)).toBeInTheDocument();
+  });
+
+  it('offers no note when the board takes none', () => {
+    page(tipJar({ allowNote: false }), dependencies());
+
+    expect(
+      screen.queryByRole('button', { name: m.tip_addNoteAction() }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('opens the note on request, and Remove drops it from the tip', async () => {
+    const deps = dependencies({
+      startCheckout: vi.fn().mockResolvedValue({
+        ok: false,
+        code: 'rate_limited',
+        message: 'Slow down',
+      }),
+    });
+    page(tipJar(), deps);
+    const noteLabel = m.tip_noteLabel({ boardName: 'Example Jobs' });
+
+    expect(screen.queryByLabelText(noteLabel)).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.tip_addNoteAction() }),
+    );
+    const note = screen.getByLabelText(noteLabel);
+    expect(note).toHaveFocus();
+    fireEvent.change(note, { target: { value: 'Thanks!' } });
+    expect(
+      screen.getByText(m.tip_noteCountText({ count: '7', max: '280' })),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.tip_removeNoteAction() }),
+    );
+    expect(screen.queryByLabelText(noteLabel)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: m.tip_addNoteAction() }),
+    ).toHaveFocus();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.tip_submitAction({ amount: money(500) }),
+      }),
+    );
+    await waitFor(() => expect(deps.startCheckout).toHaveBeenCalled());
+    expect(deps.startCheckout).toHaveBeenCalledWith({
+      data: {
+        amountCents: 500,
+        note: undefined,
+        website: undefined,
+        returnPath: '/tip',
+      },
+    });
+
+    // Opened again, it starts empty.
+    fireEvent.click(
+      screen.getByRole('button', { name: m.tip_addNoteAction() }),
+    );
+    expect(screen.getByLabelText(noteLabel)).toHaveValue('');
   });
 
   it('words a too-small Other amount under the field without starting checkout', () => {
@@ -172,7 +243,10 @@ describe('TipPageView', () => {
     page(tipJar(), deps);
 
     fireEvent.click(screen.getByRole('radio', { name: money(1000) }));
-    fireEvent.change(screen.getByLabelText(m.tip_noteLabel()), {
+    fireEvent.click(
+      screen.getByRole('button', { name: m.tip_addNoteAction() }),
+    );
+    fireEvent.change(noteField(), {
       target: { value: '  Thanks!  ' },
     });
     fireEvent.click(
@@ -203,6 +277,10 @@ describe('TipPageView', () => {
     page(tipJar(), deps);
 
     fireEvent.click(
+      screen.getByRole('button', { name: m.tip_addNoteAction() }),
+    );
+    fireEvent.change(noteField(), { target: { value: 'Thanks!' } });
+    fireEvent.click(
       screen.getByRole('button', {
         name: m.tip_submitAction({ amount: money(500) }),
       }),
@@ -211,10 +289,7 @@ describe('TipPageView', () => {
     expect(
       await screen.findByText(m.tip_noteTooLongText({ max: '280' })),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(m.tip_noteLabel())).toHaveAttribute(
-      'aria-invalid',
-      'true',
-    );
+    expect(noteField()).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('thanks the tipper once Stripe returns and the tip is paid', async () => {
