@@ -56,6 +56,7 @@ function tipJar(overrides: Partial<TipJar> = {}): TipJar {
     noteMaxLength: 280,
     thankYouMessage: 'Thanks a lot',
     tipCount: 12,
+    coverFee: null,
     url: '/tip',
     ...overrides,
   };
@@ -297,6 +298,7 @@ describe('TipPageView', () => {
       object: 'tip_jar_checkout_status',
       status: 'paid',
       amountCents: 500,
+      coverFeeCents: 0,
       currency: 'usd',
       receiptEmail: 'm•••@gmail.com',
       thankYouMessage: 'Thanks a lot',
@@ -310,11 +312,168 @@ describe('TipPageView', () => {
       await screen.findByRole('heading', { name: m.tip_thankYouTitle() }),
     ).toBeInTheDocument();
     expect(screen.getByText('Thanks a lot')).toBeInTheDocument();
+    expect(screen.queryByText(/card was charged/)).not.toBeInTheDocument();
     expect(
       screen.getByText(m.tip_receiptSentText({ email: 'm•••@gmail.com' })),
     ).toBeInTheDocument();
     expect(deps.getCheckoutState).toHaveBeenCalledWith({
       data: { sessionId: 'cs_paid' },
+    });
+  });
+
+  it('says what the card was charged when the tipper covered the fee', async () => {
+    const status: TipJarCheckoutStatus = {
+      object: 'tip_jar_checkout_status',
+      status: 'paid',
+      amountCents: 500,
+      coverFeeCents: 46,
+      currency: 'usd',
+      receiptEmail: null,
+      thankYouMessage: null,
+    };
+    const deps = dependencies({
+      getCheckoutState: vi.fn().mockResolvedValue({ ok: true, data: status }),
+    });
+    page(tipJar(), deps, 'cs_paid_fee');
+
+    expect(
+      await screen.findByRole('heading', { name: m.tip_thankYouTitle() }),
+    ).toBeInTheDocument();
+    // The tip stays the tip; the charge is tip + fee.
+    expect(
+      screen.getByText(
+        m.tip_thankYouAmountText({
+          boardName: 'Example Jobs',
+          amount: money(500),
+        }),
+        exactText,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        m.tip_chargedWithFeeText({ total: money(546), fee: money(46) }),
+        exactText,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  describe('covering the card fee', () => {
+    // A US card rate: 2.9% + 30¢.
+    const rate = { percentBps: 290, fixedMinor: 30 };
+    const coverFeeBox = (feeCents: number) =>
+      screen.getByRole('checkbox', {
+        name: m.tip_coverFeeLabel({ fee: money(feeCents) }),
+      });
+    const refused = () =>
+      dependencies({
+        startCheckout: vi.fn().mockResolvedValue({
+          ok: false,
+          code: 'rate_limited',
+          message: 'Slow down',
+        }),
+      });
+
+    it('is not offered when the board does not pass the fee on', () => {
+      page(tipJar({ coverFee: null }), dependencies());
+
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    });
+
+    it('prices the fee for the chosen amount, unticked, and only while the amount is valid', () => {
+      page(tipJar({ coverFee: rate }), dependencies());
+
+      // $5.00: ceil(530 / 0.971) = 546, so the fee is 46¢.
+      expect(coverFeeBox(46)).not.toBeChecked();
+      expect(
+        screen.getByRole('button', {
+          name: m.tip_submitAction({ amount: money(500) }),
+        }),
+      ).toBeInTheDocument();
+
+      // $10.00: ceil(1030 / 0.971) = 1061, so the fee is 61¢.
+      fireEvent.click(screen.getByRole('radio', { name: money(1000) }));
+      expect(coverFeeBox(61)).toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole('radio', { name: m.tip_otherAmountOption() }),
+      );
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText(m.tip_otherAmountLabel()), {
+        target: { value: '0.50' },
+      });
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      // $7.25: ceil(755 / 0.971) = 778, so the fee is 53¢.
+      fireEvent.change(screen.getByLabelText(m.tip_otherAmountLabel()), {
+        target: { value: '7.25' },
+      });
+      expect(coverFeeBox(53)).toBeInTheDocument();
+    });
+
+    it('adds the fee to the button and asks checkout to charge it once ticked', async () => {
+      const deps = refused();
+      page(tipJar({ coverFee: rate }), deps);
+
+      fireEvent.click(coverFeeBox(46));
+      expect(coverFeeBox(46)).toBeChecked();
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: m.tip_submitAction({ amount: money(546) }),
+        }),
+      );
+
+      await waitFor(() => expect(deps.startCheckout).toHaveBeenCalled());
+      expect(deps.startCheckout).toHaveBeenCalledWith({
+        data: {
+          amountCents: 500,
+          note: undefined,
+          website: undefined,
+          coverFee: true,
+          returnPath: '/tip',
+        },
+      });
+    });
+
+    it('sends no coverFee at all while unticked', async () => {
+      const deps = refused();
+      page(tipJar({ coverFee: rate }), deps);
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: m.tip_submitAction({ amount: money(500) }),
+        }),
+      );
+
+      await waitFor(() => expect(deps.startCheckout).toHaveBeenCalled());
+      const [{ data }] = vi.mocked(deps.startCheckout).mock.calls[0]!;
+      expect(data).not.toHaveProperty('coverFee');
+    });
+
+    it('unticks the box and says so when the board stopped offering it', async () => {
+      const deps = dependencies({
+        startCheckout: vi.fn().mockResolvedValue({
+          ok: false,
+          code: 'tip_fee_cover_not_allowed',
+          message: 'Not allowed',
+        }),
+      });
+      page(tipJar({ coverFee: rate }), deps);
+
+      fireEvent.click(coverFeeBox(46));
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: m.tip_submitAction({ amount: money(546) }),
+        }),
+      );
+
+      expect(
+        await screen.findByText(m.tip_coverFeeNotAllowedText()),
+      ).toBeInTheDocument();
+      expect(coverFeeBox(46)).not.toBeChecked();
+      expect(
+        screen.getByRole('button', {
+          name: m.tip_submitAction({ amount: money(500) }),
+        }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -326,6 +485,7 @@ describe('TipPageView', () => {
           object: 'tip_jar_checkout_status',
           status: 'processing',
           amountCents: 500,
+          coverFeeCents: 0,
           currency: 'usd',
           receiptEmail: null,
           thankYouMessage: null,
