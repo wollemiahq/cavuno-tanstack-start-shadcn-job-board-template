@@ -4,7 +4,7 @@
  * (workers-og/Satori). The hash ties this module to its source; doctor
  * compares it against theme.css and the platform snapshot.
  */
-export const tokensHash = '13dc150a42c1aedf661d4086ab809c9a09175dba64cc8d6db00fa232754df711'
+export const tokensHash = 'e043ce71eba764e76391a543928f4f6d737c221f75aa19fbe846d7b67ac64395'
 
 export interface ThemeMeta {
   mode: string | null
@@ -45,6 +45,8 @@ export const themeTokens: ThemeTokens = {
   "--accent-foreground": "oklch(0.205 0 0)",
   "--destructive": "oklch(0.577 0.245 27.325)",
   "--destructive-foreground": "oklch(0.985 0 0)",
+  "--verified": "oklch(0.546 0.245 262.881)",
+  "--verified-foreground": "oklch(1 0 0)",
   "--border": "oklch(0.922 0 0)",
   "--input": "oklch(0.922 0 0)",
   "--ring": "oklch(0.708 0 0)",
@@ -82,6 +84,8 @@ export const themeTokens: ThemeTokens = {
   "--accent-foreground": "oklch(0.985 0 0)",
   "--destructive": "oklch(0.704 0.191 22.216)",
   "--destructive-foreground": "oklch(0.985 0 0)",
+  "--verified": "oklch(0.623 0.214 259.815)",
+  "--verified-foreground": "oklch(1 0 0)",
   "--border": "oklch(1 0 0 / 10%)",
   "--input": "oklch(1 0 0 / 15%)",
   "--ring": "oklch(0.556 0 0)",

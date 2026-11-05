@@ -25,7 +25,10 @@ import {
   ItemVerificationTick,
 } from './item-verification';
 
-import type { VerifiableItem } from '@/board/item-verification';
+import type {
+  ItemVerificationRow,
+  VerifiableItem,
+} from '@/board/item-verification';
 import { m } from '@/paraglide/messages';
 import type { ItemVerification } from '@cavuno/board';
 
@@ -129,8 +132,8 @@ function emailActions(
 }
 
 describe('ItemVerificationTick', () => {
-  it.each([null, 'changed', 'rejected', 'needs_info'] as const)(
-    'a %s item is a "Verify" button',
+  it.each([null, 'changed', 'needs_info'] as const)(
+    'a %s item is a "Verify" badge',
     async (status) => {
       await mount(
         <ItemVerificationTick
@@ -140,16 +143,50 @@ describe('ItemVerificationTick', () => {
       );
       expect(
         screen.getByRole('button', { name: verifyName() }),
-      ).toHaveAttribute('title', m.itemVerification_verifyLabel());
+      ).toHaveTextContent(m.itemVerification_verifyLabel());
     },
   );
 
+  it('a verified item is a tick with a tooltip and nothing to open', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{
+          ...emailItem,
+          verification: { ...row('verified'), verifiedDomain: 'acme.com' },
+        }}
+        actions={emailActions()}
+      />,
+    );
+    const tick = screen.getByRole('img', {
+      name: m.itemVerification_statusAriaLabel({
+        status: m.itemVerification_verifiedWorkEmailTooltip(),
+        item: 'Acme',
+      }),
+    });
+    expect(tick.textContent).toBe('');
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    fireEvent.click(tick);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('a team-verified item says Verified', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{ ...emailItem, method: 'team', verification: row('verified') }}
+        actions={emailActions()}
+      />,
+    );
+    expect(
+      screen.getByRole('img', {
+        name: m.itemVerification_statusAriaLabel({
+          status: m.itemVerification_verifiedLabel(),
+          item: 'Acme',
+        }),
+      }),
+    ).toBeInTheDocument();
+  });
+
   it.each([
-    [
-      'verified',
-      () => m.itemVerification_verifiedLabel(),
-      () => m.itemVerification_verifiedLabel(),
-    ],
     [
       'pending',
       () => m.itemVerification_pendingLabel(),
@@ -159,6 +196,11 @@ describe('ItemVerificationTick', () => {
       'revoked',
       () => m.itemVerification_revokedLabel(),
       () => m.itemVerification_revokedLabel(),
+    ],
+    [
+      'rejected',
+      () => m.itemVerification_rejectedLabel(),
+      () => m.itemVerification_rejectedLabel(),
     ],
   ] as const)(
     'a %s item names its status and opens it, with Close only',
@@ -176,7 +218,7 @@ describe('ItemVerificationTick', () => {
           item: 'Acme',
         }),
       });
-      expect(tick).toHaveAttribute('title', label());
+      expect(tick.textContent).toBe(label());
 
       fireEvent.click(tick);
       const dialog = await screen.findByRole('dialog', { name: 'Acme' });
@@ -192,30 +234,6 @@ describe('ItemVerificationTick', () => {
       expect(actions.requestReview).not.toHaveBeenCalled();
     },
   );
-
-  it('shows the domain a verified item was checked at', async () => {
-    await mount(
-      <ItemVerificationTick
-        item={{
-          ...emailItem,
-          verification: { ...row('verified'), verifiedDomain: 'acme.com' },
-        }}
-        actions={emailActions()}
-      />,
-    );
-    const label = m.itemVerification_verifiedDomainLabel({
-      domain: 'acme.com',
-    });
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.itemVerification_statusAriaLabel({
-          status: label,
-          item: 'Acme',
-        }),
-      }),
-    );
-    expect(await screen.findByRole('dialog')).toHaveTextContent(label);
-  });
 
   it('checks the work email in a dialog: address, code, verified', async () => {
     const actions = emailActions({
@@ -264,8 +282,10 @@ describe('ItemVerificationTick', () => {
     // A wrong code clears the input for the next try.
     expect(code).toHaveValue('');
 
+    // The sent code refreshes the list, so a reopen resumes at the code.
+    expect(router.invalidate).toHaveBeenCalledTimes(1);
     fireEvent.change(code, { target: { value: '654321' } });
-    await waitFor(() => expect(router.invalidate).toHaveBeenCalled());
+    await waitFor(() => expect(router.invalidate).toHaveBeenCalledTimes(2));
     expect(actions.confirmEmailCode).toHaveBeenLastCalledWith(
       'experience:exp1',
       '654321',
@@ -483,6 +503,175 @@ describe('ItemVerificationTick', () => {
   });
 });
 
+describe('the step the API says', () => {
+  function next(
+    status: ItemVerification['status'],
+    nextStep: ItemVerificationRow['nextStep'],
+    emailCheck: ItemVerificationRow['emailCheck'] = null,
+  ): ItemVerificationRow {
+    return { ...row(status), nextStep, emailCheck };
+  }
+
+  it('a nextStep decides whether the badge says "Verify"', async () => {
+    await mount(
+      <>
+        <ItemVerificationTick
+          item={{ ...emailItem, verification: next('needs_info', 'none') }}
+          actions={emailActions()}
+        />
+        <ItemVerificationTick
+          item={{
+            ...emailItem,
+            label: 'Globex',
+            verification: next('rejected', 'team'),
+          }}
+          actions={emailActions()}
+        />
+      </>,
+    );
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_statusAriaLabel({
+          status: m.itemVerification_needsInfoLabel(),
+          item: 'Acme',
+        }),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: verifyName('Globex') }),
+    ).toHaveTextContent(m.itemVerification_verifyLabel());
+  });
+
+  it('resumes an emailed code: resend asks for the address again', async () => {
+    const actions = emailActions();
+    await mount(
+      <ItemVerificationTick
+        item={{
+          ...emailItem,
+          emailDomain: 'acme.com',
+          verification: next('unverified', 'email', {
+            domain: 'acme.com',
+            codeExpiresAt: new Date(Date.now() + 600_000).toISOString(),
+            resendAvailableAt: new Date(Date.now() - 1000).toISOString(),
+          }),
+        }}
+        actions={actions}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      screen.getByText(
+        m.itemVerification_codeIntroDomain({ domain: 'acme.com' }),
+        { exact: false },
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(m.itemVerification_codeLabel()),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_resendLabel() }),
+    );
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toBeInTheDocument();
+    expect(actions.startEmailCheck).not.toHaveBeenCalled();
+  });
+
+  it('waits for the resend time the API gives', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{
+          ...emailItem,
+          verification: next('unverified', 'email', {
+            domain: 'acme.com',
+            codeExpiresAt: new Date(Date.now() + 600_000).toISOString(),
+            resendAvailableAt: new Date(Date.now() + 30_500).toISOString(),
+          }),
+        }}
+        actions={emailActions()}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      screen.getByRole('button', {
+        name: m.itemVerification_resendInLabel({ seconds: 31 }),
+      }),
+    ).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_changeEmailLabel(),
+      }),
+    );
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toBeInTheDocument();
+  });
+
+  it('goes straight to the board team when the API refuses email', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{ ...emailItem, verification: next('changed', 'team') }}
+        actions={emailActions()}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      screen.getByRole('button', { name: m.itemVerification_askBoardLabel() }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(m.itemVerification_emailLabel()),
+    ).not.toBeInTheDocument();
+  });
+
+  it('asks for the email when the API allows it, whatever the status', async () => {
+    await mount(
+      <ItemVerificationTick
+        item={{ ...emailItem, verification: next('needs_info', 'email') }}
+        actions={emailActions()}
+      />,
+    );
+
+    await openDialog();
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps a code sent from this page across close and reopen', async () => {
+    const actions = emailActions();
+    await mount(<ItemVerificationTick item={emailItem} actions={actions} />);
+
+    await openDialog();
+    await sendCodeTo('ada@acme.com');
+    await screen.findByLabelText(m.itemVerification_codeLabel());
+    fireEvent.click(
+      screen.getByRole('button', { name: m.itemVerification_cancelLabel() }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
+    await openDialog();
+    expect(
+      screen.getByText(
+        m.itemVerification_codeIntro({ email: 'ada@acme.com' }),
+        { exact: false },
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_changeEmailLabel(),
+      }),
+    );
+    expect(
+      await screen.findByLabelText(m.itemVerification_emailLabel()),
+    ).toHaveValue('ada@acme.com');
+  });
+});
+
 describe('ItemVerificationCard', () => {
   it('renders nothing when the board verifies no item', async () => {
     await mount(<ItemVerificationCard items={[]} />);
@@ -491,7 +680,7 @@ describe('ItemVerificationCard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('puts a tick after each item', async () => {
+  it('puts an indicator on each item', async () => {
     await mount(
       <ItemVerificationCard
         items={[emailItem]}

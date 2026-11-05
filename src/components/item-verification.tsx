@@ -15,7 +15,7 @@ import {
   canRequestVerification,
   type VerifiableItem,
 } from '@/board/item-verification';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -24,7 +24,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
-import { cn } from '@/lib/utils';
 import type { ItemVerification } from '@cavuno/board';
 
 type Failure = { ok: false; code: string; retryAfterSeconds?: number };
@@ -33,6 +32,12 @@ type Result<T> = { ok: true; data: T } | Failure;
 // The verification dialog (the email check, its one-time code input, and
 // the request to the board team) loads when the worker opens it, so the
 // profile pages do not carry it up front.
+
+const VerifiedTickTooltip = lazy(() =>
+  import('./item-verification-verified-tick').then((module) => ({
+    default: module.VerifiedTickTooltip,
+  })),
+);
 
 const VerificationDialog = lazy(() =>
   import('./item-verification-dialog').then((module) => ({
@@ -104,33 +109,42 @@ export function itemVerificationStatusLabel(
   }
 }
 
-/** How the tick looks: verified, with the board team, or not verified. */
-export type TickTone = 'verified' | 'review' | 'none';
-
-export function tickTone(
-  verification: Pick<ItemVerification, 'status'> | null,
-): TickTone {
-  switch (verification?.status) {
-    case 'verified':
-      return 'verified';
-    case 'pending':
-    case 'needs_info':
-      return 'review';
-    default:
-      return 'none';
+/** What the verified tick's tooltip says: how the item was verified. */
+function verifiedTooltip(item: VerifiableItem): string {
+  if (item.verification?.verifiedDomain) {
+    if (item.itemKey.startsWith('experience:'))
+      return m.itemVerification_verifiedWorkEmailTooltip();
+    if (item.itemKey.startsWith('education:'))
+      return m.itemVerification_verifiedSchoolEmailTooltip();
   }
+  return m.itemVerification_verifiedLabel();
 }
 
-const TICK_ICON_CLASS = {
-  verified: 'fill-primary text-primary-foreground',
-  review: 'text-primary',
-  none: 'text-muted-foreground opacity-60',
-} satisfies Record<TickTone, string>;
+/** The filled verified tick, named by how the item was verified. */
+function verifiedTick(item: VerifiableItem, tooltip: string) {
+  return (
+    <span
+      className="inline-flex"
+      tabIndex={0}
+      role="img"
+      aria-label={m.itemVerification_statusAriaLabel({
+        status: tooltip,
+        item: item.label,
+      })}
+      data-test="item-verification-tick"
+    >
+      <BadgeCheck
+        aria-hidden
+        className="fill-verified text-verified-foreground size-4"
+      />
+    </span>
+  );
+}
 
 /**
- * The verification tick after an item's name. Its look follows the status.
- * It always opens the verification dialog: the steps while the worker may
- * ask, otherwise the status.
+ * The verification indicator beside an item's title. While the worker may
+ * ask, a "Verify" badge; otherwise the status, which opens the dialog. Once
+ * verified, a filled tick with a tooltip saying how, and nothing to open.
  */
 export function ItemVerificationTick({
   item,
@@ -142,43 +156,52 @@ export function ItemVerificationTick({
   const [open, setOpen] = useState(false);
   // Stays mounted after the first open so closing keeps its exit animation.
   const [dialogLoaded, setDialogLoaded] = useState(false);
-  const tick = useRef<HTMLElement | null>(null);
+  const trigger = useRef<HTMLElement | null>(null);
+
+  const verified = item.verification?.status === 'verified';
   const actionable = canRequestVerification(item.verification);
-  const tone = tickTone(item.verification);
   const statusLabel = actionable
     ? null
     : itemVerificationStatusLabel(item.verification);
-  const name = statusLabel
-    ? m.itemVerification_statusAriaLabel({
-        status: statusLabel,
-        item: item.label,
-      })
-    : m.itemVerification_actionAriaLabel({ item: item.label });
+  const tooltip = verified ? verifiedTooltip(item) : null;
 
   return (
     <>
-      <Button
-        ref={(element: HTMLElement | null) => {
-          tick.current = element;
-        }}
-        type="button"
-        variant="ghost"
-        size="icon-xs"
-        className="-my-1 align-middle"
-        aria-label={name}
-        title={statusLabel ?? m.itemVerification_verifyLabel()}
-        data-test="item-verification-tick"
-        data-tone={tone}
-        onClick={() => {
-          setDialogLoaded(true);
-          setOpen(true);
-        }}
-      >
-        <BadgeCheck
-          aria-hidden
-          className={cn('size-4', TICK_ICON_CLASS[tone])}
-        />
-      </Button>
+      {tooltip ? (
+        <Suspense fallback={verifiedTick(item, tooltip)}>
+          <VerifiedTickTooltip
+            tick={verifiedTick(item, tooltip)}
+            text={tooltip}
+          />
+        </Suspense>
+      ) : (
+        <Badge
+          variant={statusLabel ? 'secondary' : 'outline'}
+          render={
+            <button
+              ref={(element: HTMLElement | null) => {
+                trigger.current = element;
+              }}
+              type="button"
+              aria-label={
+                statusLabel
+                  ? m.itemVerification_statusAriaLabel({
+                      status: statusLabel,
+                      item: item.label,
+                    })
+                  : m.itemVerification_actionAriaLabel({ item: item.label })
+              }
+              data-test="item-verification-tick"
+              onClick={() => {
+                setDialogLoaded(true);
+                setOpen(true);
+              }}
+            />
+          }
+        >
+          {statusLabel ?? m.itemVerification_verifyLabel()}
+        </Badge>
+      )}
       {dialogLoaded ? (
         <Suspense fallback={null}>
           <VerificationDialog
@@ -186,7 +209,7 @@ export function ItemVerificationTick({
             actions={actions}
             open={open}
             onOpenChange={setOpen}
-            finalFocus={tick}
+            finalFocus={trigger}
           />
         </Suspense>
       ) : null}
@@ -195,7 +218,7 @@ export function ItemVerificationTick({
 }
 
 /**
- * The collection items a board verifies, each with its tick.
+ * The collection items a board verifies, each with its indicator.
  * Renders nothing when the board verifies none of the stored selections.
  */
 export function ItemVerificationCard({
@@ -224,7 +247,7 @@ export function ItemVerificationCard({
               render={<li />}
             >
               <ItemContent>
-                <ItemTitle className="gap-1">
+                <ItemTitle className="flex-wrap gap-1.5">
                   {item.label}
                   <ItemVerificationTick item={item} actions={actions} />
                 </ItemTitle>

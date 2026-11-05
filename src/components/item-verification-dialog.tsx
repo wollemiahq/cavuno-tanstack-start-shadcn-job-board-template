@@ -17,8 +17,9 @@ import {
 } from './item-verification';
 
 import {
-  canCheckByEmail,
   canRequestVerification,
+  checksByEmail,
+  type ItemVerificationRow,
   type VerifiableItem,
 } from '@/board/item-verification';
 import { Badge } from '@/components/ui/badge';
@@ -103,7 +104,9 @@ function teamReason(item: VerifiableItem, emailCheckable: boolean): string {
 
 type CodeStep = {
   step: 'code';
-  email: string;
+  /** Null when resumed from the API, which returns only the domain. */
+  email: string | null;
+  domain: string;
   sent: boolean;
   /** When "Resend code" is available again (epoch ms). */
   resendAt: number;
@@ -118,6 +121,29 @@ type Step =
   | { step: 'team' }
   /** The board team already handles or decided this item. */
   | { step: 'conflict' };
+
+/**
+ * The step the API says the item is at: the code step while an emailed code
+ * can still be typed, the board team when only asking it is allowed, else
+ * the email form.
+ */
+export function initialStep(
+  verification: ItemVerificationRow | null,
+): { step: 'email' } | CodeStep | { step: 'team' } {
+  const check = verification?.emailCheck;
+  if (check) {
+    return {
+      step: 'code',
+      email: null,
+      domain: check.domain,
+      sent: true,
+      resendAt: Date.parse(check.resendAvailableAt),
+      expiresAt: Date.parse(check.codeExpiresAt),
+    };
+  }
+  if (verification?.nextStep === 'team') return { step: 'team' };
+  return { step: 'email' };
+}
 
 /** What the status view says for an item the worker can't act on. */
 function statusText(item: VerifiableItem): string {
@@ -164,7 +190,9 @@ export function ItemVerificationDialog({
   finalFocus: RefObject<HTMLElement | null>;
 }) {
   const router = useRouter();
-  const [state, setState] = useState<Step>({ step: 'email' });
+  const [state, setState] = useState<Step>(() =>
+    initialStep(item.verification),
+  );
   const [address, setAddress] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -178,13 +206,18 @@ export function ItemVerificationDialog({
   const idPrefix = `verify-${item.itemKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const domain = item.emailDomain ?? null;
 
-  // Each open starts over from the first step.
+  // Each open resumes where the API says the item is, or keeps a code
+  // sent from this page while the API still has it. The typed address stays.
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setState({ step: 'email' });
-      setAddress('');
+      const keep =
+        state.step === 'code' &&
+        state.email !== null &&
+        (!item.verification?.nextStep || item.verification.emailCheck);
+      if (!keep) setState(initialStep(item.verification));
+      setNow(Date.now());
       setCode('');
       setError(null);
     }
@@ -194,10 +227,7 @@ export function ItemVerificationDialog({
   // Re-derived each render: an edit that removes the website moves an open
   // dialog to the board team; a status the worker can't act on shows it.
   const emailCheck =
-    item.method === 'email_domain' &&
-    canCheckByEmail(item.verification) &&
-    startEmailCheck &&
-    confirmEmailCode
+    checksByEmail(item) && startEmailCheck && confirmEmailCode
       ? { startEmailCheck, confirmEmailCode }
       : null;
   const view =
@@ -246,12 +276,15 @@ export function ItemVerificationDialog({
         setState({
           step: 'code',
           email: to,
+          domain: result.data.emailDomain,
           sent: result.data.sent,
           resendAt: sentAt + (result.data.retryAfterSeconds ?? 60) * 1000,
           expiresAt: result.data.codeExpiresAt
             ? Date.parse(result.data.codeExpiresAt)
             : null,
         });
+        // Reopening, or reloading, then resumes at the code.
+        void refresh();
       } else if (result.code === NO_DOMAIN) {
         setState({ step: 'team' });
       } else if (result.code === CONFLICT) {
@@ -488,7 +521,11 @@ export function ItemVerificationDialog({
           item={item}
           statusLabel={statusLabel}
           negative={negative}
-          description={`${m.itemVerification_codeIntro({ email: state.email })} ${
+          description={`${
+            state.email
+              ? m.itemVerification_codeIntro({ email: state.email })
+              : m.itemVerification_codeIntroDomain({ domain: state.domain })
+          } ${
             state.sent
               ? m.itemVerification_linkHint()
               : m.itemVerification_alreadySentHint()
@@ -567,7 +604,14 @@ export function ItemVerificationDialog({
             variant="ghost"
             size="sm"
             disabled={pending || resendIn > 0}
-            onClick={() => void send(state.email)}
+            onClick={() => {
+              // A resumed code names only the domain: ask for the address.
+              if (state.email) void send(state.email);
+              else {
+                setError(null);
+                setState({ step: 'email' });
+              }
+            }}
           >
             {resendIn > 0
               ? m.itemVerification_resendInLabel({ seconds: resendIn })
