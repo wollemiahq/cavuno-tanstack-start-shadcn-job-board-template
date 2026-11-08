@@ -164,4 +164,29 @@ describe('TalentProfileContent', () => {
     ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Experience' })).toBeVisible();
   });
+
+  it('marks verified items with the tick beside the title', () => {
+    render(
+      <TalentProfileContent
+        vm={{
+          ...profileVm,
+          experiences: profileVm.experiences.map((item) => ({
+            ...item,
+            verification: { verifiedDomain: 'analytical.example' },
+          })),
+          education: profileVm.education.map((item) => ({
+            ...item,
+            verification: { verifiedDomain: null },
+          })),
+        }}
+        headingAs="h1"
+      />,
+    );
+
+    const ticks = screen.getAllByRole('img', { name: /Verified/ });
+    expect(ticks).toHaveLength(2);
+    expect(ticks[0]).toHaveAccessibleName(/Verified work email/);
+    expect(ticks[1]).toHaveAccessibleName(/Verified/);
+    expect(screen.queryByRole('button', { name: /Verif/ })).toBeNull();
+  });
 });

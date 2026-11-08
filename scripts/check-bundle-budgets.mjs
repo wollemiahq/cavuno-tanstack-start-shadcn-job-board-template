@@ -224,8 +224,11 @@ const BUDGETS = {
     // The public profile's "Verified" badge on experience and education
     // (#332), with its two labels: measured 113,502 B raw / 43,120 B gzip
     // against main's 112,747 / 42,815 (+755 / +305). Raised by exactly the
-    // measured growth, keeping main's headroom.
-    '/p/$handle': { raw: 114_255, gzip: 43_305 },
+    // measured growth, keeping main's headroom. The badge then became the
+    // verified tick with its tooltip (#337): 114,650 B raw / 43,640 B gzip
+    // against 113,502 / 43,098 before (+1,148 / +542), most of it the list of
+    // files the lazily loaded tooltip fetches on hover. Raised by that growth.
+    '/p/$handle': { raw: 115_403, gzip: 43_847 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

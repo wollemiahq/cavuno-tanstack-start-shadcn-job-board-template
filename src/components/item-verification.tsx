@@ -2,8 +2,6 @@
 
 import { lazy, Suspense, useRef, useState } from 'react';
 
-import { BadgeCheck } from 'lucide-react';
-
 import { m } from '../paraglide/messages';
 import {
   confirmProfileItemEmailCode,
@@ -24,6 +22,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
+import { VerifiedTick, verifiedTooltipText } from '@/components/verified-tick';
 import type { ItemVerification } from '@cavuno/board';
 
 type Failure = { ok: false; code: string; retryAfterSeconds?: number };
@@ -32,12 +31,6 @@ type Result<T> = { ok: true; data: T } | Failure;
 // The verification dialog (the email check, its one-time code input, and
 // the request to the board team) loads when the worker opens it, so the
 // profile pages do not carry it up front.
-
-const VerifiedTickTooltip = lazy(() =>
-  import('./item-verification-verified-tick').then((module) => ({
-    default: module.VerifiedTickTooltip,
-  })),
-);
 
 const VerificationDialog = lazy(() =>
   import('./item-verification-dialog').then((module) => ({
@@ -109,36 +102,14 @@ export function itemVerificationStatusLabel(
   }
 }
 
-/** What the verified tick's tooltip says: how the item was verified. */
+/** How the item was verified, for the tick's tooltip. */
 function verifiedTooltip(item: VerifiableItem): string {
-  if (item.verification?.verifiedDomain) {
-    if (item.itemKey.startsWith('experience:'))
-      return m.itemVerification_verifiedWorkEmailTooltip();
-    if (item.itemKey.startsWith('education:'))
-      return m.itemVerification_verifiedSchoolEmailTooltip();
-  }
-  return m.itemVerification_verifiedLabel();
-}
-
-/** The filled verified tick, named by how the item was verified. */
-function verifiedTick(item: VerifiableItem, tooltip: string) {
-  return (
-    <span
-      className="inline-flex"
-      tabIndex={0}
-      role="img"
-      aria-label={m.itemVerification_statusAriaLabel({
-        status: tooltip,
-        item: item.label,
-      })}
-      data-test="item-verification-tick"
-    >
-      <BadgeCheck
-        aria-hidden
-        className="fill-verified text-verified-foreground size-4"
-      />
-    </span>
-  );
+  const kind = item.itemKey.startsWith('experience:')
+    ? 'experience'
+    : item.itemKey.startsWith('education:')
+      ? 'education'
+      : 'other';
+  return verifiedTooltipText(kind, item.verification?.verifiedDomain);
 }
 
 /**
@@ -168,12 +139,13 @@ export function ItemVerificationTick({
   return (
     <>
       {tooltip ? (
-        <Suspense fallback={verifiedTick(item, tooltip)}>
-          <VerifiedTickTooltip
-            tick={verifiedTick(item, tooltip)}
-            text={tooltip}
-          />
-        </Suspense>
+        <VerifiedTick
+          label={m.itemVerification_statusAriaLabel({
+            status: tooltip,
+            item: item.label,
+          })}
+          tooltip={tooltip}
+        />
       ) : (
         <Badge
           variant={statusLabel ? 'secondary' : 'outline'}
