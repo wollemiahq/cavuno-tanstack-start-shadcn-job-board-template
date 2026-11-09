@@ -1,10 +1,10 @@
 import { blogPostPath } from '@cavuno/board/paths';
-import { createFileRoute, getRouteApi, redirect } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getBoardContext } from '../server/queries';
-import { loadIfBlogEnabled } from './-blog-enabled';
+import { getBoardContext, resolveRedirect } from '../server/queries';
+import { createBlogPostLoader } from './-blog-post-loader';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
@@ -20,24 +20,11 @@ export const Route = createFileRoute('/blog/$postSlug')({
   pendingComponent: () => (
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
-  loader: async ({ params }) => {
-    const page = await loadIfBlogEnabled(
-      async () => (await getBoardContext()).features.blog === true,
-      () => getBlogPostPage({ data: { postSlug: params.postSlug } }),
-    );
-    const { post } = page;
-    const target =
-      (post.redirected ? post.newSlug : null) ??
-      (post.slug !== params.postSlug ? post.slug : null);
-    if (target && target !== params.postSlug) {
-      throw redirect({
-        to: '/blog/$postSlug',
-        params: { postSlug: target },
-        statusCode: 308,
-      });
-    }
-    return page;
-  },
+  loader: createBlogPostLoader({
+    getBoardContext,
+    getBlogPostPage,
+    resolveRedirect,
+  }),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
