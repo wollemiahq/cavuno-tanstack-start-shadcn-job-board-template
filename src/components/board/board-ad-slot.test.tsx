@@ -112,6 +112,24 @@ describe('BoardAdSlot', () => {
     expectNoRequest();
   });
 
+  it('does not load ads for a crawler and collapses the slot', async () => {
+    const userAgent = vi
+      .spyOn(window.navigator, 'userAgent', 'get')
+      .mockReturnValue(
+        'Mozilla/5.0 (compatible; Baiduspider-render/2.0; +http://www.baidu.com/search/spider.html)',
+      );
+    const onStatusChange = vi.fn();
+    const { container } = render(
+      <BoardAdSlot ads={ads} onStatusChange={onStatusChange} />,
+    );
+    await waitFor(() =>
+      expect(onStatusChange).toHaveBeenCalledWith('unfilled'),
+    );
+    expect(container.querySelector('[data-ad-placement]')).not.toBeVisible();
+    expectNoRequest();
+    userAgent.mockRestore();
+  });
+
   it('does not request a unit when no slot is configured', () => {
     const { container } = render(
       <BoardAdSlot ads={{ ...ads, defaultSlotId: null }} />,
