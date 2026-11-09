@@ -93,7 +93,12 @@ const BUDGETS = {
   // gzip against main's 690,160 / 219,976 (+9,224 raw / +2,737 gzip). The
   // operator approved up to +2.7 KiB gzip for #316; both budgets are raised
   // by exactly the measured growth, keeping main's headroom.
-  shell: { raw: 703_224, gzip: 231_637 },
+  // The MCP setup page (/mcp/docs: its route entry, route template and the
+  // footer link) measured 703,504 B raw against the 703,224 budget, which
+  // main had ~0.4 KiB of headroom left on (686.3 KiB); gzip stayed inside
+  // (218.8 of 226.2 KiB). Accepted by the operator on 2026-11-09; raw
+  // rebaselined with ~4 KB headroom.
+  shell: { raw: 707_600, gzip: 231_637 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
