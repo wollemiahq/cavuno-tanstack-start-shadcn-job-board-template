@@ -17,21 +17,31 @@ import type { resolveRedirect } from '../server/queries';
  * pass through untouched.
  */
 export function createCatchAllLoader(resolve: typeof resolveRedirect) {
-  return async ({ params }: { params: { _splat?: string } }) => {
-    const path = `/${params._splat ?? ''}`;
-    let target: string | null;
-    try {
-      ({ target } = await resolve({ data: { path } }));
-    } catch (error) {
-      if (isBoardApiError(error) && error.status === 403) {
-        throw notFound();
-      }
-      throw error;
+  return ({ params }: { params: { _splat?: string } }) =>
+    followManagedRedirect(resolve, `/${params._splat ?? ''}`);
+}
+
+/**
+ * 308 to the board's configured redirect for `path`, else 404. Shared by the
+ * catch-all and by routes whose own lookup missed (a retired blog post), so
+ * every managed redirect gets the same refusal and failure handling.
+ */
+export async function followManagedRedirect(
+  resolve: typeof resolveRedirect,
+  path: string,
+): Promise<never> {
+  let target: string | null;
+  try {
+    ({ target } = await resolve({ data: { path } }));
+  } catch (error) {
+    if (isBoardApiError(error) && error.status === 403) {
+      throw notFound();
     }
-    if (target) {
-      // 308 permanent — matches the hosted `permanentRedirect(target)`.
-      throw redirect({ href: target, statusCode: 308 });
-    }
-    throw notFound();
-  };
+    throw error;
+  }
+  if (target) {
+    // 308 permanent — matches the hosted `permanentRedirect(target)`.
+    throw redirect({ href: target, statusCode: 308 });
+  }
+  throw notFound();
 }
