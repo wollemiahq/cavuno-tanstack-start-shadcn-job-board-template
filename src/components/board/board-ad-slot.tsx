@@ -116,7 +116,11 @@ function AdUnit({
     });
     if (!requested.current) {
       requested.current = true;
-      ensureAdSenseScript(clientId);
+      if (!ensureAdSenseScript(clientId)) {
+        setStatus('unfilled');
+        callback.current?.('unfilled');
+        return () => observer.disconnect();
+      }
       // SAFETY: AdSense owns this optional global queue; we initialize it before use.
       const adsWindow = window as Window & { adsbygoogle?: unknown[] };
       adsWindow.adsbygoogle = adsWindow.adsbygoogle ?? [];
