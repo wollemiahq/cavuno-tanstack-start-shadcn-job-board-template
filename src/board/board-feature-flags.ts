@@ -112,3 +112,15 @@ export function readContactPageFlag(
   const parity = features as BoardContextFeatures & { contactPage?: boolean };
   return parity.contactPage ?? null;
 }
+
+/**
+ * `features.mcp`: whether the board serves its public MCP server at
+ * `/mcp`, so the footer links its setup page and `/mcp/docs` renders.
+ * Absent (an API that predates the field) reads as off.
+ */
+export function readMcpServerFlag(features: BoardContextFeatures): boolean {
+  // SAFETY: additive wire field, typed by @cavuno/board from 4.65.0; the
+  // pinned SDK does not declare it yet.
+  const parity = features as BoardContextFeatures & { mcp?: boolean };
+  return parity.mcp === true;
+}

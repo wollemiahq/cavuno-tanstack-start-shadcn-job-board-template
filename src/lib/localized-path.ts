@@ -68,6 +68,9 @@ export const MACHINE_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
   '_serverFn',
   'go',
   '.well-known',
+  // The board's MCP server and its setup page (`/mcp`, `/mcp/docs`): the
+  // URL assistants and directory listings are given.
+  'mcp',
   'embed',
   'p',
   'apply',

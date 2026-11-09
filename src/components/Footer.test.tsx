@@ -41,7 +41,11 @@ function renderFooter(
   membership: Partial<
     Pick<
       React.ComponentProps<typeof Footer>,
-      'hasMembershipPage' | 'viewerRole' | 'impressumAvailable' | 'hasTipPage'
+      | 'hasMembershipPage'
+      | 'viewerRole'
+      | 'impressumAvailable'
+      | 'hasTipPage'
+      | 'mcpServerAvailable'
     >
   > = {},
 ) {
@@ -167,6 +171,29 @@ describe('Footer Impressum link', () => {
 
     expect(
       screen.queryByRole('link', { name: m.footer_tipLabel() }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('Footer MCP link', () => {
+  it('links the setup page after Sitemap while the board serves its MCP server', () => {
+    renderFooter(contact, { mcpServerAvailable: true });
+
+    const resources = screen
+      .getByRole('heading', { name: m.footer_resourcesHeading() })
+      .closest('div');
+    const links = [...(resources?.querySelectorAll('a') ?? [])];
+    const last = links[links.length - 1];
+    expect(last).toHaveTextContent(m.footer_mcpLabel());
+    expect(last).toHaveAttribute('href', '/mcp/docs');
+    expect(links[links.length - 2]).toHaveTextContent(m.footer_sitemapLabel());
+  });
+
+  it('hides the link while the board does not serve one', () => {
+    renderFooter(contact);
+
+    expect(
+      screen.queryByRole('link', { name: m.footer_mcpLabel() }),
     ).not.toBeInTheDocument();
   });
 });
