@@ -45,6 +45,22 @@ export function parseCompaniesIndexSearch(
   return { ...parseCompaniesSearch(search), ...parseCustomFieldSearch(search) };
 }
 
+/**
+ * The `/companies` search a header keyword opens. On `/companies` the active
+ * profile-field (`cf.*`) filters carry over; the page and selection reset.
+ */
+export function companiesSearchFromHeader(
+  pathname: string,
+  current: UrlSearchInput,
+  query: string | undefined,
+): CompaniesIndexSearch {
+  if (pathname.replace(/\/+$/, '') !== '/companies') return { query };
+  return {
+    query,
+    ...pickCustomFieldSearch(parseCompaniesIndexSearch(current)),
+  };
+}
+
 /** A pane selection changes history, but never the companies listing request. */
 export function companiesListingLoaderDeps(
   search: CompaniesSearch,
