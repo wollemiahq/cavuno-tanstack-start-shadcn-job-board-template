@@ -264,6 +264,11 @@ export const getBlogPostPage = createServerFn({ method: 'GET' })
             boardName: seo.boardName,
             permalink,
             ogImageUrl: ogImage,
+            // The author page's canonical, so the post's author is the
+            // Person that page's ProfilePage declares.
+            authorProfileUrl: post.authors[0]
+              ? selfUrl(seo.origin, blogAuthorPath(post.authors[0].slug))
+              : null,
           }),
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
