@@ -63,6 +63,7 @@ import { Route as GoSplatRouteImport } from './routes/go.$'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
+import { Route as McpDocsRouteImport } from './routes/mcp.docs'
 import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
 import { Route as MePurchasesRouteImport } from './routes/me.purchases'
@@ -390,6 +391,11 @@ const JobsKeywordRoute = JobsKeywordRouteImport.update({
 const JobsRssDotxmlRoute = JobsRssDotxmlRouteImport.update({
   id: '/jobs/rss.xml',
   path: '/jobs/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpDocsRoute = McpDocsRouteImport.update({
+  id: '/mcp/docs',
+  path: '/mcp/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeAlertsRoute = MeAlertsRouteImport.update({
@@ -752,6 +758,7 @@ export interface FileRoutesByFullPath {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/mcp/docs': typeof McpDocsRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
@@ -865,6 +872,7 @@ export interface FileRoutesByTo {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/mcp/docs': typeof McpDocsRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
@@ -979,6 +987,7 @@ export interface FileRoutesById {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/mcp/docs': typeof McpDocsRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
@@ -1094,6 +1103,7 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/mcp/docs'
     | '/me/alerts'
     | '/me/applications'
     | '/me/purchases'
@@ -1207,6 +1217,7 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/mcp/docs'
     | '/me/alerts'
     | '/me/applications'
     | '/me/purchases'
@@ -1320,6 +1331,7 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/mcp/docs'
     | '/me/alerts'
     | '/me/applications'
     | '/me/purchases'
@@ -1434,6 +1446,7 @@ export interface RootRouteChildren {
   GoSplatRoute: typeof GoSplatRoute
   JobsKeywordRoute: typeof JobsKeywordRoute
   JobsRssDotxmlRoute: typeof JobsRssDotxmlRoute
+  McpDocsRoute: typeof McpDocsRoute
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   MePurchasesRoute: typeof MePurchasesRoute
@@ -1873,6 +1886,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs/rss.xml'
       fullPath: '/jobs/rss.xml'
       preLoaderRoute: typeof JobsRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp/docs': {
+      id: '/mcp/docs'
+      path: '/mcp/docs'
+      fullPath: '/mcp/docs'
+      preLoaderRoute: typeof McpDocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/me/alerts': {
@@ -2366,6 +2386,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoSplatRoute: GoSplatRoute,
   JobsKeywordRoute: JobsKeywordRoute,
   JobsRssDotxmlRoute: JobsRssDotxmlRoute,
+  McpDocsRoute: McpDocsRoute,
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   MePurchasesRoute: MePurchasesRoute,

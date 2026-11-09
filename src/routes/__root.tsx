@@ -218,6 +218,7 @@ function RootLayout() {
     publishableKey,
     contactEnabled,
     impressumAvailable,
+    mcpServerAvailable,
   } = Route.useLoaderData();
 
   // Embed widget: no site chrome, no session island, no BoardAnalyticsBoot
@@ -250,6 +251,7 @@ function RootLayout() {
         publishableKey={publishableKey}
         contactEnabled={contactEnabled}
         impressumAvailable={impressumAvailable}
+        mcpServerAvailable={mcpServerAvailable}
       />
     </RootSessionProvider>
   );
@@ -261,12 +263,14 @@ function RootChrome({
   publishableKey,
   contactEnabled,
   impressumAvailable,
+  mcpServerAvailable,
 }: {
   board: Awaited<ReturnType<typeof getRootShellData>>['board'];
   offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
   publishableKey: string;
   contactEnabled: boolean;
   impressumAvailable: boolean;
+  mcpServerAvailable: boolean;
 }) {
   const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
     useRootSession();
@@ -404,6 +408,7 @@ function RootChrome({
     jobSeekers: m.candidateLanding_title(),
     memberships: m.memberships_title(),
     tip: m.footer_tipLabel(),
+    mcp: m.footer_mcpLabel(),
   };
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
@@ -655,6 +660,7 @@ function RootChrome({
                   footer={board.footer}
                   contactEnabled={contactEnabled}
                   impressumAvailable={impressumAvailable}
+                  mcpServerAvailable={mcpServerAvailable}
                   talentDirectoryVisibility={board.talentDirectoryVisibility}
                   hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
                   hasMembershipPage={offerGate.hasMembershipPage}

@@ -183,6 +183,7 @@ export default function Footer({
   footer,
   contactEnabled,
   impressumAvailable,
+  mcpServerAvailable = false,
   connected = false,
   talentDirectoryVisibility,
   hasEmployerOfferPage,
@@ -222,6 +223,11 @@ export default function Footer({
    * bundle).
    */
   impressumAvailable: boolean;
+  /**
+   * Whether the board serves its public MCP server (`features.mcp`, read by
+   * the root loader), so `/mcp/docs` exists.
+   */
+  mcpServerAvailable?: boolean;
   connected?: boolean;
   /**
    * The tri-state behind `features.talentDirectory` — hosted chrome links
@@ -331,6 +337,11 @@ export default function Footer({
     { href: '/salaries', label: copy.footer.salariesLabel },
     // sitemap.xml is a server route, not a router page → plain anchor
     { href: '/sitemap.xml', label: copy.footer.sitemapLabel, external: true },
+    // /mcp/docs is served for the platform's MCP route, not a router page
+    // on every deployment → plain anchor
+    ...(mcpServerAvailable
+      ? [{ href: '/mcp/docs', label: copy.footer.mcpLabel, external: true }]
+      : []),
   ];
 
   // ── About ──

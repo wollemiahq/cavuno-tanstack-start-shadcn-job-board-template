@@ -89,6 +89,7 @@ describe('public and session shells', () => {
       offerGate: { visible: true },
       contactEnabled: true,
       impressumAvailable: false,
+      mcpServerAvailable: false,
     });
     expect(mocks.me).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();

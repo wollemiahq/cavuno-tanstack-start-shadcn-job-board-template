@@ -4,6 +4,7 @@ import { getRequest } from '@tanstack/react-start/server';
 import {
   failClosedJobRecommendations,
   readContactPageFlag,
+  readMcpServerFlag,
 } from '../board/board-feature-flags';
 import { impressumHasContent } from '../content/legal/impressum-availability';
 import { getBoard } from '../lib/board';
@@ -85,6 +86,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       seo,
       offerGate,
       contactEnabled,
+      mcpServerAvailable: readMcpServerFlag(board.features),
       // Decided here so no client chunk imports legal content: the rule reads
       // every translation file.
       impressumAvailable: impressumHasContent(),
