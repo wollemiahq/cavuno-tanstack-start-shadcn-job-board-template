@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TalentProfileContent } from './talent-profile-content';
 import { profileVm } from './talent-ui-test-fixtures';
 
+import { m } from '@/paraglide/messages';
+
 beforeEach(() => {
   // CompanyAvatar renders the owned Avatar primitive, whose image is
   // load-gated: Base UI only reveals the <img> once the browser reports it
@@ -183,10 +185,10 @@ describe('TalentProfileContent', () => {
       />,
     );
 
-    const ticks = screen.getAllByRole('img', { name: /Verified/ });
-    expect(ticks).toHaveLength(2);
-    expect(ticks[0]).toHaveAccessibleName(/Verified work email/);
-    expect(ticks[1]).toHaveAccessibleName(/Verified/);
-    expect(screen.queryByRole('button', { name: /Verif/ })).toBeNull();
+    const workEmail = m.itemVerification_verifiedWorkEmailTooltip();
+    const verified = m.itemVerification_verifiedLabel();
+    expect(screen.getByRole('img', { name: workEmail })).toBeVisible();
+    expect(screen.getByRole('img', { name: verified })).toBeVisible();
+    expect(screen.queryByRole('button', { name: verified })).toBeNull();
   });
 });
