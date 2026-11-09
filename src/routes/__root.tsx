@@ -408,6 +408,7 @@ function RootChrome({
     jobSeekers: m.candidateLanding_title(),
     memberships: m.memberships_title(),
     tip: m.footer_tipLabel(),
+    mcp: m.footer_mcpLabel(),
   };
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,

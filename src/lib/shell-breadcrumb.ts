@@ -26,6 +26,8 @@ export interface ShellBreadcrumbLabels {
   jobSeekers: string;
   memberships: string;
   tip: string;
+  /** The MCP setup page (`/mcp/docs`), labelled like its footer link. */
+  mcp: string;
 }
 
 export interface ShellBreadcrumbEntities {
@@ -486,6 +488,7 @@ export function resolveShellBreadcrumb({
     'job-seekers': labels.jobSeekers,
     memberships: labels.memberships,
     tip: labels.tip,
+    mcp: labels.mcp,
   }[section];
   items.push({ name: knownPage ?? readableSegment(section) });
   return finish(items);

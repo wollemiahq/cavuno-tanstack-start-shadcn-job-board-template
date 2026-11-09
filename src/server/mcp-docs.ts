@@ -5,7 +5,9 @@ import { createServerFn } from '@tanstack/react-start';
 import { readMcpServerFlag } from '../board/board-feature-flags';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
+import { getServerEnv } from '../lib/env';
 import { readPublicOrigin } from '../lib/public-origin';
+import { createSettledCache } from '../lib/settled-cache';
 import { m } from '../paraglide/messages';
 import { gatedRead } from './board-access';
 
@@ -28,6 +30,79 @@ export function mcpServerKey(boardName: string): string {
   );
 }
 
+/** One tool the board's MCP server serves, as its `tools/list` describes it. */
+export interface McpDocsTool {
+  name: string;
+  description: string;
+}
+
+const MCP_TOOLS_TTL_MS = 10 * 60_000;
+const mcpTools = createSettledCache<string, McpDocsTool[]>({
+  ttlMs: MCP_TOOLS_TTL_MS,
+  maxEntries: 4,
+});
+
+/**
+ * The `tools/list` result out of a Streamable HTTP reply, which the server
+ * sends either as JSON or as one server-sent `message` event.
+ */
+export function parseMcpToolsList(body: string): McpDocsTool[] {
+  const json = body.trimStart().startsWith('{')
+    ? body
+    : body
+        .split('\n')
+        .filter((line) => line.startsWith('data:'))
+        .map((line) => line.slice('data:'.length).trim())
+        .join('');
+  // SAFETY: the Board API's MCP server answers tools/list with the MCP
+  // spec's result shape: every tool has a string `name` and an optional
+  // string `description`.
+  const reply = JSON.parse(json) as {
+    result?: { tools?: Array<{ name: string; description?: string }> };
+  };
+  const tools = reply.result?.tools;
+  if (!tools) throw new Error('MCP tools/list reply has no tools');
+  return tools.map((tool) => ({
+    name: tool.name,
+    description: tool.description ?? '',
+  }));
+}
+
+/**
+ * The tools the board's own MCP server lists, so the page names exactly
+ * what an assistant gets (the salary tools only when the board shows
+ * salaries). A failed read serves the last good list; with none, it throws.
+ */
+async function readMcpTools(): Promise<McpDocsTool[]> {
+  const { apiUrl, board } = getServerEnv();
+  const cached = mcpTools.get(board);
+  if (cached) return cached;
+  const readAt = Date.now();
+  try {
+    const response = await fetch(
+      `${apiUrl.replace(/\/+$/, '')}/v1/boards/${encodeURIComponent(board)}/mcp`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`MCP tools/list answered ${response.status}`);
+    }
+    const tools = parseMcpToolsList(await response.text());
+    mcpTools.set(board, tools, readAt);
+    return tools;
+  } catch (error) {
+    const stale = mcpTools.getStale(board);
+    if (stale) return stale;
+    throw error;
+  }
+}
+
 /**
  * `/mcp/docs`: how to add the board's MCP server to an AI assistant. The
  * server itself answers at `/mcp` on the board's canonical origin; this page
@@ -47,6 +122,7 @@ export const getMcpDocsView = createServerFn({ method: 'GET' })
       const title = m.mcpDocs_title({ boardName });
       const description = m.mcpDocs_description({ boardName });
       const url = selfUrl(origin, '/mcp/docs');
+      const tools = await readMcpTools();
 
       return {
         boardName,
@@ -62,7 +138,7 @@ export const getMcpDocsView = createServerFn({ method: 'GET' })
           null,
           2,
         ),
-        salaryTools: boardContext.jobForm.salary.visible,
+        tools,
         head: {
           meta: [{ title }, { name: 'description', content: description }],
           links: [{ rel: 'canonical', href: url }],
