@@ -72,6 +72,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { companiesSearchFromHeader } from '@/lib/companies-search';
 import { cookieConsentDecidedScript } from '@/lib/cookie-consent';
 import {
   resolveHeaderRouteLabels,
@@ -79,7 +80,10 @@ import {
   type HeaderSearchScope,
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
-import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
+import {
+  jobsFiltersFromHeader,
+  resolveJobsSearchTarget,
+} from '@/lib/jobs-search-target';
 import type { UrlSearchInput } from '@/lib/pagination';
 import { googleSiteVerificationMeta } from '@/lib/seo-handlers';
 import {
@@ -456,7 +460,15 @@ function RootChrome({
         return;
       }
 
-      void navigate({ to: '/companies', search: { query } });
+      void navigate({
+        to: '/companies',
+        search: companiesSearchFromHeader(
+          location.pathname,
+          // SAFETY: the current route's search is URL-serializable input.
+          location.search as UrlSearchInput,
+          query,
+        ),
+      });
       return;
     }
 
@@ -503,6 +515,11 @@ function RootChrome({
         query,
         location: selectedLocation,
         term,
+        filters: jobsFiltersFromHeader(
+          location.pathname,
+          // SAFETY: the current route's search is URL-serializable input.
+          location.search as UrlSearchInput,
+        ),
       }),
     );
   }

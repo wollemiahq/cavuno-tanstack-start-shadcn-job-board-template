@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveJobsSearchTarget } from './jobs-search-target';
+import {
+  jobsFiltersFromHeader,
+  resolveJobsSearchTarget,
+} from './jobs-search-target';
 
 const london = { slug: 'london', name: 'London' };
 const react = { type: 'skill' as const, slug: 'react', name: 'React' };
@@ -144,5 +147,68 @@ describe('resolveJobsSearchTarget', () => {
       to: '/jobs',
       search: { q: 'designer', remoteOption: 'hybrid' },
     });
+  });
+});
+
+describe('header search from a filtered jobs listing', () => {
+  const entryLevelJobs = {
+    seniority: ['entry_level'],
+    remoteOption: 'hybrid',
+    'cf.visa_sponsorship': true,
+    page: '3',
+    selectedJob: 'technician-1',
+  };
+
+  it('keeps the listing filters when a location is added', () => {
+    expect(
+      resolveJobsSearchTarget({
+        query: undefined,
+        location: london,
+        term: null,
+        filters: jobsFiltersFromHeader('/jobs', entryLevelJobs),
+      }),
+    ).toEqual({
+      to: '/jobs/locations/$location',
+      params: { location: 'london' },
+      search: {
+        q: undefined,
+        seniority: ['entry_level'],
+        remoteOption: 'hybrid',
+      },
+    });
+  });
+
+  it('keeps job custom-field filters only on the plain /jobs target', () => {
+    expect(
+      resolveJobsSearchTarget({
+        query: 'technician',
+        location: null,
+        term: null,
+        filters: jobsFiltersFromHeader('/jobs', entryLevelJobs),
+      }),
+    ).toEqual({
+      to: '/jobs',
+      search: {
+        q: 'technician',
+        seniority: ['entry_level'],
+        remoteOption: 'hybrid',
+        'cf.visa_sponsorship': true,
+      },
+    });
+  });
+
+  it('keeps the filters of a programmatic jobs listing', () => {
+    expect(
+      jobsFiltersFromHeader('/jobs/locations/london', {
+        seniority: ['entry_level'],
+        within: '25',
+      }),
+    ).toEqual({ seniority: ['entry_level'] });
+  });
+
+  it('carries nothing over from a page that is not a jobs listing', () => {
+    expect(jobsFiltersFromHeader('/', entryLevelJobs)).toEqual({});
+    expect(jobsFiltersFromHeader('/talent', entryLevelJobs)).toEqual({});
+    expect(jobsFiltersFromHeader('/jobsearch', entryLevelJobs)).toEqual({});
   });
 });
