@@ -74,8 +74,6 @@ describe('disabled locale redirect path', () => {
     expect(
       disabledLocaleRedirectPath('/en/\t/evil.example', DUTCH_BOARD),
     ).toBeNull();
-    expect(
-      disabledLocaleRedirectPath('/en/x\\y', DUTCH_BOARD),
-    ).toBeNull();
+    expect(disabledLocaleRedirectPath('/en/x\\y', DUTCH_BOARD)).toBeNull();
   });
 });
