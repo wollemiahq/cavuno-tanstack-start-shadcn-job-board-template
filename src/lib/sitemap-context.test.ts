@@ -7,6 +7,7 @@ import {
 } from '@cavuno/board/sitemap';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { boardGlobalReadCache } from './read-cache';
 import {
   buildSitemapContext,
   findSitemapChunk,
@@ -23,6 +24,19 @@ vi.mock('../content/legal/impressum-availability', () => ({
 }));
 
 const ORIGIN = 'https://jobs.example';
+
+function plansBoard(plans: { purpose: string; kind: string }[]) {
+  const list = vi.fn(async () => ({
+    object: 'list' as const,
+    data: plans,
+    hasMore: false,
+  }));
+  // SAFETY: Plan-sitemap fake — only `plans.list()` is assigned onto the
+  // empty-board stub, and only `purpose` and `kind` are read from each plan;
+  // the source fakes own the buckets.
+  const fake: BoardSdk = Object.assign({} as BoardSdk, { plans: { list } });
+  return { fake, list };
+}
 
 /**
  * `board.sitemap` fake for an API that predates the published-sitemap routes:
@@ -105,14 +119,13 @@ describe('hosted-shaped sitemap context', () => {
     expect(findSitemapChunk(context, 'jobs-details', 2)).toHaveLength(1);
     expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
       { url: `${ORIGIN}/marketing` },
-      { url: `${ORIGIN}/job-seekers` },
       { url: `${ORIGIN}/pricing` },
     ]);
   });
 
   it('does not duplicate local marketing pages already supplied by the SDK', async () => {
     const context = await buildSitemapContext(
-      board,
+      plansBoard([{ purpose: 'job_seeker', kind: 'subscription' }]).fake,
       ORIGIN,
       source({
         build: async () => [`${ORIGIN}/pricing`, `${ORIGIN}/job-seekers`],
@@ -123,6 +136,57 @@ describe('hosted-shaped sitemap context', () => {
       { url: `${ORIGIN}/pricing` },
       { url: `${ORIGIN}/job-seekers` },
     ]);
+  });
+
+  describe('plan pages', () => {
+    const marketingUrls = async (
+      fake: BoardSdk,
+      build?: () => Promise<string[]>,
+    ) =>
+      (
+        findSitemapChunk(
+          await buildSitemapContext(fake, ORIGIN, source({ build })),
+          'marketing',
+          0,
+        ) ?? []
+      ).map((entry) => entry.url);
+
+    it('lists /job-seekers when the board sells a paid candidate plan', async () => {
+      const { fake, list } = plansBoard([
+        { purpose: 'job_seeker', kind: 'subscription' },
+      ]);
+      expect(await marketingUrls(fake)).toEqual([
+        `${ORIGIN}/marketing`,
+        `${ORIGIN}/job-seekers`,
+        `${ORIGIN}/pricing`,
+      ]);
+      // The same board-global, edge-cached read the nav gate makes.
+      expect(list).toHaveBeenCalledWith({}, boardGlobalReadCache());
+    });
+
+    it('leaves /job-seekers out while its route redirects, even if the SDK lists it', async () => {
+      for (const plans of [
+        [],
+        [{ purpose: 'job_seeker', kind: 'free' }],
+        [{ purpose: 'job_posting', kind: 'one_time' }],
+      ]) {
+        const urls = await marketingUrls(plansBoard(plans).fake, async () => [
+          `${ORIGIN}/`,
+          `${ORIGIN}/job-seekers`,
+        ]);
+        expect(urls).not.toContain(`${ORIGIN}/job-seekers`);
+        expect(urls).toContain(`${ORIGIN}/pricing`);
+      }
+    });
+
+    it('keeps /pricing and the other entries when the plan read fails', async () => {
+      const { fake, list } = plansBoard([]);
+      list.mockRejectedValue(new Error('upstream 503'));
+      expect(await marketingUrls(fake)).toEqual([
+        `${ORIGIN}/marketing`,
+        `${ORIGIN}/pricing`,
+      ]);
+    });
   });
 
   describe('talent location pages', () => {
@@ -174,7 +238,6 @@ describe('hosted-shaped sitemap context', () => {
 
       expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
         { url: `${ORIGIN}/marketing` },
-        { url: `${ORIGIN}/job-seekers` },
         { url: `${ORIGIN}/pricing` },
         { url: `${ORIGIN}/talent/locations` },
         { url: `${ORIGIN}/talent/locations/zuerich` },
@@ -236,7 +299,6 @@ describe('hosted-shaped sitemap context', () => {
     expect(bucket?.chunks.flat()).toEqual([
       { url: `${ORIGIN}/` },
       { url: `${ORIGIN}/about`, lastModified: '2026-09-01T00:00:00.000Z' },
-      { url: `${ORIGIN}/job-seekers` },
       { url: `${ORIGIN}/pricing` },
     ]);
   });
