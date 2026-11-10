@@ -27,7 +27,7 @@ function apiError(status: number) {
 function load(path: string, searchStr = '') {
   return loadCatchAll({
     params: { _splat: path },
-    location: { pathname: `/${path}`, searchStr },
+    location: { href: `/${encodeURI(path)}${searchStr}`, searchStr },
   });
 }
 
@@ -115,6 +115,16 @@ describe('catch-all loader', () => {
       });
       expect(resolveDisabledLocale).toHaveBeenCalledWith({
         data: { path: '/sv/jobb/acme' },
+      });
+    });
+
+    it('passes the path still percent-encoded', async () => {
+      noManagedRedirect();
+      resolveDisabledLocale.mockResolvedValue({ target: null });
+
+      await expect(load('sv/jobb/café')).rejects.toSatisfy(isNotFound);
+      expect(resolveDisabledLocale).toHaveBeenCalledWith({
+        data: { path: '/sv/jobb/caf%C3%A9' },
       });
     });
 

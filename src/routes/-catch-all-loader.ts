@@ -37,16 +37,19 @@ export function createCatchAllLoader(
     location,
   }: {
     params: { _splat?: string };
-    location: { pathname: string; searchStr: string };
+    location: { href: string; searchStr: string };
   }): Promise<never> => {
     const target = await managedRedirectTarget(
       resolve,
       `/${params._splat ?? ''}`,
     );
     if (target) throw managedRedirect(target);
-    if (disabledLocaleOf(location.pathname)) {
+    // The path as requested, still percent-encoded: `location.pathname` is
+    // decoded, and a decoded slug is not a valid Location header value.
+    const [pathname = '/'] = location.href.split(/[?#]/, 1);
+    if (disabledLocaleOf(pathname)) {
       const { target: localized } = await resolveDisabledLocale({
-        data: { path: location.pathname },
+        data: { path: pathname },
       });
       if (localized) {
         throw redirect({
