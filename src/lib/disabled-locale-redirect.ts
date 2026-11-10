@@ -45,7 +45,18 @@ export function disabledLocaleRedirectPath(
     words,
   });
   const target = localizeSegments(canonical, routing);
-  // "//host" or "/\host" would leave the site in a Location header.
-  if (target.startsWith('//') || target.startsWith('/\\')) return null;
-  return target;
+  return isSameSiteTarget(target) ? target : null;
+}
+
+const SAME_SITE_BASE = 'https://same-site.invalid';
+
+/** A Location value that stays on this site. Browsers strip tabs and
+ * newlines and read a backslash as a slash, so "/\host" or "/<tab>/host"
+ * would become "//host": reject those characters, then check that the
+ * resolved origin is unchanged. */
+function isSameSiteTarget(target: string): boolean {
+  if (!target.startsWith('/') || /[\u0000-\u001F\u007F\\]/.test(target)) {
+    return false;
+  }
+  return new URL(target, SAME_SITE_BASE).origin === SAME_SITE_BASE;
 }
