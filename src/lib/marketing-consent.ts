@@ -12,6 +12,8 @@
  * Absence of a record means no consent — never a default, and never inferred
  * from a job-alert subscription.
  */
+import type { MarketingConsent } from '@cavuno/board';
+
 export const MARKETING_CONSENT = {
   /** Checkbox on the candidate sign-up form. */
   candidateSignUp: false,
@@ -31,20 +33,5 @@ export const MARKETING_CONSENT = {
   privacyPolicyUrl: '',
 };
 
-/**
- * Wire shape of `/me/marketing-consent`. Declared locally because this
- * template pins an SDK release predating `board.me.marketingConsent` — swap
- * to the SDK namespace and its exported `MarketingConsent` type when the
- * dependency is bumped.
- */
-export interface MarketingConsentState {
-  id: string;
-  object: 'marketing_consent';
-  status: 'granted' | 'withdrawn';
-  source: string;
-  reason: 'person_request' | 'operator_request' | 'account_deleted' | null;
-  /** ISO 8601, or null. */
-  grantedAt: string | null;
-  withdrawnAt: string | null;
-  revision: number;
-}
+/** Wire shape of `/me/marketing-consent`. */
+export type MarketingConsentState = MarketingConsent;
