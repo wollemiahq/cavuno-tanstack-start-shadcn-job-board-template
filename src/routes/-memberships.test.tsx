@@ -187,6 +187,11 @@ async function renderPage(
       path: '/companies/$companySlug',
       component: () => <h1>Company</h1>,
     }),
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/employers/companies/$slug/jobs/new',
+      component: () => <h1>Post a job</h1>,
+    }),
   ];
   const router = createRouter({
     routeTree: rootRoute.addChildren(children),
@@ -514,6 +519,62 @@ describe('memberships page', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       m.memberships_confirmedText(),
     );
+  });
+
+  it('joins for the company that asked and returns to its job form once active', async () => {
+    startCheckoutAction.mockResolvedValue({ ok: true, data: kit });
+    getCheckoutStateAction.mockResolvedValue({
+      object: 'checkout_session_state',
+      status: 'complete',
+      paymentStatus: 'paid',
+      membershipActive: true,
+      clientSecret: null,
+    });
+    const jobForm = '/employers/companies/globex/jobs/new';
+    await renderPage({
+      plans: [plan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: {
+        kind: 'signed-in',
+        companies: [acme, { slug: 'globex', name: 'Globex' }],
+      },
+      loadMoreMembers: loadMoreMembers,
+      startCheckoutAction,
+      getCheckoutStateAction,
+      invalidate: vi.fn().mockResolvedValue(undefined),
+      preferredCompanySlug: 'globex',
+      continueTo: jobForm,
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.memberships_joinLabel() }),
+    );
+    // Bought for the company whose job form sent the buyer here, and a
+    // redirect-based payment still knows the way back.
+    await waitFor(() =>
+      expect(startCheckoutAction).toHaveBeenCalledWith({
+        data: {
+          companySlug: 'globex',
+          planId: plan.id,
+          returnPath:
+            '/memberships?company=globex&returnTo=%2Femployers%2Fcompanies%2Fglobex%2Fjobs%2Fnew',
+        },
+      }),
+    );
+    await waitFor(() => expect(stripeCheckout.onComplete).toBeDefined());
+    act(() => stripeCheckout.onComplete?.());
+
+    fireEvent.click(
+      await screen.findByRole(
+        'button',
+        { name: m.memberships_continueToPostLabel() },
+        { timeout: 3000 },
+      ),
+    );
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Post a job' }),
+    ).toBeVisible();
   });
 
   it('polls the returned session and confirms the membership once complete', async () => {

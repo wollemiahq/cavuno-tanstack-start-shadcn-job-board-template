@@ -33,6 +33,7 @@ export function MembershipPostGate({
   signedIn = false,
   hasMembershipPage = false,
   returnTo = '/post',
+  companySlug,
   showCompanyWorkspaceLink = true,
 }: {
   boardName: string;
@@ -43,8 +44,13 @@ export function MembershipPostGate({
    * Header/Footer, so "Become a member" never links to a 404.
    */
   hasMembershipPage?: boolean;
-  /** Where sign-in returns the visitor — the surface that showed the gate. */
+  /**
+   * The surface that showed the gate: where sign-in returns the visitor, and
+   * where the memberships page sends them once they've joined.
+   */
   returnTo?: string;
+  /** The company the visitor would join for, preselected on the memberships page. */
+  companySlug?: string;
   /**
    * Signed-in CTA onto the employer workspace. Hide it on the employer
    * posting form itself — that visitor is already there.
@@ -75,6 +81,7 @@ export function MembershipPostGate({
         {hasMembershipPage ? (
           <Link
             to="/memberships"
+            search={{ company: companySlug, returnTo }}
             className={cn(
               signedIn
                 ? buttonVariants({ variant: 'outline' })

@@ -1812,6 +1812,7 @@
   "memberships_connectCompanyText": "Associez d’abord une entreprise approuvée. Ouvrez votre tableau de bord employeur pour en ajouter une.",
   "memberships_contactCtaFallback": "Nous contacter",
   "memberships_contactPriceFallback": "Tarif sur mesure",
+  "memberships_continueToPostLabel": "Continuer vers votre offre d'emploi",
   "memberships_joinDashboardText": "Les adhésions sont accordées par l’équipe du site. Ouvrez votre tableau de bord employeur pour continuer.",
   "memberships_joinLabel": "Adhérer",
   "memberships_loadMoreLabel": "Afficher plus de membres",

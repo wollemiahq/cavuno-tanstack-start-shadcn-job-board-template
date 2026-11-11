@@ -112,6 +112,7 @@ function NewJobPage() {
                 signedIn
                 showCompanyWorkspaceLink={false}
                 hasMembershipPage={offerGate.hasMembershipPage}
+                companySlug={workspace.slug}
                 returnTo={`/employers/companies/${workspace.slug}/jobs/new`}
               />
             }

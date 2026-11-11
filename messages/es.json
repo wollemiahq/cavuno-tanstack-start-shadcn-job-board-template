@@ -1812,6 +1812,7 @@
   "memberships_connectCompanyText": "Conecta primero una empresa aprobada. Abre tu panel de empleador para añadir una.",
   "memberships_contactCtaFallback": "Contactar",
   "memberships_contactPriceFallback": "Precio personalizado",
+  "memberships_continueToPostLabel": "Continuar con tu oferta de empleo",
   "memberships_joinDashboardText": "Las membresías las concede el equipo del portal. Abre tu panel de empleador para continuar.",
   "memberships_joinLabel": "Unirse",
   "memberships_loadMoreLabel": "Ver más miembros",

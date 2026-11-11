@@ -1812,6 +1812,7 @@
   "memberships_connectCompanyText": "Connect an approved company first. Open your employer dashboard to add one.",
   "memberships_contactCtaFallback": "Get in touch",
   "memberships_contactPriceFallback": "Custom pricing",
+  "memberships_continueToPostLabel": "Continue to your job post",
   "memberships_joinDashboardText": "Memberships are granted by the board team. Open your employer dashboard to continue.",
   "memberships_joinLabel": "Join",
   "memberships_loadMoreLabel": "Show more members",

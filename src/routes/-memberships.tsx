@@ -10,7 +10,7 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { Check, Clock } from 'lucide-react';
 
 import { EmbeddedCheckout } from '../components/paywall/embedded-checkout';
@@ -86,6 +86,24 @@ export type GetMembershipCheckoutState = (input: {
 
 export const MEMBERSHIPS_PATH = '/memberships';
 
+/**
+ * `/memberships` for one company, remembering where the buyer was headed — the
+ * job they were about to post — through sign-in and Stripe's return redirect.
+ */
+export function membershipsHref({
+  companySlug = null,
+  continueTo = null,
+}: {
+  companySlug?: string | null;
+  continueTo?: string | null;
+}): string {
+  const params = new URLSearchParams();
+  if (companySlug) params.set('company', companySlug);
+  if (continueTo) params.set('returnTo', continueTo);
+  const query = params.toString();
+  return query ? `${MEMBERSHIPS_PATH}?${query}` : MEMBERSHIPS_PATH;
+}
+
 /** Stripe Checkout can carry a priced subscription or one-time plan; nothing else. */
 function canCheckout(plan: Plan): boolean {
   return (
@@ -151,11 +169,16 @@ function JoinAction({
   viewer,
   busy,
   onJoin,
+  preferredCompanySlug,
+  signInReturnTo,
 }: {
   plan: Plan;
   viewer: MembershipsViewer;
   busy: boolean;
   onJoin: (companySlug: string) => void;
+  /** The company the buyer came to join for, chosen when they manage it. */
+  preferredCompanySlug: string | null;
+  signInReturnTo: string;
 }) {
   const className = cn(
     buttonVariants({ variant: plan.isRecommended ? 'default' : 'outline' }),
@@ -167,7 +190,7 @@ function JoinAction({
   // is no <select> to set it either, so a single-company employer could never
   // buy (live gate, 2026-09-05). Hold only the explicit choice and fall back to
   // the first company, which follows `viewer` as it hydrates.
-  const [chosenSlug, setChosenSlug] = useState('');
+  const [chosenSlug, setChosenSlug] = useState(preferredCompanySlug ?? '');
   const companies = viewer.kind === 'signed-in' ? viewer.companies : [];
   const companySlug =
     companies.find((company) => company.slug === chosenSlug)?.slug ??
@@ -187,7 +210,7 @@ function JoinAction({
     return (
       <Link
         to="/auth/sign-in"
-        search={{ returnTo: MEMBERSHIPS_PATH }}
+        search={{ returnTo: signInReturnTo }}
         className={className}
       >
         {m.memberships_joinLabel()}
@@ -258,11 +281,15 @@ function MembershipPlanCard({
   viewer,
   busy,
   onJoin,
+  preferredCompanySlug,
+  signInReturnTo,
 }: {
   plan: Plan;
   viewer: MembershipsViewer;
   busy: boolean;
   onJoin: (companySlug: string) => void;
+  preferredCompanySlug: string | null;
+  signInReturnTo: string;
 }) {
   const description = planDescription(plan);
   const capacity = configuredMembershipCapacitySentence(plan);
@@ -296,7 +323,14 @@ function MembershipPlanCard({
         <BenefitList lines={planBenefitLines(plan)} />
       </CardContent>
       <CardFooter>
-        <JoinAction plan={plan} viewer={viewer} busy={busy} onJoin={onJoin} />
+        <JoinAction
+          plan={plan}
+          viewer={viewer}
+          busy={busy}
+          onJoin={onJoin}
+          preferredCompanySlug={preferredCompanySlug}
+          signInReturnTo={signInReturnTo}
+        />
       </CardFooter>
     </Card>
   );
@@ -383,6 +417,8 @@ export function MembershipsPageView({
   getCheckoutStateAction,
   invalidate,
   returning = null,
+  preferredCompanySlug = null,
+  continueTo = null,
 }: {
   plans: Plan[];
   rosters: MembershipRoster[];
@@ -394,7 +430,16 @@ export function MembershipsPageView({
   invalidate?: () => Promise<void>;
   /** Set when Stripe sent the buyer back with a session to confirm. */
   returning?: { sessionId: string; companySlug: string } | null;
+  /** The company the buyer came to join for (`?company=`). */
+  preferredCompanySlug?: string | null;
+  /**
+   * Where the buyer was headed when the board asked for a membership — the
+   * job form they left. Offered as the next step once the membership is
+   * active.
+   */
+  continueTo?: string | null;
 }): ReactNode {
+  const router = useRouter();
   // The open checkout and the company it buys for, so a card payment that
   // completes in place can poll the same seat a return redirect would.
   const [checkout, setCheckout] = useState<{
@@ -486,7 +531,7 @@ export function MembershipsPageView({
         data: {
           companySlug,
           planId: plan.id,
-          returnPath: `${MEMBERSHIPS_PATH}?company=${encodeURIComponent(companySlug)}`,
+          returnPath: membershipsHref({ companySlug, continueTo }),
         },
       });
       if (result.ok) setCheckout({ kit: result.data, companySlug });
@@ -609,9 +654,19 @@ export function MembershipsPageView({
         }
       >
         {confirmed ? (
-          <p role="status" className="text-foreground text-sm font-medium">
-            {m.memberships_confirmedText()}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p role="status" className="text-foreground text-sm font-medium">
+              {m.memberships_confirmedText()}
+            </p>
+            {continueTo ? (
+              <Button
+                type="button"
+                onClick={() => void router.navigate({ href: continueTo })}
+              >
+                {m.memberships_continueToPostLabel()}
+              </Button>
+            ) : null}
+          </div>
         ) : null}
         {error ? (
           <p role="alert" className="text-destructive text-sm">
@@ -631,6 +686,11 @@ export function MembershipsPageView({
                 viewer={viewer}
                 busy={busy === plan.id}
                 onJoin={(companySlug) => void join(plan, companySlug)}
+                preferredCompanySlug={preferredCompanySlug}
+                signInReturnTo={membershipsHref({
+                  companySlug: preferredCompanySlug,
+                  continueTo,
+                })}
               />
               {roster ? (
                 <MemberRoster

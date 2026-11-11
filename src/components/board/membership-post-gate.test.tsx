@@ -73,7 +73,7 @@ describe('MembershipPostGate', () => {
 
     expect(screen.getByRole('link', becomeMember)).toHaveAttribute(
       'href',
-      '/memberships',
+      '/memberships?returnTo=%2Fpost',
     );
     expect(screen.getByRole('link', signIn)).toHaveAttribute(
       'href',
@@ -116,6 +116,22 @@ describe('MembershipPostGate', () => {
 
     expect(screen.queryByRole('link', postAsCompany)).toBeNull();
     expect(screen.getByRole('link', becomeMember)).toBeVisible();
+  });
+
+  it('joins for the company on its job form and comes back to that form', async () => {
+    await renderGate({
+      boardName: 'Example Jobs',
+      signedIn: true,
+      hasMembershipPage: true,
+      showCompanyWorkspaceLink: false,
+      companySlug: 'acme',
+      returnTo: '/employers/companies/acme/jobs/new',
+    });
+
+    expect(screen.getByRole('link', becomeMember)).toHaveAttribute(
+      'href',
+      '/memberships?company=acme&returnTo=%2Femployers%2Fcompanies%2Facme%2Fjobs%2Fnew',
+    );
   });
 
   it('hides become-a-member for a signed-in viewer when /memberships would 404', async () => {

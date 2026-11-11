@@ -9,6 +9,7 @@ import { createMembershipsLoader } from './-memberships-loader';
 
 import { useRootSession } from '@/components/root-session';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
+import { safeRedirectPath } from '@/lib/safe-redirect-path';
 import {
   getMembershipCheckoutState,
   startMembershipCheckout,
@@ -20,15 +21,24 @@ import {
 
 /**
  * Stripe sends the buyer back here with `session_id`; `company` is the slug
- * the checkout was started for, so the return can poll the right seat.
+ * the checkout was started for, so the return can poll the right seat (and,
+ * before checkout, the company the buyer came to join for). `returnTo` is the
+ * page that asked for a membership, such as a company's job form.
  */
-type MembershipsSearch = { session_id?: string; company?: string };
+type MembershipsSearch = {
+  session_id?: string;
+  company?: string;
+  returnTo?: string;
+};
 
 export const Route = createFileRoute('/memberships')({
   staticData: { ownsMain: true },
   validateSearch: (search: UrlSearchInput): MembershipsSearch => ({
     session_id: searchString(search.session_id),
     company: searchString(search.company),
+    returnTo: searchString(search.returnTo)
+      ? safeRedirectPath(searchString(search.returnTo))
+      : undefined,
   }),
   loader: createMembershipsLoader({ getMembershipsPage }, () => {
     throw notFound();
@@ -54,7 +64,7 @@ export const Route = createFileRoute('/memberships')({
 
 function MembershipsPage() {
   const { plans, rosters, seo } = Route.useLoaderData();
-  const { session_id: sessionId, company } = Route.useSearch();
+  const { session_id: sessionId, company, returnTo } = Route.useSearch();
   const { user, ready, employerCompanies } = useRootSession();
   const router = useRouter();
   const startCheckout = useServerFn(startMembershipCheckout);
@@ -94,6 +104,8 @@ function MembershipsPage() {
       returning={
         sessionId && company ? { sessionId, companySlug: company } : null
       }
+      preferredCompanySlug={company ?? null}
+      continueTo={returnTo ?? null}
     />
   );
 }
