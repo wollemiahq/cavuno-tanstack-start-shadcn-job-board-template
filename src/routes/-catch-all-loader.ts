@@ -1,11 +1,23 @@
 import { isBoardApiError } from '@cavuno/board';
 import { notFound, redirect } from '@tanstack/react-router';
 
+import { disabledLocaleOf } from '../lib/disabled-locale';
+
+import type { resolveDisabledLocaleRedirect } from '../server/disabled-locale';
 import type { resolveRedirect } from '../server/queries';
 
 /**
- * The catch-all splat's loader: 308 to the board's configured redirect for
- * the path, else 404.
+ * The catch-all splat's loader, for a path no other route claims:
+ *
+ * 1. the board's configured redirect for the path, else
+ * 2. a disabled locale's URL (`/en/jobs` on a board that turned English
+ *    off) goes to the same page in the board's language, else
+ * 3. 404.
+ *
+ * Both redirects are 308s. A configured redirect wins, so an operator can
+ * still send a disabled locale's URLs anywhere they like. The locale step
+ * is path logic and reads no board data; it runs only for a path that
+ * starts with a language the board does not serve.
  *
  * A refused lookup (403) also 404s. The lookup sends the visitor's path as a
  * query string, and scanner paths like `/.env` or `/.git/config` are refused
@@ -16,32 +28,75 @@ import type { resolveRedirect } from '../server/queries';
  * Thrown TanStack redirects (the password wall) are not Board API errors and
  * pass through untouched.
  */
-export function createCatchAllLoader(resolve: typeof resolveRedirect) {
-  return ({ params }: { params: { _splat?: string } }) =>
-    followManagedRedirect(resolve, `/${params._splat ?? ''}`);
+export function createCatchAllLoader(
+  resolve: typeof resolveRedirect,
+  resolveDisabledLocale: typeof resolveDisabledLocaleRedirect,
+) {
+  return async ({
+    params,
+    location,
+  }: {
+    params: { _splat?: string };
+    location: { href: string; searchStr: string };
+  }): Promise<never> => {
+    const target = await managedRedirectTarget(
+      resolve,
+      `/${params._splat ?? ''}`,
+    );
+    if (target) throw managedRedirect(target);
+    // The path as requested, still percent-encoded: `location.pathname` is
+    // decoded, and a decoded slug is not a valid Location header value.
+    const [pathname = '/'] = location.href.split(/[?#]/, 1);
+    if (disabledLocaleOf(pathname)) {
+      const { target: localized } = await resolveDisabledLocale({
+        data: { path: pathname },
+      });
+      if (localized) {
+        throw redirect({
+          href: `${localized}${location.searchStr}`,
+          statusCode: 308,
+          // Bounded like the localized-URL redirect: turning the language
+          // back on must not leave returning visitors on a cached hop.
+          headers: { 'Cache-Control': 'max-age=86400' },
+        });
+      }
+    }
+    throw notFound();
+  };
 }
 
 /**
- * 308 to the board's configured redirect for `path`, else 404. Shared by the
- * catch-all and by routes whose own lookup missed (a retired blog post), so
- * every managed redirect gets the same refusal and failure handling.
+ * 308 to the board's configured redirect for `path`, else 404. Shared by
+ * routes whose own lookup missed (a retired blog post), so every managed
+ * redirect gets the same refusal and failure handling.
  */
 export async function followManagedRedirect(
   resolve: typeof resolveRedirect,
   path: string,
 ): Promise<never> {
-  let target: string | null;
+  const target = await managedRedirectTarget(resolve, path);
+  if (target) throw managedRedirect(target);
+  throw notFound();
+}
+
+/** The configured redirect target for `path`, or null. A refused lookup
+ * throws notFound (see createCatchAllLoader). */
+async function managedRedirectTarget(
+  resolve: typeof resolveRedirect,
+  path: string,
+): Promise<string | null> {
   try {
-    ({ target } = await resolve({ data: { path } }));
+    const { target } = await resolve({ data: { path } });
+    return target;
   } catch (error) {
     if (isBoardApiError(error) && error.status === 403) {
       throw notFound();
     }
     throw error;
   }
-  if (target) {
-    // 308 permanent — matches the hosted `permanentRedirect(target)`.
-    throw redirect({ href: target, statusCode: 308 });
-  }
-  throw notFound();
+}
+
+// 308 permanent — matches the hosted `permanentRedirect(target)`.
+function managedRedirect(target: string) {
+  return redirect({ href: target, statusCode: 308 });
 }
