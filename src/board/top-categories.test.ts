@@ -62,4 +62,17 @@ describe('topCategoriesFromTaxonomy', () => {
       },
     ]);
   });
+  it('prefers totalJobCount, so a parent counts its subcategories', () => {
+    expect(
+      topCategoriesFromTaxonomy([
+        {
+          canonicalSlug: 'engineering',
+          displayName: 'Engineering',
+          jobCount: 0,
+          totalJobCount: 120,
+        },
+        { canonicalSlug: 'design', displayName: 'Design', jobCount: 9 },
+      ])?.map((tile) => tile.count),
+    ).toEqual([120, 9]);
+  });
 });

@@ -27,7 +27,7 @@ import { catalogJobCount } from '@/board/job-catalog-count';
 import { topCategoriesFromTaxonomy } from '@/board/top-categories';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { selfUrl } from '@/lib/self-url';
-import type { RelatedSearch, TaxonomyListQuery } from '@cavuno/board';
+import type { RelatedSearch } from '@cavuno/board';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -62,19 +62,13 @@ export const getHomePage = createServerFn({ method: 'GET' })
         { limit: HOME_JOB_RAIL_LIMIT },
         { headers },
       );
-      // Live board-wide counts from `activeCategoryCounts`, not a tally of
-      // the jobs rail. `sort=jobCount` is additive on the Board API; an
-      // older deployment that rejects the query key fails soft to the
-      // page-window relatedSearches facets rather than 500ing `/`.
+      // Top-level categories ranked by every live job under them, so a parent
+      // whose jobs all sit in subcategories still gets a tile. An older Board
+      // API that rejects `sort=totalJobCount` fails soft to the page-window
+      // relatedSearches facets rather than 500ing `/`.
       const categoriesP = board.taxonomy.categories
         .list(
-          // SAFETY: Board API #1652 adds sort=jobCount; SDK 4.8.0
-          // TaxonomyListQuery does not list it yet. Extra keys are
-          // forwarded on the query string.
-          {
-            limit: HOME_CATEGORY_LIMIT,
-            sort: 'jobCount',
-          } as TaxonomyListQuery,
+          { limit: HOME_CATEGORY_LIMIT, topLevel: true, sort: 'totalJobCount' },
           { headers },
         )
         .catch(() => null);
