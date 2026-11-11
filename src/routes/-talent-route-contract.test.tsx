@@ -66,6 +66,7 @@ const profile: TalentProfilePageData['profile'] = {
   education: [],
   skills: [{ name: 'Robotics', jobSkillId: 'skill-robotics' }],
   languages: [],
+  customFieldMedia: {},
   customFieldValues: {},
   objectReferences: [],
   resumeUrl: null,

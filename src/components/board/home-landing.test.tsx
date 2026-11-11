@@ -196,6 +196,7 @@ const candidate: TalentDirectoryEntry = {
   skills: [],
   experiences: [],
   education: [],
+  customFieldMedia: {},
   customFieldValues: {},
   objectReferences: [],
   distanceKm: null,
