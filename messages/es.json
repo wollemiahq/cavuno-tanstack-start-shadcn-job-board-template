@@ -1714,6 +1714,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Ofertas en remoto",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta en remoto",
+        "countPlural=*": "{countLabel} ofertas en remoto"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Ofertas de {category} en remoto",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {category} en remoto",
+        "countPlural=*": "{countLabel} ofertas de {category} en remoto"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Ofertas de {skill} en remoto",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {skill} en remoto",
+        "countPlural=*": "{countLabel} ofertas de {skill} en remoto"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Ofertas híbridas",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta híbrida",
+        "countPlural=*": "{countLabel} ofertas híbridas"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Ofertas híbridas de {category}",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta híbrida de {category}",
+        "countPlural=*": "{countLabel} ofertas híbridas de {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Ofertas híbridas de {skill}",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta híbrida de {skill}",
+        "countPlural=*": "{countLabel} ofertas híbridas de {skill}"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Ofertas presenciales",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta presencial",
+        "countPlural=*": "{countLabel} ofertas presenciales"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Ofertas presenciales de {category}",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta presencial de {category}",
+        "countPlural=*": "{countLabel} ofertas presenciales de {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Ofertas presenciales de {skill}",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta presencial de {skill}",
+        "countPlural=*": "{countLabel} ofertas presenciales de {skill}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Cambiar logotipo",
   "logoUpload_uploadErrorText": "Error al subir: prueba con una imagen más pequeña.",
   "logoUpload_uploadingLabel": "Subiendo…",

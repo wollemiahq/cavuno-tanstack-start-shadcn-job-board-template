@@ -129,4 +129,11 @@ describe('jobAlertDefaultsFromSearch', () => {
       placeSlugs: ['berlin'],
     });
   });
+
+  it('scopes a work arrangement page’s alert to the arrangement, not a place', () => {
+    const defaults = jobAlertDefaultsFromSearch({ remoteOption: 'remote' });
+
+    expect(defaults.filters.remoteOptions).toEqual(['remote']);
+    expect(defaults.filters.placeSlugs).toBeUndefined();
+  });
 });

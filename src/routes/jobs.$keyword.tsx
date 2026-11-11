@@ -8,7 +8,7 @@
  * Head meta is computed in getJobsCategoryPage so `@cavuno/board/seo` stays
  * out of the universal client entry.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { m } from '../paraglide/messages';
@@ -17,12 +17,21 @@ import { createJobsCategoryLoader } from './-jobs-taxonomy-loaders';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { workArrangementRedirect } from '@/lib/work-arrangement';
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
 import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/$keyword')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
+  // `?remoteOption=remote` is the remote combination page.
+  beforeLoad: ({ params, search }) => {
+    const target = workArrangementRedirect(
+      { category: params.keyword },
+      search,
+    );
+    if (target) throw redirect({ ...target, statusCode: 308 });
+  },
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: createJobsCategoryLoader(),
   head: ({ loaderData }) =>
@@ -36,6 +45,7 @@ export const Route = createFileRoute('/jobs/$keyword')({
 function CategoryPage() {
   const { category, introHtml, list, relatedSearches, reachableCount } =
     Route.useLoaderData();
+  const { keyword } = Route.useParams();
   const search = Route.useSearch();
   return (
     <ProgrammaticJobsView
@@ -55,6 +65,7 @@ function CategoryPage() {
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
       filters={search}
+      listingRoute={{ category: keyword }}
       listedTermSlug={category.sourceSlug}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });
