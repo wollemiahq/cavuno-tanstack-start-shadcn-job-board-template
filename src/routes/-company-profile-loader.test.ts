@@ -59,6 +59,21 @@ describe('company profile loader — a missing company', () => {
     });
   });
 
+  it('asks with the locale-prefixed URL the visitor typed', async () => {
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/fr/entreprises/oud-bedrijf',
+      target: null,
+    });
+
+    await expect(load('/fr/entreprises/oud-bedrijf?page=2')).rejects.toSatisfy(
+      isNotFound,
+    );
+    expect(resolveRedirect).toHaveBeenCalledWith({
+      data: { path: '/fr/entreprises/oud-bedrijf' },
+    });
+  });
+
   it('404s when no managed redirect matches', async () => {
     resolveRedirect.mockResolvedValue({
       object: 'redirect_resolution',

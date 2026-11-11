@@ -14,6 +14,11 @@ import type { resolveRedirect } from '../server/queries';
  *    off) goes to the same page in the board's language, else
  * 3. 404.
  *
+ * The redirect lookup sends the URL the visitor typed (`requestedPath`),
+ * locale prefix and localized words kept, like every other route's miss: a
+ * rule's `from` is a URL as it appears in the browser, and the splat param is
+ * the delocalized path the router matched (`/fr/foo` arrives as `foo`).
+ *
  * Both redirects are 308s. A configured redirect wins, so an operator can
  * still send a disabled locale's URLs anywhere they like. The locale step
  * is path logic and reads no board data; it runs only for a path that
@@ -33,15 +38,13 @@ export function createCatchAllLoader(
   resolveDisabledLocale: typeof resolveDisabledLocaleRedirect,
 ) {
   return async ({
-    params,
     location,
   }: {
-    params: { _splat?: string };
-    location: { href: string; searchStr: string };
+    location: { href: string; publicHref: string; searchStr: string };
   }): Promise<never> => {
     const target = await managedRedirectTarget(
       resolve,
-      `/${params._splat ?? ''}`,
+      requestedPath(location),
     );
     if (target) throw managedRedirect(target);
     // The path as requested, still percent-encoded: `location.pathname` is
