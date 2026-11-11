@@ -64,7 +64,7 @@ async function robotsFor(
   mocks.resolve.mockResolvedValue({
     displayName: 'Fixture',
     redirectTo: null,
-    ...(companyCount === undefined ? {} : { companyCount }),
+    companyCount,
   });
   mocks.list.mockResolvedValue(envelope);
   mocks.search.mockResolvedValue(envelope);

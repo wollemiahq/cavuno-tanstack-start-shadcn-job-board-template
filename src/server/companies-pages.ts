@@ -49,6 +49,7 @@ import {
 } from '@/lib/pagination';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { boardLanguageUrl, selfUrl } from '@/lib/self-url';
+import type { TaxonomyResolution } from '@cavuno/board';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -210,7 +211,7 @@ export const MIN_COMPANIES_PER_INDEXED_MARKET_PAGE = 5;
  *
  * `count` is the market's `companyCount` (the companies tagged with it, the
  * number the board's sitemap uses) when the API returns it, else the listing's
- * total (see `marketCompanyCount`).
+ * total (see `MarketResolution`).
  */
 export function isThinMarketPage(
   query: string | undefined,
@@ -221,16 +222,12 @@ export function isThinMarketPage(
 }
 
 /**
- * The market resolve's `companyCount`, read without depending on the installed
- * SDK typing it (it ships in a later `@cavuno/board`). Without it the page falls
- * back to the listing total, which also counts untagged companies whose text
- * matches the market, so it can keep a market indexed that the sitemap drops.
+ * The market resolve with its `companyCount`, which ships in a later
+ * `@cavuno/board`; typed here so the page compiles before and after it. An
+ * older API omits it, and the page falls back to the listing total, which also
+ * counts untagged companies whose text matches the market.
  */
-function marketCompanyCount(market: object): number | undefined {
-  return 'companyCount' in market && typeof market.companyCount === 'number'
-    ? market.companyCount
-    : undefined;
-}
+type MarketResolution = TaxonomyResolution & { companyCount?: number };
 
 /**
  * /companies/markets/$market — market resolve + listing + head in ONE server fn.
@@ -264,9 +261,11 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
       const [market, pageResult, markets, seo] = await Promise.all([
         (async () => {
           try {
-            return await board.companies.markets.resolve(data.marketSlug, {
-              headers,
-            });
+            const resolved: MarketResolution =
+              await board.companies.markets.resolve(data.marketSlug, {
+                headers,
+              });
+            return resolved;
           } catch (error) {
             if (isNotFound(error)) return null;
             throw error;
@@ -337,7 +336,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
             },
           ],
         },
-        isThinMarketPage(data.query, marketCompanyCount(market) ?? page.count),
+        isThinMarketPage(data.query, market.companyCount ?? page.count),
       );
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
