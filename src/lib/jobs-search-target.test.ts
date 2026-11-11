@@ -206,6 +206,17 @@ describe('header search from a filtered jobs listing', () => {
     ).toEqual({ seniority: ['entry_level'] });
   });
 
+  it('keeps the arrangement of a work arrangement page as the workplace filter', () => {
+    expect(
+      jobsFiltersFromHeader('/jobs/locations/remote/engineering', {
+        seniority: ['entry_level'],
+      }),
+    ).toEqual({ remoteOption: 'remote', seniority: ['entry_level'] });
+    expect(jobsFiltersFromHeader('/jobs/locations/on-site', {})).toEqual({
+      remoteOption: 'on_site',
+    });
+  });
+
   it('carries nothing over from a page that is not a jobs listing', () => {
     expect(jobsFiltersFromHeader('/', entryLevelJobs)).toEqual({});
     expect(jobsFiltersFromHeader('/talent', entryLevelJobs)).toEqual({});

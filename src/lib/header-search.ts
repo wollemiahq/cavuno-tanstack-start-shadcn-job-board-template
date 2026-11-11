@@ -4,6 +4,7 @@ import {
   type UrlSearchValue,
 } from './pagination';
 import { talentProfileParam } from './talent-profile-path';
+import { isWorkArrangementSlug } from './work-arrangement';
 
 export type HeaderSearchScope =
   | 'jobs'
@@ -173,7 +174,8 @@ function locationFromPathname(
   resolvedLabel?: string,
 ): HeaderSearchLocation | null {
   const slug = pathname.match(/^\/jobs\/locations\/([^/]+)/)?.[1];
-  if (!slug) return null;
+  // A work arrangement is a filter the search keeps, not a place.
+  if (!slug || isWorkArrangementSlug(slug)) return null;
 
   return {
     slug,
