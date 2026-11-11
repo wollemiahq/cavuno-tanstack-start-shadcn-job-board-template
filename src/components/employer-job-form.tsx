@@ -500,11 +500,16 @@ export type EmployerJobFormProps = {
   /** Prefill for edit mode. */
   job?: EmployerJob;
   /**
-   * Stands in for the whole form once the board answers `membership_required`
-   * — the company cannot post here until it holds a membership, so there is
-   * nothing useful left to fill in.
+   * Stands in for the whole form when the company cannot post here until it
+   * holds a membership — up front when `canPost` is false, or once the board
+   * answers `membership_required` — so there is nothing useful to fill in.
    */
   membershipGate?: ReactNode;
+  /**
+   * The company's `capabilities.canPost` from its billing options. `false`
+   * shows `membershipGate` before anything is written.
+   */
+  canPost?: boolean;
   dependencies?: EmployerJobFormDependencies;
 };
 
@@ -667,7 +672,17 @@ function initialForm(
   };
 }
 
-export function EmployerJobForm({
+export function EmployerJobForm(props: EmployerJobFormProps) {
+  // Gate before the form mounts. The form seeds its billing choice from
+  // `billingOptions` once, so a company that joins and comes back must get a
+  // fresh form, not the one set up while it could not post.
+  if (props.canPost === false && props.membershipGate) {
+    return props.membershipGate;
+  }
+  return <JobFormFields {...props} />;
+}
+
+function JobFormFields({
   slug,
   locale,
   remotePermits,
@@ -845,9 +860,9 @@ export function EmployerJobForm({
   >('idle');
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
-  // The board refuses the write on a members-only board. Entitlement is not on
-  // the wire (billing options carry no `canPost`/`reason`), so this is set from
-  // the refusal itself rather than pre-checked.
+  // The board refuses the write on a members-only board. `canPost` (above)
+  // catches that up front; this catches a membership that lapsed after the
+  // page loaded.
   const [membershipRequired, setMembershipRequired] = useState(false);
   const [committedCheckoutJobId, setCommittedCheckoutJobId] = useState<
     string | null

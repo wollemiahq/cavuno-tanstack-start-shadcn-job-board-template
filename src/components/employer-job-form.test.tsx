@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   RouterProvider,
   createMemoryHistory,
@@ -1677,9 +1679,74 @@ describe('EmployerJobForm — office-location country lock', () => {
 });
 
 describe('EmployerJobForm — members-only board', () => {
+  it('shows the join gate before anything is written when the company cannot post', async () => {
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        canPost={false}
+        membershipGate={<div data-testid="membership-gate">Members only</div>}
+      />,
+    );
+
+    expect(screen.getByTestId('membership-gate')).toBeVisible();
+    expect(container.querySelector('form')).toBeNull();
+    expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+
+  it('opens with the membership post chosen once the company has joined', async () => {
+    // The company joins and comes back: the loader re-reads its billing
+    // options while the page stays mounted.
+    const membershipPost = leftoverCredit({
+      id: 'plan_assignment',
+      type: 'plan_assignment',
+      kind: 'member_post',
+      planName: 'Partner',
+      jobsRemaining: 0,
+      jobsTotal: 0,
+      jobsUnlimited: true,
+    });
+    function JoinAndReturn() {
+      const [joined, setJoined] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setJoined(true)}>
+            Joined
+          </button>
+          <EmployerJobForm
+            dependencies={dependencies}
+            slug="acme"
+            locale="en-AU"
+            remotePermits={null}
+            plans={[plan]}
+            billingOptions={joined ? [membershipPost] : []}
+            officeLocationSuggestions={suggestions}
+            mode={{ kind: 'create' }}
+            canPost={joined}
+            membershipGate={
+              <div data-testid="membership-gate">Members only</div>
+            }
+          />
+        </>
+      );
+    }
+    await renderWithRouter(<JoinAndReturn />);
+    expect(screen.getByTestId('membership-gate')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Joined' }));
+
+    expect(screen.getByRole('radio', { name: /Partner/ })).toBeChecked();
+  });
+
   it('replaces the form with the join gate when the board refuses the write', async () => {
-    // Entitlement is not on the wire — billing options carry no `canPost` —
-    // so the gate comes from the refusal itself.
+    // A membership can lapse after the page loaded, so the refusal itself
+    // still brings up the gate.
     mocks.updateJob.mockResolvedValue({
       ok: false,
       code: 'membership_required',

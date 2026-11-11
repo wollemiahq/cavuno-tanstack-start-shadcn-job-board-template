@@ -71,6 +71,9 @@ function NewJobPage() {
   const { workspace, remotePermits } = Route.useLoaderData();
   const { board, offerGate } = rootApi.useLoaderData();
   const locale = getLocale();
+  // A company that can't post here sees the membership gate instead of the
+  // form, so the "fill in the role" subtitle would describe nothing.
+  const canPost = workspace.billingOptions.capabilities.canPost;
   const officeLocationSuggestions = useGlobalLocationSuggestions({
     countries: resolveJobFormConstraints(board).location.allowedCountries,
   });
@@ -83,9 +86,11 @@ function NewJobPage() {
             <Text as="h1" variant="heading1">
               {m.employerCompany_postJobHeading()}
             </Text>
-            <p className="text-muted-foreground text-sm">
-              {m.employerPostJob_subtitleText()}
-            </p>
+            {canPost ? (
+              <p className="text-muted-foreground text-sm">
+                {m.employerPostJob_subtitleText()}
+              </p>
+            ) : null}
           </header>
 
           <EmployerJobForm
@@ -99,6 +104,7 @@ function NewJobPage() {
             customFields={board.customFields.job}
             nativeApplications={board.features.nativeApplications}
             mode={{ kind: 'create' }}
+            canPost={canPost}
             membershipGate={
               <MembershipPostGate
                 boardName={board.name}
