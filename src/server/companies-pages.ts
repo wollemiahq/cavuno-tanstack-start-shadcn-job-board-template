@@ -204,15 +204,13 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
 export const MIN_COMPANIES_PER_INDEXED_MARKET_PAGE = 5;
 
 /**
- * True when the plain market browse lists fewer companies than the floor. A
- * search view is left alone (it canonicalizes to the plain page), and so is a
- * listing with no total (an older API).
+ * True when the plain market page has fewer companies than the floor. A search
+ * view is left alone (it canonicalizes to the plain page), and so is a missing
+ * count (an older API).
  *
- * The board's sitemap counts the companies tagged with the market. This page
- * counts its listing's total, which also includes untagged companies whose
- * text matches the market name, so it is usually equal or higher: a market
- * can be left out of the sitemap and still be indexable here, but rarely the
- * other way round.
+ * `count` is the market's `companyCount` (the companies tagged with it, the
+ * number the board's sitemap uses) when the API returns it, else the listing's
+ * total (see `marketCompanyCount`).
  */
 export function isThinMarketPage(
   query: string | undefined,
@@ -220,6 +218,18 @@ export function isThinMarketPage(
 ): boolean {
   if (query || count === undefined) return false;
   return count < MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
+}
+
+/**
+ * The market resolve's `companyCount`, read without depending on the installed
+ * SDK typing it (it ships in a later `@cavuno/board`). Without it the page falls
+ * back to the listing total, which also counts untagged companies whose text
+ * matches the market, so it can keep a market indexed that the sitemap drops.
+ */
+function marketCompanyCount(market: object): number | undefined {
+  return 'companyCount' in market && typeof market.companyCount === 'number'
+    ? market.companyCount
+    : undefined;
 }
 
 /**
@@ -327,7 +337,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
             },
           ],
         },
-        isThinMarketPage(data.query, page.count),
+        isThinMarketPage(data.query, marketCompanyCount(market) ?? page.count),
       );
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(

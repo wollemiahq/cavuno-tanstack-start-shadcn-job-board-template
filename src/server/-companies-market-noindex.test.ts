@@ -55,8 +55,17 @@ import {
   getCompaniesMarketPage,
 } from './companies-pages';
 
-async function robotsFor(data: { query?: string }, count?: number) {
+async function robotsFor(
+  data: { query?: string },
+  count?: number,
+  companyCount?: number,
+) {
   const envelope = { data: [], count };
+  mocks.resolve.mockResolvedValue({
+    displayName: 'Fixture',
+    redirectTo: null,
+    ...(companyCount === undefined ? {} : { companyCount }),
+  });
   mocks.list.mockResolvedValue(envelope);
   mocks.search.mockResolvedValue(envelope);
   const result = await getCompaniesMarketPage({
@@ -69,7 +78,6 @@ async function robotsFor(data: { query?: string }, count?: number) {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.tree.mockResolvedValue({ data: [] });
-  mocks.resolve.mockResolvedValue({ displayName: 'Fixture', redirectTo: null });
 });
 
 describe('market page thin-content floor', () => {
@@ -88,5 +96,15 @@ describe('market page thin-content floor', () => {
   it('leaves a search view and a listing without a total alone', async () => {
     expect(await robotsFor({ query: 'fixture' }, 0)).toBeUndefined();
     expect(await robotsFor({}, undefined)).toBeUndefined();
+  });
+
+  it("uses the market's companyCount over the listing total when present", async () => {
+    const floor = MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
+    // Text matches lift the listing over the floor; the tagged count does not.
+    expect(await robotsFor({}, floor + 10, floor - 1)).toEqual({
+      name: 'robots',
+      content: 'noindex, follow',
+    });
+    expect(await robotsFor({}, 0, floor)).toBeUndefined();
   });
 });
