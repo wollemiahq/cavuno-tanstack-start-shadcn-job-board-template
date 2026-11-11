@@ -8,7 +8,7 @@ import {
   type JobPostingFormInput,
 } from '../lib/post-form';
 import { gatedRead } from './board-access';
-import { withCatalogFeatures } from './post-plans';
+import { withNamedFeatures } from './post-plans';
 
 import type { JobPostingResult } from '@cavuno/board';
 
@@ -20,9 +20,8 @@ export const getPostPlans = createServerFn({ method: 'GET' })
       const postingPlans = getBoard().jobPosting.plans(undefined, {
         headers: h,
       });
-      const data = await withCatalogFeatures(
+      const data = await withNamedFeatures(
         postingPlans.then((result) => result.data),
-        h,
       );
       return { ...(await postingPlans), data };
     }),

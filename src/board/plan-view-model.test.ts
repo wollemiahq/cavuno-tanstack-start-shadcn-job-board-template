@@ -4,7 +4,12 @@ import { m } from '../paraglide/messages';
 import { planFeatureLines, planOffersFeaturedChoice } from './plan-view-model';
 
 const plan = (features: { key: string | null; value: string | null }[]) => ({
-  features,
+  features: features.map((feature) => ({
+    ...feature,
+    name: feature.key ?? '',
+    dataType: 'string',
+    displayOrder: null,
+  })),
 });
 
 describe('planFeatureLines', () => {

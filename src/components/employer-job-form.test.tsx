@@ -165,6 +165,11 @@ beforeEach(() => {
   mocks.navigate.mockResolvedValue(undefined);
 });
 
+/** A posting-plan feature as the plans read returns it. */
+function feature(key: string, value: string) {
+  return { key, value, name: key, dataType: 'string', displayOrder: null };
+}
+
 describe('EmployerJobForm', () => {
   it('prefills the role fields from an existing job in edit mode', async () => {
     await renderWithRouter(
@@ -461,8 +466,8 @@ describe('EmployerJobForm', () => {
     const featuredPlan: JobPostingPlan = {
       ...plan,
       features: [
-        { key: 'jobs.featured_slots', value: '2' },
-        { key: 'jobs.feature_selection_mode', value: 'manual' },
+        feature('jobs.featured_slots', '2'),
+        feature('jobs.feature_selection_mode', 'manual'),
       ],
     };
 
@@ -519,7 +524,7 @@ describe('EmployerJobForm', () => {
       await renderDraftEdit([
         {
           ...plan,
-          catalogFeatures: {
+          namedFeatures: {
             'custom.newsletter_feature': {
               value: 'true',
               name: 'Newsletter feature',
@@ -549,8 +554,8 @@ describe('EmployerJobForm', () => {
         ...featuredPlan,
         kind: 'one_time',
         features: [
-          { key: 'jobs.featured_slots', value: '1' },
-          { key: 'jobs.feature_selection_mode', value: 'manual' },
+          feature('jobs.featured_slots', '1'),
+          feature('jobs.feature_selection_mode', 'manual'),
         ],
       };
       const { container } = await renderDraftEdit([oneTime]);
@@ -576,15 +581,15 @@ describe('EmployerJobForm', () => {
         id: 'plan-auto',
         name: 'Auto',
         features: [
-          { key: 'jobs.featured_slots', value: '3' },
-          { key: 'jobs.feature_selection_mode', value: 'auto' },
+          feature('jobs.featured_slots', '3'),
+          feature('jobs.feature_selection_mode', 'auto'),
         ],
       };
       const unset: JobPostingPlan = {
         ...featuredPlan,
         id: 'plan-unset',
         name: 'Unset',
-        features: [{ key: 'jobs.featured_slots', value: '3' }],
+        features: [feature('jobs.featured_slots', '3')],
       };
       await renderDraftEdit([plan, auto, unset]);
 

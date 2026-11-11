@@ -1871,7 +1871,7 @@ export function EmployerJobForm({
                         const features = [
                           ...planFeatureLines(plan),
                           ...customAttributeLines({
-                            features: plan.catalogFeatures ?? {},
+                            features: plan.namedFeatures ?? {},
                           }),
                         ];
                         return (
