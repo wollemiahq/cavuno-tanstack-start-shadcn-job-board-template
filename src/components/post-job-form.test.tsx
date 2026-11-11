@@ -186,6 +186,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -258,6 +259,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -299,6 +301,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -321,6 +324,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -353,6 +357,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -378,6 +383,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={onLogoUpload}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     const file = new File(['logo'], 'acme.png', { type: 'image/png' });
@@ -422,6 +428,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={onLogoUpload}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     const file = new File(['logo'], 'acme.png', { type: 'image/png' });
@@ -470,6 +477,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -506,6 +514,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -534,6 +543,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -544,8 +554,27 @@ describe('PostJobForm', () => {
     ).toBeNull();
   });
 
-  it('takes payment on the page and confirms it without leaving the board', async () => {
+  it('takes payment on the page and reports what the payment actually did', async () => {
     const onCheckout = vi.fn();
+    // Stripe reports a bank debit "complete" while it is still clearing.
+    const onCheckoutStatus = vi
+      .fn()
+      .mockResolvedValueOnce({
+        object: 'job_posting_checkout_status',
+        status: 'awaiting_payment',
+        jobId: 'job-1',
+        jobTitle: 'Staff Product Designer',
+        jobStatus: 'unpublished',
+        jobUrl: null,
+      })
+      .mockResolvedValue({
+        object: 'job_posting_checkout_status',
+        status: 'processing',
+        jobId: 'job-1',
+        jobTitle: 'Staff Product Designer',
+        jobStatus: 'unpublished',
+        jobUrl: null,
+      });
     render(
       <PostJobForm
         DescriptionEditor={DescriptionEditor}
@@ -569,6 +598,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={onCheckout}
+        onCheckoutStatus={onCheckoutStatus}
       />,
     );
 
@@ -585,10 +615,18 @@ describe('PostJobForm', () => {
 
     fireEvent.click(pay);
     expect(
-      await screen.findByRole('heading', {
-        name: m.postCheckout_successTitle(),
-      }),
+      await screen.findByRole(
+        'heading',
+        { name: m.postCheckout_processingTitle() },
+        { timeout: 3000 },
+      ),
     ).toBeInTheDocument();
+    expect(onCheckoutStatus).toHaveBeenCalledWith({
+      data: { sessionId: 'cs_job' },
+    });
+    expect(
+      screen.queryByRole('heading', { name: m.postCheckout_successTitle() }),
+    ).toBeNull();
   });
 });
 
@@ -622,6 +660,7 @@ describe('PostJobForm — board job-form constraints', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     return onSubmit;
@@ -848,6 +887,7 @@ describe('PostJobForm — operator form layout', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     return onSubmit;
@@ -901,6 +941,7 @@ it('keeps submission disabled until a picked office finishes resolving', () => {
     onLogoFetch: vi.fn(),
     onLogoUpload: vi.fn(),
     onCheckout: vi.fn(),
+    onCheckoutStatus: vi.fn(),
   };
   const { container, rerender } = render(
     <PostJobForm

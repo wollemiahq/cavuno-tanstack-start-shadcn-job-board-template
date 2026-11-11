@@ -10,7 +10,7 @@ import {
 import { gatedRead } from './board-access';
 import { withCatalogFeatures } from './post-plans';
 
-import type { JobPostingResult } from '@cavuno/board';
+import type { JobPostingCheckoutStatus, JobPostingResult } from '@cavuno/board';
 
 /** The board's job-posting plans (for the wizard's plan step). */
 export const getPostPlans = createServerFn({ method: 'GET' })
@@ -62,6 +62,23 @@ export const submitJobPosting = createServerFn({ method: 'POST' })
         throw error;
       }
     }),
+  );
+
+/**
+ * Payment and job state for a job-posting checkout session, read after
+ * Stripe reports the embedded checkout complete. `awaiting_payment` until the
+ * platform has recorded the payment, usually within seconds.
+ */
+export const getJobPostingCheckout = createServerFn({ method: 'GET' })
+  .validator((input: { sessionId: string }) => input)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }): Promise<JobPostingCheckoutStatus> =>
+    gatedRead(context, (h) =>
+      getBoard().jobPosting.getCheckout(data.sessionId, {
+        headers: h,
+        cache: 'no-store',
+      }),
+    ),
   );
 
 /** A stored logo (its `publicUrl` becomes the submission's `logoUrl`), or a reason it failed. */

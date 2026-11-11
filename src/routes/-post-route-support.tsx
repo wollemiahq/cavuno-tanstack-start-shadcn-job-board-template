@@ -5,6 +5,7 @@ import { PostJobForm } from '@/components/post-job-form';
 import { m } from '@/paraglide/messages';
 import {
   fetchLogoByDomain,
+  getJobPostingCheckout,
   getPostPlans,
   submitJobPosting,
   uploadLogo,
@@ -13,6 +14,7 @@ import { getRemotePermits, getSeoBase } from '@/server/queries';
 
 export type PostRouteDependencies = {
   fetchLogoByDomain: typeof fetchLogoByDomain;
+  getJobPostingCheckout: typeof getJobPostingCheckout;
   getPostPlans: typeof getPostPlans;
   getRemotePermits: typeof getRemotePermits;
   getSeoBase: typeof getSeoBase;
@@ -23,6 +25,7 @@ export type PostRouteDependencies = {
 
 export const postRouteDependencies: PostRouteDependencies = {
   fetchLogoByDomain,
+  getJobPostingCheckout,
   getPostPlans,
   getRemotePermits,
   getSeoBase,
@@ -100,6 +103,7 @@ export function PostJobPageView({
               onCheckout: (url) => {
                 window.location.href = url;
               },
+              onCheckoutStatus: dependencies.getJobPostingCheckout,
             })}
         </div>
       </PageContent>

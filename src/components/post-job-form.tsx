@@ -3,6 +3,7 @@
 import {
   Fragment,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -118,7 +119,11 @@ import { PlaceTagsField } from '@/components/place-tags-field';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { searchString } from '@/lib/pagination';
-import type { PublicBoard, RemotePermitTaxonomyEntry } from '@cavuno/board';
+import type {
+  JobPostingCheckoutStatus,
+  PublicBoard,
+  RemotePermitTaxonomyEntry,
+} from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['remote', 'hybrid', 'on_site'] as const;
 
@@ -153,6 +158,7 @@ type Status =
   | { kind: 'pending' }
   | { kind: 'error'; message: string }
   | { kind: 'checkout'; kit: EmbeddedCheckoutKit }
+  | { kind: 'confirming'; sessionId: string }
   | { kind: 'done'; title: string; body: string };
 
 /** What Stripe.js needs to mount the job's embedded checkout. */
@@ -160,7 +166,45 @@ type EmbeddedCheckoutKit = {
   publishableKey: string;
   stripeAccountId: string;
   clientSecret: string;
+  sessionId: string;
 };
+
+/** Reads are a second apart; the platform records a payment within seconds. */
+const CHECKOUT_READ_ATTEMPTS = 10;
+
+/**
+ * What to tell the poster once Stripe says the checkout is complete. A
+ * complete checkout is not a cleared payment: a bank debit completes while it
+ * is still processing, and the board may review the job before it goes live.
+ */
+function checkoutOutcome(
+  checkout: JobPostingCheckoutStatus | null,
+): Extract<Status, { kind: 'done' }> {
+  const done = (title: string, body: string) =>
+    ({ kind: 'done', title, body }) as const;
+  switch (checkout?.status) {
+    case 'processing':
+      return done(
+        m.postCheckout_processingTitle(),
+        m.postCheckout_processingBody(),
+      );
+    case 'payment_failed':
+    case 'canceled':
+      return done(m.postCheckout_failedTitle(), m.postCheckout_failedBody());
+    case 'paid':
+      if (checkout.jobStatus === 'pending_approval') {
+        return done(m.postJob_pendingTitle(), m.postJob_pendingBody());
+      }
+      return checkout.jobStatus === 'published'
+        ? done(m.postJob_publishedTitle(), m.postJob_publishedBody())
+        : done(m.postCheckout_successTitle(), m.postCheckout_successBody());
+    default:
+      return done(
+        m.postCheckout_unconfirmedTitle(),
+        m.postCheckout_unconfirmedBody(),
+      );
+  }
+}
 
 type LogoStatus =
   | { kind: 'idle' }
@@ -226,6 +270,10 @@ export type PostJobFormProps = {
   onLogoFetch: (domain: string) => Promise<LogoResult>;
   onLogoUpload: (data: FormData) => Promise<LogoResult>;
   onCheckout: (url: string) => void;
+  /** Reads the job checkout's payment and job state by session. */
+  onCheckoutStatus: (input: {
+    data: { sessionId: string };
+  }) => Promise<JobPostingCheckoutStatus>;
   /** Editor implementation seam for isolated form tests. */
   DescriptionEditor?: React.ComponentType<RichTextEditorProps>;
 };
@@ -262,6 +310,7 @@ export function PostJobForm({
   onLogoFetch,
   onLogoUpload,
   onCheckout,
+  onCheckoutStatus,
   DescriptionEditor = RichTextEditor,
 }: PostJobFormProps) {
   // The operator's field order (or the pre-layout order on an older API).
@@ -323,19 +372,64 @@ export function PostJobForm({
     setFormState((current) => ({ ...current, ...patch }));
   }
 
-  // Cards complete in place (the platform asks Stripe to redirect only when a
-  // payment method needs it; those land on /post/success with the same copy).
-  // Stable, because the checkout remounts whenever its handler changes.
+  // Most payment methods complete in place (the platform asks Stripe to
+  // redirect only when one needs it; those land on /post/success). Stable,
+  // because the checkout remounts whenever its handler changes.
   const handleCheckoutComplete = useCallback(() => {
-    setFormState((current) => ({
-      ...current,
-      status: {
-        kind: 'done',
-        title: m.postCheckout_successTitle(),
-        body: m.postCheckout_successBody(),
-      },
-    }));
+    setFormState((current) =>
+      current.status.kind === 'checkout'
+        ? {
+            ...current,
+            status: {
+              kind: 'confirming',
+              sessionId: current.status.kit.sessionId,
+            },
+          }
+        : current,
+    );
   }, []);
+
+  // Stripe's "complete" is not "paid": read what the platform recorded until
+  // it has heard from Stripe, then say what actually happened.
+  const confirmingSessionId =
+    formState.status.kind === 'confirming' ? formState.status.sessionId : null;
+  useEffect(() => {
+    if (!confirmingSessionId) return;
+    let stop = false;
+    let timerId: number | undefined;
+    let attempts = 0;
+    const finish = (checkout: JobPostingCheckoutStatus | null) =>
+      setFormState((current) => ({
+        ...current,
+        status: checkoutOutcome(checkout),
+      }));
+    const read = async () => {
+      attempts += 1;
+      let checkout: JobPostingCheckoutStatus;
+      try {
+        checkout = await onCheckoutStatus({
+          data: { sessionId: confirmingSessionId },
+        });
+      } catch {
+        if (!stop) finish(null);
+        return;
+      }
+      if (stop) return;
+      if (
+        checkout.status === 'awaiting_payment' &&
+        attempts < CHECKOUT_READ_ATTEMPTS
+      ) {
+        timerId = window.setTimeout(read, 1000);
+      } else {
+        finish(checkout.status === 'awaiting_payment' ? null : checkout);
+      }
+    };
+    void read();
+    return () => {
+      stop = true;
+      window.clearTimeout(timerId);
+    };
+  }, [confirmingSessionId, onCheckoutStatus]);
 
   function addOfficeLocation(location: OfficeLocationDraft) {
     // Suggestions are already narrowed to the board's allowed countries;
@@ -1068,6 +1162,22 @@ export function PostJobForm({
           onComplete={handleCheckoutComplete}
         />
       </PageSection>
+    );
+  }
+
+  if (status.kind === 'confirming') {
+    return (
+      <Card className="mx-auto max-w-xl text-center">
+        <CardContent className="flex flex-col items-center gap-2 py-8">
+          <Spinner className="size-6" />
+          <h2 className="font-heading text-3xl font-semibold tracking-tight">
+            {m.employerLanding_confirmingText()}
+          </h2>
+          <p className="text-muted-foreground">
+            {m.employerLanding_confirmingSubtitle()}
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
