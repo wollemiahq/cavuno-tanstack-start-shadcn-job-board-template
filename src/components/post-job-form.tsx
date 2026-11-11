@@ -3,7 +3,6 @@
 import {
   Fragment,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -35,6 +34,10 @@ import {
   publicInvoiceBillingBody,
   type InvoiceBillingDraft,
 } from './invoice-billing-fields';
+import {
+  useJobCheckoutOutcome,
+  type ReadJobCheckout,
+} from './job-checkout-outcome';
 import { PageSection } from './layout/page';
 import { EmbeddedCheckout } from './paywall/embedded-checkout';
 import {
@@ -119,11 +122,7 @@ import { PlaceTagsField } from '@/components/place-tags-field';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { enumLabel, salaryTimeframeLabel } from '@/lib/enum-labels';
 import { searchString } from '@/lib/pagination';
-import type {
-  JobPostingCheckoutStatus,
-  PublicBoard,
-  RemotePermitTaxonomyEntry,
-} from '@cavuno/board';
+import type { PublicBoard, RemotePermitTaxonomyEntry } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['remote', 'hybrid', 'on_site'] as const;
 
@@ -168,43 +167,6 @@ type EmbeddedCheckoutKit = {
   clientSecret: string;
   sessionId: string;
 };
-
-/** Reads are a second apart; the platform records a payment within seconds. */
-const CHECKOUT_READ_ATTEMPTS = 10;
-
-/**
- * What to tell the poster once Stripe says the checkout is complete. A
- * complete checkout is not a cleared payment: a bank debit completes while it
- * is still processing, and the board may review the job before it goes live.
- */
-function checkoutOutcome(
-  checkout: JobPostingCheckoutStatus | null,
-): Extract<Status, { kind: 'done' }> {
-  const done = (title: string, body: string) =>
-    ({ kind: 'done', title, body }) as const;
-  switch (checkout?.status) {
-    case 'processing':
-      return done(
-        m.postCheckout_processingTitle(),
-        m.postCheckout_processingBody(),
-      );
-    case 'payment_failed':
-    case 'canceled':
-      return done(m.postCheckout_failedTitle(), m.postCheckout_failedBody());
-    case 'paid':
-      if (checkout.jobStatus === 'pending_approval') {
-        return done(m.postJob_pendingTitle(), m.postJob_pendingBody());
-      }
-      return checkout.jobStatus === 'published'
-        ? done(m.postJob_publishedTitle(), m.postJob_publishedBody())
-        : done(m.postCheckout_successTitle(), m.postCheckout_successBody());
-    default:
-      return done(
-        m.postCheckout_unconfirmedTitle(),
-        m.postCheckout_unconfirmedBody(),
-      );
-  }
-}
 
 type LogoStatus =
   | { kind: 'idle' }
@@ -271,9 +233,7 @@ export type PostJobFormProps = {
   onLogoUpload: (data: FormData) => Promise<LogoResult>;
   onCheckout: (url: string) => void;
   /** Reads the job checkout's payment and job state by session. */
-  onCheckoutStatus: (input: {
-    data: { sessionId: string };
-  }) => Promise<JobPostingCheckoutStatus>;
+  onCheckoutStatus: ReadJobCheckout;
   /** Editor implementation seam for isolated form tests. */
   DescriptionEditor?: React.ComponentType<RichTextEditorProps>;
 };
@@ -388,48 +348,11 @@ export function PostJobForm({
         : current,
     );
   }, []);
-
-  // Stripe's "complete" is not "paid": read what the platform recorded until
-  // it has heard from Stripe, then say what actually happened.
-  const confirmingSessionId =
-    formState.status.kind === 'confirming' ? formState.status.sessionId : null;
-  useEffect(() => {
-    if (!confirmingSessionId) return;
-    let stop = false;
-    let timerId: number | undefined;
-    let attempts = 0;
-    const finish = (checkout: JobPostingCheckoutStatus | null) =>
-      setFormState((current) => ({
-        ...current,
-        status: checkoutOutcome(checkout),
-      }));
-    const read = async () => {
-      attempts += 1;
-      let checkout: JobPostingCheckoutStatus;
-      try {
-        checkout = await onCheckoutStatus({
-          data: { sessionId: confirmingSessionId },
-        });
-      } catch {
-        if (!stop) finish(null);
-        return;
-      }
-      if (stop) return;
-      if (
-        checkout.status === 'awaiting_payment' &&
-        attempts < CHECKOUT_READ_ATTEMPTS
-      ) {
-        timerId = window.setTimeout(read, 1000);
-      } else {
-        finish(checkout.status === 'awaiting_payment' ? null : checkout);
-      }
-    };
-    void read();
-    return () => {
-      stop = true;
-      window.clearTimeout(timerId);
-    };
-  }, [confirmingSessionId, onCheckoutStatus]);
+  // Stripe's "complete" is not "paid": say what the platform recorded.
+  const checkoutOutcome = useJobCheckoutOutcome(
+    formState.status.kind === 'confirming' ? formState.status.sessionId : null,
+    onCheckoutStatus,
+  );
 
   function addOfficeLocation(location: OfficeLocationDraft) {
     // Suggestions are already narrowed to the board's allowed countries;
@@ -1165,7 +1088,7 @@ export function PostJobForm({
     );
   }
 
-  if (status.kind === 'confirming') {
+  if (status.kind === 'confirming' && !checkoutOutcome) {
     return (
       <Card className="mx-auto max-w-xl text-center">
         <CardContent className="flex flex-col items-center gap-2 py-8">
@@ -1181,14 +1104,20 @@ export function PostJobForm({
     );
   }
 
-  if (status.kind === 'done') {
+  const done =
+    status.kind === 'done'
+      ? status
+      : status.kind === 'confirming'
+        ? checkoutOutcome
+        : null;
+  if (done) {
     return (
       <Card className="mx-auto max-w-xl text-center">
         <CardContent className="space-y-2 py-8">
           <h2 className="font-heading text-3xl font-semibold tracking-tight">
-            {status.title}
+            {done.title}
           </h2>
-          <p className="text-muted-foreground">{status.body}</p>
+          <p className="text-muted-foreground">{done.body}</p>
         </CardContent>
       </Card>
     );
