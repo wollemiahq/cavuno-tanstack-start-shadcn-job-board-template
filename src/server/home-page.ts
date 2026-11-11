@@ -22,6 +22,7 @@ import { gatedRead } from './board-access';
 import { resolveHomeCopy } from './home-copy';
 import { readTalentDirectory } from './talent-directory-read';
 
+import { homeJsonLd } from '@/board/home-json-ld';
 import { catalogJobCount } from '@/board/job-catalog-count';
 import { topCategoriesFromTaxonomy } from '@/board/top-categories';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
@@ -158,15 +159,22 @@ export const getHomePage = createServerFn({ method: 'GET' })
         links: [{ rel: 'canonical', href: canonical }],
       };
 
-      // Same ItemList + single jobs-breadcrumb shape the body <JsonLd> built
-      // (not the multi-crumb /jobs listing shape).
-      const jsonLd = asJsonObjects(
-        listingJsonLd({
+      // WebSite + Organization for the board itself, then the same ItemList
+      // + single jobs-breadcrumb shape the body <JsonLd> built (not the
+      // multi-crumb /jobs listing shape).
+      const jsonLd = asJsonObjects([
+        ...homeJsonLd({
+          boardName: seo.boardName,
+          homeUrl: canonical,
+          jobsUrl: selfUrl(seo.origin, '/jobs'),
+          logoUrl: boardContext.logoUrl,
+        }),
+        ...listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [{ name: breadcrumbsCopy().jobs }],
           jobs: page.data,
         }),
-      );
+      ]);
 
       return {
         copy,
