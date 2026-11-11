@@ -1,3 +1,4 @@
+import { BoardApiError } from '@cavuno/board';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -19,18 +20,21 @@ const getSessionUser = vi.fn<JobDetailLoaderDependencies['getSessionUser']>();
 const getSimilarJobs = vi.fn<JobDetailLoaderDependencies['getSimilarJobs']>();
 const myApplicationForJob =
   vi.fn<JobDetailLoaderDependencies['myApplicationForJob']>();
+const resolveRedirect = vi.fn<JobDetailLoaderDependencies['resolveRedirect']>();
 const dependencies: JobDetailLoaderDependencies = {
   getCompany,
   getJobDetailPage,
   getSessionUser,
   getSimilarJobs,
   myApplicationForJob,
+  resolveRedirect,
 };
 const loadJobDetail = createJobDetailLoader(dependencies);
 
 function jobDetailLoaderInput() {
   return {
     params: { companySlug: 'acme', jobSlug: 'platform-engineer' },
+    location: { publicHref: '/companies/acme/jobs/platform-engineer' },
   };
 }
 
@@ -41,6 +45,7 @@ beforeEach(() => {
   getSimilarJobs.mockReset();
   getCompany.mockReset();
   myApplicationForJob.mockReset();
+  resolveRedirect.mockReset();
   getJobDetailPage.mockResolvedValue({
     job: publicJobFixture('platform-engineer'),
     seo: {
@@ -126,5 +131,41 @@ describe('full job application state', () => {
       job: { slug: 'platform-engineer' },
       applicationState: 'unknown',
     });
+  });
+});
+
+describe('a missing job', () => {
+  it('308s to the managed redirect for the localized URL', async () => {
+    getJobDetailPage.mockRejectedValue(
+      new BoardApiError({
+        status: 404,
+        code: 'not_found',
+        message: 'Not found',
+        raw: undefined,
+      }),
+    );
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/bedrijven/acme/vacatures/oud',
+      target: '/vacatures',
+    });
+
+    const result = loadJobDetail({
+      ...jobDetailLoaderInput(),
+      location: { publicHref: '/bedrijven/acme/vacatures/oud' },
+    });
+
+    await expect(result).rejects.toMatchObject({
+      options: { href: '/vacatures', statusCode: 308 },
+    });
+    expect(resolveRedirect).toHaveBeenCalledWith({
+      data: { path: '/bedrijven/acme/vacatures/oud' },
+    });
+  });
+
+  it('does not look up a managed redirect for a job that renders', async () => {
+    await loadJobDetail(jobDetailLoaderInput());
+
+    expect(resolveRedirect).not.toHaveBeenCalled();
   });
 });

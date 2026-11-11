@@ -67,8 +67,10 @@ export function createCatchAllLoader(
 
 /**
  * 308 to the board's configured redirect for `path`, else 404. Shared by
- * routes whose own lookup missed (a retired blog post), so every managed
- * redirect gets the same refusal and failure handling.
+ * routes whose own lookup missed (a retired blog post, a removed company or
+ * job, an unknown taxonomy slug), so every managed redirect gets the same
+ * refusal and failure handling. Called only on the miss: a page that renders
+ * never pays for the lookup.
  */
 export async function followManagedRedirect(
   resolve: typeof resolveRedirect,
@@ -77,6 +79,22 @@ export async function followManagedRedirect(
   const target = await managedRedirectTarget(resolve, path);
   if (target) throw managedRedirect(target);
   throw notFound();
+}
+
+/**
+ * The path the visitor requested, as they typed it: localized segments and
+ * any locale prefix kept (`/bedrijven/acme`), percent-decoded like a route
+ * param. A route's own params come from the delocalized path the router
+ * matches (`/companies/acme`), but operators write redirect rules against the
+ * URLs visitors see, so a route whose lookup missed asks with this.
+ */
+export function requestedPath(location: { publicHref: string }): string {
+  const [pathname = '/'] = location.publicHref.split(/[?#]/, 1);
+  try {
+    return decodeURI(pathname);
+  } catch {
+    return pathname;
+  }
 }
 
 /** The configured redirect target for `path`, or null. A refused lookup

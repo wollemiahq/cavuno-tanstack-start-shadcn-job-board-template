@@ -1,4 +1,4 @@
-import { isRedirect } from '@tanstack/react-router';
+import { isNotFound, isRedirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -10,6 +10,7 @@ import {
 } from './-jobs-taxonomy-loaders';
 
 import type * as JobsListingPages from '../server/jobs-listing-pages';
+import type * as Queries from '../server/queries';
 
 // The programmatic jobs routes 308 an inbound alias slug to its canonical form
 // (parity with `companies.markets` and the salaries family). A redirect thrown
@@ -27,7 +28,12 @@ const getJobsLocationCategoryPage =
 const getJobsLocationSkillPage =
   vi.fn<typeof JobsListingPages.getJobsLocationSkillPage>();
 
-const keywordLoader = createJobsCategoryLoader(getJobsCategoryPage);
+const resolveRedirect = vi.fn<typeof Queries.resolveRedirect>();
+
+const keywordLoader = createJobsCategoryLoader(
+  getJobsCategoryPage,
+  resolveRedirect,
+);
 const skillLoader = createJobsSkillLoader(getJobsSkillPage);
 const locationLoader = createJobsLocationLoader(getJobsLocationPage);
 const locationKeywordLoader = createJobsLocationCategoryLoader(
@@ -44,6 +50,7 @@ function keywordLoaderInput() {
   return {
     params: { keyword: 'eng' },
     deps: {},
+    location: { publicHref: '/jobs/eng' },
   };
 }
 
@@ -51,6 +58,7 @@ function skillLoaderInput() {
   return {
     params: { skill: 'reactjs' },
     deps: {},
+    location: { publicHref: '/jobs/skills/reactjs' },
   };
 }
 
@@ -58,6 +66,7 @@ function locationLoaderInput() {
   return {
     params: { location: 'ldn' },
     deps: {},
+    location: { publicHref: '/jobs/locations/ldn' },
   };
 }
 
@@ -65,6 +74,7 @@ function locationKeywordLoaderInput() {
   return {
     params: { location: 'ldn', keyword: 'engineering' },
     deps: {},
+    location: { publicHref: '/jobs/locations/ldn/engineering' },
   };
 }
 
@@ -72,6 +82,7 @@ function locationSkillLoaderInput() {
   return {
     params: { location: 'london', skill: 'reactjs' },
     deps: {},
+    location: { publicHref: '/jobs/locations/london/skills/reactjs' },
   };
 }
 
@@ -121,6 +132,7 @@ beforeEach(() => {
   getJobsLocationPage.mockReset();
   getJobsLocationCategoryPage.mockReset();
   getJobsLocationSkillPage.mockReset();
+  resolveRedirect.mockReset();
 });
 
 describe('programmatic jobs routes — canonical-slug redirects are permanent (308)', () => {
@@ -189,5 +201,40 @@ describe('programmatic jobs routes — canonical-slug redirects are permanent (3
       to: '/jobs/locations/$location/skills/$skill',
       statusCode: 308,
     });
+  });
+});
+
+describe('programmatic jobs routes — an unknown slug', () => {
+  it('308s to the managed redirect for the URL as the visitor typed it', async () => {
+    getJobsCategoryPage.mockResolvedValue({ kind: 'not_found' });
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/vacatures/oud',
+      target: '/vacatures/nieuw',
+    });
+
+    const result = keywordLoader({
+      params: { keyword: 'oud' },
+      deps: {},
+      location: { publicHref: '/vacatures/oud?page=2' },
+    });
+
+    await expect(result).rejects.toMatchObject({
+      options: { href: '/vacatures/nieuw', statusCode: 308 },
+    });
+    expect(resolveRedirect).toHaveBeenCalledWith({
+      data: { path: '/vacatures/oud' },
+    });
+  });
+
+  it('404s when no managed redirect matches', async () => {
+    getJobsCategoryPage.mockResolvedValue({ kind: 'not_found' });
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/jobs/eng',
+      target: null,
+    });
+
+    await expect(runKeywordLoader()).resolves.toSatisfy(isNotFound);
   });
 });

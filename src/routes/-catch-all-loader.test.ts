@@ -2,7 +2,7 @@ import { BoardApiError } from '@cavuno/board';
 import { isNotFound, isRedirect, redirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createCatchAllLoader } from './-catch-all-loader';
+import { createCatchAllLoader, requestedPath } from './-catch-all-loader';
 
 import type * as DisabledLocale from '../server/disabled-locale';
 import type * as Queries from '../server/queries';
@@ -147,5 +147,19 @@ describe('catch-all loader', () => {
       await expect(load('xx/emplois')).rejects.toSatisfy(isNotFound);
       expect(resolveDisabledLocale).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('requestedPath', () => {
+  it('keeps the localized path and drops the query and hash', () => {
+    expect(requestedPath({ publicHref: '/bedrijven/acme?page=2#top' })).toBe(
+      '/bedrijven/acme',
+    );
+  });
+
+  it('decodes the path like a route param', () => {
+    expect(requestedPath({ publicHref: '/bedrijven/caf%C3%A9' })).toBe(
+      '/bedrijven/café',
+    );
   });
 });
