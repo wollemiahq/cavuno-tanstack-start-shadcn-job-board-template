@@ -395,9 +395,18 @@ export function MembershipsPageView({
   /** Set when Stripe sent the buyer back with a session to confirm. */
   returning?: { sessionId: string; companySlug: string } | null;
 }): ReactNode {
-  const [kit, setKit] = useState<MembershipCheckoutSession | null>(null);
+  // The open checkout and the company it buys for, so a card payment that
+  // completes in place can poll the same seat a return redirect would.
+  const [checkout, setCheckout] = useState<{
+    kit: MembershipCheckoutSession;
+    companySlug: string;
+  } | null>(null);
+  const kit = checkout?.kit ?? null;
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Set by Stripe's return redirect, or by `onComplete` when the payment
+  // finished on this page.
+  const [confirming, setConfirming] = useState(returning);
   const [polling, setPolling] = useState(Boolean(returning));
   const [confirmed, setConfirmed] = useState(false);
   const [paymentState, setPaymentState] = useState<
@@ -405,11 +414,12 @@ export function MembershipsPageView({
   >(null);
   const [exhausted, setExhausted] = useState(false);
 
-  // After Stripe's return redirect: poll the session until it is `complete`,
+  // After the payment (in place or via Stripe's return redirect): poll the
+  // session until it is `complete`,
   // then re-read the page so the roster shows the new member. The grant
   // itself lands by webhook, so a still-`open` session is just "not yet".
   useEffect(() => {
-    if (!polling || !returning || !getCheckoutStateAction) return;
+    if (!polling || !confirming || !getCheckoutStateAction) return;
     let stop = false;
     let attempts = 0;
     let timerId: number;
@@ -419,7 +429,7 @@ export function MembershipsPageView({
         membershipActive?: boolean;
       };
       try {
-        state = await getCheckoutStateAction({ data: returning });
+        state = await getCheckoutStateAction({ data: confirming });
       } catch {
         if (stop) return;
         setPolling(false);
@@ -449,13 +459,23 @@ export function MembershipsPageView({
       stop = true;
       window.clearTimeout(timerId);
     };
-  }, [getCheckoutStateAction, invalidate, polling, returning]);
+  }, [confirming, getCheckoutStateAction, invalidate, polling]);
 
+  const checkoutSessionId = checkout?.kit.sessionId;
+  const checkoutCompanySlug = checkout?.companySlug;
   const handleCheckoutComplete = useCallback(() => {
-    // Stripe redirects to `return_url` itself; nothing to do here beyond
-    // hiding the form if the redirect is slow.
-    setKit(null);
-  }, []);
+    // A card payment completes in place (the checkout asks Stripe to redirect
+    // only when a payment method needs it): confirm it here, as the return
+    // redirect would.
+    if (checkoutSessionId && checkoutCompanySlug) {
+      setConfirming({
+        sessionId: checkoutSessionId,
+        companySlug: checkoutCompanySlug,
+      });
+      setPolling(true);
+    }
+    setCheckout(null);
+  }, [checkoutCompanySlug, checkoutSessionId]);
 
   async function join(plan: Plan, companySlug: string) {
     if (!startCheckoutAction) return;
@@ -469,7 +489,7 @@ export function MembershipsPageView({
           returnPath: `${MEMBERSHIPS_PATH}?company=${encodeURIComponent(companySlug)}`,
         },
       });
-      if (result.ok) setKit(result.data);
+      if (result.ok) setCheckout({ kit: result.data, companySlug });
       else setError(boardErrorMessage(result));
     } catch {
       setError(boardErrorMessage({}));
@@ -491,7 +511,7 @@ export function MembershipsPageView({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setKit(null)}
+                  onClick={() => setCheckout(null)}
                 >
                   {m.employerLanding_backToPlansLabel()}
                 </Button>
