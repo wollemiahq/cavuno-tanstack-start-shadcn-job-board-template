@@ -2,7 +2,7 @@ import { BoardApiError } from '@cavuno/board';
 import { isNotFound, isRedirect, redirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createCatchAllLoader } from './-catch-all-loader';
+import { createCatchAllLoader, requestedPath } from './-catch-all-loader';
 
 import type * as DisabledLocale from '../server/disabled-locale';
 import type * as Queries from '../server/queries';
@@ -24,10 +24,15 @@ function apiError(status: number) {
   });
 }
 
-function load(path: string, searchStr = '') {
+/** `path` is the router's (delocalized) href; `publicHref` is the URL the
+ * visitor typed, which differs only under an enabled locale prefix. */
+function load(path: string, searchStr = '', publicPath = path) {
   return loadCatchAll({
-    params: { _splat: path },
-    location: { href: `/${encodeURI(path)}${searchStr}`, searchStr },
+    location: {
+      href: `/${encodeURI(path)}${searchStr}`,
+      publicHref: `/${encodeURI(publicPath)}${searchStr}`,
+      searchStr,
+    },
   });
 }
 
@@ -60,6 +65,23 @@ describe('catch-all loader', () => {
     });
     expect(resolveRedirect).toHaveBeenCalledWith({
       data: { path: '/old-jobs' },
+    });
+  });
+
+  it('asks with the locale-prefixed URL the visitor typed', async () => {
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/fr/ancienne-page',
+      target: '/fr/emplois',
+    });
+
+    const result = load('ancienne-page', '?page=2', 'fr/ancienne-page');
+
+    await expect(result).rejects.toMatchObject({
+      options: { href: '/fr/emplois', statusCode: 308 },
+    });
+    expect(resolveRedirect).toHaveBeenCalledWith({
+      data: { path: '/fr/ancienne-page' },
     });
   });
 
@@ -147,5 +169,19 @@ describe('catch-all loader', () => {
       await expect(load('xx/emplois')).rejects.toSatisfy(isNotFound);
       expect(resolveDisabledLocale).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('requestedPath', () => {
+  it('keeps the localized path and drops the query and hash', () => {
+    expect(requestedPath({ publicHref: '/bedrijven/acme?page=2#top' })).toBe(
+      '/bedrijven/acme',
+    );
+  });
+
+  it('decodes the path like a route param', () => {
+    expect(requestedPath({ publicHref: '/bedrijven/caf%C3%A9' })).toBe(
+      '/bedrijven/café',
+    );
   });
 });
