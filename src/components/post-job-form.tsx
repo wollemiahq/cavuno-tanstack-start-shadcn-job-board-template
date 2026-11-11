@@ -1,6 +1,13 @@
 'use client';
 
-import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
 import { Check, ImagePlus } from 'lucide-react';
@@ -28,6 +35,7 @@ import {
   type InvoiceBillingDraft,
 } from './invoice-billing-fields';
 import { PageSection } from './layout/page';
+import { EmbeddedCheckout } from './paywall/embedded-checkout';
 import {
   RichTextEditor,
   RICH_TEXT_MAX_CHARACTERS,
@@ -144,7 +152,15 @@ type Status =
   | { kind: 'idle' }
   | { kind: 'pending' }
   | { kind: 'error'; message: string }
+  | { kind: 'checkout'; kit: EmbeddedCheckoutKit }
   | { kind: 'done'; title: string; body: string };
+
+/** What Stripe.js needs to mount the job's embedded checkout. */
+type EmbeddedCheckoutKit = {
+  publishableKey: string;
+  stripeAccountId: string;
+  clientSecret: string;
+};
 
 type LogoStatus =
   | { kind: 'idle' }
@@ -306,6 +322,20 @@ export function PostJobForm({
   function updateFormState(patch: Partial<PostJobFormState>) {
     setFormState((current) => ({ ...current, ...patch }));
   }
+
+  // Cards complete in place (the platform asks Stripe to redirect only when a
+  // payment method needs it; those land on /post/success with the same copy).
+  // Stable, because the checkout remounts whenever its handler changes.
+  const handleCheckoutComplete = useCallback(() => {
+    setFormState((current) => ({
+      ...current,
+      status: {
+        kind: 'done',
+        title: m.postCheckout_successTitle(),
+        body: m.postCheckout_successBody(),
+      },
+    }));
+  }, []);
 
   function addOfficeLocation(location: OfficeLocationDraft) {
     // Suggestions are already narrowed to the board's allowed countries;
@@ -709,6 +739,11 @@ export function PostJobForm({
       }
 
       switch (result.result.status) {
+        case 'embedded_checkout':
+          updateFormState({
+            status: { kind: 'checkout', kit: result.result },
+          });
+          return;
         case 'checkout':
           onCheckout(result.result.checkoutUrl);
           return;
@@ -1024,6 +1059,17 @@ export function PostJobForm({
         ? 'roleType'
         : null,
   );
+
+  if (status.kind === 'checkout') {
+    return (
+      <PageSection title={m.employerLanding_completePurchaseTitle()}>
+        <EmbeddedCheckout
+          kit={status.kit}
+          onComplete={handleCheckoutComplete}
+        />
+      </PageSection>
+    );
+  }
 
   if (status.kind === 'done') {
     return (

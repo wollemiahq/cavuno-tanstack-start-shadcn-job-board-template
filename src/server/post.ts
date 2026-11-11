@@ -37,27 +37,34 @@ export type SubmitJobResult =
 
 /**
  * Submit a job to the board. Maps the flat form into the SDK's CreateJobPostingInput
- * and returns the status-discriminated result (the client redirects on `checkout`).
+ * and returns the status-discriminated result (the client mounts
+ * `embedded_checkout`).
  * A rejected submission throws a `BoardApiError`, surfaced here as `{ ok: false }`.
  */
 export const submitJobPosting = createServerFn({ method: 'POST' })
   .validator((input: SubmitJobInput) => input)
   .middleware([boardAccessMiddleware])
-  .handler(({ data, context }): Promise<SubmitJobResult> =>
-    gatedRead(context, async (h): Promise<SubmitJobResult> => {
-      try {
-        const result = await getBoard().jobPosting.create(
-          toCreateJobPostingInput(data),
-          { headers: h },
-        );
-        return { ok: true, result };
-      } catch (error) {
-        if (isBoardApiError(error)) {
-          return { ok: false, code: error.code, message: error.message };
+  .handler(
+    ({ data, context }): Promise<SubmitJobResult> =>
+      gatedRead(context, async (h): Promise<SubmitJobResult> => {
+        try {
+          // Embedded: the buyer pays on the board instead of leaving for a
+          // Stripe-hosted page, and a card payment completes in place.
+          const result = await getBoard().jobPosting.create(
+            {
+              ...toCreateJobPostingInput(data),
+              checkoutUiMode: 'embedded_page',
+            },
+            { headers: h },
+          );
+          return { ok: true, result };
+        } catch (error) {
+          if (isBoardApiError(error)) {
+            return { ok: false, code: error.code, message: error.message };
+          }
+          throw error;
         }
-        throw error;
-      }
-    }),
+      }),
   );
 
 /** A stored logo (its `publicUrl` becomes the submission's `logoUrl`), or a reason it failed. */
@@ -74,27 +81,28 @@ export const uploadLogo = createServerFn({ method: 'POST' })
   // native multipart body intact. Do NOT "simplify" this to a JSON validator.
   .validator((data: FormData) => data)
   .middleware([boardAccessMiddleware])
-  .handler(({ data, context }): Promise<LogoResult> =>
-    gatedRead(context, async (h): Promise<LogoResult> => {
-      const file = data.get('file');
-      if (!(file instanceof File)) {
-        return {
-          ok: false,
-          code: 'invalid_file',
-          message: 'Choose an image file.',
-        };
-      }
-      try {
-        const { publicUrl } = await getBoard().jobPosting.uploadLogo(file, {
-          headers: h,
-        });
-        return { ok: true, publicUrl };
-      } catch (error) {
-        if (isBoardApiError(error))
-          return { ok: false, code: error.code, message: error.message };
-        throw error;
-      }
-    }),
+  .handler(
+    ({ data, context }): Promise<LogoResult> =>
+      gatedRead(context, async (h): Promise<LogoResult> => {
+        const file = data.get('file');
+        if (!(file instanceof File)) {
+          return {
+            ok: false,
+            code: 'invalid_file',
+            message: 'Choose an image file.',
+          };
+        }
+        try {
+          const { publicUrl } = await getBoard().jobPosting.uploadLogo(file, {
+            headers: h,
+          });
+          return { ok: true, publicUrl };
+        } catch (error) {
+          if (isBoardApiError(error))
+            return { ok: false, code: error.code, message: error.message };
+          throw error;
+        }
+      }),
   );
 
 /**
@@ -104,21 +112,22 @@ export const uploadLogo = createServerFn({ method: 'POST' })
 export const fetchLogoByDomain = createServerFn({ method: 'POST' })
   .validator((input: { domain: string }) => input)
   .middleware([boardAccessMiddleware])
-  .handler(({ data, context }): Promise<LogoResult> =>
-    gatedRead(context, async (h): Promise<LogoResult> => {
-      try {
-        const { publicUrl } = await getBoard().jobPosting.fetchLogoByDomain(
-          data.domain,
-          { headers: h },
-        );
-        return { ok: true, publicUrl };
-      } catch (error) {
-        if (isBoardApiError(error)) {
-          // Wire code + wire message; the client resolves display copy
-          // from the code (boardErrorMessage maps logo codes too).
-          return { ok: false, code: error.code, message: error.message };
+  .handler(
+    ({ data, context }): Promise<LogoResult> =>
+      gatedRead(context, async (h): Promise<LogoResult> => {
+        try {
+          const { publicUrl } = await getBoard().jobPosting.fetchLogoByDomain(
+            data.domain,
+            { headers: h },
+          );
+          return { ok: true, publicUrl };
+        } catch (error) {
+          if (isBoardApiError(error)) {
+            // Wire code + wire message; the client resolves display copy
+            // from the code (boardErrorMessage maps logo codes too).
+            return { ok: false, code: error.code, message: error.message };
+          }
+          throw error;
         }
-        throw error;
-      }
-    }),
+      }),
   );
