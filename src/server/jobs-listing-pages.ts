@@ -22,10 +22,12 @@ import {
   BOARD_PATHS,
   jobsCategoryPath,
   jobsLocationCategoryPath,
+  jobsLocationPath,
   jobsLocationSkillPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
+import { MIN_JOBS_PER_INDEXED_PAGE } from '@cavuno/board/sitemap';
 import { createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
@@ -64,6 +66,11 @@ import {
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import {
+  locationCategoryListingCopy,
+  locationListingCopy,
+  locationSkillListingCopy,
+} from '@/copy-groups/location-listing';
+import {
   customFieldFiltersOrUndefined,
   hasCustomFieldSearch,
   resolveCustomFieldFilters,
@@ -77,6 +84,11 @@ import {
   type CountedHeading,
 } from '@/lib/listing-description';
 import { reachableCountOf, readReachablePage } from '@/lib/pagination';
+import {
+  INDEXABLE_WORK_ARRANGEMENT,
+  isWorkArrangementSlug,
+  type WorkArrangementSlug,
+} from '@/lib/work-arrangement';
 import type {
   EmploymentType,
   JobSort,
@@ -326,6 +338,35 @@ function combinationNoindexCount(
   return place.suggested || placeJobCount(placeTree?.data, place) === 0
     ? 0
     : inPlaceJobCount;
+}
+
+/**
+ * Whether a work arrangement page (`remote`, `hybrid` or `on-site` in the
+ * location slot) is `noindex, follow`. Only the remote page is indexed, as
+ * the sitemap lists it: its plain view once its jobs reach the thin-content
+ * floor, and its other views canonicalize to it as a place page's do. An
+ * unknown count stays below the floor, like a suggested place's. Hybrid,
+ * on-site and every arrangement combination are never indexed.
+ */
+function isWorkArrangementPageNoindex(
+  slug: WorkArrangementSlug,
+  data: JobsListingFiltersInput & { within?: number },
+  jobCount: number | undefined,
+): boolean {
+  if (slug !== INDEXABLE_WORK_ARRANGEMENT) return true;
+  if (!isPlainListingView(data)) return false;
+  return (jobCount ?? 0) < MIN_JOBS_PER_INDEXED_PAGE;
+}
+
+/** A combination's link back to its work arrangement page ("Remote jobs"). */
+function workArrangementCrumb(
+  slug: WorkArrangementSlug,
+  place: { displayName: string },
+) {
+  return {
+    name: locationListingCopy(slug, place).heading,
+    href: jobsLocationPath(slug),
+  };
 }
 
 /** The board's job custom fields as "All filters" controls. */
@@ -665,6 +706,9 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
+      const arrangement = isWorkArrangementSlug(data.locationSlug)
+        ? data.locationSlug
+        : null;
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
@@ -673,10 +717,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       // the SEO, breadcrumb and taxonomy reads as well.
       const seoRead = startedEarly(seoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
-      // chain; on failure the trail degrades to the place itself.
-      const placeTreeRead = board.taxonomy.places
-        .list(undefined, { headers })
-        .catch(() => null);
+      // chain; on failure the trail degrades to the place itself. A work
+      // arrangement has no ancestors.
+      const placeTreeRead = arrangement
+        ? Promise.resolve(null)
+        : board.taxonomy.places.list(undefined, { headers }).catch(() => null);
       filters.sort = await placeListingSort(
         filters.sort,
         data.locationSlug,
@@ -742,18 +787,19 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         data.within,
         place.defaultRadiusKm,
       );
-      const heading = m.locationPage_jobsHeading({ place: place.displayName });
-      const countedHeading: CountedHeading = (counted) =>
-        m.locationPage_jobsCountHeading({
-          ...counted,
-          place: place.displayName,
-        });
+      const { heading, countedHeading } = locationListingCopy(
+        data.locationSlug,
+        place,
+      );
       // Hosted parity: Home > Jobs > country > … > current place (terminal).
+      // A work arrangement page ends on its own heading.
       const crumbs = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: crumbs.home, href: BOARD_PATHS.home },
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
-        ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place),
+        ...(arrangement
+          ? [{ name: heading }]
+          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place)),
       ];
       const headCopy = landingDocument(place, data, {
         title: listingPageTitle({
@@ -778,13 +824,20 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           description: headCopy.description,
         }),
         // A suggested place is indexed at its default distance with enough
-        // on-site and hybrid jobs within it.
-        place.suggested
-          ? (indexJobCount ?? 0) < SUGGESTED_PLACE_INDEX_MIN_JOBS
-          : isSearchRadiusViewNoindex(
-              searchRadius,
-              placeJobCount(placeTree?.data, place),
-            ),
+        // on-site and hybrid jobs within it. A work arrangement page's own
+        // count is the listing's total: on the plain view it is unfiltered.
+        arrangement
+          ? isWorkArrangementPageNoindex(
+              arrangement,
+              data,
+              catalogJobCount(list.count, list.gatedCount),
+            )
+          : place.suggested
+            ? (indexJobCount ?? 0) < SUGGESTED_PLACE_INDEX_MIN_JOBS
+            : isSearchRadiusViewNoindex(
+                searchRadius,
+                placeJobCount(placeTree?.data, place),
+              ),
       );
       const jsonLd = asJsonObjects(
         [
@@ -850,10 +903,14 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       // the SEO, breadcrumb and taxonomy reads as well.
       const seoRead = startedEarly(seoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
-      // chain; on failure the trail degrades to the place itself.
-      const placeTreeRead = board.taxonomy.places
-        .list(undefined, { headers })
-        .catch(() => null);
+      // chain; on failure the trail degrades to the place itself. A work
+      // arrangement has no ancestors.
+      const arrangement = isWorkArrangementSlug(data.locationSlug)
+        ? data.locationSlug
+        : null;
+      const placeTreeRead = arrangement
+        ? Promise.resolve(null)
+        : board.taxonomy.places.list(undefined, { headers }).catch(() => null);
       // The in-place count needs the kilometres (whether the place widens
       // at all); the job list does not wait for them (see jobsRadiusParams).
       const radiusKmRead = listingRadiusKm(
@@ -916,28 +973,26 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         data.within,
         place.defaultRadiusKm,
       );
-      const heading = m.locationCategoryPage_jobsHeading({
-        category: category.displayName,
-        place: place.displayName,
-      });
-      const countedHeading: CountedHeading = (counted) =>
-        m.locationCategoryPage_jobsCountHeading({
-          ...counted,
-          category: category.displayName,
-          place: place.displayName,
-        });
+      const { heading, countedHeading } = locationCategoryListingCopy(
+        data.locationSlug,
+        place,
+        category,
+      );
       // Hosted parity: Home > Jobs > country > … > place (linked) > category,
       // with facet-relaxation links — ancestors keep the category scope (same
       // jobs, wider area) while the current place links its bare listing.
+      // A work arrangement links its own page instead of a place chain.
       const crumbs = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: crumbs.home, href: BOARD_PATHS.home },
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
-        ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
-          linkCurrent: true,
-          ancestorPath: (slug) =>
-            jobsLocationCategoryPath(slug, category.canonicalSlug),
-        }),
+        ...(arrangement
+          ? [workArrangementCrumb(arrangement, place)]
+          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
+              linkCurrent: true,
+              ancestorPath: (slug) =>
+                jobsLocationCategoryPath(slug, category.canonicalSlug),
+            })),
         { name: category.displayName },
       ];
       const head = noindexFollow(
@@ -960,10 +1015,12 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        isSearchRadiusViewNoindex(
-          searchRadius,
-          combinationNoindexCount(placeTree, place, inPlaceJobCount),
-        ),
+        // Work arrangement combinations are not in the sitemap.
+        arrangement !== null ||
+          isSearchRadiusViewNoindex(
+            searchRadius,
+            combinationNoindexCount(placeTree, place, inPlaceJobCount),
+          ),
       );
       const jsonLd = asJsonObjects(
         [
@@ -1024,10 +1081,14 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // the SEO, breadcrumb and taxonomy reads as well.
       const seoRead = startedEarly(seoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
-      // chain; on failure the trail degrades to the place itself.
-      const placeTreeRead = board.taxonomy.places
-        .list(undefined, { headers })
-        .catch(() => null);
+      // chain; on failure the trail degrades to the place itself. A work
+      // arrangement has no ancestors.
+      const arrangement = isWorkArrangementSlug(data.locationSlug)
+        ? data.locationSlug
+        : null;
+      const placeTreeRead = arrangement
+        ? Promise.resolve(null)
+        : board.taxonomy.places.list(undefined, { headers }).catch(() => null);
       // The in-place count needs the kilometres (whether the place widens
       // at all); the job list does not wait for them (see jobsRadiusParams).
       const radiusKmRead = listingRadiusKm(
@@ -1090,28 +1151,26 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         data.within,
         place.defaultRadiusKm,
       );
-      const heading = m.locationSkillPage_jobsHeading({
-        skill: skill.displayName,
-        place: place.displayName,
-      });
-      const countedHeading: CountedHeading = (counted) =>
-        m.locationSkillPage_jobsCountHeading({
-          ...counted,
-          skill: skill.displayName,
-          place: place.displayName,
-        });
+      const { heading, countedHeading } = locationSkillListingCopy(
+        data.locationSlug,
+        place,
+        skill,
+      );
       // Hosted parity: Home > Jobs > country > … > place (linked) > skill,
       // with the same facet-relaxation trail — ancestors keep the skill
-      // scope, the current place links its bare listing.
+      // scope, the current place links its bare listing. A work
+      // arrangement links its own page instead of a place chain.
       const crumbs = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: crumbs.home, href: BOARD_PATHS.home },
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
-        ...toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
-          linkCurrent: true,
-          ancestorPath: (slug) =>
-            jobsLocationSkillPath(slug, skill.canonicalSlug),
-        }),
+        ...(arrangement
+          ? [workArrangementCrumb(arrangement, place)]
+          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
+              linkCurrent: true,
+              ancestorPath: (slug) =>
+                jobsLocationSkillPath(slug, skill.canonicalSlug),
+            })),
         { name: skill.displayName },
       ];
       const head = noindexFollow(
@@ -1134,10 +1193,12 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
         }),
-        isSearchRadiusViewNoindex(
-          searchRadius,
-          combinationNoindexCount(placeTree, place, inPlaceJobCount),
-        ),
+        // Work arrangement combinations are not in the sitemap.
+        arrangement !== null ||
+          isSearchRadiusViewNoindex(
+            searchRadius,
+            combinationNoindexCount(placeTree, place, inPlaceJobCount),
+          ),
       );
       const jsonLd = asJsonObjects(
         [

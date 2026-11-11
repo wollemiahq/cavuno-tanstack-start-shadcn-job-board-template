@@ -1714,6 +1714,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Remote jobs",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote job",
+        "countPlural=*": "{countLabel} remote jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Remote {category} jobs",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote {category} job",
+        "countPlural=*": "{countLabel} remote {category} jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Remote {skill} jobs",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote {skill} job",
+        "countPlural=*": "{countLabel} remote {skill} jobs"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Hybrid jobs",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrid job",
+        "countPlural=*": "{countLabel} hybrid jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Hybrid {category} jobs",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrid {category} job",
+        "countPlural=*": "{countLabel} hybrid {category} jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Hybrid {skill} jobs",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrid {skill} job",
+        "countPlural=*": "{countLabel} hybrid {skill} jobs"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "On-site jobs",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} on-site job",
+        "countPlural=*": "{countLabel} on-site jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "On-site {category} jobs",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} on-site {category} job",
+        "countPlural=*": "{countLabel} on-site {category} jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "On-site {skill} jobs",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} on-site {skill} job",
+        "countPlural=*": "{countLabel} on-site {skill} jobs"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Change logo",
   "logoUpload_uploadErrorText": "Upload failed — try a smaller image.",
   "logoUpload_uploadingLabel": "Uploading…",

@@ -7,7 +7,7 @@
  * Head meta is computed in getJobsIndexPage so `@cavuno/board/seo` and the
  * jobSearch copy family stay out of the universal client entry.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import {
   jobsListingLoaderDeps,
@@ -19,6 +19,7 @@ import { JobsPage } from './-jobs-page';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { customFieldRequestSearch } from '@/lib/custom-field-filters';
+import { workArrangementRedirect } from '@/lib/work-arrangement';
 
 const JOBS_PAGE_SIZE = 20;
 
@@ -27,6 +28,12 @@ export const Route = createFileRoute('/jobs/')({
   // containers.
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsIndexSearch,
+  // `?remoteOption=remote` is `/jobs/locations/remote`, unless job custom
+  // field filters keep it here (see `workArrangementTarget`).
+  beforeLoad: ({ search }) => {
+    const target = workArrangementRedirect({}, search);
+    if (target) throw redirect({ ...target, statusCode: 308 });
+  },
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: async ({ deps }) => {
     const offset = pageToOffset(deps.page ?? 1, JOBS_PAGE_SIZE);

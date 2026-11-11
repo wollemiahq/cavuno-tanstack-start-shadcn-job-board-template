@@ -14,6 +14,13 @@ import { useRootSession } from '@/components/root-session';
 import type { JobsSearch } from '@/lib/jobs-search';
 import type { CountedHeading } from '@/lib/listing-description';
 import type { UrlSearchInput } from '@/lib/pagination';
+import {
+  isWorkArrangementSlug,
+  withWorkArrangementFilter,
+  workArrangementRemoteOption,
+  workArrangementTarget,
+  type JobsListingRoute,
+} from '@/lib/work-arrangement';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 import type { DistanceUnit } from '@cavuno/board/format';
 
@@ -40,6 +47,7 @@ export function ProgrammaticJobsView({
   pageSize,
   relatedSearches,
   filters,
+  listingRoute,
   location,
   distanceUnit = null,
   listedTermSlug,
@@ -61,6 +69,12 @@ export function ProgrammaticJobsView({
   pageSize: number;
   relatedSearches?: RelatedSearch[];
   filters: JobsSearch;
+  /**
+   * The route params this listing was opened with. On a work arrangement
+   * page (`remote`, `hybrid` or `on-site` in the location slot) the
+   * arrangement filter moves between pages instead of the query string.
+   */
+  listingRoute: JobsListingRoute;
   location?: { slug: string; label: string };
   /**
    * The unit of the place's distances (`placeDistanceUnit`), or `null` when
@@ -93,6 +107,9 @@ export function ProgrammaticJobsView({
     Boolean(user?.emailVerified),
     selectedCard?.company?.slug ?? null,
   );
+  const arrangement = isWorkArrangementSlug(location?.slug)
+    ? location.slug
+    : undefined;
   return (
     <>
       <JobSearchPage
@@ -110,13 +127,26 @@ export function ProgrammaticJobsView({
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}
-        filters={filters}
+        filters={withWorkArrangementFilter(listingRoute.location, filters)}
         jobForm={board}
         distanceSort={distanceUnit !== null}
         language={getLocale()}
         viewer={user ? { emailVerified: user.emailVerified } : null}
         onSaveJob={onSaveJob}
-        onFiltersChange={(next) =>
+        onFiltersChange={(next) => {
+          const target = workArrangementTarget(listingRoute, next);
+          if (target) {
+            navigate({
+              to: target.to,
+              params: target.params,
+              search: () => ({
+                ...target.search,
+                page: undefined,
+                selectedJob: undefined,
+              }),
+            });
+            return;
+          }
           navigate({
             search: (prev) => ({
               ...prev,
@@ -124,8 +154,8 @@ export function ProgrammaticJobsView({
               page: undefined,
               selectedJob: undefined,
             }),
-          })
-        }
+          });
+        }}
         onPageChange={(next) =>
           navigate({
             search: (prev) => ({
@@ -159,7 +189,11 @@ export function ProgrammaticJobsView({
           defaults={jobAlertDefaultsFromSearch({
             query: filters.q,
             listedTermSlug,
-            locationSlug: location?.slug,
+            // A work arrangement page alerts on the arrangement, not a place.
+            locationSlug: arrangement ? undefined : location?.slug,
+            remoteOption: arrangement
+              ? workArrangementRemoteOption(arrangement)
+              : undefined,
             source: 'jobs_list',
           })}
         />

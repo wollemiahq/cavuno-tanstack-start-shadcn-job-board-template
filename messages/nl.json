@@ -1714,6 +1714,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Remote vacatures",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote vacature",
+        "countPlural=*": "{countLabel} remote vacatures"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Remote vacatures in {category}",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote vacature in {category}",
+        "countPlural=*": "{countLabel} remote vacatures in {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Remote vacatures voor {skill}",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote vacature voor {skill}",
+        "countPlural=*": "{countLabel} remote vacatures voor {skill}"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Hybride vacatures",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybride vacature",
+        "countPlural=*": "{countLabel} hybride vacatures"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Hybride vacatures in {category}",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybride vacature in {category}",
+        "countPlural=*": "{countLabel} hybride vacatures in {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Hybride vacatures voor {skill}",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybride vacature voor {skill}",
+        "countPlural=*": "{countLabel} hybride vacatures voor {skill}"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Vacatures op locatie",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature op locatie",
+        "countPlural=*": "{countLabel} vacatures op locatie"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Vacatures op locatie in {category}",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature op locatie in {category}",
+        "countPlural=*": "{countLabel} vacatures op locatie in {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Vacatures op locatie voor {skill}",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature op locatie voor {skill}",
+        "countPlural=*": "{countLabel} vacatures op locatie voor {skill}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Logo wijzigen",
   "logoUpload_uploadErrorText": "Uploaden mislukt. Probeer een kleinere afbeelding.",
   "logoUpload_uploadingLabel": "Uploaden…",
