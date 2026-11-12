@@ -11,6 +11,7 @@ import {
   listProfileObjectReferenceChoices,
   updateProfileCustomFields,
   updateProfileObjectReferences,
+  uploadProfileCustomFieldFile,
 } from '../server/form-fields';
 
 import {
@@ -42,6 +43,10 @@ import {
   type ProfileSelections,
 } from '@/board/profile-field-writes';
 import { CollectionFieldPicker } from '@/components/collection-field-picker';
+import type {
+  CustomFieldUploadResult,
+  CustomFieldUploads,
+} from '@/components/custom-field-files-input';
 import {
   CustomFieldInput,
   hasCustomFieldInput,
@@ -94,6 +99,7 @@ import {
 import { searchString } from '@/lib/pagination';
 import type {
   CandidateProfile,
+  MyCandidateProfileFieldValues,
   ProfileFieldValues,
   ProfileObjectReferences,
 } from '@cavuno/board';
@@ -233,6 +239,21 @@ export interface ProfileFormDependencies {
   listObjectReferenceChoices?: (
     input: Parameters<typeof listProfileObjectReferenceChoices>[0],
   ) => Promise<{ data: { id: string; name: string }[] }>;
+  /** One gallery image or file upload; the server function by default. */
+  uploadCustomFieldFile?: (
+    fieldKey: string,
+    file: File,
+  ) => Promise<CustomFieldUploadResult>;
+}
+
+function uploadCustomFieldFile(
+  fieldKey: string,
+  file: File,
+): Promise<CustomFieldUploadResult> {
+  const data = new FormData();
+  data.append('fieldKey', fieldKey);
+  data.append('file', file);
+  return uploadProfileCustomFieldFile({ data });
 }
 
 export type TalentFormEntry = ProfileFormEntry<TalentFormBuiltinKey>;
@@ -254,9 +275,12 @@ const OUTSIDE_FORM: ReadonlySet<TalentFormBuiltinKey> = new Set([
   'languages',
 ]);
 
-/** The owner's editable custom fields and collection selections. */
+/**
+ * The owner's editable custom fields and collection selections. The owner
+ * read of custom fields also carries the saved gallery and file uploads.
+ */
 export type TalentProfileFields = {
-  customFields: ProfileFieldValues | null;
+  customFields: ProfileFieldValues | MyCandidateProfileFieldValues | null;
   objectReferences: ProfileObjectReferences | null;
 };
 
@@ -275,7 +299,9 @@ export function resolveTalentForm(
     TALENT_FORM_BUILTINS,
     ownerProfileDefinitions(fields),
   ).filter(
-    (entry) => entry.kind !== 'custom' || hasCustomFieldInput(entry.definition),
+    (entry) =>
+      entry.kind !== 'custom' ||
+      hasCustomFieldInput(entry.definition, { uploads: true }),
   );
 }
 
@@ -453,6 +479,14 @@ export function ProfileForm({
     initialProfileSelections(storedSelections),
   );
   const editedCustomFields = useRef(new Set<string>());
+  const uploads: CustomFieldUploads = {
+    upload: dependencies.uploadCustomFieldFile ?? uploadCustomFieldFile,
+    media:
+      (profileFields?.customFields &&
+        'customFieldMedia' in profileFields.customFields &&
+        profileFields.customFields.customFieldMedia) ||
+      {},
+  };
   const editedCollections = useRef(new Set<string>());
   useEffect(() => {
     setCustomValues((current) => ({
@@ -1134,6 +1168,7 @@ export function ProfileForm({
           definition={entry.definition}
           required={entry.required}
           value={customValues[entry.key]}
+          uploads={uploads}
           onChange={(value) => {
             editedCustomFields.current.add(entry.key);
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }));

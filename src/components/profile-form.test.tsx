@@ -252,6 +252,82 @@ describe('ProfileForm — operator form layout', () => {
     ).toBeInTheDocument();
     expect(mocks.updateProfile).not.toHaveBeenCalled();
   });
+
+  it('saves an uploaded and reordered gallery as its ordered file IDs', async () => {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    mocks.updateCustomFields.mockResolvedValue({});
+    const image = (id: string) => ({
+      id,
+      name: `${id}.png`,
+      contentType: 'image/png',
+      sizeBytes: 1024,
+      url: `https://files.test/${id}`,
+    });
+    const uploadCustomFieldFile = vi.fn(async () => ({
+      ok: true as const,
+      data: image('draft'),
+    }));
+    const profileFields: TalentProfileFields = {
+      customFields: {
+        definitions: [
+          {
+            key: 'portfolio',
+            label: 'Portfolio',
+            type: 'image_gallery',
+            required: false,
+            visibility: 'public',
+            editableByOwner: true,
+          },
+        ],
+        values: { portfolio: ['saved'] },
+        customFieldMedia: { portfolio: [image('saved')] },
+      },
+      objectReferences: null,
+    };
+    await renderWithRouter(
+      <ProfileForm
+        profile={profile}
+        language="en"
+        dependencies={{ ...mocks, uploadCustomFieldFile }}
+        locationSuggestions={suggestions}
+        profileFields={profileFields}
+        entries={resolveTalentForm(
+          [builtin('name', { locked: true })],
+          profileFields,
+        )}
+      />,
+    );
+
+    const picker = await screen.findByLabelText('Portfolio', {
+      selector: 'input[type=file]',
+    });
+    fireEvent.change(picker, {
+      target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] },
+    });
+    await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2));
+    expect(uploadCustomFieldFile).toHaveBeenCalledWith(
+      'portfolio',
+      expect.any(File),
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.customFieldUpload_imageActionsLabel({ position: 2, total: 2 }),
+      }),
+    );
+    fireEvent.click(
+      await screen.findByRole('menuitem', {
+        name: m.customFieldUpload_moveEarlierLabel(),
+      }),
+    );
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+
+    await waitFor(() =>
+      expect(mocks.updateCustomFields).toHaveBeenCalledWith({
+        data: { values: { portfolio: ['draft', 'saved'] } },
+      }),
+    );
+  });
 });
 
 describe('ProfileForm — handle', () => {
