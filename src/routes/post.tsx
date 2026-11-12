@@ -7,7 +7,11 @@ import { PostJobPageView, createPostLoader } from './-post-route-support';
 import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
 import { resolveJobFormConstraints } from '@/board/job-form';
-import { MembershipPostGate } from '@/components/board/membership-post-gate';
+import {
+  MembershipPostGate,
+  membershipJoinHeading,
+  sellsMemberships,
+} from '@/components/board/membership-post-gate';
 import { useRootSession } from '@/components/root-session';
 import { Spinner } from '@/components/ui/spinner';
 import { employerPostDestination } from '@/lib/employer-post-destination';
@@ -74,9 +78,17 @@ function PostJobPage() {
       />
     ) : undefined;
 
+  const heading =
+    handoff.kind !== 'pending' &&
+    board.posting?.requiresMembership &&
+    sellsMemberships(membershipOffer)
+      ? membershipJoinHeading(board.name)
+      : undefined;
+
   return (
     <PostJobPageView
       gate={gate}
+      heading={heading}
       plans={plans}
       remotePermits={remotePermits}
       initialPlanId={search.plan}

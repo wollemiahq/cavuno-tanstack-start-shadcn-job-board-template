@@ -97,9 +97,9 @@ async function renderGate(props: GateProps) {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   const result = render(<RouterProvider router={router} />);
-  await screen.findByRole('heading', {
-    name: props.offer?.plans.length ? m.postGate_joinHeading() : 'Example Jobs',
-  });
+  const firstPlan = props.offer?.plans[0];
+  if (firstPlan) await screen.findByText(firstPlan.name);
+  else await screen.findByRole('heading', { name: 'Example Jobs' });
   return result;
 }
 

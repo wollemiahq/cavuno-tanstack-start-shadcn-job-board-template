@@ -1976,7 +1976,7 @@
   "postGate_bodyText": "Anzeigen auf diesem Board können nur Mitglieder schalten.",
   "postGate_contactText": "Zugang nötig? Schreiben Sie an {email}.",
   "postGate_joinHeading": "Werden Sie Mitglied, um Stellen auszuschreiben",
-  "postGate_joinText": "Anzeigen auf diesem Board können nur Mitglieder schalten. Wählen Sie eine Mitgliedschaft, um loszulegen.",
+  "postGate_joinText": "Anzeigen auf {boardName} können nur Mitglieder schalten. Wählen Sie eine Mitgliedschaft, um loszulegen.",
   "postGate_postAsCompanyLabel": "Über Ihr Unternehmens-Dashboard veröffentlichen",
   "postGate_signInLabel": "Anmelden",
   "postJob_applicationUrlLabel": "Bewerbungs-URL",

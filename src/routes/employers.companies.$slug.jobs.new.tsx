@@ -26,7 +26,11 @@ import { useMembershipOffer } from './-membership-offer';
 import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
 import { resolveJobFormConstraints } from '@/board/job-form';
-import { MembershipPostGate } from '@/components/board/membership-post-gate';
+import {
+  MembershipPostGate,
+  membershipJoinHeading,
+  sellsMemberships,
+} from '@/components/board/membership-post-gate';
 import { EmployerJobForm } from '@/components/employer-job-form';
 import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
@@ -80,8 +84,13 @@ function NewJobPage() {
   const { board, offerGate } = rootApi.useLoaderData();
   const locale = getLocale();
   // A company that can't post here sees the membership gate instead of the
-  // form, so the "fill in the role" subtitle would describe nothing.
+  // form, so the "fill in the role" subtitle would describe nothing. When the
+  // gate sells memberships, the page heading is about joining instead.
   const canPost = workspace.billingOptions.capabilities.canPost;
+  const joinHeading =
+    !canPost && sellsMemberships(membershipOffer)
+      ? membershipJoinHeading(board.name)
+      : null;
   const officeLocationSuggestions = useGlobalLocationSuggestions({
     countries: resolveJobFormConstraints(board).location.allowedCountries,
   });
@@ -92,9 +101,13 @@ function NewJobPage() {
         <div className="space-y-6">
           <header className="space-y-1">
             <Text as="h1" variant="heading1">
-              {m.employerCompany_postJobHeading()}
+              {joinHeading?.title ?? m.employerCompany_postJobHeading()}
             </Text>
-            {canPost ? (
+            {joinHeading ? (
+              <p className="text-muted-foreground text-sm" dir="auto">
+                {joinHeading.description}
+              </p>
+            ) : canPost ? (
               <p className="text-muted-foreground text-sm">
                 {m.employerPostJob_subtitleText()}
               </p>

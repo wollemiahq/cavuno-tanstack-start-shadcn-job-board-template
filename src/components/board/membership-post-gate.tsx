@@ -72,6 +72,28 @@ type GateProps = {
   offer?: MembershipOffer;
 };
 
+/** Whether the gate sells the board's memberships in place of the job form. */
+export function sellsMemberships(
+  offer: MembershipOffer | undefined,
+): offer is MembershipOffer {
+  return Boolean(offer && offer.plans.length > 0);
+}
+
+/** A page's heading and the line under it. */
+export type JoinHeading = { title: string; description: string };
+
+/**
+ * The page heading while the gate sells memberships. It replaces "Post a
+ * job": the page is about joining until the poster is a member, and the
+ * gate's cards follow straight on from it.
+ */
+export function membershipJoinHeading(boardName: string): JoinHeading {
+  return {
+    title: m.postGate_joinHeading(),
+    description: m.postGate_joinText({ boardName }),
+  };
+}
+
 /**
  * The join gate that stands in for the posting form on a members-only board —
  * both the anonymous `/post` route (`context.posting.requiresMembership`) and
@@ -87,7 +109,7 @@ type GateProps = {
  * memberships page exists, sign in, or ask the board for access.
  */
 export function MembershipPostGate(props: GateProps) {
-  if (props.offer && props.offer.plans.length > 0) {
+  if (sellsMemberships(props.offer)) {
     return <MembershipJoinGate {...props} offer={props.offer} />;
   }
   return <MembershipLinkGate {...props} />;
@@ -185,14 +207,6 @@ function MembershipJoinGate({
 
   return (
     <section data-slot="membership-post-gate" className="space-y-6">
-      <div className="space-y-1">
-        <Text as="h2" variant="heading3" dir="auto">
-          {m.postGate_joinHeading()}
-        </Text>
-        <p className="text-muted-foreground" dir="auto">
-          {m.postGate_joinText()}
-        </p>
-      </div>
       {flow.confirmed ? (
         <p role="status" className="text-foreground text-sm font-medium">
           {m.memberships_confirmedText()}

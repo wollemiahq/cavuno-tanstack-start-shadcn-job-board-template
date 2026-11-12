@@ -1976,7 +1976,7 @@
   "postGate_bodyText": "Alleen leden kunnen op dit vacatureplatform vacatures plaatsen.",
   "postGate_contactText": "Toegang nodig? Mail naar {email}.",
   "postGate_joinHeading": "Word lid om vacatures te plaatsen",
-  "postGate_joinText": "Alleen leden kunnen op dit vacatureplatform vacatures plaatsen. Kies een lidmaatschap om te beginnen.",
+  "postGate_joinText": "Alleen leden kunnen op {boardName} vacatures plaatsen. Kies een lidmaatschap om te beginnen.",
   "postGate_postAsCompanyLabel": "Plaats vanuit je bedrijfsdashboard",
   "postGate_signInLabel": "Inloggen",
   "postJob_applicationUrlLabel": "Sollicitatie-URL",

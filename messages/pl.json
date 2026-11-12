@@ -2062,7 +2062,7 @@
   "postGate_bodyText": "Publikowanie na tym portalu jest dostępne tylko dla członków.",
   "postGate_contactText": "Potrzebujesz dostępu? Napisz na {email}.",
   "postGate_joinHeading": "Zostań członkiem, aby publikować oferty",
-  "postGate_joinText": "Publikowanie na tym portalu jest dostępne tylko dla członków. Wybierz członkostwo, aby zacząć publikować.",
+  "postGate_joinText": "Publikowanie w serwisie {boardName} jest dostępne tylko dla członków. Wybierz członkostwo, aby zacząć publikować.",
   "postGate_postAsCompanyLabel": "Opublikuj z panelu swojej firmy",
   "postGate_signInLabel": "Zaloguj się",
   "postJob_applicationUrlLabel": "Adres URL aplikowania",

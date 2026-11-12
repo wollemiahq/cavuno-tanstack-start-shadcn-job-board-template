@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import type { JoinHeading } from '@/components/board/membership-post-gate';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PostJobForm } from '@/components/post-job-form';
 import { m } from '@/paraglide/messages';
@@ -59,6 +60,7 @@ export function PostJobPageView({
   locale,
   officeLocationSuggestions,
   gate,
+  heading,
   dependencies = postRouteDependencies,
 }: {
   plans: Awaited<ReturnType<typeof getPostPlans>>;
@@ -76,6 +78,11 @@ export function PostJobPageView({
    * the board will refuse.
    */
   gate?: ReactNode;
+  /**
+   * Replaces "Post a job" while the gate sells memberships, so the page has
+   * one heading about joining instead of two stacked titles.
+   */
+  heading?: JoinHeading;
   dependencies?: PostRouteDependencies;
 }) {
   return (
@@ -83,10 +90,12 @@ export function PostJobPageView({
       <PageContent
         header={
           <PageHeader
-            title={m.postJob_title()}
+            title={heading?.title ?? m.postJob_title()}
             // "Choose a plan and submit below" describes the form, which the
             // gate replaces.
-            description={gate ? undefined : m.postJob_subtitle()}
+            description={
+              heading?.description ?? (gate ? undefined : m.postJob_subtitle())
+            }
           />
         }
       >

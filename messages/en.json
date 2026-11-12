@@ -1976,7 +1976,7 @@
   "postGate_bodyText": "Posting on this board is open to members only.",
   "postGate_contactText": "Need access? Email {email}.",
   "postGate_joinHeading": "Become a member to post jobs",
-  "postGate_joinText": "Posting on this board is open to members. Choose a membership to start posting.",
+  "postGate_joinText": "Posting on {boardName} is open to members only. Choose a membership to start posting.",
   "postGate_postAsCompanyLabel": "Post from your company dashboard",
   "postGate_signInLabel": "Sign in",
   "postJob_applicationUrlLabel": "Application URL",

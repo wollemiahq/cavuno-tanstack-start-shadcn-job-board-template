@@ -1976,7 +1976,7 @@
   "postGate_bodyText": "Publicar en este portal está reservado a los miembros.",
   "postGate_contactText": "¿Necesitas acceso? Escribe a {email}.",
   "postGate_joinHeading": "Hazte miembro para publicar empleos",
-  "postGate_joinText": "Publicar en este portal está reservado a los miembros. Elige una membresía para empezar a publicar.",
+  "postGate_joinText": "Publicar en {boardName} está reservado a los miembros. Elige una membresía para empezar a publicar.",
   "postGate_postAsCompanyLabel": "Publicar desde el panel de tu empresa",
   "postGate_signInLabel": "Iniciar sesión",
   "postJob_applicationUrlLabel": "URL de candidatura",

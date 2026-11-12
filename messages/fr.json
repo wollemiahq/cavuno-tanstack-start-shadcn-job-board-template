@@ -1976,7 +1976,7 @@
   "postGate_bodyText": "La publication sur ce site est réservée aux membres.",
   "postGate_contactText": "Besoin d’un accès ? Écrivez à {email}.",
   "postGate_joinHeading": "Devenez membre pour publier des offres",
-  "postGate_joinText": "La publication sur ce site est réservée aux membres. Choisissez une adhésion pour commencer à publier.",
+  "postGate_joinText": "La publication sur {boardName} est réservée aux membres. Choisissez une adhésion pour commencer à publier.",
   "postGate_postAsCompanyLabel": "Publier depuis le tableau de bord de votre entreprise",
   "postGate_signInLabel": "Se connecter",
   "postJob_applicationUrlLabel": "URL de candidature",
