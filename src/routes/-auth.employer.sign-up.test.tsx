@@ -10,7 +10,7 @@ import {
 
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
 // @vitest-environment jsdom
-import { localizePath } from '@/lib/localized-path';
+import { canonicalPathname, localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
@@ -134,9 +134,13 @@ describe('/auth/employer/sign-up continuation', () => {
     const post = localizePath('/post');
     // Every route lands on the dashboard first, carrying Post a job along:
     // the new employer has no company to post for until they create one.
+    // The emailed and in-tab links are localized; the OAuth return path is
+    // canonical and the router localizes it, so compare the route itself.
     const expectDashboardBackToPost = (href: string) => {
       const dashboard = new URL(href, 'https://board.example');
-      expect(dashboard.pathname).toBe(localizePath('/employers/dashboard'));
+      expect(canonicalPathname(dashboard.pathname)).toBe(
+        '/employers/dashboard',
+      );
       expect(dashboard.searchParams.get('returnTo')).toBe(post);
     };
     await renderRouted(
