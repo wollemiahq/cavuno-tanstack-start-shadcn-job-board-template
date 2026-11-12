@@ -118,6 +118,12 @@ export type EmployerDashboardViewDependencies = {
   createCompany: typeof createCompany;
   invalidate: () => Promise<void>;
   navigateToOnboarding: (slug: string) => Promise<void>;
+  /**
+   * Where a newly created, already approved company goes next: back to the
+   * page the employer signed up from, such as Post a job. Absent, the
+   * dashboard lists the company.
+   */
+  continueWithCompany?: () => Promise<void>;
   companyRouteElement: (input: {
     approved: boolean;
     slug: string;
@@ -593,6 +599,8 @@ function CreateCompanyModal({
               const slug = result.data.company.slug;
               if (slug && result.data.status !== 'approved') {
                 await dependencies.navigateToOnboarding(slug);
+              } else if (dependencies.continueWithCompany) {
+                await dependencies.continueWithCompany();
               } else {
                 onClose();
               }
