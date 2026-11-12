@@ -1741,7 +1741,15 @@ describe('EmployerJobForm — members-only board', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Joined' }));
 
-    expect(screen.getByRole('radio', { name: /Partner/ })).toBeChecked();
+    const partner = screen.getByRole('radio', { name: /Partner/ });
+    expect(partner).toBeChecked();
+    // Unlimited posts, not a count of zero.
+    expect(partner).toHaveAccessibleName(
+      containing(m.membershipCapacity_postsUnlimited()),
+    );
+    expect(partner).not.toHaveAccessibleName(
+      containing(m.employerCompany_creditsRemaining({ count: 0 })),
+    );
   });
 
   it('replaces the form with the join gate when the board refuses the write', async () => {

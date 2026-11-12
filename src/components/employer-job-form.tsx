@@ -1865,9 +1865,11 @@ function JobFormFields({
                               <FieldTitle>{option.planName}</FieldTitle>
                             </FieldContent>
                             <span className="text-muted-foreground text-sm">
-                              {m.employerCompany_creditsRemaining({
-                                count: option.jobsRemaining,
-                              })}
+                              {option.jobsUnlimited
+                                ? m.membershipCapacity_postsUnlimited()
+                                : m.employerCompany_creditsRemaining({
+                                    count: option.jobsRemaining,
+                                  })}
                             </span>
                           </Field>
                         </FieldLabel>
