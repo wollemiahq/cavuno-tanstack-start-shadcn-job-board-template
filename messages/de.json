@@ -940,6 +940,8 @@
   "employerCompany_joinedToast": "Du bist {company} beigetreten.",
   "employerCompany_nameLabel": "Name",
   "employerCompany_noJobsText": "Noch keine Jobs.",
+  "employerCompany_notTakingPostsText": "Hier können noch keine Stellenanzeigen veröffentlicht werden.",
+  "employerCompany_contactBoardLabel": "{board} kontaktieren",
   "employerCompany_noPlansText": "Keine Pakete zum Veröffentlichen verfügbar.",
   "employerCompany_postJobHeading": "Job veröffentlichen",
   "employerCompany_profileHeading": "Unternehmensprofil",

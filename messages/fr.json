@@ -940,6 +940,8 @@
   "employerCompany_joinedToast": "Vous avez rejoint {company}.",
   "employerCompany_nameLabel": "Nom",
   "employerCompany_noJobsText": "Aucune offre pour le moment.",
+  "employerCompany_notTakingPostsText": "Il n’est pas encore possible de publier des offres ici.",
+  "employerCompany_contactBoardLabel": "Contacter {board}",
   "employerCompany_noPlansText": "Aucune formule disponible pour la publication.",
   "employerCompany_postJobHeading": "Publier une offre",
   "employerCompany_profileHeading": "Profil de l'entreprise",

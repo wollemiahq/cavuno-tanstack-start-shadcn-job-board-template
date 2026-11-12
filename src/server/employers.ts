@@ -501,17 +501,26 @@ export const getCompanyWorkspace = createServerFn({ method: 'GET' })
         board.me.companies.jobs.list(data.slug, undefined, { headers }),
         board.me.companies.billingOptions.list(data.slug, { headers }),
         // The public job-posting plans (the `billing.type: 'new'` checkout
-        // options). Resilient: an empty list if the catalog read fails — the
-        // picker still offers any reusable credits.
+        // options). Resilient: null if the catalog read fails, so the page
+        // still loads and the picker still offers any reusable credits.
         withNamedFeatures(
           board.jobPosting
             .plans(undefined, { headers })
             .then((result) => result.data),
-        ).catch(() => []),
+        ).catch(() => null),
       ]);
       const membership =
         memberships.data.find((m) => m.company.slug === data.slug) ?? null;
-      return { slug: data.slug, membership, jobs, billingOptions, plans };
+      return {
+        slug: data.slug,
+        membership,
+        jobs,
+        billingOptions,
+        plans: plans ?? [],
+        // A failed read is not a board without plans: only this one is
+        // worth retrying.
+        plansUnavailable: plans === null,
+      };
     }),
   );
 

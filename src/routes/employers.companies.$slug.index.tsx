@@ -1,4 +1,8 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  getRouteApi,
+  useRouter,
+} from '@tanstack/react-router';
 
 import { parseCompanyJobsSearch } from '../lib/company-jobs-search';
 import { m } from '../paraglide/messages';
@@ -11,6 +15,8 @@ import {
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 import type { UrlSearchInput } from '@/lib/pagination';
+
+const rootApi = getRouteApi('__root__');
 
 export const Route = createFileRoute('/employers/companies/$slug/')({
   validateSearch: (search: UrlSearchInput) => parseCompanyJobsSearch(search),
@@ -33,10 +39,16 @@ function CompanyJobsPage() {
   const data = Route.useLoaderData();
   const search = Route.useSearch();
   const router = useRouter();
+  const { board, contactEnabled } = rootApi.useLoaderData();
   return (
     <CompanyJobsPageView
       data={data}
       search={search}
+      contact={{
+        boardName: board.name,
+        contactPage: contactEnabled,
+        email: board.footer.contactEmail,
+      }}
       actions={{
         deleteJob,
         publishJob,

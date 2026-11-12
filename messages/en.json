@@ -940,6 +940,8 @@
   "employerCompany_joinedToast": "You’ve joined {company}.",
   "employerCompany_nameLabel": "Name",
   "employerCompany_noJobsText": "No jobs yet.",
+  "employerCompany_notTakingPostsText": "This board isn’t taking job posts yet.",
+  "employerCompany_contactBoardLabel": "Contact {board}",
   "employerCompany_noPlansText": "No plans available to publish with.",
   "employerCompany_postJobHeading": "Post a job",
   "employerCompany_profileHeading": "Company profile",

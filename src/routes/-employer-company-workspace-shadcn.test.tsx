@@ -42,6 +42,7 @@ import {
   createCompanyJobsLoader,
   type CompanyJobsLoaderDependencies,
   type CompanyJobsViewActions,
+  type BoardContact,
   type CompanyJobsViewData,
 } from './-employers.company-jobs';
 import {
@@ -265,6 +266,8 @@ async function renderJobs(
     stats?: EmployerJobStat[];
     timeseries?: EmployerJobStatsPoint[];
     search?: CompanyJobsSearch;
+    plansUnavailable?: boolean;
+    contact?: BoardContact | null;
   } = {},
   canPost = true,
 ) {
@@ -279,6 +282,7 @@ async function renderJobs(
     statsIndex,
     timeseries,
     canPost,
+    plansUnavailable: deferred.plansUnavailable,
   } satisfies CompanyJobsViewData;
   await act(async () => {
     await renderWithRouter(
@@ -286,6 +290,7 @@ async function renderJobs(
         data={data}
         search={deferred.search}
         actions={jobsActions}
+        contact={deferred.contact}
       />,
     );
   });
@@ -555,14 +560,59 @@ describe('employer company workspace', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not offer a post CTA on an empty jobs list without a posting SKU', async () => {
-    await renderJobs([], {}, false);
-    expect(
-      screen.getByText(m.employerCompany_noJobsText()),
-    ).toBeInTheDocument();
+  it.each([
+    [
+      'its contact page',
+      { contactPage: true, email: 'jobs@acme.test' },
+      '/contact',
+    ],
+    [
+      'its contact email',
+      { contactPage: false, email: 'jobs@acme.test' },
+      'mailto:jobs@acme.test',
+    ],
+  ] as const)(
+    'points an employer on a board without posting plans to %s',
+    async (_case, reach, href) => {
+      await renderJobs(
+        [],
+        { contact: { boardName: 'Acme Jobs', ...reach } },
+        false,
+      );
+      expect(
+        screen.getByText(m.employerCompany_notTakingPostsText()),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(m.postJob_noPlansBody()),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('link', {
+          name: m.employerCompany_contactBoardLabel({ board: 'Acme Jobs' }),
+        }),
+      ).toHaveAttribute('href', href);
+      expect(
+        screen.queryByRole('link', { name: m.nav_post() }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it('asks for a retry only when the posting plans could not be read', async () => {
+    await renderJobs(
+      [],
+      {
+        plansUnavailable: true,
+        contact: { boardName: 'Acme Jobs', contactPage: true, email: null },
+      },
+      false,
+    );
     expect(screen.getByText(m.postJob_noPlansBody())).toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: m.nav_post() }),
+      screen.queryByText(m.employerCompany_notTakingPostsText()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', {
+        name: m.employerCompany_contactBoardLabel({ board: 'Acme Jobs' }),
+      }),
     ).not.toBeInTheDocument();
   });
 

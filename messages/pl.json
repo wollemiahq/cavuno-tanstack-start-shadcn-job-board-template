@@ -978,6 +978,8 @@
   "employerCompany_joinedToast": "Dołączono do {company}.",
   "employerCompany_nameLabel": "Nazwa",
   "employerCompany_noJobsText": "Brak ofert.",
+  "employerCompany_notTakingPostsText": "Tutaj nie można jeszcze publikować ofert.",
+  "employerCompany_contactBoardLabel": "Skontaktuj się z {board}",
   "employerCompany_noPlansText": "Brak planów umożliwiających publikację.",
   "employerCompany_postJobHeading": "Opublikuj ofertę",
   "employerCompany_profileHeading": "Profil firmy",
