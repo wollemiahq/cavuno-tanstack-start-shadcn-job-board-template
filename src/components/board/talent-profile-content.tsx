@@ -8,6 +8,11 @@ import type { TalentProfileVM } from '@/board/talent-view-model';
 type TalentProfileHeading = ElementType;
 // A logo-or-initials brand chip; reused here for education institutions.
 import { CompanyAvatar } from '@/components/board/company-avatar';
+import {
+  CustomFieldContactLinks,
+  CustomFieldFacts,
+  CustomFieldSections,
+} from '@/components/custom-field-display';
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -105,6 +110,8 @@ export function TalentProfileIdentity({
           </div>
         ) : null}
 
+        <CustomFieldContactLinks entries={vm.fields.contact} />
+
         {vm.location || vm.jobSearchStatusLabel ? (
           <div className="flex flex-wrap gap-1.5">
             {vm.location ? (
@@ -153,6 +160,16 @@ export function TalentProfileContent({
           {vm.bio}
         </p>
       ) : null}
+
+      <CustomFieldSections
+        entries={vm.fields.about}
+        headingAs={SectionHeading}
+      />
+
+      <CustomFieldSections
+        entries={vm.fields.featured}
+        headingAs={SectionHeading}
+      />
 
       {vm.experiences.length > 0 ? (
         <section className="space-y-4">
@@ -331,6 +348,15 @@ export function TalentProfileContent({
               </div>
             ))}
           </dl>
+        </section>
+      ) : null}
+
+      {vm.fields.details.length > 0 ? (
+        <section className="space-y-4">
+          <SectionHeading className="text-foreground text-lg font-semibold">
+            {m.customFieldDisplay_detailsHeading()}
+          </SectionHeading>
+          <CustomFieldFacts entries={vm.fields.details} />
         </section>
       ) : null}
     </div>

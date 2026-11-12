@@ -58,4 +58,5 @@ export const profileVm: TalentProfileVM = {
     },
   ],
   viewProfileLabel: 'View profile',
+  fields: { contact: [], about: [], featured: [], details: [] },
 };

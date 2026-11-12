@@ -13,7 +13,6 @@
 import {
   countryOptions,
   formatPublishedRelativeDate,
-  resolveCustomFieldDisplay,
 } from '@cavuno/board/format';
 import {
   companyPath,
@@ -23,15 +22,16 @@ import {
 } from '@cavuno/board/paths';
 
 import {
-  customFieldLabel,
-  customFieldOptionLabel,
-} from '@/board/custom-field-labels';
-import { resolveJobForm, type JobFormSource } from '@/board/job-form';
+  resolveFieldDisplay,
+  type DisplayFieldSource,
+  type FieldDisplayEntry,
+} from '@/board/custom-field-display';
+import type { JobFormLayoutSource } from '@/board/form-layout';
+import { resolveJobForm } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
 import { jobEmploymentTypeLabel } from '@/lib/job-employment-type-label';
-import { searchString } from '@/lib/pagination';
 import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
@@ -46,12 +46,8 @@ export interface JobDetailFactVM {
   value: string;
 }
 
-export interface JobDetailCustomFieldVM {
-  key: string;
-  label: string;
-  /** Boolean fields are pre-resolved to their yes/no copy. */
-  value: string;
-}
+/** One custom or collection field answer, formatted for its type. */
+export type JobDetailCustomFieldVM = FieldDisplayEntry;
 
 export interface JobDetailCompanyVM {
   name: string | null;
@@ -124,6 +120,44 @@ export interface JobDetailVM {
   similarJobsHeading: string;
 }
 
+/**
+ * The job's custom and collection fields in the job form's order. Fields
+ * the layout does not list (a hidden field that still has an answer, or an
+ * API without layouts) follow in definition order, so the page shows every
+ * answered field it showed before layouts ordered them.
+ */
+function jobDisplayFields(
+  jobForm: JobFormLayoutSource | null | undefined,
+  definitions: PublicBoard['customFields']['job'],
+  job: PublicJob,
+): DisplayFieldSource[] {
+  const byKey = new Map(definitions.map((d) => [d.key, d]));
+  const collections = new Map(
+    (job.resolvedCollectionFields ?? []).map((field) => [field.key, field]),
+  );
+  const fields: DisplayFieldSource[] = [];
+  const seen = new Set<string>();
+  const addCustom = (key: string) => {
+    const definition = byKey.get(key);
+    if (!definition || seen.has(`custom:${key}`)) return;
+    seen.add(`custom:${key}`);
+    fields.push({ kind: 'custom', definition });
+  };
+  const addCollection = (key: string) => {
+    const resolved = collections.get(key);
+    if (!resolved || seen.has(`collection:${key}`)) return;
+    seen.add(`collection:${key}`);
+    fields.push({ kind: 'collection', key, label: resolved.label });
+  };
+  for (const entry of jobForm?.forms?.job ?? []) {
+    if (entry.kind === 'custom') addCustom(entry.key);
+    else if (entry.kind === 'collection') addCollection(entry.key);
+  }
+  for (const definition of definitions) addCustom(definition.key);
+  for (const key of collections.keys()) addCollection(key);
+  return fields;
+}
+
 export function toJobDetailVM(
   job: PublicJob,
   customFields: PublicBoard['customFields'],
@@ -138,7 +172,7 @@ export function toJobDetailVM(
    * breaks it, which is why this is two arguments and not one.
    */
   displayLocale: string = language,
-  jobForm?: JobFormSource | null,
+  jobForm?: JobFormLayoutSource | null,
   /**
    * The company's membership plan name from the separate company read; the
    * embedded `job.company` has no membership field.
@@ -262,61 +296,19 @@ export function toJobDetailVM(
   const customFieldDefinitions = Array.isArray(customFields)
     ? customFields
     : customFields.job;
-  const customFieldVms: JobDetailCustomFieldVM[] = resolveCustomFieldDisplay(
+  const customFieldVms = resolveFieldDisplay(
+    jobDisplayFields(jobForm, customFieldDefinitions, job),
+    {
+      values: job.customFieldValues,
+      collections: new Map(
+        (job.resolvedCollectionFields ?? []).map((field) => [
+          field.key,
+          field.entries,
+        ]),
+      ),
+    },
     displayLocale,
-    customFieldDefinitions,
-    job.customFieldValues,
-  ).map((entry) => {
-    const definition = customFieldDefinitions.find((d) => d.key === entry.key);
-    // Select values arrive as SDK-resolved authoring labels; re-word them
-    // from the template map via the RAW stored option keys (the wire stores
-    // keys, never labels), falling back to the resolved label.
-    const rawValue = job.customFieldValues[entry.key];
-    const optionLabel = <T>(resolved: string, raw: T) => {
-      const key = searchString(raw);
-      return key && definition
-        ? customFieldOptionLabel(
-            definition.key,
-            { key, label: resolved },
-            displayLocale,
-          )
-        : resolved;
-    };
-    let value: string;
-    if (entry.kind === 'boolean') {
-      value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;
-    } else if (entry.kind === 'number') {
-      try {
-        value = new Intl.NumberFormat(displayLocale).format(entry.value);
-      } catch {
-        value = String(entry.value);
-      }
-    } else if (entry.kind === 'multi_select') {
-      const raws = Array.isArray(rawValue) ? rawValue : [];
-      const labels = entry.values.map((resolved, index) =>
-        optionLabel(resolved, raws[index]),
-      );
-      try {
-        value = new Intl.ListFormat(displayLocale, {
-          style: 'long',
-          type: 'conjunction',
-        }).format(labels);
-      } catch {
-        value = labels.join(', ');
-      }
-    } else if (definition?.type === 'single_select') {
-      value = optionLabel(entry.value, rawValue);
-    } else {
-      value = entry.value;
-    }
-    return {
-      key: entry.key,
-      label: definition
-        ? customFieldLabel(definition, displayLocale)
-        : entry.label,
-      value,
-    };
-  });
+  );
 
   const website = company?.website
     ? /^https?:\/\//i.test(company.website)

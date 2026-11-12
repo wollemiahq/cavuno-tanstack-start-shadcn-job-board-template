@@ -6,6 +6,12 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { createCompanyProfileLoader } from './-company-profile-loader';
 
+import {
+  groupCompanyFields,
+  profileCollections,
+  profileLayoutFields,
+  resolveFieldDisplay,
+} from '@/board/custom-field-display';
 import { toJobCardVM } from '@/board/job-view-model';
 import {
   companyCategorySalaryPath,
@@ -19,6 +25,10 @@ import { CompanyCard } from '@/components/board/company-card';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobCard } from '@/components/board/job-card';
 import { CompanySalarySummary } from '@/components/board/salary-sections';
+import {
+  CustomFieldFacts,
+  CustomFieldSections,
+} from '@/components/custom-field-display';
 import { DeferredContent } from '@/components/deferred-content';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -133,6 +143,17 @@ function CompanyPage() {
     : null;
 
   const previewJobs = jobs.data.slice(0, JOBS_PREVIEW_COUNT);
+  const fields = groupCompanyFields(
+    resolveFieldDisplay(
+      profileLayoutFields(board.forms?.company),
+      {
+        values: company.customFieldValues ?? {},
+        media: company.customFieldMedia ?? {},
+        collections: profileCollections(company.objectReferences ?? []),
+      },
+      getLocale(),
+    ),
+  );
 
   return (
     <CompanySectionShell
@@ -150,6 +171,8 @@ function CompanyPage() {
             // Company descriptions arrive pre-sanitized from the Board API.
             <Prose html={company.description} />
           ) : null}
+
+          <CustomFieldSections entries={fields.main} />
 
           <section
             aria-label={m.companyDetail_openJobsHeading()}
@@ -251,6 +274,8 @@ function CompanyPage() {
                   </div>
                 </div>
               ) : null}
+
+              <CustomFieldFacts entries={fields.facts} layout="stack" />
             </CardContent>
           </Card>
 

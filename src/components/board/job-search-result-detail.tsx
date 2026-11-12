@@ -4,7 +4,6 @@ import { m } from '../../paraglide/messages';
 
 import type {
   JobDetailChipVM,
-  JobDetailCustomFieldVM,
   JobDetailFactVM,
   JobDetailVM,
 } from '@/board/job-detail-view-model';
@@ -12,23 +11,20 @@ import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { SearchDetailHeader } from '@/components/board/search-detail-header';
+import { CustomFieldRows } from '@/components/custom-field-display';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
-function DefinitionList({
-  rows,
-}: {
-  rows: Array<JobDetailFactVM | JobDetailCustomFieldVM>;
-}) {
+function DefinitionList({ rows }: { rows: JobDetailFactVM[] }) {
   if (rows.length === 0) return null;
 
   return (
     <dl className="grid max-w-full min-w-0 gap-x-6 gap-y-2 sm:grid-cols-[max-content_minmax(0,1fr)]">
       {rows.map((row) => (
-        <div key={'key' in row ? row.key : row.label} className="contents">
+        <div key={row.label} className="contents">
           <dt className="text-muted-foreground text-sm font-medium">
             {row.label}
           </dt>
@@ -447,7 +443,7 @@ export function JobSearchResultDetail({
               <h3 className="text-sm font-semibold">
                 {vm.additionalDetailsHeading}
               </h3>
-              <DefinitionList rows={vm.customFields} />
+              <CustomFieldRows entries={vm.customFields} />
             </section>
           ) : null}
 

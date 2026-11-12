@@ -3,6 +3,13 @@ import { formatMonthYear, normalizeWebsiteUrl } from '@cavuno/board/format';
 import { verificationBadge } from './verification-badge';
 
 import {
+  groupTalentProfileFields,
+  profileCollections,
+  resolveFieldDisplay,
+  type DisplayFieldSource,
+  type TalentProfileFieldGroups,
+} from '@/board/custom-field-display';
+import {
   talentProfileParam,
   talentProfilePath,
 } from '@/lib/talent-profile-path';
@@ -71,6 +78,12 @@ export interface TalentCardMappingOptions {
    * omit where no place is searched.
    */
   distanceLabel?: (km: number) => string | null;
+  /**
+   * The custom and collection fields of the operator's talent form
+   * (`profileLayoutFields(board.forms.talent)`), in form order. The profile
+   * shows the ones the candidate answered; omit to show none.
+   */
+  fieldLayout?: readonly DisplayFieldSource[];
 }
 
 export interface TalentExperienceVM {
@@ -128,6 +141,8 @@ export interface TalentProfileVM extends TalentCardVM {
   languagesHeading: string;
   languages: TalentLanguageVM[];
   viewProfileLabel: string;
+  /** The candidate's custom and collection field answers, placed by type. */
+  fields: TalentProfileFieldGroups;
 }
 
 function profilePath(param: string | null) {
@@ -387,6 +402,17 @@ export function toTalentProfileVM(
       ),
     })),
     viewProfileLabel: labels.viewProfile,
+    fields: groupTalentProfileFields(
+      resolveFieldDisplay(
+        options?.fieldLayout ?? [],
+        {
+          values: profile.customFieldValues ?? {},
+          media: profile.customFieldMedia ?? {},
+          collections: profileCollections(profile.objectReferences ?? []),
+        },
+        language,
+      ),
+    ),
   };
 }
 

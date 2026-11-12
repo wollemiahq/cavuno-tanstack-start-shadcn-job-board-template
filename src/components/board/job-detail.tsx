@@ -35,6 +35,7 @@ import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { TaxonomyTags } from '@/components/board/taxonomy-tags';
+import { CustomFieldRows } from '@/components/custom-field-display';
 import { Container } from '@/components/layout/container';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
@@ -97,7 +98,7 @@ function CustomFields({
   return (
     <section aria-label={heading} className="flex flex-col gap-2">
       <h2 className="text-foreground text-sm font-semibold">{heading}</h2>
-      <DefinitionList rows={fields} />
+      <CustomFieldRows entries={fields} />
     </section>
   );
 }

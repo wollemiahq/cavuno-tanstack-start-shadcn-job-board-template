@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import type { DisplayFieldSource } from '@/board/custom-field-display';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   resolveTalentDetailCta,
@@ -32,6 +33,7 @@ export function TalentProfilePageView({
   hasTalentAccess = false,
   canStartMessage,
   messagingEnabled,
+  fieldLayout,
   locationHref,
   onStartConversation,
   onConversationStarted,
@@ -42,11 +44,15 @@ export function TalentProfilePageView({
   hasTalentAccess?: boolean;
   canStartMessage?: boolean;
   messagingEnabled: boolean;
+  /** The talent form's custom and collection fields, in form order. */
+  fieldLayout?: readonly DisplayFieldSource[];
   locationHref: string;
   onStartConversation: StartTalentConversation;
   onConversationStarted: (conversationId: string) => void;
 }) {
-  const vm = toTalentProfileVM(profile, getLocale(), getTalentSearchLabels());
+  const vm = toTalentProfileVM(profile, getLocale(), getTalentSearchLabels(), {
+    fieldLayout,
+  });
   const viewer: TalentDetailViewer =
     user === null
       ? { kind: 'anonymous' }

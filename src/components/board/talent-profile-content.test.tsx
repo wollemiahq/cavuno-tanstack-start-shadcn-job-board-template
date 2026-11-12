@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { TalentProfileContent } from './talent-profile-content';
 import { profileVm } from './talent-ui-test-fixtures';
+
+import {
+  groupTalentProfileFields,
+  resolveFieldDisplay,
+} from '@/board/custom-field-display';
 
 beforeEach(() => {
   // CompanyAvatar renders the owned Avatar primitive, whose image is
@@ -163,5 +169,81 @@ describe('TalentProfileContent', () => {
       screen.getByText('I translate ambitious ideas into working systems.'),
     ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Experience' })).toBeVisible();
+  });
+
+  it('places custom fields by type: contact links in the header, featured work above Experience, Details last', () => {
+    const fields = groupTalentProfileFields(
+      resolveFieldDisplay(
+        [
+          {
+            kind: 'custom',
+            definition: {
+              key: 'years',
+              label: 'Years in the trade',
+              type: 'number',
+            },
+          },
+          {
+            kind: 'custom',
+            definition: {
+              key: 'work',
+              label: 'Portfolio',
+              type: 'image_gallery',
+            },
+          },
+          {
+            kind: 'custom',
+            definition: { key: 'site', label: 'Portfolio site', type: 'url' },
+          },
+        ],
+        {
+          values: { years: 12, site: 'ada.example' },
+          media: {
+            work: [
+              {
+                id: 'img_1',
+                name: 'stairs.jpg',
+                contentType: 'image/jpeg',
+                sizeBytes: 1000,
+                url: 'https://files.example/stairs.jpg',
+              },
+            ],
+          },
+        },
+        'en',
+      ),
+    );
+    render(
+      <TalentProfileContent vm={{ ...profileVm, fields }} headingAs="h1" />,
+    );
+
+    const header = screen
+      .getByRole('heading', { level: 1, name: 'Ada Lovelace' })
+      .closest('header')!;
+    expect(
+      within(header).getByRole('link', { name: 'ada.example' }),
+    ).toHaveAttribute('href', 'https://ada.example/');
+
+    const portfolio = screen.getByRole('heading', { name: 'Portfolio' });
+    const experience = screen.getByRole('heading', { name: 'Experience' });
+    const languages = screen.getByRole('heading', { name: 'Languages' });
+    const details = screen.getByRole('heading', {
+      name: m.customFieldDisplay_detailsHeading(),
+    });
+    const follows = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(follows(portfolio, experience)).toBe(true);
+    expect(follows(languages, details)).toBe(true);
+    expect(screen.getByText('Years in the trade')).toBeVisible();
+    expect(screen.getByText('12')).toBeVisible();
+  });
+
+  it('shows no Details section when the candidate answered no custom fields', () => {
+    render(<TalentProfileContent vm={profileVm} />);
+    expect(
+      screen.queryByRole('heading', {
+        name: m.customFieldDisplay_detailsHeading(),
+      }),
+    ).toBeNull();
   });
 });

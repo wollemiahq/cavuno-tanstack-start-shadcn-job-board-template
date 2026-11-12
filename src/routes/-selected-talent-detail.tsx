@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { m } from '../paraglide/messages';
 
 import type { SelectedTalentState } from './-use-selected-talent';
+import type { DisplayFieldSource } from '@/board/custom-field-display';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   resolveTalentDetailCta,
@@ -23,6 +24,7 @@ export function SelectedTalentDetail({
   signInHref,
   messagingEnabled,
   profileUnlocks = false,
+  fieldLayout,
   saveSlot,
   onStartConversation,
   onConversationStarted,
@@ -37,6 +39,8 @@ export function SelectedTalentDetail({
   messagingEnabled: boolean;
   /** Directory cards link to `/p/{id}` when the board sells profile unlocks. */
   profileUnlocks?: boolean;
+  /** The talent form's custom and collection fields, in form order. */
+  fieldLayout?: readonly DisplayFieldSource[];
   /** Employer Save (the bookmark that saves to saved searches), next to Message. */
   saveSlot?: ReactNode;
   onStartConversation: StartTalentConversation;
@@ -50,6 +54,7 @@ export function SelectedTalentDetail({
           getTalentSearchLabels(),
           {
             profileUnlocks,
+            fieldLayout,
           },
         );
         const cta = resolveTalentDetailCta({
