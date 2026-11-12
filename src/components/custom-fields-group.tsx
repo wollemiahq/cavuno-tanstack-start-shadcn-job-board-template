@@ -48,10 +48,10 @@ const LazyCustomFieldFilesInput = lazy(() =>
 );
 
 /**
- * The editor's `RICH_TEXT_MAX_CHARACTERS`, repeated so this module does not
- * import the editor eagerly. The API caps a rich text answer at the same.
+ * The API caps a rich text custom field answer at 20,000 characters of
+ * sanitized HTML, below the 25,000 the editor allows a job description.
  */
-const RICH_TEXT_MAX_CHARACTERS = 25_000;
+const CUSTOM_FIELD_RICH_TEXT_MAX_CHARACTERS = 20_000;
 
 type JobCustomFieldDefinition = PublicBoard['customFields']['job'][number];
 /**
@@ -236,13 +236,13 @@ export function CustomFieldInput({
     case 'rich_text':
       return (
         <Field>
-          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <FieldLabel>{label}</FieldLabel>
           <Suspense fallback={<Skeleton className="h-32 w-full" />}>
             <LazyRichTextEditor
               value={textValue(value)}
               onChange={(html) => onChange(isRichTextEmpty(html) ? '' : html)}
               ariaLabel={label}
-              maxCharacters={RICH_TEXT_MAX_CHARACTERS}
+              maxCharacters={CUSTOM_FIELD_RICH_TEXT_MAX_CHARACTERS}
             />
           </Suspense>
         </Field>

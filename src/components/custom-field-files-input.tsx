@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 
 import { FileText, MoreHorizontal, Upload } from 'lucide-react';
 
+import { sizeLabel } from '@/board/custom-field-display';
 import type { ProfileFieldValue } from '@/board/profile-field-writes';
 import {
   Attachment,
@@ -28,6 +29,7 @@ import { boardErrorMessage } from '@/lib/board-error-message';
 import { searchString } from '@/lib/pagination';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
+import type { ActionResult } from '@/server/employers';
 import type { ProfileFieldMedia } from '@cavuno/board';
 
 /** The API's cap on one profile field's gallery. */
@@ -38,9 +40,7 @@ const FILE_ACCEPT =
   '.pdf,.doc,.docx,.odt,.rtf,.txt,image/jpeg,image/png,image/webp,image/gif';
 
 /** One upload to an owner-editable gallery or file field. */
-export type CustomFieldUploadResult =
-  | { ok: true; data: ProfileFieldMedia }
-  | { ok: false; code: string; message: string };
+export type CustomFieldUploadResult = ActionResult<ProfileFieldMedia>;
 
 /**
  * What the gallery and file inputs need from their form: the upload for
@@ -57,19 +57,6 @@ function storedIds(value: ProfileFieldValue | undefined): string[] {
   if (Array.isArray(value)) return value;
   const id = searchString(value);
   return id ? [id] : [];
-}
-
-function sizeLabel(bytes: number): string {
-  const [value, unit] =
-    bytes < 1024 * 1024
-      ? [bytes / 1024, 'kilobyte']
-      : [bytes / 1048576, 'megabyte'];
-  return new Intl.NumberFormat(getLocale(), {
-    style: 'unit',
-    unit,
-    unitDisplay: 'short',
-    maximumFractionDigits: unit === 'megabyte' ? 1 : 0,
-  }).format(value);
 }
 
 function uploadErrorText(
@@ -150,8 +137,16 @@ export function CustomFieldFilesInput({
     }
     for (const file of accepted) {
       setPending((count) => count + 1);
-      const result = await uploads.upload(fieldKey, file);
-      setPending((count) => count - 1);
+      let result: CustomFieldUploadResult;
+      try {
+        result = await uploads.upload(fieldKey, file);
+      } catch {
+        // A dropped connection or an expired session throws instead of
+        // returning a failure; the field must not stay stuck uploading.
+        result = { ok: false, code: 'unknown', message: '' };
+      } finally {
+        setPending((count) => count - 1);
+      }
       if (!result.ok) {
         setError(uploadErrorText(result, type));
         continue;
@@ -163,13 +158,17 @@ export function CustomFieldFilesInput({
     }
   }
 
-  function move(index: number, by: -1 | 1) {
+  // By ID, not by the shown position: a saved ID whose file the owner read
+  // no longer returns is kept in `ids` but not shown.
+  function move(fileId: string, by: -1 | 1) {
     const next = [...ids];
+    const index = next.indexOf(fileId);
     const [moved] = next.splice(index, 1);
     next.splice(index + by, 0, moved!);
     commit(next);
   }
 
+  const busy = pending > 0;
   const picker = (
     <input
       ref={inputRef}
@@ -177,6 +176,8 @@ export function CustomFieldFilesInput({
       type="file"
       className="sr-only"
       tabIndex={-1}
+      // The field label opens this picker too, so it locks with the buttons.
+      disabled={busy}
       accept={isGallery ? GALLERY_ACCEPT : FILE_ACCEPT}
       multiple={isGallery}
       aria-label={label}
@@ -187,7 +188,6 @@ export function CustomFieldFilesInput({
       }}
     />
   );
-  const busy = pending > 0;
 
   if (!isGallery) {
     const file = shown[0];
@@ -202,7 +202,7 @@ export function CustomFieldFilesInput({
             <AttachmentContent>
               <AttachmentTitle>{file.name}</AttachmentTitle>
               <AttachmentDescription>
-                {sizeLabel(file.sizeBytes)}
+                {sizeLabel(file.sizeBytes, getLocale())}
               </AttachmentDescription>
             </AttachmentContent>
             <AttachmentActions>
@@ -274,12 +274,12 @@ export function CustomFieldFilesInput({
                     />
                     <DropdownMenuContent align="end">
                       {index > 0 ? (
-                        <DropdownMenuItem onClick={() => move(index, -1)}>
+                        <DropdownMenuItem onClick={() => move(file.id, -1)}>
                           {m.customFieldUpload_moveEarlierLabel()}
                         </DropdownMenuItem>
                       ) : null}
                       {index < shown.length - 1 ? (
-                        <DropdownMenuItem onClick={() => move(index, 1)}>
+                        <DropdownMenuItem onClick={() => move(file.id, 1)}>
                           {m.customFieldUpload_moveLaterLabel()}
                         </DropdownMenuItem>
                       ) : null}

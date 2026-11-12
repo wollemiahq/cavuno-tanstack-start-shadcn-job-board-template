@@ -206,6 +206,32 @@ describe('CustomFieldFilesInput — gallery', () => {
     ).toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
   });
+  it('recovers from an upload that throws instead of staying stuck', async () => {
+    const onChange = vi.fn();
+    render(
+      <Harness
+        type="image_gallery"
+        initial={[]}
+        uploads={{
+          upload: vi.fn(async () => {
+            throw new Error('network down');
+          }),
+          media: {},
+        }}
+        onChange={onChange}
+      />,
+    );
+
+    pick([png('a.png')]);
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: m.customFieldUpload_galleryAddLabel(),
+      }),
+    ).toBeEnabled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });
 
 describe('CustomFieldFilesInput — file', () => {

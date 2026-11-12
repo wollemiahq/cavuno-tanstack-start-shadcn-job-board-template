@@ -147,7 +147,8 @@ function telHref(value: string): string {
   return match ? `tel:${number};ext=${match[2]}` : `tel:${number}`;
 }
 
-function sizeLabel(bytes: number, locale: string): string {
+/** A file size in the board locale's short units, such as "402 kB". */
+export function sizeLabel(bytes: number, locale: string): string {
   const [value, unit] =
     bytes < 1024
       ? [bytes, 'byte']

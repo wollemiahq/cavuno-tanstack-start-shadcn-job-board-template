@@ -263,10 +263,13 @@ describe('ProfileForm — operator form layout', () => {
       sizeBytes: 1024,
       url: `https://files.test/${id}`,
     });
-    const uploadCustomFieldFile = vi.fn(async () => ({
-      ok: true as const,
-      data: image('draft'),
-    }));
+    let finishUpload!: () => void;
+    const uploadCustomFieldFile = vi.fn(
+      () =>
+        new Promise<{ ok: true; data: ReturnType<typeof image> }>((resolve) => {
+          finishUpload = () => resolve({ ok: true, data: image('draft') });
+        }),
+    );
     const profileFields: TalentProfileFields = {
       customFields: {
         definitions: [
@@ -304,7 +307,14 @@ describe('ProfileForm — operator form layout', () => {
     fireEvent.change(picker, {
       target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] },
     });
+    // Saving now would drop the draft, whose ID is not in the form yet.
+    const saveButton = screen.getByRole('button', {
+      name: m.profileForm_saveLabel(),
+    });
+    await waitFor(() => expect(saveButton).toBeDisabled());
+    finishUpload();
     await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2));
+    expect(saveButton).toBeEnabled();
     expect(uploadCustomFieldFile).toHaveBeenCalledWith(
       'portfolio',
       expect.any(File),
@@ -1018,6 +1028,7 @@ describe('ProfileForm — committed overview refresh', () => {
           },
         ],
         values: { portfolio_note: 'Previously saved answer' },
+        customFieldMedia: {},
       },
       objectReferences: null,
     });
@@ -1129,6 +1140,7 @@ describe('ProfileForm — committed overview refresh', () => {
             },
           ],
           values: { portfolio_note: 'Stored note' },
+          customFieldMedia: {},
         },
         objectReferences: {
           definitions: [

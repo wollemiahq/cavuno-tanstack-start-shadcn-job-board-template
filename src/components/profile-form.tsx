@@ -100,7 +100,6 @@ import { searchString } from '@/lib/pagination';
 import type {
   CandidateProfile,
   MyCandidateProfileFieldValues,
-  ProfileFieldValues,
   ProfileObjectReferences,
 } from '@cavuno/board';
 
@@ -280,7 +279,7 @@ const OUTSIDE_FORM: ReadonlySet<TalentFormBuiltinKey> = new Set([
  * read of custom fields also carries the saved gallery and file uploads.
  */
 export type TalentProfileFields = {
-  customFields: ProfileFieldValues | MyCandidateProfileFieldValues | null;
+  customFields: MyCandidateProfileFieldValues | null;
   objectReferences: ProfileObjectReferences | null;
 };
 
@@ -479,13 +478,20 @@ export function ProfileForm({
     initialProfileSelections(storedSelections),
   );
   const editedCustomFields = useRef(new Set<string>());
+  // Save waits for uploads in flight: their IDs reach the form's values
+  // only when each finishes, and an unsaved draft is deleted later.
+  const [uploading, setUploading] = useState(0);
+  const upload = dependencies.uploadCustomFieldFile ?? uploadCustomFieldFile;
   const uploads: CustomFieldUploads = {
-    upload: dependencies.uploadCustomFieldFile ?? uploadCustomFieldFile,
-    media:
-      (profileFields?.customFields &&
-        'customFieldMedia' in profileFields.customFields &&
-        profileFields.customFields.customFieldMedia) ||
-      {},
+    upload: async (fieldKey, file) => {
+      setUploading((count) => count + 1);
+      try {
+        return await upload(fieldKey, file);
+      } finally {
+        setUploading((count) => count - 1);
+      }
+    },
+    media: profileFields?.customFields?.customFieldMedia ?? {},
   };
   const editedCollections = useRef(new Set<string>());
   useEffect(() => {
@@ -641,6 +647,7 @@ export function ProfileForm({
   }
 
   async function save() {
+    if (uploading > 0) return;
     if (saving.current) return;
     const missing = missingRequired();
     setInvalid(missing);
@@ -1250,7 +1257,11 @@ export function ProfileForm({
         <div className="flex flex-wrap items-center gap-3">
           <Button
             type="submit"
-            disabled={status === 'saving' || locationSuggestions.resolving}
+            disabled={
+              status === 'saving' ||
+              locationSuggestions.resolving ||
+              uploading > 0
+            }
           >
             {status === 'saving'
               ? m.profileForm_savingLabel()
