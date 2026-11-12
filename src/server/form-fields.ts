@@ -68,6 +68,33 @@ export const updateCompanyCustomFields = createServerFn({ method: 'POST' })
     ),
   );
 
+/**
+ * Uploads one gallery image or file to an owner-editable company custom
+ * field, as a draft the company form saves with its other custom fields.
+ */
+export const uploadCompanyCustomFieldFile = createServerFn({ method: 'POST' })
+  .validator((data) => {
+    if (!(data instanceof FormData)) throw new Error('Expected FormData');
+    const slug = searchString(data.get('slug'));
+    const fieldKey = searchString(data.get('fieldKey'));
+    const file = data.get('file');
+    if (!slug || !fieldKey || !(file instanceof File)) {
+      throw new Error('Expected a slug, a fieldKey and a file');
+    }
+    return { slug, fieldKey, file };
+  })
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.uploadCustomFieldFile(
+        data.slug,
+        data.fieldKey,
+        data.file,
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
 /** Replaces the company's complete editable collection selection set. */
 export const updateCompanyObjectReferences = createServerFn({
   method: 'POST',
