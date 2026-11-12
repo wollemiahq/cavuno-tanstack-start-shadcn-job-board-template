@@ -150,12 +150,10 @@ describe('CustomFieldFilesInput — gallery', () => {
     const saved = Array.from({ length: GALLERY_MAX_IMAGES - 1 }, (_, i) =>
       media(`s${i}`),
     );
-    const upload = vi.fn(
-      async (): Promise<CustomFieldUploadResult> => ({
-        ok: true,
-        data: media('last'),
-      }),
-    );
+    const upload = vi.fn(async (): Promise<CustomFieldUploadResult> => ({
+      ok: true,
+      data: media('last'),
+    }));
     const onChange = vi.fn();
     render(
       <Harness
@@ -211,7 +209,7 @@ describe('CustomFieldFilesInput — gallery', () => {
 });
 
 describe('CustomFieldFilesInput — file', () => {
-  it('stores one ID, replaces it on a new upload and clears it on remove', async () => {
+  it('stores one ID and clears it on remove', async () => {
     const onChange = vi.fn();
     render(
       <Harness

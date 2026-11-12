@@ -806,7 +806,6 @@
   "customFieldUpload_fileTypeError": "Gebruik een pdf-, Word-, ODT-, RTF-, tekst- of afbeeldingsbestand.",
   "customFieldUpload_tooLargeError": "Dit bestand is groter dan 10 MB.",
   "customFieldUpload_uploadingLabel": "Uploaden…",
-  "customFieldUpload_replaceLabel": "Vervangen",
   "customFieldUpload_removeLabel": "Verwijderen",
   "customFieldUpload_imageActionsLabel": "Acties voor afbeelding {position} van {total}",
   "customFieldUpload_moveEarlierLabel": "Naar voren",

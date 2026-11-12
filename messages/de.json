@@ -806,7 +806,6 @@
   "customFieldUpload_fileTypeError": "Verwende eine PDF-, Word-, ODT-, RTF-, Text- oder Bilddatei.",
   "customFieldUpload_tooLargeError": "Die Datei ist größer als 10 MB.",
   "customFieldUpload_uploadingLabel": "Wird hochgeladen…",
-  "customFieldUpload_replaceLabel": "Ersetzen",
   "customFieldUpload_removeLabel": "Entfernen",
   "customFieldUpload_imageActionsLabel": "Aktionen für Bild {position} von {total}",
   "customFieldUpload_moveEarlierLabel": "Nach vorne",

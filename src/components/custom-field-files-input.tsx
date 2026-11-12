@@ -195,9 +195,9 @@ export function CustomFieldFilesInput({
       <div className="space-y-2">
         {picker}
         {file ? (
-          <Attachment className="w-full" state={busy ? 'uploading' : 'done'}>
+          <Attachment className="w-full">
             <AttachmentMedia>
-              {busy ? <Spinner /> : <FileText aria-hidden />}
+              <FileText aria-hidden />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle>{file.name}</AttachmentTitle>
@@ -206,18 +206,7 @@ export function CustomFieldFilesInput({
               </AttachmentDescription>
             </AttachmentContent>
             <AttachmentActions>
-              <AttachmentAction
-                size="sm"
-                disabled={busy}
-                onClick={() => inputRef.current?.click()}
-              >
-                {m.customFieldUpload_replaceLabel()}
-              </AttachmentAction>
-              <AttachmentAction
-                size="sm"
-                disabled={busy}
-                onClick={() => commit([])}
-              >
+              <AttachmentAction size="sm" onClick={() => commit([])}>
                 {m.customFieldUpload_removeLabel()}
               </AttachmentAction>
             </AttachmentActions>

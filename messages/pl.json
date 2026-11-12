@@ -840,7 +840,6 @@
   "customFieldUpload_fileTypeError": "Użyj pliku PDF, Word, ODT, RTF, tekstowego lub obrazu.",
   "customFieldUpload_tooLargeError": "Ten plik przekracza 10 MB.",
   "customFieldUpload_uploadingLabel": "Przesyłanie…",
-  "customFieldUpload_replaceLabel": "Zamień",
   "customFieldUpload_removeLabel": "Usuń",
   "customFieldUpload_imageActionsLabel": "Działania dla obrazu {position} z {total}",
   "customFieldUpload_moveEarlierLabel": "Przesuń wcześniej",
