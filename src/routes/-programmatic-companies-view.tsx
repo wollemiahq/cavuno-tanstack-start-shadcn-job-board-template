@@ -2,6 +2,7 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router';
 
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyCardVM } from '@/board/company-view-model';
+import { profileLayoutFields } from '@/board/custom-field-display';
 import { CompanySearchPage } from '@/components/board/company-search-page';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
@@ -149,6 +150,7 @@ export function ProgrammaticCompaniesView({
           state={selectedCompany}
           language={getLocale()}
           jobForm={board}
+          fieldLayout={profileLayoutFields(board.forms?.company)}
         />
       }
     />

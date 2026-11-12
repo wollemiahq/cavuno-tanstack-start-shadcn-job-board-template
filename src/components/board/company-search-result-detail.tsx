@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 import { Link } from '@tanstack/react-router';
 
 import { m } from '../../paraglide/messages';
@@ -9,6 +11,10 @@ import { CompanyAvatar } from '@/components/board/company-avatar';
 import { JobCard } from '@/components/board/job-card';
 import { MembershipBadge } from '@/components/board/membership-badge';
 import { SearchDetailHeader } from '@/components/board/search-detail-header';
+import {
+  CustomFieldSections,
+  CustomFieldValue,
+} from '@/components/custom-field-display';
 import { Prose } from '@/components/prose';
 import { SearchResultDetailHeader } from '@/components/search-results/search-results';
 import { Text } from '@/components/text';
@@ -197,6 +203,14 @@ export function CompanySearchResultDetail({
           <p className="text-muted-foreground">{vm.noDescriptionText}</p>
         )}
 
+        <div className="contents" inert={!interactive}>
+          <CustomFieldSections
+            entries={vm.fields.main}
+            headingAs="h3"
+            headingClassName="text-foreground text-sm font-semibold"
+          />
+        </div>
+
         {interactive && jobPreviews.length > 0 ? (
           <section
             aria-label={m.companyDetail_openJobsHeading()}
@@ -285,30 +299,47 @@ export function CompanySearchResultDetail({
           </section>
         ) : null}
 
-        {vm.websiteHref && vm.websiteLabel ? (
+        {(vm.websiteHref && vm.websiteLabel) || vm.fields.facts.length > 0 ? (
           <dl
             data-slot="company-detail-facts"
-            className="grid grid-cols-[5rem_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2"
+            className="grid grid-cols-[minmax(5rem,max-content)_minmax(0,1fr)] items-baseline gap-x-4 gap-y-2"
           >
-            <dt className="text-muted-foreground text-sm font-medium">
-              {vm.websiteHeading}
-            </dt>
-            <dd className="text-foreground min-w-0 text-sm [overflow-wrap:anywhere]">
-              {interactive ? (
-                <a
-                  href={vm.websiteHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium underline-offset-4 outline-none hover:underline focus-visible:underline"
+            {vm.websiteHref && vm.websiteLabel ? (
+              <>
+                <dt className="text-muted-foreground text-sm font-medium">
+                  {vm.websiteHeading}
+                </dt>
+                <dd className="text-foreground min-w-0 text-sm [overflow-wrap:anywhere]">
+                  {interactive ? (
+                    <a
+                      href={vm.websiteHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline-offset-4 outline-none hover:underline focus-visible:underline"
+                    >
+                      {vm.websiteLabel}
+                    </a>
+                  ) : (
+                    <span className="text-foreground text-sm">
+                      {vm.websiteLabel}
+                    </span>
+                  )}
+                </dd>
+              </>
+            ) : null}
+            {vm.fields.facts.map((entry) => (
+              <Fragment key={entry.id}>
+                <dt className="text-muted-foreground text-sm font-medium">
+                  {entry.label}
+                </dt>
+                <dd
+                  className="text-foreground min-w-0 text-sm"
+                  inert={!interactive}
                 >
-                  {vm.websiteLabel}
-                </a>
-              ) : (
-                <span className="text-foreground text-sm">
-                  {vm.websiteLabel}
-                </span>
-              )}
-            </dd>
+                  <CustomFieldValue value={entry.value} />
+                </dd>
+              </Fragment>
+            ))}
           </dl>
         ) : null}
       </div>

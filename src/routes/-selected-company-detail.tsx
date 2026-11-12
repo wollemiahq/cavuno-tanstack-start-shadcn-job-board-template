@@ -3,6 +3,7 @@ import { m } from '../paraglide/messages';
 import type { SelectedCompanyState } from './-use-selected-company';
 import { getCompanySearchLabels } from '@/board/company-search-labels';
 import { toCompanyDetailVM } from '@/board/company-view-model';
+import type { DisplayFieldSource } from '@/board/custom-field-display';
 import type { JobFormSource } from '@/board/job-form';
 import { toJobCardVM } from '@/board/job-view-model';
 import { toOverallSalaryVM } from '@/board/salary-view-model';
@@ -13,10 +14,13 @@ export function SelectedCompanyDetail({
   state,
   language,
   jobForm,
+  fieldLayout,
 }: {
   state: SelectedCompanyState;
   language: string;
   jobForm?: JobFormSource | null;
+  /** The company form's custom and collection fields, in form order. */
+  fieldLayout: readonly DisplayFieldSource[];
 }) {
   const hasSalaries = Boolean(
     state.salarySummary &&
@@ -51,7 +55,10 @@ export function SelectedCompanyDetail({
       : null;
   const detail = state.company ? (
     <CompanySearchResultDetail
-      vm={toCompanyDetailVM(state.company, getCompanySearchLabels())}
+      vm={toCompanyDetailVM(state.company, getCompanySearchLabels(), {
+        layout: fieldLayout,
+        locale: language,
+      })}
       jobPreviews={(state.jobs?.data ?? [])
         .slice(0, 4)
         .map((job) => toJobCardVM(job, language, jobForm))}

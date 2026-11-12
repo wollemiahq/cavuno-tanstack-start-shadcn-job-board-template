@@ -50,7 +50,12 @@ const vm: JobDetailVM = {
   categoriesHeading: 'Categories',
   skillsHeading: 'Skills',
   customFields: [
-    { key: 'portfolio', label: 'Portfolio required', value: 'Yes' },
+    {
+      id: 'custom:portfolio',
+      label: 'Portfolio required',
+      type: 'boolean',
+      value: { kind: 'text', text: 'Yes', multiline: false },
+    },
   ],
   additionalDetailsHeading: 'Additional details',
   company: {

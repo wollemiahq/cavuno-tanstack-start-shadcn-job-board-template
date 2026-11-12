@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../../paraglide/messages';
 import { TalentProfileContent } from './talent-profile-content';
 import { profileVm } from './talent-ui-test-fixtures';
 
@@ -163,5 +164,76 @@ describe('TalentProfileContent', () => {
       screen.getByText('I translate ambitious ideas into working systems.'),
     ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Experience' })).toBeVisible();
+  });
+
+  it('renders each field group: contact links in the header, featured work and Details sections', () => {
+    const fields = {
+      contact: [
+        {
+          id: 'custom:site',
+          label: 'Portfolio site',
+          type: 'url' as const,
+          value: {
+            kind: 'link' as const,
+            href: 'https://ada.example/',
+            text: 'ada.example',
+            external: true,
+          },
+        },
+      ],
+      about: [],
+      featured: [
+        {
+          id: 'custom:work',
+          label: 'Portfolio',
+          type: 'image_gallery' as const,
+          value: {
+            kind: 'images' as const,
+            images: [
+              {
+                id: 'img_1',
+                name: 'stairs.jpg',
+                url: 'https://files.example/stairs.jpg',
+              },
+            ],
+          },
+        },
+      ],
+      details: [
+        {
+          id: 'custom:years',
+          label: 'Years in the trade',
+          type: 'number' as const,
+          value: { kind: 'text' as const, text: '12', multiline: false },
+        },
+      ],
+    };
+    render(
+      <TalentProfileContent vm={{ ...profileVm, fields }} headingAs="h1" />,
+    );
+
+    const header = screen
+      .getByRole('heading', { level: 1, name: 'Ada Lovelace' })
+      .closest('header')!;
+    expect(
+      within(header).getByRole('link', { name: 'ada.example' }),
+    ).toHaveAttribute('href', 'https://ada.example/');
+    expect(screen.getByRole('heading', { name: 'Portfolio' })).toBeVisible();
+    expect(
+      screen.getByRole('heading', {
+        name: m.customFieldDisplay_detailsHeading(),
+      }),
+    ).toBeVisible();
+    expect(screen.getByText('Years in the trade')).toBeVisible();
+    expect(screen.getByText('12')).toBeVisible();
+  });
+
+  it('shows no Details section when the candidate answered no custom fields', () => {
+    render(<TalentProfileContent vm={profileVm} />);
+    expect(
+      screen.queryByRole('heading', {
+        name: m.customFieldDisplay_detailsHeading(),
+      }),
+    ).toBeNull();
   });
 });

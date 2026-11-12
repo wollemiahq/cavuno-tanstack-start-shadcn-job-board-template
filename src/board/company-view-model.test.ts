@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { toCompanyCardVM, toCompanyDetailVM } from './company-view-model';
+import {
+  toCompanyCardVM,
+  toCompanyDetailVM,
+  toCompanyFieldGroups,
+} from './company-view-model';
 
 import type { PublicCompany, PublicCompanyDetail } from '@cavuno/board';
 
@@ -91,6 +95,7 @@ describe('company view models', () => {
         ],
       } satisfies PublicCompanyDetail,
       labels,
+      { layout: [], locale: 'en' },
     );
 
     expect(vm.marketChips).toEqual([
@@ -125,5 +130,62 @@ describe('company membership is public identity', () => {
 
   it('carries null for a company with no membership', () => {
     expect(toCompanyCardVM(company, labels).membershipPlanName).toBeNull();
+  });
+});
+
+describe('toCompanyFieldGroups', () => {
+  it('puts rich text and galleries in the main column and shorter answers with the key facts', () => {
+    const groups = toCompanyFieldGroups(
+      {
+        ...company,
+        customFieldValues: {
+          crew: 24,
+          benefits: '<p>RDOs</p>',
+          site: 'a.example',
+        },
+        customFieldMedia: {
+          workshop: [
+            {
+              id: 'w',
+              name: 'w.jpg',
+              contentType: 'image/jpeg',
+              sizeBytes: 1,
+              url: 'https://f.example/w',
+            },
+          ],
+        },
+      },
+      [
+        {
+          kind: 'custom',
+          definition: { key: 'crew', label: 'Crew', type: 'number' },
+        },
+        {
+          kind: 'custom',
+          definition: {
+            key: 'workshop',
+            label: 'Workshop',
+            type: 'image_gallery',
+          },
+        },
+        {
+          kind: 'custom',
+          definition: { key: 'site', label: 'Site', type: 'url' },
+        },
+        {
+          kind: 'custom',
+          definition: { key: 'benefits', label: 'Benefits', type: 'rich_text' },
+        },
+      ],
+      'en',
+    );
+    expect(groups.main.map((entry) => entry.id)).toEqual([
+      'custom:workshop',
+      'custom:benefits',
+    ]);
+    expect(groups.facts.map((entry) => entry.id)).toEqual([
+      'custom:crew',
+      'custom:site',
+    ]);
   });
 });

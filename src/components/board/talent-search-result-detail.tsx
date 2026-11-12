@@ -105,6 +105,7 @@ function ExpandedTalentDetailHeader({
           headingAs="h2"
           size="lg"
           nameHref={interactive && vm.detailHref ? vm.detailHref : null}
+          interactive={interactive}
         />
       </div>
       {hasActions ? (

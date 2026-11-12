@@ -55,6 +55,7 @@ const vm: CompanyDetailVM = {
   viewJobsLabel: 'View jobs',
   viewSalariesLabel: 'View salaries',
   websiteHeading: 'Website',
+  fields: { main: [], facts: [] },
 };
 
 const jobPreviews: JobCardVM[] = Array.from({ length: 5 }, (_, index) =>
@@ -119,6 +120,45 @@ function renderDetail(ui: React.ReactNode) {
 afterEach(cleanup);
 
 describe('CompanySearchResultDetail', () => {
+  it('shows the company custom fields: long answers as sections, short ones as facts', async () => {
+    renderDetail(
+      <CompanySearchResultDetail
+        vm={{
+          ...vm,
+          fields: {
+            main: [
+              {
+                id: 'custom:benefits',
+                label: 'Benefits',
+                type: 'rich_text',
+                value: {
+                  kind: 'html',
+                  html: '<p>Paid <strong>RDOs</strong></p>',
+                },
+              },
+            ],
+            facts: [
+              {
+                id: 'custom:crew',
+                label: 'Crew size',
+                type: 'number',
+                value: { kind: 'text', text: '24', multiline: false },
+              },
+            ],
+          },
+        }}
+        jobPreviews={[]}
+      />,
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Benefits' }),
+    ).toBeVisible();
+    expect(screen.getByText('RDOs').tagName).toBe('STRONG');
+    expect(screen.getByText('Crew size')).toBeVisible();
+    expect(screen.getByText('24')).toBeVisible();
+  });
+
   it('replaces the expanded company hero with a compact action header at the shared boundary', async () => {
     const { container } = renderDetail(
       <CompanySearchResultDetail
@@ -327,7 +367,25 @@ describe('CompanySearchResultDetail', () => {
   it('hides all actions while a newly selected company is loading', async () => {
     renderDetail(
       <CompanySearchResultDetail
-        vm={vm}
+        vm={{
+          ...vm,
+          fields: {
+            main: [],
+            facts: [
+              {
+                id: 'custom:site',
+                label: 'Careers site',
+                type: 'url',
+                value: {
+                  kind: 'link',
+                  href: 'https://careers.example',
+                  text: 'careers.example',
+                  external: true,
+                },
+              },
+            ],
+          },
+        }}
         jobPreviews={jobPreviews}
         salaryOverall={salaryOverall}
         hasSalaries
@@ -349,6 +407,10 @@ describe('CompanySearchResultDetail', () => {
     expect(screen.queryByRole('link', { name: 'Developer tools' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'acme.example' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Role 1' })).toBeNull();
+    // The previous company's custom field links stay visible but inert.
+    expect(
+      screen.getByRole('link', { name: 'careers.example' }).closest('[inert]'),
+    ).not.toBeNull();
     expect(
       screen.queryByRole('heading', {
         name: m.companyDetail_salariesSummaryHeading(),

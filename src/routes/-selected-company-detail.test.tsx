@@ -119,7 +119,9 @@ function renderSelectedCompany(
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <SelectedCompanyDetail state={state} language="en" />,
+    component: () => (
+      <SelectedCompanyDetail state={state} language="en" fieldLayout={[]} />
+    ),
   });
   const companyJobsRoute = createRoute({
     getParentRoute: () => rootRoute,

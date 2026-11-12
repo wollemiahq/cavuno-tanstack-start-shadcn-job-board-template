@@ -1,6 +1,11 @@
 import { normalizeWebsiteUrl } from '@cavuno/board/format';
 import { companyMarketPath, companyPath } from '@cavuno/board/paths';
 
+import {
+  resolveProfileFieldDisplay,
+  type DisplayFieldSource,
+  type FieldDisplayEntry,
+} from '@/board/custom-field-display';
 import { cardSummary } from '@/lib/derive-summary';
 import type { PublicCompany, PublicCompanyDetail } from '@cavuno/board';
 
@@ -53,6 +58,31 @@ export interface CompanyDetailVM extends Omit<
   viewJobsLabel: string;
   viewSalariesLabel: string;
   websiteHeading: string;
+  /** The company's custom and collection field answers, placed by type. */
+  fields: CompanyFieldGroups;
+}
+
+/**
+ * Where each custom field goes on the company page and pane: formatted text
+ * and galleries in the main column, every shorter answer with the key facts.
+ */
+export interface CompanyFieldGroups {
+  main: FieldDisplayEntry[];
+  facts: FieldDisplayEntry[];
+}
+
+export function toCompanyFieldGroups(
+  company: PublicCompany,
+  fieldLayout: readonly DisplayFieldSource[],
+  locale: string,
+): CompanyFieldGroups {
+  const entries = resolveProfileFieldDisplay(fieldLayout, company, locale);
+  const inMain = (entry: FieldDisplayEntry) =>
+    entry.type === 'rich_text' || entry.type === 'image_gallery';
+  return {
+    main: entries.filter(inMain),
+    facts: entries.filter((entry) => !inMain(entry)),
+  };
 }
 
 export function toCompanyCardVM(
@@ -80,6 +110,11 @@ export function toCompanyCardVM(
 export function toCompanyDetailVM(
   company: PublicCompanyDetail,
   labels: CompanySearchLabels,
+  /**
+   * The company form's fields (`profileLayoutFields(board.forms.company)`)
+   * and the display locale.
+   */
+  fields: { layout: readonly DisplayFieldSource[]; locale: string },
 ): CompanyDetailVM {
   const card = toCompanyCardVM(company, labels);
   const normalizedWebsite = normalizeWebsiteUrl(company.website ?? '');
@@ -104,5 +139,6 @@ export function toCompanyDetailVM(
     viewJobsLabel: labels.viewJobs,
     viewSalariesLabel: labels.viewSalaries,
     websiteHeading: labels.website,
+    fields: toCompanyFieldGroups(company, fields.layout, fields.locale),
   };
 }
