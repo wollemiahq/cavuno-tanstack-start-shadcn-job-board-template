@@ -43,10 +43,7 @@ import { readTalentDirectory } from './talent-directory-read';
 
 import type { AnchorJobPaths } from '../board/job-alert-match';
 import type { BoardContextFooter } from '../components/Footer';
-import type {
-  EmployerOfferGate,
-  PlanOfferGate,
-} from '../lib/board-context-cache-core';
+import type { PlanOfferGate } from '../lib/board-context-cache-core';
 import type {
   BlogPostsListQuery,
   BlogSearchBody,
@@ -149,27 +146,35 @@ export const getStaleBoardContext = createServerFn({ method: 'GET' }).handler(
  * Whether /employers has anything to sell — self-service plans, talent
  * plans, or quote-only employer-service tiers — the hosted
  * `hasEmployerOfferPage` gate the footer/nav Pricing links key on, plus
- * whether the board publishes a membership plan (the Memberships link), and
- * whether it lists a digital product (the Products link), and whether its tip
- * jar is on (the footer Tip link). OPEN read on an open board; a
- * password-protected board refuses ungated plan reads, so the links hide
- * until the wall is passed (the wall page renders no footer nav anyway).
+ * whether the board publishes a membership plan (the Memberships link). OPEN
+ * read on an open board; a password-protected board refuses ungated plan
+ * reads, so the links hide until the wall is passed (the wall page renders no
+ * footer nav anyway).
  *
- * The Products link is decided apart from the plan gates: products are
- * listed and unlisted at any time, so it is held only for the products
- * list's own freshness (`PRODUCTS_GATE_TTL_MS`), never edge-cached for the
- * board-global 5 minutes, and a failed read hides it for that request only.
+ * The Products and Tip links are not decided here: the root shell reads them
+ * off the board context (`features.products`, `features.tipJar`), and only
+ * an API that predates those flags costs {@link getProductsLinkFallback} /
+ * {@link getTipLinkFallback}.
  */
 export const getEmployerOfferGate = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<EmployerOfferGate> => {
-    const [planGate, hasProductsPage, hasTipPage] = await Promise.all([
-      readPlanOfferGate(),
-      // Fail closed for this request only: the memo never keeps a failure.
-      readProductsGate(readProductsListed).catch(() => false),
-      readTipJarGate(readTipJarOn).catch(() => false),
-    ]);
-    return { ...planGate, hasProductsPage, hasTipPage };
-  },
+  async (): Promise<PlanOfferGate> => readPlanOfferGate(),
+);
+
+/**
+ * Products link for a board context without `features.products`. Held for
+ * the products list's own freshness (`PRODUCTS_GATE_TTL_MS`), never
+ * edge-cached for the board-global 5 minutes; a failed read hides the link
+ * for that request only (the memo never keeps a failure).
+ */
+export const getProductsLinkFallback = createServerFn({
+  method: 'GET',
+}).handler(async (): Promise<boolean> =>
+  readProductsGate(readProductsListed).catch(() => false),
+);
+
+/** Tip link for a board context without `features.tipJar`; same rules. */
+export const getTipLinkFallback = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<boolean> => readTipJarGate(readTipJarOn).catch(() => false),
 );
 
 async function readPlanOfferGate(): Promise<PlanOfferGate> {

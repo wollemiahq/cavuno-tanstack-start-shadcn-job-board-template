@@ -5,6 +5,8 @@ import {
   failClosedJobRecommendations,
   readContactPageFlag,
   readMcpServerFlag,
+  readProductsFlag,
+  readTipJarFlag,
 } from '../board/board-feature-flags';
 import { impressumHasContent } from '../content/legal/impressum-availability';
 import { getBoard } from '../lib/board';
@@ -22,7 +24,9 @@ import {
   getBoardContext,
   getBoardSeo,
   getEmployerOfferGate,
+  getProductsLinkFallback,
   getStaleBoardContext,
+  getTipLinkFallback,
 } from './queries';
 import { EMPTY_GRANT } from './talent-access';
 
@@ -55,26 +59,38 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
         features: failClosedJobRecommendations(cached.features),
       };
     });
-    const [board, seo, offerGate, contactEnabled] = await Promise.all([
-      boardContext,
-      // seo() 503s when the pk_ has no registered public origin (local
-      // unpublished API). Ads.txt / IndexNow / GSC must not 500 the shell.
-      getBoardSeo().catch(() => ({
-        adsTxt: null,
-        indexNowKey: null,
-        googleSiteVerification: null,
-        canonicalBase: '',
-        manifest: { name: '' },
-      })),
-      getEmployerOfferGate(),
-      // The footer Contact link rides the board context. Only a context from
-      // an API that predates `features.contactPage` costs a `/contact` read.
-      boardContext.then(
-        async ({ features }) =>
-          readContactPageFlag(features) ??
-          (await getContactForRoot())?.enabled === true,
-      ),
-    ]);
+    const [board, seo, planGate, contactEnabled, hasProductsPage, hasTipPage] =
+      await Promise.all([
+        boardContext,
+        // seo() 503s when the pk_ has no registered public origin (local
+        // unpublished API). Ads.txt / IndexNow / GSC must not 500 the shell.
+        getBoardSeo().catch(() => ({
+          adsTxt: null,
+          indexNowKey: null,
+          googleSiteVerification: null,
+          canonicalBase: '',
+          manifest: { name: '' },
+        })),
+        getEmployerOfferGate(),
+        // The footer Contact link rides the board context. Only a context from
+        // an API that predates `features.contactPage` costs a `/contact` read.
+        boardContext.then(
+          async ({ features }) =>
+            readContactPageFlag(features) ??
+            (await getContactForRoot())?.enabled === true,
+        ),
+        // The header Products link and footer Tip link ride the board context
+        // the same way. Only an API that predates the flags costs a
+        // `/products` or `/tip-jar` read; never probe those per render.
+        boardContext.then(
+          async ({ features }) =>
+            readProductsFlag(features) ?? (await getProductsLinkFallback()),
+        ),
+        boardContext.then(
+          async ({ features }) =>
+            readTipJarFlag(features) ?? (await getTipLinkFallback()),
+        ),
+      ]);
 
     return {
       // This deployment's own origin — hreflang alternates and localized
@@ -84,7 +100,7 @@ export const getRootShellData = createServerFn({ method: 'GET' }).handler(
       publishableKey: getServerEnv().board,
       board,
       seo,
-      offerGate,
+      offerGate: { ...planGate, hasProductsPage, hasTipPage },
       contactEnabled,
       mcpServerAvailable: readMcpServerFlag(board.features),
       // Decided here so no client chunk imports legal content: the rule reads
