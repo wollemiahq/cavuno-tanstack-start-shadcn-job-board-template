@@ -38,6 +38,8 @@ function features(
     messaging: true,
     contactPage: true,
     mcp: false,
+    tipJar: false,
+    products: false,
     ...extra,
   };
 }
