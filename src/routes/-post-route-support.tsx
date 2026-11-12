@@ -61,6 +61,7 @@ export function PostJobPageView({
   officeLocationSuggestions,
   gate,
   heading,
+  contact = null,
   dependencies = postRouteDependencies,
 }: {
   plans: Awaited<ReturnType<typeof getPostPlans>>;
@@ -83,6 +84,8 @@ export function PostJobPageView({
    * one heading about joining instead of two stacked titles.
    */
   heading?: JoinHeading;
+  /** How to reach the board when it takes no job posts. */
+  contact?: Parameters<typeof PostJobForm>[0]['contact'];
   dependencies?: PostRouteDependencies;
 }) {
   return (
@@ -109,6 +112,7 @@ export function PostJobPageView({
               jobForm,
               remotePermits: remotePermits?.data ?? null,
               initialPlanId,
+              contact,
               onSubmit: (input) =>
                 dependencies.submitJobPosting({ data: input }),
               onLogoFetch: (domain) =>

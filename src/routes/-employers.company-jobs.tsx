@@ -39,6 +39,11 @@ import {
   toEmployerStatsChartVM,
 } from '@/board/employer-stats-view-model';
 import {
+  BoardContactButton,
+  canContactBoard,
+  type BoardContact,
+} from '@/components/board/board-contact-button';
+import {
   EmployerStatsChart,
   EmployerStatsChartPending,
 } from '@/components/employer/employer-stats-chart';
@@ -210,37 +215,6 @@ export type CompanyJobsViewData = {
   plansUnavailable?: boolean;
 };
 
-/** The board's contact page when it has one, else its contact email. */
-export type BoardContact = {
-  boardName: string;
-  contactPage: boolean;
-  email: string | null;
-};
-
-function boardContactLink(contact: BoardContact | null) {
-  if (!contact) return null;
-  const label = m.employerCompany_contactBoardLabel({
-    board: contact.boardName,
-  });
-  // Same filled button as the Post a job action it stands in for.
-  const className = buttonVariants();
-  if (contact.contactPage) {
-    return (
-      <Link to="/contact" className={className}>
-        {label}
-      </Link>
-    );
-  }
-  if (contact.email) {
-    return (
-      <a href={`mailto:${contact.email}`} className={className}>
-        {label}
-      </a>
-    );
-  }
-  return null;
-}
-
 function activeJobsSubtitle(count: number) {
   if (count === 0) return m.employerJobs_activeJobsZero();
   const locale = getLocale();
@@ -321,7 +295,9 @@ export function CompanyJobsPageView({
   // A board with no posting plans can only be fixed by its operator, so the
   // employer gets a way to reach them instead of a retry they cannot use.
   const contactLink =
-    canPost || plansUnavailable ? null : boardContactLink(contact);
+    !canPost && !plansUnavailable && canContactBoard(contact) ? (
+      <BoardContactButton contact={contact} />
+    ) : null;
 
   const outcome = postingOutcome(search, jobs.data);
 
@@ -368,7 +344,7 @@ export function CompanyJobsPageView({
                     ? m.employerCompany_jobsEmptyText()
                     : plansUnavailable
                       ? m.postJob_noPlansBody()
-                      : m.employerCompany_notTakingPostsText()}
+                      : m.postJob_notTakingPostsText()}
                 </EmptyDescription>
               </EmptyHeader>
               {postJobLink ? (

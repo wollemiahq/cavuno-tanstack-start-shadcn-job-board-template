@@ -42,6 +42,7 @@ import {
 import type { JobFormLayoutSource } from '@/board/form-layout';
 import type { JobFormSource } from '@/board/job-form';
 import type { PostPlan } from '@/board/plan-view-model';
+import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 import { containing, normalized } from '@/test/text';
 
@@ -880,6 +881,7 @@ describe('EmployerJobForm', () => {
         billingOptions={[]}
         officeLocationSuggestions={suggestions}
         mode={{ kind: 'create' }}
+        contact={{ boardName: 'Acme Jobs', contactPage: true, email: null }}
       />,
     );
 
@@ -893,7 +895,39 @@ describe('EmployerJobForm', () => {
         name: m.employerCompany_createDraftLabel(),
       }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText(m.postJob_noPlansTitle())).toBeInTheDocument();
+    expect(
+      screen.getByText(m.postJob_notTakingPostsText()),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(m.postJob_noPlansBody())).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: m.postJob_contactBoardLabel({ board: 'Acme Jobs' }),
+      }),
+    ).toHaveAttribute('href', localizePath('/contact'));
+  });
+
+  it('asks for a retry only when the posting plans could not be read', async () => {
+    await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        plansUnavailable
+        contact={{ boardName: 'Acme Jobs', contactPage: true, email: null }}
+      />,
+    );
+
+    expect(screen.getByText(m.postJob_noPlansBody())).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', {
+        name: m.postJob_contactBoardLabel({ board: 'Acme Jobs' }),
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('still offers Post job when leftover credits remain and no plan is for sale', async () => {

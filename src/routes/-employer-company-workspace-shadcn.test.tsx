@@ -42,7 +42,6 @@ import {
   createCompanyJobsLoader,
   type CompanyJobsLoaderDependencies,
   type CompanyJobsViewActions,
-  type BoardContact,
   type CompanyJobsViewData,
 } from './-employers.company-jobs';
 import {
@@ -64,6 +63,7 @@ import { Route as ProfileRoute } from './employers.companies.$slug.profile';
 import type { PipelineBoardVM } from '../board/pipeline-view-model';
 import type { PipelineActions } from '../components/employer/applicant-pipeline-board';
 import type { CompanyJobsSearch } from '../lib/company-jobs-search';
+import type { BoardContact } from '@/components/board/board-contact-button';
 import { normalized } from '@/test/text';
 
 const pipelineActions = {
@@ -580,14 +580,14 @@ describe('employer company workspace', () => {
         false,
       );
       expect(
-        screen.getByText(m.employerCompany_notTakingPostsText()),
+        screen.getByText(m.postJob_notTakingPostsText()),
       ).toBeInTheDocument();
       expect(
         screen.queryByText(m.postJob_noPlansBody()),
       ).not.toBeInTheDocument();
       expect(
         screen.getByRole('link', {
-          name: m.employerCompany_contactBoardLabel({ board: 'Acme Jobs' }),
+          name: m.postJob_contactBoardLabel({ board: 'Acme Jobs' }),
         }),
       ).toHaveAttribute('href', href);
       expect(
@@ -607,11 +607,11 @@ describe('employer company workspace', () => {
     );
     expect(screen.getByText(m.postJob_noPlansBody())).toBeInTheDocument();
     expect(
-      screen.queryByText(m.employerCompany_notTakingPostsText()),
+      screen.queryByText(m.postJob_notTakingPostsText()),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('link', {
-        name: m.employerCompany_contactBoardLabel({ board: 'Acme Jobs' }),
+        name: m.postJob_contactBoardLabel({ board: 'Acme Jobs' }),
       }),
     ).not.toBeInTheDocument();
   });

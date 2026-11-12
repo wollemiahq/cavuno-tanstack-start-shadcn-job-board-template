@@ -36,7 +36,7 @@ export const Route = createFileRoute('/post')({
 function PostJobPage() {
   const { plans, membershipPlans, remotePermits } = Route.useLoaderData();
   const search = Route.useSearch();
-  const { board, offerGate } = rootApi.useLoaderData();
+  const { board, offerGate, contactEnabled } = rootApi.useLoaderData();
   const { user, ready, employerCompanies } = useRootSession();
   const officeLocationSuggestions = useGlobalLocationSuggestions({
     countries: resolveJobFormConstraints(board).location.allowedCountries,
@@ -96,6 +96,11 @@ function PostJobPage() {
       jobForm={board}
       locale={getLocale()}
       officeLocationSuggestions={officeLocationSuggestions}
+      contact={{
+        boardName: board.name,
+        contactPage: contactEnabled,
+        email: board.footer.contactEmail,
+      }}
     />
   );
 }

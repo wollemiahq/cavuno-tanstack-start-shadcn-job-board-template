@@ -59,6 +59,11 @@ import {
   planOffersFeaturedChoice,
   type PostPlan,
 } from '@/board/plan-view-model';
+import {
+  BoardContactButton,
+  canContactBoard,
+  type BoardContact,
+} from '@/components/board/board-contact-button';
 import { CollectionFieldPicker } from '@/components/collection-field-picker';
 import {
   CustomFieldInput,
@@ -85,6 +90,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
@@ -510,6 +516,10 @@ export type EmployerJobFormProps = {
    * shows `membershipGate` before anything is written.
    */
   canPost?: boolean;
+  /** The plan catalog could not be read, so posting may come back. */
+  plansUnavailable?: boolean;
+  /** How to reach the board when it takes no job posts. */
+  contact?: BoardContact | null;
   dependencies?: EmployerJobFormDependencies;
 };
 
@@ -695,6 +705,8 @@ function JobFormFields({
   customFields = [],
   nativeApplications = true,
   membershipGate,
+  plansUnavailable = false,
+  contact = null,
   dependencies,
 }: EmployerJobFormProps) {
   // The operator's field order (or the pre-layout order on an older API).
@@ -1777,12 +1789,28 @@ function JobFormFields({
   if (membershipRequired && membershipGate) return membershipGate;
 
   if (mode.kind === 'create' && !canPublish) {
+    // Only a failed plan read is worth retrying; a board with no plans can
+    // only be changed by its operator.
+    if (plansUnavailable) {
+      return (
+        <Empty className="border-border min-h-64 border">
+          <EmptyHeader>
+            <EmptyTitle>{m.postJob_noPlansTitle()}</EmptyTitle>
+            <EmptyDescription>{m.postJob_noPlansBody()}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      );
+    }
     return (
       <Empty className="border-border min-h-64 border">
         <EmptyHeader>
-          <EmptyTitle>{m.postJob_noPlansTitle()}</EmptyTitle>
-          <EmptyDescription>{m.postJob_noPlansBody()}</EmptyDescription>
+          <EmptyTitle>{m.postJob_notTakingPostsText()}</EmptyTitle>
         </EmptyHeader>
+        {canContactBoard(contact) ? (
+          <EmptyContent>
+            <BoardContactButton contact={contact} />
+          </EmptyContent>
+        ) : null}
       </Empty>
     );
   }

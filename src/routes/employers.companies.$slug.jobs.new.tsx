@@ -81,7 +81,7 @@ const rootApi = getRouteApi('__root__');
 function NewJobPage() {
   const { workspace, remotePermits, membershipPlans } = Route.useLoaderData();
   const membershipOffer = useMembershipOffer(membershipPlans);
-  const { board, offerGate } = rootApi.useLoaderData();
+  const { board, offerGate, contactEnabled } = rootApi.useLoaderData();
   const locale = getLocale();
   // A company that can't post here sees the membership gate instead of the
   // form, so the "fill in the role" subtitle would describe nothing. When the
@@ -126,6 +126,12 @@ function NewJobPage() {
             nativeApplications={board.features.nativeApplications}
             mode={{ kind: 'create' }}
             canPost={canPost}
+            plansUnavailable={workspace.plansUnavailable}
+            contact={{
+              boardName: board.name,
+              contactPage: contactEnabled,
+              email: board.footer.contactEmail,
+            }}
             membershipGate={
               <MembershipPostGate
                 boardName={board.name}
