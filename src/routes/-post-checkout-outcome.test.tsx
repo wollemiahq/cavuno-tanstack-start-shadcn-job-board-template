@@ -7,7 +7,7 @@
  */
 import '@testing-library/jest-dom/vitest';
 import { cleanup, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   PostCheckoutCanceledView,
@@ -16,17 +16,64 @@ import {
 
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
+import type { JobPostingCheckoutStatus } from '@cavuno/board';
+
+function checkout(
+  status: JobPostingCheckoutStatus['status'],
+): JobPostingCheckoutStatus {
+  return {
+    object: 'job_posting_checkout_status',
+    status,
+    jobId: 'job-1',
+    jobTitle: 'Designer',
+    jobStatus: 'unpublished',
+    jobUrl: null,
+  };
+}
 
 afterEach(cleanup);
 
 describe('post checkout outcome screens', () => {
   it('tells a paid buyer the payment landed and links onward to the board', async () => {
-    await renderRouted(<PostCheckoutSuccessView />);
+    // An older return link without a session cannot be checked.
+    await renderRouted(<PostCheckoutSuccessView readCheckout={vi.fn()} />);
     expect(screen.getByText(m.postCheckout_successTitle())).toBeInTheDocument();
     expect(screen.getByText(m.postCheckout_successBody())).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: m.postCheckout_browseJobsLabel() }),
     ).toHaveAttribute('href', '/jobs');
+  });
+
+  it('reads the returned session and says a clearing bank payment is still processing', async () => {
+    const readCheckout = vi.fn().mockResolvedValue(checkout('processing'));
+    await renderRouted(
+      <PostCheckoutSuccessView
+        sessionId="cs_job"
+        readCheckout={readCheckout}
+      />,
+    );
+    expect(
+      await screen.findByText(m.postCheckout_processingTitle()),
+    ).toBeInTheDocument();
+    expect(readCheckout).toHaveBeenCalledWith({
+      data: { sessionId: 'cs_job' },
+    });
+    expect(screen.queryByText(m.postCheckout_successTitle())).toBeNull();
+  });
+
+  it('sends a buyer whose payment failed back to post again', async () => {
+    await renderRouted(
+      <PostCheckoutSuccessView
+        sessionId="cs_job"
+        readCheckout={vi.fn().mockResolvedValue(checkout('payment_failed'))}
+      />,
+    );
+    expect(
+      await screen.findByText(m.postCheckout_failedTitle()),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: m.postCheckout_backToPostLabel() }),
+    ).toHaveAttribute('href', '/post');
   });
 
   it('tells a cancelling buyer they were not charged and links back to the wizard', async () => {

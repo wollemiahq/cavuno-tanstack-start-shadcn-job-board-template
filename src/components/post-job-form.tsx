@@ -1,6 +1,13 @@
 'use client';
 
-import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { countryOptions } from '@cavuno/board/format';
 import { Check, ImagePlus } from 'lucide-react';
@@ -27,7 +34,12 @@ import {
   publicInvoiceBillingBody,
   type InvoiceBillingDraft,
 } from './invoice-billing-fields';
+import {
+  useJobCheckoutOutcome,
+  type ReadJobCheckout,
+} from './job-checkout-outcome';
 import { PageSection } from './layout/page';
+import { EmbeddedCheckout } from './paywall/embedded-checkout';
 import {
   RichTextEditor,
   RICH_TEXT_MAX_CHARACTERS,
@@ -144,7 +156,17 @@ type Status =
   | { kind: 'idle' }
   | { kind: 'pending' }
   | { kind: 'error'; message: string }
+  | { kind: 'checkout'; kit: EmbeddedCheckoutKit }
+  | { kind: 'confirming'; sessionId: string }
   | { kind: 'done'; title: string; body: string };
+
+/** What Stripe.js needs to mount the job's embedded checkout. */
+type EmbeddedCheckoutKit = {
+  publishableKey: string;
+  stripeAccountId: string;
+  clientSecret: string;
+  sessionId: string;
+};
 
 type LogoStatus =
   | { kind: 'idle' }
@@ -210,6 +232,8 @@ export type PostJobFormProps = {
   onLogoFetch: (domain: string) => Promise<LogoResult>;
   onLogoUpload: (data: FormData) => Promise<LogoResult>;
   onCheckout: (url: string) => void;
+  /** Reads the job checkout's payment and job state by session. */
+  onCheckoutStatus: ReadJobCheckout;
   /** Editor implementation seam for isolated form tests. */
   DescriptionEditor?: React.ComponentType<RichTextEditorProps>;
 };
@@ -246,6 +270,7 @@ export function PostJobForm({
   onLogoFetch,
   onLogoUpload,
   onCheckout,
+  onCheckoutStatus,
   DescriptionEditor = RichTextEditor,
 }: PostJobFormProps) {
   // The operator's field order (or the pre-layout order on an older API).
@@ -306,6 +331,28 @@ export function PostJobForm({
   function updateFormState(patch: Partial<PostJobFormState>) {
     setFormState((current) => ({ ...current, ...patch }));
   }
+
+  // Most payment methods complete in place (the platform asks Stripe to
+  // redirect only when one needs it; those land on /post/success). Stable,
+  // because the checkout remounts whenever its handler changes.
+  const handleCheckoutComplete = useCallback(() => {
+    setFormState((current) =>
+      current.status.kind === 'checkout'
+        ? {
+            ...current,
+            status: {
+              kind: 'confirming',
+              sessionId: current.status.kit.sessionId,
+            },
+          }
+        : current,
+    );
+  }, []);
+  // Stripe's "complete" is not "paid": say what the platform recorded.
+  const checkoutOutcome = useJobCheckoutOutcome(
+    formState.status.kind === 'confirming' ? formState.status.sessionId : null,
+    onCheckoutStatus,
+  );
 
   function addOfficeLocation(location: OfficeLocationDraft) {
     // Suggestions are already narrowed to the board's allowed countries;
@@ -709,6 +756,11 @@ export function PostJobForm({
       }
 
       switch (result.result.status) {
+        case 'embedded_checkout':
+          updateFormState({
+            status: { kind: 'checkout', kit: result.result },
+          });
+          return;
         case 'checkout':
           onCheckout(result.result.checkoutUrl);
           return;
@@ -1025,14 +1077,47 @@ export function PostJobForm({
         : null,
   );
 
-  if (status.kind === 'done') {
+  if (status.kind === 'checkout') {
+    return (
+      <PageSection title={m.employerLanding_completePurchaseTitle()}>
+        <EmbeddedCheckout
+          kit={status.kit}
+          onComplete={handleCheckoutComplete}
+        />
+      </PageSection>
+    );
+  }
+
+  if (status.kind === 'confirming' && !checkoutOutcome) {
+    return (
+      <Card className="mx-auto max-w-xl text-center">
+        <CardContent className="flex flex-col items-center gap-2 py-8">
+          <Spinner className="size-6" />
+          <h2 className="font-heading text-3xl font-semibold tracking-tight">
+            {m.employerLanding_confirmingText()}
+          </h2>
+          <p className="text-muted-foreground">
+            {m.employerLanding_confirmingSubtitle()}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const done =
+    status.kind === 'done'
+      ? status
+      : status.kind === 'confirming'
+        ? checkoutOutcome
+        : null;
+  if (done) {
     return (
       <Card className="mx-auto max-w-xl text-center">
         <CardContent className="space-y-2 py-8">
           <h2 className="font-heading text-3xl font-semibold tracking-tight">
-            {status.title}
+            {done.title}
           </h2>
-          <p className="text-muted-foreground">{status.body}</p>
+          <p className="text-muted-foreground">{done.body}</p>
         </CardContent>
       </Card>
     );

@@ -10,6 +10,20 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('./paywall/embedded-checkout', () => ({
+  EmbeddedCheckout: ({
+    kit,
+    onComplete,
+  }: {
+    kit: { clientSecret: string };
+    onComplete?: () => void;
+  }) => (
+    <button type="button" data-secret={kit.clientSecret} onClick={onComplete}>
+      stripe-pay
+    </button>
+  ),
+}));
+
 import { PostJobForm } from './post-job-form';
 
 import type { RichTextEditorProps } from './rich-text-editor';
@@ -106,6 +120,48 @@ afterEach(() => {
   cleanup();
 });
 
+/** Fills every field the default layout requires, then submits. */
+function fillAndSubmit() {
+  fireEvent.change(screen.getByLabelText(m.postJob_companyNameLabel()), {
+    target: { value: 'Acme Studio' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_companyWebsiteLabel()), {
+    target: { value: 'acme.example' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_contactNameLabel()), {
+    target: { value: 'Ada Lovelace' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_contactEmailLabel()), {
+    target: { value: 'ada@acme.example' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_jobTitleLabel()), {
+    target: { value: 'Staff Product Designer' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_descriptionLabel()), {
+    target: { value: 'Lead product design across the company.' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_applicationUrlLabel()), {
+    target: { value: 'acme.example/careers/staff-designer' },
+  });
+  // Hybrid (the default) requires somewhere to be on-site at — pick an
+  // office location from the worldwide search.
+  pickBerlin();
+  fireEvent.change(screen.getByLabelText(m.postJob_salaryMinLabel()), {
+    target: { value: '140000' },
+  });
+  fireEvent.change(screen.getByLabelText(m.postJob_salaryMaxLabel()), {
+    target: { value: '180000' },
+  });
+
+  // Select the submit control structurally — its label now tracks the chosen
+  // plan (free → publish, paid → checkout), so pinning the copy would be brittle.
+  const submitButton = screen
+    .getAllByRole('button')
+    .find((button) => button.getAttribute('type') === 'submit');
+  if (!submitButton) throw new Error('The post form needs a submit button');
+  fireEvent.click(submitButton);
+}
+
 describe('PostJobForm', () => {
   it('submits the complete public posting contract through the selected plan', async () => {
     const onSubmit = vi.fn().mockResolvedValue({
@@ -130,47 +186,11 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
-    fireEvent.change(screen.getByLabelText(m.postJob_companyNameLabel()), {
-      target: { value: 'Acme Studio' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_companyWebsiteLabel()), {
-      target: { value: 'acme.example' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_contactNameLabel()), {
-      target: { value: 'Ada Lovelace' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_contactEmailLabel()), {
-      target: { value: 'ada@acme.example' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_jobTitleLabel()), {
-      target: { value: 'Staff Product Designer' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_descriptionLabel()), {
-      target: { value: 'Lead product design across the company.' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_applicationUrlLabel()), {
-      target: { value: 'acme.example/careers/staff-designer' },
-    });
-    // Hybrid (the default) requires somewhere to be on-site at — pick an
-    // office location from the worldwide search.
-    pickBerlin();
-    fireEvent.change(screen.getByLabelText(m.postJob_salaryMinLabel()), {
-      target: { value: '140000' },
-    });
-    fireEvent.change(screen.getByLabelText(m.postJob_salaryMaxLabel()), {
-      target: { value: '180000' },
-    });
-
-    // Select the submit control structurally — its label now tracks the chosen
-    // plan (free → publish, paid → checkout), so pinning the copy would be brittle.
-    const submitButton = screen
-      .getAllByRole('button')
-      .find((button) => button.getAttribute('type') === 'submit');
-    if (!submitButton) throw new Error('The post form needs a submit button');
-    fireEvent.click(submitButton);
+    fillAndSubmit();
 
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith({
@@ -239,6 +259,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -280,6 +301,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -302,6 +324,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -334,6 +357,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -359,6 +383,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={onLogoUpload}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     const file = new File(['logo'], 'acme.png', { type: 'image/png' });
@@ -403,6 +428,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={onLogoUpload}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     const file = new File(['logo'], 'acme.png', { type: 'image/png' });
@@ -451,6 +477,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -487,6 +514,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -515,6 +543,7 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
 
@@ -522,6 +551,81 @@ describe('PostJobForm', () => {
     expect(screen.queryByLabelText(m.postJob_seniorityLabel())).toBeNull();
     expect(
       screen.queryByLabelText(m.postJob_officeLocationsLabel()),
+    ).toBeNull();
+  });
+
+  it('takes payment on the page and reports what the payment actually did', async () => {
+    const onCheckout = vi.fn();
+    // Stripe reports a bank debit "complete" while it is still clearing.
+    const onCheckoutStatus = vi
+      .fn()
+      .mockResolvedValueOnce({
+        object: 'job_posting_checkout_status',
+        status: 'awaiting_payment',
+        jobId: 'job-1',
+        jobTitle: 'Staff Product Designer',
+        jobStatus: 'unpublished',
+        jobUrl: null,
+      })
+      .mockResolvedValue({
+        object: 'job_posting_checkout_status',
+        status: 'processing',
+        jobId: 'job-1',
+        jobTitle: 'Staff Product Designer',
+        jobStatus: 'unpublished',
+        jobUrl: null,
+      });
+    render(
+      <PostJobForm
+        DescriptionEditor={DescriptionEditor}
+        customFields={[]}
+        remotePermits={null}
+        locale="en"
+        officeLocationSuggestions={officeLocationSuggestions}
+        plans={plans}
+        onSubmit={vi.fn().mockResolvedValue({
+          ok: true,
+          result: {
+            object: 'job_posting_result',
+            status: 'embedded_checkout',
+            clientSecret: 'cs_secret_job',
+            sessionId: 'cs_job',
+            stripeAccountId: 'acct_board',
+            publishableKey: 'pk_test',
+            jobId: 'job-1',
+          },
+        })}
+        onLogoFetch={vi.fn()}
+        onLogoUpload={vi.fn()}
+        onCheckout={onCheckout}
+        onCheckoutStatus={onCheckoutStatus}
+      />,
+    );
+
+    fillAndSubmit();
+
+    const pay = await screen.findByRole('button', { name: 'stripe-pay' });
+    expect(pay).toHaveAttribute('data-secret', 'cs_secret_job');
+    expect(
+      screen.getByRole('heading', {
+        name: m.employerLanding_completePurchaseTitle(),
+      }),
+    ).toBeInTheDocument();
+    expect(onCheckout).not.toHaveBeenCalled();
+
+    fireEvent.click(pay);
+    expect(
+      await screen.findByRole(
+        'heading',
+        { name: m.postCheckout_processingTitle() },
+        { timeout: 3000 },
+      ),
+    ).toBeInTheDocument();
+    expect(onCheckoutStatus).toHaveBeenCalledWith({
+      data: { sessionId: 'cs_job' },
+    });
+    expect(
+      screen.queryByRole('heading', { name: m.postCheckout_successTitle() }),
     ).toBeNull();
   });
 });
@@ -556,6 +660,7 @@ describe('PostJobForm — board job-form constraints', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     return onSubmit;
@@ -782,6 +887,7 @@ describe('PostJobForm — operator form layout', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        onCheckoutStatus={vi.fn()}
       />,
     );
     return onSubmit;
@@ -835,6 +941,7 @@ it('keeps submission disabled until a picked office finishes resolving', () => {
     onLogoFetch: vi.fn(),
     onLogoUpload: vi.fn(),
     onCheckout: vi.fn(),
+    onCheckoutStatus: vi.fn(),
   };
   const { container, rerender } = render(
     <PostJobForm
