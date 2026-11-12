@@ -49,7 +49,6 @@ import {
 } from '@/lib/pagination';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
 import { boardLanguageUrl, selfUrl } from '@/lib/self-url';
-import type { TaxonomyResolution } from '@cavuno/board';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -211,7 +210,7 @@ export const MIN_COMPANIES_PER_INDEXED_MARKET_PAGE = 5;
  *
  * `count` is the market's `companyCount` (the companies tagged with it, the
  * number the board's sitemap uses) when the API returns it, else the listing's
- * total (see `MarketResolution`).
+ * total, which also counts untagged companies whose text matches the market.
  */
 export function isThinMarketPage(
   query: string | undefined,
@@ -220,14 +219,6 @@ export function isThinMarketPage(
   if (query || count === undefined) return false;
   return count < MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
 }
-
-/**
- * The market resolve with its `companyCount`, which ships in a later
- * `@cavuno/board`; typed here so the page compiles before and after it. An
- * older API omits it, and the page falls back to the listing total, which also
- * counts untagged companies whose text matches the market.
- */
-type MarketResolution = TaxonomyResolution & { companyCount?: number };
 
 /**
  * /companies/markets/$market — market resolve + listing + head in ONE server fn.
@@ -261,11 +252,9 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
       const [market, pageResult, markets, seo] = await Promise.all([
         (async () => {
           try {
-            const resolved: MarketResolution =
-              await board.companies.markets.resolve(data.marketSlug, {
-                headers,
-              });
-            return resolved;
+            return await board.companies.markets.resolve(data.marketSlug, {
+              headers,
+            });
           } catch (error) {
             if (isNotFound(error)) return null;
             throw error;
