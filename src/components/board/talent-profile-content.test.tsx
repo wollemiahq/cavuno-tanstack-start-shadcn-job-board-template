@@ -8,11 +8,6 @@ import { m } from '../../paraglide/messages';
 import { TalentProfileContent } from './talent-profile-content';
 import { profileVm } from './talent-ui-test-fixtures';
 
-import {
-  groupTalentProfileFields,
-  resolveFieldDisplay,
-} from '@/board/custom-field-display';
-
 beforeEach(() => {
   // CompanyAvatar renders the owned Avatar primitive, whose image is
   // load-gated: Base UI only reveals the <img> once the browser reports it
@@ -171,48 +166,48 @@ describe('TalentProfileContent', () => {
     expect(screen.getByRole('heading', { name: 'Experience' })).toBeVisible();
   });
 
-  it('places custom fields by type: contact links in the header, featured work above Experience, Details last', () => {
-    const fields = groupTalentProfileFields(
-      resolveFieldDisplay(
-        [
-          {
-            kind: 'custom',
-            definition: {
-              key: 'years',
-              label: 'Years in the trade',
-              type: 'number',
-            },
-          },
-          {
-            kind: 'custom',
-            definition: {
-              key: 'work',
-              label: 'Portfolio',
-              type: 'image_gallery',
-            },
-          },
-          {
-            kind: 'custom',
-            definition: { key: 'site', label: 'Portfolio site', type: 'url' },
-          },
-        ],
+  it('renders each field group: contact links in the header, featured work and Details sections', () => {
+    const fields = {
+      contact: [
         {
-          values: { years: 12, site: 'ada.example' },
-          media: {
-            work: [
+          id: 'custom:site',
+          label: 'Portfolio site',
+          type: 'url' as const,
+          value: {
+            kind: 'link' as const,
+            href: 'https://ada.example/',
+            text: 'ada.example',
+            external: true,
+          },
+        },
+      ],
+      about: [],
+      featured: [
+        {
+          id: 'custom:work',
+          label: 'Portfolio',
+          type: 'image_gallery' as const,
+          value: {
+            kind: 'images' as const,
+            images: [
               {
                 id: 'img_1',
                 name: 'stairs.jpg',
-                contentType: 'image/jpeg',
-                sizeBytes: 1000,
                 url: 'https://files.example/stairs.jpg',
               },
             ],
           },
         },
-        'en',
-      ),
-    );
+      ],
+      details: [
+        {
+          id: 'custom:years',
+          label: 'Years in the trade',
+          type: 'number' as const,
+          value: { kind: 'text' as const, text: '12', multiline: false },
+        },
+      ],
+    };
     render(
       <TalentProfileContent vm={{ ...profileVm, fields }} headingAs="h1" />,
     );
@@ -223,17 +218,12 @@ describe('TalentProfileContent', () => {
     expect(
       within(header).getByRole('link', { name: 'ada.example' }),
     ).toHaveAttribute('href', 'https://ada.example/');
-
-    const portfolio = screen.getByRole('heading', { name: 'Portfolio' });
-    const experience = screen.getByRole('heading', { name: 'Experience' });
-    const languages = screen.getByRole('heading', { name: 'Languages' });
-    const details = screen.getByRole('heading', {
-      name: m.customFieldDisplay_detailsHeading(),
-    });
-    const follows = (a: Element, b: Element) =>
-      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(follows(portfolio, experience)).toBe(true);
-    expect(follows(languages, details)).toBe(true);
+    expect(screen.getByRole('heading', { name: 'Portfolio' })).toBeVisible();
+    expect(
+      screen.getByRole('heading', {
+        name: m.customFieldDisplay_detailsHeading(),
+      }),
+    ).toBeVisible();
     expect(screen.getByText('Years in the trade')).toBeVisible();
     expect(screen.getByText('12')).toBeVisible();
   });

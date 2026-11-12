@@ -3,11 +3,9 @@ import { formatMonthYear, normalizeWebsiteUrl } from '@cavuno/board/format';
 import { verificationBadge } from './verification-badge';
 
 import {
-  groupTalentProfileFields,
-  profileCollections,
-  resolveFieldDisplay,
+  resolveProfileFieldDisplay,
   type DisplayFieldSource,
-  type TalentProfileFieldGroups,
+  type FieldDisplayEntry,
 } from '@/board/custom-field-display';
 import {
   talentProfileParam,
@@ -403,17 +401,58 @@ export function toTalentProfileVM(
     })),
     viewProfileLabel: labels.viewProfile,
     fields: groupTalentProfileFields(
-      resolveFieldDisplay(
-        options?.fieldLayout ?? [],
-        {
-          values: profile.customFieldValues ?? {},
-          media: profile.customFieldMedia ?? {},
-          collections: profileCollections(profile.objectReferences ?? []),
-        },
-        language,
-      ),
+      resolveProfileFieldDisplay(options?.fieldLayout ?? [], profile, language),
     ),
   };
+}
+
+/**
+ * Where each custom field goes on a talent profile, by type, the way
+ * LinkedIn lays out a profile: contact links in the header, formatted text
+ * with the bio, galleries then files as featured work above Experience, and
+ * everything else in a Details section at the end. Each group keeps form
+ * order. Change a type's group here to move it.
+ */
+export interface TalentProfileFieldGroups {
+  contact: FieldDisplayEntry[];
+  about: FieldDisplayEntry[];
+  featured: FieldDisplayEntry[];
+  details: FieldDisplayEntry[];
+}
+
+const TALENT_FIELD_GROUP = {
+  url: 'contact',
+  email: 'contact',
+  phone: 'contact',
+  rich_text: 'about',
+  image_gallery: 'featured',
+  file: 'featured',
+  short_text: 'details',
+  long_text: 'details',
+  single_select: 'details',
+  multi_select: 'details',
+  boolean: 'details',
+  number: 'details',
+  date: 'details',
+  collection: 'details',
+} satisfies Record<FieldDisplayEntry['type'], keyof TalentProfileFieldGroups>;
+
+export function groupTalentProfileFields(
+  entries: readonly FieldDisplayEntry[],
+): TalentProfileFieldGroups {
+  const groups: TalentProfileFieldGroups = {
+    contact: [],
+    about: [],
+    featured: [],
+    details: [],
+  };
+  for (const entry of entries)
+    groups[TALENT_FIELD_GROUP[entry.type]].push(entry);
+  // Galleries lead the featured work, files follow.
+  groups.featured.sort(
+    (a, b) => Number(a.type === 'file') - Number(b.type === 'file'),
+  );
+  return groups;
 }
 
 /** The viewer looking at a talent detail surface, for CTA gating. */

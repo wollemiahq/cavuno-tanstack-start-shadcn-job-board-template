@@ -1,7 +1,7 @@
 /**
  * Custom and collection field DISPLAY — the view-model seam every public
- * page uses to show the operator's own fields (talent profile, company
- * page, job page, and their directory panels).
+ * page uses to show the operator's own fields: the talent profile, company
+ * page and job page, and their directory and search detail panes.
  *
  * `resolveFieldDisplay` walks the fields in the operator's form order and
  * turns each stored value into one plain, fully-resolved entry, formatted
@@ -20,23 +20,15 @@ import {
   customFieldLabel,
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
+import type { ProfileCustomDefinition } from '@/board/form-layout';
 import { m } from '@/paraglide/messages';
+import type { BoardProfileFormField } from '@cavuno/board';
 
-/** The field types an operator can add to talent, company and job forms. */
-export type CustomFieldDisplayType =
-  | 'short_text'
-  | 'long_text'
-  | 'rich_text'
-  | 'single_select'
-  | 'multi_select'
-  | 'boolean'
-  | 'number'
-  | 'date'
-  | 'url'
-  | 'email'
-  | 'phone'
-  | 'image_gallery'
-  | 'file';
+/**
+ * The field types an operator can add. Profile fields have every type; job
+ * fields a subset of them.
+ */
+export type CustomFieldDisplayType = ProfileCustomDefinition['type'];
 
 /** One field to show, in order: a custom field or a collection field. */
 export type DisplayFieldSource =
@@ -78,6 +70,13 @@ export interface DisplayFieldRecord {
   collections?: ReadonlyMap<string, readonly DisplayCollectionEntry[]>;
 }
 
+/** One gallery image, ready to render. */
+export interface FieldDisplayImage {
+  id: string;
+  url: string;
+  name: string;
+}
+
 export type FieldDisplayValue =
   /** Plain text; `multiline` keeps the line breaks of a long text answer. */
   | { kind: 'text'; text: string; multiline: boolean }
@@ -85,10 +84,7 @@ export type FieldDisplayValue =
   | { kind: 'html'; html: string }
   | { kind: 'chips'; items: string[] }
   | { kind: 'link'; href: string; text: string; external: boolean }
-  | {
-      kind: 'images';
-      images: { id: string; url: string; name: string }[];
-    }
+  | { kind: 'images'; images: FieldDisplayImage[] }
   | {
       kind: 'files';
       files: { id: string; url: string; name: string; sizeLabel: string }[];
@@ -135,6 +131,17 @@ function webHref(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * A `tel:` link for a phone answer. The API accepts an extension after the
+ * number (`ext 89`, `x89`, `#89`); it becomes the RFC 3966 `;ext=` parameter
+ * rather than extra digits of the number.
+ */
+function telHref(value: string): string {
+  const match = /^(.*?)\s*(?:ext\.?|x|#)\s*(\d+)$/i.exec(value.trim());
+  const number = (match ? match[1]! : value).replace(/[^\d+]/g, '');
+  return match ? `tel:${number};ext=${match[2]}` : `tel:${number}`;
 }
 
 function sizeLabel(bytes: number, locale: string): string {
@@ -238,7 +245,7 @@ function customValue(
       return text !== null
         ? {
             kind: 'link',
-            href: `tel:${text.replace(/[^\d+]/g, '')}`,
+            href: telHref(text),
             text: text.trim(),
             external: false,
           }
@@ -322,32 +329,13 @@ export function resolveFieldDisplay(
 
 /**
  * The custom and collection fields of a company or talent form layout, in
- * order. Hidden entries and built-ins are left out. `null` (an API that
- * predates `forms`) yields no fields: without the layout there are no
- * definitions to format the values with.
+ * order. Built-ins and hidden entries are left out: on a profile, a field
+ * the operator hides from the form is hidden from the page too. `null` (an
+ * API that predates `forms`) yields no fields: without the layout there are
+ * no definitions to format the values with.
  */
 export function profileLayoutFields(
-  layout:
-    | ReadonlyArray<
-        | { kind: 'builtin'; key: string; visible: boolean }
-        | {
-            kind: 'custom';
-            key: string;
-            visible: boolean;
-            definition: Extract<
-              DisplayFieldSource,
-              { kind: 'custom' }
-            >['definition'];
-          }
-        | {
-            kind: 'collection';
-            key: string;
-            visible: boolean;
-            definition: { key: string; label: string };
-          }
-      >
-    | null
-    | undefined,
+  layout: readonly BoardProfileFormField[] | null | undefined,
 ): DisplayFieldSource[] {
   if (!Array.isArray(layout)) return [];
   return layout.flatMap((field): DisplayFieldSource[] => {
@@ -357,91 +345,48 @@ export function profileLayoutFields(
     }
     if (field.kind === 'collection') {
       return [
-        {
-          kind: 'collection',
-          key: field.key,
-          label: field.definition.label,
-        },
+        { kind: 'collection', key: field.key, label: field.definition.label },
       ];
     }
     return [];
   });
 }
 
-/** A profile read's collection selections, grouped by field key. */
-export function profileCollections(
-  references: ReadonlyArray<{
+/** A company or talent public read's custom and collection answers. */
+export interface ProfileFieldAnswers {
+  customFieldValues?: Readonly<Record<string, DisplayFieldValue>>;
+  customFieldMedia?: Readonly<Record<string, readonly DisplayFieldMedia[]>>;
+  objectReferences?: ReadonlyArray<{
     fieldKey: string;
     recordId: string;
     title: string;
     logoUrl?: string;
-  }>,
-): Map<string, DisplayCollectionEntry[]> {
-  const byField = new Map<string, DisplayCollectionEntry[]>();
-  for (const reference of references) {
-    const list = byField.get(reference.fieldKey) ?? [];
+  }>;
+}
+
+/** A company or talent read's answered fields, in the layout's order. */
+export function resolveProfileFieldDisplay(
+  layout: readonly DisplayFieldSource[],
+  profile: ProfileFieldAnswers,
+  locale: string,
+): FieldDisplayEntry[] {
+  const collections = new Map<string, DisplayCollectionEntry[]>();
+  for (const reference of profile.objectReferences ?? []) {
+    const list = collections.get(reference.fieldKey) ?? [];
     list.push({
       id: reference.recordId,
       title: reference.title,
       logoUrl: reference.logoUrl ?? null,
     });
-    byField.set(reference.fieldKey, list);
+    collections.set(reference.fieldKey, list);
   }
-  return byField;
-}
-
-/**
- * Where each field goes on a talent profile, by type, the way LinkedIn lays
- * out a profile: contact links in the header, formatted text with the bio,
- * galleries then files as featured work above Experience, and everything
- * else in a Details section at the end. Each group keeps form order.
- */
-export interface TalentProfileFieldGroups {
-  contact: FieldDisplayEntry[];
-  about: FieldDisplayEntry[];
-  featured: FieldDisplayEntry[];
-  details: FieldDisplayEntry[];
-}
-
-export function groupTalentProfileFields(
-  entries: readonly FieldDisplayEntry[],
-): TalentProfileFieldGroups {
-  const of = (...types: FieldDisplayEntry['type'][]) =>
-    entries.filter((entry) => types.includes(entry.type));
-  return {
-    contact: of('url', 'email', 'phone'),
-    about: of('rich_text'),
-    featured: [...of('image_gallery'), ...of('file')],
-    details: entries.filter(
-      (entry) =>
-        ![
-          'url',
-          'email',
-          'phone',
-          'rich_text',
-          'image_gallery',
-          'file',
-        ].includes(entry.type),
-    ),
-  };
-}
-
-/**
- * Where each field goes on a company page: formatted text and galleries in
- * the main column, every shorter answer in the key-facts card.
- */
-export interface CompanyFieldGroups {
-  main: FieldDisplayEntry[];
-  facts: FieldDisplayEntry[];
-}
-
-export function groupCompanyFields(
-  entries: readonly FieldDisplayEntry[],
-): CompanyFieldGroups {
-  const inMain = (entry: FieldDisplayEntry) =>
-    entry.type === 'rich_text' || entry.type === 'image_gallery';
-  return {
-    main: entries.filter(inMain),
-    facts: entries.filter((entry) => !inMain(entry)),
-  };
+  return resolveFieldDisplay(
+    layout,
+    {
+      values: profile.customFieldValues ?? {},
+      media: profile.customFieldMedia ?? {},
+      collections,
+    },
+    locale,
+  );
 }

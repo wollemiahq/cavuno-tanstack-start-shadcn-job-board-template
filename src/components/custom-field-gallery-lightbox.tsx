@@ -1,6 +1,6 @@
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 
-import type { Images } from '@/components/custom-field-display';
+import type { FieldDisplayImage } from '@/board/custom-field-display';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { m } from '@/paraglide/messages';
@@ -12,25 +12,22 @@ export function GalleryLightbox({
   onIndexChange,
   onClose,
 }: {
-  images: Images;
-  index: number | null;
+  images: readonly FieldDisplayImage[];
+  index: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
 }) {
-  const open = index !== null;
-  const current = open ? images[index] : undefined;
-  const step = (delta: number) => {
-    if (index === null) return;
+  const current = images[index];
+  const step = (delta: number) =>
     onIndexChange((index + delta + images.length) % images.length);
-  };
   const position = m.customFieldDisplay_galleryImagePosition({
-    position: String((index ?? 0) + 1),
+    position: String(index + 1),
     total: String(images.length),
   });
 
   return (
     <Dialog
-      open={open}
+      open
       onOpenChange={(next) => {
         if (!next) onClose();
       }}

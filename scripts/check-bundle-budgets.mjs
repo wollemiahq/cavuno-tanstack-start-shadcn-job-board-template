@@ -222,8 +222,10 @@ const BUDGETS = {
     '/employers/dashboard': { raw: 172_000, gzip: 65_500 },
     // Custom field display (see /talent/): +9,893 / +4,131.
     '/matches': { raw: 159_893, gzip: 62_131 },
-    '/companies/markets/$market': { raw: 121_500, gzip: 46_500 },
-    '/companies/': { raw: 121_000, gzip: 46_000 },
+    // Custom field display on the company detail pane (see /talent/):
+    // measured +11,741 B raw / +5,383 B gzip on both.
+    '/companies/markets/$market': { raw: 133_241, gzip: 51_883 },
+    '/companies/': { raw: 132_741, gzip: 51_383 },
     // Digital products (2026-10-26). The store listing reuses the companies
     // list-and-detail split (search, Select filters, cursor pagination), so it
     // is budgeted like /companies/: measured 137.5 KiB raw / 52.8 KiB gzip.
@@ -243,8 +245,9 @@ const BUDGETS = {
     // (#332), with its two labels: measured 113,502 B raw / 43,120 B gzip
     // against main's 112,747 / 42,815 (+755 / +305). Raised by exactly the
     // measured growth, keeping main's headroom.
-    // Custom field display (see /talent/): +12,464 / +5,543.
-    '/p/$handle': { raw: 126_719, gzip: 48_848 },
+    // Custom field display (see /talent/): +12,464 / +5,543, then +201 B
+    // gzip for the review fixes (phone extensions, typed talent placement).
+    '/p/$handle': { raw: 126_719, gzip: 49_049 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

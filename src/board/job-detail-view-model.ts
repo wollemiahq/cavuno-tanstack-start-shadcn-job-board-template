@@ -121,41 +121,46 @@ export interface JobDetailVM {
 }
 
 /**
- * The job's custom and collection fields in the job form's order. Fields
- * the layout does not list (a hidden field that still has an answer, or an
- * API without layouts) follow in definition order, so the page shows every
- * answered field it showed before layouts ordered them.
+ * The job's custom and collection fields: the ones the job form shows, in
+ * its order, then every other public field, in definition order. A field
+ * the operator hides from the form, or that the layout does not list, still
+ * shows its stored answer after the listed ones, as the job page did before
+ * layouts ordered it. (Profiles differ: a hidden profile field is not
+ * shown.) `resolveFieldDisplay` drops the repeats.
+ *
+ * Reads `forms.job` directly rather than through `resolveJobFormLayout`,
+ * which would add the job form's layout code to every job page bundle for
+ * the one rule needed here: listed, visible entries first.
  */
 function jobDisplayFields(
   jobForm: JobFormLayoutSource | null | undefined,
   definitions: PublicBoard['customFields']['job'],
-  job: PublicJob,
+  collections: PublicJob['resolvedCollectionFields'],
 ): DisplayFieldSource[] {
   const byKey = new Map(definitions.map((d) => [d.key, d]));
-  const collections = new Map(
-    (job.resolvedCollectionFields ?? []).map((field) => [field.key, field]),
+  const collectionLabel = new Map(collections.map((f) => [f.key, f.label]));
+  const listed = (jobForm?.forms?.job ?? []).flatMap(
+    (entry): DisplayFieldSource[] => {
+      if (!entry.visible) return [];
+      const definition = entry.kind === 'custom' && byKey.get(entry.key);
+      if (definition) return [{ kind: 'custom', definition }];
+      const label =
+        entry.kind === 'collection' && collectionLabel.get(entry.key);
+      return label ? [{ kind: 'collection', key: entry.key, label }] : [];
+    },
   );
-  const fields: DisplayFieldSource[] = [];
-  const seen = new Set<string>();
-  const addCustom = (key: string) => {
-    const definition = byKey.get(key);
-    if (!definition || seen.has(`custom:${key}`)) return;
-    seen.add(`custom:${key}`);
-    fields.push({ kind: 'custom', definition });
-  };
-  const addCollection = (key: string) => {
-    const resolved = collections.get(key);
-    if (!resolved || seen.has(`collection:${key}`)) return;
-    seen.add(`collection:${key}`);
-    fields.push({ kind: 'collection', key, label: resolved.label });
-  };
-  for (const entry of jobForm?.forms?.job ?? []) {
-    if (entry.kind === 'custom') addCustom(entry.key);
-    else if (entry.kind === 'collection') addCollection(entry.key);
-  }
-  for (const definition of definitions) addCustom(definition.key);
-  for (const key of collections.keys()) addCollection(key);
-  return fields;
+  return [
+    ...listed,
+    ...definitions.map((definition) => ({
+      kind: 'custom' as const,
+      definition,
+    })),
+    ...collections.map((field) => ({
+      kind: 'collection' as const,
+      key: field.key,
+      label: field.label,
+    })),
+  ];
 }
 
 export function toJobDetailVM(
@@ -297,7 +302,11 @@ export function toJobDetailVM(
     ? customFields
     : customFields.job;
   const customFieldVms = resolveFieldDisplay(
-    jobDisplayFields(jobForm, customFieldDefinitions, job),
+    jobDisplayFields(
+      jobForm,
+      customFieldDefinitions,
+      job.resolvedCollectionFields ?? [],
+    ),
     {
       values: job.customFieldValues,
       collections: new Map(

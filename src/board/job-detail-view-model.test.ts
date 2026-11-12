@@ -439,10 +439,10 @@ describe('toJobDetailVM', () => {
       ],
       jobCollections: [],
     } satisfies PublicBoard['customFields'];
-    const listed = (key: string) => ({
+    const listed = (key: string, visible = true) => ({
       kind: 'custom' as const,
       key,
-      visible: true,
+      visible,
       required: false,
       definition: defs.job.find((d) => d.key === key)!,
     });
@@ -451,6 +451,29 @@ describe('toJobDetailVM', () => {
     const board: JobFormLayoutSource = {
       forms: { job: [listed('scope'), listed('visa')] },
     };
+    // A field hidden from the form keeps its answer on the page, but it
+    // follows the listed fields instead of taking its layout position.
+    const hiddenFirst: JobFormLayoutSource = {
+      forms: {
+        job: [listed('visa', false), listed('team'), listed('scope')],
+      },
+    };
+    expect(
+      toJobDetailVM(
+        job,
+        defs,
+        [],
+        null,
+        'en',
+        'en',
+        hiddenFirst,
+      ).customFields.map((f) => f.id),
+    ).toEqual([
+      'custom:team',
+      'custom:scope',
+      'custom:visa',
+      'collection:trades',
+    ]);
 
     const fields = toJobDetailVM(
       job,

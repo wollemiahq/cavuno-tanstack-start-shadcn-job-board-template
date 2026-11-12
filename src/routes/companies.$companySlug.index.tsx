@@ -6,12 +6,8 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { createCompanyProfileLoader } from './-company-profile-loader';
 
-import {
-  groupCompanyFields,
-  profileCollections,
-  profileLayoutFields,
-  resolveFieldDisplay,
-} from '@/board/custom-field-display';
+import { toCompanyFieldGroups } from '@/board/company-view-model';
+import { profileLayoutFields } from '@/board/custom-field-display';
 import { toJobCardVM } from '@/board/job-view-model';
 import {
   companyCategorySalaryPath,
@@ -143,16 +139,10 @@ function CompanyPage() {
     : null;
 
   const previewJobs = jobs.data.slice(0, JOBS_PREVIEW_COUNT);
-  const fields = groupCompanyFields(
-    resolveFieldDisplay(
-      profileLayoutFields(board.forms?.company),
-      {
-        values: company.customFieldValues ?? {},
-        media: company.customFieldMedia ?? {},
-        collections: profileCollections(company.objectReferences ?? []),
-      },
-      getLocale(),
-    ),
+  const fields = toCompanyFieldGroups(
+    company,
+    profileLayoutFields(board.forms?.company),
+    getLocale(),
   );
 
   return (

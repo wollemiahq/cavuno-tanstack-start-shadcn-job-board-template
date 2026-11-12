@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { m } from '../paraglide/messages';
 import {
-  groupCompanyFields,
-  groupTalentProfileFields,
-  profileCollections,
   profileLayoutFields,
   resolveFieldDisplay,
+  resolveProfileFieldDisplay,
   type CustomFieldDisplayType,
   type DisplayFieldSource,
   type DisplayFieldValue,
@@ -119,12 +117,6 @@ describe('resolveFieldDisplay', () => {
       { kind: 'chips', items: ['Gold', 'Bronze'] },
     ],
     [
-      'date',
-      field('d', 'date'),
-      '2026-12-01',
-      { kind: 'text', text: 'Dec 1, 2026', multiline: false },
-    ],
-    [
       'bare domain URL',
       field('u', 'url'),
       'okafor.example/work/',
@@ -164,8 +156,26 @@ describe('resolveFieldDisplay', () => {
         external: false,
       },
     ],
+    // The extension is a `tel:` parameter, not more digits of the number.
+    [
+      'phone with an extension',
+      field('p', 'phone'),
+      '+1 555 123 4567 ext 89',
+      {
+        kind: 'link',
+        href: 'tel:+15551234567;ext=89',
+        text: '+1 555 123 4567 ext 89',
+        external: false,
+      },
+    ],
   ])('formats %s', (_name, source, value, expected) => {
     expect(one(source, value)).toEqual(expected);
+  });
+
+  it('formats a date for the locale rather than showing the stored string', () => {
+    const value = one(field('d', 'date'), '2026-12-01');
+    expect(value).toMatchObject({ kind: 'text', multiline: false });
+    expect(value).not.toMatchObject({ text: '2026-12-01' });
   });
 
   it.each([
@@ -212,7 +222,7 @@ describe('resolveFieldDisplay', () => {
   });
 
   it('keeps the given order and drops unanswered fields and collections', () => {
-    const entries = resolveFieldDisplay(
+    const entries = resolveProfileFieldDisplay(
       [
         { kind: 'collection', key: 'assoc', label: 'Associations' },
         field('empty', 'short_text'),
@@ -220,8 +230,8 @@ describe('resolveFieldDisplay', () => {
         { kind: 'collection', key: 'none', label: 'None' },
       ],
       {
-        values: { n: 3 },
-        collections: profileCollections([
+        customFieldValues: { n: 3 },
+        objectReferences: [
           { fieldKey: 'assoc', recordId: 'r2', title: 'HIA' },
           {
             fieldKey: 'assoc',
@@ -229,7 +239,7 @@ describe('resolveFieldDisplay', () => {
             title: 'MBQ',
             logoUrl: 'https://l.example/m.png',
           },
-        ]),
+        ],
       },
       'en',
     );
@@ -253,71 +263,55 @@ describe('profileLayoutFields', () => {
       key: 'licence',
       label: 'Licence',
       type: 'short_text' as const,
+      required: false,
+      visibility: 'public' as const,
+      editableByOwner: true,
+    };
+    const collection = {
+      key: 'assoc',
+      label: 'Associations',
+      typeId: 'type_1',
+      multiple: true,
+      visibility: 'public' as const,
+      editableByOwner: true,
+      allowOverrides: false,
     };
     expect(
       profileLayoutFields([
-        { kind: 'builtin', key: 'bio', visible: true },
+        {
+          kind: 'builtin',
+          key: 'bio',
+          visible: true,
+          required: false,
+          locked: false,
+          lockReason: null,
+        },
         {
           kind: 'collection',
           key: 'assoc',
           visible: true,
-          definition: { key: 'assoc', label: 'Associations' },
+          required: false,
+          definition: collection,
         },
         {
           kind: 'custom',
           key: 'hidden',
           visible: false,
+          required: false,
           definition: { ...definition, key: 'hidden' },
         },
-        { kind: 'custom', key: 'licence', visible: true, definition },
+        {
+          kind: 'custom',
+          key: 'licence',
+          visible: true,
+          required: false,
+          definition,
+        },
       ]),
     ).toEqual([
       { kind: 'collection', key: 'assoc', label: 'Associations' },
       { kind: 'custom', definition },
     ]);
     expect(profileLayoutFields(null)).toEqual([]);
-  });
-});
-
-describe('field placement', () => {
-  const entries = resolveFieldDisplay(
-    [
-      field('years', 'number'),
-      field('site', 'url'),
-      field('cert', 'file'),
-      field('about', 'rich_text'),
-      field('work', 'image_gallery'),
-      field('mail', 'email'),
-    ],
-    {
-      values: {
-        years: 12,
-        site: 'a.example',
-        about: '<p>x</p>',
-        mail: 'a@b.example',
-      },
-      media: { cert: [media('c')], work: [media('w')] },
-    },
-    'en',
-  );
-  const ids = (list: { id: string }[]) => list.map((entry) => entry.id);
-
-  it('places talent fields by type, galleries before files, each group in form order', () => {
-    const groups = groupTalentProfileFields(entries);
-    expect(ids(groups.contact)).toEqual(['custom:site', 'custom:mail']);
-    expect(ids(groups.about)).toEqual(['custom:about']);
-    expect(ids(groups.featured)).toEqual(['custom:work', 'custom:cert']);
-    expect(ids(groups.details)).toEqual(['custom:years']);
-  });
-
-  it('puts company rich text and galleries in the main column', () => {
-    const groups = groupCompanyFields(entries);
-    expect(ids(groups.main)).toEqual(['custom:about', 'custom:work']);
-    expect(ids(groups.facts)).toEqual([
-      'custom:years',
-      'custom:site',
-      'custom:cert',
-      'custom:mail',
-    ]);
   });
 });

@@ -4,6 +4,7 @@ import { FileText, Globe, Mail, Phone } from 'lucide-react';
 
 import type {
   FieldDisplayEntry,
+  FieldDisplayImage,
   FieldDisplayValue,
 } from '@/board/custom-field-display';
 import { Prose } from '@/components/prose';
@@ -20,9 +21,7 @@ import { m } from '@/paraglide/messages';
  */
 
 /** How many gallery tiles show before the last one becomes "View all". */
-export const GALLERY_TILE_LIMIT = 6;
-
-export type Images = Extract<FieldDisplayValue, { kind: 'images' }>['images'];
+const GALLERY_TILE_LIMIT = 6;
 
 // The larger view loads on the first tile click, so pages pay for the
 // dialog only when a visitor opens an image.
@@ -41,7 +40,7 @@ export function CustomFieldGallery({
   images,
   className,
 }: {
-  images: Images;
+  images: readonly FieldDisplayImage[];
   className?: string;
 }) {
   const [index, setIndex] = useState<number | null>(null);
