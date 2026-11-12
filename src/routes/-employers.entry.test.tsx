@@ -161,6 +161,18 @@ const membership = {
   },
 } satisfies CompanyMembership;
 
+function companyList(
+  data: readonly CompanyMembership[],
+): Awaited<ReturnType<EmployerDashboardLoaderDependencies['listCompanies']>> {
+  return {
+    object: 'list',
+    url: '/v1/me/companies',
+    hasMore: false,
+    nextCursor: null,
+    data: [...data],
+  };
+}
+
 function dashboardLoaderContext() {
   const pathname = '/employers/dashboard';
   return {
@@ -270,6 +282,74 @@ describe('employer entry surfaces', () => {
       search: { returnTo: '/employers/dashboard' },
     });
   });
+
+  it.each([
+    ['one approved company', [membership], {}, {}],
+    [
+      'one approved company after a work-email approval',
+      [membership],
+      { verified: 'approved' },
+      { joined: '1' },
+    ],
+  ] as const)(
+    'opens the company workspace directly for %s',
+    async (_case, memberships, deps, search) => {
+      listCompanies.mockResolvedValue(companyList(memberships));
+
+      let result: unknown;
+      try {
+        result = await dashboardLoader({ ...dashboardLoaderContext(), deps });
+      } catch (error) {
+        result = error;
+      }
+
+      expect(isRedirect(result)).toBe(true);
+      if (!isRedirect(result)) return;
+      expect(result.options).toMatchObject({
+        to: '/employers/companies/$slug',
+        params: { slug: 'acme-ventures' },
+      });
+      expect(result.options.search).toEqual(search);
+    },
+  );
+
+  it.each([
+    [
+      'two approved companies',
+      [
+        membership,
+        {
+          ...membership,
+          id: 'membership-globex',
+          company: { ...membership.company, id: 'globex', slug: 'globex' },
+        },
+      ],
+      {},
+    ],
+    [
+      'one claim still awaiting approval',
+      [{ ...membership, status: 'awaiting_admin' }],
+      {},
+    ],
+    ['an employer adding another company', [membership], { add: true }],
+    [
+      'an employer continuing to another page',
+      [membership],
+      { returnTo: '/post' },
+    ],
+  ] as const)(
+    'keeps the company list for %s',
+    async (_case, memberships, deps) => {
+      listCompanies.mockResolvedValue(companyList(memberships));
+
+      const result = await dashboardLoader({
+        ...dashboardLoaderContext(),
+        deps,
+      });
+
+      expect(result.data).toEqual(memberships);
+    },
+  );
 
   it('preserves the pending company path across employer sign-in', async () => {
     listCompanies.mockRejectedValue(new Error('UNAUTHENTICATED'));
