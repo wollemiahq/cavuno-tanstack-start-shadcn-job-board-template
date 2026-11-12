@@ -168,6 +168,18 @@ describe('resolveFieldDisplay', () => {
         external: false,
       },
     ],
+    // A bracketed trunk 0 after the country code is not dialled.
+    [
+      'phone with a bracketed trunk 0',
+      field('p', 'phone'),
+      '+44 (0)20 7946 0958',
+      {
+        kind: 'link',
+        href: 'tel:+442079460958',
+        text: '+44 (0)20 7946 0958',
+        external: false,
+      },
+    ],
   ])('formats %s', (_name, source, value, expected) => {
     expect(one(source, value)).toEqual(expected);
   });

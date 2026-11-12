@@ -20,7 +20,7 @@ export function SelectedCompanyDetail({
   language: string;
   jobForm?: JobFormSource | null;
   /** The company form's custom and collection fields, in form order. */
-  fieldLayout?: readonly DisplayFieldSource[];
+  fieldLayout: readonly DisplayFieldSource[];
 }) {
   const hasSalaries = Boolean(
     state.salarySummary &&
@@ -55,11 +55,10 @@ export function SelectedCompanyDetail({
       : null;
   const detail = state.company ? (
     <CompanySearchResultDetail
-      vm={toCompanyDetailVM(
-        state.company,
-        getCompanySearchLabels(),
-        fieldLayout ? { layout: fieldLayout, locale: language } : undefined,
-      )}
+      vm={toCompanyDetailVM(state.company, getCompanySearchLabels(), {
+        layout: fieldLayout,
+        locale: language,
+      })}
       jobPreviews={(state.jobs?.data ?? [])
         .slice(0, 4)
         .map((job) => toJobCardVM(job, language, jobForm))}

@@ -140,7 +140,10 @@ function webHref(value: string): string | null {
  */
 function telHref(value: string): string {
   const match = /^(.*?)\s*(?:ext\.?|x|#)\s*(\d+)$/i.exec(value.trim());
-  const number = (match ? match[1]! : value).replace(/[^\d+]/g, '');
+  // "+44 (0)20 …": the bracketed trunk 0 is not dialled after a country code.
+  const number = (match ? match[1]! : value)
+    .replace(/\(0\)/g, '')
+    .replace(/[^\d+]/g, '');
   return match ? `tel:${number};ext=${match[2]}` : `tel:${number}`;
 }
 

@@ -95,6 +95,7 @@ describe('company view models', () => {
         ],
       } satisfies PublicCompanyDetail,
       labels,
+      { layout: [], locale: 'en' },
     );
 
     expect(vm.marketChips).toEqual([

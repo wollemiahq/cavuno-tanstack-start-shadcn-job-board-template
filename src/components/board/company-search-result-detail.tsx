@@ -203,11 +203,13 @@ export function CompanySearchResultDetail({
           <p className="text-muted-foreground">{vm.noDescriptionText}</p>
         )}
 
-        <CustomFieldSections
-          entries={vm.fields.main}
-          headingAs="h3"
-          headingClassName="text-foreground text-sm font-semibold"
-        />
+        <div className="contents" inert={!interactive}>
+          <CustomFieldSections
+            entries={vm.fields.main}
+            headingAs="h3"
+            headingClassName="text-foreground text-sm font-semibold"
+          />
+        </div>
 
         {interactive && jobPreviews.length > 0 ? (
           <section
@@ -330,7 +332,10 @@ export function CompanySearchResultDetail({
                 <dt className="text-muted-foreground text-sm font-medium">
                   {entry.label}
                 </dt>
-                <dd className="text-foreground min-w-0 text-sm">
+                <dd
+                  className="text-foreground min-w-0 text-sm"
+                  inert={!interactive}
+                >
                   <CustomFieldValue value={entry.value} />
                 </dd>
               </Fragment>

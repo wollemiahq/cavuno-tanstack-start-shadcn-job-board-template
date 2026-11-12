@@ -57,12 +57,15 @@ export function TalentProfileIdentity({
   showName = true,
   size = 'lg',
   nameHref = null,
+  interactive = true,
 }: {
   vm: TalentProfileVM;
   headingAs?: 'h1' | 'h2';
   showName?: boolean;
   size?: 'lg' | 'xl';
   nameHref?: string | null;
+  /** False while a directory pane still shows the previous profile. */
+  interactive?: boolean;
 }) {
   return (
     <header
@@ -110,7 +113,9 @@ export function TalentProfileIdentity({
           </div>
         ) : null}
 
-        <CustomFieldContactLinks entries={vm.fields.contact} />
+        <div className="contents" inert={!interactive}>
+          <CustomFieldContactLinks entries={vm.fields.contact} />
+        </div>
 
         {vm.location || vm.jobSearchStatusLabel ? (
           <div className="flex flex-wrap gap-1.5">
@@ -149,6 +154,7 @@ export function TalentProfileContent({
           vm={vm}
           headingAs={headingAs}
           showName={showName}
+          interactive={interactive}
         />
       ) : null}
 
@@ -161,15 +167,17 @@ export function TalentProfileContent({
         </p>
       ) : null}
 
-      <CustomFieldSections
-        entries={vm.fields.about}
-        headingAs={SectionHeading}
-      />
+      <div className="contents" inert={!interactive}>
+        <CustomFieldSections
+          entries={vm.fields.about}
+          headingAs={SectionHeading}
+        />
 
-      <CustomFieldSections
-        entries={vm.fields.featured}
-        headingAs={SectionHeading}
-      />
+        <CustomFieldSections
+          entries={vm.fields.featured}
+          headingAs={SectionHeading}
+        />
+      </div>
 
       {vm.experiences.length > 0 ? (
         <section className="space-y-4">
@@ -356,7 +364,9 @@ export function TalentProfileContent({
           <SectionHeading className="text-foreground text-lg font-semibold">
             {m.customFieldDisplay_detailsHeading()}
           </SectionHeading>
-          <CustomFieldFacts entries={vm.fields.details} />
+          <div inert={!interactive}>
+            <CustomFieldFacts entries={vm.fields.details} />
+          </div>
         </section>
       ) : null}
     </div>

@@ -112,9 +112,9 @@ export function toCompanyDetailVM(
   labels: CompanySearchLabels,
   /**
    * The company form's fields (`profileLayoutFields(board.forms.company)`)
-   * and the display locale; omit to show no custom fields.
+   * and the display locale.
    */
-  fields?: { layout: readonly DisplayFieldSource[]; locale: string },
+  fields: { layout: readonly DisplayFieldSource[]; locale: string },
 ): CompanyDetailVM {
   const card = toCompanyCardVM(company, labels);
   const normalizedWebsite = normalizeWebsiteUrl(company.website ?? '');
@@ -139,8 +139,6 @@ export function toCompanyDetailVM(
     viewJobsLabel: labels.viewJobs,
     viewSalariesLabel: labels.viewSalaries,
     websiteHeading: labels.website,
-    fields: fields
-      ? toCompanyFieldGroups(company, fields.layout, fields.locale)
-      : { main: [], facts: [] },
+    fields: toCompanyFieldGroups(company, fields.layout, fields.locale),
   };
 }

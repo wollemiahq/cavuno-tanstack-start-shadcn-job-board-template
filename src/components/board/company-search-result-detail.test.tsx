@@ -367,7 +367,25 @@ describe('CompanySearchResultDetail', () => {
   it('hides all actions while a newly selected company is loading', async () => {
     renderDetail(
       <CompanySearchResultDetail
-        vm={vm}
+        vm={{
+          ...vm,
+          fields: {
+            main: [],
+            facts: [
+              {
+                id: 'custom:site',
+                label: 'Careers site',
+                type: 'url',
+                value: {
+                  kind: 'link',
+                  href: 'https://careers.example',
+                  text: 'careers.example',
+                  external: true,
+                },
+              },
+            ],
+          },
+        }}
         jobPreviews={jobPreviews}
         salaryOverall={salaryOverall}
         hasSalaries
@@ -389,6 +407,10 @@ describe('CompanySearchResultDetail', () => {
     expect(screen.queryByRole('link', { name: 'Developer tools' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'acme.example' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Role 1' })).toBeNull();
+    // The previous company's custom field links stay visible but inert.
+    expect(
+      screen.getByRole('link', { name: 'careers.example' }).closest('[inert]'),
+    ).not.toBeNull();
     expect(
       screen.queryByRole('heading', {
         name: m.companyDetail_salariesSummaryHeading(),
