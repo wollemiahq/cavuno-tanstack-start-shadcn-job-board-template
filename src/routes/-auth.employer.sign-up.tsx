@@ -15,15 +15,20 @@ import {
   appendAuthIntentQuery,
   appendOAuthProviderHint,
 } from '@/lib/board-datalayer-events';
-import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
-
-const EMPLOYER_DASHBOARD = '/employers/dashboard';
+import {
+  buildVerifyEmailRedirectPath,
+  verificationEmailReturnTo,
+} from '@/lib/candidate-return-to';
+import { employerDashboardHref } from '@/lib/employer-return-to';
 
 /** Where an employer lands after the provider round trip, tagged for the
  * conversion datalayer the same way the candidate surfaces tag theirs. */
-function employerOAuthReturnTo(provider: 'google' | 'linkedin') {
+function employerOAuthReturnTo(
+  dashboard: string,
+  provider: 'google' | 'linkedin',
+) {
   return appendOAuthProviderHint(
-    appendAuthIntentQuery(EMPLOYER_DASHBOARD, 'sign_up'),
+    appendAuthIntentQuery(dashboard, 'sign_up'),
     provider,
   );
 }
@@ -72,18 +77,26 @@ export function EmployerSignUpUnavailable() {
 
 export function EmployerSignUpView({
   boardName,
+  returnTo,
   signUpEmployerAction,
   getOAuthAuthorizationUrlAction,
   invalidate,
   footer,
 }: {
   boardName: string;
+  /**
+   * Where the employer continues once their company is set up, such as Post
+   * a job. Every path lands on the dashboard first: a new employer has no
+   * company to post for until they create or claim one there.
+   */
+  returnTo?: string;
   signUpEmployerAction: (input: {
     data: {
       email: string;
       password: string;
       displayName: string;
       marketingConsent?: boolean;
+      returnTo?: string;
     };
   }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
   getOAuthAuthorizationUrlAction: (input: {
@@ -107,6 +120,7 @@ export function EmployerSignUpView({
     marketingConsent.privacyPolicyUrl = MARKETING_CONSENT.privacyPolicyUrl;
     marketingConsent.privacyLinkLabel = m.marketingConsent_privacyLinkLabel();
   }
+  const dashboard = employerDashboardHref(returnTo);
 
   return (
     <RegistrationPage
@@ -123,9 +137,15 @@ export function EmployerSignUpView({
         successActionLabel: m.authEmployerSignUp_goToDashboardLabel(),
       }}
       marketingConsent={marketingConsent}
-      successHref={buildVerifyEmailRedirectPath(EMPLOYER_DASHBOARD)}
+      successHref={buildVerifyEmailRedirectPath(dashboard)}
       onSubmit={async (values) => {
-        const result = await signUpEmployerAction({ data: values });
+        // Without a destination the emailed link keeps the platform's
+        // employer landing; with one it returns through the dashboard too.
+        const result = await signUpEmployerAction({
+          data: returnTo
+            ? { ...values, returnTo: verificationEmailReturnTo(dashboard) }
+            : values,
+        });
         if (result.ok) await reconcileCommittedAction(invalidate);
         return result;
       }}
@@ -136,7 +156,7 @@ export function EmployerSignUpView({
         getOAuthAuthorizationUrlAction({
           data: {
             provider,
-            returnTo: employerOAuthReturnTo(provider),
+            returnTo: employerOAuthReturnTo(dashboard, provider),
             role: 'employer',
           },
         })

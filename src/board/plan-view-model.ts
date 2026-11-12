@@ -3,13 +3,10 @@ import { getLocale } from '../paraglide/runtime';
 
 import type { JobPostingPlan, Plan } from '@cavuno/board';
 
-/** A posting plan plus the public catalogue's named features for the same plan. */
+/** A posting plan with its features keyed and named, as the catalogue keys them. */
 export type PostPlan = JobPostingPlan & {
-  /**
-   * The posting-plan read carries feature keys and values but not their
-   * names, so an operator's custom attributes come from the plan catalogue.
-   */
-  catalogFeatures?: Plan['features'];
+  /** The plan's features by canonical key, for custom-attribute lines. */
+  namedFeatures?: Plan['features'];
 };
 
 function featureMap(plan: Pick<JobPostingPlan, 'features'>) {

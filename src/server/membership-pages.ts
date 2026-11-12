@@ -120,3 +120,22 @@ export const listMembershipCompanies = createServerFn({ method: 'GET' })
       } satisfies MembershipRoster;
     }),
   );
+
+/**
+ * The membership plans a members-only board sells where it gates posting, so
+ * the gate can offer them in place of the job form. Empty on a board where
+ * anyone can post, without reading the plans.
+ */
+export const getPostingMembershipPlans = createServerFn({ method: 'GET' })
+  .middleware([boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, async (headers) => {
+      const board = await readBoardContext();
+      if (!board.posting?.requiresMembership) return [];
+      const plans = await getBoard().plans.list(
+        { purpose: 'membership' },
+        { headers },
+      );
+      return [...plans.data].sort(byDisplayOrder);
+    }),
+  );

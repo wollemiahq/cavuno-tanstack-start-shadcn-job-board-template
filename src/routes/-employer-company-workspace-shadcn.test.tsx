@@ -500,6 +500,20 @@ describe('employer company workspace', () => {
     );
   });
 
+  it('says a job that published straight away is live, not a draft', async () => {
+    const liveJob = { ...draftJob, status: 'published' as const };
+    await renderJobs([liveJob], {
+      search: { posted: '1', job_id: liveJob.id },
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.postJob_publishedTitle(),
+    );
+    expect(screen.getByRole('alert')).not.toHaveTextContent(
+      m.employerJobs_postedBody(),
+    );
+  });
+
   it('explains a same-origin save and says so if the new row is not listed yet', async () => {
     await renderJobs([draftJob], {
       search: { posted: '1', job_id: 'job-missing' },

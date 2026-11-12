@@ -2,7 +2,8 @@
  * Membership checkout for the company a signed-in employer approved-manages.
  * Mirrors `talent-access.ts`: the Board API mints a connected-account
  * embedded Checkout mount kit (`board.me.companies.startMembershipCheckout`),
- * the page mounts it with Stripe.js, and after the return redirect the page
+ * the page mounts it with Stripe.js, and once Stripe.js reports completion
+ * (or after a return redirect, for payment methods that need one) the page
  * polls `retrieveMembershipCheckout` until the session is `complete`. The
  * plan itself is granted to the company by the platform once payment lands.
  */
@@ -77,6 +78,9 @@ export const startMembershipCheckout = createServerFn({ method: 'POST' })
             planId: data.planId,
             returnPath: data.returnPath,
             colorMode: 'light',
+            // A card payment completes on the page; only a payment method
+            // that needs a redirect comes back through `returnPath`.
+            redirectOnCompletion: 'if_required',
           },
           { headers },
         ),

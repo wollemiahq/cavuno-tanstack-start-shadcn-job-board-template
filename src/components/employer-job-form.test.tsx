@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest';
+import { useState } from 'react';
+
 import {
   RouterProvider,
   createMemoryHistory,
@@ -164,6 +166,11 @@ beforeEach(() => {
   mocks.invalidate.mockResolvedValue(undefined);
   mocks.navigate.mockResolvedValue(undefined);
 });
+
+/** A posting-plan feature as the plans read returns it. */
+function feature(key: string, value: string) {
+  return { key, value, name: key, dataType: 'string', displayOrder: null };
+}
 
 describe('EmployerJobForm', () => {
   it('prefills the role fields from an existing job in edit mode', async () => {
@@ -461,8 +468,8 @@ describe('EmployerJobForm', () => {
     const featuredPlan: JobPostingPlan = {
       ...plan,
       features: [
-        { key: 'jobs.featured_slots', value: '2' },
-        { key: 'jobs.feature_selection_mode', value: 'manual' },
+        feature('jobs.featured_slots', '2'),
+        feature('jobs.feature_selection_mode', 'manual'),
       ],
     };
 
@@ -519,7 +526,7 @@ describe('EmployerJobForm', () => {
       await renderDraftEdit([
         {
           ...plan,
-          catalogFeatures: {
+          namedFeatures: {
             'custom.newsletter_feature': {
               value: 'true',
               name: 'Newsletter feature',
@@ -549,8 +556,8 @@ describe('EmployerJobForm', () => {
         ...featuredPlan,
         kind: 'one_time',
         features: [
-          { key: 'jobs.featured_slots', value: '1' },
-          { key: 'jobs.feature_selection_mode', value: 'manual' },
+          feature('jobs.featured_slots', '1'),
+          feature('jobs.feature_selection_mode', 'manual'),
         ],
       };
       const { container } = await renderDraftEdit([oneTime]);
@@ -576,15 +583,15 @@ describe('EmployerJobForm', () => {
         id: 'plan-auto',
         name: 'Auto',
         features: [
-          { key: 'jobs.featured_slots', value: '3' },
-          { key: 'jobs.feature_selection_mode', value: 'auto' },
+          feature('jobs.featured_slots', '3'),
+          feature('jobs.feature_selection_mode', 'auto'),
         ],
       };
       const unset: JobPostingPlan = {
         ...featuredPlan,
         id: 'plan-unset',
         name: 'Unset',
-        features: [{ key: 'jobs.featured_slots', value: '3' }],
+        features: [feature('jobs.featured_slots', '3')],
       };
       await renderDraftEdit([plan, auto, unset]);
 
@@ -1672,9 +1679,82 @@ describe('EmployerJobForm — office-location country lock', () => {
 });
 
 describe('EmployerJobForm — members-only board', () => {
+  it('shows the join gate before anything is written when the company cannot post', async () => {
+    const { container } = await renderWithRouter(
+      <EmployerJobForm
+        dependencies={dependencies}
+        slug="acme"
+        locale="en-AU"
+        remotePermits={null}
+        plans={[plan]}
+        billingOptions={[]}
+        officeLocationSuggestions={suggestions}
+        mode={{ kind: 'create' }}
+        canPost={false}
+        membershipGate={<div data-testid="membership-gate">Members only</div>}
+      />,
+    );
+
+    expect(screen.getByTestId('membership-gate')).toBeVisible();
+    expect(container.querySelector('form')).toBeNull();
+    expect(mocks.createJob).not.toHaveBeenCalled();
+  });
+
+  it('opens with the membership post chosen once the company has joined', async () => {
+    // The company joins and comes back: the loader re-reads its billing
+    // options while the page stays mounted.
+    const membershipPost = leftoverCredit({
+      id: 'plan_assignment',
+      type: 'plan_assignment',
+      kind: 'member_post',
+      planName: 'Partner',
+      jobsRemaining: 0,
+      jobsTotal: 0,
+      jobsUnlimited: true,
+    });
+    function JoinAndReturn() {
+      const [joined, setJoined] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setJoined(true)}>
+            Joined
+          </button>
+          <EmployerJobForm
+            dependencies={dependencies}
+            slug="acme"
+            locale="en-AU"
+            remotePermits={null}
+            plans={[plan]}
+            billingOptions={joined ? [membershipPost] : []}
+            officeLocationSuggestions={suggestions}
+            mode={{ kind: 'create' }}
+            canPost={joined}
+            membershipGate={
+              <div data-testid="membership-gate">Members only</div>
+            }
+          />
+        </>
+      );
+    }
+    await renderWithRouter(<JoinAndReturn />);
+    expect(screen.getByTestId('membership-gate')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Joined' }));
+
+    const partner = screen.getByRole('radio', { name: /Partner/ });
+    expect(partner).toBeChecked();
+    // Unlimited posts, not a count of zero.
+    expect(partner).toHaveAccessibleName(
+      containing(m.membershipCapacity_postsUnlimited()),
+    );
+    expect(partner).not.toHaveAccessibleName(
+      containing(m.employerCompany_creditsRemaining({ count: 0 })),
+    );
+  });
+
   it('replaces the form with the join gate when the board refuses the write', async () => {
-    // Entitlement is not on the wire — billing options carry no `canPost` —
-    // so the gate comes from the refusal itself.
+    // A membership can lapse after the page loaded, so the refusal itself
+    // still brings up the gate.
     mocks.updateJob.mockResolvedValue({
       ok: false,
       code: 'membership_required',

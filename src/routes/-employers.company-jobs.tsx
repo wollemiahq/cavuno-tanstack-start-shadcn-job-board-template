@@ -446,7 +446,10 @@ function postingOutcome(
   jobs: EmployerJobSummary[],
 ): { title: string; body: string } | null {
   if (!search.checkout_success && !search.posted) return null;
-  const listed = !search.job_id || jobs.some((job) => job.id === search.job_id);
+  const job = search.job_id
+    ? jobs.find((candidate) => candidate.id === search.job_id)
+    : undefined;
+  const listed = !search.job_id || job !== undefined;
   if (search.checkout_success) {
     return {
       title: m.employerJobs_checkoutSuccessTitle(),
@@ -466,6 +469,14 @@ function postingOutcome(
       body: listed
         ? m.postJob_pendingBody()
         : m.employerJobs_postedMissingBody(),
+    };
+  }
+  // A credit, membership post or free plan publishes at once; only a job
+  // saved as a draft should hear that drafts stay off the board.
+  if (job?.status === 'published') {
+    return {
+      title: m.postJob_publishedTitle(),
+      body: m.postJob_publishedBody(),
     };
   }
   return {

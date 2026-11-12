@@ -1,30 +1,29 @@
-import { getBoard } from '../lib/board';
-
 import type { PostPlan } from '../board/plan-view-model';
-import type { JobPostingPlan } from '@cavuno/board';
+import type { JobPostingPlan, Plan } from '@cavuno/board';
 
 /**
- * Attach each posting plan's named features from the public plan catalogue.
- * The posting-plan read carries feature keys and values but not their names,
- * so an operator's custom attributes can only be rendered from here.
- * Attribute lines are additive copy: a failed catalogue read leaves the plans
- * without them rather than failing the page.
+ * Key each posting plan's features by their canonical key, with the names the
+ * posting-plan read carries, so an operator's custom attributes render as the
+ * plan catalogue's `features` map would. No second read: the catalogue hides
+ * job-posting plans on members-only boards.
  */
-export async function withCatalogFeatures(
+export async function withNamedFeatures(
   plans: Promise<JobPostingPlan[]>,
-  headers: Record<string, string>,
 ): Promise<PostPlan[]> {
-  const [postingPlans, catalog] = await Promise.all([
-    plans,
-    getBoard()
-      .plans.list({}, { headers })
-      .catch(() => null),
-  ]);
-  const featuresById = new Map(
-    (catalog?.data ?? []).map((plan) => [plan.id, plan.features]),
-  );
-  return postingPlans.map((plan) => ({
-    ...plan,
-    catalogFeatures: featuresById.get(plan.id),
-  }));
+  return (await plans).map((plan) => {
+    const namedFeatures: Plan['features'] = {};
+    for (const feature of plan.features) {
+      if (!feature.key || !feature.value) continue;
+      const entry: Plan['features'][string] = {
+        value: feature.value,
+        name: feature.name,
+        dataType: feature.dataType,
+      };
+      if (feature.displayOrder !== null) {
+        entry.displayOrder = feature.displayOrder;
+      }
+      namedFeatures[feature.key] = entry;
+    }
+    return { ...plan, namedFeatures };
+  });
 }

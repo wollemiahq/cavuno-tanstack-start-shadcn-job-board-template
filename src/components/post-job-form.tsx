@@ -1205,7 +1205,7 @@ export function PostJobForm({
               plan.prices.find(({ isActive }) => isActive) ?? plan.prices[0];
             const features = [
               ...planFeatureLines(plan),
-              ...customAttributeLines({ features: plan.catalogFeatures ?? {} }),
+              ...customAttributeLines({ features: plan.namedFeatures ?? {} }),
             ];
             return (
               // The owned Field choice card — the SAME idiom as the join

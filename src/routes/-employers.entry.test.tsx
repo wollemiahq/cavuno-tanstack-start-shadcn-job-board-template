@@ -578,6 +578,68 @@ describe('employer entry surfaces', () => {
     ).toEqual({});
   });
 
+  it('sends a new employer back to Post a job once their created company is approved', async () => {
+    vi.useFakeTimers();
+    searchCompanies.mockResolvedValue({
+      ok: true,
+      data: {
+        object: 'list',
+        url: '/v1/me/companies/search',
+        data: [],
+        hasMore: false,
+        nextCursor: null,
+      },
+    });
+    createCompany.mockResolvedValue({ ok: true, data: membership });
+    invalidate.mockResolvedValue(undefined);
+    const continueWithCompany = vi.fn<() => Promise<void>>();
+    continueWithCompany.mockResolvedValue(undefined);
+    render(
+      <EmployerDashboardView
+        companies={[]}
+        dependencies={{ ...dashboardViewDependencies, continueWithCompany }}
+      />,
+    );
+    fireEvent.change(
+      screen.getByLabelText(m.employerOnboarding_searchPlaceholder()),
+      { target: { value: 'Acme' } },
+    );
+    await act(() => vi.advanceTimersByTimeAsync(250));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerOnboarding_addAsNewCompany({ query: 'Acme' }),
+      }),
+    );
+    const dialog = screen.getByRole('dialog', {
+      name: m.employerOnboarding_modalTitle(),
+    });
+    fireEvent.change(
+      within(dialog).getByLabelText(m.employerDashboard_nameLabel()),
+      { target: { value: 'Acme Ventures' } },
+    );
+    fireEvent.click(
+      within(dialog).getByRole('button', {
+        name: m.employerDashboard_createCompanyLabel(),
+      }),
+    );
+    await act(() => vi.advanceTimersByTimeAsync(0));
+
+    expect(continueWithCompany).toHaveBeenCalledOnce();
+    expect(navigateToOnboarding).not.toHaveBeenCalled();
+
+    // The dashboard keeps a page an employer can use, and drops the candidate
+    // default that sign-in links pass when nothing better is known.
+    expect(validateEmployerDashboardSearch({ returnTo: '/post' })).toEqual({
+      returnTo: '/post',
+    });
+    expect(validateEmployerDashboardSearch({ returnTo: '/account' })).toEqual(
+      {},
+    );
+    expect(
+      validateEmployerDashboardSearch({ returnTo: 'https://evil.example' }),
+    ).toEqual({});
+  });
+
   it('uses the owned focus-managed dialog when adding a company', async () => {
     vi.useFakeTimers();
     searchCompanies.mockResolvedValue({
