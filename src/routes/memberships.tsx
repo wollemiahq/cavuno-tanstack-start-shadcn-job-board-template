@@ -4,10 +4,10 @@ import { createFileRoute, notFound, useRouter } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 
 import { m } from '../paraglide/messages';
-import { MembershipsPageView, type MembershipsViewer } from './-memberships';
+import { useMembershipsViewer } from './-membership-offer';
+import { MembershipsPageView } from './-memberships';
 import { createMembershipsLoader } from './-memberships-loader';
 
-import { useRootSession } from '@/components/root-session';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
 import { safeRedirectPath } from '@/lib/safe-redirect-path';
 import {
@@ -65,31 +65,12 @@ export const Route = createFileRoute('/memberships')({
 function MembershipsPage() {
   const { plans, rosters, seo } = Route.useLoaderData();
   const { session_id: sessionId, company, returnTo } = Route.useSearch();
-  const { user, ready, employerCompanies } = useRootSession();
   const router = useRouter();
   const startCheckout = useServerFn(startMembershipCheckout);
   const getCheckoutState = useServerFn(getMembershipCheckoutState);
   const invalidate = useCallback(() => router.invalidate(), [router]);
 
-  // A membership is bought FOR a company, so the viewer carries the companies
-  // they approved-manage; an approved row without a slug cannot be addressed
-  // over the API and is left out.
-  const viewer: MembershipsViewer =
-    !ready || user === null
-      ? { kind: 'anonymous' }
-      : {
-          kind: 'signed-in',
-          companies: (employerCompanies ?? []).flatMap((membership) =>
-            membership.status === 'approved' && membership.company.slug
-              ? [
-                  {
-                    slug: membership.company.slug,
-                    name: membership.company.name,
-                  },
-                ]
-              : [],
-          ),
-        };
+  const viewer = useMembershipsViewer();
 
   return (
     <MembershipsPageView

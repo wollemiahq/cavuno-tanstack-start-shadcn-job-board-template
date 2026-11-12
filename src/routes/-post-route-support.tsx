@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PostJobForm } from '@/components/post-job-form';
 import { m } from '@/paraglide/messages';
+import { getPostingMembershipPlans } from '@/server/membership-pages';
 import {
   fetchLogoByDomain,
   getPostPlans,
@@ -14,6 +15,7 @@ import { getRemotePermits, getSeoBase } from '@/server/queries';
 export type PostRouteDependencies = {
   fetchLogoByDomain: typeof fetchLogoByDomain;
   getPostPlans: typeof getPostPlans;
+  getPostingMembershipPlans: typeof getPostingMembershipPlans;
   getRemotePermits: typeof getRemotePermits;
   getSeoBase: typeof getSeoBase;
   renderForm: (props: Parameters<typeof PostJobForm>[0]) => ReactNode;
@@ -24,6 +26,7 @@ export type PostRouteDependencies = {
 export const postRouteDependencies: PostRouteDependencies = {
   fetchLogoByDomain,
   getPostPlans,
+  getPostingMembershipPlans,
   getRemotePermits,
   getSeoBase,
   renderForm: (props) => <PostJobForm {...props} />,
@@ -35,12 +38,15 @@ export function createPostLoader(
   dependencies: PostRouteDependencies = postRouteDependencies,
 ) {
   return async () => {
-    const [plans, remotePermits, seo] = await Promise.all([
+    const [plans, membershipPlans, remotePermits, seo] = await Promise.all([
       dependencies.getPostPlans(),
+      // What the members-only gate sells. Empty on an open board; a failed
+      // read leaves the gate linking to /memberships instead.
+      dependencies.getPostingMembershipPlans().catch(() => []),
       dependencies.getRemotePermits().catch(() => null),
       dependencies.getSeoBase(),
     ]);
-    return { plans, remotePermits, seo };
+    return { plans, membershipPlans, remotePermits, seo };
   };
 }
 
@@ -78,7 +84,9 @@ export function PostJobPageView({
         header={
           <PageHeader
             title={m.postJob_title()}
-            description={m.postJob_subtitle()}
+            // "Choose a plan and submit below" describes the form, which the
+            // gate replaces.
+            description={gate ? undefined : m.postJob_subtitle()}
           />
         }
       >
