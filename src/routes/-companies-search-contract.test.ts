@@ -54,6 +54,7 @@ function marketLoaderContext(deps: { query?: string; page?: number }) {
   return {
     params: { market: 'venture-capital' },
     deps,
+    location: { publicHref: '/companies/markets/venture-capital' },
   };
 }
 

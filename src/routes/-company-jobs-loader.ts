@@ -1,8 +1,10 @@
 import { isNotFound } from '@cavuno/board';
-import { notFound } from '@tanstack/react-router';
+
+import { followManagedRedirect, requestedPath } from './-catch-all-loader';
 
 import { pageToOffset } from '@/lib/pagination';
 import { getCompanyJobsPage } from '@/server/companies-pages';
+import { resolveRedirect } from '@/server/queries';
 
 export interface CompanyJobsSearch {
   q?: string;
@@ -15,13 +17,16 @@ export const COMPANY_JOBS_PAGE_SIZE = 20;
 
 export function createCompanyJobsLoader(
   loadPage: typeof getCompanyJobsPage = getCompanyJobsPage,
+  resolve: typeof resolveRedirect = resolveRedirect,
 ) {
   return async ({
     params,
     deps,
+    location,
   }: {
     params: { companySlug: string };
     deps: CompanyJobsSearch;
+    location: { publicHref: string };
   }) => {
     try {
       const offset = pageToOffset(deps.page ?? 1, COMPANY_JOBS_PAGE_SIZE);
@@ -41,7 +46,8 @@ export function createCompanyJobsLoader(
         locationName: deps.locationName ?? null,
       };
     } catch (error) {
-      if (isNotFound(error)) throw notFound();
+      if (isNotFound(error))
+        return followManagedRedirect(resolve, requestedPath(location));
       throw error;
     }
   };

@@ -66,6 +66,18 @@ describe('resolveHeaderSearchState', () => {
     });
   });
 
+  it('leaves the location empty on a work arrangement page, which is a filter', () => {
+    const state = resolveHeaderSearchState(
+      '/jobs/locations/remote/mechanical-engineering',
+      {},
+      'Remote',
+      'Mechanical Engineering',
+    );
+
+    expect(state.location).toBeNull();
+    expect(state.query).toBe('Mechanical Engineering');
+  });
+
   it('prefills a canonical skill route as a skill term', () => {
     expect(
       resolveHeaderSearchState(

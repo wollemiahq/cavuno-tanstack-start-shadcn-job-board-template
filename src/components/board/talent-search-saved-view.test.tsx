@@ -77,6 +77,7 @@ function candidate(id: string, name: string): TalentDirectoryEntry {
     skills: [],
     experiences: [],
     education: [],
+    customFieldMedia: {},
     customFieldValues: {},
     objectReferences: [],
     distanceKm: null,

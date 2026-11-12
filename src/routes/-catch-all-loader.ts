@@ -14,6 +14,11 @@ import type { resolveRedirect } from '../server/queries';
  *    off) goes to the same page in the board's language, else
  * 3. 404.
  *
+ * The redirect lookup sends the URL the visitor typed (`requestedPath`),
+ * locale prefix and localized words kept, like every other route's miss: a
+ * rule's `from` is a URL as it appears in the browser, and the splat param is
+ * the delocalized path the router matched (`/fr/foo` arrives as `foo`).
+ *
  * Both redirects are 308s. A configured redirect wins, so an operator can
  * still send a disabled locale's URLs anywhere they like. The locale step
  * is path logic and reads no board data; it runs only for a path that
@@ -33,15 +38,13 @@ export function createCatchAllLoader(
   resolveDisabledLocale: typeof resolveDisabledLocaleRedirect,
 ) {
   return async ({
-    params,
     location,
   }: {
-    params: { _splat?: string };
-    location: { href: string; searchStr: string };
+    location: { href: string; publicHref: string; searchStr: string };
   }): Promise<never> => {
     const target = await managedRedirectTarget(
       resolve,
-      `/${params._splat ?? ''}`,
+      requestedPath(location),
     );
     if (target) throw managedRedirect(target);
     // The path as requested, still percent-encoded: `location.pathname` is
@@ -67,8 +70,10 @@ export function createCatchAllLoader(
 
 /**
  * 308 to the board's configured redirect for `path`, else 404. Shared by
- * routes whose own lookup missed (a retired blog post), so every managed
- * redirect gets the same refusal and failure handling.
+ * routes whose own lookup missed (a retired blog post, a removed company or
+ * job, an unknown taxonomy slug), so every managed redirect gets the same
+ * refusal and failure handling. Called only on the miss: a page that renders
+ * never pays for the lookup.
  */
 export async function followManagedRedirect(
   resolve: typeof resolveRedirect,
@@ -77,6 +82,22 @@ export async function followManagedRedirect(
   const target = await managedRedirectTarget(resolve, path);
   if (target) throw managedRedirect(target);
   throw notFound();
+}
+
+/**
+ * The path the visitor requested, as they typed it: localized segments and
+ * any locale prefix kept (`/bedrijven/acme`), percent-decoded like a route
+ * param. A route's own params come from the delocalized path the router
+ * matches (`/companies/acme`), but operators write redirect rules against the
+ * URLs visitors see, so a route whose lookup missed asks with this.
+ */
+export function requestedPath(location: { publicHref: string }): string {
+  const [pathname = '/'] = location.publicHref.split(/[?#]/, 1);
+  try {
+    return decodeURI(pathname);
+  } catch {
+    return pathname;
+  }
 }
 
 /** The configured redirect target for `path`, or null. A refused lookup

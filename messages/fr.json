@@ -1714,6 +1714,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Offres en télétravail",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre en télétravail",
+        "countPlural=*": "{countLabel} offres en télétravail"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Offres {category} en télétravail",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} en télétravail",
+        "countPlural=*": "{countLabel} offres {category} en télétravail"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Offres {skill} en télétravail",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} en télétravail",
+        "countPlural=*": "{countLabel} offres {skill} en télétravail"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Offres en hybride",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre en hybride",
+        "countPlural=*": "{countLabel} offres en hybride"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Offres {category} en hybride",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} en hybride",
+        "countPlural=*": "{countLabel} offres {category} en hybride"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Offres {skill} en hybride",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} en hybride",
+        "countPlural=*": "{countLabel} offres {skill} en hybride"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Offres sur site",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre sur site",
+        "countPlural=*": "{countLabel} offres sur site"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Offres {category} sur site",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} sur site",
+        "countPlural=*": "{countLabel} offres {category} sur site"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Offres {skill} sur site",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} sur site",
+        "countPlural=*": "{countLabel} offres {skill} sur site"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Changer le logo",
   "logoUpload_uploadErrorText": "Échec de l’envoi — essayez une image plus petite.",
   "logoUpload_uploadingLabel": "Envoi en cours…",

@@ -1786,6 +1786,165 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Oferty pracy zdalnej",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy zdalnej ({countLabel})",
+        "countPlural=few": "Oferty pracy zdalnej ({countLabel})",
+        "countPlural=many": "Oferty pracy zdalnej ({countLabel})",
+        "countPlural=*": "Oferty pracy zdalnej ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Oferty pracy zdalnej: {category}",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy zdalnej: {category} ({countLabel})",
+        "countPlural=few": "Oferty pracy zdalnej: {category} ({countLabel})",
+        "countPlural=many": "Oferty pracy zdalnej: {category} ({countLabel})",
+        "countPlural=*": "Oferty pracy zdalnej: {category} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Oferty pracy zdalnej: {skill}",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy zdalnej: {skill} ({countLabel})",
+        "countPlural=few": "Oferty pracy zdalnej: {skill} ({countLabel})",
+        "countPlural=many": "Oferty pracy zdalnej: {skill} ({countLabel})",
+        "countPlural=*": "Oferty pracy zdalnej: {skill} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Oferty pracy hybrydowej",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy hybrydowej ({countLabel})",
+        "countPlural=few": "Oferty pracy hybrydowej ({countLabel})",
+        "countPlural=many": "Oferty pracy hybrydowej ({countLabel})",
+        "countPlural=*": "Oferty pracy hybrydowej ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Oferty pracy hybrydowej: {category}",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy hybrydowej: {category} ({countLabel})",
+        "countPlural=few": "Oferty pracy hybrydowej: {category} ({countLabel})",
+        "countPlural=many": "Oferty pracy hybrydowej: {category} ({countLabel})",
+        "countPlural=*": "Oferty pracy hybrydowej: {category} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Oferty pracy hybrydowej: {skill}",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy hybrydowej: {skill} ({countLabel})",
+        "countPlural=few": "Oferty pracy hybrydowej: {skill} ({countLabel})",
+        "countPlural=many": "Oferty pracy hybrydowej: {skill} ({countLabel})",
+        "countPlural=*": "Oferty pracy hybrydowej: {skill} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Oferty pracy stacjonarnej",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy stacjonarnej ({countLabel})",
+        "countPlural=few": "Oferty pracy stacjonarnej ({countLabel})",
+        "countPlural=many": "Oferty pracy stacjonarnej ({countLabel})",
+        "countPlural=*": "Oferty pracy stacjonarnej ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Oferty pracy stacjonarnej: {category}",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy stacjonarnej: {category} ({countLabel})",
+        "countPlural=few": "Oferty pracy stacjonarnej: {category} ({countLabel})",
+        "countPlural=many": "Oferty pracy stacjonarnej: {category} ({countLabel})",
+        "countPlural=*": "Oferty pracy stacjonarnej: {category} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Oferty pracy stacjonarnej: {skill}",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy stacjonarnej: {skill} ({countLabel})",
+        "countPlural=few": "Oferty pracy stacjonarnej: {skill} ({countLabel})",
+        "countPlural=many": "Oferty pracy stacjonarnej: {skill} ({countLabel})",
+        "countPlural=*": "Oferty pracy stacjonarnej: {skill} ({countLabel})"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Zmień logo",
   "logoUpload_uploadErrorText": "Przesyłanie nie powiodło się — spróbuj mniejszego obrazu.",
   "logoUpload_uploadingLabel": "Przesyłanie…",

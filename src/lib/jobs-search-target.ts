@@ -12,6 +12,7 @@ import {
   type JobsFilters,
 } from '@/lib/jobs-search';
 import type { UrlSearchInput } from '@/lib/pagination';
+import { withWorkArrangementFilter } from '@/lib/work-arrangement';
 
 export type JobsSearchFilters = Pick<
   JobsFilters,
@@ -76,7 +77,8 @@ export type JobsSearchTarget =
  * The filters a site header search keeps from the jobs listing the visitor
  * is on, so a new keyword or place does not silently drop the workplace,
  * type and seniority they picked. Only `/jobs` itself holds job custom-field
- * (`cf.*`) filters. Off a jobs listing nothing carries over.
+ * (`cf.*`) filters. Off a jobs listing nothing carries over. A work
+ * arrangement page's arrangement carries over as the workplace filter.
  */
 export function jobsFiltersFromHeader(
   pathname: string,
@@ -88,7 +90,11 @@ export function jobsFiltersFromHeader(
     return { ...compactFilters(search), ...pickCustomFieldSearch(search) };
   }
   if (path.startsWith('/jobs/')) {
-    return compactFilters(parseJobsSearch(current));
+    // A work arrangement page holds its arrangement in the path.
+    const location = path.match(/^\/jobs\/locations\/([^/]+)/)?.[1];
+    return compactFilters(
+      withWorkArrangementFilter(location, parseJobsSearch(current)),
+    );
   }
   return {};
 }

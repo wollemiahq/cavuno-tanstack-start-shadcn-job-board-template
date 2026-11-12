@@ -136,6 +136,7 @@ const profile = {
   education: [],
   skills: [],
   languages: [],
+  customFieldMedia: {},
   customFieldValues: {},
   objectReferences: [],
   resumeUrl: null,

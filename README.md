@@ -176,6 +176,7 @@ Feeds, metadata, redirects, and other machine endpoints ship alongside them:
 | Jobs search (filters + master/detail) | `/jobs`, `/jobs/locations` |
 | Job detail (meta + Google for Jobs JSON-LD) | `/companies/:companySlug/jobs/:jobSlug` |
 | Programmatic SEO job listings | `/jobs/:keyword`, `/jobs/skills/:skill`, `/jobs/locations/:location`, `/jobs/locations/:location/:keyword`, `/jobs/locations/:location/skills/:skill` |
+| Work arrangement job listings | `/jobs/locations/remote`, `/jobs/locations/hybrid`, `/jobs/locations/on-site`, and their `/:keyword` and `/skills/:skill` combinations |
 | Companies, company jobs, and company salaries | `/companies`, `/companies/:companySlug`, `/companies/markets/:market`, `/companies/:companySlug/jobs`, `/companies/:companySlug/salaries`, `/companies/:companySlug/salaries/:categorySlug` |
 | Salaries hubs | `/salaries`, `/salaries/companies`, `/salaries/titles`, `/salaries/skills`, `/salaries/locations` |
 | Salary title and skill explorers | `/salaries/titles/:slug`, `/salaries/titles/:slug/locations`, `/salaries/titles/:slug/:locationSlug`, `/salaries/skills/:slug`, `/salaries/skills/:slug/locations`, `/salaries/skills/:slug/:locationSlug` |
@@ -203,6 +204,13 @@ Cross-cutting capabilities that ship on top of those routes:
   `sitemap.xml`, `robots.txt`, job and blog RSS feeds, and OpenGraph images.
   Job-detail URLs mirror Cavuno's hosted board, so a board migrating hosted →
   headless keeps its indexed URLs.
+- **Work arrangement pages**: `remote`, `hybrid` and `on-site` in the
+  location slot list remote, hybrid and on-site jobs under their own headings
+  ("Remote jobs"). Choosing one in the Workplace filter opens its page, and
+  `?remoteOption=` URLs redirect there; on a real place the filter stays a
+  query parameter. The remote page is indexed once it lists enough jobs (the
+  same floor the sitemap uses); the hybrid, on-site and combination pages
+  stay `noindex, follow`. The rules live in `src/lib/work-arrangement.ts`.
 - **Real-data discipline** — the design handles messy data by construction:
   long titles clamp, absent salaries are omitted (never an empty label), skill
   tags cap at `3 + N`, missing logos fall back to initials.

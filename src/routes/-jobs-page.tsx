@@ -11,6 +11,7 @@ import { useRootSession } from '@/components/root-session';
 import { resolveCustomFieldFilters } from '@/lib/custom-field-filters';
 import { jobAlertDefaultsFromSearch } from '@/lib/job-alert-defaults';
 import { pageSearchValue } from '@/lib/pagination';
+import { workArrangementTarget } from '@/lib/work-arrangement';
 import { saveJob } from '@/server/account';
 
 const JOBS_PAGE_SIZE = 20;
@@ -58,16 +59,18 @@ export function JobsPage() {
           saveJob({ data: { jobId } }).then(() => undefined)
         }
         relatedSearches={relatedSearches}
-        onFiltersChange={(next) =>
+        onFiltersChange={(next) => {
+          // Choosing one work arrangement opens its page.
+          const target = workArrangementTarget({}, next);
           navigate({
-            to: '/jobs',
+            ...(target ?? { to: '/jobs' }),
             search: () => ({
-              ...next,
+              ...(target ? target.search : next),
               page: undefined,
               selectedJob: undefined,
             }),
-          })
-        }
+          });
+        }}
         onPageChange={(next) =>
           navigate({
             to: '/jobs',

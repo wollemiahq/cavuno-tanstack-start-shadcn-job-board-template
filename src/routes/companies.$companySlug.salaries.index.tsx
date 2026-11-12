@@ -1,10 +1,12 @@
 import { isNotFound } from '@cavuno/board';
 import { companySalaryPath, salaryLocationPath } from '@cavuno/board/paths';
-import { createFileRoute, notFound } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getCompanySalariesPage } from '../server/companies-pages';
+import { resolveRedirect } from '../server/queries';
+import { followManagedRedirect, requestedPath } from './-catch-all-loader';
 import { SalaryNotFoundPage } from './-salary-page-layout';
 
 import {
@@ -28,13 +30,14 @@ import { Text } from '@/components/text';
 
 export const Route = createFileRoute('/companies/$companySlug/salaries/')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     try {
       return await getCompanySalariesPage({
         data: { companySlug: params.companySlug },
       });
     } catch (error) {
-      if (isNotFound(error)) throw notFound();
+      if (isNotFound(error))
+        return followManagedRedirect(resolveRedirect, requestedPath(location));
       throw error;
     }
   },
