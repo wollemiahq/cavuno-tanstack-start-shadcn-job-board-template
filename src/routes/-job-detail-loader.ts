@@ -1,5 +1,4 @@
 import { isNotFound, type PublicJobCard } from '@cavuno/board';
-import { jobDetailPath } from '@cavuno/board/paths';
 import { redirect } from '@tanstack/react-router';
 
 import { followManagedRedirect, requestedPath } from './-catch-all-loader';
@@ -70,8 +69,11 @@ export function createJobDetailLoader(
         page.job.slug &&
         actualCompanySlug !== params.companySlug
       )
+        // `to` + params, not `href`: the router localizes it (an `href` skips
+        // the rewrite, so a translated board took a second hop).
         throw redirect({
-          href: jobDetailPath(actualCompanySlug, page.job.slug),
+          to: '/companies/$companySlug/jobs/$jobSlug',
+          params: { companySlug: actualCompanySlug, jobSlug: page.job.slug },
           statusCode: 301,
         });
       const { user, applicationState } = session;
