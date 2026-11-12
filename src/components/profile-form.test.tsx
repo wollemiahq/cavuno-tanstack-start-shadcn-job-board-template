@@ -253,7 +253,7 @@ describe('ProfileForm — operator form layout', () => {
     expect(mocks.updateProfile).not.toHaveBeenCalled();
   });
 
-  it('saves an uploaded and reordered gallery as its ordered file IDs', async () => {
+  it('holds Save until an upload finishes, then saves the gallery with it', async () => {
     mocks.updateProfile.mockResolvedValue({ ok: true });
     mocks.updateCustomFields.mockResolvedValue({});
     const image = (id: string) => ({
@@ -320,21 +320,11 @@ describe('ProfileForm — operator form layout', () => {
       expect.any(File),
     );
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.customFieldUpload_imageActionsLabel({ position: 2, total: 2 }),
-      }),
-    );
-    fireEvent.click(
-      await screen.findByRole('menuitem', {
-        name: m.customFieldUpload_moveEarlierLabel(),
-      }),
-    );
     fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
 
     await waitFor(() =>
       expect(mocks.updateCustomFields).toHaveBeenCalledWith({
-        data: { values: { portfolio: ['draft', 'saved'] } },
+        data: { values: { portfolio: ['saved', 'draft'] } },
       }),
     );
   });

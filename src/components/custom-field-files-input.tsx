@@ -2,7 +2,27 @@
 
 import { useRef, useState } from 'react';
 
-import { FileText, MoreHorizontal, Upload } from 'lucide-react';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type DragEndEvent,
+  type UniqueIdentifier,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { FileText, Upload, X } from 'lucide-react';
 
 import { sizeLabel } from '@/board/custom-field-display';
 import type { ProfileFieldValue } from '@/board/profile-field-writes';
@@ -17,12 +37,6 @@ import {
   AttachmentTrigger,
 } from '@/components/ui/attachment';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { FieldDescription, FieldError } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { boardErrorMessage } from '@/lib/board-error-message';
@@ -160,13 +174,55 @@ export function CustomFieldFilesInput({
 
   // By ID, not by the shown position: a saved ID whose file the owner read
   // no longer returns is kept in `ids` but not shown.
-  function move(fileId: string, by: -1 | 1) {
-    const next = [...ids];
-    const index = next.indexOf(fileId);
-    const [moved] = next.splice(index, 1);
-    next.splice(index + by, 0, moved!);
-    commit(next);
+  function reorder({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
+    commit(
+      arrayMove(
+        ids,
+        ids.indexOf(String(active.id)),
+        ids.indexOf(String(over.id)),
+      ),
+    );
   }
+
+  const sensors = useSensors(
+    // A few pixels of travel before a drag starts, so a click on the remove
+    // button stays a click; a long press on touch, so the page still scrolls.
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 6 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+  const position = (id: UniqueIdentifier) =>
+    shown.findIndex((file) => file.id === id) + 1;
+  const announcements: Announcements = {
+    onDragStart: ({ active }) =>
+      m.customFieldUpload_reorderPickedUp({
+        position: position(active.id),
+        total: shown.length,
+      }),
+    onDragOver: ({ over }) =>
+      over
+        ? m.customFieldUpload_reorderMoved({
+            position: position(over.id),
+            total: shown.length,
+          })
+        : undefined,
+    onDragEnd: ({ active, over }) =>
+      over
+        ? m.customFieldUpload_reorderDropped({
+            position: position(over.id),
+            total: shown.length,
+          })
+        : m.customFieldUpload_reorderCancelled({
+            position: position(active.id),
+          }),
+    onDragCancel: ({ active }) =>
+      m.customFieldUpload_reorderCancelled({ position: position(active.id) }),
+  };
 
   const busy = pending > 0;
   const picker = (
@@ -241,72 +297,45 @@ export function CustomFieldFilesInput({
     <div className="space-y-2">
       {picker}
       {shown.length > 0 || busy ? (
-        <ul className="flex flex-wrap gap-2" aria-label={label}>
-          {shown.map((file, index) => (
-            <li key={file.id}>
-              <Attachment orientation="vertical">
-                <AttachmentMedia variant="image">
-                  <img
-                    src={file.url}
-                    alt={m.customFieldDisplay_galleryImagePosition({
-                      position: index + 1,
-                      total: shown.length,
-                    })}
-                    loading="lazy"
-                  />
-                </AttachmentMedia>
-                <AttachmentActions>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="icon-xs"
-                          aria-label={m.customFieldUpload_imageActionsLabel({
-                            position: index + 1,
-                            total: shown.length,
-                          })}
-                        >
-                          <MoreHorizontal aria-hidden />
-                        </Button>
-                      }
-                    />
-                    <DropdownMenuContent align="end">
-                      {index > 0 ? (
-                        <DropdownMenuItem onClick={() => move(file.id, -1)}>
-                          {m.customFieldUpload_moveEarlierLabel()}
-                        </DropdownMenuItem>
-                      ) : null}
-                      {index < shown.length - 1 ? (
-                        <DropdownMenuItem onClick={() => move(file.id, 1)}>
-                          {m.customFieldUpload_moveLaterLabel()}
-                        </DropdownMenuItem>
-                      ) : null}
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() =>
-                          commit(ids.filter((fileId) => fileId !== file.id))
-                        }
-                      >
-                        {m.customFieldUpload_removeLabel()}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </AttachmentActions>
-              </Attachment>
-            </li>
-          ))}
-          {busy ? (
-            <li>
-              <Attachment orientation="vertical" state="uploading">
-                <AttachmentMedia>
-                  <Spinner />
-                </AttachmentMedia>
-              </Attachment>
-            </li>
-          ) : null}
-        </ul>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={reorder}
+          accessibility={{
+            announcements,
+            screenReaderInstructions: {
+              draggable: m.customFieldUpload_reorderInstructions(),
+            },
+          }}
+        >
+          <SortableContext
+            items={shown.map((file) => file.id)}
+            strategy={rectSortingStrategy}
+          >
+            <ul className="flex flex-wrap gap-2" aria-label={label}>
+              {shown.map((file, index) => (
+                <SortableImage
+                  key={file.id}
+                  file={file}
+                  position={index + 1}
+                  total={shown.length}
+                  onRemove={() =>
+                    commit(ids.filter((fileId) => fileId !== file.id))
+                  }
+                />
+              ))}
+              {busy ? (
+                <li>
+                  <Attachment orientation="vertical" state="uploading">
+                    <AttachmentMedia>
+                      <Spinner />
+                    </AttachmentMedia>
+                  </Attachment>
+                </li>
+              ) : null}
+            </ul>
+          </SortableContext>
+        </DndContext>
       ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button
@@ -328,5 +357,77 @@ export function CustomFieldFilesInput({
       </div>
       {error ? <FieldError>{error}</FieldError> : null}
     </div>
+  );
+}
+
+/**
+ * One gallery image. The image is the drag handle (mouse, long press, or
+ * focus and space then the arrow keys); the remove button sits beside it,
+ * not inside it, so it is never a button within a button.
+ */
+function SortableImage({
+  file,
+  position,
+  total,
+  onRemove,
+}: {
+  file: ProfileFieldMedia;
+  position: number;
+  total: number;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: file.id,
+    attributes: {
+      roleDescription: m.customFieldUpload_reorderRoleDescription(),
+    },
+  });
+  return (
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        zIndex: isDragging ? 1 : undefined,
+        position: 'relative',
+      }}
+    >
+      <Attachment orientation="vertical">
+        <AttachmentMedia
+          ref={setActivatorNodeRef}
+          variant="image"
+          className="focus-visible:ring-ring/30 cursor-grab touch-manipulation outline-none focus-visible:ring-3 active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <img
+            src={file.url}
+            alt={m.customFieldDisplay_galleryImagePosition({ position, total })}
+            loading="lazy"
+            draggable={false}
+          />
+        </AttachmentMedia>
+        <AttachmentActions>
+          <AttachmentAction
+            variant="secondary"
+            aria-label={m.customFieldUpload_removeImageLabel({
+              position,
+              total,
+            })}
+            onClick={onRemove}
+          >
+            <X aria-hidden />
+          </AttachmentAction>
+        </AttachmentActions>
+      </Attachment>
+    </li>
   );
 }

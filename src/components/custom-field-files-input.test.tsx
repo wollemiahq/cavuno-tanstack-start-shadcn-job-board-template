@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -21,7 +22,10 @@ import {
 import { m } from '@/paraglide/messages';
 import type { ProfileFieldMedia } from '@cavuno/board';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function media(id: string): ProfileFieldMedia {
   return {
@@ -69,6 +73,31 @@ function pick(files: File[]) {
 
 const png = (name: string) => new File(['x'], name, { type: 'image/png' });
 
+/**
+ * jsdom lays nothing out, so a keyboard drag has no neighbour to move to.
+ * Place each gallery tile 100px right of the one before it.
+ */
+/** One key press, then let dnd-kit measure and re-render before the next. */
+async function press(element: HTMLElement, code: string) {
+  await act(async () => {
+    fireEvent.keyDown(element, { code });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
+
+function layOutTilesInARow() {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+    function (this: HTMLElement) {
+      const tile = this.closest('li');
+      const index = tile
+        ? Array.from(tile.parentElement!.children).indexOf(tile)
+        : 0;
+      const left = index * 100;
+      return DOMRect.fromRect({ x: left, y: 0, width: 96, height: 96 });
+    },
+  );
+}
+
 describe('CustomFieldFilesInput — gallery', () => {
   it('uploads picked images in order and appends their IDs to the saved ones', async () => {
     let next = 0;
@@ -101,7 +130,8 @@ describe('CustomFieldFilesInput — gallery', () => {
     expect(screen.getAllByRole('img')).toHaveLength(3);
   });
 
-  it('moves and removes an image through its menu', async () => {
+  it('reorders an image by keyboard drag and removes one with its button', async () => {
+    layOutTilesInARow();
     const onChange = vi.fn();
     render(
       <Harness
@@ -115,35 +145,60 @@ describe('CustomFieldFilesInput — gallery', () => {
       />,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: m.customFieldUpload_imageActionsLabel({ position: 1, total: 3 }),
+    // Pick up the first image, move it one place right, drop it.
+    const first = screen.getByRole('button', {
+      name: m.customFieldDisplay_galleryImagePosition({
+        position: 1,
+        total: 3,
       }),
+    });
+    first.focus();
+    await press(first, 'Space');
+    await press(first, 'ArrowRight');
+    await press(first, 'Space');
+    await waitFor(() =>
+      expect(onChange).toHaveBeenLastCalledWith(['two', 'one', 'three']),
     );
-    // The first image cannot move earlier.
-    expect(
-      screen.queryByRole('menuitem', {
-        name: m.customFieldUpload_moveEarlierLabel(),
-      }),
-    ).toBeNull();
-    fireEvent.click(
-      await screen.findByRole('menuitem', {
-        name: m.customFieldUpload_moveLaterLabel(),
-      }),
-    );
-    expect(onChange).toHaveBeenLastCalledWith(['two', 'one', 'three']);
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: m.customFieldUpload_imageActionsLabel({ position: 3, total: 3 }),
-      }),
-    );
-    fireEvent.click(
-      await screen.findByRole('menuitem', {
-        name: m.customFieldUpload_removeLabel(),
+        name: m.customFieldUpload_removeImageLabel({ position: 3, total: 3 }),
       }),
     );
     expect(onChange).toHaveBeenLastCalledWith(['two', 'one']);
+  });
+
+  it('keeps the order when a keyboard drag is cancelled', async () => {
+    layOutTilesInARow();
+    const onChange = vi.fn();
+    render(
+      <Harness
+        type="image_gallery"
+        initial={['one', 'two']}
+        uploads={{
+          upload: vi.fn(),
+          media: { portfolio: [media('one'), media('two')] },
+        }}
+        onChange={onChange}
+      />,
+    );
+
+    const first = screen.getByRole('button', {
+      name: m.customFieldDisplay_galleryImagePosition({
+        position: 1,
+        total: 2,
+      }),
+    });
+    first.focus();
+    await press(first, 'Space');
+    await press(first, 'ArrowRight');
+    await press(first, 'Escape');
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('img').map((img) => img.getAttribute('src')),
+      ).toEqual(['https://files.test/one', 'https://files.test/two']),
+    );
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it(`uploads only up to ${GALLERY_MAX_IMAGES} images and says why`, async () => {
