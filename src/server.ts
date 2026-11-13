@@ -21,6 +21,11 @@
  * asking for text/markdown, say) would get Start's 406; it gets the HTML
  * page instead (htmlPageRequest).
  *
+ * Markdown twins: a `/x.md` URL for a page with a twin
+ * (src/lib/markdown-twin/routes.ts) is handed to Start addressed to the
+ * internal twin route, with the original URL still used for locale
+ * detection and the cache key. Outside requests for that route 404.
+ *
  * An uncaught server error, or a 500 that Start rendered itself, logs one
  * `starter_server_error` line (src/lib/server-error-log.server.ts).
  *
@@ -45,6 +50,12 @@ import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
 import { isMachinePath } from './lib/localized-path';
 import { localizedUrlRedirect } from './lib/localized-url-redirect';
+import {
+  isMarkdownTwinRoutePath,
+  markdownTwinRedirectLocation,
+  markdownTwinRouteRequest,
+  resolveMarkdownTwin,
+} from './lib/markdown-twin/routes';
 import {
   readPublicHtmlCache,
   withPublicHtmlCacheHeaders,
@@ -112,6 +123,27 @@ async function serve(
     if (clientError) return withBaselineSecurityHeaders(clientError, request);
   }
 
+  if (isMarkdownTwinRoutePath(pathname)) {
+    return withBaselineSecurityHeaders(
+      new Response('Not Found\n', {
+        status: 404,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      }),
+      request,
+    );
+  }
+  const twin = resolveMarkdownTwin(request);
+  const twinRedirect = twin && markdownTwinRedirectLocation(request, twin);
+  if (twinRedirect) {
+    return withBaselineSecurityHeaders(
+      new Response(null, {
+        status: 308,
+        headers: { Location: twinRedirect, 'Cache-Control': 'max-age=86400' },
+      }),
+      request,
+    );
+  }
+
   // Canonical (English) segments 308 to the board's localized URL before
   // anything renders or reads the cache; the router rewrite stays the
   // client-side safety net.
@@ -125,7 +157,10 @@ async function serve(
 
   const rendered = await paraglideMiddleware(
     localeDetectionRequest(request),
-    () => startHandler(htmlPageRequest(request)),
+    () =>
+      startHandler(
+        twin ? markdownTwinRouteRequest(request) : htmlPageRequest(request),
+      ),
   );
   const response = withPublicHtmlCacheHeaders(
     request,
