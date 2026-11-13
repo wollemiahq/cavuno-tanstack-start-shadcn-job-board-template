@@ -1,58 +1,39 @@
 // @vitest-environment jsdom
 
-import '@testing-library/jest-dom/vitest';
-import { isRedirect } from '@tanstack/react-router';
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import "@testing-library/jest-dom/vitest";
+import { isRedirect } from "@tanstack/react-router";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createEmployerDashboardLoader,
   EmployerDashboardView,
   type EmployerDashboardLoaderDependencies,
   type EmployerDashboardViewDependencies,
-} from './-employers.dashboard';
-import {
-  EmployersPageView,
-  type EmployersPageViewDependencies,
-} from './-employers.index';
+} from "./-employers.dashboard";
+import { EmployersPageView, type EmployersPageViewDependencies } from "./-employers.index";
 import {
   createEmployerOnboardingLoader,
   EmployerOnboardingPageView,
   type EmployerOnboardingLoaderDependencies,
   type EmployerOnboardingViewDependencies,
-} from './-employers.onboarding';
-import {
-  Route as DashboardRoute,
-  validateEmployerDashboardSearch,
-} from './employers.dashboard';
-import { Route as OnboardingRoute } from './employers.onboarding.$slug';
+} from "./-employers.onboarding";
+import { Route as DashboardRoute, validateEmployerDashboardSearch } from "./employers.dashboard";
+import { Route as OnboardingRoute } from "./employers.onboarding.$slug";
 
-import { m } from '@/paraglide/messages';
-import { getLocale } from '@/paraglide/runtime';
-import { renderRouted } from '@/test/render-routed';
-import type { CompanyMembership, Plan } from '@cavuno/board';
+import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
+import { renderRouted } from "@/test/render-routed";
+import type { CompanyMembership, Plan } from "@cavuno/board";
 
-const listCompanies =
-  vi.fn<EmployerDashboardLoaderDependencies['listCompanies']>();
-const getSeoBase = vi.fn<EmployerDashboardLoaderDependencies['getSeoBase']>();
-const refreshSession =
-  vi.fn<EmployerDashboardLoaderDependencies['refreshSession']>();
-const searchCompanies =
-  vi.fn<EmployerDashboardViewDependencies['searchCompanies']>();
-const claimCompany = vi.fn<EmployerDashboardViewDependencies['claimCompany']>();
-const createCompany =
-  vi.fn<EmployerDashboardViewDependencies['createCompany']>();
-const sendWorkEmail =
-  vi.fn<EmployerOnboardingViewDependencies['sendWorkEmail']>();
-const cancelClaim = vi.fn<EmployerOnboardingViewDependencies['cancelClaim']>();
+const listCompanies = vi.fn<EmployerDashboardLoaderDependencies["listCompanies"]>();
+const getSeoBase = vi.fn<EmployerDashboardLoaderDependencies["getSeoBase"]>();
+const refreshSession = vi.fn<EmployerDashboardLoaderDependencies["refreshSession"]>();
+const searchCompanies = vi.fn<EmployerDashboardViewDependencies["searchCompanies"]>();
+const claimCompany = vi.fn<EmployerDashboardViewDependencies["claimCompany"]>();
+const createCompany = vi.fn<EmployerDashboardViewDependencies["createCompany"]>();
+const sendWorkEmail = vi.fn<EmployerOnboardingViewDependencies["sendWorkEmail"]>();
+const cancelClaim = vi.fn<EmployerOnboardingViewDependencies["cancelClaim"]>();
 const invalidate = vi.fn<() => Promise<void>>();
 const navigateToOnboarding = vi.fn<(slug: string) => Promise<void>>();
 const navigateToDashboard = vi.fn<() => Promise<void>>();
@@ -76,13 +57,7 @@ const dashboardViewDependencies = {
   invalidate,
   navigateToOnboarding,
   companyRouteElement: ({ approved, slug }) => (
-    <a
-      href={
-        approved
-          ? `/employers/companies/${slug}`
-          : `/employers/onboarding/${slug}`
-      }
-    />
+    <a href={approved ? `/employers/companies/${slug}` : `/employers/onboarding/${slug}`} />
   ),
 } satisfies EmployerDashboardViewDependencies;
 
@@ -118,55 +93,55 @@ const employersPageViewDependencies = {
 } satisfies EmployersPageViewDependencies;
 
 const plan = {
-  object: 'plan',
-  id: 'plan-growth',
-  name: 'Growth',
-  description: 'For growing hiring teams',
-  purpose: 'job_posting',
-  kind: 'subscription',
-  billingInterval: 'month',
+  object: "plan",
+  id: "plan-growth",
+  name: "Growth",
+  description: "For growing hiring teams",
+  purpose: "job_posting",
+  kind: "subscription",
+  billingInterval: "month",
   isRecommended: true,
   displayOrder: 1,
   invoiceOnly: false,
-  publishTiming: 'on_payment',
+  publishTiming: "on_payment",
   netTermsDays: null,
   billingIntervalCount: null,
-  pricingMode: 'priced',
+  pricingMode: "priced",
   priceText: null,
   ctaText: null,
   ctaDestination: null,
-  price: { currency: 'usd', amountCents: 9900, stripePriceId: 'price_growth' },
+  price: { currency: "usd", amountCents: 9900, stripePriceId: "price_growth" },
   featureSummary: {
     durationDays: 30,
     maxActiveJobs: 5,
     featuredSlots: 1,
-    featureSelectionMode: 'manual',
+    featureSelectionMode: "manual",
   },
   features: {},
 } satisfies Plan;
 
 const membership = {
-  id: 'membership-acme',
-  object: 'company_membership',
-  status: 'approved',
-  role: 'owner',
-  workEmail: 'owner@acme.test',
-  workEmailVerifiedAt: '2026-07-14T00:00:00.000Z',
+  id: "membership-acme",
+  object: "company_membership",
+  status: "approved",
+  role: "owner",
+  workEmail: "owner@acme.test",
+  workEmailVerifiedAt: "2026-07-14T00:00:00.000Z",
   company: {
-    id: 'company-acme',
-    name: 'Acme Ventures',
-    slug: 'acme-ventures',
-    website: 'acme.test',
+    id: "company-acme",
+    name: "Acme Ventures",
+    slug: "acme-ventures",
+    website: "acme.test",
     logoUrl: null,
   },
 } satisfies CompanyMembership;
 
 function companyList(
   data: readonly CompanyMembership[],
-): Awaited<ReturnType<EmployerDashboardLoaderDependencies['listCompanies']>> {
+): Awaited<ReturnType<EmployerDashboardLoaderDependencies["listCompanies"]>> {
   return {
-    object: 'list',
-    url: '/v1/me/companies',
+    object: "list",
+    url: "/v1/me/companies",
     hasMore: false,
     nextCursor: null,
     data: [...data],
@@ -174,35 +149,35 @@ function companyList(
 }
 
 function dashboardLoaderContext() {
-  const pathname = '/employers/dashboard';
+  const pathname = "/employers/dashboard";
   return {
     abortController: new AbortController(),
     preload: false,
     params: {},
     deps: {},
-    context: { origin: 'https://jobs.example.test' },
+    context: { origin: "https://jobs.example.test" },
     location: {
       href: pathname,
       pathname,
       search: {},
-      searchStr: '',
+      searchStr: "",
       state: { __TSR_index: 0 },
-      hash: '',
+      hash: "",
       publicHref: pathname,
       external: false,
     },
     navigate: vi.fn(),
     parentMatchPromise: new Promise<never>(() => undefined),
-    cause: 'enter' as const,
+    cause: "enter" as const,
     route: DashboardRoute,
   };
 }
 
 function onboardingLoaderContext() {
-  const pathname = '/employers/onboarding/acme-ventures';
+  const pathname = "/employers/onboarding/acme-ventures";
   return {
     ...dashboardLoaderContext(),
-    params: { slug: 'acme-ventures' },
+    params: { slug: "acme-ventures" },
     location: {
       ...dashboardLoaderContext().location,
       href: pathname,
@@ -219,7 +194,7 @@ afterEach(() => {
   for (const input of document.querySelectorAll<HTMLInputElement>(
     'input[type="password"], input[autocomplete="one-time-code"], input[type="email"], textarea[name="coverLetter"]',
   )) {
-    expect(input.form?.method).toBe('post');
+    expect(input.form?.method).toBe("post");
   }
   cleanup();
   vi.clearAllMocks();
@@ -227,9 +202,9 @@ afterEach(() => {
 
 beforeEach(() => {
   getSeoBase.mockResolvedValue({
-    boardName: 'Acme',
-    language: 'en',
-    origin: 'https://jobs.example.test',
+    boardName: "Acme",
+    language: "en",
+    origin: "https://jobs.example.test",
   });
   refreshSession.mockResolvedValue({ ok: false });
   invalidate.mockResolvedValue(undefined);
@@ -238,9 +213,9 @@ beforeEach(() => {
   showActionError.mockResolvedValue(undefined);
 });
 
-describe('employer entry surfaces', () => {
-  it('returns signed-out employers to the dashboard they originally requested', async () => {
-    listCompanies.mockRejectedValue(new Error('UNAUTHENTICATED'));
+describe("employer entry surfaces", () => {
+  it("returns signed-out employers to the dashboard they originally requested", async () => {
+    listCompanies.mockRejectedValue(new Error("UNAUTHENTICATED"));
 
     let result: unknown;
     try {
@@ -252,21 +227,19 @@ describe('employer entry surfaces', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options).toMatchObject({
-      to: '/auth/sign-in',
-      search: { returnTo: '/employers/dashboard' },
+      to: "/auth/sign-in",
+      search: { returnTo: "/employers/dashboard" },
     });
   });
 
-  it('does not disguise a non-authentication employer failure as signed out', async () => {
-    listCompanies.mockRejectedValue(new Error('UPSTREAM_TIMEOUT'));
+  it("does not disguise a non-authentication employer failure as signed out", async () => {
+    listCompanies.mockRejectedValue(new Error("UPSTREAM_TIMEOUT"));
 
-    await expect(dashboardLoader(dashboardLoaderContext())).rejects.toThrow(
-      'UPSTREAM_TIMEOUT',
-    );
+    await expect(dashboardLoader(dashboardLoaderContext())).rejects.toThrow("UPSTREAM_TIMEOUT");
   });
 
-  it('sends an unverified employer back through verification for the dashboard', async () => {
-    listCompanies.mockRejectedValue(new Error('EMAIL_UNVERIFIED'));
+  it("sends an unverified employer back through verification for the dashboard", async () => {
+    listCompanies.mockRejectedValue(new Error("EMAIL_UNVERIFIED"));
 
     let result: unknown;
     try {
@@ -278,21 +251,21 @@ describe('employer entry surfaces', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options).toMatchObject({
-      to: '/auth/verify-email-required',
-      search: { returnTo: '/employers/dashboard' },
+      to: "/auth/verify-email-required",
+      search: { returnTo: "/employers/dashboard" },
     });
   });
 
   it.each([
-    ['one approved company', [membership], {}, {}],
+    ["one approved company", [membership], {}, {}],
     [
-      'one approved company after a work-email approval',
+      "one approved company after a work-email approval",
       [membership],
-      { verified: 'approved' },
-      { joined: '1' },
+      { verified: "approved" },
+      { joined: "1" },
     ],
   ] as const)(
-    'opens the company workspace directly for %s',
+    "opens the company workspace directly for %s",
     async (_case, memberships, deps, search) => {
       listCompanies.mockResolvedValue(companyList(memberships));
 
@@ -306,8 +279,8 @@ describe('employer entry surfaces', () => {
       expect(isRedirect(result)).toBe(true);
       if (!isRedirect(result)) return;
       expect(result.options).toMatchObject({
-        to: '/employers/companies/$slug',
-        params: { slug: 'acme-ventures' },
+        to: "/employers/companies/$slug",
+        params: { slug: "acme-ventures" },
       });
       expect(result.options.search).toEqual(search);
     },
@@ -315,44 +288,33 @@ describe('employer entry surfaces', () => {
 
   it.each([
     [
-      'two approved companies',
+      "two approved companies",
       [
         membership,
         {
           ...membership,
-          id: 'membership-globex',
-          company: { ...membership.company, id: 'globex', slug: 'globex' },
+          id: "membership-globex",
+          company: { ...membership.company, id: "globex", slug: "globex" },
         },
       ],
       {},
     ],
-    [
-      'one claim still awaiting approval',
-      [{ ...membership, status: 'awaiting_admin' }],
-      {},
-    ],
-    ['an employer adding another company', [membership], { add: true }],
-    [
-      'an employer continuing to another page',
-      [membership],
-      { returnTo: '/post' },
-    ],
-  ] as const)(
-    'keeps the company list for %s',
-    async (_case, memberships, deps) => {
-      listCompanies.mockResolvedValue(companyList(memberships));
+    ["one claim still awaiting approval", [{ ...membership, status: "awaiting_admin" }], {}],
+    ["an employer adding another company", [membership], { add: true }],
+    ["an employer continuing to another page", [membership], { returnTo: "/post" }],
+  ] as const)("keeps the company list for %s", async (_case, memberships, deps) => {
+    listCompanies.mockResolvedValue(companyList(memberships));
 
-      const result = await dashboardLoader({
-        ...dashboardLoaderContext(),
-        deps,
-      });
+    const result = await dashboardLoader({
+      ...dashboardLoaderContext(),
+      deps,
+    });
 
-      expect(result.data).toEqual(memberships);
-    },
-  );
+    expect(result.data).toEqual(memberships);
+  });
 
-  it('preserves the pending company path across employer sign-in', async () => {
-    listCompanies.mockRejectedValue(new Error('UNAUTHENTICATED'));
+  it("preserves the pending company path across employer sign-in", async () => {
+    listCompanies.mockRejectedValue(new Error("UNAUTHENTICATED"));
 
     let result: unknown;
     try {
@@ -364,127 +326,119 @@ describe('employer entry surfaces', () => {
     expect(isRedirect(result)).toBe(true);
     if (!isRedirect(result)) return;
     expect(result.options).toMatchObject({
-      to: '/auth/sign-in',
-      search: { returnTo: '/employers/onboarding/acme-ventures' },
+      to: "/auth/sign-in",
+      search: { returnTo: "/employers/onboarding/acme-ventures" },
     });
   });
 
-  it('sends a self-service employer offer into the matching public posting plan', () => {
+  it("sends a self-service employer offer into the matching public posting plan", () => {
     render(
       <EmployersPageView
         plans={[plan]}
         contactPlans={[]}
-        seo={{ boardName: 'Example Jobs' }}
+        seo={{ boardName: "Example Jobs" }}
         dependencies={employersPageViewDependencies}
       />,
     );
 
     expect(
-      screen.getByRole('heading', {
+      screen.getByRole("heading", {
         level: 1,
         name: m.employerLanding_title(),
       }),
     ).toBeVisible();
-    const growthCard = screen.getByText('Growth').closest('[data-slot="card"]');
+    const growthCard = screen.getByText("Growth").closest('[data-slot="card"]');
     if (!(growthCard instanceof HTMLElement)) {
-      throw new Error('The Growth plan must render in a card');
+      throw new Error("The Growth plan must render in a card");
     }
-    expect(
-      within(growthCard).getByText(m.employerLanding_recommendedBadge()),
-    ).toBeVisible();
+    expect(within(growthCard).getByText(m.employerLanding_recommendedBadge())).toBeVisible();
     // A job-posting plan's action posts a job — it is not a subscription.
     expect(
-      within(growthCard).getByRole('link', {
+      within(growthCard).getByRole("link", {
         name: m.siteHeader_postJobLabel(),
       }),
-    ).toHaveAttribute('href', '/post?plan=plan-growth');
+    ).toHaveAttribute("href", "/post?plan=plan-growth");
   });
 
-  it('does not send a talent-access subscription into the job-posting form', () => {
+  it("does not send a talent-access subscription into the job-posting form", () => {
     render(
       <EmployersPageView
         plans={[
           {
             ...plan,
-            id: 'plan-talent',
-            name: 'Talent access',
-            purpose: 'talent_access',
+            id: "plan-talent",
+            name: "Talent access",
+            purpose: "talent_access",
           },
         ]}
         contactPlans={[]}
-        seo={{ boardName: 'Example Jobs' }}
+        seo={{ boardName: "Example Jobs" }}
         dependencies={employersPageViewDependencies}
       />,
     );
 
     const talentCard = screen
-      .getAllByText('Talent access')
+      .getAllByText("Talent access")
       .map((element) => element.closest('[data-slot="card"]'))
       .find((element) => element !== null);
     if (!(talentCard instanceof HTMLElement)) {
-      throw new Error('The Talent access plan must render in a card');
+      throw new Error("The Talent access plan must render in a card");
     }
     expect(
-      within(talentCard).getByRole('link', {
+      within(talentCard).getByRole("link", {
         name: m.employerLanding_subscribeLabel(),
       }),
-    ).toHaveAttribute('href', '/employers');
+    ).toHaveAttribute("href", "/employers");
     expect(
       within(talentCard).queryByText(
-        m.employerLanding_featureActiveJobs({ count: 5, countLabel: '5' }),
+        m.employerLanding_featureActiveJobs({ count: 5, countLabel: "5" }),
       ),
     ).toBeNull();
     expect(
-      within(talentCard).queryByText(
-        m.employerLanding_featureListingDuration({ days: 30 }),
-      ),
+      within(talentCard).queryByText(m.employerLanding_featureListingDuration({ days: 30 })),
     ).toBeNull();
-    expect(
-      within(talentCard).getByText('For growing hiring teams'),
-    ).toBeVisible();
+    expect(within(talentCard).getByText("For growing hiring teams")).toBeVisible();
   });
 
-  it('shows membership pricing and benefits before handing purchase to the membership page', () => {
+  it("shows membership pricing and benefits before handing purchase to the membership page", () => {
     render(
       <EmployersPageView
         plans={[
           {
             ...plan,
-            id: 'plan-member',
-            name: 'Community member',
-            purpose: 'membership',
+            id: "plan-member",
+            name: "Community member",
+            purpose: "membership",
             price: {
-              currency: 'usd',
+              currency: "usd",
               amountCents: 1250,
-              stripePriceId: 'price_member',
+              stripePriceId: "price_member",
             },
             features: {
-              'membership.max_members': {
-                name: 'Team members',
-                value: '5',
-                dataType: 'integer',
+              "membership.max_members": {
+                name: "Team members",
+                value: "5",
+                dataType: "integer",
                 displayOrder: 1,
               },
             },
           },
         ]}
         contactPlans={[]}
-        seo={{ boardName: 'Example Jobs' }}
+        seo={{ boardName: "Example Jobs" }}
         dependencies={employersPageViewDependencies}
       />,
     );
 
-    const card = screen
-      .getByText('Community member')
-      .closest('[data-slot="card"]');
+    const card = screen.getByText("Community member").closest('[data-slot="card"]');
     if (!(card instanceof HTMLElement)) {
-      throw new Error('The membership plan must render in a card');
+      throw new Error("The membership plan must render in a card");
     }
     expect(
-      within(card).getByRole('link', {
+      within(card).getByRole("link", {
         name: m.memberships_joinLabel(),
       }),
-    ).toHaveAttribute('href', '/memberships');
+    ).toHaveAttribute("href", "/memberships");
   });
 
   it("lists a priced plan's custom attributes alongside its built-in features", () => {
@@ -494,46 +448,44 @@ describe('employer entry surfaces', () => {
           {
             ...plan,
             features: {
-              'custom.newsletter_feature': {
-                value: 'true',
-                name: 'Newsletter feature',
-                dataType: 'boolean',
+              "custom.newsletter_feature": {
+                value: "true",
+                name: "Newsletter feature",
+                dataType: "boolean",
               },
-              'custom.social_posts': {
-                value: '2',
-                name: 'Social posts',
-                dataType: 'integer',
+              "custom.social_posts": {
+                value: "2",
+                name: "Social posts",
+                dataType: "integer",
               },
             },
           },
         ]}
         contactPlans={[]}
-        seo={{ boardName: 'Example Jobs' }}
+        seo={{ boardName: "Example Jobs" }}
         dependencies={employersPageViewDependencies}
       />,
     );
 
-    const card = screen.getByText('Growth').closest('[data-slot="card"]');
+    const card = screen.getByText("Growth").closest('[data-slot="card"]');
     if (!(card instanceof HTMLElement)) {
-      throw new Error('The Growth plan must render in a card');
+      throw new Error("The Growth plan must render in a card");
     }
     expect(
-      within(card).getByText(
-        m.employerLanding_featureActiveJobs({ count: 5, countLabel: '5' }),
-      ),
+      within(card).getByText(m.employerLanding_featureActiveJobs({ count: 5, countLabel: "5" })),
     ).toBeVisible();
-    expect(within(card).getByText('Newsletter feature')).toBeVisible();
+    expect(within(card).getByText("Newsletter feature")).toBeVisible();
     expect(
       within(card).getByText(
         m.planFeature_countedValue({
-          name: 'Social posts',
+          name: "Social posts",
           value: (2).toLocaleString(getLocale()),
         }),
       ),
     ).toBeVisible();
   });
 
-  it('renders a quote-only tier as its price text and CTA, never as a price', () => {
+  it("renders a quote-only tier as its price text and CTA, never as a price", () => {
     // `pricingMode` is the authority: a contact plan can still carry a zeroed
     // price row, and reading `price` would advertise that tier as free.
     render(
@@ -542,94 +494,86 @@ describe('employer entry surfaces', () => {
         contactPlans={[
           {
             ...plan,
-            id: 'plan-enterprise',
-            name: 'Concierge hiring',
-            purpose: 'employer_service',
-            pricingMode: 'contact',
-            priceText: 'Priced per engagement',
-            ctaText: 'Talk to sales',
-            ctaDestination: 'mailto:sales@example.com',
-            price: { currency: 'usd', amountCents: 0, stripePriceId: null },
+            id: "plan-enterprise",
+            name: "Concierge hiring",
+            purpose: "employer_service",
+            pricingMode: "contact",
+            priceText: "Priced per engagement",
+            ctaText: "Talk to sales",
+            ctaDestination: "mailto:sales@example.com",
+            price: { currency: "usd", amountCents: 0, stripePriceId: null },
           },
         ]}
-        seo={{ boardName: 'Example Jobs' }}
+        seo={{ boardName: "Example Jobs" }}
         dependencies={employersPageViewDependencies}
       />,
     );
 
-    const card = screen
-      .getByText('Concierge hiring')
-      .closest('[data-slot="card"]');
+    const card = screen.getByText("Concierge hiring").closest('[data-slot="card"]');
     if (!(card instanceof HTMLElement)) {
-      throw new Error('The Concierge hiring plan must render in a card');
+      throw new Error("The Concierge hiring plan must render in a card");
     }
-    expect(within(card).getByText('Priced per engagement')).toBeVisible();
+    expect(within(card).getByText("Priced per engagement")).toBeVisible();
     expect(within(card).queryByText(m.employerLanding_freeLabel())).toBeNull();
-    expect(
-      within(card).getByRole('link', { name: 'Talk to sales' }),
-    ).toHaveAttribute('href', 'mailto:sales@example.com');
+    expect(within(card).getByRole("link", { name: "Talk to sales" })).toHaveAttribute(
+      "href",
+      "mailto:sales@example.com",
+    );
   });
 
-  it('renders no CTA for a quote-only tier whose destination is unset', () => {
+  it("renders no CTA for a quote-only tier whose destination is unset", () => {
     render(
       <EmployersPageView
         plans={[]}
         contactPlans={[
           {
             ...plan,
-            id: 'plan-bespoke',
-            name: 'Bespoke',
-            purpose: 'employer_service',
-            pricingMode: 'contact',
+            id: "plan-bespoke",
+            name: "Bespoke",
+            purpose: "employer_service",
+            pricingMode: "contact",
             priceText: null,
             ctaText: null,
             ctaDestination: null,
           },
         ]}
-        seo={{ boardName: 'Example Jobs' }}
+        seo={{ boardName: "Example Jobs" }}
         dependencies={employersPageViewDependencies}
       />,
     );
 
-    const card = screen.getByText('Bespoke').closest('[data-slot="card"]');
+    const card = screen.getByText("Bespoke").closest('[data-slot="card"]');
     if (!(card instanceof HTMLElement)) {
-      throw new Error('The Bespoke plan must render in a card');
+      throw new Error("The Bespoke plan must render in a card");
     }
-    expect(
-      within(card).getByText(m.memberships_contactPriceFallback()),
-    ).toBeVisible();
-    expect(within(card).queryByRole('link')).toBeNull();
+    expect(within(card).getByText(m.memberships_contactPriceFallback())).toBeVisible();
+    expect(within(card).queryByRole("link")).toBeNull();
   });
 
-  it('presents approved memberships as an authenticated company workspace list', () => {
+  it("presents approved memberships as an authenticated company workspace list", () => {
     render(
-      <EmployerDashboardView
-        companies={[membership]}
-        dependencies={dashboardViewDependencies}
-      />,
+      <EmployerDashboardView companies={[membership]} dependencies={dashboardViewDependencies} />,
     );
 
     expect(
-      screen.getByRole('heading', {
+      screen.getByRole("heading", {
         level: 1,
         name: m.employerOnboarding_yourCompaniesTitle(),
       }),
     ).toBeVisible();
-    const companyItem = screen
-      .getByText('Acme Ventures')
-      .closest('[data-slot="item"]');
+    const companyItem = screen.getByText("Acme Ventures").closest('[data-slot="item"]');
     if (!(companyItem instanceof HTMLElement)) {
-      throw new Error('The approved company must render in a workspace item');
+      throw new Error("The approved company must render in a workspace item");
     }
-    expect(within(companyItem).getByText('owner')).toBeVisible();
+    expect(within(companyItem).getByText("owner")).toBeVisible();
     expect(
-      screen.getByRole('button', {
+      screen.getByRole("button", {
         name: m.employerOnboarding_addCompanyLabel(),
       }),
     ).toBeEnabled();
   });
 
-  it('preserves only bounded work-email outcomes and announces them once', async () => {
+  it("preserves only bounded work-email outcomes and announces them once", async () => {
     const consume = vi.fn();
     render(
       <EmployerDashboardView
@@ -640,31 +584,29 @@ describe('employer entry surfaces', () => {
       />,
     );
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      m.employerDashboard_verifiedApproved(),
-    );
+    expect(screen.getByRole("alert")).toHaveTextContent(m.employerDashboard_verifiedApproved());
     await waitFor(() => expect(consume).toHaveBeenCalledOnce());
 
     expect(
       validateEmployerDashboardSearch({
-        verified: 'pending',
-        unsafe: 'value',
+        verified: "pending",
+        unsafe: "value",
       }),
-    ).toEqual({ verified: 'pending' });
+    ).toEqual({ verified: "pending" });
     expect(
       validateEmployerDashboardSearch({
-        verified: 'javascript:alert(1)',
+        verified: "javascript:alert(1)",
       }),
     ).toEqual({});
   });
 
-  it('sends a new employer back to Post a job once their created company is approved', async () => {
+  it("sends a new employer back to Post a job once their created company is approved", async () => {
     vi.useFakeTimers();
     searchCompanies.mockResolvedValue({
       ok: true,
       data: {
-        object: 'list',
-        url: '/v1/me/companies/search',
+        object: "list",
+        url: "/v1/me/companies/search",
         data: [],
         hasMore: false,
         nextCursor: null,
@@ -680,25 +622,23 @@ describe('employer entry surfaces', () => {
         dependencies={{ ...dashboardViewDependencies, continueWithCompany }}
       />,
     );
-    fireEvent.change(
-      screen.getByLabelText(m.employerOnboarding_searchPlaceholder()),
-      { target: { value: 'Acme' } },
-    );
+    fireEvent.change(screen.getByLabelText(m.employerOnboarding_searchPlaceholder()), {
+      target: { value: "Acme" },
+    });
     await act(() => vi.advanceTimersByTimeAsync(250));
     fireEvent.click(
-      screen.getByRole('button', {
-        name: m.employerOnboarding_addAsNewCompany({ query: 'Acme' }),
+      screen.getByRole("button", {
+        name: m.employerOnboarding_addAsNewCompany({ query: "Acme" }),
       }),
     );
-    const dialog = screen.getByRole('dialog', {
+    const dialog = screen.getByRole("dialog", {
       name: m.employerOnboarding_modalTitle(),
     });
-    fireEvent.change(
-      within(dialog).getByLabelText(m.employerDashboard_nameLabel()),
-      { target: { value: 'Acme Ventures' } },
-    );
+    fireEvent.change(within(dialog).getByLabelText(m.employerDashboard_nameLabel()), {
+      target: { value: "Acme Ventures" },
+    });
     fireEvent.click(
-      within(dialog).getByRole('button', {
+      within(dialog).getByRole("button", {
         name: m.employerDashboard_createCompanyLabel(),
       }),
     );
@@ -709,73 +649,60 @@ describe('employer entry surfaces', () => {
 
     // The dashboard keeps a page an employer can use, and drops the candidate
     // default that sign-in links pass when nothing better is known.
-    expect(validateEmployerDashboardSearch({ returnTo: '/post' })).toEqual({
-      returnTo: '/post',
+    expect(validateEmployerDashboardSearch({ returnTo: "/post" })).toEqual({
+      returnTo: "/post",
     });
-    expect(validateEmployerDashboardSearch({ returnTo: '/account' })).toEqual(
-      {},
-    );
-    expect(
-      validateEmployerDashboardSearch({ returnTo: 'https://evil.example' }),
-    ).toEqual({});
+    expect(validateEmployerDashboardSearch({ returnTo: "/account" })).toEqual({});
+    expect(validateEmployerDashboardSearch({ returnTo: "https://evil.example" })).toEqual({});
   });
 
-  it('uses the owned focus-managed dialog when adding a company', async () => {
+  it("uses the owned focus-managed dialog when adding a company", async () => {
     vi.useFakeTimers();
     searchCompanies.mockResolvedValue({
       ok: true,
       data: {
-        object: 'list',
-        url: '/v1/me/companies/search',
+        object: "list",
+        url: "/v1/me/companies/search",
         data: [],
         hasMore: false,
         nextCursor: null,
       },
     });
-    render(
-      <EmployerDashboardView
-        companies={[]}
-        dependencies={dashboardViewDependencies}
-      />,
-    );
-    const companySearch = screen.getByLabelText(
-      m.employerOnboarding_searchPlaceholder(),
-    );
+    render(<EmployerDashboardView companies={[]} dependencies={dashboardViewDependencies} />);
+    const companySearch = screen.getByLabelText(m.employerOnboarding_searchPlaceholder());
     fireEvent.change(companySearch, {
-      target: { value: 'Acme' },
+      target: { value: "Acme" },
     });
     await act(() => vi.advanceTimersByTimeAsync(250));
 
-    expect(companySearch).toHaveAttribute('role', 'combobox');
-    expect(
-      document.querySelector('[data-slot="combobox-content"]'),
-    ).toBeVisible();
+    expect(companySearch).toHaveAttribute("role", "combobox");
+    expect(document.querySelector('[data-slot="combobox-content"]')).toBeVisible();
 
     fireEvent.click(
-      screen.getByRole('button', {
-        name: m.employerOnboarding_addAsNewCompany({ query: 'Acme' }),
+      screen.getByRole("button", {
+        name: m.employerOnboarding_addAsNewCompany({ query: "Acme" }),
       }),
     );
 
-    const dialog = screen.getByRole('dialog', {
+    const dialog = screen.getByRole("dialog", {
       name: m.employerOnboarding_modalTitle(),
     });
-    expect(dialog).toHaveAttribute('data-slot', 'dialog-content');
+    expect(dialog).toHaveAttribute("data-slot", "dialog-content");
   });
 
-  it('keeps the connect-company panel open across keystrokes while results update in place', async () => {
+  it("keeps the connect-company panel open across keystrokes while results update in place", async () => {
     vi.useFakeTimers();
     // Echo the query back through the result so we can watch the list swap.
     searchCompanies.mockImplementation(({ data }) =>
       Promise.resolve({
         ok: true,
         data: {
-          object: 'list',
-          url: '/v1/me/companies/search',
+          object: "list",
+          url: "/v1/me/companies/search",
           data: [
             {
               id: `co-${data.q}`,
-              object: 'claimable_company',
+              object: "claimable_company",
               name: `Match ${data.q}`,
               slug: `match-${data.q}`,
               website: null,
@@ -786,53 +713,40 @@ describe('employer entry surfaces', () => {
         },
       }),
     );
-    render(
-      <EmployerDashboardView
-        companies={[]}
-        dependencies={dashboardViewDependencies}
-      />,
-    );
-    const companySearch = screen.getByLabelText(
-      m.employerOnboarding_searchPlaceholder(),
-    );
+    render(<EmployerDashboardView companies={[]} dependencies={dashboardViewDependencies} />);
+    const companySearch = screen.getByLabelText(m.employerOnboarding_searchPlaceholder());
 
-    fireEvent.change(companySearch, { target: { value: 'Ac' } });
+    fireEvent.change(companySearch, { target: { value: "Ac" } });
     await act(() => vi.advanceTimersByTimeAsync(250));
-    expect(
-      document.querySelector('[data-slot="combobox-content"]'),
-    ).toBeVisible();
-    expect(screen.getByText('Match Ac')).toBeVisible();
+    expect(document.querySelector('[data-slot="combobox-content"]')).toBeVisible();
+    expect(screen.getByText("Match Ac")).toBeVisible();
 
     // A second keystroke must NOT close the panel while the next search
     // debounces — the previous results stay visible in place.
-    fireEvent.change(companySearch, { target: { value: 'Acm' } });
-    expect(
-      document.querySelector('[data-slot="combobox-content"]'),
-    ).toBeVisible();
-    expect(screen.getByText('Match Ac')).toBeVisible();
+    fireEvent.change(companySearch, { target: { value: "Acm" } });
+    expect(document.querySelector('[data-slot="combobox-content"]')).toBeVisible();
+    expect(screen.getByText("Match Ac")).toBeVisible();
 
     // Once the debounce resolves, the list updates in place and stays open.
     await act(() => vi.advanceTimersByTimeAsync(250));
-    expect(
-      document.querySelector('[data-slot="combobox-content"]'),
-    ).toBeVisible();
-    expect(screen.getByText('Match Acm')).toBeVisible();
+    expect(document.querySelector('[data-slot="combobox-content"]')).toBeVisible();
+    expect(screen.getByText("Match Acm")).toBeVisible();
   });
 
-  it('clears stale company results and reports a rejected debounced search', async () => {
+  it("clears stale company results and reports a rejected debounced search", async () => {
     vi.useFakeTimers();
     searchCompanies
       .mockResolvedValueOnce({
         ok: true,
         data: {
-          object: 'list',
-          url: '/v1/me/companies/search',
+          object: "list",
+          url: "/v1/me/companies/search",
           data: [
             {
-              id: 'co-acme',
-              object: 'claimable_company',
-              name: 'Acme Ventures',
-              slug: 'acme',
+              id: "co-acme",
+              object: "claimable_company",
+              name: "Acme Ventures",
+              slug: "acme",
               website: null,
             },
           ],
@@ -840,67 +754,56 @@ describe('employer entry surfaces', () => {
           nextCursor: null,
         },
       })
-      .mockRejectedValueOnce(new Error('network'));
-    render(
-      <EmployerDashboardView
-        companies={[]}
-        dependencies={dashboardViewDependencies}
-      />,
-    );
-    const input = screen.getByLabelText(
-      m.employerOnboarding_searchPlaceholder(),
-    );
-    fireEvent.change(input, { target: { value: 'Acme' } });
+      .mockRejectedValueOnce(new Error("network"));
+    render(<EmployerDashboardView companies={[]} dependencies={dashboardViewDependencies} />);
+    const input = screen.getByLabelText(m.employerOnboarding_searchPlaceholder());
+    fireEvent.change(input, { target: { value: "Acme" } });
     await act(() => vi.advanceTimersByTimeAsync(250));
-    expect(screen.getByText('Acme Ventures')).toBeVisible();
+    expect(screen.getByText("Acme Ventures")).toBeVisible();
 
-    fireEvent.change(input, { target: { value: 'Acme Labs' } });
+    fireEvent.change(input, { target: { value: "Acme Labs" } });
     await act(() => vi.advanceTimersByTimeAsync(250));
 
-    expect(screen.queryByText('Acme Ventures')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      m.employerCompany_genericError(),
-    );
+    expect(screen.queryByText("Acme Ventures")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(m.employerCompany_genericError());
     expect(
-      screen.getByRole('button', {
-        name: m.employerOnboarding_addAsNewCompany({ query: 'Acme Labs' }),
+      screen.getByRole("button", {
+        name: m.employerOnboarding_addAsNewCompany({ query: "Acme Labs" }),
       }),
     ).toBeEnabled();
   });
 
-  it('keeps a pending membership inside the employer workspace while awaiting approval', () => {
+  it("keeps a pending membership inside the employer workspace while awaiting approval", () => {
     render(
       <EmployerOnboardingPageView
-        membership={{ ...membership, status: 'awaiting_admin' }}
+        membership={{ ...membership, status: "awaiting_admin" }}
         slug="acme-ventures"
         dependencies={onboardingViewDependencies}
       />,
     );
 
     expect(
-      screen.getByRole('heading', {
+      screen.getByRole("heading", {
         level: 1,
         name: m.employerOnboarding_awaitingAdminTitle(),
       }),
     ).toBeVisible();
     expect(
-      screen.getByText(
-        m.employerOnboarding_awaitingAdminBody({ company: 'Acme Ventures' }),
-      ),
+      screen.getByText(m.employerOnboarding_awaitingAdminBody({ company: "Acme Ventures" })),
     ).toBeVisible();
     // The step's single escape hatch withdraws the claim (no Back link).
     expect(
-      screen.getByRole('button', {
+      screen.getByRole("button", {
         name: m.employerDashboard_cancelClaimLabel(),
       }),
     ).toBeEnabled();
   });
 
-  it('resets work-email state when navigating between onboarding companies', () => {
+  it("resets work-email state when navigating between onboarding companies", () => {
     const firstMembership = {
       ...membership,
-      status: 'pending_work_email' as const,
-      workEmail: 'owner@acme.test',
+      status: "pending_work_email" as const,
+      workEmail: "owner@acme.test",
       workEmailVerifiedAt: null,
     };
     const { rerender } = render(
@@ -911,25 +814,25 @@ describe('employer entry surfaces', () => {
       />,
     );
     fireEvent.click(
-      screen.getByRole('button', {
+      screen.getByRole("button", {
         name: m.employerOnboarding_changeEmailLabel(),
       }),
     );
-    expect(
-      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
-    ).toHaveValue('owner@acme.test');
+    expect(screen.getByLabelText(m.employerDashboard_workEmailLabel())).toHaveValue(
+      "owner@acme.test",
+    );
 
     const secondMembership = {
       ...membership,
-      id: 'membership-beta',
-      status: 'pending_work_email' as const,
-      workEmail: 'hiring@beta.test',
+      id: "membership-beta",
+      status: "pending_work_email" as const,
+      workEmail: "hiring@beta.test",
       workEmailVerifiedAt: null,
       company: {
         ...membership.company,
-        id: 'company-beta',
-        name: 'Beta Labs',
-        slug: 'beta-labs',
+        id: "company-beta",
+        name: "Beta Labs",
+        slug: "beta-labs",
       },
     };
     rerender(
@@ -942,76 +845,73 @@ describe('employer entry surfaces', () => {
 
     expect(screen.getByText(/hiring@beta\.test/)).toBeVisible();
     fireEvent.click(
-      screen.getByRole('button', {
+      screen.getByRole("button", {
         name: m.employerOnboarding_changeEmailLabel(),
       }),
     );
-    expect(
-      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
-    ).toHaveValue('hiring@beta.test');
+    expect(screen.getByLabelText(m.employerDashboard_workEmailLabel())).toHaveValue(
+      "hiring@beta.test",
+    );
     expect(sendWorkEmail).not.toHaveBeenCalled();
   });
 
   it("names the company's domain when the work email is off it", async () => {
     sendWorkEmail.mockResolvedValue({
       ok: false,
-      code: 'validation_bad_request',
-      message: 'wire text',
-      fields: ['workEmail'],
+      code: "validation_bad_request",
+      message: "wire text",
+      fields: ["workEmail"],
     });
     render(
       <EmployerOnboardingPageView
         membership={{
           ...membership,
-          status: 'pending_work_email',
+          status: "pending_work_email",
           workEmail: null,
           workEmailVerifiedAt: null,
           // Stored before the Board API stripped trailing dots.
           company: {
             ...membership.company,
-            website: 'https://www.Acme.test./careers',
+            website: "https://www.Acme.test./careers",
           },
         }}
         slug="acme-ventures"
         dependencies={onboardingViewDependencies}
       />,
     );
-    fireEvent.change(
-      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
-      { target: { value: 'owner@gmail.test' } },
-    );
+    fireEvent.change(screen.getByLabelText(m.employerDashboard_workEmailLabel()), {
+      target: { value: "owner@gmail.test" },
+    });
     fireEvent.click(
-      screen.getByRole('button', {
+      screen.getByRole("button", {
         name: m.employerDashboard_sendLinkLabel(),
       }),
     );
 
     expect(
-      await screen.findByText(
-        m.employerOnboarding_workEmailDomainError({ domain: 'acme.test' }),
-      ),
+      await screen.findByText(m.employerOnboarding_workEmailDomainError({ domain: "acme.test" })),
     ).toBeVisible();
     expect(sendWorkEmail).toHaveBeenCalledWith({
       data: {
-        slug: 'acme-ventures',
-        body: { workEmail: 'owner@gmail.test' },
+        slug: "acme-ventures",
+        body: { workEmail: "owner@gmail.test" },
       },
     });
     expect(invalidate).not.toHaveBeenCalled();
   });
 
-  it('keeps the generic validation copy when the company has no website', async () => {
+  it("keeps the generic validation copy when the company has no website", async () => {
     sendWorkEmail.mockResolvedValue({
       ok: false,
-      code: 'validation_bad_request',
-      message: 'wire text',
-      fields: ['workEmail'],
+      code: "validation_bad_request",
+      message: "wire text",
+      fields: ["workEmail"],
     });
     render(
       <EmployerOnboardingPageView
         membership={{
           ...membership,
-          status: 'pending_work_email',
+          status: "pending_work_email",
           workEmail: null,
           workEmailVerifiedAt: null,
           company: { ...membership.company, website: null },
@@ -1020,49 +920,44 @@ describe('employer entry surfaces', () => {
         dependencies={onboardingViewDependencies}
       />,
     );
-    fireEvent.change(
-      screen.getByLabelText(m.employerDashboard_workEmailLabel()),
-      { target: { value: 'owner@gmail.test' } },
-    );
+    fireEvent.change(screen.getByLabelText(m.employerDashboard_workEmailLabel()), {
+      target: { value: "owner@gmail.test" },
+    });
     fireEvent.click(
-      screen.getByRole('button', {
+      screen.getByRole("button", {
         name: m.employerDashboard_sendLinkLabel(),
       }),
     );
 
-    expect(
-      await screen.findByText(m.boardError_validationText()),
-    ).toBeVisible();
+    expect(await screen.findByText(m.boardError_validationText())).toBeVisible();
   });
 
-  it('keeps a failed cancellation visible without leaving onboarding', async () => {
+  it("keeps a failed cancellation visible without leaving onboarding", async () => {
     cancelClaim.mockResolvedValue({
       ok: false,
-      code: 'employer_not_member',
-      message: 'wire text',
+      code: "employer_not_member",
+      message: "wire text",
     });
     render(
       <EmployerOnboardingPageView
-        membership={{ ...membership, status: 'awaiting_admin' }}
+        membership={{ ...membership, status: "awaiting_admin" }}
         slug="acme-ventures"
         dependencies={onboardingViewDependencies}
       />,
     );
-    const cancel = screen.getByRole('button', {
+    const cancel = screen.getByRole("button", {
       name: m.employerDashboard_cancelClaimLabel(),
     });
     fireEvent.click(cancel);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      m.boardError_notMemberText(),
-    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(m.boardError_notMemberText());
     expect(cancel).toBeEnabled();
     expect(invalidate).not.toHaveBeenCalled();
     expect(navigateToDashboard).not.toHaveBeenCalled();
   });
 });
 
-it('shows unlimited featuring instead of dropping the benefit', () => {
+it("shows unlimited featuring instead of dropping the benefit", () => {
   render(
     <EmployersPageView
       plans={[
@@ -1070,61 +965,65 @@ it('shows unlimited featuring instead of dropping the benefit', () => {
           ...plan,
           featureSummary: { ...plan.featureSummary, featuredSlots: 0 },
           features: {
-            'jobs.featured_slots': {
-              value: 'unlimited',
-              name: 'Featured slots',
-              dataType: 'integer',
+            "jobs.featured_slots": {
+              value: "unlimited",
+              name: "Featured slots",
+              dataType: "integer",
               displayOrder: 0,
             },
           },
         },
       ]}
       contactPlans={[]}
-      seo={{ boardName: 'Example Jobs' }}
+      seo={{ boardName: "Example Jobs" }}
       dependencies={employersPageViewDependencies}
     />,
   );
-  expect(
-    screen.getByText(m.employerCompany_featuredUnlimitedText()),
-  ).toBeVisible();
+  expect(screen.getByText(m.employerCompany_featuredUnlimitedText())).toBeVisible();
 });
 
-it('lists candidate benefits at the exact monthly price and links to candidate checkout', async () => {
+it("lists candidate benefits at the exact monthly price and links to candidate checkout", async () => {
   await renderRouted(
     <EmployersPageView
       audience="candidates"
       plans={[
         {
           ...plan,
-          purpose: 'job_seeker',
+          purpose: "job_seeker",
           price: { ...plan.price, amountCents: 999 },
           features: {
-            'job_seeker.matches': {
-              value: 'true',
-              name: 'Job matching',
-              dataType: 'boolean',
+            "job_seeker.matches": {
+              value: "true",
+              name: "Job matching",
+              dataType: "boolean",
               displayOrder: 0,
             },
-            'job_seeker.job_alerts': {
-              value: 'false',
-              name: 'Job alerts',
-              dataType: 'boolean',
+            "job_seeker.job_alerts": {
+              value: "false",
+              name: "Job alerts",
+              dataType: "boolean",
               displayOrder: 1,
             },
           },
         },
       ]}
       contactPlans={[]}
-      seo={{ boardName: 'Example Jobs' }}
+      seo={{ boardName: "Example Jobs" }}
     />,
   );
-  expect(screen.getByText('Job matching')).toBeVisible();
-  expect(screen.queryByText('Job alerts')).not.toBeInTheDocument();
+  expect(screen.getByText("Job matching")).toBeVisible();
+  expect(screen.queryByText("Job alerts")).not.toBeInTheDocument();
   expect(
-    screen.getByRole('link', {
+    screen.getByRole("link", {
       name: m.employerLanding_subscribeLabel(),
     }),
-  ).toHaveAttribute('href', '/account/access');
+  ).toHaveAttribute("href", "/account/access");
+  // A paid candidate plan puts `/pricing` in the sitemap, so it is linked.
+  expect(
+    screen.getByRole("link", {
+      name: m.employerLanding_compareAllPlansLabel(),
+    }),
+  ).toHaveAttribute("href", "/pricing");
   expect(
     screen.queryByText(m.employerLanding_featureListingDuration({ days: 30 })),
   ).not.toBeInTheDocument();
