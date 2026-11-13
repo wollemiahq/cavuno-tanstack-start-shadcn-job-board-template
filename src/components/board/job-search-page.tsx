@@ -355,6 +355,14 @@ export function JobSearchPage({
                       </div>
                     </section>
                   ) : null}
+                  {/* The places directory is otherwise linked from the footer
+                      only; every listing links it in its content. */}
+                  <Link
+                    to="/jobs/locations"
+                    className={buttonVariants({ variant: 'link', size: 'sm' })}
+                  >
+                    {m.jobSearch_browseLocationsLabel()}
+                  </Link>
                 </SearchResultsList>
               }
               detail={

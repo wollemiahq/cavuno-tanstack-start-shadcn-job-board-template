@@ -36,6 +36,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { hasPaidCandidatePlans } from '@/lib/candidate-pricing';
 import { cn } from '@/lib/utils';
 import type { Plan } from '@cavuno/board';
 
@@ -400,6 +401,13 @@ export function EmployersPageView({
         memberships.length === 0));
   const pageDescription =
     description ?? m.employerLanding_subtitle({ boardName: seo.boardName });
+  // `/pricing` compares both audiences, so the one-audience pages link it
+  // only when the board sells to both (the sitemap lists it under the same
+  // rule; otherwise it repeats `/employers`).
+  const linksPricing =
+    audience !== 'all' &&
+    hasPaidCandidatePlans(plans) &&
+    jobPosting.length + talentAccess.length + contactPlans.length > 0;
 
   return (
     <Page width="wide">
@@ -471,6 +479,14 @@ export function EmployersPageView({
                   dependencies={dependencies}
                 />
               </>
+            ) : null}
+            {linksPricing ? (
+              <Link
+                to="/pricing"
+                className={buttonVariants({ variant: 'link' })}
+              >
+                {m.employerLanding_compareAllPlansLabel()}
+              </Link>
             ) : null}
           </>
         )}

@@ -119,7 +119,6 @@ describe('hosted-shaped sitemap context', () => {
     expect(findSitemapChunk(context, 'jobs-details', 2)).toHaveLength(1);
     expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
       { url: `${ORIGIN}/marketing` },
-      { url: `${ORIGIN}/pricing` },
     ]);
   });
 
@@ -151,7 +150,7 @@ describe('hosted-shaped sitemap context', () => {
         ) ?? []
       ).map((entry) => entry.url);
 
-    it('lists /job-seekers when the board sells a paid candidate plan', async () => {
+    it('lists /job-seekers and /pricing when the board sells a paid candidate plan', async () => {
       const { fake, list } = plansBoard([
         { purpose: 'job_seeker', kind: 'subscription' },
       ]);
@@ -164,7 +163,7 @@ describe('hosted-shaped sitemap context', () => {
       expect(list).toHaveBeenCalledWith({}, boardGlobalReadCache());
     });
 
-    it('leaves /job-seekers out while its route redirects, even if the SDK lists it', async () => {
+    it('leaves /job-seekers and /pricing out without paid candidate plans, even if the SDK lists them', async () => {
       for (const plans of [
         [],
         [{ purpose: 'job_seeker', kind: 'free' }],
@@ -173,19 +172,18 @@ describe('hosted-shaped sitemap context', () => {
         const urls = await marketingUrls(plansBoard(plans).fake, async () => [
           `${ORIGIN}/`,
           `${ORIGIN}/job-seekers`,
+          `${ORIGIN}/pricing`,
         ]);
         expect(urls).not.toContain(`${ORIGIN}/job-seekers`);
-        expect(urls).toContain(`${ORIGIN}/pricing`);
+        // Without candidate plans /pricing repeats /employers.
+        expect(urls).not.toContain(`${ORIGIN}/pricing`);
       }
     });
 
-    it('keeps /pricing and the other entries when the plan read fails', async () => {
+    it('keeps the other entries when the plan read fails', async () => {
       const { fake, list } = plansBoard([]);
       list.mockRejectedValue(new Error('upstream 503'));
-      expect(await marketingUrls(fake)).toEqual([
-        `${ORIGIN}/marketing`,
-        `${ORIGIN}/pricing`,
-      ]);
+      expect(await marketingUrls(fake)).toEqual([`${ORIGIN}/marketing`]);
     });
   });
 
@@ -238,7 +236,6 @@ describe('hosted-shaped sitemap context', () => {
 
       expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
         { url: `${ORIGIN}/marketing` },
-        { url: `${ORIGIN}/pricing` },
         { url: `${ORIGIN}/talent/locations` },
         { url: `${ORIGIN}/talent/locations/zuerich` },
         { url: `${ORIGIN}/talent/locations/bern` },
@@ -299,7 +296,6 @@ describe('hosted-shaped sitemap context', () => {
     expect(bucket?.chunks.flat()).toEqual([
       { url: `${ORIGIN}/` },
       { url: `${ORIGIN}/about`, lastModified: '2026-09-01T00:00:00.000Z' },
-      { url: `${ORIGIN}/pricing` },
     ]);
   });
 
