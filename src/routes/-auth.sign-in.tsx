@@ -15,6 +15,7 @@ import {
   candidateAuthSearch,
   candidateOAuthReturnTo,
 } from '../lib/candidate-return-to';
+import { signInReturnTo } from '../lib/employer-return-to';
 import { m } from '../paraglide/messages';
 
 import { AuthMailAppLinks } from '@/components/mail-app-links';
@@ -24,6 +25,7 @@ import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { textActionClass, textLinkClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
+import type { BoardUser } from '@cavuno/board';
 
 export function SignInView({
   returnTo,
@@ -38,7 +40,7 @@ export function SignInView({
   signInAction: (input: {
     data: { email: string; password: string };
   }) => Promise<
-    | { ok: true; boardUser?: unknown }
+    | { ok: true; boardUser?: Pick<BoardUser, 'role'> }
     | { ok: false; code: string; message: string }
   >;
   requestMagicLinkAction: (input: {
@@ -190,8 +192,14 @@ export function SignInView({
             // The httpOnly session is committed. A hard navigation both
             // reconciles the shell and prevents later router failures from
             // being reported as an authentication failure.
+            const role =
+              'boardUser' in result ? result.boardUser?.role : undefined;
             assignLocation(
-              appendAuthConversionQuery(returnTo, 'login', 'password'),
+              appendAuthConversionQuery(
+                signInReturnTo(returnTo, role),
+                'login',
+                'password',
+              ),
             );
             return;
           }
