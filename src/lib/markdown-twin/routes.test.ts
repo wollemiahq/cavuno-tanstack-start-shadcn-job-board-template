@@ -43,6 +43,42 @@ describe('resolveMarkdownTwin', () => {
       params: { companySlug: 'acme', jobSlug: 'café-chef' },
       htmlPath: '/companies/acme/jobs/caf%C3%A9-chef',
       twinPath: '/companies/acme/jobs/caf%C3%A9-chef.md',
+      search: '?ref=x',
+    });
+  });
+
+  it.each([
+    ['/index.md', 'home', {}],
+    ['/fr/index.md', 'home', {}],
+    ['/jobs.md', 'jobs', {}],
+    ['/jobs/engineering.md', 'jobsCategory', { keyword: 'engineering' }],
+    ['/jobs/skills/python.md', 'jobsSkill', { skill: 'python' }],
+    ['/jobs/locations.md', 'jobsLocations', {}],
+    ['/jobs/locations/remote.md', 'jobsLocation', { location: 'remote' }],
+    [
+      '/jobs/locations/berlin/engineering.md',
+      'jobsLocationCategory',
+      { location: 'berlin', keyword: 'engineering' },
+    ],
+    [
+      '/jobs/locations/berlin/skills/python.md',
+      'jobsLocationSkill',
+      { location: 'berlin', skill: 'python' },
+    ],
+  ])('resolves %s as the %s page', (path, kind, params) => {
+    expect(resolveMarkdownTwin(get(path), ENGLISH_BOARD)).toMatchObject({
+      kind,
+      params,
+    });
+  });
+
+  it('resolves localized listing words, keeping the query', () => {
+    expect(
+      resolveMarkdownTwin(get('/vacatures/locaties.md?page=2'), DUTCH_BOARD),
+    ).toMatchObject({
+      kind: 'jobsLocations',
+      htmlPath: '/vacatures/locaties',
+      search: '?page=2',
     });
   });
 
@@ -71,7 +107,8 @@ describe('resolveMarkdownTwin', () => {
   it.each([
     ['the page itself', '/companies/acme/jobs/designer'],
     ['a twin of a twin', '/companies/acme/jobs/designer.md.md'],
-    ['a page without a twin yet', '/jobs.md'],
+    ['a page without a twin yet', '/companies.md'],
+    ['a feed', '/jobs/rss.xml.md'],
     ['an unknown path', '/no/such/page.md'],
     ['a company page', '/companies/acme.md'],
     ['an empty last segment', '/companies/acme/jobs/designer/.md'],

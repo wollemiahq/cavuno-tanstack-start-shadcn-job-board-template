@@ -2,15 +2,35 @@ import { isRedirect, redirect } from '@tanstack/react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import { markdownTwinRouteRequest } from '../../lib/markdown-twin/routes';
-import { serveMarkdownTwin, type MarkdownTwinBuilder } from './index';
+import {
+  serveMarkdownTwin,
+  type MarkdownTwinBuilder,
+  type MarkdownTwinBuilders,
+} from './index';
 
 const TWIN_URL = 'https://board.example/companies/acme/jobs/engineer.md';
 const CANONICAL = 'https://hosted.example/companies/acme/jobs/engineer';
 
-function serve(build: MarkdownTwinBuilder, url = TWIN_URL) {
-  return serveMarkdownTwin(markdownTwinRouteRequest(new Request(url)), {
+/** Every page kind answered by `build`. */
+function builders(build: MarkdownTwinBuilder): MarkdownTwinBuilders {
+  return {
+    home: build,
+    jobs: build,
+    jobsCategory: build,
+    jobsSkill: build,
+    jobsLocations: build,
+    jobsLocation: build,
+    jobsLocationCategory: build,
+    jobsLocationSkill: build,
     job: build,
-  });
+  };
+}
+
+function serve(build: MarkdownTwinBuilder, url = TWIN_URL) {
+  return serveMarkdownTwin(
+    markdownTwinRouteRequest(new Request(url)),
+    builders(build),
+  );
 }
 
 describe('serveMarkdownTwin', () => {

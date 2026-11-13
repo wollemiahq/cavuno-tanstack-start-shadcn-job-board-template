@@ -15,7 +15,17 @@ import {
   type MarkdownTwin,
   type MarkdownTwinKind,
 } from '../../lib/markdown-twin/routes';
+import { buildHomeTwin } from './home';
 import { buildJobTwin } from './job-detail';
+import {
+  buildJobsCategoryTwin,
+  buildJobsLocationCategoryTwin,
+  buildJobsLocationSkillTwin,
+  buildJobsLocationTwin,
+  buildJobsLocationsTwin,
+  buildJobsSkillTwin,
+  buildJobsTwin,
+} from './jobs-listings';
 
 import type { MarkdownTwinResult } from './result';
 
@@ -30,6 +40,15 @@ export type MarkdownTwinBuilders = Record<
 >;
 
 const BUILDERS = {
+  home: (twin, origin) => buildHomeTwin(twin, origin),
+  jobs: (twin, origin) => buildJobsTwin(twin, origin),
+  jobsCategory: (twin, origin) => buildJobsCategoryTwin(twin, origin),
+  jobsSkill: (twin, origin) => buildJobsSkillTwin(twin, origin),
+  jobsLocations: (twin, origin) => buildJobsLocationsTwin(twin, origin),
+  jobsLocation: (twin, origin) => buildJobsLocationTwin(twin, origin),
+  jobsLocationCategory: (twin, origin) =>
+    buildJobsLocationCategoryTwin(twin, origin),
+  jobsLocationSkill: (twin, origin) => buildJobsLocationSkillTwin(twin, origin),
   job: (twin, origin) => buildJobTwin(twin, origin),
 } satisfies MarkdownTwinBuilders;
 

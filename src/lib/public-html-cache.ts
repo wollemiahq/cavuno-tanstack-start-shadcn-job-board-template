@@ -1,5 +1,5 @@
 import { canonicalPathname } from './localized-path';
-import { MARKDOWN_SUFFIX } from './markdown-twin/routes';
+import { markdownTwinPagePath } from './markdown-twin/routes';
 import { talentProfileParam } from './talent-profile-path';
 
 /**
@@ -78,10 +78,8 @@ function pathnameWithoutLocale(pathname: string): string {
 }
 
 export function isPublicDocumentPath(pathname: string): boolean {
-  // A Markdown twin (`/x.md`) is as public as its page `/x`.
-  const page = pathname.endsWith(MARKDOWN_SUFFIX)
-    ? pathname.slice(0, -MARKDOWN_SUFFIX.length)
-    : pathname;
+  // A Markdown twin (`/x.md`, `/index.md`) is as public as its page.
+  const page = markdownTwinPagePath(pathname) ?? pathname;
   const normalized = pathnameWithoutLocale(page);
   if (PUBLIC_DOCUMENT_PATHS.has(normalized)) return true;
   if (talentProfileParam(normalized) !== null) return true;
