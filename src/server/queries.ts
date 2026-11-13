@@ -33,7 +33,10 @@ import {
   readTipJarGate,
 } from '../lib/board-context-cache';
 import { readBoardSeo } from '../lib/board-seo-cache';
-import { hasPaidCandidatePlans } from '../lib/candidate-pricing';
+import {
+  hasEmployerOfferPage,
+  hasPaidCandidatePlans,
+} from '../lib/candidate-pricing';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { requestNear } from '../lib/request-near';
@@ -192,9 +195,10 @@ async function readPlanOfferGate(): Promise<PlanOfferGate> {
         ),
       ]);
       return {
-        hasEmployerOfferPage:
-          plans.data.some((plan) => plan.purpose !== 'job_seeker') ||
-          employerServicePlans.data.length > 0,
+        hasEmployerOfferPage: hasEmployerOfferPage(
+          plans.data,
+          employerServicePlans.data,
+        ),
         hasCandidatePricingPage: hasPaidCandidatePlans(plans.data),
         // The Memberships link is loader-driven off the same read, so it
         // never flashes in on a board that publishes no membership plan.
