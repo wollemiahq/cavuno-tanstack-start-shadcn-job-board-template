@@ -25,70 +25,68 @@ import {
   jobsLocationPath,
   jobsLocationSkillPath,
   jobsSkillPath,
-} from '@cavuno/board/paths';
-import { listingHead, listingJsonLd } from '@cavuno/board/seo';
-import { MIN_JOBS_PER_INDEXED_PAGE } from '@cavuno/board/sitemap';
-import { createServerFn } from '@tanstack/react-start';
+} from "@cavuno/board/paths";
+import { listingHead, listingJsonLd } from "@cavuno/board/seo";
+import { MIN_JOBS_PER_INDEXED_PAGE } from "@cavuno/board/sitemap";
+import { createServerFn } from "@tanstack/react-start";
 
-import { getBoard } from '../lib/board';
-import { boardAccessMiddleware } from '../lib/board-access-middleware';
-import { readBoardContext } from '../lib/board-context-cache';
-import { localizePath } from '../lib/localized-path';
-import { readPublicOrigin } from '../lib/public-origin';
-import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
-import { gatedRead } from './board-access';
+import { getBoard } from "../lib/board";
+import { boardAccessMiddleware } from "../lib/board-access-middleware";
+import { readBoardContext } from "../lib/board-context-cache";
+import { localizePath } from "../lib/localized-path";
+import { readPublicOrigin } from "../lib/public-origin";
+import { m } from "../paraglide/messages";
+import { getLocale } from "../paraglide/runtime";
+import { gatedRead } from "./board-access";
 import {
   combinationInPlaceCountCache,
   listingCacheKey,
   jobsRadiusParams,
   listingRadiusKm,
   placeListingSort,
-} from './listing-place-cache';
+} from "./listing-place-cache";
 import {
   noindexFollow,
   resolveOrNull,
   settled,
   trailBreadcrumbJsonLd,
-} from './place-listing-helpers';
+} from "./place-listing-helpers";
 
-import {
-  customFieldLabel,
-  customFieldOptionLabel,
-} from '@/board/custom-field-labels';
-import { catalogJobCount } from '@/board/job-catalog-count';
-import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
+import { customFieldLabel, customFieldOptionLabel } from "@/board/custom-field-labels";
+import { catalogJobCount } from "@/board/job-catalog-count";
+import { toJobsLocationHierarchyCrumbs } from "@/board/jobs-location-hierarchy";
 import {
   isSearchRadiusViewNoindex,
   placeJobCount,
   placeSearchRadius,
-} from '@/board/search-radius';
-import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
-import { jobSearchCopy } from '@/copy-groups/job-search';
+  type PlaceSearchRadius,
+} from "@/board/search-radius";
+import { breadcrumbsCopy } from "@/copy-groups/breadcrumbs";
+import { jobSearchCopy } from "@/copy-groups/job-search";
 import {
   locationCategoryListingCopy,
   locationListingCopy,
   locationSkillListingCopy,
-} from '@/copy-groups/location-listing';
+} from "@/copy-groups/location-listing";
 import {
   customFieldFiltersOrUndefined,
   hasCustomFieldSearch,
   resolveCustomFieldFilters,
   toCustomFilterFields,
   type CustomFieldSearch,
-} from '@/lib/custom-field-filters';
+} from "@/lib/custom-field-filters";
 import {
   jobsIndexPageTitle,
   listingMetaDescription,
   listingPageTitle,
   type CountedHeading,
-} from '@/lib/listing-description';
-import { reachableCountOf, readReachablePage } from '@/lib/pagination';
+} from "@/lib/listing-description";
+import { reachableCountOf, readReachablePage } from "@/lib/pagination";
 import {
   INDEXABLE_WORK_ARRANGEMENT,
   isWorkArrangementSlug,
   type WorkArrangementSlug,
-} from '@/lib/work-arrangement';
+} from "@/lib/work-arrangement";
 import type {
   EmploymentType,
   JobSort,
@@ -98,7 +96,7 @@ import type {
   RemoteOption,
   Seniority,
   TaxonomyResolution,
-} from '@cavuno/board';
+} from "@cavuno/board";
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -128,20 +126,18 @@ function listFilters(
   input: JobsListingFiltersInput,
 ): Pick<
   JobsListQuery,
-  | 'remoteOption'
-  | 'employmentType'
-  | 'customEmploymentType'
-  | 'seniority'
-  | 'sort'
-  | 'offset'
-  | 'limit'
+  | "remoteOption"
+  | "employmentType"
+  | "customEmploymentType"
+  | "seniority"
+  | "sort"
+  | "offset"
+  | "limit"
 > {
   return {
     remoteOption: input.remoteOption ? [input.remoteOption] : undefined,
     employmentType: input.employmentType ? [input.employmentType] : undefined,
-    customEmploymentType: input.customEmploymentType
-      ? [input.customEmploymentType]
-      : undefined,
+    customEmploymentType: input.customEmploymentType ? [input.customEmploymentType] : undefined,
     seniority: input.seniority?.length ? input.seniority : undefined,
     sort: input.sort,
     offset: input.offset,
@@ -162,10 +158,7 @@ function startedEarly<T>(read: Promise<T>): Promise<T> {
 async function seoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
-  const [boardContext, origin] = await Promise.all([
-    readBoardContext(),
-    readPublicOrigin(),
-  ]);
+  const [boardContext, origin] = await Promise.all([readBoardContext(), readPublicOrigin()]);
   return {
     boardName: boardContext.name,
     language: boardContext.language,
@@ -177,9 +170,7 @@ async function seoBase() {
  * The plain URL's own view: first page, no filter, sort, query or chosen
  * distance. Other views canonicalize to it, so only it decides indexing.
  */
-function isPlainListingView(
-  data: JobsListingFiltersInput & { within?: number },
-): boolean {
+function isPlainListingView(data: JobsListingFiltersInput & { within?: number }): boolean {
   return (
     data.offset === 0 &&
     data.within === undefined &&
@@ -226,7 +217,7 @@ type LandingPageContent = {
 function filledLandingCopy(value: string | undefined): string | undefined {
   if (value === undefined) return undefined;
   const trimmed = value.trim();
-  return trimmed === '' ? undefined : trimmed;
+  return trimmed === "" ? undefined : trimmed;
 }
 
 function landingDocument(
@@ -237,8 +228,7 @@ function landingDocument(
   if (!isPlainListingView(data)) return fallback;
   return {
     title: filledLandingCopy(resolution.metaTitle) ?? fallback.title,
-    description:
-      filledLandingCopy(resolution.metaDescription) ?? fallback.description,
+    description: filledLandingCopy(resolution.metaDescription) ?? fallback.description,
   };
 }
 
@@ -268,7 +258,7 @@ async function combinationInPlaceJobCount(
   if ((await radiusKmRead) === undefined) return null;
   const key = listingCacheKey(
     data.locationSlug,
-    'category' in facet ? `category:${facet.category}` : `skill:${facet.skill}`,
+    "category" in facet ? `category:${facet.category}` : `skill:${facet.skill}`,
   );
   const cached = combinationInPlaceCountCache.get(key);
   if (cached !== undefined) return cached;
@@ -312,7 +302,7 @@ async function suggestedPlaceIndexJobCount(
     const list = await getBoard().jobs.list(
       {
         location: data.locationSlug,
-        remoteOption: ['on_site', 'hybrid'],
+        remoteOption: ["on_site", "hybrid"],
         offset: 0,
         limit: 1,
       },
@@ -328,13 +318,16 @@ async function suggestedPlaceIndexJobCount(
  * The place a listing's related-search chips link inside: a category or skill
  * chip on a place's pages goes to that place's combination page, so those
  * pages get inlinks. None for a suggested place or a work arrangement, whose
- * combinations are never indexed.
+ * combinations are never indexed, nor for a listing widened by a radius,
+ * whose chip counts include nearby jobs and so are no floor on the place's
+ * own.
  */
-function relatedSearchesPlace(
-  place: Pick<TaxonomyResolution, 'canonicalSlug' | 'suggested'>,
+export function relatedSearchesPlace(
+  place: Pick<TaxonomyResolution, "canonicalSlug" | "suggested">,
   arrangement: string | null,
+  searchRadius: PlaceSearchRadius | null,
 ): string | null {
-  return arrangement || place.suggested ? null : place.canonicalSlug;
+  return arrangement || place.suggested || searchRadius?.selected ? null : place.canonicalSlug;
 }
 
 /**
@@ -344,13 +337,11 @@ function relatedSearchesPlace(
  * cannot say so: the API widens it to the place's default distance.
  */
 function combinationNoindexCount(
-  placeTree: { data: readonly Pick<PublicPlace, 'slug' | 'jobCount'>[] } | null,
-  place: Pick<TaxonomyResolution, 'sourceSlug' | 'canonicalSlug' | 'suggested'>,
+  placeTree: { data: readonly Pick<PublicPlace, "slug" | "jobCount">[] } | null,
+  place: Pick<TaxonomyResolution, "sourceSlug" | "canonicalSlug" | "suggested">,
   inPlaceJobCount: number | null,
 ): number | null {
-  return place.suggested || placeJobCount(placeTree?.data, place) === 0
-    ? 0
-    : inPlaceJobCount;
+  return place.suggested || placeJobCount(placeTree?.data, place) === 0 ? 0 : inPlaceJobCount;
 }
 
 /**
@@ -372,10 +363,7 @@ function isWorkArrangementPageNoindex(
 }
 
 /** A combination's link back to its work arrangement page ("Remote jobs"). */
-function workArrangementCrumb(
-  slug: WorkArrangementSlug,
-  place: { displayName: string },
-) {
+function workArrangementCrumb(slug: WorkArrangementSlug, place: { displayName: string }) {
   return {
     name: locationListingCopy(slug, place).heading,
     href: jobsLocationPath(slug),
@@ -388,17 +376,13 @@ async function jobCustomFilterFields() {
   const language = getLocale();
   return toCustomFilterFields(boardContext.customFields?.job, {
     field: (definition) => customFieldLabel(definition, language),
-    option: (definition, option) =>
-      customFieldOptionLabel(definition.key, option, language),
+    option: (definition, option) => customFieldOptionLabel(definition.key, option, language),
   });
 }
 
 /** Canonical /jobs listing — list or search + head (jobSearch headingJobs). */
-export const getJobsIndexPage = createServerFn({ method: 'GET' })
-  .validator(
-    (input: JobsListingFiltersInput & { customFields?: CustomFieldSearch }) =>
-      input,
-  )
+export const getJobsIndexPage = createServerFn({ method: "GET" })
+  .validator((input: JobsListingFiltersInput & { customFields?: CustomFieldSearch }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
@@ -443,11 +427,9 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
         fieldsRead,
       ]);
       const page = rawList;
-      const relatedSearches =
-        'relatedSearches' in page ? page.relatedSearches : undefined;
+      const relatedSearches = "relatedSearches" in page ? page.relatedSearches : undefined;
       const heading = jobSearchCopy().headingJobs;
-      const countedHeading: CountedHeading = (counted) =>
-        m.jobSearch_resultsCount(counted);
+      const countedHeading: CountedHeading = (counted) => m.jobSearch_resultsCount(counted);
       const head = listingHead({
         title: jobsIndexPageTitle({
           boardName: seo.boardName,
@@ -455,7 +437,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
           count: catalogJobCount(page.count, page.gatedCount),
         }),
         origin: seo.origin,
-        path: localizePath('/jobs'),
+        path: localizePath("/jobs"),
         description: listingMetaDescription({
           heading: heading,
           countedHeading,
@@ -467,10 +449,7 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [
-            { name: crumbs.home, path: localizePath('/') },
-            { name: crumbs.jobs },
-          ],
+          breadcrumbs: [{ name: crumbs.home, path: localizePath("/") }, { name: crumbs.jobs }],
           jobs: page.data,
         }),
       );
@@ -493,10 +472,8 @@ export const getJobsIndexPage = createServerFn({ method: 'GET' })
  * alias slug that 308-redirects still fetches a listing that is then discarded.
  * That path is rare; the common path saves a full serial round-trip wave.
  */
-export const getJobsCategoryPage = createServerFn({ method: 'GET' })
-  .validator(
-    (input: JobsListingFiltersInput & { categorySlug: string }) => input,
-  )
+export const getJobsCategoryPage = createServerFn({ method: "GET" })
+  .validator((input: JobsListingFiltersInput & { categorySlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
@@ -506,22 +483,17 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       // serializing an extra upstream round trip (and an extra /_serverFn hop
       // on client-side navigation) in front of the listing + SEO batch.
       const [category, listResult, seo] = await Promise.all([
-        resolveOrNull(
-          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
-        ),
+        resolveOrNull(board.taxonomy.categories.resolve(data.categorySlug, { headers })),
         settled(
           readReachablePage(data.offset, data.limit, (offset) =>
-            board.jobs.list(
-              { ...filters, offset, category: data.categorySlug },
-              { headers },
-            ),
+            board.jobs.list({ ...filters, offset, category: data.categorySlug }, { headers }),
           ),
         ),
         seoBase(),
       ]);
-      if (!category) return { kind: 'not_found' as const };
+      if (!category) return { kind: "not_found" as const };
       if (category.redirectTo) {
-        return { kind: 'redirect' as const, to: category.redirectTo };
+        return { kind: "redirect" as const, to: category.redirectTo };
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
@@ -559,8 +531,8 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: localizePath('/') },
-            { name: crumbs.jobs, path: localizePath('/jobs') },
+            { name: crumbs.home, path: localizePath("/") },
+            { name: crumbs.jobs, path: localizePath("/jobs") },
             { name: heading },
           ],
           jobs: list.data,
@@ -568,7 +540,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       );
       const intro = landingIntro(category, data);
       return {
-        kind: 'ok' as const,
+        kind: "ok" as const,
         category: intro.resolution,
         introHtml: intro.introHtml,
         list,
@@ -588,7 +560,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
  * alias slug that 308-redirects still fetches a listing that is then discarded.
  * That path is rare; the common path saves a full serial round-trip wave.
  */
-export const getJobsSkillPage = createServerFn({ method: 'GET' })
+export const getJobsSkillPage = createServerFn({ method: "GET" })
   .validator((input: JobsListingFiltersInput & { skillSlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
@@ -596,22 +568,17 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
       const board = getBoard();
       const filters = listFilters(data);
       const [skill, listResult, seo] = await Promise.all([
-        resolveOrNull(
-          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
-        ),
+        resolveOrNull(board.taxonomy.skills.resolve(data.skillSlug, { headers })),
         settled(
           readReachablePage(data.offset, data.limit, (offset) =>
-            board.jobs.list(
-              { ...filters, offset, skill: data.skillSlug },
-              { headers },
-            ),
+            board.jobs.list({ ...filters, offset, skill: data.skillSlug }, { headers }),
           ),
         ),
         seoBase(),
       ]);
-      if (!skill) return { kind: 'not_found' as const };
+      if (!skill) return { kind: "not_found" as const };
       if (skill.redirectTo) {
-        return { kind: 'redirect' as const, to: skill.redirectTo };
+        return { kind: "redirect" as const, to: skill.redirectTo };
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
@@ -640,15 +607,15 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
         listingJsonLd({
           origin: seo.origin,
           breadcrumbs: [
-            { name: crumbs.home, path: localizePath('/') },
-            { name: crumbs.jobs, path: localizePath('/jobs') },
+            { name: crumbs.home, path: localizePath("/") },
+            { name: crumbs.jobs, path: localizePath("/jobs") },
             { name: heading },
           ],
           jobs: list.data,
         }),
       );
       return {
-        kind: 'ok' as const,
+        kind: "ok" as const,
         skill,
         list,
         seo,
@@ -661,7 +628,7 @@ export const getJobsSkillPage = createServerFn({ method: 'GET' })
   );
 
 /** /jobs/locations/ directory — places + head + breadcrumb JSON-LD. */
-export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
+export const getJobsLocationsIndexPage = createServerFn({ method: "GET" })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
@@ -677,7 +644,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
           language: seo.language,
         }),
         origin: seo.origin,
-        path: localizePath('/jobs/locations'),
+        path: localizePath("/jobs/locations"),
         description: listingMetaDescription({
           heading: m.jobsLocationsIndex_heading(),
           boardName: seo.boardName,
@@ -687,10 +654,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         listingJsonLd({
           origin: seo.origin,
-          breadcrumbs: [
-            { name: crumbs.jobs, path: '/' },
-            { name: crumbs.locations },
-          ],
+          breadcrumbs: [{ name: crumbs.jobs, path: "/" }, { name: crumbs.locations }],
         }),
       );
       return { places, seo, head, jsonLd };
@@ -704,7 +668,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
  * alias slug that 308-redirects still fetches a listing that is then discarded.
  * That path is rare; the common path saves a full serial round-trip wave.
  */
-export const getJobsLocationPage = createServerFn({ method: 'GET' })
+export const getJobsLocationPage = createServerFn({ method: "GET" })
   .validator(
     (
       input: JobsListingFiltersInput & {
@@ -719,9 +683,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const filters = listFilters(data);
-      const arrangement = isWorkArrangementSlug(data.locationSlug)
-        ? data.locationSlug
-        : null;
+      const arrangement = isWorkArrangementSlug(data.locationSlug) ? data.locationSlug : null;
       const placeRead = resolveOrNull(
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
@@ -735,20 +697,12 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       const placeTreeRead = arrangement
         ? Promise.resolve(null)
         : board.taxonomy.places.list(undefined, { headers }).catch(() => null);
-      filters.sort = await placeListingSort(
-        filters.sort,
-        data.locationSlug,
-        placeRead,
-      );
+      filters.sort = await placeListingSort(filters.sort, data.locationSlug, placeRead);
       const radiusParams = await jobsRadiusParams(data.within, () =>
         listingRadiusKm(data.locationSlug, placeRead, data.within),
       );
       // Never rejects; only a suggested place reads it.
-      const indexJobCountRead = suggestedPlaceIndexJobCount(
-        data,
-        placeRead,
-        headers,
-      );
+      const indexJobCountRead = suggestedPlaceIndexJobCount(data, placeRead, headers);
       const [place, listResult, seo, placeTree] = await Promise.all([
         placeRead,
         settled(
@@ -787,23 +741,15 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         placeTreeRead,
       ]);
       const indexJobCount = await indexJobCountRead;
-      if (!place) return { kind: 'not_found' as const };
+      if (!place) return { kind: "not_found" as const };
       if (place.redirectTo) {
-        return { kind: 'redirect' as const, to: place.redirectTo };
+        return { kind: "redirect" as const, to: place.redirectTo };
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const relatedSearches =
-        'relatedSearches' in list ? list.relatedSearches : undefined;
-      const searchRadius = placeSearchRadius(
-        place,
-        data.within,
-        place.defaultRadiusKm,
-      );
-      const { heading, countedHeading } = locationListingCopy(
-        data.locationSlug,
-        place,
-      );
+      const relatedSearches = "relatedSearches" in list ? list.relatedSearches : undefined;
+      const searchRadius = placeSearchRadius(place, data.within, place.defaultRadiusKm);
+      const { heading, countedHeading } = locationListingCopy(data.locationSlug, place);
       // Hosted parity: Home > Jobs > country > … > current place (terminal).
       // A work arrangement page ends on its own heading.
       const crumbs = breadcrumbsCopy();
@@ -847,10 +793,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
             )
           : place.suggested
             ? (indexJobCount ?? 0) < SUGGESTED_PLACE_INDEX_MIN_JOBS
-            : isSearchRadiusViewNoindex(
-                searchRadius,
-                placeJobCount(placeTree?.data, place),
-              ),
+            : isSearchRadiusViewNoindex(searchRadius, placeJobCount(placeTree?.data, place)),
       );
       const jsonLd = asJsonObjects(
         [
@@ -864,13 +807,13 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       );
       const intro = landingIntro(place, data);
       return {
-        kind: 'ok' as const,
+        kind: "ok" as const,
         place: intro.resolution,
         introHtml: intro.introHtml,
         list,
         seo,
         relatedSearches,
-        relatedSearchesPlace: relatedSearchesPlace(place, arrangement),
+        relatedSearchesPlace: relatedSearchesPlace(place, arrangement, searchRadius),
         searchRadius,
         head,
         jsonLd,
@@ -888,7 +831,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
  * alias slug that 308-redirects still fetches a listing that is then discarded.
  * That path is rare; the common path saves a full serial round-trip wave.
  */
-export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
+export const getJobsLocationCategoryPage = createServerFn({ method: "GET" })
   .validator(
     (
       input: JobsListingFiltersInput & {
@@ -908,9 +851,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
       const categoryRead = startedEarly(
-        resolveOrNull(
-          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
-        ),
+        resolveOrNull(board.taxonomy.categories.resolve(data.categorySlug, { headers })),
       );
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
@@ -919,74 +860,51 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
-      const arrangement = isWorkArrangementSlug(data.locationSlug)
-        ? data.locationSlug
-        : null;
+      const arrangement = isWorkArrangementSlug(data.locationSlug) ? data.locationSlug : null;
       const placeTreeRead = arrangement
         ? Promise.resolve(null)
         : board.taxonomy.places.list(undefined, { headers }).catch(() => null);
       // The in-place count needs the kilometres (whether the place widens
       // at all); the job list does not wait for them (see jobsRadiusParams).
-      const radiusKmRead = listingRadiusKm(
-        data.locationSlug,
-        placeRead,
-        data.within,
-      );
+      const radiusKmRead = listingRadiusKm(data.locationSlug, placeRead, data.within);
       // A filtered view may never await it; a failed place resolve already
       // fails the page through `placeRead`, so do not also leave a rejection
       // unobserved.
       radiusKmRead.catch(() => undefined);
-      filters.sort = await placeListingSort(
-        filters.sort,
-        data.locationSlug,
+      filters.sort = await placeListingSort(filters.sort, data.locationSlug, placeRead);
+      const radiusParams = await jobsRadiusParams(data.within, () => radiusKmRead);
+      const [place, category, listResult, seo, placeTree, inPlaceJobCount] = await Promise.all([
         placeRead,
-      );
-      const radiusParams = await jobsRadiusParams(
-        data.within,
-        () => radiusKmRead,
-      );
-      const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
-        await Promise.all([
-          placeRead,
-          categoryRead,
-          settled(
-            readReachablePage(data.offset, data.limit, (offset) =>
-              board.jobs.list(
-                {
-                  ...filters,
-                  offset,
-                  location: data.locationSlug,
-                  ...radiusParams,
-                  category: data.categorySlug,
-                },
-                { headers },
-              ),
+        categoryRead,
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              {
+                ...filters,
+                offset,
+                location: data.locationSlug,
+                ...radiusParams,
+                category: data.categorySlug,
+              },
+              { headers },
             ),
           ),
-          seoRead,
-          placeTreeRead,
-          combinationInPlaceJobCount(
-            data,
-            { category: data.categorySlug },
-            radiusKmRead,
-            headers,
-          ),
-        ]);
-      if (!place || !category) return { kind: 'not_found' as const };
+        ),
+        seoRead,
+        placeTreeRead,
+        combinationInPlaceJobCount(data, { category: data.categorySlug }, radiusKmRead, headers),
+      ]);
+      if (!place || !category) return { kind: "not_found" as const };
       if (place.redirectTo || category.redirectTo) {
         return {
-          kind: 'redirect' as const,
+          kind: "redirect" as const,
           locationTo: place.redirectTo ?? data.locationSlug,
           keywordTo: category.redirectTo ?? data.categorySlug,
         };
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const searchRadius = placeSearchRadius(
-        place,
-        data.within,
-        place.defaultRadiusKm,
-      );
+      const searchRadius = placeSearchRadius(place, data.within, place.defaultRadiusKm);
       const { heading, countedHeading } = locationCategoryListingCopy(
         data.locationSlug,
         place,
@@ -1004,8 +922,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           ? [workArrangementCrumb(arrangement, place)]
           : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
               linkCurrent: true,
-              ancestorPath: (slug) =>
-                jobsLocationCategoryPath(slug, category.canonicalSlug),
+              ancestorPath: (slug) => jobsLocationCategoryPath(slug, category.canonicalSlug),
             })),
         { name: category.displayName },
       ];
@@ -1019,9 +936,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
           origin: seo.origin,
-          path: localizePath(
-            `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
-          ),
+          path: localizePath(`/jobs/locations/${data.locationSlug}/${data.categorySlug}`),
           description: listingMetaDescription({
             heading: heading,
             countedHeading,
@@ -1047,13 +962,13 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         ].filter((entry) => entry !== null),
       );
       return {
-        kind: 'ok' as const,
+        kind: "ok" as const,
         place: withoutIntro(place),
         category: withoutIntro(category),
         list,
         seo,
         relatedSearches: list.relatedSearches,
-        relatedSearchesPlace: relatedSearchesPlace(place, arrangement),
+        relatedSearchesPlace: relatedSearchesPlace(place, arrangement, searchRadius),
         searchRadius,
         head,
         jsonLd,
@@ -1064,7 +979,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
   );
 
 /** /jobs/locations/$location/skills/$skill — place + skill listing + head. */
-export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
+export const getJobsLocationSkillPage = createServerFn({ method: "GET" })
   .validator(
     (
       input: JobsListingFiltersInput & {
@@ -1087,9 +1002,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         board.taxonomy.places.resolve(data.locationSlug, { headers }),
       );
       const skillRead = startedEarly(
-        resolveOrNull(
-          board.taxonomy.skills.resolve(data.skillSlug, { headers }),
-        ),
+        resolveOrNull(board.taxonomy.skills.resolve(data.skillSlug, { headers })),
       );
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
@@ -1098,79 +1011,52 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
-      const arrangement = isWorkArrangementSlug(data.locationSlug)
-        ? data.locationSlug
-        : null;
+      const arrangement = isWorkArrangementSlug(data.locationSlug) ? data.locationSlug : null;
       const placeTreeRead = arrangement
         ? Promise.resolve(null)
         : board.taxonomy.places.list(undefined, { headers }).catch(() => null);
       // The in-place count needs the kilometres (whether the place widens
       // at all); the job list does not wait for them (see jobsRadiusParams).
-      const radiusKmRead = listingRadiusKm(
-        data.locationSlug,
-        placeRead,
-        data.within,
-      );
+      const radiusKmRead = listingRadiusKm(data.locationSlug, placeRead, data.within);
       // A filtered view may never await it; a failed place resolve already
       // fails the page through `placeRead`, so do not also leave a rejection
       // unobserved.
       radiusKmRead.catch(() => undefined);
-      filters.sort = await placeListingSort(
-        filters.sort,
-        data.locationSlug,
+      filters.sort = await placeListingSort(filters.sort, data.locationSlug, placeRead);
+      const radiusParams = await jobsRadiusParams(data.within, () => radiusKmRead);
+      const [place, skill, listResult, seo, placeTree, inPlaceJobCount] = await Promise.all([
         placeRead,
-      );
-      const radiusParams = await jobsRadiusParams(
-        data.within,
-        () => radiusKmRead,
-      );
-      const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
-        await Promise.all([
-          placeRead,
-          skillRead,
-          settled(
-            readReachablePage(data.offset, data.limit, (offset) =>
-              board.jobs.list(
-                {
-                  ...filters,
-                  offset,
-                  location: data.locationSlug,
-                  ...radiusParams,
-                  skill: data.skillSlug,
-                },
-                { headers },
-              ),
+        skillRead,
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              {
+                ...filters,
+                offset,
+                location: data.locationSlug,
+                ...radiusParams,
+                skill: data.skillSlug,
+              },
+              { headers },
             ),
           ),
-          seoRead,
-          placeTreeRead,
-          combinationInPlaceJobCount(
-            data,
-            { skill: data.skillSlug },
-            radiusKmRead,
-            headers,
-          ),
-        ]);
-      if (!place || !skill) return { kind: 'not_found' as const };
+        ),
+        seoRead,
+        placeTreeRead,
+        combinationInPlaceJobCount(data, { skill: data.skillSlug }, radiusKmRead, headers),
+      ]);
+      if (!place || !skill) return { kind: "not_found" as const };
       if (place.redirectTo || skill.redirectTo) {
         return {
-          kind: 'redirect' as const,
+          kind: "redirect" as const,
           locationTo: place.redirectTo ?? data.locationSlug,
           skillTo: skill.redirectTo ?? data.skillSlug,
         };
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const searchRadius = placeSearchRadius(
-        place,
-        data.within,
-        place.defaultRadiusKm,
-      );
-      const { heading, countedHeading } = locationSkillListingCopy(
-        data.locationSlug,
-        place,
-        skill,
-      );
+      const searchRadius = placeSearchRadius(place, data.within, place.defaultRadiusKm);
+      const { heading, countedHeading } = locationSkillListingCopy(data.locationSlug, place, skill);
       // Hosted parity: Home > Jobs > country > … > place (linked) > skill,
       // with the same facet-relaxation trail — ancestors keep the skill
       // scope, the current place links its bare listing. A work
@@ -1183,8 +1069,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           ? [workArrangementCrumb(arrangement, place)]
           : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
               linkCurrent: true,
-              ancestorPath: (slug) =>
-                jobsLocationSkillPath(slug, skill.canonicalSlug),
+              ancestorPath: (slug) => jobsLocationSkillPath(slug, skill.canonicalSlug),
             })),
         { name: skill.displayName },
       ];
@@ -1198,9 +1083,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
             count: catalogJobCount(list.count, list.gatedCount),
           }),
           origin: seo.origin,
-          path: localizePath(
-            `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
-          ),
+          path: localizePath(`/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`),
           description: listingMetaDescription({
             heading: heading,
             countedHeading,
@@ -1226,13 +1109,13 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         ].filter((entry) => entry !== null),
       );
       return {
-        kind: 'ok' as const,
+        kind: "ok" as const,
         place: withoutIntro(place),
         skill,
         list,
         seo,
         relatedSearches: list.relatedSearches,
-        relatedSearchesPlace: relatedSearchesPlace(place, arrangement),
+        relatedSearchesPlace: relatedSearchesPlace(place, arrangement, searchRadius),
         searchRadius,
         head,
         jsonLd,
