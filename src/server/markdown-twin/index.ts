@@ -15,6 +15,13 @@ import {
   type MarkdownTwin,
   type MarkdownTwinKind,
 } from '../../lib/markdown-twin/routes';
+import { buildBlogPostTwin, buildBlogTagTwin, buildBlogTwin } from './blog';
+import {
+  buildCompaniesTwin,
+  buildCompanyJobsTwin,
+  buildCompanyMarketTwin,
+  buildCompanyTwin,
+} from './companies';
 import { buildHomeTwin } from './home';
 import { buildJobTwin } from './job-detail';
 import {
@@ -50,6 +57,13 @@ const BUILDERS = {
     buildJobsLocationCategoryTwin(twin, origin),
   jobsLocationSkill: (twin, origin) => buildJobsLocationSkillTwin(twin, origin),
   job: (twin, origin) => buildJobTwin(twin, origin),
+  companies: (twin, origin) => buildCompaniesTwin(twin, origin),
+  companyMarket: (twin, origin) => buildCompanyMarketTwin(twin, origin),
+  company: (twin, origin) => buildCompanyTwin(twin, origin),
+  companyJobs: (twin, origin) => buildCompanyJobsTwin(twin, origin),
+  blog: (twin, origin) => buildBlogTwin(twin, origin),
+  blogPost: (twin, origin) => buildBlogPostTwin(twin, origin),
+  blogTag: (twin, origin) => buildBlogTagTwin(twin, origin),
 } satisfies MarkdownTwinBuilders;
 
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';

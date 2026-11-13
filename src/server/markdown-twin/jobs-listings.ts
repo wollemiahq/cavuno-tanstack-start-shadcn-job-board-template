@@ -19,7 +19,6 @@ import {
   jobsLocationSkillPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
-import { defaultParseSearch } from '@tanstack/react-router';
 
 import { placeLinkSlug } from '../../board/place-link';
 import { buildPlaceHierarchy } from '../../components/board/place-directory-tree';
@@ -64,6 +63,7 @@ import { escapeInline, link, markdownDocument } from './format';
 import {
   canonicalOf,
   listingTwin,
+  routerSearch,
   type JobCardPage,
   type ListingPageData,
 } from './job-listing';
@@ -75,7 +75,6 @@ import {
 
 import type { JobFormSource } from '../../board/job-form';
 import type { MarkdownTwin } from '../../lib/markdown-twin/routes';
-import type { UrlSearchInput } from '../../lib/pagination';
 import type { MarkdownTwinResult } from './result';
 import type { PublicPlace } from '@cavuno/board';
 
@@ -139,13 +138,6 @@ const defaultDependencies: ListingTwinDependencies = {
   resolveRedirect,
   readBoardContext,
 };
-
-/** The twin's query as the router parses a page URL's. */
-function routerSearch(twin: MarkdownTwin): UrlSearchInput {
-  // SAFETY: TanStack's default search codec only yields URL-serializable
-  // scalar and array values, which is what the route validators take.
-  return defaultParseSearch(twin.search) as UrlSearchInput;
-}
 
 /** The canonical path of a work arrangement redirect's target. */
 function targetPath<Search>(target: WorkArrangementTarget<Search>): string {

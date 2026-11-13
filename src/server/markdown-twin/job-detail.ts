@@ -77,7 +77,7 @@ type JobDetailFacts = Pick<
 >;
 
 /** One custom-field answer as inline Markdown; rich text is a block. */
-function fieldValue(
+export function fieldValue(
   value: JobDetailVM['customFields'][number]['value'],
   origin: string,
 ): string {

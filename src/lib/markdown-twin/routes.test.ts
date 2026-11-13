@@ -65,6 +65,13 @@ describe('resolveMarkdownTwin', () => {
       'jobsLocationSkill',
       { location: 'berlin', skill: 'python' },
     ],
+    ['/companies.md', 'companies', {}],
+    ['/companies/acme.md', 'company', { companySlug: 'acme' }],
+    ['/companies/acme/jobs.md', 'companyJobs', { companySlug: 'acme' }],
+    ['/companies/markets/robotics.md', 'companyMarket', { market: 'robotics' }],
+    ['/blog.md', 'blog', {}],
+    ['/blog/hello-world.md', 'blogPost', { postSlug: 'hello-world' }],
+    ['/blog/tag/remote.md', 'blogTag', { tagSlug: 'remote' }],
   ])('resolves %s as the %s page', (path, kind, params) => {
     expect(resolveMarkdownTwin(get(path), ENGLISH_BOARD)).toMatchObject({
       kind,
@@ -80,6 +87,15 @@ describe('resolveMarkdownTwin', () => {
       htmlPath: '/vacatures/locaties',
       search: '?page=2',
     });
+  });
+
+  it('resolves localized company and blog words', () => {
+    expect(
+      resolveMarkdownTwin(get('/bedrijven/branches/robotica.md'), DUTCH_BOARD),
+    ).toMatchObject({ kind: 'companyMarket', params: { market: 'robotica' } });
+    expect(
+      resolveMarkdownTwin(get('/fr/blog/etiquette/remote.md'), DUTCH_BOARD),
+    ).toMatchObject({ kind: 'blogTag', params: { tagSlug: 'remote' } });
   });
 
   it('answers HEAD as well as GET, and nothing else', () => {
@@ -107,10 +123,10 @@ describe('resolveMarkdownTwin', () => {
   it.each([
     ['the page itself', '/companies/acme/jobs/designer'],
     ['a twin of a twin', '/companies/acme/jobs/designer.md.md'],
-    ['a page without a twin yet', '/companies.md'],
+    ['a page without a twin yet', '/companies/acme/salaries.md'],
+    ['an author page', '/blog/author/jane.md'],
     ['a feed', '/jobs/rss.xml.md'],
     ['an unknown path', '/no/such/page.md'],
-    ['a company page', '/companies/acme.md'],
     ['an empty last segment', '/companies/acme/jobs/designer/.md'],
     ['a machine path', '/api/companies/acme/jobs/designer.md'],
     ['the internal twin route', '/markdown-twin/companies/a/jobs/b.md'],

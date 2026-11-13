@@ -129,6 +129,8 @@ describe('public HTML cache policy', () => {
     expect(isPublicDocumentPath('/de/jobs.md')).toBe(true);
     expect(isPublicDocumentPath('/index.md')).toBe(true);
     expect(isPublicDocumentPath('/de/index.md')).toBe(true);
+    expect(isPublicDocumentPath('/companies.md')).toBe(true);
+    expect(isPublicDocumentPath('/blog/tag/remote.md')).toBe(true);
     expect(isPublicDocumentPath('/account.md')).toBe(false);
 
     const twin = withPublicHtmlCacheHeaders(
