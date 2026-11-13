@@ -451,3 +451,22 @@ describe('salaryCompanyMetaDescription', () => {
     ).toContain('2027');
   });
 });
+
+describe('salary links', () => {
+  it('links a skill to its jobs page, since skill salary pages are never indexed', async () => {
+    const { salarySkillLinkPath } = await import('./salary-view-model');
+    expect(salarySkillLinkPath('incident-response')).toBe(
+      '/jobs/skills/incident-response',
+    );
+  });
+
+  it('leaves out list items the API marks not indexable, and keeps items without the field', async () => {
+    const { indexableSalaryItems } = await import('./salary-view-model');
+    const items = [
+      { slug: 'a', indexable: true },
+      { slug: 'b', indexable: false },
+      { slug: 'c' },
+    ];
+    expect(indexableSalaryItems(items).map((i) => i.slug)).toEqual(['a', 'c']);
+  });
+});

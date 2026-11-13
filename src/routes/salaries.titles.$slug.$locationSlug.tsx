@@ -16,7 +16,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
-  salarySkillInLocationPath,
+  salarySkillLinkPath,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -94,11 +94,12 @@ function TitleLocationSalaryPage() {
       jobCount: x.jobCount,
     }));
 
-  // Cross-axis rails stay scoped to THIS place (skill/title salaries in the
-  // current location), matching the hosted board — not the bare axis pages.
+  // Cross-axis rails stay scoped to THIS place (title salaries in the current
+  // location), matching the hosted board. Skills link their jobs page: skill
+  // salary pages are never indexed.
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
-    href: salarySkillInLocationPath(x.skillSlug, salary.locationCanonicalSlug),
+    href: salarySkillLinkPath(x.skillSlug),
     range:
       formatSalaryRange(
         locale,

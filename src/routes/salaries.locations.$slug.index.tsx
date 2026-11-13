@@ -3,8 +3,12 @@
  * so `@cavuno/board/seo` stays out of the universal client entry.
  */
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
-import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import { Link, createFileRoute, redirect } from '@tanstack/react-router';
+import {
+  BOARD_PATHS,
+  salaryLocationPath,
+  salaryTitlePath,
+} from '@cavuno/board/paths';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -16,10 +20,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
-  salaryLocationSkillsPath,
-  salaryLocationTitlesPath,
-  salarySkillInLocationPath,
-  salaryTitleInLocationPath,
+  salarySkillLinkPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -34,7 +35,6 @@ import {
 } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
-import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 type City = LocationSalaryDetail['childLocations'][number];
@@ -99,11 +99,14 @@ function LocationSalaryPage() {
     href: c.href,
   }));
 
-  // Cross-axis: top titles/skills stay scoped to THIS place ("{Title} salaries
-  // in {Place}"), matching the hosted board — not the bare title/skill pages.
+  // The API's top titles and skills for a place are board-wide figures, not
+  // the place's: the counts match the board-wide title pages, and the
+  // "{Title} in {Place}" page 404s where the place has too little data. So
+  // each card links the board-wide title page its figures come from, and
+  // skills link their jobs page (skill salary pages are never indexed).
   const categoryItems: RailItem[] = salary.topCategories.map((x) => ({
     name: x.categoryName,
-    href: salaryTitleInLocationPath(x.categorySlug, salary.canonicalSlug),
+    href: salaryTitlePath(x.categorySlug),
     range:
       formatSalaryRange(
         locale,
@@ -115,7 +118,7 @@ function LocationSalaryPage() {
   }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
-    href: salarySkillInLocationPath(x.skillSlug, salary.canonicalSlug),
+    href: salarySkillLinkPath(x.skillSlug),
     range:
       formatSalaryRange(
         locale,
@@ -201,36 +204,12 @@ function LocationSalaryPage() {
           ) : null}
 
           {categoryItems.length > 0 ? (
-            <PageSection
-              title={m.salaryDetail_topTitles()}
-              actions={
-                <Link
-                  to={salaryLocationTitlesPath(salary.canonicalSlug)}
-                  className={buttonVariants({ variant: 'link', size: 'sm' })}
-                >
-                  {m.salaryDetail_seeAllTitlesInPlaceLabel({
-                    place: salary.placeName,
-                  })}
-                </Link>
-              }
-            >
+            <PageSection title={m.salaryDetail_topTitles()}>
               <SalaryRail vm={toSalaryRailVM('', categoryItems, getLocale())} />
             </PageSection>
           ) : null}
           {skillItems.length > 0 ? (
-            <PageSection
-              title={m.salaryDetail_topSkills()}
-              actions={
-                <Link
-                  to={salaryLocationSkillsPath(salary.canonicalSlug)}
-                  className={buttonVariants({ variant: 'link', size: 'sm' })}
-                >
-                  {m.salaryDetail_seeAllSkillsInPlaceLabel({
-                    place: salary.placeName,
-                  })}
-                </Link>
-              }
-            >
+            <PageSection title={m.salaryDetail_topSkills()}>
               <SalaryRail vm={toSalaryRailVM('', skillItems, getLocale())} />
             </PageSection>
           ) : null}

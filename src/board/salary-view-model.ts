@@ -17,6 +17,7 @@ import { formatSalaryStat, formatSalaryStatRange } from '@cavuno/board/format';
 import {
   companySalaryPath,
   encodePathSegment,
+  jobsSkillPath,
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
@@ -101,6 +102,28 @@ export function salarySkillLocationsPath(skillSlug: string): string {
 /** Cross-axis: the job-titles fan-out inside a place's salary page. */
 export function salaryLocationTitlesPath(placeSlug: string): string {
   return `${salaryLocationPath(placeSlug)}/titles`;
+}
+
+/**
+ * Where a skill links from an indexable salary page: the skill's jobs page.
+ * Skill salary pages are never indexed (the Board API returns
+ * `indexable: false` at any job count, because people search salaries by
+ * role, not skill), so linking them from indexable pages spends link weight
+ * on pages that cannot rank. The jobs page for the skill can.
+ */
+export function salarySkillLinkPath(skillSlug: string): string {
+  return jobsSkillPath(skillSlug);
+}
+
+/**
+ * Salary list items the Board API marks `indexable: false` (too few jobs
+ * behind the figure) are left out of link lists, so pages link only salary
+ * pages that can be indexed. An item without the field (an older API) stays.
+ */
+export function indexableSalaryItems<T extends { indexable?: boolean }>(
+  items: readonly T[],
+): T[] {
+  return items.filter((item) => item.indexable !== false);
 }
 
 /** Cross-axis: the skills fan-out inside a place's salary page. */

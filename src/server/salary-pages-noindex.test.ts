@@ -183,6 +183,17 @@ describe('salary hub robots meta', () => {
     );
   });
 
+  it('lists only indexable titles in the titles index structured data', async () => {
+    api.titlesList.mockResolvedValue(
+      list([titleItem('thin', { indexable: false }), titleItem('ranked')]),
+    );
+    const page = await getSalaryTitlesIndexPage();
+    // Slugs only: the salary path segment is localized per board language.
+    const ld = JSON.stringify(page.jsonLd);
+    expect(ld).toContain('/ranked"');
+    expect(ld).not.toContain('/thin"');
+  });
+
   it('keeps the root hub indexable when any list it loads has an indexable item', async () => {
     api.titlesList.mockResolvedValue(
       list([titleItem('a', { indexable: false })]),

@@ -34,6 +34,7 @@ import {
 import { createServerFn } from '@tanstack/react-start';
 
 import {
+  indexableSalaryItems,
   salaryEntityInPlaceTitle,
   salaryEntityTitle,
   salaryLocationSkillsPath,
@@ -257,7 +258,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            titles.data.map((t) => ({
+            indexableSalaryItems(titles.data).map((t) => ({
               name: t.name,
               url: selfUrl(seo.origin, salaryTitlePath(t.slug)),
             })),

@@ -6,7 +6,6 @@ import {
   BOARD_PATHS,
   companySalaryPath,
   salaryLocationPath,
-  salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
 import { Link, createFileRoute } from '@tanstack/react-router';
@@ -19,6 +18,8 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableSalaryItems,
+  salarySkillLinkPath,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -50,39 +51,45 @@ function SalariesHub() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
-  const companyItems: RailItem[] = companies.slice(0, PREVIEW).map((x) => ({
-    name: x.companyName,
-    href: companySalaryPath(x.companySlug),
-    range:
-      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
-      '',
-    jobCount: x.jobCount,
-    logoPath: x.logoPath,
-  }));
-  const titleItems: RailItem[] = titles.slice(0, PREVIEW).map((x) => ({
-    name: x.name,
-    href: salaryTitlePath(x.slug),
-    range:
-      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
-      '',
-    jobCount: x.jobCount,
-  }));
+  const companyItems: RailItem[] = indexableSalaryItems(companies)
+    .slice(0, PREVIEW)
+    .map((x) => ({
+      name: x.companyName,
+      href: companySalaryPath(x.companySlug),
+      range:
+        formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
+        '',
+      jobCount: x.jobCount,
+      logoPath: x.logoPath,
+    }));
+  const titleItems: RailItem[] = indexableSalaryItems(titles)
+    .slice(0, PREVIEW)
+    .map((x) => ({
+      name: x.name,
+      href: salaryTitlePath(x.slug),
+      range:
+        formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
+        '',
+      jobCount: x.jobCount,
+    }));
   const skillItems: RailItem[] = skills.slice(0, PREVIEW).map((x) => ({
     name: x.name,
-    href: salarySkillPath(x.slug),
+    href: salarySkillLinkPath(x.slug),
     range:
       formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, x.currency) ??
       '',
     jobCount: x.jobCount,
   }));
-  const locationItems: RailItem[] = locations.slice(0, PREVIEW).map((x) => ({
-    name: x.placeName,
-    href: salaryLocationPath(x.placeSlug),
-    // Location index items carry no currency — never invent one.
-    range:
-      formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, null) ?? '',
-    jobCount: x.jobCount,
-  }));
+  const locationItems: RailItem[] = indexableSalaryItems(locations)
+    .slice(0, PREVIEW)
+    .map((x) => ({
+      name: x.placeName,
+      href: salaryLocationPath(x.placeSlug),
+      // Location index items carry no currency — never invent one.
+      range:
+        formatSalaryRange(locale, x.avgSalaryMin, x.avgSalaryMax, null) ?? '',
+      jobCount: x.jobCount,
+    }));
   const hasSalaryData =
     companyItems.length +
       titleItems.length +

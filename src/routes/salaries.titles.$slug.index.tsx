@@ -3,11 +3,7 @@
  * `@cavuno/board/seo` stays out of the universal client entry.
  */
 import { isNotFound } from '@cavuno/board';
-import {
-  BOARD_PATHS,
-  salarySkillPath,
-  salaryTitlePath,
-} from '@cavuno/board/paths';
+import { BOARD_PATHS, salaryTitlePath } from '@cavuno/board/paths';
 import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
@@ -28,6 +24,7 @@ import {
   toSalaryFaqVM,
   toSalaryRailVM,
   toSeniorityTableVM,
+  salarySkillLinkPath,
 } from '@/board/salary-view-model';
 import {
   SalaryEmptyState,
@@ -111,7 +108,7 @@ function TitleSalaryPage() {
   }));
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
-    href: salarySkillPath(x.skillSlug),
+    href: salarySkillLinkPath(x.skillSlug),
     range:
       formatSalaryRange(
         locale,
