@@ -162,7 +162,11 @@ const BUDGETS = {
     // input load on click. Measured 290,363 B raw / 106,871 B gzip against
     // main's 283,057 / 103,998 (+7,306 / +2,873); both budgets are raised by
     // exactly the measured growth, keeping main's headroom.
-    '/account': { raw: 297_306, gzip: 109_373 },
+    // Markdown twins (job detail) left this route's raw bytes unchanged
+    // (296,513 B) but moved its gzip from 109,348 to 109,390 B: the route
+    // tree gained a server-only route, which renamed the hashed chunk files
+    // this route imports. Raised by that +42 B, keeping main's headroom.
+    '/account': { raw: 297_306, gzip: 109_415 },
     // Pre-existing overflow on main after board-user self-service (#40):
     // this route used the default 80 KiB increment and landed at 113.7 /
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the

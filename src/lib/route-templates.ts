@@ -74,6 +74,7 @@ export const ROUTE_TEMPLATES = [
   '/me/purchases',
   '/mcp/docs',
   '/mcp/server-card',
+  '/markdown-twin/$',
   '/messages/$conversationId',
   '/p/$handle',
   '/post/checkout-canceled',

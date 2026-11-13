@@ -64,6 +64,7 @@ import { Route as GoSplatRouteImport } from './routes/go.$'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
+import { Route as MarkdownTwinSplatRouteImport } from './routes/markdown-twin.$'
 import { Route as McpIndexRouteImport } from './routes/mcp.index'
 import { Route as McpDocsRouteImport } from './routes/mcp.docs'
 import { Route as McpServerCardRouteImport } from './routes/mcp.server-card'
@@ -400,6 +401,11 @@ const JobsKeywordRoute = JobsKeywordRouteImport.update({
 const JobsRssDotxmlRoute = JobsRssDotxmlRouteImport.update({
   id: '/jobs/rss.xml',
   path: '/jobs/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarkdownTwinSplatRoute = MarkdownTwinSplatRouteImport.update({
+  id: '/markdown-twin/$',
+  path: '/markdown-twin/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpIndexRoute = McpIndexRouteImport.update({
@@ -778,6 +784,7 @@ export interface FileRoutesByFullPath {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/markdown-twin/$': typeof MarkdownTwinSplatRoute
   '/mcp/docs': typeof McpDocsRoute
   '/mcp/server-card': typeof McpServerCardRoute
   '/me/alerts': typeof MeAlertsRoute
@@ -895,6 +902,7 @@ export interface FileRoutesByTo {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/markdown-twin/$': typeof MarkdownTwinSplatRoute
   '/mcp/docs': typeof McpDocsRoute
   '/mcp/server-card': typeof McpServerCardRoute
   '/me/alerts': typeof MeAlertsRoute
@@ -1013,6 +1021,7 @@ export interface FileRoutesById {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/markdown-twin/$': typeof MarkdownTwinSplatRoute
   '/mcp/docs': typeof McpDocsRoute
   '/mcp/server-card': typeof McpServerCardRoute
   '/me/alerts': typeof MeAlertsRoute
@@ -1132,6 +1141,7 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/markdown-twin/$'
     | '/mcp/docs'
     | '/mcp/server-card'
     | '/me/alerts'
@@ -1249,6 +1259,7 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/markdown-twin/$'
     | '/mcp/docs'
     | '/mcp/server-card'
     | '/me/alerts'
@@ -1366,6 +1377,7 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/markdown-twin/$'
     | '/mcp/docs'
     | '/mcp/server-card'
     | '/me/alerts'
@@ -1484,6 +1496,7 @@ export interface RootRouteChildren {
   GoSplatRoute: typeof GoSplatRoute
   JobsKeywordRoute: typeof JobsKeywordRoute
   JobsRssDotxmlRoute: typeof JobsRssDotxmlRoute
+  MarkdownTwinSplatRoute: typeof MarkdownTwinSplatRoute
   McpDocsRoute: typeof McpDocsRoute
   McpServerCardRoute: typeof McpServerCardRoute
   MeAlertsRoute: typeof MeAlertsRoute
@@ -1933,6 +1946,13 @@ declare module '@tanstack/react-router' {
       path: '/jobs/rss.xml'
       fullPath: '/jobs/rss.xml'
       preLoaderRoute: typeof JobsRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markdown-twin/$': {
+      id: '/markdown-twin/$'
+      path: '/markdown-twin/$'
+      fullPath: '/markdown-twin/$'
+      preLoaderRoute: typeof MarkdownTwinSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp/': {
@@ -2448,6 +2468,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoSplatRoute: GoSplatRoute,
   JobsKeywordRoute: JobsKeywordRoute,
   JobsRssDotxmlRoute: JobsRssDotxmlRoute,
+  MarkdownTwinSplatRoute: MarkdownTwinSplatRoute,
   McpDocsRoute: McpDocsRoute,
   McpServerCardRoute: McpServerCardRoute,
   MeAlertsRoute: MeAlertsRoute,

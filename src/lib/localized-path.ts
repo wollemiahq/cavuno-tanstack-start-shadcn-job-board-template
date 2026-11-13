@@ -79,6 +79,9 @@ export const MACHINE_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
   'ads.txt',
   'indexnow-key.txt',
   'site.webmanifest',
+  // The internal route that answers Markdown twins
+  // (src/lib/markdown-twin/routes.ts); never addressed from outside.
+  'markdown-twin',
 ]);
 
 /** Machine routes deeper in the tree: feeds and OG images. */

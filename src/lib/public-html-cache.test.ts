@@ -124,6 +124,26 @@ describe('public HTML cache policy', () => {
     expect(personalized.headers.get('X-Cavuno-Doc-Vary')).toBeNull();
   });
 
+  it('treats a Markdown twin like its page', () => {
+    expect(isPublicDocumentPath('/companies/acme/jobs/engineer.md')).toBe(true);
+    expect(isPublicDocumentPath('/de/jobs.md')).toBe(true);
+    expect(isPublicDocumentPath('/account.md')).toBe(false);
+
+    const twin = withPublicHtmlCacheHeaders(
+      new Request('https://board.test/companies/acme/jobs/engineer.md'),
+      new Response('# Engineer', {
+        headers: {
+          'Content-Type': 'text/markdown; charset=utf-8',
+          Vary: 'Accept, Cookie',
+        },
+      }),
+    );
+    expect(twin.headers.get('cloudflare-cdn-cache-control')).toBe(
+      'public, max-age=60, stale-while-revalidate=300',
+    );
+    expect(twin.headers.get('vary')).toBe('Accept, Cookie');
+  });
+
   it('caches a request that only carries the consent cookie', async () => {
     const match = vi.fn(async () => new Response('cached'));
     const put = vi.fn(async () => undefined);
