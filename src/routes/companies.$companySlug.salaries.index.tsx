@@ -1,6 +1,10 @@
 import { isNotFound } from '@cavuno/board';
-import { companySalaryPath, salaryLocationPath } from '@cavuno/board/paths';
-import { createFileRoute } from '@tanstack/react-router';
+import {
+  BOARD_PATHS,
+  companySalaryPath,
+  salaryLocationPath,
+} from '@cavuno/board/paths';
+import { createFileRoute, Link } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -27,6 +31,7 @@ import {
 } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { Text } from '@/components/text';
+import { buttonVariants } from '@/components/ui/button';
 
 export const Route = createFileRoute('/companies/$companySlug/salaries/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -164,6 +169,13 @@ function CompanySalaryPage() {
             getLocale(),
           )}
         />
+        {/* The only link back to the salary company directory outside /salaries. */}
+        <Link
+          to={BOARD_PATHS.salaryCompanies}
+          className={buttonVariants({ variant: 'link' })}
+        >
+          {m.salaryHub_seeAllCompaniesLabel()}
+        </Link>
         <SalaryFaq vm={toSalaryFaqVM(faqs, getLocale())} />
       </div>
     </CompanySectionShell>
