@@ -280,10 +280,23 @@ describe('PostJobForm', () => {
         onLogoFetch={vi.fn()}
         onLogoUpload={vi.fn()}
         onCheckout={vi.fn()}
+        contact={{
+          boardName: 'Acme Jobs',
+          contactPage: false,
+          email: 'jobs@acme.test',
+        }}
       />,
     );
 
-    expect(screen.getByText(m.postJob_noPlansTitle())).toBeInTheDocument();
+    expect(
+      screen.getByText(m.postJob_notTakingPostsText()),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(m.postJob_noPlansBody())).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: m.postJob_contactBoardLabel({ board: 'Acme Jobs' }),
+      }),
+    ).toHaveAttribute('href', 'mailto:jobs@acme.test');
     expect(
       screen.queryByRole('button', { name: m.postJob_submitButtonLabel() }),
     ).not.toBeInTheDocument();

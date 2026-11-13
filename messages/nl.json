@@ -2169,6 +2169,8 @@
   "postJob_logoPreviewAlt": "Voorbeeld van bedrijfslogo",
   "postJob_noPlansBody": "Plaatsen is op dit moment niet beschikbaar. Probeer het later opnieuw.",
   "postJob_noPlansTitle": "Er zijn geen vacatureplaatsingspakketten beschikbaar.",
+  "postJob_notTakingPostsText": "Je kunt hier nog geen vacatures plaatsen.",
+  "postJob_contactBoardLabel": "Contact opnemen met {board}",
   "postJob_officeLocationsLabel": "Locatie",
   "postJob_officeLocationsPlaceholder": "Voeg een stad toe…",
   "postJob_officeLocationsRemoteHelperText": "Optioneel voor remote functies. Voeg steden toe waar een kantoor beschikbaar is.",

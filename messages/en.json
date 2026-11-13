@@ -2169,6 +2169,8 @@
   "postJob_logoPreviewAlt": "Company logo preview",
   "postJob_noPlansBody": "Posting is not available right now. Please try again later.",
   "postJob_noPlansTitle": "No job posting plans are available.",
+  "postJob_notTakingPostsText": "This board isn’t taking job posts yet.",
+  "postJob_contactBoardLabel": "Contact {board}",
   "postJob_officeLocationsLabel": "Location",
   "postJob_officeLocationsPlaceholder": "Add a city…",
   "postJob_officeLocationsRemoteHelperText": "Optional for remote roles — add cities where an office is available.",

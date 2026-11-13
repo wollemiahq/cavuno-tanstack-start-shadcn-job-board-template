@@ -39,6 +39,11 @@ import {
   toEmployerStatsChartVM,
 } from '@/board/employer-stats-view-model';
 import {
+  BoardContactButton,
+  canContactBoard,
+  type BoardContact,
+} from '@/components/board/board-contact-button';
+import {
   EmployerStatsChart,
   EmployerStatsChartPending,
 } from '@/components/employer/employer-stats-chart';
@@ -206,6 +211,8 @@ export type CompanyJobsViewData = {
   timeseries: Promise<EmployerJobStatsPoint[]>;
   /** False when the board has no job-posting SKU and no leftover credits. */
   canPost: boolean;
+  /** True when the plan catalog could not be read, so posting may come back. */
+  plansUnavailable?: boolean;
 };
 
 function activeJobsSubtitle(count: number) {
@@ -247,12 +254,23 @@ export function CompanyJobsPageView({
   data,
   actions,
   search = {},
+  contact = null,
 }: {
   data: CompanyJobsViewData;
   actions: CompanyJobsViewActions;
   search?: CompanyJobsSearch;
+  /** How an employer reaches the board, offered when it takes no posts. */
+  contact?: BoardContact | null;
 }) {
-  const { slug, membership, jobs, statsIndex, timeseries, canPost } = data;
+  const {
+    slug,
+    membership,
+    jobs,
+    statsIndex,
+    timeseries,
+    canPost,
+    plansUnavailable = false,
+  } = data;
   const copy = {
     nav: navCopy(),
   };
@@ -273,6 +291,13 @@ export function CompanyJobsPageView({
       {copy.nav.post}
     </Link>
   ) : null;
+
+  // A board with no posting plans can only be fixed by its operator, so the
+  // employer gets a way to reach them instead of a retry they cannot use.
+  const contactLink =
+    !canPost && !plansUnavailable && canContactBoard(contact) ? (
+      <BoardContactButton contact={contact} />
+    ) : null;
 
   const outcome = postingOutcome(search, jobs.data);
 
@@ -317,10 +342,16 @@ export function CompanyJobsPageView({
                 <EmptyDescription>
                   {canPost
                     ? m.employerCompany_jobsEmptyText()
-                    : m.postJob_noPlansBody()}
+                    : plansUnavailable
+                      ? m.postJob_noPlansBody()
+                      : m.postJob_notTakingPostsText()}
                 </EmptyDescription>
               </EmptyHeader>
-              {postJobLink ? <EmptyContent>{postJobLink}</EmptyContent> : null}
+              {postJobLink ? (
+                <EmptyContent>{postJobLink}</EmptyContent>
+              ) : contactLink ? (
+                <EmptyContent>{contactLink}</EmptyContent>
+              ) : null}
             </Empty>
           ) : (
             <>

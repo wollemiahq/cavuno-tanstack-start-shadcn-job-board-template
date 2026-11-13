@@ -48,7 +48,7 @@ import { Card, CardContent } from './ui/card';
 import { Checkbox } from './ui/checkbox';
 import {
   Empty,
-  EmptyDescription,
+  EmptyContent,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
@@ -100,6 +100,11 @@ import type { LocationSuggestionVM } from '@/board/location-suggestion';
 import { customAttributeLines } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
 import { planFeatureLines, type PostPlan } from '@/board/plan-view-model';
+import {
+  BoardContactButton,
+  canContactBoard,
+  type BoardContact,
+} from '@/components/board/board-contact-button';
 import {
   CustomFieldInput,
   missingRequiredCustomField,
@@ -212,6 +217,8 @@ export type PostJobFormProps = {
   onCheckout: (url: string) => void;
   /** Editor implementation seam for isolated form tests. */
   DescriptionEditor?: React.ComponentType<RichTextEditorProps>;
+  /** How to reach the board when it takes no job posts. */
+  contact?: BoardContact | null;
 };
 
 function formatPrice(locale: string, amount: number, currency: string) {
@@ -247,6 +254,7 @@ export function PostJobForm({
   onLogoUpload,
   onCheckout,
   DescriptionEditor = RichTextEditor,
+  contact = null,
 }: PostJobFormProps) {
   // The operator's field order (or the pre-layout order on an older API).
   // Visibility and required state for salary, seniority and location come
@@ -1038,6 +1046,8 @@ export function PostJobForm({
     );
   }
 
+  // A failed plan read errors the route, so no plans here means the board
+  // sells none: only its operator can change that.
   if (plans.length === 0) {
     return (
       <Empty className="border-border border">
@@ -1045,9 +1055,13 @@ export function PostJobForm({
           <EmptyMedia variant="icon">
             <ImagePlus aria-hidden="true" />
           </EmptyMedia>
-          <EmptyTitle>{m.postJob_noPlansTitle()}</EmptyTitle>
-          <EmptyDescription>{m.postJob_noPlansBody()}</EmptyDescription>
+          <EmptyTitle>{m.postJob_notTakingPostsText()}</EmptyTitle>
         </EmptyHeader>
+        {canContactBoard(contact) ? (
+          <EmptyContent>
+            <BoardContactButton contact={contact} />
+          </EmptyContent>
+        ) : null}
       </Empty>
     );
   }

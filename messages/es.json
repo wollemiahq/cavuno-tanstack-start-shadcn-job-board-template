@@ -2169,6 +2169,8 @@
   "postJob_logoPreviewAlt": "Vista previa del logotipo de la empresa",
   "postJob_noPlansBody": "La publicación no está disponible ahora mismo. Inténtalo de nuevo más tarde.",
   "postJob_noPlansTitle": "No hay planes de publicación disponibles.",
+  "postJob_notTakingPostsText": "Todavía no se pueden publicar ofertas aquí.",
+  "postJob_contactBoardLabel": "Contactar con {board}",
   "postJob_officeLocationsLabel": "Ubicación",
   "postJob_officeLocationsPlaceholder": "Añade una ciudad…",
   "postJob_officeLocationsRemoteHelperText": "Opcional para puestos remotos: añade las ciudades donde haya oficina.",
