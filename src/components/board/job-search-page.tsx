@@ -120,6 +120,7 @@ export function JobSearchPage({
   resultsScope,
   introHtml,
   relatedSearches,
+  relatedSearchesPlace,
   onFiltersChange,
   onPageChange,
   selectedJob,
@@ -162,6 +163,8 @@ export function JobSearchPage({
    */
   introHtml?: string;
   relatedSearches?: RelatedSearch[];
+  /** Scopes category and skill chips to this place's combination pages. */
+  relatedSearchesPlace?: string | null;
   onFiltersChange: (next: JobsFilters & CustomFieldSearch) => void;
   onPageChange: (page: number) => void;
   selectedJob?: string;
@@ -194,7 +197,10 @@ export function JobSearchPage({
     onReplace: onSelectedJobReplace,
     onPush: onSelectedJobPush,
   });
-  const relatedChips = relatedSearchesToChips(relatedSearches);
+  const relatedChips = relatedSearchesToChips(
+    relatedSearches,
+    relatedSearchesPlace,
+  );
   const resultsBar = (
     <JobsResultsBar
       visibleCount={count}

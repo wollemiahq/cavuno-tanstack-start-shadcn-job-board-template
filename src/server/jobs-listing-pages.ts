@@ -62,6 +62,7 @@ import {
   isSearchRadiusViewNoindex,
   placeJobCount,
   placeSearchRadius,
+  type PlaceSearchRadius,
 } from '@/board/search-radius';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { jobSearchCopy } from '@/copy-groups/job-search';
@@ -322,6 +323,24 @@ async function suggestedPlaceIndexJobCount(
   } catch {
     return null;
   }
+}
+
+/**
+ * The place a listing's related-search chips link inside: a category or skill
+ * chip on a place's pages goes to that place's combination page, so those
+ * pages get inlinks. None for a suggested place or a work arrangement, whose
+ * combinations are never indexed, nor for a listing widened by a radius,
+ * whose chip counts include nearby jobs and so are no floor on the place's
+ * own.
+ */
+export function relatedSearchesPlace(
+  place: Pick<TaxonomyResolution, 'canonicalSlug' | 'suggested'>,
+  arrangement: string | null,
+  searchRadius: PlaceSearchRadius | null,
+): string | null {
+  return arrangement || place.suggested || searchRadius?.selected
+    ? null
+    : place.canonicalSlug;
 }
 
 /**
@@ -857,6 +876,11 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches,
+        relatedSearchesPlace: relatedSearchesPlace(
+          place,
+          arrangement,
+          searchRadius,
+        ),
         searchRadius,
         head,
         jsonLd,
@@ -1039,6 +1063,11 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches: list.relatedSearches,
+        relatedSearchesPlace: relatedSearchesPlace(
+          place,
+          arrangement,
+          searchRadius,
+        ),
         searchRadius,
         head,
         jsonLd,
@@ -1217,6 +1246,11 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches: list.relatedSearches,
+        relatedSearchesPlace: relatedSearchesPlace(
+          place,
+          arrangement,
+          searchRadius,
+        ),
         searchRadius,
         head,
         jsonLd,

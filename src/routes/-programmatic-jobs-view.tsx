@@ -46,6 +46,7 @@ export function ProgrammaticJobsView({
   page,
   pageSize,
   relatedSearches,
+  relatedSearchesPlace,
   filters,
   listingRoute,
   location,
@@ -68,6 +69,8 @@ export function ProgrammaticJobsView({
   page: number;
   pageSize: number;
   relatedSearches?: RelatedSearch[];
+  /** Scopes category and skill chips to this place's combination pages. */
+  relatedSearchesPlace?: string | null;
   filters: JobsSearch;
   /**
    * The route params this listing was opened with. On a work arrangement
@@ -127,6 +130,7 @@ export function ProgrammaticJobsView({
         page={page}
         pageSize={pageSize}
         relatedSearches={relatedSearches}
+        relatedSearchesPlace={relatedSearchesPlace}
         filters={withWorkArrangementFilter(listingRoute.location, filters)}
         jobForm={board}
         distanceSort={distanceUnit !== null}

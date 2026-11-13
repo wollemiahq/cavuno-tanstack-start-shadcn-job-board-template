@@ -53,6 +53,7 @@ function LocationPage() {
     introHtml,
     list,
     relatedSearches,
+    relatedSearchesPlace,
     searchRadius,
     reachableCount,
   } = Route.useLoaderData();
@@ -95,6 +96,7 @@ function LocationPage() {
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
+      relatedSearchesPlace={relatedSearchesPlace}
       filters={search}
       listingRoute={{ location }}
       onSaveJob={async (jobId) => {

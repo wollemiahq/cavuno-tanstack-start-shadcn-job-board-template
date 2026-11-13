@@ -68,6 +68,7 @@ describe('location jobs route — combined keyword and place filtering', () => {
         origin: 'https://example.com',
       },
       relatedSearches: undefined,
+      relatedSearchesPlace: 'sydney',
       searchRadius: null,
       head: { meta: [], links: [] },
       jsonLd: [],
