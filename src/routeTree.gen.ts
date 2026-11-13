@@ -35,6 +35,7 @@ import { Route as SiteDotwebmanifestRouteImport } from './routes/site[.]webmanif
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TipRouteImport } from './routes/tip'
+import { Route as DotwellKnownAiCatalogDotjsonRouteImport } from './routes/[.]well-known.ai-catalog[.]json'
 import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
 import { Route as AccountAccessRouteImport } from './routes/account_.access'
 import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
@@ -63,6 +64,9 @@ import { Route as GoSplatRouteImport } from './routes/go.$'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
+import { Route as McpIndexRouteImport } from './routes/mcp.index'
+import { Route as McpDocsRouteImport } from './routes/mcp.docs'
+import { Route as McpServerCardRouteImport } from './routes/mcp.server-card'
 import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
 import { Route as MePurchasesRouteImport } from './routes/me.purchases'
@@ -251,6 +255,12 @@ const TipRoute = TipRouteImport.update({
   path: '/tip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownAiCatalogDotjsonRoute =
+  DotwellKnownAiCatalogDotjsonRouteImport.update({
+    id: '/.well-known/ai-catalog.json',
+    path: '/.well-known/ai-catalog.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DotwellKnownCavunoDotjsonRoute =
   DotwellKnownCavunoDotjsonRouteImport.update({
     id: '/.well-known/cavuno.json',
@@ -390,6 +400,21 @@ const JobsKeywordRoute = JobsKeywordRouteImport.update({
 const JobsRssDotxmlRoute = JobsRssDotxmlRouteImport.update({
   id: '/jobs/rss.xml',
   path: '/jobs/rss.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpIndexRoute = McpIndexRouteImport.update({
+  id: '/mcp/',
+  path: '/mcp/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpDocsRoute = McpDocsRouteImport.update({
+  id: '/mcp/docs',
+  path: '/mcp/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpServerCardRoute = McpServerCardRouteImport.update({
+  id: '/mcp/server-card',
+  path: '/mcp/server-card',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeAlertsRoute = MeAlertsRouteImport.update({
@@ -729,6 +754,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tip': typeof TipRoute
+  '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -752,6 +778,8 @@ export interface FileRoutesByFullPath {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/mcp/docs': typeof McpDocsRoute
+  '/mcp/server-card': typeof McpServerCardRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
@@ -767,6 +795,7 @@ export interface FileRoutesByFullPath {
   '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
+  '/mcp/': typeof McpIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
   '/talent/': typeof TalentIndexRoute
@@ -842,6 +871,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tip': typeof TipRoute
+  '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -865,6 +895,8 @@ export interface FileRoutesByTo {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/mcp/docs': typeof McpDocsRoute
+  '/mcp/server-card': typeof McpServerCardRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
@@ -880,6 +912,7 @@ export interface FileRoutesByTo {
   '/employer': typeof EmployerIndexRoute
   '/employers': typeof EmployersIndexRoute
   '/jobs': typeof JobsIndexRoute
+  '/mcp': typeof McpIndexRoute
   '/products': typeof ProductsIndexRoute
   '/salaries': typeof SalariesIndexRoute
   '/talent': typeof TalentIndexRoute
@@ -956,6 +989,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tip': typeof TipRoute
+  '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/account_/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
@@ -979,6 +1013,8 @@ export interface FileRoutesById {
   '/go/$': typeof GoSplatRoute
   '/jobs/$keyword': typeof JobsKeywordRoute
   '/jobs/rss.xml': typeof JobsRssDotxmlRoute
+  '/mcp/docs': typeof McpDocsRoute
+  '/mcp/server-card': typeof McpServerCardRoute
   '/me/alerts': typeof MeAlertsRoute
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
@@ -994,6 +1030,7 @@ export interface FileRoutesById {
   '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
   '/jobs/': typeof JobsIndexRoute
+  '/mcp/': typeof McpIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
   '/talent/': typeof TalentIndexRoute
@@ -1071,6 +1108,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/tip'
+    | '/.well-known/ai-catalog.json'
     | '/.well-known/cavuno.json'
     | '/account/access'
     | '/alerts/confirm'
@@ -1094,6 +1132,8 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/mcp/docs'
+    | '/mcp/server-card'
     | '/me/alerts'
     | '/me/applications'
     | '/me/purchases'
@@ -1109,6 +1149,7 @@ export interface FileRouteTypes {
     | '/employer/'
     | '/employers/'
     | '/jobs/'
+    | '/mcp/'
     | '/products/'
     | '/salaries/'
     | '/talent/'
@@ -1184,6 +1225,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/tip'
+    | '/.well-known/ai-catalog.json'
     | '/.well-known/cavuno.json'
     | '/account/access'
     | '/alerts/confirm'
@@ -1207,6 +1249,8 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/mcp/docs'
+    | '/mcp/server-card'
     | '/me/alerts'
     | '/me/applications'
     | '/me/purchases'
@@ -1222,6 +1266,7 @@ export interface FileRouteTypes {
     | '/employer'
     | '/employers'
     | '/jobs'
+    | '/mcp'
     | '/products'
     | '/salaries'
     | '/talent'
@@ -1297,6 +1342,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms-of-service'
     | '/tip'
+    | '/.well-known/ai-catalog.json'
     | '/.well-known/cavuno.json'
     | '/account_/access'
     | '/alerts/confirm'
@@ -1320,6 +1366,8 @@ export interface FileRouteTypes {
     | '/go/$'
     | '/jobs/$keyword'
     | '/jobs/rss.xml'
+    | '/mcp/docs'
+    | '/mcp/server-card'
     | '/me/alerts'
     | '/me/applications'
     | '/me/purchases'
@@ -1335,6 +1383,7 @@ export interface FileRouteTypes {
     | '/employer/'
     | '/employers/'
     | '/jobs/'
+    | '/mcp/'
     | '/products/'
     | '/salaries/'
     | '/talent/'
@@ -1411,6 +1460,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TipRoute: typeof TipRoute
+  DotwellKnownAiCatalogDotjsonRoute: typeof DotwellKnownAiCatalogDotjsonRoute
   DotwellKnownCavunoDotjsonRoute: typeof DotwellKnownCavunoDotjsonRoute
   AccountAccessRoute: typeof AccountAccessRoute
   AlertsConfirmRoute: typeof AlertsConfirmRoute
@@ -1434,6 +1484,8 @@ export interface RootRouteChildren {
   GoSplatRoute: typeof GoSplatRoute
   JobsKeywordRoute: typeof JobsKeywordRoute
   JobsRssDotxmlRoute: typeof JobsRssDotxmlRoute
+  McpDocsRoute: typeof McpDocsRoute
+  McpServerCardRoute: typeof McpServerCardRoute
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   MePurchasesRoute: typeof MePurchasesRoute
@@ -1448,6 +1500,7 @@ export interface RootRouteChildren {
   EmployerIndexRoute: typeof EmployerIndexRoute
   EmployersIndexRoute: typeof EmployersIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
+  McpIndexRoute: typeof McpIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   SalariesIndexRoute: typeof SalariesIndexRoute
   TalentIndexRoute: typeof TalentIndexRoute
@@ -1679,6 +1732,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TipRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/ai-catalog.json': {
+      id: '/.well-known/ai-catalog.json'
+      path: '/.well-known/ai-catalog.json'
+      fullPath: '/.well-known/ai-catalog.json'
+      preLoaderRoute: typeof DotwellKnownAiCatalogDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.well-known/cavuno.json': {
       id: '/.well-known/cavuno.json'
       path: '/.well-known/cavuno.json'
@@ -1873,6 +1933,27 @@ declare module '@tanstack/react-router' {
       path: '/jobs/rss.xml'
       fullPath: '/jobs/rss.xml'
       preLoaderRoute: typeof JobsRssDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp/': {
+      id: '/mcp/'
+      path: '/mcp'
+      fullPath: '/mcp/'
+      preLoaderRoute: typeof McpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp/docs': {
+      id: '/mcp/docs'
+      path: '/mcp/docs'
+      fullPath: '/mcp/docs'
+      preLoaderRoute: typeof McpDocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp/server-card': {
+      id: '/mcp/server-card'
+      path: '/mcp/server-card'
+      fullPath: '/mcp/server-card'
+      preLoaderRoute: typeof McpServerCardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/me/alerts': {
@@ -2343,6 +2424,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TipRoute: TipRoute,
+  DotwellKnownAiCatalogDotjsonRoute: DotwellKnownAiCatalogDotjsonRoute,
   DotwellKnownCavunoDotjsonRoute: DotwellKnownCavunoDotjsonRoute,
   AccountAccessRoute: AccountAccessRoute,
   AlertsConfirmRoute: AlertsConfirmRoute,
@@ -2366,6 +2448,8 @@ const rootRouteChildren: RootRouteChildren = {
   GoSplatRoute: GoSplatRoute,
   JobsKeywordRoute: JobsKeywordRoute,
   JobsRssDotxmlRoute: JobsRssDotxmlRoute,
+  McpDocsRoute: McpDocsRoute,
+  McpServerCardRoute: McpServerCardRoute,
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   MePurchasesRoute: MePurchasesRoute,
@@ -2380,6 +2464,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmployerIndexRoute: EmployerIndexRoute,
   EmployersIndexRoute: EmployersIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
+  McpIndexRoute: McpIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   SalariesIndexRoute: SalariesIndexRoute,
   TalentIndexRoute: TalentIndexRoute,

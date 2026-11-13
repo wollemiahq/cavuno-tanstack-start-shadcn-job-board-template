@@ -72,6 +72,7 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { boardHeadIconLinks } from '@/lib/board-icons';
 import { resolveBoardConversionAnalytics } from '@/lib/board-pixel-conversions';
 import { resolveJobDetailBreadcrumbAriaLabel } from '@/lib/breadcrumb-aria-label';
+import { companiesSearchFromHeader } from '@/lib/companies-search';
 import { cookieConsentDecidedScript } from '@/lib/cookie-consent';
 import {
   resolveHeaderRouteLabels,
@@ -79,7 +80,10 @@ import {
   type HeaderSearchScope,
   type HeaderSearchSubmission,
 } from '@/lib/header-search';
-import { resolveJobsSearchTarget } from '@/lib/jobs-search-target';
+import {
+  jobsFiltersFromHeader,
+  resolveJobsSearchTarget,
+} from '@/lib/jobs-search-target';
 import type { UrlSearchInput } from '@/lib/pagination';
 import { googleSiteVerificationMeta } from '@/lib/seo-handlers';
 import {
@@ -214,6 +218,7 @@ function RootLayout() {
     publishableKey,
     contactEnabled,
     impressumAvailable,
+    mcpServerAvailable,
   } = Route.useLoaderData();
 
   // Embed widget: no site chrome, no session island, no BoardAnalyticsBoot
@@ -246,6 +251,7 @@ function RootLayout() {
         publishableKey={publishableKey}
         contactEnabled={contactEnabled}
         impressumAvailable={impressumAvailable}
+        mcpServerAvailable={mcpServerAvailable}
       />
     </RootSessionProvider>
   );
@@ -257,12 +263,14 @@ function RootChrome({
   publishableKey,
   contactEnabled,
   impressumAvailable,
+  mcpServerAvailable,
 }: {
   board: Awaited<ReturnType<typeof getRootShellData>>['board'];
   offerGate: Awaited<ReturnType<typeof getRootShellData>>['offerGate'];
   publishableKey: string;
   contactEnabled: boolean;
   impressumAvailable: boolean;
+  mcpServerAvailable: boolean;
 }) {
   const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
     useRootSession();
@@ -400,6 +408,7 @@ function RootChrome({
     jobSeekers: m.candidateLanding_title(),
     memberships: m.memberships_title(),
     tip: m.footer_tipLabel(),
+    mcp: m.footer_mcpLabel(),
   };
   const shellBreadcrumb = resolveShellBreadcrumb({
     pathname: location.pathname,
@@ -456,7 +465,15 @@ function RootChrome({
         return;
       }
 
-      void navigate({ to: '/companies', search: { query } });
+      void navigate({
+        to: '/companies',
+        search: companiesSearchFromHeader(
+          location.pathname,
+          // SAFETY: the current route's search is URL-serializable input.
+          location.search as UrlSearchInput,
+          query,
+        ),
+      });
       return;
     }
 
@@ -503,6 +520,11 @@ function RootChrome({
         query,
         location: selectedLocation,
         term,
+        filters: jobsFiltersFromHeader(
+          location.pathname,
+          // SAFETY: the current route's search is URL-serializable input.
+          location.search as UrlSearchInput,
+        ),
       }),
     );
   }
@@ -638,6 +660,7 @@ function RootChrome({
                   footer={board.footer}
                   contactEnabled={contactEnabled}
                   impressumAvailable={impressumAvailable}
+                  mcpServerAvailable={mcpServerAvailable}
                   talentDirectoryVisibility={board.talentDirectoryVisibility}
                   hasEmployerOfferPage={offerGate.hasEmployerOfferPage}
                   hasMembershipPage={offerGate.hasMembershipPage}

@@ -4,11 +4,13 @@ import {
   companyPath,
   companySalaryPath,
 } from '@cavuno/board/paths';
-import { createFileRoute, notFound, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getCompanyCategorySalaryPage } from '../server/companies-pages';
+import { resolveRedirect } from '../server/queries';
+import { followManagedRedirect, requestedPath } from './-catch-all-loader';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
@@ -37,7 +39,7 @@ export const Route = createFileRoute(
   '/companies/$companySlug/salaries/$categorySlug',
 )({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     let page;
     try {
       page = await getCompanyCategorySalaryPage({
@@ -47,7 +49,8 @@ export const Route = createFileRoute(
         },
       });
     } catch (error) {
-      if (isNotFound(error)) throw notFound();
+      if (isNotFound(error))
+        return followManagedRedirect(resolveRedirect, requestedPath(location));
       throw error;
     }
     // The API returns the board-language canonical category slug as data; the

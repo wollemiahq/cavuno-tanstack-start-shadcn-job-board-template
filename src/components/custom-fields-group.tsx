@@ -1,5 +1,7 @@
 'use client';
 
+import { lazy, Suspense } from 'react';
+
 import { m } from '../paraglide/messages';
 
 import {
@@ -7,6 +9,7 @@ import {
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
 import type { ProfileCustomDefinition } from '@/board/form-layout';
+import type { CustomFieldUploads } from '@/components/custom-field-files-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
@@ -23,16 +26,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { searchString } from '@/lib/pagination';
+import { isRichTextEmpty } from '@/lib/post-form';
 import type { PublicBoard } from '@cavuno/board';
+
+// The editor (Tiptap) loads only on a form that has a rich text field.
+const LazyRichTextEditor = lazy(() =>
+  import('@/components/rich-text-editor').then(({ RichTextEditor }) => ({
+    default: RichTextEditor,
+  })),
+);
+
+// The gallery and file input (with its menu) loads only on a form that has
+// such a field: the job forms never do, and most boards' profiles don't.
+const LazyCustomFieldFilesInput = lazy(() =>
+  import('@/components/custom-field-files-input').then(
+    ({ CustomFieldFilesInput }) => ({ default: CustomFieldFilesInput }),
+  ),
+);
+
+/**
+ * The API caps a rich text custom field answer at 20,000 characters of
+ * sanitized HTML, below the 25,000 the editor allows a job description.
+ */
+const CUSTOM_FIELD_RICH_TEXT_MAX_CHARACTERS = 20_000;
 
 type JobCustomFieldDefinition = PublicBoard['customFields']['job'][number];
 /**
  * A job custom field, or a company / talent profile custom field. Profile
  * fields add `date`, `url`, `email` and `phone`, which render as the
- * matching native input; the types without an owner input here
- * (`rich_text`, `image_gallery`, `file`) render nothing.
+ * matching native input, and `image_gallery` and `file`, which render only
+ * when the form passes `uploads` for their owner.
  */
 type CustomFieldDefinition = JobCustomFieldDefinition | ProfileCustomDefinition;
 type CustomFieldValue = string | string[] | boolean | number;
@@ -68,11 +94,14 @@ export function CustomFieldInput({
   definition,
   value,
   required = definition.required,
+  uploads,
   onChange,
 }: {
   definition: CustomFieldDefinition;
   value: CustomFieldValue | undefined;
   required?: boolean;
+  /** The owner's upload and saved files; gallery and file fields need it. */
+  uploads?: CustomFieldUploads;
   onChange: (value: CustomFieldValue) => void;
 }) {
   const id = `custom-field-${definition.key}`;
@@ -204,20 +233,57 @@ export function CustomFieldInput({
         </FieldSet>
       );
     }
+    case 'rich_text':
+      return (
+        <Field>
+          <FieldLabel>{label}</FieldLabel>
+          <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+            <LazyRichTextEditor
+              value={textValue(value)}
+              onChange={(html) => onChange(isRichTextEmpty(html) ? '' : html)}
+              ariaLabel={label}
+              maxCharacters={CUSTOM_FIELD_RICH_TEXT_MAX_CHARACTERS}
+            />
+          </Suspense>
+        </Field>
+      );
+    case 'image_gallery':
+    case 'file':
+      if (!uploads) return null;
+      return (
+        <Field>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <Suspense fallback={<Skeleton className="h-9 w-32" />}>
+            <LazyCustomFieldFilesInput
+              id={id}
+              fieldKey={definition.key}
+              label={label}
+              type={definition.type}
+              value={value}
+              uploads={uploads}
+              onChange={onChange}
+            />
+          </Suspense>
+        </Field>
+      );
     default:
       return null;
   }
 }
 
-/** Whether `CustomFieldInput` draws an input for this field type. */
-export function hasCustomFieldInput(definition: {
-  type: CustomFieldDefinition['type'];
-}): boolean {
-  return (
-    definition.type !== 'rich_text' &&
-    definition.type !== 'image_gallery' &&
-    definition.type !== 'file'
-  );
+/**
+ * Whether `CustomFieldInput` draws an input for this field type. Gallery
+ * and file fields need an upload for their owner, so a form without one
+ * (the job forms, whose fields have no such types) leaves them out.
+ */
+export function hasCustomFieldInput(
+  definition: { type: CustomFieldDefinition['type'] },
+  options: { uploads?: boolean } = {},
+): boolean {
+  if (definition.type === 'image_gallery' || definition.type === 'file') {
+    return options.uploads === true;
+  }
+  return true;
 }
 
 /** An unanswered custom field: nothing typed, nothing ticked, nothing picked. */

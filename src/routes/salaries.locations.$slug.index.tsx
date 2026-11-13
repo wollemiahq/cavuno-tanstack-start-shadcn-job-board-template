@@ -4,16 +4,13 @@
  */
 import { isNotFound, type LocationSalaryDetail } from '@cavuno/board';
 import { BOARD_PATHS, salaryLocationPath } from '@cavuno/board/paths';
-import {
-  Link,
-  createFileRoute,
-  notFound,
-  redirect,
-} from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
+import { resolveRedirect } from '../server/queries';
 import { getLocationSalaryPage } from '../server/salary-pages';
+import { followManagedRedirect, requestedPath } from './-catch-all-loader';
 import { SalaryNotFoundPage, SalaryPageLayout } from './-salary-page-layout';
 import { SalaryPendingPage } from './-salary-pending-page';
 
@@ -60,12 +57,13 @@ const cityItem =
 
 export const Route = createFileRoute('/salaries/locations/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     let page;
     try {
       page = await getLocationSalaryPage({ data: { slug: params.slug } });
     } catch (error) {
-      if (isNotFound(error)) throw notFound();
+      if (isNotFound(error))
+        return followManagedRedirect(resolveRedirect, requestedPath(location));
       throw error;
     }
     if (page.salary.canonicalSlug !== params.slug) {

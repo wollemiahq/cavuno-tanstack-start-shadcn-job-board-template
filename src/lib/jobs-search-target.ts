@@ -1,8 +1,18 @@
+import {
+  pickCustomFieldSearch,
+  type CustomFieldSearch,
+} from '@/lib/custom-field-filters';
 import type {
   HeaderSearchLocation,
   HeaderSearchTerm,
 } from '@/lib/header-search';
-import type { JobsFilters } from '@/lib/jobs-search';
+import {
+  parseJobsIndexSearch,
+  parseJobsSearch,
+  type JobsFilters,
+} from '@/lib/jobs-search';
+import type { UrlSearchInput } from '@/lib/pagination';
+import { withWorkArrangementFilter } from '@/lib/work-arrangement';
 
 export type JobsSearchFilters = Pick<
   JobsFilters,
@@ -13,7 +23,8 @@ export interface ResolveJobsSearchTargetInput {
   query: string | undefined;
   location: HeaderSearchLocation | null;
   term: HeaderSearchTerm | null;
-  filters?: JobsSearchFilters;
+  /** `cf.*` entries only apply to the plain `/jobs` target. */
+  filters?: JobsSearchFilters & CustomFieldSearch;
 }
 
 /**
@@ -59,8 +70,34 @@ export type JobsSearchTarget =
     }
   | {
       to: '/jobs';
-      search: { q: string | undefined } & JobsSearchFilters;
+      search: { q: string | undefined } & JobsSearchFilters & CustomFieldSearch;
     };
+
+/**
+ * The filters a site header search keeps from the jobs listing the visitor
+ * is on, so a new keyword or place does not silently drop the workplace,
+ * type and seniority they picked. Only `/jobs` itself holds job custom-field
+ * (`cf.*`) filters. Off a jobs listing nothing carries over. A work
+ * arrangement page's arrangement carries over as the workplace filter.
+ */
+export function jobsFiltersFromHeader(
+  pathname: string,
+  current: UrlSearchInput,
+): JobsSearchFilters & CustomFieldSearch {
+  const path = pathname.replace(/\/+$/, '');
+  if (path === '/jobs') {
+    const search = parseJobsIndexSearch(current);
+    return { ...compactFilters(search), ...pickCustomFieldSearch(search) };
+  }
+  if (path.startsWith('/jobs/')) {
+    // A work arrangement page holds its arrangement in the path.
+    const location = path.match(/^\/jobs\/locations\/([^/]+)/)?.[1];
+    return compactFilters(
+      withWorkArrangementFilter(location, parseJobsSearch(current)),
+    );
+  }
+  return {};
+}
 
 function compactFilters(filters?: JobsSearchFilters): JobsSearchFilters {
   if (!filters) return {};
@@ -150,5 +187,8 @@ export function resolveJobsSearchTarget({
     };
   }
 
-  return { to: '/jobs', search: { q: query, ...extra } };
+  return {
+    to: '/jobs',
+    search: { q: query, ...extra, ...pickCustomFieldSearch(filters ?? {}) },
+  };
 }

@@ -186,6 +186,10 @@
   "alertsConfirm_notFoundBody": "We konden deze bevestigingslink niet vinden.",
   "alertsConfirm_notFoundHeading": "Ongeldige link",
   "alertsConfirm_title": "Vacaturemeldingen bevestigen",
+  "alertsConfirm_unsubscribedBody": "Deze link is verstuurd voordat je vacature-alerts werden uitgezet, dus hij zet ze niet weer aan. Gebruik de beheerlink in een van je alert-e-mails om ze te hervatten.",
+  "alertsConfirm_unsubscribedHeading": "Vacature-alerts staan uit",
+  "alertsConfirm_waitlistedBody": "Je vacature-alert is bevestigd. Hij start zodra het jobboard naar meer mensen kan versturen.",
+  "alertsConfirm_waitlistedHeading": "Je staat op de wachtlijst",
   "alertsManage_actionErrorText": "Er is iets misgegaan. Probeer het opnieuw.",
   "alertsManage_activeBadge": "Actief",
   "alertsManage_allJobsText": "Alle vacatures",
@@ -792,6 +796,28 @@
   "customField_visaSponsorship_optionCaseByCase": "Per geval",
   "customField_visaSponsorship_optionNo": "Nee",
   "customField_visaSponsorship_optionYes": "Ja",
+  "customFieldDisplay_detailsHeading": "Details",
+  "customFieldDisplay_galleryViewAll": "Alles bekijken ({count})",
+  "customFieldDisplay_galleryOpenImage": "Afbeelding {position} van {total} openen",
+  "customFieldDisplay_galleryImagePosition": "Afbeelding {position} van {total}",
+  "customFieldDisplay_galleryPrevious": "Vorige afbeelding",
+  "customFieldDisplay_galleryNext": "Volgende afbeelding",
+  "customFieldUpload_galleryAddLabel": "Afbeeldingen toevoegen",
+  "customFieldUpload_galleryCount": "{count} van {max} afbeeldingen",
+  "customFieldUpload_galleryLimitError": "Een galerij bevat maximaal {max} afbeeldingen. Verwijder er een om een andere toe te voegen.",
+  "customFieldUpload_galleryTypeError": "Gebruik een JPEG-, PNG-, WebP- of GIF-afbeelding.",
+  "customFieldUpload_fileAddLabel": "Bestand uploaden",
+  "customFieldUpload_fileTypeError": "Gebruik een pdf-, Word-, ODT-, RTF-, tekst- of afbeeldingsbestand.",
+  "customFieldUpload_tooLargeError": "Dit bestand is groter dan 10 MB.",
+  "customFieldUpload_uploadingLabel": "Uploaden…",
+  "customFieldUpload_removeLabel": "Verwijderen",
+  "customFieldUpload_removeImageLabel": "Afbeelding {position} van {total} verwijderen",
+  "customFieldUpload_reorderRoleDescription": "sorteerbare afbeelding",
+  "customFieldUpload_reorderInstructions": "Om een afbeelding te verplaatsen, druk op spatie of enter om haar op te pakken, verplaats haar met de pijltjestoetsen en druk op spatie of enter om haar neer te zetten. Druk op escape om te annuleren.",
+  "customFieldUpload_reorderPickedUp": "Afbeelding {position} van {total} opgepakt.",
+  "customFieldUpload_reorderMoved": "Afbeelding verplaatst naar positie {position} van {total}.",
+  "customFieldUpload_reorderDropped": "Afbeelding neergezet op positie {position} van {total}.",
+  "customFieldUpload_reorderCancelled": "Verplaatsen geannuleerd. De afbeelding blijft op positie {position}.",
   "dangerZone_cancelLabel": "Annuleren",
   "dangerZone_confirmLabel": "Typ {word} om te bevestigen",
   "dangerZone_confirmWord": "VERWIJDEREN",
@@ -1327,6 +1353,7 @@
   "footer_resourcesHeading": "Bronnen",
   "footer_salariesLabel": "Salarissen",
   "footer_sitemapLabel": "Sitemap",
+  "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Gebruiksvoorwaarden",
   "footer_websiteLabel": "Website",
   "home_blogDescription": "Gidsen en inzichten over werving van ons team.",
@@ -1713,6 +1740,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Remote vacatures",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote vacature",
+        "countPlural=*": "{countLabel} remote vacatures"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Remote vacatures in {category}",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote vacature in {category}",
+        "countPlural=*": "{countLabel} remote vacatures in {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Remote vacatures voor {skill}",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote vacature voor {skill}",
+        "countPlural=*": "{countLabel} remote vacatures voor {skill}"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Hybride vacatures",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybride vacature",
+        "countPlural=*": "{countLabel} hybride vacatures"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Hybride vacatures in {category}",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybride vacature in {category}",
+        "countPlural=*": "{countLabel} hybride vacatures in {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Hybride vacatures voor {skill}",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybride vacature voor {skill}",
+        "countPlural=*": "{countLabel} hybride vacatures voor {skill}"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Vacatures op locatie",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature op locatie",
+        "countPlural=*": "{countLabel} vacatures op locatie"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Vacatures op locatie in {category}",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature op locatie in {category}",
+        "countPlural=*": "{countLabel} vacatures op locatie in {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Vacatures op locatie voor {skill}",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} vacature op locatie voor {skill}",
+        "countPlural=*": "{countLabel} vacatures op locatie voor {skill}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Logo wijzigen",
   "logoUpload_uploadErrorText": "Uploaden mislukt. Probeer een kleinere afbeelding.",
   "logoUpload_uploadingLabel": "Uploaden…",
@@ -1811,6 +1979,7 @@
   "memberships_connectCompanyText": "Koppel eerst een goedgekeurd bedrijf. Open je werkgeversdashboard om een bedrijf toe te voegen.",
   "memberships_contactCtaFallback": "Neem contact op",
   "memberships_contactPriceFallback": "Prijs op maat",
+  "memberships_continueToPostLabel": "Ga verder met je vacature",
   "memberships_joinDashboardText": "Het team van het vacatureplatform kent lidmaatschappen toe. Open je werkgeversdashboard om door te gaan.",
   "memberships_joinLabel": "Word lid",
   "memberships_loadMoreLabel": "Toon meer leden",
@@ -1969,9 +2138,12 @@
   "postCheckout_canceledTitle": "Afrekenen geannuleerd",
   "postCheckout_successBody": "Je vacature wordt gepubliceerd en verschijnt zo op het vacatureplatform. Je ontvangt het betaalbewijs per e-mail.",
   "postCheckout_successTitle": "Betaling ontvangen",
+  "postGate_alreadyMemberText": "Al lid?",
   "postGate_becomeMemberLabel": "Lid worden",
   "postGate_bodyText": "Alleen leden kunnen op dit vacatureplatform vacatures plaatsen.",
   "postGate_contactText": "Toegang nodig? Mail naar {email}.",
+  "postGate_joinHeading": "Word lid om vacatures te plaatsen",
+  "postGate_joinText": "Alleen leden kunnen op {boardName} vacatures plaatsen. Kies een lidmaatschap om te beginnen.",
   "postGate_postAsCompanyLabel": "Plaats vanuit je bedrijfsdashboard",
   "postGate_signInLabel": "Inloggen",
   "postJob_applicationUrlLabel": "Sollicitatie-URL",
@@ -3053,7 +3225,8 @@
   "itemVerification_codeExpiredError": "Deze code is verlopen. Vraag een nieuwe aan.",
   "itemVerification_emailPlaceholder": "naam",
   "tip_metaDescription": "Steun {boardName} met een fooi.",
-  "tip_countText": [
+  "tip_cardTitle": "Fooienpot",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3062,30 +3235,37 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Tot nu toe {countLabel} fooi",
-        "countPlural=*": "Tot nu toe {countLabel} fooien"
+        "countPlural=one": "{countLabel} persoon heeft een fooi gegeven",
+        "countPlural=*": "{countLabel} mensen hebben een fooi gegeven"
       }
     }
   ],
   "tip_amountLegend": "Kies een bedrag",
-  "tip_otherAmountOption": "Anders",
+  "tip_otherAmountOption": "Ander bedrag",
   "tip_otherAmountLabel": "Jouw bedrag",
   "tip_amountHelpText": "Minimaal {minimum}.",
   "tip_amountInvalidText": "Vul een bedrag in zoals 5 of 5,50.",
   "tip_amountBelowMinimumText": "De kleinste fooi is {minimum}.",
-  "tip_noteLabel": "Voeg een bericht toe (optioneel)",
-  "tip_noteCountText": "{count} van {max} tekens",
+  "tip_addNoteAction": "Bericht toevoegen",
+  "tip_noteLabel": "Bericht voor {boardName} (optioneel)",
+  "tip_removeNoteAction": "Bericht verwijderen",
+  "tip_notePlaceholder": "Vertel waarom je een fooi geeft",
+  "tip_notePrivacyText": "Alleen {boardName} ziet je bericht. Het wordt niet op de site getoond.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Je bericht mag maximaal {max} tekens lang zijn.",
   "tip_noteNotAllowedText": "Deze fooienpot neemt geen berichten aan. Haal je bericht weg en probeer het opnieuw.",
+  "tip_coverFeeLabel": "{fee} toevoegen om de kaartkosten te dekken",
+  "tip_coverFeeNotAllowedText": "Dit board biedt het dekken van de kaartkosten niet meer aan.",
   "tip_submitAction": "Geef {amount}",
   "tip_continueAction": "Verder naar betalen",
-  "tip_paymentHelpText": "In de volgende stap betaal je veilig via Stripe.",
+  "tip_secureCheckoutText": "Veilig betalen via Stripe",
   "tip_checkoutTitle": "Rond je fooi af",
   "tip_backAction": "Terug",
   "tip_confirmingTitle": "Je fooi wordt bevestigd…",
   "tip_confirmingText": "Dit duurt meestal een paar seconden.",
   "tip_thankYouTitle": "Bedankt!",
   "tip_thankYouAmountText": "Je gaf {boardName} {amount}.",
+  "tip_chargedWithFeeText": "Je kaart is belast met {total}, inclusief {fee} aan kaartkosten.",
   "tip_receiptSentText": "Bon verstuurd naar {email}",
   "tip_processingTitle": "Je fooi wordt verwerkt",
   "tip_processingText": "We mailen je de bon zodra de betaling binnen is.",
@@ -3093,5 +3273,26 @@
   "tip_checkoutMissingTitle": "We konden deze fooi niet vinden",
   "tip_checkoutMissingText": "De betaling is misschien verlopen. Je kunt een nieuwe fooi geven.",
   "tip_startOverAction": "Terug naar de fooienpagina",
-  "tip_browseJobsAction": "Bekijk vacatures"
+  "tip_browseJobsAction": "Bekijk vacatures",
+  "mcpDocs_title": "{boardName} in AI-assistenten",
+  "mcpDocs_description": "Doorzoek de vacatures en bedrijven op {boardName} vanuit Claude, ChatGPT, Cursor en andere AI-assistenten die MCP ondersteunen. Geen account of API-sleutel nodig.",
+  "mcpDocs_intro": "Doorzoek de vacatures en bedrijven op {boardName} vanuit Claude, ChatGPT, Cursor en andere AI-assistenten die het Model Context Protocol (MCP) ondersteunen. Voeg deze server-URL toe aan je assistent:",
+  "mcpDocs_access": "Je hebt geen account of API-sleutel nodig. De assistent ziet wat de vacaturebank aan elke niet-ingelogde bezoeker laat zien, en elke vacature linkt naar haar pagina op {boardName}, waar je de volledige vacature leest en solliciteert.",
+  "mcpDocs_copyUrlLabel": "MCP-server-URL kopiëren",
+  "mcpDocs_copyCodeLabel": "Kopiëren",
+  "mcpDocs_copiedLabel": "Gekopieerd",
+  "mcpDocs_assistantsHeading": "Voeg het toe aan je assistent",
+  "mcpDocs_claudeHeading": "Claude (claude.ai en Claude Desktop)",
+  "mcpDocs_claudeSteps": "Ga naar {connectorsMenu}, kies {addButton} en daarna {customConnector}. Vul de naam {boardName} en de URL hierboven in.",
+  "mcpDocs_claudeCodeHeading": "Claude Code",
+  "mcpDocs_chatgptHeading": "ChatGPT",
+  "mcpDocs_chatgptSteps": "Open in een ChatGPT Business- of Enterprise-workspace {pluginsMenu}, kies {plusButton} en daarna {customServer}, en vul de URL hierboven in zonder authenticatie. Je workspace-instellingen bepalen wie er een mag toevoegen.",
+  "mcpDocs_cursorHeading": "Cursor",
+  "mcpDocs_vscodeHeading": "VS Code",
+  "mcpDocs_addToFile": "Voeg dit toe aan {file}:",
+  "mcpDocs_otherHeading": "Andere assistenten",
+  "mcpDocs_otherSteps": "Elke client die externe MCP-servers via Streamable HTTP ondersteunt, kan verbinding maken met de URL hierboven.",
+  "mcpDocs_toolsHeading": "Wat het kan",
+  "mcpDocs_limitsHeading": "Limieten",
+  "mcpDocs_limits": "Elke tool leest alleen de openbare vacatures van de vacaturebank; er wordt niets opgeslagen of gewijzigd. Verzoeken zijn per bezoeker en per vacaturebank beperkt, en een beperkt verzoek vertelt wanneer je het opnieuw kunt proberen."
 }

@@ -10,7 +10,7 @@ import {
 
 import { buildVerifyEmailRedirectPath } from '@/lib/candidate-return-to';
 // @vitest-environment jsdom
-import { localizePath } from '@/lib/localized-path';
+import { canonicalPathname, localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 import { renderRouted } from '@/test/render-routed';
 
@@ -121,6 +121,72 @@ describe('/auth/employer/sign-up continuation', () => {
     // The emailed link keeps the platform's employer landing: no returnTo.
     expect(mocks.signUpEmployer.mock.calls[0]![0].data).not.toHaveProperty(
       'returnTo',
+    );
+  });
+
+  it('returns an employer who came from Post a job there through the dashboard', async () => {
+    mocks.signUpEmployer.mockResolvedValue({ ok: true });
+    mocks.invalidate.mockResolvedValue(undefined);
+    mocks.getOAuthAuthorizationUrl.mockResolvedValue({
+      ok: false,
+      message: 'OAuth unavailable in this test',
+    });
+    const post = localizePath('/post');
+    // Every route lands on the dashboard first, carrying Post a job along:
+    // the new employer has no company to post for until they create one.
+    // The emailed and in-tab links are localized; the OAuth return path is
+    // canonical and the router localizes it, so compare the route itself.
+    const expectDashboardBackToPost = (href: string) => {
+      const dashboard = new URL(href, 'https://board.example');
+      expect(canonicalPathname(dashboard.pathname)).toBe(
+        '/employers/dashboard',
+      );
+      expect(dashboard.searchParams.get('returnTo')).toBe(post);
+    };
+    await renderRouted(
+      <EmployerSignUpView
+        boardName="Cavuno Jobs"
+        returnTo={post}
+        signUpEmployerAction={mocks.signUpEmployer}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authSignIn_continueWithGoogleLabel(),
+      }),
+    );
+    await screen.findByRole('alert');
+    expectDashboardBackToPost(
+      mocks.getOAuthAuthorizationUrl.mock.calls[0]![0].data.returnTo,
+    );
+
+    fireEvent.change(screen.getByLabelText(m.authEmployerSignUp_nameLabel()), {
+      target: { value: 'Ada Employer' },
+    });
+    fireEvent.change(
+      screen.getByLabelText(m.authEmployerSignUp_workEmailLabel()),
+      { target: { value: 'ada@company.example' } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(m.authEmployerSignUp_passwordLabel()),
+      { target: { value: 'correct-horse' } },
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: m.authEmployerSignUp_submitLabel() }),
+    );
+
+    const action = await screen.findByRole('link', {
+      name: m.authEmployerSignUp_goToDashboardLabel(),
+    });
+    const gate = new URL(action.getAttribute('href')!, 'https://board.example');
+    expect(gate.pathname).toBe(localizePath('/auth/verify-email-required'));
+    expectDashboardBackToPost(gate.searchParams.get('returnTo')!);
+    // The emailed verification link finishes at the same place.
+    expectDashboardBackToPost(
+      mocks.signUpEmployer.mock.calls[0]![0].data.returnTo,
     );
   });
 

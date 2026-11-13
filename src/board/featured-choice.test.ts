@@ -21,6 +21,9 @@ function plan(
     features: Object.entries(features).map(([key, value]) => ({
       key,
       value,
+      name: key,
+      dataType: 'string',
+      displayOrder: null,
       feature: { key },
     })),
   };

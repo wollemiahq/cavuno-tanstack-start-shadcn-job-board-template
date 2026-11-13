@@ -4,6 +4,7 @@ import type {
   JobAlertFiltersInput,
   JobAlertRemoteOption,
   PublicJob,
+  RemoteOption,
 } from '@cavuno/board';
 
 const REMOTE_OPTIONS = ['on_site', 'hybrid', 'remote'] as const;
@@ -48,8 +49,9 @@ export function jobAlertDefaultsFromJob(job: PublicJob): JobAlertDefaults {
 
 /**
  * Scope a listing/search alert: the text query the page ran becomes the
- * alert's search `query`, and the active location slug its place. A blank
- * query leaves a location-only (or all-jobs) alert.
+ * alert's search `query`, and the active location slug its place (or, on a
+ * work arrangement page, the arrangement its `remoteOption`). A blank query
+ * leaves a location-only (or all-jobs) alert.
  *
  * A category or skill page also sends the slug of the term it lists as the
  * alert's one job function. Alone, the board takes it as the alert's
@@ -60,6 +62,7 @@ export function jobAlertDefaultsFromSearch(opts: {
   query?: string;
   listedTermSlug?: string;
   locationSlug?: string;
+  remoteOption?: RemoteOption;
   source?: string;
 }): JobAlertDefaults {
   const query =
@@ -70,6 +73,7 @@ export function jobAlertDefaultsFromSearch(opts: {
       query,
       jobFunctions: opts.listedTermSlug ? [opts.listedTermSlug] : undefined,
       placeSlugs: opts.locationSlug ? [opts.locationSlug] : undefined,
+      remoteOptions: opts.remoteOption ? [opts.remoteOption] : undefined,
     },
     context: { source: opts.source ?? 'jobs_list' },
   };

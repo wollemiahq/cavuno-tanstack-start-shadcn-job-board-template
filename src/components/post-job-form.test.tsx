@@ -469,7 +469,7 @@ describe('PostJobForm', () => {
         plans={[
           {
             ...plans[0]!,
-            catalogFeatures: {
+            namedFeatures: {
               'custom.newsletter_feature': {
                 value: 'true',
                 name: 'Newsletter feature',

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
+import { redirect } from '@tanstack/react-router';
 import { ChevronRight, Plus, Search, XIcon } from 'lucide-react';
 
 import { incomingAuthSearch } from '../lib/board-datalayer-events';
@@ -81,16 +82,18 @@ export function createEmployerDashboardLoader(
   dependencies: EmployerDashboardLoaderDependencies = employerDashboardLoaderDependencies,
 ) {
   return async ({
+    deps = {},
     location,
   }: {
+    deps?: EmployerDashboardLoaderDeps;
     location: { search?: UrlSearchInput; searchStr?: string };
   }) => {
+    let loaded;
     try {
-      const [companies, seo] = await Promise.all([
+      loaded = await Promise.all([
         dependencies.listCompanies(),
         dependencies.getSeoBase(),
       ]);
-      return { ...companies, seo };
     } catch (error) {
       return await handleEmployerLoaderErrorUsing(
         dependencies.refreshSession,
@@ -102,7 +105,41 @@ export function createEmployerDashboardLoader(
         },
       );
     }
+    const [companies, seo] = loaded;
+    const slug = singleCompanySlug(companies.data, deps);
+    if (slug) {
+      throw redirect({
+        to: '/employers/companies/$slug',
+        params: { slug },
+        // A work-email approval greets the new member on their company.
+        search: deps.verified === 'approved' ? { joined: '1' } : {},
+      });
+    }
+    return { ...companies, seo };
   };
+}
+
+/** The dashboard search values that decide whether the list is skipped. */
+export type EmployerDashboardLoaderDeps = {
+  add?: boolean;
+  verified?: WorkEmailVerificationOutcome;
+  returnTo?: string;
+};
+
+/**
+ * The company whose workspace opens instead of the list, when the list would
+ * only offer one approved company to pick. Undefined while the employer is
+ * adding a company, has somewhere else to continue, or holds a claim that is
+ * not approved yet.
+ */
+function singleCompanySlug(
+  memberships: CompanyMembership[],
+  { add, returnTo }: EmployerDashboardLoaderDeps,
+): string | undefined {
+  if (add || returnTo || memberships.length !== 1) return undefined;
+  const [only] = memberships;
+  if (only.status !== 'approved') return undefined;
+  return only.company.slug ?? undefined;
 }
 
 const STATUS_LABEL = {
@@ -118,6 +155,12 @@ export type EmployerDashboardViewDependencies = {
   createCompany: typeof createCompany;
   invalidate: () => Promise<void>;
   navigateToOnboarding: (slug: string) => Promise<void>;
+  /**
+   * Where a newly created, already approved company goes next: back to the
+   * page the employer signed up from, such as Post a job. Absent, the
+   * dashboard lists the company.
+   */
+  continueWithCompany?: () => Promise<void>;
   companyRouteElement: (input: {
     approved: boolean;
     slug: string;
@@ -593,6 +636,8 @@ function CreateCompanyModal({
               const slug = result.data.company.slug;
               if (slug && result.data.status !== 'approved') {
                 await dependencies.navigateToOnboarding(slug);
+              } else if (dependencies.continueWithCompany) {
+                await dependencies.continueWithCompany();
               } else {
                 onClose();
               }

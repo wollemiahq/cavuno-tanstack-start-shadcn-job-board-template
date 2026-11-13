@@ -93,7 +93,19 @@ const BUDGETS = {
   // gzip against main's 690,160 / 219,976 (+9,224 raw / +2,737 gzip). The
   // operator approved up to +2.7 KiB gzip for #316; both budgets are raised
   // by exactly the measured growth, keeping main's headroom.
-  shell: { raw: 703_224, gzip: 231_637 },
+  // The MCP setup page (/mcp/docs: its route entry, route template and the
+  // footer link) measured 703,504 B raw against the 703,224 budget, which
+  // main had ~0.4 KiB of headroom left on (686.3 KiB); gzip stayed inside
+  // (218.8 of 226.2 KiB). Accepted by the operator on 2026-11-09; raw
+  // rebaselined with ~4 KB headroom.
+  // Members-only posting (#356): the return path an employer carries through
+  // sign-up, the dashboard and the memberships page is validated in those
+  // routes' search schemas, which ride the shell. Measured 707,741 B raw
+  // against the 707,600 budget (main with @cavuno/board 4.69.0 alone: 707,095);
+  // gzip stayed inside (220.0 of 226.2 KiB). The plan cards and checkout are
+  // lazy-loaded off the routes. Accepted by the operator on 2026-11-12; raw
+  // rebaselined with ~4 KB headroom.
+  shell: { raw: 711_500, gzip: 231_637 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
@@ -150,7 +162,16 @@ const BUDGETS = {
     // input load on click. Measured 290,363 B raw / 106,871 B gzip against
     // main's 283,057 / 103,998 (+7,306 / +2,873); both budgets are raised by
     // exactly the measured growth, keeping main's headroom.
-    '/account': { raw: 297_306, gzip: 109_373 },
+    // Later work used up that headroom: main at 1c78723 measured 109,348 B
+    // gzip, 25 B under budget. #361 (single-company employer landing) added
+    // no code to this route, but it added exports to the shell chunk, which
+    // renamed the minified imports in this route's chunks: 109,388 B gzip,
+    // 296,514 B raw. Gzip is rebaselined to that measurement plus the same
+    // ~2.5 KB headroom #332 left, so renaming churn does not trip the gate.
+    // The verify badge, verified tick and its lazily loaded tooltip (#337):
+    // 298,082 B raw / 110,153 B gzip against main's 296,514 / 109,388
+    // (+1,568 / +765). Raw raised by exactly that growth; gzip still fits.
+    '/account': { raw: 298_874, gzip: 111_900 },
     // Pre-existing overflow on main after board-user self-service (#40):
     // this route used the default 80 KiB increment and landed at 113.7 /
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
@@ -179,12 +200,19 @@ const BUDGETS = {
     // KiB raw / 69.2 KiB gzip (205,282 / 70,822 B) while the route's total
     // first load fell from 313.3 to 279.3 KiB gzip. Budget is the
     // measurement plus ~3%.
-    '/talent/': { raw: 343_000, gzip: 126_000 },
+    // Custom field display (every field type on the talent, company and job
+    // pages): the shared field view model and display component load on every
+    // route that renders a job, talent or company detail. The gallery's larger
+    // view loads on click and is not counted. Raised by exactly the measured
+    // growth against main (2026-11-12), keeping main's headroom.
+    // Measured +12,484 B raw / +5,538 B gzip.
+    '/talent/': { raw: 355_484, gzip: 131_538 },
     // The talent location page renders the /talent/ directory view filtered
     // to one place, so it loads the same code: measured 325.4 KiB raw /
     // 120.1 KiB gzip against /talent/'s 325.2 / 120.0 (2026-10-15). Same
     // budget as /talent/.
-    '/talent/locations/$location': { raw: 343_000, gzip: 126_000 },
+    // Custom field display, as /talent/: +12,484 / +5,539.
+    '/talent/locations/$location': { raw: 355_484, gzip: 131_539 },
     // TanStack Start 1.0's manifest lists every chunk a route's lazy code
     // imports; 1.168 left out transitive imports, so these routes were
     // measured short and loaded the rest without a preload. The bytes did not
@@ -196,18 +224,24 @@ const BUDGETS = {
       raw: 708_500,
       gzip: 241_500,
     },
-    '/jobs/locations/$location/$keyword': { raw: 290_000, gzip: 110_500 },
-    '/jobs/locations/$location/skills/$skill': { raw: 290_000, gzip: 110_500 },
-    '/jobs/locations/$location/': { raw: 290_000, gzip: 110_500 },
-    '/jobs/$keyword': { raw: 235_500, gzip: 92_500 },
-    '/jobs/skills/$skill': { raw: 235_500, gzip: 92_500 },
-    '/jobs/': { raw: 233_500, gzip: 91_000 },
+    // Custom field display on the job search detail pane (see /talent/):
+    // measured +10,572 / +4,605 on the location listings, +10,565 / +4,618 on
+    // the others.
+    '/jobs/locations/$location/$keyword': { raw: 300_572, gzip: 115_105 },
+    '/jobs/locations/$location/skills/$skill': { raw: 300_572, gzip: 115_105 },
+    '/jobs/locations/$location/': { raw: 300_572, gzip: 115_105 },
+    '/jobs/$keyword': { raw: 246_065, gzip: 97_117 },
+    '/jobs/skills/$skill': { raw: 246_065, gzip: 97_117 },
+    '/jobs/': { raw: 244_065, gzip: 95_618 },
     '/messages': { raw: 244_000, gzip: 87_500 },
     '/me/alerts': { raw: 182_000, gzip: 70_500 },
     '/employers/dashboard': { raw: 172_000, gzip: 65_500 },
-    '/matches': { raw: 150_000, gzip: 58_000 },
-    '/companies/markets/$market': { raw: 121_500, gzip: 46_500 },
-    '/companies/': { raw: 121_000, gzip: 46_000 },
+    // Custom field display (see /talent/): +9,893 / +4,131.
+    '/matches': { raw: 159_893, gzip: 62_131 },
+    // Custom field display on the company detail pane (see /talent/):
+    // measured +11,741 B raw / +5,383 B gzip on both.
+    '/companies/markets/$market': { raw: 133_241, gzip: 51_883 },
+    '/companies/': { raw: 132_741, gzip: 51_383 },
     // Digital products (2026-10-26). The store listing reuses the companies
     // list-and-detail split (search, Select filters, cursor pagination), so it
     // is budgeted like /companies/: measured 137.5 KiB raw / 52.8 KiB gzip.
@@ -219,16 +253,20 @@ const BUDGETS = {
     // Saved-job pagination makes the full saved collection reachable. Its
     // shared cursor controls add ~1.6 KiB gzip (42.2 -> 43.8 KiB measured);
     // retain roughly the original 1.3 KiB headroom on this private route.
-    '/saved-jobs': { raw: 123_000, gzip: 46_000 },
-    '/companies/$companySlug/jobs/$jobSlug': { raw: 112_500, gzip: 44_500 },
+    // Custom field display (see /talent/): +10,550 / +4,623.
+    '/saved-jobs': { raw: 133_550, gzip: 50_623 },
+    // Custom field display (see /talent/): +10,566 / +4,639.
+    '/companies/$companySlug/jobs/$jobSlug': { raw: 123_066, gzip: 49_139 },
     // The public profile's "Verified" badge on experience and education
     // (#332), with its two labels: measured 113,502 B raw / 43,120 B gzip
     // against main's 112,747 / 42,815 (+755 / +305). Raised by exactly the
-    // measured growth, keeping main's headroom. The badge then became the
-    // verified tick with its tooltip (#337): 114,650 B raw / 43,640 B gzip
-    // against 113,502 / 43,098 before (+1,148 / +542), most of it the list of
+    // measured growth, keeping main's headroom.
+    // Custom field display (see /talent/): +12,464 / +5,543, then +201 B
+    // gzip for the review fixes (phone extensions, typed talent placement).
+    // The verified tick with its tooltip (#337): +1,148 B raw / +542 B gzip
+    // measured before main's custom fields landed, most of it the list of
     // files the lazily loaded tooltip fetches on hover. Raised by that growth.
-    '/p/$handle': { raw: 115_403, gzip: 43_847 },
+    '/p/$handle': { raw: 127_867, gzip: 49_591 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

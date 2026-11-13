@@ -112,3 +112,41 @@ export function readContactPageFlag(
   const parity = features as BoardContextFeatures & { contactPage?: boolean };
   return parity.contactPage ?? null;
 }
+
+/**
+ * `features.tipJar`: whether the board's tip jar is on, so `/tip` exists (the
+ * footer Tip link). `null` when the API predates the field, so the caller can
+ * fall back to one `GET /tip-jar` read.
+ */
+export function readTipJarFlag(features: BoardContextFeatures): boolean | null {
+  // SAFETY: additive wire field, typed by @cavuno/board from the release
+  // after 4.68.0; the pinned SDK does not declare it yet.
+  const parity = features as BoardContextFeatures & { tipJar?: boolean };
+  return parity.tipJar ?? null;
+}
+
+/**
+ * `features.products`: whether the board lists at least one digital product
+ * (the header Products link). `null` when the API predates the field, so the
+ * caller can fall back to one `GET /products` read.
+ */
+export function readProductsFlag(
+  features: BoardContextFeatures,
+): boolean | null {
+  // SAFETY: additive wire field, typed by @cavuno/board from the release
+  // after 4.68.0; the pinned SDK does not declare it yet.
+  const parity = features as BoardContextFeatures & { products?: boolean };
+  return parity.products ?? null;
+}
+
+/**
+ * `features.mcp`: whether the board serves its public MCP server at
+ * `/mcp`, so the footer links its setup page and `/mcp/docs` renders.
+ * Absent (an API that predates the field) reads as off.
+ */
+export function readMcpServerFlag(features: BoardContextFeatures): boolean {
+  // SAFETY: additive wire field, typed by @cavuno/board from 4.65.0; the
+  // pinned SDK does not declare it yet.
+  const parity = features as BoardContextFeatures & { mcp?: boolean };
+  return parity.mcp === true;
+}

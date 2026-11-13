@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { m } from '../paraglide/messages';
 import {
   PostJobPageView,
   postRouteDependencies,
@@ -170,5 +171,33 @@ describe('/post membership gate', () => {
     expect(screen.getByTestId('membership-gate')).toBeVisible();
     // A visitor who cannot post must not be walked through the wizard.
     expect(screen.queryByTestId('post-job-form')).toBeNull();
+  });
+
+  it('heads the page with the join heading while the gate sells memberships', () => {
+    render(
+      <PostJobPageView
+        plans={plans}
+        remotePermits={null}
+        customFields={[]}
+        locale="en"
+        officeLocationSuggestions={{
+          suggestions: [],
+          loading: false,
+          onQueryChange: vi.fn(),
+        }}
+        gate={<div data-testid="membership-gate">Members only</div>}
+        heading={{ title: 'Join to post', description: 'Members post here.' }}
+        dependencies={dependencies}
+      />,
+    );
+
+    // One heading about joining, not "Post a job" stacked over the gate's.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Join to post' }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('heading', { name: m.postJob_title() }),
+    ).toBeNull();
+    expect(screen.getByText('Members post here.')).toBeVisible();
   });
 });

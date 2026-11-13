@@ -1,18 +1,13 @@
-import { isNotFound } from '@cavuno/board';
 import { companySalaryPath } from '@cavuno/board/paths';
-import {
-  createFileRoute,
-  getRouteApi,
-  Link,
-  notFound,
-} from '@tanstack/react-router';
+import { createFileRoute, getRouteApi, Link } from '@tanstack/react-router';
 import { ArrowRight, Building2 } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import { getCompanyProfilePage } from '../server/companies-pages';
-import { getSimilarCompanies } from '../server/queries';
+import { createCompanyProfileLoader } from './-company-profile-loader';
 
+import { toCompanyFieldGroups } from '@/board/company-view-model';
+import { profileLayoutFields } from '@/board/custom-field-display';
 import { toJobCardVM } from '@/board/job-view-model';
 import {
   companyCategorySalaryPath,
@@ -26,6 +21,10 @@ import { CompanyCard } from '@/components/board/company-card';
 import { CompanySectionShell } from '@/components/board/company-section-header';
 import { JobCard } from '@/components/board/job-card';
 import { CompanySalarySummary } from '@/components/board/salary-sections';
+import {
+  CustomFieldFacts,
+  CustomFieldSections,
+} from '@/components/custom-field-display';
 import { DeferredContent } from '@/components/deferred-content';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
@@ -46,32 +45,7 @@ import { cn } from '@/lib/utils';
 export const Route = createFileRoute('/companies/$companySlug/')({
   // The shared page layout owns the canonical route geometry.
   staticData: { fullBleed: true, ownsMain: true },
-  loader: async ({ params }) => {
-    try {
-      // ONE server fn: company, jobs, salary gate and SEO base resolve in a
-      // single parallel batch server-side (see getCompanyProfilePage). The
-      // old shape awaited a three-read Promise.all and THEN an SEO call,
-      // serializing a second wave just to build head tags.
-      // Similar companies is a below-the-fold, search-backed rail. It needs
-      // only the slug, so it is kicked off BEFORE the page batch is awaited —
-      // starting it after made it a second serial wave, and SSR renders the
-      // rail into the document, so "deferred" did not keep it off the
-      // first-byte path. Now it overlaps the four page reads instead.
-      // Degrades to empty, never fatal.
-      const similar = getSimilarCompanies({
-        data: { companySlug: params.companySlug, limit: 6 },
-      })
-        .then((r) => r.data)
-        .catch(() => []);
-      const pageData = await getCompanyProfilePage({
-        data: { companySlug: params.companySlug },
-      });
-      return { ...pageData, similar };
-    } catch (error) {
-      if (isNotFound(error)) throw notFound();
-      throw error;
-    }
-  },
+  loader: createCompanyProfileLoader(),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
@@ -165,6 +139,11 @@ function CompanyPage() {
     : null;
 
   const previewJobs = jobs.data.slice(0, JOBS_PREVIEW_COUNT);
+  const fields = toCompanyFieldGroups(
+    company,
+    profileLayoutFields(board.forms?.company),
+    getLocale(),
+  );
 
   return (
     <CompanySectionShell
@@ -182,6 +161,8 @@ function CompanyPage() {
             // Company descriptions arrive pre-sanitized from the Board API.
             <Prose html={company.description} />
           ) : null}
+
+          <CustomFieldSections entries={fields.main} />
 
           <section
             aria-label={m.companyDetail_openJobsHeading()}
@@ -283,6 +264,8 @@ function CompanyPage() {
                   </div>
                 </div>
               ) : null}
+
+              <CustomFieldFacts entries={fields.facts} layout="stack" />
             </CardContent>
           </Card>
 

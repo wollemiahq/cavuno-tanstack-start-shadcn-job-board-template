@@ -44,7 +44,7 @@ import {
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
 import { listingRadiusKm, placeListingSort } from './listing-place-cache';
-import { withCatalogFeatures } from './post-plans';
+import { withNamedFeatures } from './post-plans';
 
 import {
   parseJobFormViolations,
@@ -503,11 +503,10 @@ export const getCompanyWorkspace = createServerFn({ method: 'GET' })
         // The public job-posting plans (the `billing.type: 'new'` checkout
         // options). Resilient: an empty list if the catalog read fails — the
         // picker still offers any reusable credits.
-        withCatalogFeatures(
+        withNamedFeatures(
           board.jobPosting
             .plans(undefined, { headers })
             .then((result) => result.data),
-          headers,
         ).catch(() => []),
       ]);
       const membership =

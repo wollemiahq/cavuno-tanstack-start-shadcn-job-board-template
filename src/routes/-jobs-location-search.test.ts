@@ -11,16 +11,22 @@ import { PROGRAMMATIC_JOBS_PAGE_SIZE } from './-programmatic-jobs-constants';
 import { Route as LocationRoute } from './jobs.locations.$location.index';
 
 import type { getJobsLocationPage as GetJobsLocationPage } from '../server/jobs-listing-pages';
+import type { resolveRedirect as ResolveRedirect } from '../server/queries';
 import { jobsListingLoaderDeps, parseJobsSearch } from '@/lib/jobs-search';
 import { listingPageHref } from '@/lib/pagination';
 
 const getJobsLocationPage = vi.fn<typeof GetJobsLocationPage>();
-const loadLocationJobs = createJobsLocationLoader(getJobsLocationPage);
+const resolveRedirect = vi.fn<typeof ResolveRedirect>();
+const loadLocationJobs = createJobsLocationLoader(
+  getJobsLocationPage,
+  resolveRedirect,
+);
 
 function locationJobsLoaderContext() {
   return {
     params: { location: 'sydney' },
     deps: { q: 'robotics' },
+    location: { publicHref: '/jobs/locations/sydney?q=robotics' },
   };
 }
 
@@ -88,6 +94,7 @@ describe('location jobs route — combined keyword and place filtering', () => {
   it('threads a custom employment type from the URL into the jobs query', async () => {
     await loadLocationJobs({
       params: { location: 'sydney' },
+      location: { publicHref: '/jobs/locations/sydney' },
       deps: jobsListingLoaderDeps(
         parseJobsSearch({ customEmploymentType: 'casual' }),
       ),
@@ -102,11 +109,17 @@ describe('location jobs route — combined keyword and place filtering', () => {
 describe('location jobs route — search distance', () => {
   it('passes the URL `within` to the page read', async () => {
     getJobsLocationPage.mockResolvedValue({ kind: 'not_found' });
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/jobs/locations/sydney',
+      target: null,
+    });
 
     await expect(
       loadLocationJobs({
         params: { location: 'sydney' },
         deps: { within: 25 },
+        location: { publicHref: '/jobs/locations/sydney?within=25' },
       }),
     ).rejects.toBeDefined();
 

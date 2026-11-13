@@ -108,6 +108,9 @@ const board = {
     messaging: true,
     contactPage: true,
     placeSuggestions: false,
+    mcp: false,
+    tipJar: false,
+    products: false,
   },
   analytics: {
     ga4MeasurementId: null,

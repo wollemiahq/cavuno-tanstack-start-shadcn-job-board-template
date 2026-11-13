@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { m } from '../paraglide/messages';
 import { toJobDetailVM } from './job-detail-view-model';
 
+import type { JobFormLayoutSource } from '@/board/form-layout';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
@@ -387,11 +388,120 @@ describe('toJobDetailVM', () => {
   });
 
   it('resolves a boolean custom field to its yes/no copy, text passes through', () => {
-    const visa = vm.customFields.find((f) => f.key === 'visa');
-    const team = vm.customFields.find((f) => f.key === 'team');
-    expect(visa?.value).not.toBe('true'); // resolved to a yes-copy string
-    expect(visa?.value.length).toBeGreaterThan(0);
-    expect(team?.value).toBe('Platform');
+    expect(vm.customFields.map((f) => [f.id, f.value])).toEqual([
+      [
+        'custom:visa',
+        {
+          kind: 'text',
+          text: m.jobDetail_customFieldYesLabel(),
+          multiline: false,
+        },
+      ],
+      ['custom:team', { kind: 'text', text: 'Platform', multiline: false }],
+    ]);
+  });
+
+  it('orders fields by the job form, renders rich text as HTML and shows collection selections', () => {
+    const job = createJob({
+      customFieldValues: {
+        visa: false,
+        team: 'Platform',
+        scope: '<p>Fit-out of <strong>three</strong> sites</p>',
+      },
+      resolvedCollectionFields: [
+        {
+          key: 'trades',
+          label: 'Trade communities',
+          entries: [
+            {
+              id: 'rec_1',
+              name: 'Carpentry',
+              title: 'Carpentry',
+              description: null,
+              titleOverride: null,
+              descriptionOverride: null,
+              fields: [],
+              values: {},
+            },
+          ],
+        },
+      ],
+    });
+    const defs = {
+      job: [
+        ...customFields.job,
+        {
+          key: 'scope',
+          label: 'Scope',
+          type: 'rich_text',
+          required: false,
+        },
+      ],
+      jobCollections: [],
+    } satisfies PublicBoard['customFields'];
+    const listed = (key: string, visible = true) => ({
+      kind: 'custom' as const,
+      key,
+      visible,
+      required: false,
+      definition: defs.job.find((d) => d.key === key)!,
+    });
+    // The layout lists the rich text before the boolean. `team` and the
+    // collection are not listed, so they follow the listed fields.
+    const board: JobFormLayoutSource = {
+      forms: { job: [listed('scope'), listed('visa')] },
+    };
+    // A field hidden from the form keeps its answer on the page, but it
+    // follows the listed fields instead of taking its layout position.
+    const hiddenFirst: JobFormLayoutSource = {
+      forms: {
+        job: [listed('visa', false), listed('team'), listed('scope')],
+      },
+    };
+    expect(
+      toJobDetailVM(
+        job,
+        defs,
+        [],
+        null,
+        'en',
+        'en',
+        hiddenFirst,
+      ).customFields.map((f) => f.id),
+    ).toEqual([
+      'custom:team',
+      'custom:scope',
+      'custom:visa',
+      'collection:trades',
+    ]);
+
+    const fields = toJobDetailVM(
+      job,
+      defs,
+      [],
+      null,
+      'en',
+      'en',
+      board,
+    ).customFields;
+
+    expect(fields.map((f) => f.id)).toEqual([
+      'custom:scope',
+      'custom:visa',
+      'custom:team',
+      'collection:trades',
+    ]);
+    expect(fields[0]?.value).toEqual({
+      kind: 'html',
+      html: '<p>Fit-out of <strong>three</strong> sites</p>',
+    });
+    expect(fields[3]?.value).toEqual({
+      kind: 'collection',
+      entries: [{ id: 'rec_1', title: 'Carpentry', logoUrl: null }],
+    });
+    expect(fields[1]?.value).toMatchObject({
+      text: m.jobDetail_customFieldNoLabel(),
+    });
   });
 
   it('normalises the company website (adds https, strips protocol for the label) and builds the profile path', () => {
@@ -443,9 +553,12 @@ describe('template-side custom-field localization', () => {
     expect(field.label).toBe(
       m.customField_visaSponsorship_label({}, { locale: 'en' }),
     );
-    expect(field.value).toBe(
-      m.customField_visaSponsorship_optionCaseByCase({}, { locale: 'en' }),
-    );
+    expect(field.value).toEqual({
+      kind: 'chips',
+      items: [
+        m.customField_visaSponsorship_optionCaseByCase({}, { locale: 'en' }),
+      ],
+    });
   });
 
   it('falls back to the wire authoring labels for unmapped fields', () => {
@@ -466,7 +579,7 @@ describe('template-side custom-field localization', () => {
     });
     const vm = toJobDetailVM(j, unmapped, [], null, 'de').customFields[0]!;
     expect(vm.label).toBe('Quest preference');
-    expect(vm.value).toBe('Dragons');
+    expect(vm.value).toEqual({ kind: 'chips', items: ['Dragons'] });
   });
 });
 

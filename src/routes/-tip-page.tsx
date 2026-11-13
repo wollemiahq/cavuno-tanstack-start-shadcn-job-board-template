@@ -17,8 +17,21 @@ import {
   type FormEvent,
 } from 'react';
 
+import {
+  tipCoverFeeCents,
+  type TipJar,
+  type TipJarCheckout,
+  type TipJarCheckoutStatus,
+} from '@cavuno/board';
 import { Link } from '@tanstack/react-router';
-import { CircleCheck, Clock, SearchX } from 'lucide-react';
+import {
+  CircleCheck,
+  Clock,
+  HandHeart,
+  Lock,
+  Plus,
+  SearchX,
+} from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -29,6 +42,7 @@ import { Prose } from '@/components/prose';
 import { Text } from '@/components/text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Empty,
   EmptyContent,
@@ -57,11 +71,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { boardErrorMessage } from '@/lib/board-error-message';
 import { cn } from '@/lib/utils';
-import type {
-  TipJar,
-  TipJarCheckout,
-  TipJarCheckoutStatus,
-} from '@cavuno/board';
 
 const EmbeddedCheckout = lazy(() =>
   import('@/components/paywall/embedded-checkout').then((module) => ({
@@ -80,6 +89,8 @@ export type TipCheckoutValues = {
   amountCents: number;
   note?: string;
   website?: string;
+  /** Only when the tipper ticked "cover the card fee"; never `false`. */
+  coverFee?: true;
 };
 
 export type TipPageDependencies = {
@@ -114,7 +125,7 @@ function mountKit(checkout: TipJarCheckout): MountKit | null {
   };
 }
 
-type FieldKey = 'amount' | 'note' | 'form';
+type FieldKey = 'amount' | 'note' | 'coverFee' | 'form';
 
 /** Which field a Board API refusal belongs under. */
 export function tipRefusalField(code: string | null): FieldKey {
@@ -125,6 +136,8 @@ export function tipRefusalField(code: string | null): FieldKey {
     case 'tip_note_not_allowed':
     case 'tip_note_too_long':
       return 'note';
+    case 'tip_fee_cover_not_allowed':
+      return 'coverFee';
     default:
       return 'form';
   }
@@ -146,6 +159,8 @@ function tipRefusalText(
       return m.tip_noteTooLongText({ max: String(tipJar.noteMaxLength) });
     case 'tip_note_not_allowed':
       return m.tip_noteNotAllowedText();
+    case 'tip_fee_cover_not_allowed':
+      return m.tip_coverFeeNotAllowedText();
     default:
       // stripe_not_connected, rate_limited, … and the generic fallback.
       return boardErrorMessage(refusal);
@@ -317,6 +332,7 @@ export function TipPageView({
   return (
     <TipForm
       tipJar={tipJar}
+      boardName={boardName}
       onStart={async (values) => {
         const result = await dependencies.startCheckout({
           data: { ...values, returnPath },
@@ -324,7 +340,12 @@ export function TipPageView({
         if (!result.ok) return { code: result.code, message: result.message };
         const nextKit = mountKit(result.data);
         if (!nextKit) return { code: null, message: '' };
-        setKitAmountCents(values.amountCents);
+        setKitAmountCents(
+          values.amountCents +
+            (values.coverFee
+              ? tipCoverFeeCents(values.amountCents, tipJar.coverFee)
+              : 0),
+        );
         setKit(nextKit);
       }}
     />
@@ -333,9 +354,11 @@ export function TipPageView({
 
 function TipForm({
   tipJar,
+  boardName,
   onStart,
 }: {
   tipJar: TipJar;
+  boardName: string;
   /** Resolves with a refusal to show, or nothing once checkout mounts. */
   onStart: (
     values: TipCheckoutValues,
@@ -344,13 +367,19 @@ function TipForm({
   const id = useId();
   const locale = getLocale();
   const otherInput = useRef<HTMLInputElement>(null);
+  const noteInput = useRef<HTMLTextAreaElement>(null);
+  const addNoteButton = useRef<HTMLButtonElement>(null);
   // The middle suggestion starts selected, like most tip jars.
   const [choice, setChoice] = useState(
     tipJar.suggestedCents.length > 1 ? '1' : '0',
   );
   const [otherText, setOtherText] = useState('');
+  // The note starts collapsed behind "Add a note"; only an open note is sent.
+  const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState('');
   const [website, setWebsite] = useState('');
+  // Unticked by default; offered only when the board passes the fee on.
+  const [coverFee, setCoverFee] = useState(false);
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const focusOther = useEffectEvent(() => otherInput.current?.focus());
@@ -358,9 +387,35 @@ function TipForm({
   useEffect(() => {
     if (otherPicked > 0) focusOther();
   }, [otherPicked]);
+  // Opening the note moves focus into it; removing it returns focus to
+  // "Add a note". Skipped on the first render so the page never steals focus.
+  const noteToggled = useRef(false);
+  useEffect(() => {
+    if (!noteToggled.current) return;
+    if (noteOpen) noteInput.current?.focus();
+    else addNoteButton.current?.focus();
+  }, [noteOpen]);
 
   const resolved = resolveTipAmount(tipJar, choice, otherText, locale);
   const money = (cents: number) => formatMoney(locale, cents, tipJar.currency);
+  // The exact fee the checkout adds for `coverFee: true`.
+  const feeCents =
+    tipJar.coverFee && resolved.ok
+      ? tipCoverFeeCents(resolved.amountCents, tipJar.coverFee)
+      : 0;
+  const offerCoverFee = feeCents > 0;
+  const chargeCents = resolved.ok
+    ? resolved.amountCents + (offerCoverFee && coverFee ? feeCents : 0)
+    : 0;
+
+  function toggleNote(open: boolean) {
+    noteToggled.current = true;
+    setNoteOpen(open);
+    if (!open) {
+      setNote('');
+      if (errors.note) setErrors({ ...errors, note: undefined });
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -371,13 +426,17 @@ function TipForm({
     }
     setErrors({});
     setPending(true);
+    const values: TipCheckoutValues = {
+      amountCents: resolved.amountCents,
+      note: tipJar.allowNote && noteOpen ? note.trim() || undefined : undefined,
+      website: website || undefined,
+    };
+    // Unticked tips send the same request as before: no coverFee at all.
+    if (offerCoverFee && coverFee) values.coverFee = true;
     try {
-      const refusal = await onStart({
-        amountCents: resolved.amountCents,
-        note: tipJar.allowNote ? note.trim() || undefined : undefined,
-        website: website || undefined,
-      });
+      const refusal = await onStart(values);
       if (refusal) {
+        if (refusal.code === 'tip_fee_cover_not_allowed') setCoverFee(false);
         setErrors({
           [tipRefusalField(refusal.code)]: tipRefusalText(
             refusal,
@@ -395,49 +454,66 @@ function TipForm({
 
   return (
     <Page width="narrow">
-      <PageContent
-        header={
-          <PageHeader
-            title={tipJar.name}
-            description={
-              tipJar.tipCount !== null ? (
-                <span data-test="tip-count">
-                  {m.tip_countText({
-                    count: tipJar.tipCount,
-                    countLabel: new Intl.NumberFormat(locale).format(
-                      tipJar.tipCount,
-                    ),
-                  })}
-                </span>
-              ) : undefined
-            }
-          />
-        }
-      >
-        <div className="flex flex-col gap-8">
-          {tipJar.descriptionHtml ? (
-            <Prose html={tipJar.descriptionHtml} />
-          ) : tipJar.description ? (
-            <div
-              className="text-foreground leading-relaxed whitespace-pre-line"
-              dir="auto"
-            >
-              {tipJar.description}
-            </div>
-          ) : null}
+      <PageContent>
+        <div className="mx-auto flex w-full max-w-120 flex-col gap-8">
+          <header className="flex flex-col gap-1.5">
+            <Text variant="heading1" as="h1" className="tracking-tight">
+              {tipJar.name}
+            </Text>
+            {tipJar.descriptionHtml ? (
+              <Prose
+                html={tipJar.descriptionHtml}
+                className="text-muted-foreground"
+              />
+            ) : tipJar.description ? (
+              <Text
+                variant="secondary"
+                className="leading-relaxed whitespace-pre-line"
+                dir="auto"
+              >
+                {tipJar.description}
+              </Text>
+            ) : null}
+          </header>
 
           <Card>
             <CardContent>
               <form
                 noValidate
                 onSubmit={submit}
-                aria-label={tipJar.name}
+                aria-labelledby={`${id}-title`}
                 className="flex flex-col gap-6"
                 data-test="tip-form"
               >
+                <div className="flex flex-col gap-3">
+                  <Text variant="heading4" as="h2" id={`${id}-title`}>
+                    {m.tip_cardTitle()}
+                  </Text>
+                  {tipJar.tipCount !== null ? (
+                    <div
+                      className="flex items-center gap-3"
+                      data-test="tip-count"
+                    >
+                      <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full">
+                        <HandHeart aria-hidden="true" className="size-4" />
+                      </span>
+                      <Text variant="secondary" size="sm">
+                        {m.tip_tippedCountText({
+                          count: tipJar.tipCount,
+                          countLabel: new Intl.NumberFormat(locale).format(
+                            tipJar.tipCount,
+                          ),
+                        })}
+                      </Text>
+                    </div>
+                  ) : null}
+                </div>
+
                 <FieldGroup className="gap-6">
                   <FieldSet data-invalid={Boolean(errors.amount) || undefined}>
-                    <FieldLegend>{m.tip_amountLegend()}</FieldLegend>
+                    <FieldLegend variant="label">
+                      {m.tip_amountLegend()}
+                    </FieldLegend>
                     <RadioGroup
                       name="amount"
                       value={choice}
@@ -449,7 +525,7 @@ function TipForm({
                         }
                         if (value === 'other') setOtherPicked((n) => n + 1);
                       }}
-                      className="grid-cols-2 sm:grid-cols-4"
+                      className="grid-cols-2 gap-2 sm:grid-cols-4"
                     >
                       {[
                         ...tipJar.suggestedCents.map((cents, index) => ({
@@ -461,14 +537,21 @@ function TipForm({
                         <FieldLabel
                           key={option.value}
                           htmlFor={`${id}-amount-${option.value}`}
-                          className="hover:bg-muted cursor-pointer transition-colors"
+                          className="hover:bg-muted has-data-checked:border-primary has-focus-visible:ring-ring/30 cursor-pointer justify-center transition-colors has-focus-visible:ring-3 *:data-[slot=field]:px-1 *:data-[slot=field]:py-3"
                         >
-                          <Field orientation="horizontal">
+                          <Field
+                            orientation="horizontal"
+                            className="justify-center text-center"
+                          >
+                            {/* Out of the flow: the whole card is the radio. */}
                             <RadioGroupItem
                               id={`${id}-amount-${option.value}`}
                               value={option.value}
+                              className="absolute opacity-0"
                             />
-                            <FieldTitle>{option.label}</FieldTitle>
+                            <FieldTitle className="justify-center">
+                              {option.label}
+                            </FieldTitle>
                           </Field>
                         </FieldLabel>
                       ))}
@@ -518,20 +601,88 @@ function TipForm({
                     ) : null}
                   </FieldSet>
 
-                  {tipJar.allowNote ? (
-                    <Field data-invalid={Boolean(errors.note) || undefined}>
-                      <FieldLabel htmlFor={`${id}-note`}>
-                        {m.tip_noteLabel()}
-                      </FieldLabel>
+                  {offerCoverFee || errors.coverFee ? (
+                    <Field
+                      orientation="horizontal"
+                      data-invalid={Boolean(errors.coverFee) || undefined}
+                      className="flex-wrap"
+                    >
+                      {offerCoverFee ? (
+                        <>
+                          <Checkbox
+                            id={`${id}-cover-fee`}
+                            name="coverFee"
+                            checked={coverFee}
+                            onCheckedChange={(checked) => {
+                              setCoverFee(checked === true);
+                              if (errors.coverFee) {
+                                setErrors({ ...errors, coverFee: undefined });
+                              }
+                            }}
+                          />
+                          <FieldLabel
+                            htmlFor={`${id}-cover-fee`}
+                            className="font-normal"
+                          >
+                            {m.tip_coverFeeLabel({ fee: money(feeCents) })}
+                          </FieldLabel>
+                        </>
+                      ) : null}
+                      {errors.coverFee ? (
+                        <FieldError className="basis-full">
+                          {errors.coverFee}
+                        </FieldError>
+                      ) : null}
+                    </Field>
+                  ) : null}
+
+                  {tipJar.allowNote && !noteOpen ? (
+                    <div>
+                      <Button
+                        ref={addNoteButton}
+                        type="button"
+                        variant="link"
+                        size="inline"
+                        className="-ms-1 text-sm"
+                        aria-expanded={false}
+                        aria-controls={`${id}-note-section`}
+                        onClick={() => toggleNote(true)}
+                      >
+                        <Plus data-icon="inline-start" aria-hidden="true" />
+                        {m.tip_addNoteAction()}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {tipJar.allowNote && noteOpen ? (
+                    <Field
+                      id={`${id}-note-section`}
+                      data-invalid={Boolean(errors.note) || undefined}
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <FieldLabel htmlFor={`${id}-note`}>
+                          {m.tip_noteLabel({ boardName })}
+                        </FieldLabel>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="inline"
+                          className="-me-1 text-sm"
+                          onClick={() => toggleNote(false)}
+                        >
+                          {m.tip_removeNoteAction()}
+                        </Button>
+                      </div>
                       <Textarea
+                        ref={noteInput}
                         id={`${id}-note`}
                         name="note"
                         rows={3}
                         maxLength={tipJar.noteMaxLength}
+                        placeholder={m.tip_notePlaceholder()}
                         value={note}
                         dir="auto"
                         aria-invalid={Boolean(errors.note) || undefined}
-                        aria-describedby={`${id}-note-help`}
+                        aria-describedby={`${id}-note-help ${id}-note-count`}
                         onChange={(event) => {
                           setNote(event.target.value);
                           if (errors.note) {
@@ -540,17 +691,26 @@ function TipForm({
                         }}
                       />
                       {errors.note ? (
-                        <FieldError id={`${id}-note-help`}>
-                          {errors.note}
-                        </FieldError>
-                      ) : (
-                        <FieldDescription id={`${id}-note-help`}>
+                        <FieldError>{errors.note}</FieldError>
+                      ) : null}
+                      <div className="text-muted-foreground flex items-start justify-between gap-3 text-xs">
+                        <p id={`${id}-note-help`} className="flex gap-1.5">
+                          <Lock
+                            aria-hidden="true"
+                            className="mt-0.5 size-3 shrink-0"
+                          />
+                          {m.tip_notePrivacyText({ boardName })}
+                        </p>
+                        <p
+                          id={`${id}-note-count`}
+                          className="shrink-0 tabular-nums"
+                        >
                           {m.tip_noteCountText({
                             count: String(note.length),
                             max: String(tipJar.noteMaxLength),
                           })}
-                        </FieldDescription>
-                      )}
+                        </p>
+                      </div>
                     </Field>
                   ) : null}
 
@@ -571,29 +731,28 @@ function TipForm({
                   </div>
                 </FieldGroup>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   <Button
                     type="submit"
                     size="xl"
+                    className="w-full"
                     disabled={pending}
                     aria-busy={pending || undefined}
                   >
                     {pending ? <Spinner data-icon="inline-start" /> : null}
                     {resolved.ok
-                      ? m.tip_submitAction({
-                          amount: money(resolved.amountCents),
-                        })
+                      ? m.tip_submitAction({ amount: money(chargeCents) })
                       : m.tip_continueAction()}
                   </Button>
                   {errors.form ? (
                     <FieldError data-test="tip-checkout-error">
                       {errors.form}
                     </FieldError>
-                  ) : (
-                    <p className="text-muted-foreground text-center text-sm">
-                      {m.tip_paymentHelpText()}
-                    </p>
-                  )}
+                  ) : null}
+                  <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-xs">
+                    <Lock aria-hidden="true" className="size-3" />
+                    {m.tip_secureCheckoutText()}
+                  </p>
                 </div>
               </form>
             </CardContent>
@@ -647,6 +806,22 @@ function TipReturnState({
                     ),
                   })}
                 </EmptyDescription>
+                {state.status.coverFeeCents > 0 ? (
+                  <EmptyDescription>
+                    {m.tip_chargedWithFeeText({
+                      total: formatMoney(
+                        locale,
+                        state.status.amountCents + state.status.coverFeeCents,
+                        state.status.currency,
+                      ),
+                      fee: formatMoney(
+                        locale,
+                        state.status.coverFeeCents,
+                        state.status.currency,
+                      ),
+                    })}
+                  </EmptyDescription>
+                ) : null}
               </EmptyHeader>
               <EmptyContent>
                 {state.status.thankYouMessage ? (

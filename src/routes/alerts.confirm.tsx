@@ -15,8 +15,10 @@ import { searchString, type UrlSearchInput } from '@/lib/pagination';
 type ConfirmStatus =
   | 'confirmed'
   | 'already_confirmed'
+  | 'waitlisted'
   | 'expired'
-  | 'not_found';
+  | 'not_found'
+  | 'unsubscribed';
 
 type ConfirmCopy = Record<
   ConfirmStatus,
@@ -33,6 +35,10 @@ const COPY = {
     heading: m.alertsConfirm_alreadyConfirmedHeading,
     body: m.alertsConfirm_alreadyConfirmedBody,
   },
+  waitlisted: {
+    heading: m.alertsConfirm_waitlistedHeading,
+    body: m.alertsConfirm_waitlistedBody,
+  },
   expired: {
     heading: m.alertsConfirm_expiredHeading,
     body: m.alertsConfirm_expiredBody,
@@ -40,6 +46,10 @@ const COPY = {
   not_found: {
     heading: m.alertsConfirm_notFoundHeading,
     body: m.alertsConfirm_notFoundBody,
+  },
+  unsubscribed: {
+    heading: m.alertsConfirm_unsubscribedHeading,
+    body: m.alertsConfirm_unsubscribedBody,
   },
 } satisfies ConfirmCopy;
 

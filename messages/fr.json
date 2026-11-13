@@ -186,6 +186,10 @@
   "alertsConfirm_notFoundBody": "Nous n'avons pas trouvé ce lien de confirmation.",
   "alertsConfirm_notFoundHeading": "Lien invalide",
   "alertsConfirm_title": "Confirmer les alertes emploi",
+  "alertsConfirm_unsubscribedBody": "Ce lien a été envoyé avant la désactivation de vos alertes emploi, il ne les réactive donc pas. Pour les reprendre, utilisez le lien de gestion de l'un de vos e-mails d'alerte.",
+  "alertsConfirm_unsubscribedHeading": "Les alertes emploi sont désactivées",
+  "alertsConfirm_waitlistedBody": "Votre alerte emploi est confirmée. Elle démarrera dès que le site pourra envoyer à davantage de personnes.",
+  "alertsConfirm_waitlistedHeading": "Vous êtes sur la liste d'attente",
   "alertsManage_actionErrorText": "Une erreur s’est produite. Réessayez.",
   "alertsManage_activeBadge": "Active",
   "alertsManage_allJobsText": "Toutes les offres",
@@ -792,6 +796,28 @@
   "customField_visaSponsorship_optionCaseByCase": "Au cas par cas",
   "customField_visaSponsorship_optionNo": "Non",
   "customField_visaSponsorship_optionYes": "Oui",
+  "customFieldDisplay_detailsHeading": "Détails",
+  "customFieldDisplay_galleryViewAll": "Tout afficher ({count})",
+  "customFieldDisplay_galleryOpenImage": "Ouvrir l’image {position} sur {total}",
+  "customFieldDisplay_galleryImagePosition": "Image {position} sur {total}",
+  "customFieldDisplay_galleryPrevious": "Image précédente",
+  "customFieldDisplay_galleryNext": "Image suivante",
+  "customFieldUpload_galleryAddLabel": "Ajouter des images",
+  "customFieldUpload_galleryCount": "{count} sur {max} images",
+  "customFieldUpload_galleryLimitError": "Une galerie contient jusqu’à {max} images. Retirez-en une pour en ajouter une autre.",
+  "customFieldUpload_galleryTypeError": "Utilisez une image JPEG, PNG, WebP ou GIF.",
+  "customFieldUpload_fileAddLabel": "Importer un fichier",
+  "customFieldUpload_fileTypeError": "Utilisez un fichier PDF, Word, ODT, RTF, texte ou image.",
+  "customFieldUpload_tooLargeError": "Ce fichier dépasse 10 Mo.",
+  "customFieldUpload_uploadingLabel": "Importation…",
+  "customFieldUpload_removeLabel": "Retirer",
+  "customFieldUpload_removeImageLabel": "Retirer l’image {position} sur {total}",
+  "customFieldUpload_reorderRoleDescription": "image déplaçable",
+  "customFieldUpload_reorderInstructions": "Pour déplacer une image, appuyez sur espace ou entrée pour la saisir, déplacez-la avec les flèches, puis appuyez sur espace ou entrée pour la déposer. Appuyez sur échap pour annuler.",
+  "customFieldUpload_reorderPickedUp": "Image {position} sur {total} saisie.",
+  "customFieldUpload_reorderMoved": "Image déplacée en position {position} sur {total}.",
+  "customFieldUpload_reorderDropped": "Image déposée en position {position} sur {total}.",
+  "customFieldUpload_reorderCancelled": "Déplacement annulé. L’image reste en position {position}.",
   "dangerZone_cancelLabel": "Annuler",
   "dangerZone_confirmLabel": "Saisissez {word} pour confirmer",
   "dangerZone_confirmWord": "SUPPRIMER",
@@ -1327,6 +1353,7 @@
   "footer_resourcesHeading": "Ressources",
   "footer_salariesLabel": "Salaires",
   "footer_sitemapLabel": "Plan du site",
+  "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Conditions d'utilisation",
   "footer_websiteLabel": "Site web",
   "home_blogDescription": "Conseils et analyses recrutement de notre équipe.",
@@ -1713,6 +1740,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Offres en télétravail",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre en télétravail",
+        "countPlural=*": "{countLabel} offres en télétravail"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Offres {category} en télétravail",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} en télétravail",
+        "countPlural=*": "{countLabel} offres {category} en télétravail"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Offres {skill} en télétravail",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} en télétravail",
+        "countPlural=*": "{countLabel} offres {skill} en télétravail"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Offres en hybride",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre en hybride",
+        "countPlural=*": "{countLabel} offres en hybride"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Offres {category} en hybride",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} en hybride",
+        "countPlural=*": "{countLabel} offres {category} en hybride"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Offres {skill} en hybride",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} en hybride",
+        "countPlural=*": "{countLabel} offres {skill} en hybride"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Offres sur site",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre sur site",
+        "countPlural=*": "{countLabel} offres sur site"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Offres {category} sur site",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {category} sur site",
+        "countPlural=*": "{countLabel} offres {category} sur site"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Offres {skill} sur site",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} offre {skill} sur site",
+        "countPlural=*": "{countLabel} offres {skill} sur site"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Changer le logo",
   "logoUpload_uploadErrorText": "Échec de l’envoi — essayez une image plus petite.",
   "logoUpload_uploadingLabel": "Envoi en cours…",
@@ -1811,6 +1979,7 @@
   "memberships_connectCompanyText": "Associez d’abord une entreprise approuvée. Ouvrez votre tableau de bord employeur pour en ajouter une.",
   "memberships_contactCtaFallback": "Nous contacter",
   "memberships_contactPriceFallback": "Tarif sur mesure",
+  "memberships_continueToPostLabel": "Continuer vers votre offre d'emploi",
   "memberships_joinDashboardText": "Les adhésions sont accordées par l’équipe du site. Ouvrez votre tableau de bord employeur pour continuer.",
   "memberships_joinLabel": "Adhérer",
   "memberships_loadMoreLabel": "Afficher plus de membres",
@@ -1969,9 +2138,12 @@
   "postCheckout_canceledTitle": "Paiement annulé",
   "postCheckout_successBody": "Votre offre d'emploi est en cours de publication et apparaîtra sur le site dans un instant. Un reçu vous a été envoyé par e-mail.",
   "postCheckout_successTitle": "Paiement reçu",
+  "postGate_alreadyMemberText": "Déjà membre ?",
   "postGate_becomeMemberLabel": "Devenir membre",
   "postGate_bodyText": "La publication sur ce site est réservée aux membres.",
   "postGate_contactText": "Besoin d’un accès ? Écrivez à {email}.",
+  "postGate_joinHeading": "Devenez membre pour publier des offres",
+  "postGate_joinText": "La publication sur {boardName} est réservée aux membres. Choisissez une adhésion pour commencer à publier.",
   "postGate_postAsCompanyLabel": "Publier depuis le tableau de bord de votre entreprise",
   "postGate_signInLabel": "Se connecter",
   "postJob_applicationUrlLabel": "URL de candidature",
@@ -3053,7 +3225,8 @@
   "itemVerification_codeExpiredError": "Ce code a expiré. Demandez-en un nouveau.",
   "itemVerification_emailPlaceholder": "nom",
   "tip_metaDescription": "Soutenez {boardName} avec un pourboire.",
-  "tip_countText": [
+  "tip_cardTitle": "Cagnotte",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3062,30 +3235,37 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{countLabel} pourboire jusqu'ici",
-        "countPlural=*": "{countLabel} pourboires jusqu'ici"
+        "countPlural=one": "{countLabel} personne a laissé un pourboire",
+        "countPlural=*": "{countLabel} personnes ont laissé un pourboire"
       }
     }
   ],
   "tip_amountLegend": "Choisissez un montant",
-  "tip_otherAmountOption": "Autre",
+  "tip_otherAmountOption": "Autre montant",
   "tip_otherAmountLabel": "Votre montant",
   "tip_amountHelpText": "Au moins {minimum}.",
   "tip_amountInvalidText": "Saisissez un montant comme 5 ou 5,50.",
   "tip_amountBelowMinimumText": "Le plus petit pourboire est de {minimum}.",
-  "tip_noteLabel": "Ajouter un mot (facultatif)",
-  "tip_noteCountText": "{count} sur {max} caractères",
+  "tip_addNoteAction": "Ajouter un mot",
+  "tip_noteLabel": "Ajouter un mot pour {boardName} (facultatif)",
+  "tip_removeNoteAction": "Retirer le mot",
+  "tip_notePlaceholder": "Dites pourquoi vous laissez un pourboire",
+  "tip_notePrivacyText": "Seul {boardName} voit votre mot. Il n'est pas affiché sur le site.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Votre mot ne doit pas dépasser {max} caractères.",
   "tip_noteNotAllowedText": "Cette cagnotte n'accepte pas de mot. Retirez votre mot et réessayez.",
+  "tip_coverFeeLabel": "Ajouter {fee} pour couvrir les frais de carte",
+  "tip_coverFeeNotAllowedText": "Ce site ne propose plus de couvrir les frais de carte.",
   "tip_submitAction": "Donner {amount}",
   "tip_continueAction": "Continuer vers le paiement",
-  "tip_paymentHelpText": "À l'étape suivante, vous payez en toute sécurité avec Stripe.",
+  "tip_secureCheckoutText": "Paiement sécurisé par Stripe",
   "tip_checkoutTitle": "Finaliser votre pourboire",
   "tip_backAction": "Retour",
   "tip_confirmingTitle": "Confirmation de votre pourboire…",
   "tip_confirmingText": "Cela prend généralement quelques secondes.",
   "tip_thankYouTitle": "Merci !",
   "tip_thankYouAmountText": "Vous avez donné {amount} à {boardName}.",
+  "tip_chargedWithFeeText": "Votre carte a été débitée de {total}, frais de carte de {fee} inclus.",
   "tip_receiptSentText": "Reçu envoyé à {email}",
   "tip_processingTitle": "Votre pourboire est en cours de traitement",
   "tip_processingText": "Nous vous enverrons le reçu dès que le paiement sera confirmé.",
@@ -3093,5 +3273,26 @@
   "tip_checkoutMissingTitle": "Pourboire introuvable",
   "tip_checkoutMissingText": "Le paiement a peut-être expiré. Vous pouvez laisser un nouveau pourboire.",
   "tip_startOverAction": "Retour à la page des pourboires",
-  "tip_browseJobsAction": "Parcourir les offres"
+  "tip_browseJobsAction": "Parcourir les offres",
+  "mcpDocs_title": "{boardName} dans les assistants IA",
+  "mcpDocs_description": "Recherchez les offres et les entreprises de {boardName} depuis Claude, ChatGPT, Cursor et d’autres assistants IA compatibles MCP. Aucun compte ni clé API requis.",
+  "mcpDocs_intro": "Recherchez les offres et les entreprises de {boardName} depuis Claude, ChatGPT, Cursor et d’autres assistants IA compatibles avec le Model Context Protocol (MCP). Ajoutez cette URL de serveur à votre assistant :",
+  "mcpDocs_access": "Aucun compte ni clé API n’est nécessaire. L’assistant voit ce que le site d’emploi montre à tout visiteur non connecté, et chaque offre renvoie vers sa page sur {boardName}, où vous lisez l’annonce complète et postulez.",
+  "mcpDocs_copyUrlLabel": "Copier l’URL du serveur MCP",
+  "mcpDocs_copyCodeLabel": "Copier",
+  "mcpDocs_copiedLabel": "Copié",
+  "mcpDocs_assistantsHeading": "Ajoutez-le à votre assistant",
+  "mcpDocs_claudeHeading": "Claude (claude.ai et Claude Desktop)",
+  "mcpDocs_claudeSteps": "Allez dans {connectorsMenu}, sélectionnez {addButton}, puis {customConnector}. Saisissez le nom {boardName} et l’URL ci-dessus.",
+  "mcpDocs_claudeCodeHeading": "Claude Code",
+  "mcpDocs_chatgptHeading": "ChatGPT",
+  "mcpDocs_chatgptSteps": "Dans un espace de travail ChatGPT Business ou Enterprise, ouvrez {pluginsMenu}, sélectionnez {plusButton}, puis {customServer}, et saisissez l’URL ci-dessus sans authentification. Les paramètres de votre espace de travail décident qui peut en ajouter un.",
+  "mcpDocs_cursorHeading": "Cursor",
+  "mcpDocs_vscodeHeading": "VS Code",
+  "mcpDocs_addToFile": "Ajoutez ceci à {file} :",
+  "mcpDocs_otherHeading": "Autres assistants",
+  "mcpDocs_otherSteps": "Tout client compatible avec les serveurs MCP distants via Streamable HTTP peut se connecter à l’URL ci-dessus.",
+  "mcpDocs_toolsHeading": "Ce qu’il peut faire",
+  "mcpDocs_limitsHeading": "Limites",
+  "mcpDocs_limits": "Chaque outil lit uniquement les annonces publiques du site d’emploi ; rien n’est enregistré ni modifié. Les requêtes sont limitées par visiteur et par site, et une requête limitée indique quand réessayer."
 }

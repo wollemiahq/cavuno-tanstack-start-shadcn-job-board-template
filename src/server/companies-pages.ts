@@ -197,6 +197,30 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
   );
 
 /**
+ * A market page lists at least this many companies to be indexed. It matches
+ * the hosted board's market-page floor (`MIN_COMPANIES_PER_INDEXED_MARKET_PAGE`),
+ * which also keeps thinner markets out of the board's sitemap.
+ */
+export const MIN_COMPANIES_PER_INDEXED_MARKET_PAGE = 5;
+
+/**
+ * True when the plain market page has fewer companies than the floor. A search
+ * view is left alone (it canonicalizes to the plain page), and so is a missing
+ * count (an older API).
+ *
+ * `count` is the market's `companyCount` (the companies tagged with it, the
+ * number the board's sitemap uses) when the API returns it, else the listing's
+ * total, which also counts untagged companies whose text matches the market.
+ */
+export function isThinMarketPage(
+  query: string | undefined,
+  count: number | undefined,
+): boolean {
+  if (query || count === undefined) return false;
+  return count < MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
+}
+
+/**
  * /companies/markets/$market — market resolve + listing + head in ONE server fn.
  *
  * Trade-off: resolve joins the same Promise.all as the listing query, so an
@@ -277,29 +301,32 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
         isCompanySearchUnavailable(pageResult.error);
       if (!pageResult.ok && !searchUnavailable) throw pageResult.error;
       const page = pageResult.ok ? pageResult.value : { data: [], count: 0 };
-      const head = {
-        meta: [
-          {
-            title: headTitle(
-              seo.boardName,
-              m.marketPage_metaTitle({ market: market.displayName }),
-            ),
-          },
-          {
-            name: 'description',
-            content: m.marketPage_metaDescription({
-              market: market.displayName,
-              boardName: seo.boardName,
-            }),
-          },
-        ],
-        links: [
-          {
-            rel: 'canonical',
-            href: selfUrl(seo.origin, companyMarketPath(data.marketSlug)),
-          },
-        ],
-      };
+      const head = noindexFollow(
+        {
+          meta: [
+            {
+              title: headTitle(
+                seo.boardName,
+                m.marketPage_metaTitle({ market: market.displayName }),
+              ),
+            },
+            {
+              name: 'description',
+              content: m.marketPage_metaDescription({
+                market: market.displayName,
+                boardName: seo.boardName,
+              }),
+            },
+          ],
+          links: [
+            {
+              rel: 'canonical',
+              href: selfUrl(seo.origin, companyMarketPath(data.marketSlug)),
+            },
+          ],
+        },
+        isThinMarketPage(data.query, market.companyCount ?? page.count),
+      );
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
         [

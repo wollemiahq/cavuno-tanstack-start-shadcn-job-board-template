@@ -14,6 +14,8 @@ import {
 import { placeLinkSlug } from '../board/place-link';
 import { TALENT_PLACES_LIMIT } from '../board/talent-places';
 import { impressumHasContent } from '../content/legal/impressum-availability';
+import { hasPaidCandidatePlans } from './candidate-pricing';
+import { boardGlobalReadCache } from './read-cache';
 import { createSettledCache } from './settled-cache';
 
 import type { SettledCache } from './settled-cache';
@@ -210,7 +212,36 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
   return lastModified ? { url: entry.url, lastModified } : { url: entry.url };
 }
 
-const LOCAL_MARKETING_PATHS = ['/job-seekers', '/pricing'] as const;
+/**
+ * Plan pages this starter owns. `/pricing` always renders (an empty state
+ * when the board has no plans). `/job-seekers` redirects to `/jobs` unless
+ * the board sells a paid candidate plan, so it is listed only under the
+ * same predicate its route loader uses.
+ */
+const PLAN_PAGES = [
+  { path: '/job-seekers', isLive: hasPaidCandidatePlans },
+  { path: '/pricing', isLive: () => true },
+] as const;
+
+/**
+ * The plan pages that serve a page rather than a redirect. Reads the same
+ * board-global, edge-cached plan list the root loader's nav gate reads, once
+ * per snapshot build (not per sitemap request). A failed read is treated as
+ * an empty catalogue, as the nav gate does: it must not take down the
+ * sitemap's other buckets.
+ */
+async function livePlanPagePaths(board: BoardSdk): Promise<string[]> {
+  // Test doubles stub only the namespaces a case touches.
+  const plans = board.plans
+    ? await board.plans
+        .list({}, boardGlobalReadCache())
+        .then((page) => page.data)
+        .catch(() => [])
+    : [];
+  return PLAN_PAGES.filter((page) => page.isLive(plans)).map(
+    (page) => page.path,
+  );
+}
 
 /**
  * The talent location pages to list, when the talent directory is public:
@@ -244,26 +275,35 @@ function withLocalMarketingPages(
   origin: string,
   bucket: SitemapBucket,
   entries: SitemapEntry[],
+  planPaths: readonly string[],
   talentPaths: readonly string[],
 ): SitemapEntry[] {
   if (bucket !== 'marketing') return entries;
   // `/impressum` is listed exactly when the operator has written one
-  // (`impressumHasContent`). Whatever the SDK or the published sitemap says
-  // about it, from the board context's `features.impressum`, is dropped.
-  const impressumUrl = `${origin}${BOARD_PATHS.impressum}`;
-  const listed = entries.filter((entry) => entry.url !== impressumUrl);
+  // (`impressumHasContent`), and each plan page exactly when its route serves
+  // it (`PLAN_PAGES`). Whatever the SDK or the published sitemap says about
+  // those pages is dropped when they are not live.
   const impressumPaths = impressumHasContent() ? [BOARD_PATHS.impressum] : [];
+  const ownedPaths = [
+    BOARD_PATHS.impressum,
+    ...PLAN_PAGES.map((page) => page.path),
+  ];
+  const livePaths = new Set<string>([...impressumPaths, ...planPaths]);
+  const notLive = new Set(
+    ownedPaths
+      .filter((path) => !livePaths.has(path))
+      .map((path) => `${origin}${path}`),
+  );
+  const listed = entries.filter((entry) => !notLive.has(entry.url));
   const urls = new Set(listed.map((entry) => entry.url));
   return [
     ...listed,
-    ...[...LOCAL_MARKETING_PATHS, ...impressumPaths, ...talentPaths].flatMap(
-      (path) => {
-        const url = `${origin}${path}`;
-        if (urls.has(url)) return [];
-        urls.add(url);
-        return [{ url }];
-      },
-    ),
+    ...[...planPaths, ...impressumPaths, ...talentPaths].flatMap((path) => {
+      const url = `${origin}${path}`;
+      if (urls.has(url)) return [];
+      urls.add(url);
+      return [{ url }];
+    }),
   ];
 }
 
@@ -273,8 +313,9 @@ export async function buildSitemapContext(
   source: SitemapSource = DEFAULT_SOURCE,
 ): Promise<SitemapContext> {
   const catalog = memoizingBoardView(board);
-  const [listed, talentPaths] = await Promise.all([
+  const [listed, planPaths, talentPaths] = await Promise.all([
     source.listedBucketEntries(catalog),
+    livePlanPagePaths(board),
     // A failed talent read leaves the talent pages out; it must not take
     // down the sitemap's other buckets, which never depended on it.
     talentLocationPaths(board).catch((): string[] => []),
@@ -291,6 +332,7 @@ export async function buildSitemapContext(
           origin,
           bucket,
           sdkEntries.map(toSitemapEntry),
+          planPaths,
           talentPaths,
         );
         const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);

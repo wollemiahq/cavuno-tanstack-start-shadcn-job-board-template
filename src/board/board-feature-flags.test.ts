@@ -37,6 +37,9 @@ function features(
     nativeApplications: true,
     messaging: true,
     contactPage: true,
+    mcp: false,
+    tipJar: false,
+    products: false,
     ...extra,
   };
 }

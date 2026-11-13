@@ -252,6 +252,82 @@ describe('ProfileForm — operator form layout', () => {
     ).toBeInTheDocument();
     expect(mocks.updateProfile).not.toHaveBeenCalled();
   });
+
+  it('holds Save until an upload finishes, then saves the gallery with it', async () => {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    mocks.updateCustomFields.mockResolvedValue({});
+    const image = (id: string) => ({
+      id,
+      name: `${id}.png`,
+      contentType: 'image/png',
+      sizeBytes: 1024,
+      url: `https://files.test/${id}`,
+    });
+    let finishUpload!: () => void;
+    const uploadCustomFieldFile = vi.fn(
+      () =>
+        new Promise<{ ok: true; data: ReturnType<typeof image> }>((resolve) => {
+          finishUpload = () => resolve({ ok: true, data: image('draft') });
+        }),
+    );
+    const profileFields: TalentProfileFields = {
+      customFields: {
+        definitions: [
+          {
+            key: 'portfolio',
+            label: 'Portfolio',
+            type: 'image_gallery',
+            required: false,
+            visibility: 'public',
+            editableByOwner: true,
+          },
+        ],
+        values: { portfolio: ['saved'] },
+        customFieldMedia: { portfolio: [image('saved')] },
+      },
+      objectReferences: null,
+    };
+    await renderWithRouter(
+      <ProfileForm
+        profile={profile}
+        language="en"
+        dependencies={{ ...mocks, uploadCustomFieldFile }}
+        locationSuggestions={suggestions}
+        profileFields={profileFields}
+        entries={resolveTalentForm(
+          [builtin('name', { locked: true })],
+          profileFields,
+        )}
+      />,
+    );
+
+    const picker = await screen.findByLabelText('Portfolio', {
+      selector: 'input[type=file]',
+    });
+    fireEvent.change(picker, {
+      target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] },
+    });
+    // Saving now would drop the draft, whose ID is not in the form yet.
+    const saveButton = screen.getByRole('button', {
+      name: m.profileForm_saveLabel(),
+    });
+    await waitFor(() => expect(saveButton).toBeDisabled());
+    finishUpload();
+    await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2));
+    expect(saveButton).toBeEnabled();
+    expect(uploadCustomFieldFile).toHaveBeenCalledWith(
+      'portfolio',
+      expect.any(File),
+    );
+
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+
+    await waitFor(() =>
+      expect(mocks.updateCustomFields).toHaveBeenCalledWith({
+        data: { values: { portfolio: ['saved', 'draft'] } },
+      }),
+    );
+  });
 });
 
 describe('ProfileForm — handle', () => {
@@ -942,6 +1018,7 @@ describe('ProfileForm — committed overview refresh', () => {
           },
         ],
         values: { portfolio_note: 'Previously saved answer' },
+        customFieldMedia: {},
       },
       objectReferences: null,
     });
@@ -1053,6 +1130,7 @@ describe('ProfileForm — committed overview refresh', () => {
             },
           ],
           values: { portfolio_note: 'Stored note' },
+          customFieldMedia: {},
         },
         objectReferences: {
           definitions: [

@@ -186,6 +186,10 @@
   "alertsConfirm_notFoundBody": "We couldn't find that confirmation link.",
   "alertsConfirm_notFoundHeading": "Invalid link",
   "alertsConfirm_title": "Confirm job alerts",
+  "alertsConfirm_unsubscribedBody": "This link was sent before your job alerts were turned off, so it doesn't turn them back on. To resume them, use the manage link in one of your alert emails.",
+  "alertsConfirm_unsubscribedHeading": "Job alerts are off",
+  "alertsConfirm_waitlistedBody": "Your job alert is confirmed. It starts as soon as the board can send to more people.",
+  "alertsConfirm_waitlistedHeading": "You're on the waitlist",
   "alertsManage_actionErrorText": "Something went wrong. Try again.",
   "alertsManage_activeBadge": "Active",
   "alertsManage_allJobsText": "All jobs",
@@ -792,6 +796,28 @@
   "customField_visaSponsorship_optionCaseByCase": "Case-by-case",
   "customField_visaSponsorship_optionNo": "No",
   "customField_visaSponsorship_optionYes": "Yes",
+  "customFieldDisplay_detailsHeading": "Details",
+  "customFieldDisplay_galleryViewAll": "View all ({count})",
+  "customFieldDisplay_galleryOpenImage": "Open image {position} of {total}",
+  "customFieldDisplay_galleryImagePosition": "Image {position} of {total}",
+  "customFieldDisplay_galleryPrevious": "Previous image",
+  "customFieldDisplay_galleryNext": "Next image",
+  "customFieldUpload_galleryAddLabel": "Add images",
+  "customFieldUpload_galleryCount": "{count} of {max} images",
+  "customFieldUpload_galleryLimitError": "A gallery holds up to {max} images. Remove one to add another.",
+  "customFieldUpload_galleryTypeError": "Use a JPEG, PNG, WebP or GIF image.",
+  "customFieldUpload_fileAddLabel": "Upload a file",
+  "customFieldUpload_fileTypeError": "Use a PDF, Word, ODT, RTF, text or image file.",
+  "customFieldUpload_tooLargeError": "That file is over 10 MB.",
+  "customFieldUpload_uploadingLabel": "Uploading…",
+  "customFieldUpload_removeLabel": "Remove",
+  "customFieldUpload_removeImageLabel": "Remove image {position} of {total}",
+  "customFieldUpload_reorderRoleDescription": "sortable image",
+  "customFieldUpload_reorderInstructions": "To move an image, press space or enter to pick it up, use the arrow keys to move it, then press space or enter to drop it. Press escape to cancel.",
+  "customFieldUpload_reorderPickedUp": "Picked up image {position} of {total}.",
+  "customFieldUpload_reorderMoved": "Image moved to position {position} of {total}.",
+  "customFieldUpload_reorderDropped": "Image dropped at position {position} of {total}.",
+  "customFieldUpload_reorderCancelled": "Move cancelled. The image stays at position {position}.",
   "dangerZone_cancelLabel": "Cancel",
   "dangerZone_confirmLabel": "Type {word} to confirm",
   "dangerZone_confirmWord": "DELETE",
@@ -1327,6 +1353,7 @@
   "footer_resourcesHeading": "Resources",
   "footer_salariesLabel": "Salaries",
   "footer_sitemapLabel": "Sitemap",
+  "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Terms of Service",
   "footer_websiteLabel": "Website",
   "home_blogDescription": "Guides and hiring insight from our team.",
@@ -1713,6 +1740,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Remote jobs",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote job",
+        "countPlural=*": "{countLabel} remote jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Remote {category} jobs",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote {category} job",
+        "countPlural=*": "{countLabel} remote {category} jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Remote {skill} jobs",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} remote {skill} job",
+        "countPlural=*": "{countLabel} remote {skill} jobs"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Hybrid jobs",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrid job",
+        "countPlural=*": "{countLabel} hybrid jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Hybrid {category} jobs",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrid {category} job",
+        "countPlural=*": "{countLabel} hybrid {category} jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Hybrid {skill} jobs",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrid {skill} job",
+        "countPlural=*": "{countLabel} hybrid {skill} jobs"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "On-site jobs",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} on-site job",
+        "countPlural=*": "{countLabel} on-site jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "On-site {category} jobs",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} on-site {category} job",
+        "countPlural=*": "{countLabel} on-site {category} jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "On-site {skill} jobs",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} on-site {skill} job",
+        "countPlural=*": "{countLabel} on-site {skill} jobs"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Change logo",
   "logoUpload_uploadErrorText": "Upload failed — try a smaller image.",
   "logoUpload_uploadingLabel": "Uploading…",
@@ -1811,6 +1979,7 @@
   "memberships_connectCompanyText": "Connect an approved company first. Open your employer dashboard to add one.",
   "memberships_contactCtaFallback": "Get in touch",
   "memberships_contactPriceFallback": "Custom pricing",
+  "memberships_continueToPostLabel": "Continue to your job post",
   "memberships_joinDashboardText": "Memberships are granted by the board team. Open your employer dashboard to continue.",
   "memberships_joinLabel": "Join",
   "memberships_loadMoreLabel": "Show more members",
@@ -1969,9 +2138,12 @@
   "postCheckout_canceledTitle": "Checkout canceled",
   "postCheckout_successBody": "Your job posting is being published and will appear on the board in a moment. A receipt is on its way to your email.",
   "postCheckout_successTitle": "Payment received",
+  "postGate_alreadyMemberText": "Already a member?",
   "postGate_becomeMemberLabel": "Become a member",
   "postGate_bodyText": "Posting on this board is open to members only.",
   "postGate_contactText": "Need access? Email {email}.",
+  "postGate_joinHeading": "Become a member to post jobs",
+  "postGate_joinText": "Posting on {boardName} is open to members only. Choose a membership to start posting.",
   "postGate_postAsCompanyLabel": "Post from your company dashboard",
   "postGate_signInLabel": "Sign in",
   "postJob_applicationUrlLabel": "Application URL",
@@ -3053,7 +3225,8 @@
   "itemVerification_codeExpiredError": "This code expired. Send a new one.",
   "itemVerification_emailPlaceholder": "name",
   "tip_metaDescription": "Support {boardName} with a tip.",
-  "tip_countText": [
+  "tip_cardTitle": "Tip jar",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3062,30 +3235,37 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{countLabel} tip so far",
-        "countPlural=*": "{countLabel} tips so far"
+        "countPlural=one": "{countLabel} person has tipped",
+        "countPlural=*": "{countLabel} people have tipped"
       }
     }
   ],
   "tip_amountLegend": "Choose an amount",
-  "tip_otherAmountOption": "Other",
+  "tip_otherAmountOption": "Other amount",
   "tip_otherAmountLabel": "Your amount",
   "tip_amountHelpText": "At least {minimum}.",
   "tip_amountInvalidText": "Enter an amount like 5 or 5.50.",
   "tip_amountBelowMinimumText": "The smallest tip is {minimum}.",
-  "tip_noteLabel": "Add a note (optional)",
-  "tip_noteCountText": "{count} of {max} characters",
+  "tip_addNoteAction": "Add a note",
+  "tip_noteLabel": "Add a note for {boardName} (optional)",
+  "tip_removeNoteAction": "Remove note",
+  "tip_notePlaceholder": "Say why you're tipping",
+  "tip_notePrivacyText": "Only {boardName} sees your note. It isn't shown on the site.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Keep your note to {max} characters.",
   "tip_noteNotAllowedText": "This tip jar doesn't take notes. Remove your note and try again.",
+  "tip_coverFeeLabel": "Add {fee} to cover the card fee",
+  "tip_coverFeeNotAllowedText": "This board no longer offers covering the card fee.",
   "tip_submitAction": "Tip {amount}",
   "tip_continueAction": "Continue to payment",
-  "tip_paymentHelpText": "You'll pay securely with Stripe on the next step.",
+  "tip_secureCheckoutText": "Secure checkout by Stripe",
   "tip_checkoutTitle": "Complete your tip",
   "tip_backAction": "Back",
   "tip_confirmingTitle": "Confirming your tip…",
   "tip_confirmingText": "This usually takes a few seconds.",
   "tip_thankYouTitle": "Thank you!",
   "tip_thankYouAmountText": "You tipped {boardName} {amount}.",
+  "tip_chargedWithFeeText": "Your card was charged {total}, including the {fee} card fee.",
   "tip_receiptSentText": "Receipt sent to {email}",
   "tip_processingTitle": "Your tip is processing",
   "tip_processingText": "We'll email your receipt as soon as the payment clears.",
@@ -3093,5 +3273,26 @@
   "tip_checkoutMissingTitle": "We couldn't find this tip",
   "tip_checkoutMissingText": "The payment may have expired. You can start a new tip.",
   "tip_startOverAction": "Back to the tip page",
-  "tip_browseJobsAction": "Browse jobs"
+  "tip_browseJobsAction": "Browse jobs",
+  "mcpDocs_title": "{boardName} in AI assistants",
+  "mcpDocs_description": "Search the jobs and companies on {boardName} from Claude, ChatGPT, Cursor and other AI assistants that support MCP. No account or API key needed.",
+  "mcpDocs_intro": "Search the jobs and companies on {boardName} from Claude, ChatGPT, Cursor and other AI assistants that support the Model Context Protocol (MCP). Add this server URL to your assistant:",
+  "mcpDocs_access": "No account or API key is needed. The assistant sees what the board shows any visitor who is not signed in, and every job links to its page on {boardName}, where you read the full listing and apply.",
+  "mcpDocs_copyUrlLabel": "Copy MCP server URL",
+  "mcpDocs_copyCodeLabel": "Copy",
+  "mcpDocs_copiedLabel": "Copied",
+  "mcpDocs_assistantsHeading": "Add it to your assistant",
+  "mcpDocs_claudeHeading": "Claude (claude.ai and Claude Desktop)",
+  "mcpDocs_claudeSteps": "Go to {connectorsMenu}, select {addButton}, then {customConnector}. Enter the name {boardName} and the URL above.",
+  "mcpDocs_claudeCodeHeading": "Claude Code",
+  "mcpDocs_chatgptHeading": "ChatGPT",
+  "mcpDocs_chatgptSteps": "On a ChatGPT Business or Enterprise workspace, open {pluginsMenu}, select {plusButton}, then {customServer}, and enter the URL above with no authentication. Your workspace settings decide who can add one.",
+  "mcpDocs_cursorHeading": "Cursor",
+  "mcpDocs_vscodeHeading": "VS Code",
+  "mcpDocs_addToFile": "Add this to {file}:",
+  "mcpDocs_otherHeading": "Other assistants",
+  "mcpDocs_otherSteps": "Any client that supports remote MCP servers over Streamable HTTP can connect to the URL above.",
+  "mcpDocs_toolsHeading": "What it can do",
+  "mcpDocs_limitsHeading": "Limits",
+  "mcpDocs_limits": "Every tool only reads the board's public listings; nothing is saved or changed. Requests are rate limited per visitor and per board, and a limited request says when to retry."
 }

@@ -30,6 +30,7 @@ function profile(handle: string): TalentProfile {
     education: [],
     skills: [],
     languages: [],
+    customFieldMedia: {},
     customFieldValues: {},
     objectReferences: [],
     resumeUrl: null,

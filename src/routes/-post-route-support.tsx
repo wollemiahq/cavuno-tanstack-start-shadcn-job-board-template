@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 
+import type { JoinHeading } from '@/components/board/membership-post-gate';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
 import { PostJobForm } from '@/components/post-job-form';
 import { m } from '@/paraglide/messages';
+import { getPostingMembershipPlans } from '@/server/membership-pages';
 import {
   fetchLogoByDomain,
   getPostPlans,
@@ -14,6 +16,7 @@ import { getRemotePermits, getSeoBase } from '@/server/queries';
 export type PostRouteDependencies = {
   fetchLogoByDomain: typeof fetchLogoByDomain;
   getPostPlans: typeof getPostPlans;
+  getPostingMembershipPlans: typeof getPostingMembershipPlans;
   getRemotePermits: typeof getRemotePermits;
   getSeoBase: typeof getSeoBase;
   renderForm: (props: Parameters<typeof PostJobForm>[0]) => ReactNode;
@@ -24,6 +27,7 @@ export type PostRouteDependencies = {
 export const postRouteDependencies: PostRouteDependencies = {
   fetchLogoByDomain,
   getPostPlans,
+  getPostingMembershipPlans,
   getRemotePermits,
   getSeoBase,
   renderForm: (props) => <PostJobForm {...props} />,
@@ -35,12 +39,15 @@ export function createPostLoader(
   dependencies: PostRouteDependencies = postRouteDependencies,
 ) {
   return async () => {
-    const [plans, remotePermits, seo] = await Promise.all([
+    const [plans, membershipPlans, remotePermits, seo] = await Promise.all([
       dependencies.getPostPlans(),
+      // What the members-only gate sells. Empty on an open board; a failed
+      // read leaves the gate linking to /memberships instead.
+      dependencies.getPostingMembershipPlans().catch(() => []),
       dependencies.getRemotePermits().catch(() => null),
       dependencies.getSeoBase(),
     ]);
-    return { plans, remotePermits, seo };
+    return { plans, membershipPlans, remotePermits, seo };
   };
 }
 
@@ -53,6 +60,7 @@ export function PostJobPageView({
   locale,
   officeLocationSuggestions,
   gate,
+  heading,
   dependencies = postRouteDependencies,
 }: {
   plans: Awaited<ReturnType<typeof getPostPlans>>;
@@ -70,6 +78,11 @@ export function PostJobPageView({
    * the board will refuse.
    */
   gate?: ReactNode;
+  /**
+   * Replaces "Post a job" while the gate sells memberships, so the page has
+   * one heading about joining instead of two stacked titles.
+   */
+  heading?: JoinHeading;
   dependencies?: PostRouteDependencies;
 }) {
   return (
@@ -77,8 +90,12 @@ export function PostJobPageView({
       <PageContent
         header={
           <PageHeader
-            title={m.postJob_title()}
-            description={m.postJob_subtitle()}
+            title={heading?.title ?? m.postJob_title()}
+            // "Choose a plan and submit below" describes the form, which the
+            // gate replaces.
+            description={
+              heading?.description ?? (gate ? undefined : m.postJob_subtitle())
+            }
           />
         }
       >

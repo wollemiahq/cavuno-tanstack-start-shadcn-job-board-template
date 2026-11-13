@@ -13,7 +13,6 @@
 import {
   countryOptions,
   formatPublishedRelativeDate,
-  resolveCustomFieldDisplay,
 } from '@cavuno/board/format';
 import {
   companyPath,
@@ -23,15 +22,16 @@ import {
 } from '@cavuno/board/paths';
 
 import {
-  customFieldLabel,
-  customFieldOptionLabel,
-} from '@/board/custom-field-labels';
-import { resolveJobForm, type JobFormSource } from '@/board/job-form';
+  resolveFieldDisplay,
+  type DisplayFieldSource,
+  type FieldDisplayEntry,
+} from '@/board/custom-field-display';
+import type { JobFormLayoutSource } from '@/board/form-layout';
+import { resolveJobForm } from '@/board/job-form';
 import { jobDetailCopy } from '@/copy-groups/job-detail';
 import { enumLabel } from '@/lib/enum-labels';
 import { jobBreadcrumbItems } from '@/lib/job-breadcrumbs';
 import { jobEmploymentTypeLabel } from '@/lib/job-employment-type-label';
-import { searchString } from '@/lib/pagination';
 import { formatJobSalary } from '@/lib/salary-display';
 import type { PublicBoard, PublicJob, PublicJobCard } from '@cavuno/board';
 
@@ -46,12 +46,8 @@ export interface JobDetailFactVM {
   value: string;
 }
 
-export interface JobDetailCustomFieldVM {
-  key: string;
-  label: string;
-  /** Boolean fields are pre-resolved to their yes/no copy. */
-  value: string;
-}
+/** One custom or collection field answer, formatted for its type. */
+export type JobDetailCustomFieldVM = FieldDisplayEntry;
 
 export interface JobDetailCompanyVM {
   name: string | null;
@@ -124,6 +120,49 @@ export interface JobDetailVM {
   similarJobsHeading: string;
 }
 
+/**
+ * The job's custom and collection fields: the ones the job form shows, in
+ * its order, then every other public field, in definition order. A field
+ * the operator hides from the form, or that the layout does not list, still
+ * shows its stored answer after the listed ones, as the job page did before
+ * layouts ordered it. (Profiles differ: a hidden profile field is not
+ * shown.) `resolveFieldDisplay` drops the repeats.
+ *
+ * Reads `forms.job` directly rather than through `resolveJobFormLayout`,
+ * which would add the job form's layout code to every job page bundle for
+ * the one rule needed here: listed, visible entries first.
+ */
+function jobDisplayFields(
+  jobForm: JobFormLayoutSource | null | undefined,
+  definitions: PublicBoard['customFields']['job'],
+  collections: PublicJob['resolvedCollectionFields'],
+): DisplayFieldSource[] {
+  const byKey = new Map(definitions.map((d) => [d.key, d]));
+  const collectionLabel = new Map(collections.map((f) => [f.key, f.label]));
+  const listed = (jobForm?.forms?.job ?? []).flatMap(
+    (entry): DisplayFieldSource[] => {
+      if (!entry.visible) return [];
+      const definition = entry.kind === 'custom' && byKey.get(entry.key);
+      if (definition) return [{ kind: 'custom', definition }];
+      const label =
+        entry.kind === 'collection' && collectionLabel.get(entry.key);
+      return label ? [{ kind: 'collection', key: entry.key, label }] : [];
+    },
+  );
+  return [
+    ...listed,
+    ...definitions.map((definition) => ({
+      kind: 'custom' as const,
+      definition,
+    })),
+    ...collections.map((field) => ({
+      kind: 'collection' as const,
+      key: field.key,
+      label: field.label,
+    })),
+  ];
+}
+
 export function toJobDetailVM(
   job: PublicJob,
   customFields: PublicBoard['customFields'],
@@ -138,7 +177,7 @@ export function toJobDetailVM(
    * breaks it, which is why this is two arguments and not one.
    */
   displayLocale: string = language,
-  jobForm?: JobFormSource | null,
+  jobForm?: JobFormLayoutSource | null,
   /**
    * The company's membership plan name from the separate company read; the
    * embedded `job.company` has no membership field.
@@ -262,61 +301,23 @@ export function toJobDetailVM(
   const customFieldDefinitions = Array.isArray(customFields)
     ? customFields
     : customFields.job;
-  const customFieldVms: JobDetailCustomFieldVM[] = resolveCustomFieldDisplay(
+  const customFieldVms = resolveFieldDisplay(
+    jobDisplayFields(
+      jobForm,
+      customFieldDefinitions,
+      job.resolvedCollectionFields ?? [],
+    ),
+    {
+      values: job.customFieldValues,
+      collections: new Map(
+        (job.resolvedCollectionFields ?? []).map((field) => [
+          field.key,
+          field.entries,
+        ]),
+      ),
+    },
     displayLocale,
-    customFieldDefinitions,
-    job.customFieldValues,
-  ).map((entry) => {
-    const definition = customFieldDefinitions.find((d) => d.key === entry.key);
-    // Select values arrive as SDK-resolved authoring labels; re-word them
-    // from the template map via the RAW stored option keys (the wire stores
-    // keys, never labels), falling back to the resolved label.
-    const rawValue = job.customFieldValues[entry.key];
-    const optionLabel = <T>(resolved: string, raw: T) => {
-      const key = searchString(raw);
-      return key && definition
-        ? customFieldOptionLabel(
-            definition.key,
-            { key, label: resolved },
-            displayLocale,
-          )
-        : resolved;
-    };
-    let value: string;
-    if (entry.kind === 'boolean') {
-      value = entry.value ? copy.customFieldYesLabel : copy.customFieldNoLabel;
-    } else if (entry.kind === 'number') {
-      try {
-        value = new Intl.NumberFormat(displayLocale).format(entry.value);
-      } catch {
-        value = String(entry.value);
-      }
-    } else if (entry.kind === 'multi_select') {
-      const raws = Array.isArray(rawValue) ? rawValue : [];
-      const labels = entry.values.map((resolved, index) =>
-        optionLabel(resolved, raws[index]),
-      );
-      try {
-        value = new Intl.ListFormat(displayLocale, {
-          style: 'long',
-          type: 'conjunction',
-        }).format(labels);
-      } catch {
-        value = labels.join(', ');
-      }
-    } else if (definition?.type === 'single_select') {
-      value = optionLabel(entry.value, rawValue);
-    } else {
-      value = entry.value;
-    }
-    return {
-      key: entry.key,
-      label: definition
-        ? customFieldLabel(definition, displayLocale)
-        : entry.label,
-      value,
-    };
-  });
+  );
 
   const website = company?.website
     ? /^https?:\/\//i.test(company.website)

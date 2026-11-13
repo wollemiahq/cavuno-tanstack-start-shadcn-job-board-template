@@ -7,7 +7,7 @@
  * Head meta is computed in getJobsSkillPage so `@cavuno/board/seo` stays out
  * of the universal client entry.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { m } from '../paraglide/messages';
@@ -16,12 +16,18 @@ import { createJobsSkillLoader } from './-jobs-taxonomy-loaders';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { workArrangementRedirect } from '@/lib/work-arrangement';
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
 import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/skills/$skill')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseJobsSearch,
+  // `?remoteOption=remote` is the remote combination page.
+  beforeLoad: ({ params, search }) => {
+    const target = workArrangementRedirect({ skill: params.skill }, search);
+    if (target) throw redirect({ ...target, statusCode: 308 });
+  },
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: createJobsSkillLoader(),
   head: ({ loaderData }) =>
@@ -35,6 +41,7 @@ export const Route = createFileRoute('/jobs/skills/$skill')({
 function SkillPage() {
   const { skill, list, relatedSearches, reachableCount } =
     Route.useLoaderData();
+  const { skill: skillSlug } = Route.useParams();
   const search = Route.useSearch();
   return (
     <ProgrammaticJobsView
@@ -50,6 +57,7 @@ function SkillPage() {
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
       filters={search}
+      listingRoute={{ skill: skillSlug }}
       listedTermSlug={skill.sourceSlug}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });

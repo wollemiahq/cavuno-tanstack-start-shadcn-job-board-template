@@ -194,6 +194,10 @@
   "alertsConfirm_notFoundBody": "Nie udało się znaleźć tego linku potwierdzającego.",
   "alertsConfirm_notFoundHeading": "Nieprawidłowy link",
   "alertsConfirm_title": "Potwierdź alerty o ofertach pracy",
+  "alertsConfirm_unsubscribedBody": "Ten link został wysłany przed wyłączeniem Twoich alertów o ofertach pracy, więc nie włącza ich ponownie. Aby je wznowić, użyj linku do zarządzania z jednego z e-maili z alertami.",
+  "alertsConfirm_unsubscribedHeading": "Alerty o ofertach pracy są wyłączone",
+  "alertsConfirm_waitlistedBody": "Twój alert o ofertach pracy jest potwierdzony. Zacznie działać, gdy serwis będzie mógł wysyłać do większej liczby osób.",
+  "alertsConfirm_waitlistedHeading": "Jesteś na liście oczekujących",
   "alertsManage_actionErrorText": "Coś poszło nie tak. Spróbuj ponownie.",
   "alertsManage_activeBadge": "Aktywny",
   "alertsManage_allJobsText": "Wszystkie oferty",
@@ -826,6 +830,28 @@
   "customField_visaSponsorship_optionCaseByCase": "Indywidualnie",
   "customField_visaSponsorship_optionNo": "Nie",
   "customField_visaSponsorship_optionYes": "Tak",
+  "customFieldDisplay_detailsHeading": "Szczegóły",
+  "customFieldDisplay_galleryViewAll": "Pokaż wszystkie ({count})",
+  "customFieldDisplay_galleryOpenImage": "Otwórz obraz {position} z {total}",
+  "customFieldDisplay_galleryImagePosition": "Obraz {position} z {total}",
+  "customFieldDisplay_galleryPrevious": "Poprzedni obraz",
+  "customFieldDisplay_galleryNext": "Następny obraz",
+  "customFieldUpload_galleryAddLabel": "Dodaj obrazy",
+  "customFieldUpload_galleryCount": "Obrazy: {count} z {max}",
+  "customFieldUpload_galleryLimitError": "Galeria mieści maksymalnie {max} obrazów. Usuń jeden, aby dodać kolejny.",
+  "customFieldUpload_galleryTypeError": "Użyj obrazu JPEG, PNG, WebP lub GIF.",
+  "customFieldUpload_fileAddLabel": "Prześlij plik",
+  "customFieldUpload_fileTypeError": "Użyj pliku PDF, Word, ODT, RTF, tekstowego lub obrazu.",
+  "customFieldUpload_tooLargeError": "Ten plik przekracza 10 MB.",
+  "customFieldUpload_uploadingLabel": "Przesyłanie…",
+  "customFieldUpload_removeLabel": "Usuń",
+  "customFieldUpload_removeImageLabel": "Usuń obraz {position} z {total}",
+  "customFieldUpload_reorderRoleDescription": "obraz do sortowania",
+  "customFieldUpload_reorderInstructions": "Aby przesunąć obraz, naciśnij spację lub Enter, żeby go podnieść, przesuń go strzałkami, a potem naciśnij spację lub Enter, żeby go upuścić. Naciśnij Escape, aby anulować.",
+  "customFieldUpload_reorderPickedUp": "Podniesiono obraz {position} z {total}.",
+  "customFieldUpload_reorderMoved": "Obraz przesunięty na pozycję {position} z {total}.",
+  "customFieldUpload_reorderDropped": "Obraz upuszczony na pozycji {position} z {total}.",
+  "customFieldUpload_reorderCancelled": "Przesuwanie anulowane. Obraz pozostaje na pozycji {position}.",
   "dangerZone_cancelLabel": "Anuluj",
   "dangerZone_confirmLabel": "Wpisz {word}, aby potwierdzić",
   "dangerZone_confirmWord": "USUŃ",
@@ -1379,6 +1405,7 @@
   "footer_resourcesHeading": "Materiały",
   "footer_salariesLabel": "Wynagrodzenia",
   "footer_sitemapLabel": "Mapa strony",
+  "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Regulamin",
   "footer_websiteLabel": "Strona internetowa",
   "home_blogDescription": "Poradniki i wiedza o rekrutacji od naszego zespołu.",
@@ -1785,6 +1812,165 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Oferty pracy zdalnej",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy zdalnej ({countLabel})",
+        "countPlural=few": "Oferty pracy zdalnej ({countLabel})",
+        "countPlural=many": "Oferty pracy zdalnej ({countLabel})",
+        "countPlural=*": "Oferty pracy zdalnej ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Oferty pracy zdalnej: {category}",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy zdalnej: {category} ({countLabel})",
+        "countPlural=few": "Oferty pracy zdalnej: {category} ({countLabel})",
+        "countPlural=many": "Oferty pracy zdalnej: {category} ({countLabel})",
+        "countPlural=*": "Oferty pracy zdalnej: {category} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Oferty pracy zdalnej: {skill}",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy zdalnej: {skill} ({countLabel})",
+        "countPlural=few": "Oferty pracy zdalnej: {skill} ({countLabel})",
+        "countPlural=many": "Oferty pracy zdalnej: {skill} ({countLabel})",
+        "countPlural=*": "Oferty pracy zdalnej: {skill} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Oferty pracy hybrydowej",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy hybrydowej ({countLabel})",
+        "countPlural=few": "Oferty pracy hybrydowej ({countLabel})",
+        "countPlural=many": "Oferty pracy hybrydowej ({countLabel})",
+        "countPlural=*": "Oferty pracy hybrydowej ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Oferty pracy hybrydowej: {category}",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy hybrydowej: {category} ({countLabel})",
+        "countPlural=few": "Oferty pracy hybrydowej: {category} ({countLabel})",
+        "countPlural=many": "Oferty pracy hybrydowej: {category} ({countLabel})",
+        "countPlural=*": "Oferty pracy hybrydowej: {category} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Oferty pracy hybrydowej: {skill}",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy hybrydowej: {skill} ({countLabel})",
+        "countPlural=few": "Oferty pracy hybrydowej: {skill} ({countLabel})",
+        "countPlural=many": "Oferty pracy hybrydowej: {skill} ({countLabel})",
+        "countPlural=*": "Oferty pracy hybrydowej: {skill} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Oferty pracy stacjonarnej",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy stacjonarnej ({countLabel})",
+        "countPlural=few": "Oferty pracy stacjonarnej ({countLabel})",
+        "countPlural=many": "Oferty pracy stacjonarnej ({countLabel})",
+        "countPlural=*": "Oferty pracy stacjonarnej ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Oferty pracy stacjonarnej: {category}",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy stacjonarnej: {category} ({countLabel})",
+        "countPlural=few": "Oferty pracy stacjonarnej: {category} ({countLabel})",
+        "countPlural=many": "Oferty pracy stacjonarnej: {category} ({countLabel})",
+        "countPlural=*": "Oferty pracy stacjonarnej: {category} ({countLabel})"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Oferty pracy stacjonarnej: {skill}",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty pracy stacjonarnej: {skill} ({countLabel})",
+        "countPlural=few": "Oferty pracy stacjonarnej: {skill} ({countLabel})",
+        "countPlural=many": "Oferty pracy stacjonarnej: {skill} ({countLabel})",
+        "countPlural=*": "Oferty pracy stacjonarnej: {skill} ({countLabel})"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Zmień logo",
   "logoUpload_uploadErrorText": "Przesyłanie nie powiodło się — spróbuj mniejszego obrazu.",
   "logoUpload_uploadingLabel": "Przesyłanie…",
@@ -1891,6 +2077,7 @@
   "memberships_connectCompanyText": "Najpierw połącz zatwierdzoną firmę. Otwórz panel pracodawcy, aby ją dodać.",
   "memberships_contactCtaFallback": "Skontaktuj się",
   "memberships_contactPriceFallback": "Wycena indywidualna",
+  "memberships_continueToPostLabel": "Przejdź do swojego ogłoszenia o pracę",
   "memberships_joinDashboardText": "Członkostwa przyznaje zespół portalu. Otwórz panel pracodawcy, aby kontynuować.",
   "memberships_joinLabel": "Dołącz",
   "memberships_loadMoreLabel": "Pokaż więcej członków",
@@ -2055,9 +2242,12 @@
   "postCheckout_canceledTitle": "Płatność anulowana",
   "postCheckout_successBody": "Twoje ogłoszenie jest publikowane i za chwilę pojawi się na tablicy. Potwierdzenie wyślemy na Twój adres e-mail.",
   "postCheckout_successTitle": "Płatność otrzymana",
+  "postGate_alreadyMemberText": "Masz już członkostwo?",
   "postGate_becomeMemberLabel": "Zostań członkiem",
   "postGate_bodyText": "Publikowanie na tym portalu jest dostępne tylko dla członków.",
   "postGate_contactText": "Potrzebujesz dostępu? Napisz na {email}.",
+  "postGate_joinHeading": "Zostań członkiem, aby publikować oferty",
+  "postGate_joinText": "Publikowanie w serwisie {boardName} jest dostępne tylko dla członków. Wybierz członkostwo, aby zacząć publikować.",
   "postGate_postAsCompanyLabel": "Opublikuj z panelu swojej firmy",
   "postGate_signInLabel": "Zaloguj się",
   "postJob_applicationUrlLabel": "Adres URL aplikowania",
@@ -3181,7 +3371,8 @@
   "itemVerification_codeExpiredError": "Kod wygasł. Poproś o nowy.",
   "itemVerification_emailPlaceholder": "imie.nazwisko",
   "tip_metaDescription": "Wesprzyj {boardName} napiwkiem.",
-  "tip_countText": [
+  "tip_cardTitle": "Skarbonka",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3190,32 +3381,39 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Dotąd {countLabel} napiwek",
-        "countPlural=few": "Dotąd {countLabel} napiwki",
-        "countPlural=many": "Dotąd {countLabel} napiwków",
-        "countPlural=*": "Dotąd {countLabel} napiwku"
+        "countPlural=one": "{countLabel} osoba dała napiwek",
+        "countPlural=few": "{countLabel} osoby dały napiwek",
+        "countPlural=many": "{countLabel} osób dało napiwek",
+        "countPlural=*": "{countLabel} osoby dały napiwek"
       }
     }
   ],
   "tip_amountLegend": "Wybierz kwotę",
-  "tip_otherAmountOption": "Inna",
+  "tip_otherAmountOption": "Inna kwota",
   "tip_otherAmountLabel": "Twoja kwota",
   "tip_amountHelpText": "Co najmniej {minimum}.",
   "tip_amountInvalidText": "Wpisz kwotę, np. 5 lub 5,50.",
   "tip_amountBelowMinimumText": "Najmniejszy napiwek to {minimum}.",
-  "tip_noteLabel": "Dodaj wiadomość (opcjonalnie)",
-  "tip_noteCountText": "{count} z {max} znaków",
+  "tip_addNoteAction": "Dodaj wiadomość",
+  "tip_noteLabel": "Wiadomość dla {boardName} (opcjonalnie)",
+  "tip_removeNoteAction": "Usuń wiadomość",
+  "tip_notePlaceholder": "Napisz, dlaczego dajesz napiwek",
+  "tip_notePrivacyText": "Tylko {boardName} widzi Twoją wiadomość. Nie pojawia się na stronie.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Wiadomość może mieć najwyżej {max} znaków.",
   "tip_noteNotAllowedText": "Ta skarbonka nie przyjmuje wiadomości. Usuń wiadomość i spróbuj ponownie.",
+  "tip_coverFeeLabel": "Dodaj {fee}, aby pokryć opłatę za kartę",
+  "tip_coverFeeNotAllowedText": "Ten portal nie oferuje już pokrycia opłaty za kartę.",
   "tip_submitAction": "Daj {amount}",
   "tip_continueAction": "Przejdź do płatności",
-  "tip_paymentHelpText": "W następnym kroku zapłacisz bezpiecznie przez Stripe.",
+  "tip_secureCheckoutText": "Bezpieczna płatność przez Stripe",
   "tip_checkoutTitle": "Dokończ napiwek",
   "tip_backAction": "Wróć",
   "tip_confirmingTitle": "Potwierdzamy napiwek…",
   "tip_confirmingText": "Zwykle trwa to kilka sekund.",
   "tip_thankYouTitle": "Dziękujemy!",
   "tip_thankYouAmountText": "Dałeś(-aś) {boardName} {amount}.",
+  "tip_chargedWithFeeText": "Z Twojej karty pobrano {total}, w tym {fee} opłaty za kartę.",
   "tip_receiptSentText": "Potwierdzenie wysłane na {email}",
   "tip_processingTitle": "Napiwek jest przetwarzany",
   "tip_processingText": "Wyślemy potwierdzenie, gdy tylko płatność dotrze.",
@@ -3223,5 +3421,26 @@
   "tip_checkoutMissingTitle": "Nie znaleźliśmy tego napiwku",
   "tip_checkoutMissingText": "Płatność mogła wygasnąć. Możesz dać nowy napiwek.",
   "tip_startOverAction": "Wróć do strony napiwków",
-  "tip_browseJobsAction": "Przeglądaj oferty"
+  "tip_browseJobsAction": "Przeglądaj oferty",
+  "mcpDocs_title": "{boardName} w asystentach AI",
+  "mcpDocs_description": "Przeszukuj oferty pracy i firmy na {boardName} w Claude, ChatGPT, Cursor i innych asystentach AI obsługujących MCP. Bez konta i klucza API.",
+  "mcpDocs_intro": "Przeszukuj oferty pracy i firmy na {boardName} w Claude, ChatGPT, Cursor i innych asystentach AI obsługujących Model Context Protocol (MCP). Dodaj ten adres URL serwera do swojego asystenta:",
+  "mcpDocs_access": "Nie potrzebujesz konta ani klucza API. Asystent widzi to, co portal pracy pokazuje każdemu niezalogowanemu odwiedzającemu, a każda oferta prowadzi do swojej strony na {boardName}, gdzie przeczytasz pełne ogłoszenie i zaaplikujesz.",
+  "mcpDocs_copyUrlLabel": "Kopiuj adres URL serwera MCP",
+  "mcpDocs_copyCodeLabel": "Kopiuj",
+  "mcpDocs_copiedLabel": "Skopiowano",
+  "mcpDocs_assistantsHeading": "Dodaj go do swojego asystenta",
+  "mcpDocs_claudeHeading": "Claude (claude.ai i Claude Desktop)",
+  "mcpDocs_claudeSteps": "Przejdź do {connectorsMenu}, wybierz {addButton}, a potem {customConnector}. Wpisz nazwę {boardName} i adres URL podany wyżej.",
+  "mcpDocs_claudeCodeHeading": "Claude Code",
+  "mcpDocs_chatgptHeading": "ChatGPT",
+  "mcpDocs_chatgptSteps": "W przestrzeni roboczej ChatGPT Business lub Enterprise otwórz {pluginsMenu}, wybierz {plusButton}, a potem {customServer}, i wpisz adres URL podany wyżej bez uwierzytelniania. Ustawienia przestrzeni roboczej decydują, kto może go dodać.",
+  "mcpDocs_cursorHeading": "Cursor",
+  "mcpDocs_vscodeHeading": "VS Code",
+  "mcpDocs_addToFile": "Dodaj to do {file}:",
+  "mcpDocs_otherHeading": "Inni asystenci",
+  "mcpDocs_otherSteps": "Każdy klient obsługujący zdalne serwery MCP przez Streamable HTTP może połączyć się z adresem URL podanym wyżej.",
+  "mcpDocs_toolsHeading": "Co potrafi",
+  "mcpDocs_limitsHeading": "Limity",
+  "mcpDocs_limits": "Każde narzędzie tylko czyta publiczne ogłoszenia portalu pracy; nic nie jest zapisywane ani zmieniane. Liczba zapytań jest ograniczona dla każdego odwiedzającego i każdego portalu, a ograniczone zapytanie podaje, kiedy spróbować ponownie."
 }

@@ -30,6 +30,7 @@ const candidate = {
   skills: ['Mathematics', 'Analytical engines'],
   experiences: [],
   education: [],
+  customFieldMedia: {},
   customFieldValues: {},
   objectReferences: [],
   distanceKm: null,

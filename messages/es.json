@@ -186,6 +186,10 @@
   "alertsConfirm_notFoundBody": "No hemos encontrado ese enlace de confirmación.",
   "alertsConfirm_notFoundHeading": "Enlace no válido",
   "alertsConfirm_title": "Confirmar alertas de empleo",
+  "alertsConfirm_unsubscribedBody": "Este enlace se envió antes de que se desactivaran tus alertas de empleo, así que no las vuelve a activar. Para reanudarlas, usa el enlace de gestión de uno de tus correos de alertas.",
+  "alertsConfirm_unsubscribedHeading": "Las alertas de empleo están desactivadas",
+  "alertsConfirm_waitlistedBody": "Tu alerta de empleo está confirmada. Empezará en cuanto el portal pueda enviar a más personas.",
+  "alertsConfirm_waitlistedHeading": "Estás en la lista de espera",
   "alertsManage_actionErrorText": "Se ha producido un error. Inténtalo de nuevo.",
   "alertsManage_activeBadge": "Activa",
   "alertsManage_allJobsText": "Todas las ofertas",
@@ -792,6 +796,28 @@
   "customField_visaSponsorship_optionCaseByCase": "Según el caso",
   "customField_visaSponsorship_optionNo": "No",
   "customField_visaSponsorship_optionYes": "Sí",
+  "customFieldDisplay_detailsHeading": "Detalles",
+  "customFieldDisplay_galleryViewAll": "Ver todas ({count})",
+  "customFieldDisplay_galleryOpenImage": "Abrir la imagen {position} de {total}",
+  "customFieldDisplay_galleryImagePosition": "Imagen {position} de {total}",
+  "customFieldDisplay_galleryPrevious": "Imagen anterior",
+  "customFieldDisplay_galleryNext": "Imagen siguiente",
+  "customFieldUpload_galleryAddLabel": "Añadir imágenes",
+  "customFieldUpload_galleryCount": "{count} de {max} imágenes",
+  "customFieldUpload_galleryLimitError": "Una galería admite hasta {max} imágenes. Quita una para añadir otra.",
+  "customFieldUpload_galleryTypeError": "Usa una imagen JPEG, PNG, WebP o GIF.",
+  "customFieldUpload_fileAddLabel": "Subir un archivo",
+  "customFieldUpload_fileTypeError": "Usa un archivo PDF, Word, ODT, RTF, de texto o de imagen.",
+  "customFieldUpload_tooLargeError": "El archivo supera los 10 MB.",
+  "customFieldUpload_uploadingLabel": "Subiendo…",
+  "customFieldUpload_removeLabel": "Quitar",
+  "customFieldUpload_removeImageLabel": "Quitar la imagen {position} de {total}",
+  "customFieldUpload_reorderRoleDescription": "imagen ordenable",
+  "customFieldUpload_reorderInstructions": "Para mover una imagen, pulsa espacio o intro para tomarla, muévela con las flechas y pulsa espacio o intro para soltarla. Pulsa escape para cancelar.",
+  "customFieldUpload_reorderPickedUp": "Imagen {position} de {total} tomada.",
+  "customFieldUpload_reorderMoved": "Imagen movida a la posición {position} de {total}.",
+  "customFieldUpload_reorderDropped": "Imagen soltada en la posición {position} de {total}.",
+  "customFieldUpload_reorderCancelled": "Movimiento cancelado. La imagen sigue en la posición {position}.",
   "dangerZone_cancelLabel": "Cancelar",
   "dangerZone_confirmLabel": "Escribe {word} para confirmar",
   "dangerZone_confirmWord": "ELIMINAR",
@@ -1327,6 +1353,7 @@
   "footer_resourcesHeading": "Recursos",
   "footer_salariesLabel": "Salarios",
   "footer_sitemapLabel": "Mapa del sitio",
+  "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Términos del servicio",
   "footer_websiteLabel": "Sitio web",
   "home_blogDescription": "Guías y consejos de contratación de nuestro equipo.",
@@ -1713,6 +1740,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Ofertas en remoto",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta en remoto",
+        "countPlural=*": "{countLabel} ofertas en remoto"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Ofertas de {category} en remoto",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {category} en remoto",
+        "countPlural=*": "{countLabel} ofertas de {category} en remoto"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Ofertas de {skill} en remoto",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta de {skill} en remoto",
+        "countPlural=*": "{countLabel} ofertas de {skill} en remoto"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Ofertas híbridas",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta híbrida",
+        "countPlural=*": "{countLabel} ofertas híbridas"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Ofertas híbridas de {category}",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta híbrida de {category}",
+        "countPlural=*": "{countLabel} ofertas híbridas de {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Ofertas híbridas de {skill}",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta híbrida de {skill}",
+        "countPlural=*": "{countLabel} ofertas híbridas de {skill}"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Ofertas presenciales",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta presencial",
+        "countPlural=*": "{countLabel} ofertas presenciales"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "Ofertas presenciales de {category}",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta presencial de {category}",
+        "countPlural=*": "{countLabel} ofertas presenciales de {category}"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "Ofertas presenciales de {skill}",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} oferta presencial de {skill}",
+        "countPlural=*": "{countLabel} ofertas presenciales de {skill}"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Cambiar logotipo",
   "logoUpload_uploadErrorText": "Error al subir: prueba con una imagen más pequeña.",
   "logoUpload_uploadingLabel": "Subiendo…",
@@ -1811,6 +1979,7 @@
   "memberships_connectCompanyText": "Conecta primero una empresa aprobada. Abre tu panel de empleador para añadir una.",
   "memberships_contactCtaFallback": "Contactar",
   "memberships_contactPriceFallback": "Precio personalizado",
+  "memberships_continueToPostLabel": "Continuar con tu oferta de empleo",
   "memberships_joinDashboardText": "Las membresías las concede el equipo del portal. Abre tu panel de empleador para continuar.",
   "memberships_joinLabel": "Unirse",
   "memberships_loadMoreLabel": "Ver más miembros",
@@ -1969,9 +2138,12 @@
   "postCheckout_canceledTitle": "Pago cancelado",
   "postCheckout_successBody": "Tu oferta de empleo se está publicando y aparecerá en el tablón en un momento. Te enviaremos el recibo por correo electrónico.",
   "postCheckout_successTitle": "Pago recibido",
+  "postGate_alreadyMemberText": "¿Ya eres miembro?",
   "postGate_becomeMemberLabel": "Hazte miembro",
   "postGate_bodyText": "Publicar en este portal está reservado a los miembros.",
   "postGate_contactText": "¿Necesitas acceso? Escribe a {email}.",
+  "postGate_joinHeading": "Hazte miembro para publicar empleos",
+  "postGate_joinText": "Publicar en {boardName} está reservado a los miembros. Elige una membresía para empezar a publicar.",
   "postGate_postAsCompanyLabel": "Publicar desde el panel de tu empresa",
   "postGate_signInLabel": "Iniciar sesión",
   "postJob_applicationUrlLabel": "URL de candidatura",
@@ -3053,7 +3225,8 @@
   "itemVerification_codeExpiredError": "El código ha caducado. Pide uno nuevo.",
   "itemVerification_emailPlaceholder": "nombre",
   "tip_metaDescription": "Apoya a {boardName} con una propina.",
-  "tip_countText": [
+  "tip_cardTitle": "Bote de propinas",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3062,30 +3235,37 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{countLabel} propina hasta ahora",
-        "countPlural=*": "{countLabel} propinas hasta ahora"
+        "countPlural=one": "{countLabel} persona ha dejado propina",
+        "countPlural=*": "{countLabel} personas han dejado propina"
       }
     }
   ],
   "tip_amountLegend": "Elige un importe",
-  "tip_otherAmountOption": "Otro",
+  "tip_otherAmountOption": "Otro importe",
   "tip_otherAmountLabel": "Tu importe",
   "tip_amountHelpText": "Mínimo {minimum}.",
   "tip_amountInvalidText": "Escribe un importe como 5 o 5,50.",
   "tip_amountBelowMinimumText": "La propina mínima es {minimum}.",
-  "tip_noteLabel": "Añade una nota (opcional)",
-  "tip_noteCountText": "{count} de {max} caracteres",
+  "tip_addNoteAction": "Añadir una nota",
+  "tip_noteLabel": "Añade una nota para {boardName} (opcional)",
+  "tip_removeNoteAction": "Quitar la nota",
+  "tip_notePlaceholder": "Cuenta por qué dejas propina",
+  "tip_notePrivacyText": "Solo {boardName} ve tu nota. No se muestra en el sitio.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Tu nota puede tener como máximo {max} caracteres.",
   "tip_noteNotAllowedText": "Este bote de propinas no admite notas. Quita tu nota e inténtalo de nuevo.",
+  "tip_coverFeeLabel": "Añadir {fee} para cubrir la comisión de la tarjeta",
+  "tip_coverFeeNotAllowedText": "Este portal ya no ofrece cubrir la comisión de la tarjeta.",
   "tip_submitAction": "Dar {amount}",
   "tip_continueAction": "Continuar al pago",
-  "tip_paymentHelpText": "En el siguiente paso pagarás de forma segura con Stripe.",
+  "tip_secureCheckoutText": "Pago seguro con Stripe",
   "tip_checkoutTitle": "Completa tu propina",
   "tip_backAction": "Volver",
   "tip_confirmingTitle": "Confirmando tu propina…",
   "tip_confirmingText": "Suele tardar unos segundos.",
   "tip_thankYouTitle": "¡Gracias!",
   "tip_thankYouAmountText": "Le has dado {amount} a {boardName}.",
+  "tip_chargedWithFeeText": "Se cargaron {total} a tu tarjeta, incluida la comisión de la tarjeta de {fee}.",
   "tip_receiptSentText": "Recibo enviado a {email}",
   "tip_processingTitle": "Tu propina se está procesando",
   "tip_processingText": "Te enviaremos el recibo en cuanto se confirme el pago.",
@@ -3093,5 +3273,26 @@
   "tip_checkoutMissingTitle": "No encontramos esta propina",
   "tip_checkoutMissingText": "Puede que el pago haya caducado. Puedes dar una nueva propina.",
   "tip_startOverAction": "Volver a la página de propinas",
-  "tip_browseJobsAction": "Ver ofertas"
+  "tip_browseJobsAction": "Ver ofertas",
+  "mcpDocs_title": "{boardName} en asistentes de IA",
+  "mcpDocs_description": "Busca los empleos y las empresas de {boardName} desde Claude, ChatGPT, Cursor y otros asistentes de IA compatibles con MCP. Sin cuenta ni clave de API.",
+  "mcpDocs_intro": "Busca los empleos y las empresas de {boardName} desde Claude, ChatGPT, Cursor y otros asistentes de IA compatibles con el Model Context Protocol (MCP). Añade esta URL de servidor a tu asistente:",
+  "mcpDocs_access": "No necesitas cuenta ni clave de API. El asistente ve lo mismo que la bolsa de empleo muestra a cualquier visitante sin sesión iniciada, y cada empleo enlaza a su página en {boardName}, donde lees la oferta completa y te postulas.",
+  "mcpDocs_copyUrlLabel": "Copiar la URL del servidor MCP",
+  "mcpDocs_copyCodeLabel": "Copiar",
+  "mcpDocs_copiedLabel": "Copiado",
+  "mcpDocs_assistantsHeading": "Añádelo a tu asistente",
+  "mcpDocs_claudeHeading": "Claude (claude.ai y Claude Desktop)",
+  "mcpDocs_claudeSteps": "Ve a {connectorsMenu}, selecciona {addButton} y luego {customConnector}. Introduce el nombre {boardName} y la URL de arriba.",
+  "mcpDocs_claudeCodeHeading": "Claude Code",
+  "mcpDocs_chatgptHeading": "ChatGPT",
+  "mcpDocs_chatgptSteps": "En un espacio de trabajo de ChatGPT Business o Enterprise, abre {pluginsMenu}, selecciona {plusButton} y luego {customServer}, e introduce la URL de arriba sin autenticación. La configuración de tu espacio de trabajo decide quién puede añadir uno.",
+  "mcpDocs_cursorHeading": "Cursor",
+  "mcpDocs_vscodeHeading": "VS Code",
+  "mcpDocs_addToFile": "Añade esto a {file}:",
+  "mcpDocs_otherHeading": "Otros asistentes",
+  "mcpDocs_otherSteps": "Cualquier cliente compatible con servidores MCP remotos mediante Streamable HTTP puede conectarse a la URL de arriba.",
+  "mcpDocs_toolsHeading": "Qué puede hacer",
+  "mcpDocs_limitsHeading": "Límites",
+  "mcpDocs_limits": "Cada herramienta solo lee las ofertas públicas de la bolsa de empleo; no se guarda ni se cambia nada. Las solicitudes tienen un límite por visitante y por bolsa de empleo, y una solicitud limitada indica cuándo volver a intentarlo."
 }

@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => {
     stale: vi.fn(),
     seo: vi.fn(),
     offer: vi.fn(),
+    productsFallback: vi.fn(),
+    tipFallback: vi.fn(),
     contact: vi.fn(),
     me: vi.fn(),
     grant: vi.fn(),
@@ -57,6 +59,8 @@ vi.mock('./queries', () => ({
   getStaleBoardContext: mocks.stale,
   getBoardSeo: mocks.seo,
   getEmployerOfferGate: mocks.offer,
+  getProductsLinkFallback: mocks.productsFallback,
+  getTipLinkFallback: mocks.tipFallback,
 }));
 vi.mock('./talent-access', () => ({ EMPTY_GRANT: {} }));
 vi.mock('../content/legal/impressum-availability', () => ({
@@ -69,10 +73,12 @@ beforeEach(() => {
   mocks.context = { session: null, boardAccessHeaders: {} };
   mocks.boardContext.mockResolvedValue({
     name: 'Fixture board',
-    features: { contactPage: true },
+    features: { contactPage: true, products: false, tipJar: true },
   });
   mocks.seo.mockResolvedValue({ canonicalBase: 'https://fixture.example' });
   mocks.offer.mockResolvedValue({ visible: true });
+  mocks.productsFallback.mockResolvedValue(true);
+  mocks.tipFallback.mockResolvedValue(false);
   mocks.contact.mockResolvedValue({
     object: 'board_contact',
     enabled: true,
@@ -84,16 +90,33 @@ describe('public and session shells', () => {
     expect(await getRootShellData()).toEqual({
       origin: 'https://fixture.example',
       publishableKey: 'pk_fixture',
-      board: { name: 'Fixture board', features: { contactPage: true } },
+      board: {
+        name: 'Fixture board',
+        features: { contactPage: true, products: false, tipJar: true },
+      },
       seo: { canonicalBase: 'https://fixture.example' },
-      offerGate: { visible: true },
+      offerGate: { visible: true, hasProductsPage: false, hasTipPage: true },
       contactEnabled: true,
       impressumAvailable: false,
+      mcpServerAvailable: false,
     });
     expect(mocks.me).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();
     expect(mocks.preview).not.toHaveBeenCalled();
     expect(mocks.contact).not.toHaveBeenCalled();
+    expect(mocks.productsFallback).not.toHaveBeenCalled();
+    expect(mocks.tipFallback).not.toHaveBeenCalled();
+  });
+  it('a context without the Products and Tip flags falls back to one read each', async () => {
+    mocks.boardContext.mockResolvedValue({
+      name: 'Fixture board',
+      features: { contactPage: true },
+    });
+    expect(await getRootShellData()).toMatchObject({
+      offerGate: { visible: true, hasProductsPage: true, hasTipPage: false },
+    });
+    expect(mocks.productsFallback).toHaveBeenCalledTimes(1);
+    expect(mocks.tipFallback).toHaveBeenCalledTimes(1);
   });
   it('footer Contact link reads the board context, not /contact', async () => {
     mocks.boardContext.mockResolvedValue({

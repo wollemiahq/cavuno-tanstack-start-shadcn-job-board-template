@@ -11,6 +11,7 @@ import { getLocale } from '../paraglide/runtime';
 import { RestrictedTalentDirectory } from './-restricted-talent-directory';
 import { TALENT_PAGE_SIZE } from './-talent-loaders';
 
+import { profileLayoutFields } from '@/board/custom-field-display';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   employerCanStartMessage,
@@ -185,6 +186,7 @@ export function TalentDirectoryView({
           signInHref={signInHref}
           messagingEnabled={board.features.messaging}
           profileUnlocks={profileUnlocks}
+          fieldLayout={profileLayoutFields(board.forms?.talent)}
           onStartConversation={(input) => startConversation({ data: input })}
           onConversationStarted={(conversationId) =>
             window.location.assign(

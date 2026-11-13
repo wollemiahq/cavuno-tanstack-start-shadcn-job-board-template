@@ -42,11 +42,12 @@ export function JoinPage() {
         employerTitle={m.authJoin_employerCardTitle()}
         employerBody={m.authJoin_employerCardBody()}
       />
-      {/* The candidate form carries the caller's destination through; the
-          employer form has no candidate returnTo to honour. */}
+      {/* Both forms carry the caller's destination through: an employer who
+          came from Post a job goes back there once their company is set up. */}
       {role === 'employer' ? (
         <Link
           to="/auth/employer/sign-up"
+          search={returnTo ? { returnTo } : {}}
           className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
         >
           {m.authJoin_continueLabel()}

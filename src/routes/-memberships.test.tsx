@@ -21,6 +21,23 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// Stripe.js stand-in: mounts nothing and hands the test Stripe's
+// `onComplete`, the callback a card payment fires on the page.
+type StripeCheckoutStub = { onComplete?: () => void };
+const stripeCheckout = vi.hoisted(() => {
+  const stub: StripeCheckoutStub = {};
+  return stub;
+});
+vi.mock('@stripe/stripe-js', () => ({
+  loadStripe: () =>
+    Promise.resolve({
+      createEmbeddedCheckoutPage: (options: { onComplete?: () => void }) => {
+        stripeCheckout.onComplete = options.onComplete;
+        return Promise.resolve({ mount: () => {}, destroy: () => {} });
+      },
+    }),
+}));
+
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import {
@@ -170,6 +187,11 @@ async function renderPage(
       path: '/companies/$companySlug',
       component: () => <h1>Company</h1>,
     }),
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path: '/employers/companies/$slug/jobs/new',
+      component: () => <h1>Post a job</h1>,
+    }),
   ];
   const router = createRouter({
     routeTree: rootRoute.addChildren(children),
@@ -192,6 +214,7 @@ async function renderPage(
 
 afterEach(() => {
   cleanup();
+  stripeCheckout.onComplete = undefined;
   vi.useRealTimers();
   vi.clearAllMocks();
 });
@@ -456,6 +479,102 @@ describe('memberships page', () => {
       await screen.findByText(m.boardError_membershipSeatTakenText()),
     ).toHaveAttribute('role', 'alert');
     expect(screen.queryByTestId('paywall-embedded-checkout')).toBeNull();
+  });
+
+  it('confirms a card payment that completes on the page, without a redirect', async () => {
+    startCheckoutAction.mockResolvedValue({ ok: true, data: kit });
+    getCheckoutStateAction.mockResolvedValue({
+      object: 'checkout_session_state',
+      status: 'complete',
+      paymentStatus: 'paid',
+      membershipActive: true,
+      clientSecret: null,
+    });
+    await renderPage({
+      plans: [plan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: { kind: 'signed-in', companies: [acme] },
+      loadMoreMembers: loadMoreMembers,
+      startCheckoutAction,
+      getCheckoutStateAction,
+      invalidate: vi.fn().mockResolvedValue(undefined),
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.memberships_joinLabel() }),
+    );
+    await waitFor(() => expect(stripeCheckout.onComplete).toBeDefined());
+    act(() => stripeCheckout.onComplete?.());
+
+    // The session the page opened, for the company it bought for. The page
+    // waits a second before its first read.
+    await waitFor(
+      () =>
+        expect(getCheckoutStateAction).toHaveBeenCalledWith({
+          data: { companySlug: 'acme', sessionId: kit.sessionId },
+        }),
+      { timeout: 3000 },
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      m.memberships_confirmedText(),
+    );
+  });
+
+  it('joins for the company that asked and returns to its job form once active', async () => {
+    startCheckoutAction.mockResolvedValue({ ok: true, data: kit });
+    getCheckoutStateAction.mockResolvedValue({
+      object: 'checkout_session_state',
+      status: 'complete',
+      paymentStatus: 'paid',
+      membershipActive: true,
+      clientSecret: null,
+    });
+    const jobForm = '/employers/companies/globex/jobs/new';
+    await renderPage({
+      plans: [plan],
+      rosters: [roster],
+      seo: { boardName: 'Example Jobs' },
+      viewer: {
+        kind: 'signed-in',
+        companies: [acme, { slug: 'globex', name: 'Globex' }],
+      },
+      loadMoreMembers: loadMoreMembers,
+      startCheckoutAction,
+      getCheckoutStateAction,
+      invalidate: vi.fn().mockResolvedValue(undefined),
+      preferredCompanySlug: 'globex',
+      continueTo: jobForm,
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.memberships_joinLabel() }),
+    );
+    // Bought for the company whose job form sent the buyer here, and a
+    // redirect-based payment still knows the way back.
+    await waitFor(() =>
+      expect(startCheckoutAction).toHaveBeenCalledWith({
+        data: {
+          companySlug: 'globex',
+          planId: plan.id,
+          returnPath:
+            '/memberships?company=globex&returnTo=%2Femployers%2Fcompanies%2Fglobex%2Fjobs%2Fnew',
+        },
+      }),
+    );
+    await waitFor(() => expect(stripeCheckout.onComplete).toBeDefined());
+    act(() => stripeCheckout.onComplete?.());
+
+    fireEvent.click(
+      await screen.findByRole(
+        'button',
+        { name: m.memberships_continueToPostLabel() },
+        { timeout: 3000 },
+      ),
+    );
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Post a job' }),
+    ).toBeVisible();
   });
 
   it('polls the returned session and confirms the membership once complete', async () => {

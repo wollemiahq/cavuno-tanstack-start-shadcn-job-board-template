@@ -2,12 +2,18 @@ import { BoardApiError } from '@cavuno/board';
 import { isNotFound, isRedirect, redirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createCatchAllLoader } from './-catch-all-loader';
+import { createCatchAllLoader, requestedPath } from './-catch-all-loader';
 
+import type * as DisabledLocale from '../server/disabled-locale';
 import type * as Queries from '../server/queries';
 
 const resolveRedirect = vi.fn<typeof Queries.resolveRedirect>();
-const loadCatchAll = createCatchAllLoader(resolveRedirect);
+const resolveDisabledLocale =
+  vi.fn<typeof DisabledLocale.resolveDisabledLocaleRedirect>();
+const loadCatchAll = createCatchAllLoader(
+  resolveRedirect,
+  resolveDisabledLocale,
+);
 
 function apiError(status: number) {
   return new BoardApiError({
@@ -18,12 +24,29 @@ function apiError(status: number) {
   });
 }
 
-function load(path: string) {
-  return loadCatchAll({ params: { _splat: path } });
+/** `path` is the router's (delocalized) href; `publicHref` is the URL the
+ * visitor typed, which differs only under an enabled locale prefix. */
+function load(path: string, searchStr = '', publicPath = path) {
+  return loadCatchAll({
+    location: {
+      href: `/${encodeURI(path)}${searchStr}`,
+      publicHref: `/${encodeURI(publicPath)}${searchStr}`,
+      searchStr,
+    },
+  });
+}
+
+function noManagedRedirect() {
+  resolveRedirect.mockResolvedValue({
+    object: 'redirect_resolution',
+    path: '/',
+    target: null,
+  });
 }
 
 beforeEach(() => {
   resolveRedirect.mockReset();
+  resolveDisabledLocale.mockReset();
 });
 
 describe('catch-all loader', () => {
@@ -42,6 +65,23 @@ describe('catch-all loader', () => {
     });
     expect(resolveRedirect).toHaveBeenCalledWith({
       data: { path: '/old-jobs' },
+    });
+  });
+
+  it('asks with the locale-prefixed URL the visitor typed', async () => {
+    resolveRedirect.mockResolvedValue({
+      object: 'redirect_resolution',
+      path: '/fr/ancienne-page',
+      target: '/fr/emplois',
+    });
+
+    const result = load('ancienne-page', '?page=2', 'fr/ancienne-page');
+
+    await expect(result).rejects.toMatchObject({
+      options: { href: '/fr/emplois', statusCode: 308 },
+    });
+    expect(resolveRedirect).toHaveBeenCalledWith({
+      data: { path: '/fr/ancienne-page' },
     });
   });
 
@@ -78,5 +118,70 @@ describe('catch-all loader', () => {
     resolveRedirect.mockRejectedValue(wall);
 
     await expect(load('nope')).rejects.toBe(wall);
+  });
+
+  describe('a language the board turned off', () => {
+    // No test runtime serves Swedish, so its prefix stands in for a
+    // disabled locale.
+    it('308s to the board-language page, query kept', async () => {
+      noManagedRedirect();
+      resolveDisabledLocale.mockResolvedValue({ target: '/jobs/acme' });
+
+      const result = load('sv/jobb/acme', '?page=2');
+
+      await expect(result).rejects.toMatchObject({
+        options: { href: '/jobs/acme?page=2', statusCode: 308 },
+      });
+      expect(resolveRedirect).toHaveBeenCalledWith({
+        data: { path: '/sv/jobb/acme' },
+      });
+      expect(resolveDisabledLocale).toHaveBeenCalledWith({
+        data: { path: '/sv/jobb/acme' },
+      });
+    });
+
+    it('passes the path still percent-encoded', async () => {
+      noManagedRedirect();
+      resolveDisabledLocale.mockResolvedValue({ target: null });
+
+      await expect(load('sv/jobb/café')).rejects.toSatisfy(isNotFound);
+      expect(resolveDisabledLocale).toHaveBeenCalledWith({
+        data: { path: '/sv/jobb/caf%C3%A9' },
+      });
+    });
+
+    it('lets a configured redirect win', async () => {
+      resolveRedirect.mockResolvedValue({
+        object: 'redirect_resolution',
+        path: '/sv/jobb',
+        target: '/elsewhere',
+      });
+
+      await expect(load('sv/jobb')).rejects.toMatchObject({
+        options: { href: '/elsewhere', statusCode: 308 },
+      });
+      expect(resolveDisabledLocale).not.toHaveBeenCalled();
+    });
+
+    it('is not consulted for other unknown paths', async () => {
+      noManagedRedirect();
+
+      await expect(load('xx/emplois')).rejects.toSatisfy(isNotFound);
+      expect(resolveDisabledLocale).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('requestedPath', () => {
+  it('keeps the localized path and drops the query and hash', () => {
+    expect(requestedPath({ publicHref: '/bedrijven/acme?page=2#top' })).toBe(
+      '/bedrijven/acme',
+    );
+  });
+
+  it('decodes the path like a route param', () => {
+    expect(requestedPath({ publicHref: '/bedrijven/caf%C3%A9' })).toBe(
+      '/bedrijven/café',
+    );
   });
 });

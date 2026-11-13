@@ -14,6 +14,7 @@ import { createTalentProfileLoader } from './-talent-loaders';
 import { TalentProfilePageView } from './-talent-profile-view';
 import { TalentUnlockGate, TalentUnlockPending } from './-talent-unlock-gate';
 
+import { profileLayoutFields } from '@/board/custom-field-display';
 import {
   employerCanStartMessage,
   isOpaqueTalentRoute,
@@ -341,6 +342,7 @@ function TalentProfilePage() {
         scopedGrant && employerCanStartMessage(scopedGrant),
       )}
       messagingEnabled={board.features.messaging}
+      fieldLayout={profileLayoutFields(board.forms?.talent)}
       locationHref={location.href}
       onStartConversation={(input) =>
         startConversation({ data: { ...input, companyId: requestCompanyId } })

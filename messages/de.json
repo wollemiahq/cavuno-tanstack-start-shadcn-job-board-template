@@ -186,6 +186,10 @@
   "alertsConfirm_notFoundBody": "Wir konnten diesen Bestätigungslink nicht finden.",
   "alertsConfirm_notFoundHeading": "Ungültiger Link",
   "alertsConfirm_title": "Job-Benachrichtigungen bestätigen",
+  "alertsConfirm_unsubscribedBody": "Dieser Link wurde verschickt, bevor deine Jobalarme deaktiviert wurden, daher aktiviert er sie nicht wieder. Um sie fortzusetzen, nutze den Verwaltungslink in einer deiner Alarm-E-Mails.",
+  "alertsConfirm_unsubscribedHeading": "Jobalarme sind deaktiviert",
+  "alertsConfirm_waitlistedBody": "Dein Jobalarm ist bestätigt. Er startet, sobald das Board an weitere Personen senden kann.",
+  "alertsConfirm_waitlistedHeading": "Du stehst auf der Warteliste",
   "alertsManage_actionErrorText": "Etwas ist schiefgelaufen. Versuche es erneut.",
   "alertsManage_activeBadge": "Aktiv",
   "alertsManage_allJobsText": "Alle Jobs",
@@ -792,6 +796,28 @@
   "customField_visaSponsorship_optionCaseByCase": "Im Einzelfall",
   "customField_visaSponsorship_optionNo": "Nein",
   "customField_visaSponsorship_optionYes": "Ja",
+  "customFieldDisplay_detailsHeading": "Details",
+  "customFieldDisplay_galleryViewAll": "Alle anzeigen ({count})",
+  "customFieldDisplay_galleryOpenImage": "Bild {position} von {total} öffnen",
+  "customFieldDisplay_galleryImagePosition": "Bild {position} von {total}",
+  "customFieldDisplay_galleryPrevious": "Vorheriges Bild",
+  "customFieldDisplay_galleryNext": "Nächstes Bild",
+  "customFieldUpload_galleryAddLabel": "Bilder hinzufügen",
+  "customFieldUpload_galleryCount": "{count} von {max} Bildern",
+  "customFieldUpload_galleryLimitError": "Eine Galerie fasst bis zu {max} Bilder. Entferne eins, um ein weiteres hinzuzufügen.",
+  "customFieldUpload_galleryTypeError": "Verwende ein JPEG-, PNG-, WebP- oder GIF-Bild.",
+  "customFieldUpload_fileAddLabel": "Datei hochladen",
+  "customFieldUpload_fileTypeError": "Verwende eine PDF-, Word-, ODT-, RTF-, Text- oder Bilddatei.",
+  "customFieldUpload_tooLargeError": "Die Datei ist größer als 10 MB.",
+  "customFieldUpload_uploadingLabel": "Wird hochgeladen…",
+  "customFieldUpload_removeLabel": "Entfernen",
+  "customFieldUpload_removeImageLabel": "Bild {position} von {total} entfernen",
+  "customFieldUpload_reorderRoleDescription": "sortierbares Bild",
+  "customFieldUpload_reorderInstructions": "Um ein Bild zu verschieben, nimm es mit Leertaste oder Eingabetaste auf, bewege es mit den Pfeiltasten und lege es mit Leertaste oder Eingabetaste ab. Mit Escape brichst du ab.",
+  "customFieldUpload_reorderPickedUp": "Bild {position} von {total} aufgenommen.",
+  "customFieldUpload_reorderMoved": "Bild an Position {position} von {total} verschoben.",
+  "customFieldUpload_reorderDropped": "Bild an Position {position} von {total} abgelegt.",
+  "customFieldUpload_reorderCancelled": "Verschieben abgebrochen. Das Bild bleibt an Position {position}.",
   "dangerZone_cancelLabel": "Abbrechen",
   "dangerZone_confirmLabel": "Gib {word} ein, um zu bestätigen",
   "dangerZone_confirmWord": "LÖSCHEN",
@@ -1327,6 +1353,7 @@
   "footer_resourcesHeading": "Ressourcen",
   "footer_salariesLabel": "Gehälter",
   "footer_sitemapLabel": "Sitemap",
+  "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Nutzungsbedingungen",
   "footer_websiteLabel": "Website",
   "home_blogDescription": "Tipps und Einblicke rund ums Recruiting von unserem Team.",
@@ -1713,6 +1740,147 @@
       }
     }
   ],
+  "workArrangementPage_remoteJobsHeading": "Remote-Jobs",
+  "workArrangementPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Remote-Job",
+        "countPlural=*": "{countLabel} Remote-Jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_remoteJobsHeading": "Remote {category}-Jobs",
+  "workArrangementCategoryPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Remote {category}-Job",
+        "countPlural=*": "{countLabel} Remote {category}-Jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_remoteJobsHeading": "Remote {skill}-Jobs",
+  "workArrangementSkillPage_remoteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Remote {skill}-Job",
+        "countPlural=*": "{countLabel} Remote {skill}-Jobs"
+      }
+    }
+  ],
+  "workArrangementPage_hybridJobsHeading": "Hybrid-Jobs",
+  "workArrangementPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Hybrid-Job",
+        "countPlural=*": "{countLabel} Hybrid-Jobs"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_hybridJobsHeading": "Hybride {category}-Jobs",
+  "workArrangementCategoryPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrider {category}-Job",
+        "countPlural=*": "{countLabel} hybride {category}-Jobs"
+      }
+    }
+  ],
+  "workArrangementSkillPage_hybridJobsHeading": "Hybride {skill}-Jobs",
+  "workArrangementSkillPage_hybridJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} hybrider {skill}-Job",
+        "countPlural=*": "{countLabel} hybride {skill}-Jobs"
+      }
+    }
+  ],
+  "workArrangementPage_onSiteJobsHeading": "Jobs vor Ort",
+  "workArrangementPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Job vor Ort",
+        "countPlural=*": "{countLabel} Jobs vor Ort"
+      }
+    }
+  ],
+  "workArrangementCategoryPage_onSiteJobsHeading": "{category}-Jobs vor Ort",
+  "workArrangementCategoryPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input category",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} {category}-Job vor Ort",
+        "countPlural=*": "{countLabel} {category}-Jobs vor Ort"
+      }
+    }
+  ],
+  "workArrangementSkillPage_onSiteJobsHeading": "{skill}-Jobs vor Ort",
+  "workArrangementSkillPage_onSiteJobsCountHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input skill",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} {skill}-Job vor Ort",
+        "countPlural=*": "{countLabel} {skill}-Jobs vor Ort"
+      }
+    }
+  ],
   "logoUpload_changeLogoLabel": "Logo ändern",
   "logoUpload_uploadErrorText": "Upload fehlgeschlagen — versuch ein kleineres Bild.",
   "logoUpload_uploadingLabel": "Wird hochgeladen…",
@@ -1811,6 +1979,7 @@
   "memberships_connectCompanyText": "Verbinden Sie zuerst ein freigegebenes Unternehmen. Öffnen Sie Ihr Arbeitgeber-Dashboard, um eines hinzuzufügen.",
   "memberships_contactCtaFallback": "Kontakt aufnehmen",
   "memberships_contactPriceFallback": "Individuelle Preise",
+  "memberships_continueToPostLabel": "Weiter zu Ihrer Stellenanzeige",
   "memberships_joinDashboardText": "Mitgliedschaften vergibt das Board-Team. Öffnen Sie Ihr Arbeitgeber-Dashboard, um fortzufahren.",
   "memberships_joinLabel": "Mitglied werden",
   "memberships_loadMoreLabel": "Mehr Mitglieder anzeigen",
@@ -1969,9 +2138,12 @@
   "postCheckout_canceledTitle": "Bezahlung abgebrochen",
   "postCheckout_successBody": "Deine Stellenanzeige wird veröffentlicht und erscheint gleich auf dem Board. Eine Rechnung ist auf dem Weg zu deiner E-Mail-Adresse.",
   "postCheckout_successTitle": "Zahlung erhalten",
+  "postGate_alreadyMemberText": "Bereits Mitglied?",
   "postGate_becomeMemberLabel": "Mitglied werden",
   "postGate_bodyText": "Anzeigen auf diesem Board können nur Mitglieder schalten.",
   "postGate_contactText": "Zugang nötig? Schreiben Sie an {email}.",
+  "postGate_joinHeading": "Werden Sie Mitglied, um Stellen auszuschreiben",
+  "postGate_joinText": "Anzeigen auf {boardName} können nur Mitglieder schalten. Wählen Sie eine Mitgliedschaft, um loszulegen.",
   "postGate_postAsCompanyLabel": "Über Ihr Unternehmens-Dashboard veröffentlichen",
   "postGate_signInLabel": "Anmelden",
   "postJob_applicationUrlLabel": "Bewerbungs-URL",
@@ -3053,7 +3225,8 @@
   "itemVerification_codeExpiredError": "Der Code ist abgelaufen. Fordere einen neuen an.",
   "itemVerification_emailPlaceholder": "name",
   "tip_metaDescription": "Unterstütze {boardName} mit einem Trinkgeld.",
-  "tip_countText": [
+  "tip_cardTitle": "Trinkgeldkasse",
+  "tip_tippedCountText": [
     {
       "declarations": [
         "input count",
@@ -3062,30 +3235,37 @@
       ],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Bisher {countLabel} Trinkgeld",
-        "countPlural=*": "Bisher {countLabel} Trinkgelder"
+        "countPlural=one": "{countLabel} Person hat Trinkgeld gegeben",
+        "countPlural=*": "{countLabel} Personen haben Trinkgeld gegeben"
       }
     }
   ],
   "tip_amountLegend": "Betrag wählen",
-  "tip_otherAmountOption": "Anderer",
+  "tip_otherAmountOption": "Anderer Betrag",
   "tip_otherAmountLabel": "Dein Betrag",
   "tip_amountHelpText": "Mindestens {minimum}.",
   "tip_amountInvalidText": "Gib einen Betrag wie 5 oder 5,50 ein.",
   "tip_amountBelowMinimumText": "Das kleinste Trinkgeld ist {minimum}.",
-  "tip_noteLabel": "Nachricht hinzufügen (optional)",
-  "tip_noteCountText": "{count} von {max} Zeichen",
+  "tip_addNoteAction": "Nachricht hinzufügen",
+  "tip_noteLabel": "Nachricht an {boardName} (optional)",
+  "tip_removeNoteAction": "Nachricht entfernen",
+  "tip_notePlaceholder": "Schreib, warum du Trinkgeld gibst",
+  "tip_notePrivacyText": "Nur {boardName} sieht deine Nachricht. Sie wird nicht auf der Website angezeigt.",
+  "tip_noteCountText": "{count}/{max}",
   "tip_noteTooLongText": "Deine Nachricht darf höchstens {max} Zeichen lang sein.",
   "tip_noteNotAllowedText": "Diese Trinkgeldkasse nimmt keine Nachrichten an. Entferne deine Nachricht und versuche es erneut.",
+  "tip_coverFeeLabel": "{fee} hinzufügen, um die Kartengebühr zu decken",
+  "tip_coverFeeNotAllowedText": "Dieses Board bietet die Übernahme der Kartengebühr nicht mehr an.",
   "tip_submitAction": "{amount} geben",
   "tip_continueAction": "Weiter zur Zahlung",
-  "tip_paymentHelpText": "Im nächsten Schritt zahlst du sicher über Stripe.",
+  "tip_secureCheckoutText": "Sichere Zahlung über Stripe",
   "tip_checkoutTitle": "Trinkgeld abschließen",
   "tip_backAction": "Zurück",
   "tip_confirmingTitle": "Dein Trinkgeld wird bestätigt…",
   "tip_confirmingText": "Das dauert meist nur ein paar Sekunden.",
   "tip_thankYouTitle": "Danke!",
   "tip_thankYouAmountText": "Du hast {boardName} {amount} gegeben.",
+  "tip_chargedWithFeeText": "Deine Karte wurde mit {total} belastet, einschließlich der Kartengebühr von {fee}.",
   "tip_receiptSentText": "Beleg gesendet an {email}",
   "tip_processingTitle": "Dein Trinkgeld wird verarbeitet",
   "tip_processingText": "Wir schicken dir den Beleg, sobald die Zahlung eingegangen ist.",
@@ -3093,5 +3273,26 @@
   "tip_checkoutMissingTitle": "Wir konnten dieses Trinkgeld nicht finden",
   "tip_checkoutMissingText": "Die Zahlung ist vielleicht abgelaufen. Du kannst ein neues Trinkgeld geben.",
   "tip_startOverAction": "Zurück zur Trinkgeldseite",
-  "tip_browseJobsAction": "Jobs durchstöbern"
+  "tip_browseJobsAction": "Jobs durchstöbern",
+  "mcpDocs_title": "{boardName} in KI-Assistenten",
+  "mcpDocs_description": "Durchsuchen Sie die Jobs und Unternehmen auf {boardName} mit Claude, ChatGPT, Cursor und anderen KI-Assistenten, die MCP unterstützen. Kein Konto und kein API-Schlüssel nötig.",
+  "mcpDocs_intro": "Durchsuchen Sie die Jobs und Unternehmen auf {boardName} mit Claude, ChatGPT, Cursor und anderen KI-Assistenten, die das Model Context Protocol (MCP) unterstützen. Fügen Sie Ihrem Assistenten diese Server-URL hinzu:",
+  "mcpDocs_access": "Sie brauchen weder ein Konto noch einen API-Schlüssel. Der Assistent sieht, was die Jobbörse jedem nicht angemeldeten Besucher zeigt, und jeder Job verlinkt auf seine Seite auf {boardName}, wo Sie die vollständige Anzeige lesen und sich bewerben.",
+  "mcpDocs_copyUrlLabel": "MCP-Server-URL kopieren",
+  "mcpDocs_copyCodeLabel": "Kopieren",
+  "mcpDocs_copiedLabel": "Kopiert",
+  "mcpDocs_assistantsHeading": "Zu Ihrem Assistenten hinzufügen",
+  "mcpDocs_claudeHeading": "Claude (claude.ai und Claude Desktop)",
+  "mcpDocs_claudeSteps": "Öffnen Sie {connectorsMenu}, wählen Sie {addButton} und dann {customConnector}. Geben Sie den Namen {boardName} und die URL oben ein.",
+  "mcpDocs_claudeCodeHeading": "Claude Code",
+  "mcpDocs_chatgptHeading": "ChatGPT",
+  "mcpDocs_chatgptSteps": "Öffnen Sie in einem ChatGPT-Business- oder -Enterprise-Workspace {pluginsMenu}, wählen Sie {plusButton} und dann {customServer}, und geben Sie die URL oben ohne Authentifizierung ein. Ihre Workspace-Einstellungen legen fest, wer einen Server hinzufügen darf.",
+  "mcpDocs_cursorHeading": "Cursor",
+  "mcpDocs_vscodeHeading": "VS Code",
+  "mcpDocs_addToFile": "Fügen Sie dies zu {file} hinzu:",
+  "mcpDocs_otherHeading": "Andere Assistenten",
+  "mcpDocs_otherSteps": "Jeder Client, der entfernte MCP-Server über Streamable HTTP unterstützt, kann sich mit der URL oben verbinden.",
+  "mcpDocs_toolsHeading": "Was er kann",
+  "mcpDocs_limitsHeading": "Grenzen",
+  "mcpDocs_limits": "Jedes Tool liest nur die öffentlichen Anzeigen der Jobbörse; nichts wird gespeichert oder geändert. Anfragen sind pro Besucher und pro Jobbörse begrenzt, und eine begrenzte Anfrage sagt, wann Sie es erneut versuchen können."
 }

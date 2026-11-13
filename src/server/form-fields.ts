@@ -13,6 +13,7 @@ import {
   boardAccessMiddleware,
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
+import { searchString } from '../lib/pagination';
 import {
   requireSessionMiddleware,
   type SessionContext,
@@ -67,6 +68,33 @@ export const updateCompanyCustomFields = createServerFn({ method: 'POST' })
     ),
   );
 
+/**
+ * Uploads one gallery image or file to an owner-editable company custom
+ * field, as a draft the company form saves with its other custom fields.
+ */
+export const uploadCompanyCustomFieldFile = createServerFn({ method: 'POST' })
+  .validator((data) => {
+    if (!(data instanceof FormData)) throw new Error('Expected FormData');
+    const slug = searchString(data.get('slug'));
+    const fieldKey = searchString(data.get('fieldKey'));
+    const file = data.get('file');
+    if (!slug || !fieldKey || !(file instanceof File)) {
+      throw new Error('Expected a slug, a fieldKey and a file');
+    }
+    return { slug, fieldKey, file };
+  })
+  .middleware([verifiedBoardUserMiddleware])
+  .handler(({ data, context }) =>
+    run(() =>
+      getBoard().me.companies.uploadCustomFieldFile(
+        data.slug,
+        data.fieldKey,
+        data.file,
+        { headers: authedHeaders(context) },
+      ),
+    ),
+  );
+
 /** Replaces the company's complete editable collection selection set. */
 export const updateCompanyObjectReferences = createServerFn({
   method: 'POST',
@@ -112,6 +140,32 @@ export const updateProfileCustomFields = createServerFn({ method: 'POST' })
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
     return getBoard().me.profile.updateCustomFields(data, { headers });
+  });
+
+/**
+ * One gallery image or file for an owner-editable candidate custom field.
+ * The client posts FormData with `fieldKey` and a `file`. The upload is a
+ * draft until its ID is saved with `updateProfileCustomFields`.
+ */
+export const uploadProfileCustomFieldFile = createServerFn({ method: 'POST' })
+  .validator((data) => {
+    if (!(data instanceof FormData)) throw new Error('Expected FormData');
+    const fieldKey = searchString(data.get('fieldKey'));
+    const file = data.get('file');
+    if (!fieldKey || !(file instanceof File)) {
+      throw new Error('Expected a fieldKey and a file');
+    }
+    return { fieldKey, file };
+  })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    return run(() =>
+      getBoard().me.profile.uploadCustomFieldFile(data.fieldKey, data.file, {
+        headers,
+      }),
+    );
   });
 
 /** Replaces the candidate's complete editable collection selection set. */

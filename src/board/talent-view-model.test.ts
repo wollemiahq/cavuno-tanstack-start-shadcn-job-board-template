@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { resolveFieldDisplay } from './custom-field-display';
 import {
   employerCanStartMessage,
+  groupTalentProfileFields,
   isRedactedTalentDirectoryEntry,
   resolveTalentDetailCta,
   resolveTalentProfileSurface,
@@ -73,6 +75,7 @@ const directoryEntry = {
       endDate: '2021-06',
     },
   ],
+  customFieldMedia: {},
   customFieldValues: {},
   objectReferences: [],
   distanceKm: null,
@@ -124,6 +127,7 @@ const profile = {
     { name: 'Mathematics', jobSkillId: null },
   ],
   languages: [{ name: 'English', proficiency: 'fluent' }],
+  customFieldMedia: {},
   customFieldValues: {},
   objectReferences: [],
   resumeUrl: null,
@@ -702,5 +706,75 @@ describe('resolveTalentProfileSurface', () => {
         candidateAccessReady: true,
       }),
     ).toBe('no_plan');
+  });
+});
+
+describe('groupTalentProfileFields', () => {
+  it('places fields by type, galleries before files, each group in form order', () => {
+    const entries = resolveFieldDisplay(
+      [
+        {
+          kind: 'custom',
+          definition: { key: 'years', label: 'Years', type: 'number' },
+        },
+        {
+          kind: 'custom',
+          definition: { key: 'site', label: 'Site', type: 'url' },
+        },
+        {
+          kind: 'custom',
+          definition: { key: 'cert', label: 'Cert', type: 'file' },
+        },
+        {
+          kind: 'custom',
+          definition: { key: 'about', label: 'About', type: 'rich_text' },
+        },
+        {
+          kind: 'custom',
+          definition: { key: 'work', label: 'Work', type: 'image_gallery' },
+        },
+        { kind: 'collection', key: 'assoc', label: 'Associations' },
+        {
+          kind: 'custom',
+          definition: { key: 'mail', label: 'Mail', type: 'email' },
+        },
+      ],
+      {
+        values: {
+          years: 12,
+          site: 'a.example',
+          about: '<p>x</p>',
+          mail: 'a@b.example',
+        },
+        media: {
+          cert: [
+            {
+              id: 'c',
+              name: 'c.pdf',
+              contentType: 'application/pdf',
+              sizeBytes: 1,
+              url: 'https://f.example/c',
+            },
+          ],
+          work: [
+            {
+              id: 'w',
+              name: 'w.jpg',
+              contentType: 'image/jpeg',
+              sizeBytes: 1,
+              url: 'https://f.example/w',
+            },
+          ],
+        },
+        collections: new Map([['assoc', [{ id: 'r1', title: 'MBQ' }]]]),
+      },
+      'en',
+    );
+    const groups = groupTalentProfileFields(entries);
+    const ids = (list: { id: string }[]) => list.map((entry) => entry.id);
+    expect(ids(groups.contact)).toEqual(['custom:site', 'custom:mail']);
+    expect(ids(groups.about)).toEqual(['custom:about']);
+    expect(ids(groups.featured)).toEqual(['custom:work', 'custom:cert']);
+    expect(ids(groups.details)).toEqual(['custom:years', 'collection:assoc']);
   });
 });

@@ -2,11 +2,16 @@ import { Navigate, createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
+import { useMembershipOffer } from './-membership-offer';
 import { PostJobPageView, createPostLoader } from './-post-route-support';
 import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
 import { resolveJobFormConstraints } from '@/board/job-form';
-import { MembershipPostGate } from '@/components/board/membership-post-gate';
+import {
+  MembershipPostGate,
+  membershipJoinHeading,
+  sellsMemberships,
+} from '@/components/board/membership-post-gate';
 import { useRootSession } from '@/components/root-session';
 import { Spinner } from '@/components/ui/spinner';
 import { employerPostDestination } from '@/lib/employer-post-destination';
@@ -29,7 +34,7 @@ export const Route = createFileRoute('/post')({
 });
 
 function PostJobPage() {
-  const { plans, remotePermits } = Route.useLoaderData();
+  const { plans, membershipPlans, remotePermits } = Route.useLoaderData();
   const search = Route.useSearch();
   const { board, offerGate } = rootApi.useLoaderData();
   const { user, ready, employerCompanies } = useRootSession();
@@ -37,6 +42,7 @@ function PostJobPage() {
     countries: resolveJobFormConstraints(board).location.allowedCountries,
   });
   const signedIn = ready && user !== null;
+  const membershipOffer = useMembershipOffer(membershipPlans);
   const handoff = employerPostDestination(
     signedIn ? user : null,
     employerCompanies,
@@ -68,12 +74,21 @@ function PostJobPage() {
         contactEmail={board.footer.contactEmail}
         signedIn={signedIn}
         hasMembershipPage={offerGate.hasMembershipPage}
+        offer={membershipOffer}
       />
     ) : undefined;
+
+  const heading =
+    handoff.kind !== 'pending' &&
+    board.posting?.requiresMembership &&
+    sellsMemberships(membershipOffer)
+      ? membershipJoinHeading(board.name)
+      : undefined;
 
   return (
     <PostJobPageView
       gate={gate}
+      heading={heading}
       plans={plans}
       remotePermits={remotePermits}
       initialPlanId={search.plan}

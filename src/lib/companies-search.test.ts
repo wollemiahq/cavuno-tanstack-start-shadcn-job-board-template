@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   companiesListingLoaderDeps,
+  companiesSearchFromHeader,
   includeSelectedCompanyMarket,
   parseCompaniesSearch,
 } from './companies-search';
@@ -109,5 +110,26 @@ describe('includeSelectedCompanyMarket', () => {
         displayName: 'Technologie',
       }),
     ).toBe(markets);
+  });
+});
+
+describe('companiesSearchFromHeader', () => {
+  const filteredCompanies = {
+    query: 'cooling',
+    'cf.headquarters': 'emea',
+    page: '2',
+    selectedCompany: 'acme',
+  };
+
+  it('keeps the profile-field filters for a new keyword on /companies', () => {
+    expect(
+      companiesSearchFromHeader('/companies', filteredCompanies, 'power'),
+    ).toEqual({ query: 'power', 'cf.headquarters': 'emea' });
+  });
+
+  it('starts clean from any other page', () => {
+    expect(
+      companiesSearchFromHeader('/jobs', filteredCompanies, 'power'),
+    ).toEqual({ query: 'power' });
   });
 });

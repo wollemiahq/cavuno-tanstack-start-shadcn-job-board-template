@@ -65,6 +65,7 @@ afterEach(() => {
   document.getElementById('cavuno-adsense-loader')?.remove();
   delete adsWindow.adsbygoogle;
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 function expectNoRequest() {
   expect(document.getElementById('cavuno-adsense-loader')).toBeNull();
@@ -110,6 +111,29 @@ describe('BoardAdSlot', () => {
     );
     expect(container).toBeEmptyDOMElement();
     expectNoRequest();
+  });
+
+  it('does not load ads for a crawler and collapses the slot', async () => {
+    vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (compatible; Baiduspider-render/2.0; +http://www.baidu.com/search/spider.html)',
+    );
+    const onStatusChange = vi.fn();
+    const { container } = render(
+      <BoardAdSlot ads={ads} onStatusChange={onStatusChange} />,
+    );
+    await waitFor(() =>
+      expect(onStatusChange).toHaveBeenCalledWith('unfilled'),
+    );
+    expect(container.querySelector('[data-ad-placement]')).not.toBeVisible();
+    expectNoRequest();
+  });
+
+  it('still loads ads for a phone whose model name contains "bot"', () => {
+    vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Linux; Android 9; CUBOT_X19) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+    );
+    render(<BoardAdSlot ads={ads} />);
+    expect(adsWindow.adsbygoogle).toHaveLength(1);
   });
 
   it('does not request a unit when no slot is configured', () => {

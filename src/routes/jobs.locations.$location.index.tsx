@@ -8,13 +8,12 @@
  * Head meta is computed in getJobsLocationPage so `@cavuno/board/seo` stays
  * out of the universal client entry.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import {
   jobsListingLoaderDeps,
   parseLocationJobsSearch,
 } from '../lib/jobs-search';
-import { m } from '../paraglide/messages';
 import { saveJob } from '../server/account';
 import { createJobsLocationLoader } from './-jobs-taxonomy-loaders';
 
@@ -22,12 +21,22 @@ import { placeDistanceUnit, shortPlaceName } from '@/board/search-radius';
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { SearchRadiusScope } from '@/components/board/search-radius-scope';
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { locationListingCopy } from '@/copy-groups/location-listing';
+import { workArrangementRedirect } from '@/lib/work-arrangement';
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
 import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
 
 export const Route = createFileRoute('/jobs/locations/$location/')({
   staticData: { fullBleed: true, ownsMain: true, fillsViewport: true },
   validateSearch: parseLocationJobsSearch,
+  // `remote?remoteOption=hybrid` is the hybrid page.
+  beforeLoad: ({ params, search }) => {
+    const target = workArrangementRedirect(
+      { location: params.location },
+      search,
+    );
+    if (target) throw redirect({ ...target, statusCode: 308 });
+  },
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
   loader: createJobsLocationLoader(),
   head: ({ loaderData }) =>
@@ -50,15 +59,11 @@ function LocationPage() {
   const { location } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const { heading, countedHeading } = locationListingCopy(location, place);
   return (
     <ProgrammaticJobsView
-      heading={m.locationPage_jobsHeading({ place: place.displayName })}
-      countedHeading={(counted) =>
-        m.locationPage_jobsCountHeading({
-          ...counted,
-          place: place.displayName,
-        })
-      }
+      heading={heading}
+      countedHeading={countedHeading}
       resultsScope={
         searchRadius
           ? (range) => (
@@ -91,6 +96,7 @@ function LocationPage() {
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
       filters={search}
+      listingRoute={{ location }}
       onSaveJob={async (jobId) => {
         await saveJob({ data: { jobId } });
       }}

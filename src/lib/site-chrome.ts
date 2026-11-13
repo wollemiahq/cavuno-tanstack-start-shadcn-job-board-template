@@ -65,6 +65,7 @@ export type ChromeFooterLabels = {
   resourcesHeading?: string;
   salariesLabel?: string;
   sitemapLabel?: string;
+  mcpLabel?: string;
   termsOfServiceLabel?: string;
   websiteLabel?: string;
 };
@@ -162,6 +163,7 @@ const FOOTER_LABEL_KEYS = [
   'resourcesHeading',
   'salariesLabel',
   'sitemapLabel',
+  'mcpLabel',
   'termsOfServiceLabel',
   'websiteLabel',
 ] as const;

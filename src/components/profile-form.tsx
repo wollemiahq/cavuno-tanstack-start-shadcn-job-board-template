@@ -11,6 +11,7 @@ import {
   listProfileObjectReferenceChoices,
   updateProfileCustomFields,
   updateProfileObjectReferences,
+  uploadProfileCustomFieldFile,
 } from '../server/form-fields';
 
 import {
@@ -42,6 +43,10 @@ import {
   type ProfileSelections,
 } from '@/board/profile-field-writes';
 import { CollectionFieldPicker } from '@/components/collection-field-picker';
+import type {
+  CustomFieldUploadResult,
+  CustomFieldUploads,
+} from '@/components/custom-field-files-input';
 import {
   CustomFieldInput,
   hasCustomFieldInput,
@@ -94,7 +99,7 @@ import {
 import { searchString } from '@/lib/pagination';
 import type {
   CandidateProfile,
-  ProfileFieldValues,
+  MyCandidateProfileFieldValues,
   ProfileObjectReferences,
 } from '@cavuno/board';
 
@@ -233,6 +238,21 @@ export interface ProfileFormDependencies {
   listObjectReferenceChoices?: (
     input: Parameters<typeof listProfileObjectReferenceChoices>[0],
   ) => Promise<{ data: { id: string; name: string }[] }>;
+  /** One gallery image or file upload; the server function by default. */
+  uploadCustomFieldFile?: (
+    fieldKey: string,
+    file: File,
+  ) => Promise<CustomFieldUploadResult>;
+}
+
+function uploadCustomFieldFile(
+  fieldKey: string,
+  file: File,
+): Promise<CustomFieldUploadResult> {
+  const data = new FormData();
+  data.append('fieldKey', fieldKey);
+  data.append('file', file);
+  return uploadProfileCustomFieldFile({ data });
 }
 
 export type TalentFormEntry = ProfileFormEntry<TalentFormBuiltinKey>;
@@ -254,9 +274,12 @@ const OUTSIDE_FORM: ReadonlySet<TalentFormBuiltinKey> = new Set([
   'languages',
 ]);
 
-/** The owner's editable custom fields and collection selections. */
+/**
+ * The owner's editable custom fields and collection selections. The owner
+ * read of custom fields also carries the saved gallery and file uploads.
+ */
 export type TalentProfileFields = {
-  customFields: ProfileFieldValues | null;
+  customFields: MyCandidateProfileFieldValues | null;
   objectReferences: ProfileObjectReferences | null;
 };
 
@@ -275,7 +298,9 @@ export function resolveTalentForm(
     TALENT_FORM_BUILTINS,
     ownerProfileDefinitions(fields),
   ).filter(
-    (entry) => entry.kind !== 'custom' || hasCustomFieldInput(entry.definition),
+    (entry) =>
+      entry.kind !== 'custom' ||
+      hasCustomFieldInput(entry.definition, { uploads: true }),
   );
 }
 
@@ -453,6 +478,21 @@ export function ProfileForm({
     initialProfileSelections(storedSelections),
   );
   const editedCustomFields = useRef(new Set<string>());
+  // Save waits for uploads in flight: their IDs reach the form's values
+  // only when each finishes, and an unsaved draft is deleted later.
+  const [uploading, setUploading] = useState(0);
+  const upload = dependencies.uploadCustomFieldFile ?? uploadCustomFieldFile;
+  const uploads: CustomFieldUploads = {
+    upload: async (fieldKey, file) => {
+      setUploading((count) => count + 1);
+      try {
+        return await upload(fieldKey, file);
+      } finally {
+        setUploading((count) => count - 1);
+      }
+    },
+    media: profileFields?.customFields?.customFieldMedia ?? {},
+  };
   const editedCollections = useRef(new Set<string>());
   useEffect(() => {
     setCustomValues((current) => ({
@@ -607,6 +647,7 @@ export function ProfileForm({
   }
 
   async function save() {
+    if (uploading > 0) return;
     if (saving.current) return;
     const missing = missingRequired();
     setInvalid(missing);
@@ -1134,6 +1175,7 @@ export function ProfileForm({
           definition={entry.definition}
           required={entry.required}
           value={customValues[entry.key]}
+          uploads={uploads}
           onChange={(value) => {
             editedCustomFields.current.add(entry.key);
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }));
@@ -1215,7 +1257,11 @@ export function ProfileForm({
         <div className="flex flex-wrap items-center gap-3">
           <Button
             type="submit"
-            disabled={status === 'saving' || locationSuggestions.resolving}
+            disabled={
+              status === 'saving' ||
+              locationSuggestions.resolving ||
+              uploading > 0
+            }
           >
             {status === 'saving'
               ? m.profileForm_savingLabel()

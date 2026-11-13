@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthLinkConfirmation } from './auth-link-confirmation';
 
+import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 
 afterEach(cleanup);
@@ -46,6 +47,41 @@ describe('sign-in confirmation', () => {
         confirmed: true,
       },
     });
+  });
+
+  it.each([
+    [
+      'sends a returning employer to the employer dashboard',
+      false,
+      `${localizePath('/employers/dashboard')}?cavuno_auth=login`,
+    ],
+    [
+      'keeps a new account on email verification',
+      true,
+      `${localizePath('/auth/verify-email-required')}?`,
+    ],
+  ] as const)('%s', async (_case, isNewUser, destinationStart) => {
+    const action = vi.fn().mockResolvedValue({
+      ok: true,
+      isNewUser,
+      boardUser: { role: 'employer' },
+    });
+    const navigate = vi.fn();
+    render(
+      <AuthLinkConfirmation
+        token="stored-auth-flow"
+        returnTo={`${localizePath('/account')}?cavuno_magic_binding=browser-proof`}
+        method="magic_link"
+        action={action}
+        navigate={navigate}
+        autoContinue
+      />,
+    );
+    await waitFor(() => expect(navigate).toHaveBeenCalledOnce());
+    const [destination] = navigate.mock.calls[0] ?? [];
+    expect(String(destination).slice(0, destinationStart.length)).toBe(
+      destinationStart,
+    );
   });
 
   it.each([

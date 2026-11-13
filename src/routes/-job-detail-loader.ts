@@ -1,11 +1,12 @@
 import { isNotFound, type PublicJobCard } from '@cavuno/board';
-import { jobDetailPath } from '@cavuno/board/paths';
-import { notFound, redirect } from '@tanstack/react-router';
+import { redirect } from '@tanstack/react-router';
+
+import { followManagedRedirect, requestedPath } from './-catch-all-loader';
 
 import { getSessionUser } from '@/server/account';
 import { myApplicationForJob } from '@/server/applications';
 import { getJobDetailPage } from '@/server/job-detail-page';
-import { getCompany, getSimilarJobs } from '@/server/queries';
+import { getCompany, getSimilarJobs, resolveRedirect } from '@/server/queries';
 
 type SimilarJobsResult = { jobs: PublicJobCard[] };
 
@@ -15,6 +16,7 @@ export type JobDetailLoaderDependencies = {
   getSessionUser: typeof getSessionUser;
   getSimilarJobs: typeof getSimilarJobs;
   myApplicationForJob: typeof myApplicationForJob;
+  resolveRedirect: typeof resolveRedirect;
 };
 
 const defaultDependencies: JobDetailLoaderDependencies = {
@@ -23,6 +25,7 @@ const defaultDependencies: JobDetailLoaderDependencies = {
   getSessionUser,
   getSimilarJobs,
   myApplicationForJob,
+  resolveRedirect,
 };
 
 export function createJobDetailLoader(
@@ -30,8 +33,10 @@ export function createJobDetailLoader(
 ) {
   return async ({
     params,
+    location,
   }: {
     params: { companySlug: string; jobSlug: string };
+    location: { publicHref: string };
   }) => {
     const noSimilarJobs = (): SimilarJobsResult => ({ jobs: [] });
     try {
@@ -64,8 +69,11 @@ export function createJobDetailLoader(
         page.job.slug &&
         actualCompanySlug !== params.companySlug
       )
+        // `to` + params, not `href`: the router localizes it (an `href` skips
+        // the rewrite, so a translated board took a second hop).
         throw redirect({
-          href: jobDetailPath(actualCompanySlug, page.job.slug),
+          to: '/companies/$companySlug/jobs/$jobSlug',
+          params: { companySlug: actualCompanySlug, jobSlug: page.job.slug },
           statusCode: 301,
         });
       const { user, applicationState } = session;
@@ -82,7 +90,11 @@ export function createJobDetailLoader(
         applicationState,
       };
     } catch (error) {
-      if (isNotFound(error)) throw notFound();
+      if (isNotFound(error))
+        return followManagedRedirect(
+          dependencies.resolveRedirect,
+          requestedPath(location),
+        );
       throw error;
     }
   };

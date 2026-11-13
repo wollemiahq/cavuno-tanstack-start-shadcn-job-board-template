@@ -46,6 +46,13 @@ work.
   sharing an in-flight read WITHIN a single request: use
   src/lib/request-memo.ts, keyed on getRequest(), so a different request can
   never reach the entry.
+- The root shell (src/server/root-shell.ts) runs on every document render
+  and soft navigation, so each Board API call in it is paid once per page
+  view. Never call an endpoint there only to decide whether to show a link
+  or section; read `board.context().features` instead. If the flag you need
+  is missing, ask for it in the Board API. The budget in
+  src/server/root-shell-board-api-budget.test.ts lists every call the root
+  shell may make.
 - API HTML fields such as job and company descriptions are pre-sanitized.
   Render only those known fields as HTML; do not interpolate other strings into
   dangerouslySetInnerHTML.

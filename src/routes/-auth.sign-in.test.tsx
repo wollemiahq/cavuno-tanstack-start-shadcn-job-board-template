@@ -156,6 +156,43 @@ describe('/auth/sign-in search contract', () => {
     expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['an employer', 'employer', '/account', '/employers/dashboard'],
+    ['a candidate', 'candidate', '/account', '/account'],
+    [
+      'an employer with a chosen destination',
+      'employer',
+      '/companies/acme/jobs/platform-engineer',
+      '/companies/acme/jobs/platform-engineer',
+    ],
+  ] as const)(
+    'lands %s on the right home after a password sign-in',
+    async (_case, role, returnTo, destination) => {
+      mocks.signIn.mockResolvedValue({ ok: true, boardUser: { role } });
+      const { container } = renderSignIn(localizePath(returnTo));
+      await screen.findByRole('button', { name: m.authSignIn_submitLabel() });
+      fireEvent.change(container.querySelector('input[name="email"]')!, {
+        target: { value: 'person@example.com' },
+      });
+      fireEvent.change(container.querySelector('input[name="password"]')!, {
+        target: { value: 'secret-password' },
+      });
+      fireEvent.click(
+        await screen.findByRole('button', { name: m.authSignIn_submitLabel() }),
+      );
+
+      await waitFor(() => {
+        expect(mocks.assignLocation).toHaveBeenCalledWith(
+          appendAuthConversionQuery(
+            localizePath(destination),
+            'login',
+            'password',
+          ),
+        );
+      });
+    },
+  );
+
   it('recovers when password sign-in rejects unexpectedly', async () => {
     mocks.signIn.mockRejectedValue(new Error('network unavailable'));
     const { container } = renderSignIn('/account');
