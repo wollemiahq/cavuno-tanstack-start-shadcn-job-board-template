@@ -49,8 +49,15 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
 );
 
 function LocationSkillPage() {
-  const { place, skill, list, relatedSearches, searchRadius, reachableCount } =
-    Route.useLoaderData();
+  const {
+    place,
+    skill,
+    list,
+    relatedSearches,
+    relatedSearchesPlace,
+    searchRadius,
+    reachableCount,
+  } = Route.useLoaderData();
   const { location, skill: skillSlug } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -93,6 +100,7 @@ function LocationSkillPage() {
       page={search.page ?? 1}
       pageSize={PROGRAMMATIC_JOBS_PAGE_SIZE}
       relatedSearches={relatedSearches}
+      relatedSearchesPlace={relatedSearchesPlace}
       filters={search}
       listingRoute={{ location, skill: skillSlug }}
       listedTermSlug={skill.sourceSlug}

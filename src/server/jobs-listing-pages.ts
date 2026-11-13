@@ -325,6 +325,19 @@ async function suggestedPlaceIndexJobCount(
 }
 
 /**
+ * The place a listing's related-search chips link inside: a category or skill
+ * chip on a place's pages goes to that place's combination page, so those
+ * pages get inlinks. None for a suggested place or a work arrangement, whose
+ * combinations are never indexed.
+ */
+function relatedSearchesPlace(
+  place: Pick<TaxonomyResolution, 'canonicalSlug' | 'suggested'>,
+  arrangement: string | null,
+): string | null {
+  return arrangement || place.suggested ? null : place.canonicalSlug;
+}
+
+/**
  * The in-place count a combination's noindex reads: none when the place has
  * no jobs of its own in the board's place directory. A suggested place (any
  * settlement from `places.suggest`) is never in it, and its exact read
@@ -857,6 +870,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches,
+        relatedSearchesPlace: relatedSearchesPlace(place, arrangement),
         searchRadius,
         head,
         jsonLd,
@@ -1039,6 +1053,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches: list.relatedSearches,
+        relatedSearchesPlace: relatedSearchesPlace(place, arrangement),
         searchRadius,
         head,
         jsonLd,
@@ -1217,6 +1232,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         list,
         seo,
         relatedSearches: list.relatedSearches,
+        relatedSearchesPlace: relatedSearchesPlace(place, arrangement),
         searchRadius,
         head,
         jsonLd,

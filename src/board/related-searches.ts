@@ -1,8 +1,11 @@
 import {
   companyMarketPath,
   jobsCategoryPath,
+  jobsLocationCategoryPath,
+  jobsLocationSkillPath,
   jobsSkillPath,
 } from '@cavuno/board/paths';
+import { MIN_JOBS_PER_INDEXED_PAGE } from '@cavuno/board/sitemap';
 
 import { m } from '../paraglide/messages';
 
@@ -30,17 +33,32 @@ export function relatedSearchesTitle(): string {
  */
 export function relatedSearchesToChips(
   related: RelatedSearch[] | undefined,
+  placeSlug?: string | null,
 ): TaxonomyChip[] {
   // Show the board-language `displayName`; link the board-language
   // `canonicalSlug` (the English `slug` page redirects on a translated board).
   return (related ?? []).map((r) => ({
     key: `${r.type}-${r.slug}`,
     name: r.displayName,
-    href:
-      r.type === 'market'
-        ? companyMarketPath(r.canonicalSlug)
-        : r.type === 'skill'
-          ? jobsSkillPath(r.canonicalSlug)
-          : jobsCategoryPath(r.canonicalSlug),
+    href: chipHref(r, placeSlug),
   }));
+}
+
+/**
+ * On a place's pages a category or skill chip links that place's combination
+ * page (`/jobs/locations/{place}/{category}`), which nothing else links. Only
+ * when the term has enough jobs: `count` counts this page of results, so it is
+ * a floor on the place's jobs for the term and the combination is never thin.
+ * Below the floor, and off a place, the chip links the board-wide page.
+ */
+function chipHref(r: RelatedSearch, placeSlug?: string | null): string {
+  if (r.type === 'market') return companyMarketPath(r.canonicalSlug);
+  if (placeSlug && r.count >= MIN_JOBS_PER_INDEXED_PAGE) {
+    return r.type === 'skill'
+      ? jobsLocationSkillPath(placeSlug, r.canonicalSlug)
+      : jobsLocationCategoryPath(placeSlug, r.canonicalSlug);
+  }
+  return r.type === 'skill'
+    ? jobsSkillPath(r.canonicalSlug)
+    : jobsCategoryPath(r.canonicalSlug);
 }
