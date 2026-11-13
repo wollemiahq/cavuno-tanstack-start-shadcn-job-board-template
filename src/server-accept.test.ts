@@ -63,7 +63,7 @@ describe('server entry Accept handling', () => {
   });
 
   it('passes a browser Accept through unchanged', async () => {
-    await get('/jobs', BROWSER_ACCEPT);
+    await get('/', BROWSER_ACCEPT);
     expect(acceptSeenByStart()).toBe(BROWSER_ACCEPT);
   });
 
