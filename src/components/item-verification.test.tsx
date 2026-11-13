@@ -25,12 +25,9 @@ import {
   ItemVerificationTick,
 } from './item-verification';
 
-import type {
-  ItemVerificationRow,
-  VerifiableItem,
-} from '@/board/item-verification';
+import type { VerifiableItem } from '@/board/item-verification';
 import { m } from '@/paraglide/messages';
-import type { ItemVerification } from '@cavuno/board';
+import type { MyItemVerification } from '@cavuno/board';
 
 vi.mock('@/server/item-verification', () => ({
   submitProfileItemVerification: vi.fn(),
@@ -70,7 +67,8 @@ const emailItem: VerifiableItem = {
   verification: null,
 };
 
-function row(status: ItemVerification['status']): ItemVerification {
+/** A row as the API lists it: `nextStep` follows the status for an email-domain item. */
+function row(status: MyItemVerification['status']): MyItemVerification {
   return {
     id: 'iv1',
     object: 'item_verification',
@@ -83,6 +81,12 @@ function row(status: ItemVerification['status']): ItemVerification {
     hasProof: false,
     verifiedDomain: null,
     updatedAt: '2026-11-01T00:00:00.000Z',
+    nextStep: ['pending', 'verified', 'revoked', 'rejected'].includes(status)
+      ? 'none'
+      : status === 'needs_info'
+        ? 'team'
+        : 'email',
+    emailCheck: null,
   };
 }
 
@@ -505,10 +509,10 @@ describe('ItemVerificationTick', () => {
 
 describe('the step the API says', () => {
   function next(
-    status: ItemVerification['status'],
-    nextStep: ItemVerificationRow['nextStep'],
-    emailCheck: ItemVerificationRow['emailCheck'] = null,
-  ): ItemVerificationRow {
+    status: MyItemVerification['status'],
+    nextStep: MyItemVerification['nextStep'],
+    emailCheck: MyItemVerification['emailCheck'] = null,
+  ): MyItemVerification {
     return { ...row(status), nextStep, emailCheck };
   }
 
