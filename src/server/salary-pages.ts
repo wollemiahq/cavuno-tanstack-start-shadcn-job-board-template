@@ -19,7 +19,7 @@ import {
   salaryLocationPath,
   salarySkillPath,
   salaryTitlePath,
-} from "@cavuno/board/paths";
+} from '@cavuno/board/paths';
 import {
   buildSalaryFaq,
   createBreadcrumbJsonLd,
@@ -30,8 +30,8 @@ import {
   locationSalaryJsonLd,
   skillSalaryJsonLd,
   titleSalaryJsonLd,
-} from "@cavuno/board/seo";
-import { createServerFn } from "@tanstack/react-start";
+} from '@cavuno/board/seo';
+import { createServerFn } from '@tanstack/react-start';
 
 import {
   indexableSalaryItems,
@@ -45,20 +45,24 @@ import {
   salaryTitleInLocationPath,
   salaryTitleLocationsPath,
   toLocationHierarchyCrumbs,
-} from "../board/salary-view-model";
-import { getBoard } from "../lib/board";
-import { boardAccessMiddleware } from "../lib/board-access-middleware";
-import { readBoardContext } from "../lib/board-context-cache";
-import { headTitle } from "../lib/page-title";
-import { readPublicOrigin } from "../lib/public-origin";
-import { m } from "../paraglide/messages";
-import { getLocale } from "../paraglide/runtime";
-import { gatedRead } from "./board-access";
-import { isSalaryHubNoindex, isSalaryPageNoindex, noindexFollow } from "./place-listing-helpers";
+} from '../board/salary-view-model';
+import { getBoard } from '../lib/board';
+import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
+import { headTitle } from '../lib/page-title';
+import { readPublicOrigin } from '../lib/public-origin';
+import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
+import { gatedRead } from './board-access';
+import {
+  isSalaryHubNoindex,
+  isSalaryPageNoindex,
+  noindexFollow,
+} from './place-listing-helpers';
 
-import { breadcrumbsCopy } from "@/copy-groups/breadcrumbs";
-import { composeSalaryFaqs } from "@/lib/salary-faq";
-import { selfUrl } from "@/lib/self-url";
+import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { composeSalaryFaqs } from '@/lib/salary-faq';
+import { selfUrl } from '@/lib/self-url';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -76,7 +80,10 @@ function asJsonObjects<T>(value: T): JsonObject[] {
 }
 
 async function seoBase() {
-  const [boardContext, origin] = await Promise.all([readBoardContext(), readPublicOrigin()]);
+  const [boardContext, origin] = await Promise.all([
+    readBoardContext(),
+    readPublicOrigin(),
+  ]);
   return {
     boardName: boardContext.name,
     language: boardContext.language,
@@ -96,7 +103,7 @@ async function seoBase() {
  * The four independent API reads are also batched into the existing RPC
  * instead of creating a client-side request fan-out.
  */
-export const getSalaryHubPage = createServerFn({ method: "GET" })
+export const getSalaryHubPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
@@ -117,7 +124,7 @@ export const getSalaryHubPage = createServerFn({ method: "GET" })
               title: headTitle(seo.boardName, m.salaryHub_metaTitle()),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_metaDescription({
                 boardName: seo.boardName,
               }),
@@ -125,17 +132,22 @@ export const getSalaryHubPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
             },
           ],
         },
-        isSalaryHubNoindex([...companies.data, ...titles.data, ...skills.data, ...locations.data]),
+        isSalaryHubNoindex([
+          ...companies.data,
+          ...titles.data,
+          ...skills.data,
+          ...locations.data,
+        ]),
       );
       const jsonLd = asJsonObjects(
         [
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             { label: c.salaries },
           ]),
         ].filter((entry) => entry !== null),
@@ -147,7 +159,9 @@ export const getSalaryHubPage = createServerFn({ method: "GET" })
         skills: skills.data,
         // Top-level places only (the hub preview); the index page shows the
         // full hierarchy.
-        locations: locations.data.filter((location) => location.parentSlug === null),
+        locations: locations.data.filter(
+          (location) => location.parentSlug === null,
+        ),
         seo,
         head,
         jsonLd,
@@ -157,7 +171,7 @@ export const getSalaryHubPage = createServerFn({ method: "GET" })
 
 // ── Index hubs (Tier 2) ─────────────────────────────────────────────────────
 
-export const getSalaryCompaniesIndexPage = createServerFn({ method: "GET" })
+export const getSalaryCompaniesIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
@@ -173,7 +187,7 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: "GET" })
               title: headTitle(seo.boardName, m.salaryHub_companiesMetaTitle()),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_companiesMetaDescription({
                 boardName: seo.boardName,
               }),
@@ -181,7 +195,7 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, BOARD_PATHS.salaryCompanies),
             },
           ],
@@ -197,7 +211,7 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: "GET" })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -210,7 +224,7 @@ export const getSalaryCompaniesIndexPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getSalaryTitlesIndexPage = createServerFn({ method: "GET" })
+export const getSalaryTitlesIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
@@ -226,7 +240,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: "GET" })
               title: headTitle(seo.boardName, m.salaryHub_titlesMetaTitle()),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_titlesMetaDescription({
                 boardName: seo.boardName,
               }),
@@ -234,7 +248,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, BOARD_PATHS.salaryTitles),
             },
           ],
@@ -250,7 +264,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: "GET" })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -263,7 +277,7 @@ export const getSalaryTitlesIndexPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getSalarySkillsIndexPage = createServerFn({ method: "GET" })
+export const getSalarySkillsIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
@@ -279,7 +293,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: "GET" })
               title: headTitle(seo.boardName, m.salaryHub_skillsMetaTitle()),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_skillsMetaDescription({
                 boardName: seo.boardName,
               }),
@@ -287,7 +301,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, BOARD_PATHS.salarySkills),
             },
           ],
@@ -303,7 +317,7 @@ export const getSalarySkillsIndexPage = createServerFn({ method: "GET" })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -316,12 +330,15 @@ export const getSalarySkillsIndexPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getSalaryLocationsIndexPage = createServerFn({ method: "GET" })
+export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const [locations, seo] = await Promise.all([
-        getBoard().salaries.locations.list({ locale: getLocale() }, { headers }),
+        getBoard().salaries.locations.list(
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
@@ -332,7 +349,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: "GET" })
               title: headTitle(seo.boardName, m.salaryHub_locationsMetaTitle()),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryHub_locationsMetaDescription({
                 boardName: seo.boardName,
               }),
@@ -340,7 +357,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, BOARD_PATHS.salaryLocations),
             },
           ],
@@ -356,7 +373,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: "GET" })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -371,13 +388,17 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: "GET" })
 
 // ── Detail pages (Tier 2) ───────────────────────────────────────────────────
 
-export const getTitleSalaryPage = createServerFn({ method: "GET" })
+export const getTitleSalaryPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [salary, seo] = await Promise.all([
-        getBoard().salaries.titles.retrieve(data.slug, { locale: getLocale() }, { headers }),
+        getBoard().salaries.titles.retrieve(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const locale = seo.language;
@@ -404,7 +425,7 @@ export const getTitleSalaryPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: salary.overallSalary
                 ? m.salaryDetail_titleMetaDescriptionWithData({
                     title: salary.categoryName,
@@ -418,7 +439,7 @@ export const getTitleSalaryPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, salaryTitlePath(salary.canonicalSlug)),
             },
           ],
@@ -437,7 +458,7 @@ export const getTitleSalaryPage = createServerFn({ method: "GET" })
           titleSalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -454,13 +475,17 @@ export const getTitleSalaryPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getSkillSalaryPage = createServerFn({ method: "GET" })
+export const getSkillSalaryPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [salary, seo] = await Promise.all([
-        getBoard().salaries.skills.retrieve(data.slug, { locale: getLocale() }, { headers }),
+        getBoard().salaries.skills.retrieve(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const locale = seo.language;
@@ -487,7 +512,7 @@ export const getSkillSalaryPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: salary.overallSalary
                 ? m.salaryDetail_skillMetaDescriptionWithData({
                     skill: salary.skillName,
@@ -501,7 +526,7 @@ export const getSkillSalaryPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(seo.origin, salarySkillPath(salary.canonicalSlug)),
             },
           ],
@@ -520,7 +545,7 @@ export const getSkillSalaryPage = createServerFn({ method: "GET" })
           skillSalaryJsonLd(salary),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -537,18 +562,24 @@ export const getSkillSalaryPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getLocationSalaryPage = createServerFn({ method: "GET" })
+export const getLocationSalaryPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
       const [salary, seo, tree] = await Promise.all([
-        board.salaries.locations.retrieve(data.slug, { locale: getLocale() }, { headers }),
+        board.salaries.locations.retrieve(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
         // Breadcrumb enrichment only: on failure the trail degrades to the
         // place itself instead of faulting a page whose own data loaded fine.
-        board.salaries.locations.list({ locale: getLocale() }, { headers }).catch(() => null),
+        board.salaries.locations
+          .list({ locale: getLocale() }, { headers })
+          .catch(() => null),
       ]);
       const locale = seo.language;
       const c = breadcrumbsCopy();
@@ -575,10 +606,13 @@ export const getLocationSalaryPage = createServerFn({ method: "GET" })
         {
           meta: [
             {
-              title: headTitle(seo.boardName, salaryPlaceTitle(locale, salary.placeName, range)),
+              title: headTitle(
+                seo.boardName,
+                salaryPlaceTitle(locale, salary.placeName, range),
+              ),
             },
             {
-              name: "description",
+              name: 'description',
               content: salary.overallSalary
                 ? m.salaryDetail_placeMetaDescriptionWithData({
                     place: salary.placeName,
@@ -592,8 +626,11 @@ export const getLocationSalaryPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
-              href: selfUrl(seo.origin, salaryLocationPath(salary.canonicalSlug)),
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryLocationPath(salary.canonicalSlug),
+              ),
             },
           ],
         },
@@ -609,11 +646,12 @@ export const getLocationSalaryPage = createServerFn({ method: "GET" })
       const jsonLd = asJsonObjects(
         [
           locationSalaryJsonLd(salary, {
-            occupationUrl: ({ categorySlug }) => selfUrl(seo.origin, salaryTitlePath(categorySlug)),
+            occupationUrl: ({ categorySlug }) =>
+              selfUrl(seo.origin, salaryTitlePath(categorySlug)),
           }),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -636,13 +674,17 @@ export const getLocationSalaryPage = createServerFn({ method: "GET" })
 
 // ── Cross-axis listings ─────────────────────────────────────────────────────
 
-export const getTitleLocationsPage = createServerFn({ method: "GET" })
+export const getTitleLocationsPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [payload, seo] = await Promise.all([
-        getBoard().salaries.titles.locations(data.slug, { locale: getLocale() }, { headers }),
+        getBoard().salaries.titles.locations(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
@@ -658,7 +700,7 @@ export const getTitleLocationsPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryDetail_titleLocationsMetaDescription({
                 title: payload.categoryName,
                 count: payload.locations.length,
@@ -668,8 +710,11 @@ export const getTitleLocationsPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
-              href: selfUrl(seo.origin, salaryTitleLocationsPath(payload.canonicalSlug)),
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryTitleLocationsPath(payload.canonicalSlug),
+              ),
             },
           ],
         },
@@ -687,7 +732,7 @@ export const getTitleLocationsPage = createServerFn({ method: "GET" })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -698,7 +743,10 @@ export const getTitleLocationsPage = createServerFn({ method: "GET" })
             },
             {
               label: payload.categoryName,
-              href: boardUrl(seo.origin, salaryTitlePath(payload.canonicalSlug)),
+              href: boardUrl(
+                seo.origin,
+                salaryTitlePath(payload.canonicalSlug),
+              ),
             },
             { label: c.locations },
           ]),
@@ -708,13 +756,17 @@ export const getTitleLocationsPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getSkillLocationsPage = createServerFn({ method: "GET" })
+export const getSkillLocationsPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [payload, seo] = await Promise.all([
-        getBoard().salaries.skills.locations(data.slug, { locale: getLocale() }, { headers }),
+        getBoard().salaries.skills.locations(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
@@ -730,7 +782,7 @@ export const getSkillLocationsPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryDetail_skillLocationsMetaDescription({
                 skill: payload.skillName,
                 count: payload.locations.length,
@@ -740,8 +792,11 @@ export const getSkillLocationsPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
-              href: selfUrl(seo.origin, salarySkillLocationsPath(payload.canonicalSlug)),
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salarySkillLocationsPath(payload.canonicalSlug),
+              ),
             },
           ],
         },
@@ -759,7 +814,7 @@ export const getSkillLocationsPage = createServerFn({ method: "GET" })
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -770,7 +825,10 @@ export const getSkillLocationsPage = createServerFn({ method: "GET" })
             },
             {
               label: payload.skillName,
-              href: boardUrl(seo.origin, salarySkillPath(payload.canonicalSlug)),
+              href: boardUrl(
+                seo.origin,
+                salarySkillPath(payload.canonicalSlug),
+              ),
             },
             { label: c.locations },
           ]),
@@ -780,13 +838,17 @@ export const getSkillLocationsPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getLocationTitlesPage = createServerFn({ method: "GET" })
+export const getLocationTitlesPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [payload, seo] = await Promise.all([
-        getBoard().salaries.locations.titles(data.slug, { locale: getLocale() }, { headers }),
+        getBoard().salaries.locations.titles(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
@@ -813,7 +875,7 @@ export const getLocationTitlesPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryDetail_titlesInPlaceMetaDescription({
                 place: payload.placeName,
                 count: payload.titles.length,
@@ -822,8 +884,11 @@ export const getLocationTitlesPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
-              href: selfUrl(seo.origin, salaryLocationTitlesPath(payload.canonicalSlug)),
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryLocationTitlesPath(payload.canonicalSlug),
+              ),
             },
           ],
         },
@@ -834,11 +899,14 @@ export const getLocationTitlesPage = createServerFn({ method: "GET" })
           itemListJsonLd(
             payload.titles.map((t) => ({
               name: t.name,
-              url: boardUrl(seo.origin, salaryTitleInLocationPath(t.slug, payload.canonicalSlug)),
+              url: boardUrl(
+                seo.origin,
+                salaryTitleInLocationPath(t.slug, payload.canonicalSlug),
+              ),
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -849,7 +917,10 @@ export const getLocationTitlesPage = createServerFn({ method: "GET" })
             },
             {
               label: payload.placeName,
-              href: boardUrl(seo.origin, salaryLocationPath(payload.canonicalSlug)),
+              href: boardUrl(
+                seo.origin,
+                salaryLocationPath(payload.canonicalSlug),
+              ),
             },
             { label: c.titles },
           ]),
@@ -859,13 +930,17 @@ export const getLocationTitlesPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getLocationSkillsPage = createServerFn({ method: "GET" })
+export const getLocationSkillsPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const [payload, seo] = await Promise.all([
-        getBoard().salaries.locations.skills(data.slug, { locale: getLocale() }, { headers }),
+        getBoard().salaries.locations.skills(
+          data.slug,
+          { locale: getLocale() },
+          { headers },
+        ),
         seoBase(),
       ]);
       const c = breadcrumbsCopy();
@@ -891,7 +966,7 @@ export const getLocationSkillsPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: m.salaryDetail_skillsInPlaceMetaDescription({
                 place: payload.placeName,
                 count: payload.skills.length,
@@ -900,8 +975,11 @@ export const getLocationSkillsPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
-              href: selfUrl(seo.origin, salaryLocationSkillsPath(payload.canonicalSlug)),
+              rel: 'canonical',
+              href: selfUrl(
+                seo.origin,
+                salaryLocationSkillsPath(payload.canonicalSlug),
+              ),
             },
           ],
         },
@@ -912,11 +990,14 @@ export const getLocationSkillsPage = createServerFn({ method: "GET" })
           itemListJsonLd(
             payload.skills.map((s) => ({
               name: s.name,
-              url: boardUrl(seo.origin, salarySkillInLocationPath(s.slug, payload.canonicalSlug)),
+              url: boardUrl(
+                seo.origin,
+                salarySkillInLocationPath(s.slug, payload.canonicalSlug),
+              ),
             })),
           ),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -927,7 +1008,10 @@ export const getLocationSkillsPage = createServerFn({ method: "GET" })
             },
             {
               label: payload.placeName,
-              href: boardUrl(seo.origin, salaryLocationPath(payload.canonicalSlug)),
+              href: boardUrl(
+                seo.origin,
+                salaryLocationPath(payload.canonicalSlug),
+              ),
             },
             { label: c.skills },
           ]),
@@ -939,7 +1023,7 @@ export const getLocationSkillsPage = createServerFn({ method: "GET" })
 
 // ── Cross-axis detail ───────────────────────────────────────────────────────
 
-export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
+export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; locationSlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
@@ -970,7 +1054,12 @@ export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
               title: headTitle(
                 seo.boardName,
                 salary.overallSalary
-                  ? salaryEntityInPlaceTitle(locale, salary.categoryName, salary.placeName, range!)
+                  ? salaryEntityInPlaceTitle(
+                      locale,
+                      salary.categoryName,
+                      salary.placeName,
+                      range!,
+                    )
                   : m.salaryDetail_titleInPlaceHeading({
                       title: salary.categoryName,
                       place: salary.placeName,
@@ -978,7 +1067,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: salary.overallSalary
                 ? m.salaryDetail_titleInPlaceMetaDescriptionWithData({
                     title: salary.categoryName,
@@ -994,7 +1083,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(
                 seo.origin,
                 salaryTitleInLocationPath(
@@ -1018,7 +1107,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
             currency: salary.currency,
           }),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -1029,7 +1118,10 @@ export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
             },
             {
               label: salary.categoryName,
-              href: boardUrl(seo.origin, salaryTitlePath(salary.categoryCanonicalSlug)),
+              href: boardUrl(
+                seo.origin,
+                salaryTitlePath(salary.categoryCanonicalSlug),
+              ),
             },
             { label: salary.placeName },
           ]),
@@ -1039,7 +1131,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: "GET" })
     }),
   );
 
-export const getSkillLocationSalaryPage = createServerFn({ method: "GET" })
+export const getSkillLocationSalaryPage = createServerFn({ method: 'GET' })
   .validator((input: { slug: string; locationSlug: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
@@ -1070,7 +1162,12 @@ export const getSkillLocationSalaryPage = createServerFn({ method: "GET" })
               title: headTitle(
                 seo.boardName,
                 salary.overallSalary
-                  ? salaryEntityInPlaceTitle(locale, salary.skillName, salary.placeName, range!)
+                  ? salaryEntityInPlaceTitle(
+                      locale,
+                      salary.skillName,
+                      salary.placeName,
+                      range!,
+                    )
                   : m.salaryDetail_skillInPlaceHeading({
                       skill: salary.skillName,
                       place: salary.placeName,
@@ -1078,7 +1175,7 @@ export const getSkillLocationSalaryPage = createServerFn({ method: "GET" })
               ),
             },
             {
-              name: "description",
+              name: 'description',
               content: salary.overallSalary
                 ? m.salaryDetail_skillInPlaceMetaDescriptionWithData({
                     skill: salary.skillName,
@@ -1094,10 +1191,13 @@ export const getSkillLocationSalaryPage = createServerFn({ method: "GET" })
           ],
           links: [
             {
-              rel: "canonical",
+              rel: 'canonical',
               href: selfUrl(
                 seo.origin,
-                salarySkillInLocationPath(salary.skillCanonicalSlug, salary.locationCanonicalSlug),
+                salarySkillInLocationPath(
+                  salary.skillCanonicalSlug,
+                  salary.locationCanonicalSlug,
+                ),
               ),
             },
           ],
@@ -1115,7 +1215,7 @@ export const getSkillLocationSalaryPage = createServerFn({ method: "GET" })
             currency: salary.currency,
           }),
           createBreadcrumbJsonLd([
-            { label: c.home, href: selfUrl(seo.origin, "/") },
+            { label: c.home, href: selfUrl(seo.origin, '/') },
             {
               label: c.salaries,
               href: selfUrl(seo.origin, BOARD_PATHS.salaries),
@@ -1126,7 +1226,10 @@ export const getSkillLocationSalaryPage = createServerFn({ method: "GET" })
             },
             {
               label: salary.skillName,
-              href: boardUrl(seo.origin, salarySkillPath(salary.skillCanonicalSlug)),
+              href: boardUrl(
+                seo.origin,
+                salarySkillPath(salary.skillCanonicalSlug),
+              ),
             },
             { label: salary.placeName },
           ]),
