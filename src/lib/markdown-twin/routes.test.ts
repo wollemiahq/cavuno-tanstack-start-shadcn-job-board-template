@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import URL_WORDS from '../../url-words.json';
 import {
+  acceptsMarkdown,
   isMarkdownTwinRoutePath,
   markdownPathFor,
   markdownTwinRedirectLocation,
   markdownTwinRequestUrl,
   markdownTwinRouteRequest,
+  negotiatedMarkdownTwin,
+  pageMarkdownTwin,
   resolveMarkdownTwin,
 } from './routes';
 
@@ -155,6 +158,51 @@ describe('markdownTwinRedirectLocation', () => {
 
   it('leaves a localized twin where it is', () => {
     expect(locationFor('/bedrijven/acme/vacatures/designer.md')).toBeNull();
+  });
+});
+
+describe('Accept negotiation', () => {
+  it.each([
+    ['text/markdown', true],
+    ['text/html;q=0.9, TEXT/Markdown', true],
+    ['text/markdown;q=0.1', true],
+    ['text/markdown;q=0', false],
+    ['text/markdown; q=0.0', false],
+    ['text/html,application/xhtml+xml,*/*;q=0.8', false],
+    ['*/*', false],
+    ['text/markdownish', false],
+  ])('Accept %s lists Markdown: %s', (accept, expected) => {
+    expect(acceptsMarkdown(accept)).toBe(expected);
+  });
+
+  function negotiate(path: string, accept = 'text/markdown', method = 'GET') {
+    return negotiatedMarkdownTwin(
+      { ...get(path, method), headers: new Headers({ accept }) },
+      DUTCH_BOARD,
+    );
+  }
+
+  it('finds the twin of a page URL, home included', () => {
+    expect(negotiate('/vacatures?page=2')).toMatchObject({
+      kind: 'jobs',
+      twinPath: '/vacatures.md',
+      search: '?page=2',
+    });
+    expect(negotiate('/')?.twinPath).toBe('/index.md');
+    expect(negotiate('/fr/')?.twinPath).toBe('/fr/index.md');
+    expect(negotiate('/bedrijven/acme/vacatures/designer', '*/*')).toBeNull();
+  });
+
+  it('leaves pages without a twin, twin URLs and other methods alone', () => {
+    expect(negotiate('/bedrijven/acme/salarissen')).toBeNull();
+    expect(negotiate('/index')).toBeNull();
+    expect(negotiate('/vacatures.md')).toBeNull();
+    expect(negotiate('/vacatures', 'text/markdown', 'POST')).toBeNull();
+  });
+
+  it('leaves canonical words to the localized URL redirect', () => {
+    expect(negotiate('/jobs')).toBeNull();
+    expect(pageMarkdownTwin(get('/jobs'), DUTCH_BOARD)?.kind).toBe('jobs');
   });
 });
 

@@ -25,6 +25,10 @@
  * (src/lib/markdown-twin/routes.ts) is handed to Start addressed to the
  * internal twin route, with the original URL still used for locale
  * detection and the cache key. Outside requests for that route 404.
+ * A request for the page URL itself whose Accept lists text/markdown
+ * (q above 0) is served exactly as its `/x.md` twin, from the twin's cache
+ * key. HTML responses of pages with a twin carry `Vary: Accept`, and the
+ * root document links the twin (src/components/markdown-alternate-link.tsx).
  *
  * An uncaught server error, or a 500 that Start rendered itself, logs one
  * `starter_server_error` line (src/lib/server-error-log.server.ts).
@@ -54,6 +58,9 @@ import {
   isMarkdownTwinRoutePath,
   markdownTwinRedirectLocation,
   markdownTwinRouteRequest,
+  markdownTwinUrlRequest,
+  negotiatedMarkdownTwin,
+  pageMarkdownTwin,
   resolveMarkdownTwin,
 } from './lib/markdown-twin/routes';
 import {
@@ -101,6 +108,24 @@ function htmlPageRequest(request: Request): Request {
   return new Request(request, { headers });
 }
 
+/** A page with a Markdown twin answers HTML or Markdown by Accept, so its
+ * HTML says so to shared caches. */
+function withVaryAccept(request: Request, response: Response): Response {
+  if (!pageMarkdownTwin(request)) return response;
+  if (!response.headers.get('content-type')?.includes('text/html')) {
+    return response;
+  }
+  const vary = response.headers.get('Vary') ?? '';
+  if (/(^|,)\s*(accept|\*)\s*(,|$)/i.test(vary)) return response;
+  const headers = new Headers(response.headers);
+  headers.set('Vary', vary ? `${vary}, Accept` : 'Accept');
+  return new Response(response.body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+}
+
 const startHandler = createStartHandler(defaultStreamHandler);
 
 interface WorkerEnvironment {}
@@ -108,19 +133,19 @@ interface WorkerEnvironment {}
 type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
 
 async function serve(
-  request: Request,
+  incoming: Request,
   executionContext?: ExecutionContext,
 ): Promise<Response> {
-  const authFlow = captureAuthFlow(request);
-  if (authFlow) return withBaselineSecurityHeaders(authFlow, request);
-  const pathname = new URL(request.url).pathname;
+  const authFlow = captureAuthFlow(incoming);
+  if (authFlow) return withBaselineSecurityHeaders(authFlow, incoming);
+  const pathname = new URL(incoming.url).pathname;
   if (pathname === CLIENT_ERROR_PATH || pathname === `${CLIENT_ERROR_PATH}/`) {
     const clientError = await matchClientErrorIngest(
-      request,
+      incoming,
       getServerEnv(),
       executionContext?.waitUntil.bind(executionContext),
     );
-    if (clientError) return withBaselineSecurityHeaders(clientError, request);
+    if (clientError) return withBaselineSecurityHeaders(clientError, incoming);
   }
 
   if (isMarkdownTwinRoutePath(pathname)) {
@@ -129,9 +154,14 @@ async function serve(
         status: 404,
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       }),
-      request,
+      incoming,
     );
   }
+  // Markdown asked for on the page URL: from here on, the twin's request.
+  const negotiated = negotiatedMarkdownTwin(incoming);
+  const request = negotiated
+    ? markdownTwinUrlRequest(incoming, negotiated)
+    : incoming;
   const twin = resolveMarkdownTwin(request);
   const twinRedirect = twin && markdownTwinRedirectLocation(request, twin);
   if (twinRedirect) {
@@ -162,9 +192,12 @@ async function serve(
         twin ? markdownTwinRouteRequest(request) : htmlPageRequest(request),
       ),
   );
-  const response = withPublicHtmlCacheHeaders(
+  const response = withVaryAccept(
     request,
-    withBaselineSecurityHeaders(rendered, request),
+    withPublicHtmlCacheHeaders(
+      request,
+      withBaselineSecurityHeaders(rendered, request),
+    ),
   );
   // Always a promise now, and one that never rejects — a cache the
   // runtime refuses must not turn a rendered page into an error.

@@ -61,6 +61,7 @@ import {
 } from '@/components/header-route-actions';
 import { Box } from '@/components/layout/box';
 import { Container } from '@/components/layout/container';
+import { MarkdownAlternateLink } from '@/components/markdown-alternate-link';
 import { NavigationProgress } from '@/components/navigation-progress';
 import { RootSessionProvider, useRootSession } from '@/components/root-session';
 import {
@@ -769,6 +770,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             self-canonicals per page (selfUrl) make /de/ and /fr/
             indexable instead of consolidating into the base locale. */}
           <AlternateLinks origin={origin} />
+          <MarkdownAlternateLink origin={origin} />
           <HeadContent />
         </head>
         <body className="bg-background text-foreground flex min-h-screen flex-col font-sans antialiased">
