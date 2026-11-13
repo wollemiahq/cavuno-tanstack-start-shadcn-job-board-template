@@ -48,6 +48,13 @@ export const MARKDOWN_TWIN_PAGES = [
     template: '/jobs/locations/$location/skills/$skill',
   },
   { kind: 'job', template: '/companies/$companySlug/jobs/$jobSlug' },
+  { kind: 'companies', template: '/companies/' },
+  { kind: 'companyMarket', template: '/companies/markets/$market' },
+  { kind: 'company', template: '/companies/$companySlug/' },
+  { kind: 'companyJobs', template: '/companies/$companySlug/jobs/' },
+  { kind: 'blog', template: '/blog/' },
+  { kind: 'blogPost', template: '/blog/$postSlug' },
+  { kind: 'blogTag', template: '/blog/tag/$tagSlug' },
 ] as const satisfies readonly {
   kind: string;
   template: (typeof ROUTE_TEMPLATES)[number];

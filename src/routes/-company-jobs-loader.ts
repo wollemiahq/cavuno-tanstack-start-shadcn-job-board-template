@@ -2,7 +2,13 @@ import { isNotFound } from '@cavuno/board';
 
 import { followManagedRedirect, requestedPath } from './-catch-all-loader';
 
-import { pageToOffset } from '@/lib/pagination';
+import {
+  pageSearchValue,
+  pageToOffset,
+  parsePageParam,
+  searchString,
+  type UrlSearchInput,
+} from '@/lib/pagination';
 import { getCompanyJobsPage } from '@/server/companies-pages';
 import { resolveRedirect } from '@/server/queries';
 
@@ -14,6 +20,18 @@ export interface CompanyJobsSearch {
 }
 
 export const COMPANY_JOBS_PAGE_SIZE = 20;
+
+/** The company jobs page's search params, as the route validates them. */
+export function parseCompanyJobsSearch(
+  search: UrlSearchInput,
+): CompanyJobsSearch {
+  return {
+    q: searchString(search.q),
+    location: searchString(search.location),
+    locationName: searchString(search.locationName),
+    page: pageSearchValue(parsePageParam(search.page)),
+  };
+}
 
 export function createCompanyJobsLoader(
   loadPage: typeof getCompanyJobsPage = getCompanyJobsPage,

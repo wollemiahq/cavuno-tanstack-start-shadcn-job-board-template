@@ -29,9 +29,6 @@ import {
   clampPage,
   pageableCount,
   pageSearchValue,
-  parsePageParam,
-  searchString,
-  type UrlSearchInput,
 } from '../lib/pagination';
 import { chromeEntity } from '../lib/site-chrome';
 import { m } from '../paraglide/messages';
@@ -39,7 +36,7 @@ import { getLocale } from '../paraglide/runtime';
 import {
   COMPANY_JOBS_PAGE_SIZE,
   createCompanyJobsLoader,
-  type CompanyJobsSearch,
+  parseCompanyJobsSearch,
 } from './-company-jobs-loader';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
@@ -60,12 +57,7 @@ export const Route = createFileRoute('/companies/$companySlug/jobs/')({
   // breadcrumb placement (the shell header is the hero here — no centered
   // shared company header band — matching /companies + /companies/…/salaries).
   staticData: { fullBleed: true, ownsMain: true },
-  validateSearch: (search: UrlSearchInput): CompanyJobsSearch => ({
-    q: searchString(search.q),
-    location: searchString(search.location),
-    locationName: searchString(search.locationName),
-    page: pageSearchValue(parsePageParam(search.page)),
-  }),
+  validateSearch: parseCompanyJobsSearch,
   loaderDeps: ({ search }) => search,
   loader: createCompanyJobsLoader(),
   head: ({ loaderData }) =>

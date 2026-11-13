@@ -7,6 +7,7 @@
  * renders with, so the twin reads like the page.
  */
 import { jobDetailPath } from '@cavuno/board/paths';
+import { defaultParseSearch } from '@tanstack/react-router';
 
 import {
   catalogJobCount,
@@ -41,6 +42,7 @@ import {
 import type { JobFormSource } from '../../board/job-form';
 import type { CountedHeading } from '../../lib/listing-description';
 import type { MarkdownTwin } from '../../lib/markdown-twin/routes';
+import type { UrlSearchInput } from '../../lib/pagination';
 import type { MarkdownTwinResult } from './result';
 import type { PublicJobCard, RelatedSearch } from '@cavuno/board';
 
@@ -60,6 +62,13 @@ export type ListingPageData = {
   seo: { origin: string };
   head: { links: ReadonlyArray<{ rel: string; href: string }> };
 };
+
+/** The twin's query as the router parses a page URL's. */
+export function routerSearch(twin: MarkdownTwin): UrlSearchInput {
+  // SAFETY: TanStack's default search codec only yields URL-serializable
+  // scalar and array values, which is what the route validators take.
+  return defaultParseSearch(twin.search) as UrlSearchInput;
+}
 
 /** The page's canonical URL, for the twin's `Link` header. */
 export function canonicalOf(
@@ -119,17 +128,21 @@ function countedTitle(
   });
 }
 
-/** Previous and next links to this listing's twin pages. */
-function pageLinks(
+/** Previous and next links to this listing's twin pages, dropping the
+ * page's pane selection (`selectedJob`, `selectedCompany`). */
+export function pageLinks(
   twin: MarkdownTwin,
   origin: string,
   page: number,
   total: number,
+  transientParams: string[] = ['selectedJob'],
 ): string | null {
   const href = (target: number) =>
-    `${origin}${listingPageHref(`${twin.twinPath}${twin.search}`, target, [
-      'selectedJob',
-    ])}`;
+    `${origin}${listingPageHref(
+      `${twin.twinPath}${twin.search}`,
+      target,
+      transientParams,
+    )}`;
   return bulletList([
     page > 1 ? link(m.pagination_previousPageLabel(), href(page - 1)) : null,
     page < total ? link(m.pagination_nextPageLabel(), href(page + 1)) : null,

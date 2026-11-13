@@ -23,6 +23,13 @@ function builders(build: MarkdownTwinBuilder): MarkdownTwinBuilders {
     jobsLocationCategory: build,
     jobsLocationSkill: build,
     job: build,
+    companies: build,
+    companyMarket: build,
+    company: build,
+    companyJobs: build,
+    blog: build,
+    blogPost: build,
+    blogTag: build,
   };
 }
 
