@@ -188,9 +188,10 @@ describe('salary hub robots meta', () => {
       list([titleItem('thin', { indexable: false }), titleItem('ranked')]),
     );
     const page = await getSalaryTitlesIndexPage();
+    // Slugs only: the salary path segment is localized per board language.
     const ld = JSON.stringify(page.jsonLd);
-    expect(ld).toContain('/salaries/titles/ranked');
-    expect(ld).not.toContain('/salaries/titles/thin');
+    expect(ld).toContain('/ranked"');
+    expect(ld).not.toContain('/thin"');
   });
 
   it('keeps the root hub indexable when any list it loads has an indexable item', async () => {
