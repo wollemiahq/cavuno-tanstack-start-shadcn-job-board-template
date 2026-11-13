@@ -257,28 +257,29 @@ const COMPANY_JOBS_MAX_PAGES = 10;
  * The `/companies/{slug}/jobs` pages to list: the starter's own route (the
  * platform's published sitemap has no such page), for each company with
  * more jobs than its profile previews. With fewer, the jobs page repeats the
- * profile's list. The catalog's browse order is ranked by live job count, so
- * the walk stops at the first company at or under the preview, once per
- * snapshot build. A failed read lists none of them.
+ * profile's list. The catalog's browse order is ranked by job count, so the
+ * walk stops at the first page with no company over the preview, once per
+ * snapshot build. The ranking can lag the live count it returns, so a single
+ * company at or under the preview does not end it. A failed read lists none
+ * of them.
  */
 async function companyJobsPaths(board: BoardSdk): Promise<string[]> {
   // Test doubles stub only the namespaces a case touches.
   if (!board.companies) return [];
-  const paths: string[] = [];
+  const paths = new Set<string>();
   for (let pageIndex = 0; pageIndex < COMPANY_JOBS_MAX_PAGES; pageIndex++) {
     const page = await board.companies.list(
       { limit: COMPANY_PAGE_SIZE, offset: pageIndex * COMPANY_PAGE_SIZE },
       boardGlobalReadCache(),
     );
-    for (const company of page.data) {
-      if ((company.publishedJobCount ?? 0) <= COMPANY_JOBS_PREVIEW_COUNT) {
-        return paths;
-      }
-      paths.push(`${companyPath(company.slug)}/jobs`);
-    }
-    if (page.data.length < COMPANY_PAGE_SIZE) return paths;
+    const busy = page.data.filter(
+      (company) =>
+        (company.publishedJobCount ?? 0) > COMPANY_JOBS_PREVIEW_COUNT,
+    );
+    for (const company of busy) paths.add(`${companyPath(company.slug)}/jobs`);
+    if (busy.length === 0 || page.data.length < COMPANY_PAGE_SIZE) break;
   }
-  return paths;
+  return [...paths];
 }
 
 /**
