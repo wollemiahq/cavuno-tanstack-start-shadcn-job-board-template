@@ -45,6 +45,11 @@ export function validateEmployerDashboardSearch(
 
 export const Route = createFileRoute('/employers/dashboard')({
   validateSearch: validateEmployerDashboardSearch,
+  loaderDeps: ({ search: { add, verified, returnTo } }) => ({
+    add,
+    verified,
+    returnTo,
+  }),
   loader: createEmployerDashboardLoader(),
   head: ({ loaderData }) => ({
     meta: [
