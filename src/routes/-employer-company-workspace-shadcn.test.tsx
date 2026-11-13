@@ -2028,7 +2028,11 @@ describe('Company profile — operator form layout', () => {
     editableByOwner: true,
   };
   const profileFields = {
-    customFields: { definitions: [motto], values: { motto: 'Onward' } },
+    customFields: {
+      definitions: [motto],
+      values: { motto: 'Onward' },
+      customFieldMedia: {},
+    },
     objectReferences: { definitions: [], selections: [] },
     verifications: null,
   };
@@ -2165,5 +2169,92 @@ describe('Company profile — operator form layout', () => {
     );
     // No collection field changed, so the full-replace write is skipped.
     expect(updateCompanyObjectReferences).not.toHaveBeenCalled();
+  });
+
+  it('holds the save while a gallery image uploads, then saves the images in order', async () => {
+    const image = (id: string) => ({
+      id,
+      name: `${id}.png`,
+      contentType: 'image/png',
+      sizeBytes: 1024,
+      url: `https://files.test/${id}`,
+    });
+    let finishUpload!: () => void;
+    const uploadCustomFieldFile = vi.fn(
+      () =>
+        new Promise<{ ok: true; data: ReturnType<typeof image> }>((resolve) => {
+          finishUpload = () => resolve({ ok: true, data: image('draft') });
+        }),
+    );
+    const updateCompanyCustomFields = vi.fn().mockResolvedValue({ ok: true });
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    const gallery = {
+      key: 'office',
+      label: 'Office',
+      type: 'image_gallery' as const,
+      required: false,
+      visibility: 'public' as const,
+      editableByOwner: true,
+    };
+    render(
+      <CompanyProfilePageView
+        data={{
+          ...profileLoaderData,
+          profileFields: {
+            ...profileFields,
+            customFields: {
+              definitions: [gallery],
+              values: { office: ['saved'] },
+              customFieldMedia: { office: [image('saved')] },
+            },
+          },
+          formLayout: [
+            builtin('name', { locked: true }),
+            {
+              kind: 'custom',
+              key: 'office',
+              visible: true,
+              required: false,
+              definition: gallery,
+            },
+          ],
+        }}
+        actions={{
+          ...profileActions,
+          uploadCustomFieldFile,
+          updateCompanyCustomFields,
+        }}
+      />,
+    );
+
+    const picker = await screen.findByLabelText('Office', {
+      selector: 'input[type=file]',
+    });
+    fireEvent.change(picker, {
+      target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] },
+    });
+    // Saving now would drop the draft, whose ID is not in the form yet.
+    const saveButton = screen.getByRole('button', {
+      name: m.employerCompany_saveCompanyLabel(),
+    });
+    await waitFor(() => expect(saveButton).toBeDisabled());
+    expect(uploadCustomFieldFile).toHaveBeenCalledWith(
+      'northstar-labs',
+      'office',
+      expect.any(File),
+    );
+    finishUpload();
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    fireEvent.click(saveButton);
+
+    await waitFor(() =>
+      expect(updateCompanyCustomFields).toHaveBeenCalledWith({
+        data: {
+          slug: 'northstar-labs',
+          body: { values: { office: ['saved', 'draft'] } },
+        },
+      }),
+    );
   });
 });

@@ -46,6 +46,7 @@ import {
   listCompanyObjectReferenceChoices,
   updateCompanyCustomFields,
   updateCompanyObjectReferences,
+  uploadCompanyCustomFieldFile,
 } from '../server/form-fields';
 import { submitCompanyItemVerification } from '../server/item-verification';
 import { getSeoBase, getCompany } from '../server/queries';
@@ -75,6 +76,10 @@ import {
   type ProfileSelections,
 } from '@/board/profile-field-writes';
 import { CollectionFieldPicker } from '@/components/collection-field-picker';
+import type {
+  CustomFieldUploadResult,
+  CustomFieldUploads,
+} from '@/components/custom-field-files-input';
 import {
   CustomFieldInput,
   hasCustomFieldInput,
@@ -283,6 +288,12 @@ export type CompanyProfileViewActions = {
   listCompanyObjectReferenceChoices?: (
     ...args: Parameters<typeof listCompanyObjectReferenceChoices>
   ) => Promise<{ data: { id: string; name: string }[] }>;
+  /** One gallery image or file upload; the server function by default. */
+  uploadCustomFieldFile?: (
+    slug: string,
+    fieldKey: string,
+    file: File,
+  ) => Promise<CustomFieldUploadResult>;
   /** Asks the board team to verify a company item; the server function by default. */
   submitCompanyItemVerification?: (
     ...args: Parameters<typeof submitCompanyItemVerification>
@@ -294,6 +305,18 @@ export type CompanyProfileViewActions = {
 };
 
 type EmployerCompany = Awaited<ReturnType<typeof getEmployerCompany>>;
+
+function uploadCustomFieldFile(
+  slug: string,
+  fieldKey: string,
+  file: File,
+): Promise<CustomFieldUploadResult> {
+  const data = new FormData();
+  data.append('slug', slug);
+  data.append('fieldKey', fieldKey);
+  data.append('file', file);
+  return uploadCompanyCustomFieldFile({ data });
+}
 
 function stripProtocol(url: string): string {
   return url.replace(/^https?:\/\//i, '');
@@ -453,7 +476,9 @@ function ProfileEditorCard({
     ownerProfileDefinitions(profileFields),
     { fallbackRequired: ['name'], fallbackCollectionsFirst: true },
   ).filter(
-    (entry) => entry.kind !== 'custom' || hasCustomFieldInput(entry.definition),
+    (entry) =>
+      entry.kind !== 'custom' ||
+      hasCustomFieldInput(entry.definition, { uploads: true }),
   );
   const shows = (key: CompanyFormBuiltinKey) => showsBuiltin(entries, key);
   const requires = (key: CompanyFormBuiltinKey) =>
@@ -486,6 +511,21 @@ function ProfileEditorCard({
   const [selections, setSelections] = useState<ProfileSelections>(() =>
     initialProfileSelections(storedSelections),
   );
+  // Save waits for uploads in flight: their IDs reach the form's values
+  // only when each finishes, and an unsaved draft is deleted later.
+  const [uploading, setUploading] = useState(0);
+  const upload = actions.uploadCustomFieldFile ?? uploadCustomFieldFile;
+  const uploads: CustomFieldUploads = {
+    upload: async (fieldKey, file) => {
+      setUploading((count) => count + 1);
+      try {
+        return await upload(slug, fieldKey, file);
+      } finally {
+        setUploading((count) => count - 1);
+      }
+    },
+    media: profileFields?.customFields?.customFieldMedia ?? {},
+  };
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'error' | 'committed'
   >('idle');
@@ -525,6 +565,7 @@ function ProfileEditorCard({
   }
 
   async function save() {
+    if (uploading > 0) return;
     const missing = missingRequired();
     setInvalidField(missing?.id ?? null);
     if (missing) {
@@ -803,6 +844,7 @@ function ProfileEditorCard({
           definition={entry.definition}
           required={entry.required}
           value={customValues[entry.key]}
+          uploads={uploads}
           onChange={(value) =>
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }))
           }
@@ -872,7 +914,9 @@ function ProfileEditorCard({
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="submit"
-              disabled={status === 'saving' || status === 'committed'}
+              disabled={
+                status === 'saving' || status === 'committed' || uploading > 0
+              }
             >
               {status === 'saving'
                 ? m.employerCompany_savingLabel()

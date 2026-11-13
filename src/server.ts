@@ -17,6 +17,10 @@
  * `rewrite.input` owns delocalization; feeding it an already-delocalized
  * URL loops the redirect.
  *
+ * A page request whose Accept names neither text/html nor *\/* (an agent
+ * asking for text/markdown, say) would get Start's 406; it gets the HTML
+ * page instead (htmlPageRequest).
+ *
  * An uncaught server error, or a 500 that Start rendered itself, logs one
  * `starter_server_error` line (src/lib/server-error-log.server.ts).
  *
@@ -39,6 +43,7 @@ import { matchClientErrorIngest } from './lib/client-error-ingest';
 import { CLIENT_ERROR_PATH } from './lib/client-error-report';
 import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
+import { isMachinePath } from './lib/localized-path';
 import { localizedUrlRedirect } from './lib/localized-url-redirect';
 import {
   readPublicHtmlCache,
@@ -65,6 +70,24 @@ function localeDetectionRequest(request: Request): Request {
   // can disturb a POST RPC's body stream, which the real handler still
   // needs. The middleware only reads the URL (and headers) here.
   return new Request(url, { method: 'GET', headers: request.headers });
+}
+
+/** Start's own test: a page render answers 406 unless Accept matches. */
+const ACCEPTS_HTML = /(^|,)\s*(\*\/\*|text\/html)/;
+const HTML_ACCEPT = 'text/html,*/*;q=0.8';
+
+/** For a GET/HEAD page request whose Accept rules out HTML: a copy that
+ * accepts HTML, so the page renders instead of a 406. Machine paths
+ * (server functions, feeds, sitemaps, robots.txt, OG images) keep the
+ * request as sent. */
+function htmlPageRequest(request: Request): Request {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return request;
+  const accept = request.headers.get('Accept');
+  if (!accept || ACCEPTS_HTML.test(accept)) return request;
+  if (isMachinePath(new URL(request.url).pathname)) return request;
+  const headers = new Headers(request.headers);
+  headers.set('Accept', HTML_ACCEPT);
+  return new Request(request, { headers });
 }
 
 const startHandler = createStartHandler(defaultStreamHandler);
@@ -102,7 +125,7 @@ async function serve(
 
   const rendered = await paraglideMiddleware(
     localeDetectionRequest(request),
-    () => startHandler(request),
+    () => startHandler(htmlPageRequest(request)),
   );
   const response = withPublicHtmlCacheHeaders(
     request,
