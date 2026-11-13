@@ -13,6 +13,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableSalaryItems,
   toSalaryBreadcrumbVM,
   toSalaryRailVM,
 } from '@/board/salary-view-model';
@@ -40,7 +41,7 @@ function SalaryTitlesIndex() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
-  const items: RailItem[] = titles.map((t) => ({
+  const items: RailItem[] = indexableSalaryItems(titles).map((t) => ({
     name: t.name,
     href: salaryTitlePath(t.slug),
     range:
