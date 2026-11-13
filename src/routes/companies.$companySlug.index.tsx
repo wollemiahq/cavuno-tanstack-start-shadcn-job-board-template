@@ -6,6 +6,7 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { createCompanyProfileLoader } from './-company-profile-loader';
 
+import { COMPANY_JOBS_PREVIEW_COUNT } from '@/board/company-jobs-preview';
 import { toCompanyFieldGroups } from '@/board/company-view-model';
 import { profileLayoutFields } from '@/board/custom-field-display';
 import { toJobCardVM } from '@/board/job-view-model';
@@ -88,9 +89,6 @@ function openJobsHeading(count: number) {
   });
 }
 
-/** How many jobs the profile previews before deferring to the /jobs subpage. */
-const JOBS_PREVIEW_COUNT = 6;
-
 const rootApi = getRouteApi('__root__');
 
 function CompanyPage() {
@@ -138,7 +136,7 @@ function CompanyPage() {
       : `https://${company.website}`
     : null;
 
-  const previewJobs = jobs.data.slice(0, JOBS_PREVIEW_COUNT);
+  const previewJobs = jobs.data.slice(0, COMPANY_JOBS_PREVIEW_COUNT);
   const fields = toCompanyFieldGroups(
     company,
     profileLayoutFields(board.forms?.company),

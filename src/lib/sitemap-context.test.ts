@@ -137,6 +137,38 @@ describe('hosted-shaped sitemap context', () => {
     ]);
   });
 
+  it('lists company jobs pages for companies with more jobs than the profile previews', async () => {
+    const list = vi.fn(async () => ({
+      object: 'list' as const,
+      // Ranked by live job count, as the catalog's browse order is.
+      data: [
+        { slug: 'busy', publishedJobCount: 7 },
+        { slug: 'quiet', publishedJobCount: 6 },
+        { slug: 'never-read', publishedJobCount: 9 },
+      ],
+      hasMore: false,
+    }));
+    // SAFETY: only `companies.list()` is read, and only `slug` and
+    // `publishedJobCount` from each company.
+    const fake: BoardSdk = Object.assign({} as BoardSdk, {
+      companies: { list },
+    });
+    const context = await buildSitemapContext(
+      fake,
+      ORIGIN,
+      source({ buckets: ['marketing', 'companies'] }),
+    );
+
+    expect(findSitemapChunk(context, 'companies', 0)).toEqual([
+      { url: `${ORIGIN}/companies` },
+      { url: `${ORIGIN}/companies/busy/jobs` },
+    ]);
+    expect(findSitemapChunk(context, 'marketing', 0)).toEqual([
+      { url: `${ORIGIN}/marketing` },
+    ]);
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
   describe('plan pages', () => {
     const marketingUrls = async (
       fake: BoardSdk,

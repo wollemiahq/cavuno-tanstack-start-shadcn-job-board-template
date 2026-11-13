@@ -1,4 +1,8 @@
-import { BOARD_PATHS, talentLocationPath } from '@cavuno/board/paths';
+import {
+  BOARD_PATHS,
+  companyPath,
+  talentLocationPath,
+} from '@cavuno/board/paths';
 import {
   MIN_JOBS_PER_INDEXED_PAGE,
   SITEMAP_CHUNK_SIZE,
@@ -11,6 +15,7 @@ import {
   type SitemapUrlEntry,
 } from '@cavuno/board/sitemap';
 
+import { COMPANY_JOBS_PREVIEW_COUNT } from '../board/company-jobs-preview';
 import { placeLinkSlug } from '../board/place-link';
 import { TALENT_PLACES_LIMIT } from '../board/talent-places';
 import { impressumHasContent } from '../content/legal/impressum-availability';
@@ -243,6 +248,39 @@ async function livePlanPagePaths(board: BoardSdk): Promise<string[]> {
   );
 }
 
+/** Companies per catalog page, the list endpoint's maximum. */
+const COMPANY_PAGE_SIZE = 100;
+/** Bounds the catalog walk: the companies ranked first hold the most jobs. */
+const COMPANY_JOBS_MAX_PAGES = 10;
+
+/**
+ * The `/companies/{slug}/jobs` pages to list: the starter's own route (the
+ * platform's published sitemap has no such page), for each company with
+ * more jobs than its profile previews. With fewer, the jobs page repeats the
+ * profile's list. The catalog's browse order is ranked by live job count, so
+ * the walk stops at the first company at or under the preview, once per
+ * snapshot build. A failed read lists none of them.
+ */
+async function companyJobsPaths(board: BoardSdk): Promise<string[]> {
+  // Test doubles stub only the namespaces a case touches.
+  if (!board.companies) return [];
+  const paths: string[] = [];
+  for (let pageIndex = 0; pageIndex < COMPANY_JOBS_MAX_PAGES; pageIndex++) {
+    const page = await board.companies.list(
+      { limit: COMPANY_PAGE_SIZE, offset: pageIndex * COMPANY_PAGE_SIZE },
+      boardGlobalReadCache(),
+    );
+    for (const company of page.data) {
+      if ((company.publishedJobCount ?? 0) <= COMPANY_JOBS_PREVIEW_COUNT) {
+        return paths;
+      }
+      paths.push(`${companyPath(company.slug)}/jobs`);
+    }
+    if (page.data.length < COMPANY_PAGE_SIZE) return paths;
+  }
+  return paths;
+}
+
 /**
  * The talent location pages to list, when the talent directory is public:
  * the `/talent/locations` directory and each place page with at least
@@ -307,18 +345,35 @@ function withLocalMarketingPages(
   ];
 }
 
+/** Appends the starter's company jobs pages to the companies bucket. */
+function withLocalCompanyJobsPages(
+  origin: string,
+  bucket: SitemapBucket,
+  entries: SitemapEntry[],
+  paths: readonly string[],
+): SitemapEntry[] {
+  if (bucket !== 'companies' || paths.length === 0) return entries;
+  const urls = new Set(entries.map((entry) => entry.url));
+  const added = paths
+    .map((path) => `${origin}${path}`)
+    .filter((url) => !urls.has(url))
+    .map((url) => ({ url }));
+  return [...entries, ...added];
+}
+
 export async function buildSitemapContext(
   board: BoardSdk,
   origin: string,
   source: SitemapSource = DEFAULT_SOURCE,
 ): Promise<SitemapContext> {
   const catalog = memoizingBoardView(board);
-  const [listed, planPaths, talentPaths] = await Promise.all([
+  const [listed, planPaths, talentPaths, companyJobPaths] = await Promise.all([
     source.listedBucketEntries(catalog),
     livePlanPagePaths(board),
-    // A failed talent read leaves the talent pages out; it must not take
-    // down the sitemap's other buckets, which never depended on it.
+    // A failed talent or company read leaves those pages out; it must not
+    // take down the sitemap's other buckets, which never depended on it.
     talentLocationPaths(board).catch((): string[] => []),
+    companyJobsPaths(board).catch((): string[] => []),
   ]);
   const built = await Promise.all(
     listed.map(
@@ -328,12 +383,17 @@ export async function buildSitemapContext(
           origin,
           bucket,
         );
-        const entries = withLocalMarketingPages(
+        const entries = withLocalCompanyJobsPages(
           origin,
           bucket,
-          sdkEntries.map(toSitemapEntry),
-          planPaths,
-          talentPaths,
+          withLocalMarketingPages(
+            origin,
+            bucket,
+            sdkEntries.map(toSitemapEntry),
+            planPaths,
+            talentPaths,
+          ),
+          companyJobPaths,
         );
         const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
         const built: SitemapBucketContext = {

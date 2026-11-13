@@ -1,14 +1,3 @@
-/**
- * The Markdown twins of the company pages: the companies index, a company
- * market, a company profile and the company's jobs page.
- *
- * Each builder parses the twin's query with the page route's own search
- * validator and calls the server function its loader calls, with the same
- * input, so `?page=2` and the filters mean what they mean on the page, and
- * board access, the password wall and Board API shedding are unchanged.
- * Like the page: an alias market slug moves to its canonical market, and an
- * unknown slug follows the board's configured redirect, else 404s.
- */
 import {
   isNotFound,
   type BoardProfileFormField,
@@ -20,6 +9,18 @@ import {
   companySalaryPath,
 } from '@cavuno/board/paths';
 
+/**
+ * The Markdown twins of the company pages: the companies index, a company
+ * market, a company profile and the company's jobs page.
+ *
+ * Each builder parses the twin's query with the page route's own search
+ * validator and calls the server function its loader calls, with the same
+ * input, so `?page=2` and the filters mean what they mean on the page, and
+ * board access, the password wall and Board API shedding are unchanged.
+ * Like the page: an alias market slug moves to its canonical market, and an
+ * unknown slug follows the board's configured redirect, else 404s.
+ */
+import { COMPANY_JOBS_PREVIEW_COUNT } from '../../board/company-jobs-preview';
 import { getCompanySearchLabels } from '../../board/company-search-labels';
 import {
   toCompanyCardVM,
@@ -86,8 +87,6 @@ import type { MarkdownTwin } from '../../lib/markdown-twin/routes';
 import type { MarkdownTwinResult } from './result';
 import type { PublicCompanyDetail } from '@cavuno/board';
 
-/** How many jobs the profile previews, as the page does. */
-const JOBS_PREVIEW_COUNT = 6;
 /** Similar companies the profile loader asks for. */
 const SIMILAR_COMPANIES_LIMIT = 6;
 
@@ -368,7 +367,7 @@ export async function buildCompanyTwin(
       : `https://${company.website}`
     : null;
   const openCount = company.publishedJobCount;
-  const previewJobs = jobs.data.slice(0, JOBS_PREVIEW_COUNT);
+  const previewJobs = jobs.data.slice(0, COMPANY_JOBS_PREVIEW_COUNT);
   const jobsHeading =
     openCount === 0
       ? m.companyDetail_openJobsHeading()
