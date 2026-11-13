@@ -10,12 +10,16 @@ import {
   verificationsByKey,
 } from './item-verification';
 
-import type { ItemVerification, ProfileObjectReferences } from '@cavuno/board';
+import type {
+  MyItemVerification,
+  ProfileObjectReferences,
+} from '@cavuno/board';
 
 function verification(
   itemKey: string,
-  status: ItemVerification['status'],
-): ItemVerification {
+  status: MyItemVerification['status'],
+  nextStep: MyItemVerification['nextStep'],
+): MyItemVerification {
   return {
     id: `iv_${itemKey}`,
     object: 'item_verification',
@@ -28,10 +32,12 @@ function verification(
     hasProof: false,
     verifiedDomain: null,
     updatedAt: '2026-11-01T00:00:00.000Z',
+    nextStep,
+    emailCheck: null,
   };
 }
 
-function list(...rows: ItemVerification[]) {
+function list(...rows: MyItemVerification[]) {
   return verificationsByKey({ data: rows });
 }
 
@@ -85,8 +91,8 @@ describe('built-in item verification', () => {
 
   it('checks a current job with a website by work email, and a past job by the team', () => {
     const rows = list(
-      verification('experience:exp1', 'changed'),
-      verification('experience:exp2', 'rejected'),
+      verification('experience:exp1', 'changed', 'email'),
+      verification('experience:exp2', 'rejected', 'none'),
     );
     expect(experienceVerifiableItem(job, rows)).toMatchObject({
       itemKey: 'experience:exp1',
@@ -109,73 +115,35 @@ describe('built-in item verification', () => {
       ),
     ).toMatchObject({ method: 'email_domain', emailDomain: 'mit.edu' });
   });
-
-  it('lets the worker ask again only from a status the API accepts', () => {
-    expect(canRequestVerification(null)).toBe(true);
-    expect(canRequestVerification({ status: 'needs_info' })).toBe(true);
-    expect(canRequestVerification({ status: 'lapsed' })).toBe(true);
-    expect(canRequestVerification({ status: 'pending' })).toBe(false);
-    expect(canRequestVerification({ status: 'verified' })).toBe(false);
-    expect(canRequestVerification({ status: 'revoked' })).toBe(false);
-    expect(canRequestVerification({ status: 'rejected' })).toBe(false);
-  });
-
-  it('starts an email check only from a status the API accepts for it', () => {
-    expect(canCheckByEmail(null)).toBe(true);
-    for (const status of [
-      'unverified',
-      'changed',
-      'lapsed',
-      'unable_to_verify',
-    ] as const) {
-      expect(canCheckByEmail({ status })).toBe(true);
-    }
-    for (const status of [
-      'rejected',
-      'needs_info',
-      'pending',
-      'verified',
-      'revoked',
-    ] as const) {
-      expect(canCheckByEmail({ status })).toBe(false);
-    }
-  });
 });
 
 describe('the API next step', () => {
-  it('decides when present, over the status', () => {
-    expect(
-      canRequestVerification({ status: 'needs_info', nextStep: 'none' }),
-    ).toBe(false);
-    expect(
-      canRequestVerification({ status: 'rejected', nextStep: 'team' }),
-    ).toBe(true);
-    expect(canCheckByEmail({ status: 'needs_info', nextStep: 'email' })).toBe(
-      true,
-    );
-    expect(canCheckByEmail({ status: 'unverified', nextStep: 'team' })).toBe(
-      false,
-    );
+  it('decides over the status', () => {
+    const row = (
+      status: MyItemVerification['status'],
+      nextStep: MyItemVerification['nextStep'],
+    ) => verification('experience:exp1', status, nextStep);
+    expect(canRequestVerification(null)).toBe(true);
+    expect(canCheckByEmail(null)).toBe(true);
+    expect(canRequestVerification(row('needs_info', 'none'))).toBe(false);
+    expect(canRequestVerification(row('rejected', 'team'))).toBe(true);
+    expect(canCheckByEmail(row('needs_info', 'email'))).toBe(true);
+    expect(canCheckByEmail(row('unverified', 'team'))).toBe(false);
   });
 
-  it('checks by email by the next step, else by method and status', () => {
-    const row = (nextStep?: 'email' | 'team' | 'none') => ({
-      ...verification('experience:exp1', 'unverified'),
-      nextStep,
-    });
+  it('checks by email by the next step, else by method', () => {
+    const row = (nextStep: MyItemVerification['nextStep']) =>
+      verification('experience:exp1', 'unverified', nextStep);
     expect(checksByEmail({ method: 'team', verification: row('email') })).toBe(
       true,
     );
     expect(
       checksByEmail({ method: 'email_domain', verification: row('team') }),
     ).toBe(false);
-    expect(checksByEmail({ method: 'email_domain', verification: row() })).toBe(
-      true,
-    );
-    expect(checksByEmail({ method: 'team', verification: row() })).toBe(false);
     expect(checksByEmail({ method: 'email_domain', verification: null })).toBe(
       true,
     );
+    expect(checksByEmail({ method: 'team', verification: null })).toBe(false);
   });
 });
 
@@ -250,7 +218,7 @@ describe('collectionVerifiableItems', () => {
 
     const items = collectionVerifiableItems(
       references,
-      list(verification('ref:cards:rec2:e1', 'pending')),
+      list(verification('ref:cards:rec2:e1', 'pending', 'none')),
       { emailDomain: true },
     );
     expect(items).toEqual([
