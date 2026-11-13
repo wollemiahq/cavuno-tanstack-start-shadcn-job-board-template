@@ -195,12 +195,12 @@ describe('ItemVerificationTick', () => {
     [
       'revoked',
       () => m.itemVerification_revokedLabel(),
-      () => m.itemVerification_revokedLabel(),
+      () => m.itemVerification_revokedText(),
     ],
     [
       'rejected',
       () => m.itemVerification_rejectedLabel(),
-      () => m.itemVerification_rejectedLabel(),
+      () => m.itemVerification_rejectedText(),
     ],
   ] as const)(
     'a %s item names its status and opens it, with Close only',

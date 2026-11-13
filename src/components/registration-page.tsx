@@ -61,7 +61,7 @@ export function AuthPageCard({
               {title}
             </h1>
             {supportingText ? (
-              <p className="text-muted-foreground text-sm leading-6">
+              <p className="text-muted-foreground text-sm leading-6 text-balance">
                 {supportingText}
               </p>
             ) : null}

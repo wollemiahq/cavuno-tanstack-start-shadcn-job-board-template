@@ -148,6 +148,10 @@ export function initialStep(
 function statusText(item: VerifiableItem): string {
   const status = item.verification?.status;
   if (status !== 'pending' && !canRequestVerification(item.verification)) {
+    if (status === 'needs_info') return m.itemVerification_needsInfoText();
+    if (status === 'rejected') return m.itemVerification_rejectedText();
+    if (status === 'unable_to_verify') return m.itemVerification_unableText();
+    if (status === 'revoked') return m.itemVerification_revokedText();
     const label = itemVerificationStatusLabel(item.verification);
     if (label) return label;
   }
@@ -571,11 +575,11 @@ export function ItemVerificationDialog({
             <FieldError className="text-center">{shownError}</FieldError>
           ) : null}
         </Field>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="link"
+            size="inline"
             disabled={pending}
             onClick={() => {
               setError(null);
@@ -587,8 +591,8 @@ export function ItemVerificationDialog({
           </Button>
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="link"
+            size="inline"
             disabled={pending || resendIn > 0}
             onClick={() => {
               // A resumed code names only the domain: ask for the address.
