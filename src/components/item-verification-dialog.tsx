@@ -22,7 +22,6 @@ import {
   type ItemVerificationRow,
   type VerifiableItem,
 } from '@/board/item-verification';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -378,10 +377,6 @@ export function ItemVerificationDialog({
   };
 
   const close = () => onOpenChange(false);
-  const statusLabel = itemVerificationStatusLabel(item.verification);
-  const negative =
-    item.verification?.status === 'rejected' ||
-    item.verification?.status === 'revoked';
 
   const cancelButton = (
     <Button type="button" variant="outline" disabled={pending} onClick={close}>
@@ -413,8 +408,6 @@ export function ItemVerificationDialog({
       <>
         <Header
           item={item}
-          statusLabel={statusLabel}
-          negative={negative}
           description={teamReason(item, emailCheck !== null)}
         />
         {error ? <FieldError>{error}</FieldError> : null}
@@ -441,12 +434,7 @@ export function ItemVerificationDialog({
           void send(email);
         }}
       >
-        <Header
-          item={item}
-          statusLabel={statusLabel}
-          negative={negative}
-          description={m.itemVerification_emailIntro()}
-        />
+        <Header item={item} description={m.itemVerification_emailIntro()} />
         <Field data-invalid={error ? true : undefined} className="gap-1.5">
           <FieldLabel htmlFor={`${idPrefix}-email`}>
             {m.itemVerification_emailLabel()}
@@ -519,8 +507,6 @@ export function ItemVerificationDialog({
       >
         <Header
           item={item}
-          statusLabel={statusLabel}
-          negative={negative}
           description={`${
             state.email
               ? m.itemVerification_codeIntro({ email: state.email })
@@ -644,13 +630,9 @@ export function ItemVerificationDialog({
 
 function Header({
   item,
-  statusLabel,
-  negative,
   description,
 }: {
   item: VerifiableItem;
-  statusLabel: string | null;
-  negative: boolean;
   description: string;
 }) {
   return (
@@ -658,11 +640,6 @@ function Header({
       <DialogTitle className="pe-8">
         {m.itemVerification_actionAriaLabel({ item: item.label })}
       </DialogTitle>
-      {statusLabel ? (
-        <Badge variant={negative ? 'destructive' : 'outline'}>
-          {statusLabel}
-        </Badge>
-      ) : null}
       <DialogDescription>{description}</DialogDescription>
     </DialogHeader>
   );
