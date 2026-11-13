@@ -12,6 +12,10 @@
  * `/fr/emplois.md`, `/index.md` for the home page). A twin asked for under
  * a canonical or retired word 308s to the localized twin URL.
  *
+ * A GET or HEAD for the page URL itself whose Accept lists `text/markdown`
+ * with q above 0 gets the same twin (negotiatedMarkdownTwin); browsers,
+ * which never list it, keep the HTML page.
+ *
  * The twin is answered by one server route (MARKDOWN_TWIN_ROUTE): the
  * server entry rewrites a resolved twin to it, and refuses outside requests
  * for that prefix, so the route only ever sees a rewritten request.
@@ -171,6 +175,62 @@ export function resolveMarkdownTwin(
     };
   }
   return best?.twin ?? null;
+}
+
+/** True when an Accept header lists `text/markdown` with q above 0. */
+export function acceptsMarkdown(accept: string | null): boolean {
+  if (!accept) return false;
+  return accept.split(',').some((entry) => {
+    const [type, ...params] = entry.split(';').map((part) => part.trim());
+    if (type?.toLowerCase() !== 'text/markdown') return false;
+    const q = params.find((param) => /^q\s*=/i.test(param));
+    if (q === undefined) return true;
+    const value = Number(q.slice(q.indexOf('=') + 1).trim());
+    return Number.isFinite(value) && value > 0;
+  });
+}
+
+/** The twin of the page a GET or HEAD request addresses by its HTML URL
+ * (whatever its Accept), or null when the page has none. */
+export function pageMarkdownTwin(
+  request: Pick<Request, 'method' | 'url'>,
+  routing?: LocaleRouting,
+): MarkdownTwin | null {
+  const url = new URL(request.url);
+  const pagePath = url.pathname.replace(/\/+$/, '') || '/';
+  if (pagePath.endsWith(MARKDOWN_SUFFIX)) return null;
+  url.pathname = markdownPathFor(pagePath, routing);
+  const twin = resolveMarkdownTwin(
+    { method: request.method, url: url.href },
+    routing,
+  );
+  // `/index` would otherwise borrow the home page's `/index.md`.
+  return twin && twin.htmlPath === pagePath ? twin : null;
+}
+
+/** The twin a page request negotiates with `Accept: text/markdown`, or
+ * null. A page asked for under canonical or retired words is left to the
+ * localized URL redirect, and the agent negotiates again there. */
+export function negotiatedMarkdownTwin(
+  request: Pick<Request, 'method' | 'url' | 'headers'>,
+  routing?: LocaleRouting,
+): MarkdownTwin | null {
+  if (!acceptsMarkdown(request.headers.get('Accept'))) return null;
+  const twin = pageMarkdownTwin(request, routing);
+  if (!twin || markdownTwinRedirectLocation(request, twin, routing)) {
+    return null;
+  }
+  return twin;
+}
+
+/** The same request addressed to its twin's `.md` URL (query kept). */
+export function markdownTwinUrlRequest(
+  request: Request,
+  twin: MarkdownTwin,
+): Request {
+  const url = new URL(request.url);
+  url.pathname = twin.twinPath;
+  return new Request(url, request);
 }
 
 /**
