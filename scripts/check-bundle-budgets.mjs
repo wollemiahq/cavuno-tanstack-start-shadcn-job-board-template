@@ -168,7 +168,10 @@ const BUDGETS = {
     // renamed the minified imports in this route's chunks: 109,388 B gzip,
     // 296,514 B raw. Gzip is rebaselined to that measurement plus the same
     // ~2.5 KB headroom #332 left, so renaming churn does not trip the gate.
-    '/account': { raw: 297_306, gzip: 111_900 },
+    // The verify badge, verified tick and its lazily loaded tooltip (#337):
+    // 298,082 B raw / 110,153 B gzip against main's 296,514 / 109,388
+    // (+1,568 / +765). Raw raised by exactly that growth; gzip still fits.
+    '/account': { raw: 298_874, gzip: 111_900 },
     // Pre-existing overflow on main after board-user self-service (#40):
     // this route used the default 80 KiB increment and landed at 113.7 /
     // 38.9. English-only compile dropped it to 103.5 / 35.5. Charge the
@@ -260,7 +263,10 @@ const BUDGETS = {
     // measured growth, keeping main's headroom.
     // Custom field display (see /talent/): +12,464 / +5,543, then +201 B
     // gzip for the review fixes (phone extensions, typed talent placement).
-    '/p/$handle': { raw: 126_719, gzip: 49_049 },
+    // The verified tick with its tooltip (#337): +1,148 B raw / +542 B gzip
+    // measured before main's custom fields landed, most of it the list of
+    // files the lazily loaded tooltip fetches on hover. Raised by that growth.
+    '/p/$handle': { raw: 127_867, gzip: 49_591 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

@@ -1,7 +1,6 @@
 import type { ElementType } from 'react';
 
 import { Link } from '@tanstack/react-router';
-import { BadgeCheck } from 'lucide-react';
 
 import type { TalentProfileVM } from '@/board/talent-view-model';
 
@@ -16,6 +15,7 @@ import {
 import { Text } from '@/components/text';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { VerifiedTick, verifiedTooltipText } from '@/components/verified-tick';
 import { initialsOf } from '@/lib/initials';
 import { m } from '@/paraglide/messages';
 
@@ -198,16 +198,21 @@ export function TalentProfileContent({
                 />
                 <div className="min-w-0 flex-1 space-y-3">
                   <div>
-                    <h4 className="text-foreground font-semibold">
-                      {experience.title}
-                    </h4>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h4 className="text-foreground font-semibold">
+                        {experience.title}
+                      </h4>
+                      <ProfileVerifiedTick
+                        kind="experience"
+                        verification={experience.verification}
+                      />
+                    </div>
                     <ProfileLink
                       href={experience.companyHref}
                       interactive={interactive}
                     >
                       {experience.companyName}
                     </ProfileLink>
-                    <VerifiedBadge verification={experience.verification} />
                   </div>
                   {experience.dateRangeLabel ? (
                     <p className="text-muted-foreground text-sm">
@@ -281,13 +286,18 @@ export function TalentProfileContent({
                   className="mt-0.5"
                 />
                 <div className="min-w-0 flex-1 space-y-2">
-                  <ProfileLink
-                    href={education.institutionHref}
-                    interactive={interactive}
-                  >
-                    {education.institutionName}
-                  </ProfileLink>
-                  <VerifiedBadge verification={education.verification} />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <ProfileLink
+                      href={education.institutionHref}
+                      interactive={interactive}
+                    >
+                      {education.institutionName}
+                    </ProfileLink>
+                    <ProfileVerifiedTick
+                      kind="education"
+                      verification={education.verification}
+                    />
+                  </div>
                   {education.qualificationLabel ? (
                     <p className="text-foreground font-medium">
                       {education.qualificationLabel}
@@ -374,22 +384,17 @@ export function TalentProfileContent({
 }
 
 /** The board's "Verified" mark on a verified entry, with the confirmed email domain. */
-function VerifiedBadge({
+function ProfileVerifiedTick({
+  kind,
   verification,
 }: {
+  kind: 'experience' | 'education';
   verification: { verifiedDomain: string | null } | null;
 }) {
   if (!verification) return null;
   return (
-    <div>
-      <Badge variant="secondary" data-test="verified-badge">
-        <BadgeCheck aria-hidden data-icon="inline-start" />
-        {verification.verifiedDomain
-          ? m.itemVerification_verifiedDomainLabel({
-              domain: verification.verifiedDomain,
-            })
-          : m.itemVerification_verifiedLabel()}
-      </Badge>
-    </div>
+    <VerifiedTick
+      tooltip={verifiedTooltipText(kind, verification.verifiedDomain)}
+    />
   );
 }

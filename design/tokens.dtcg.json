@@ -65,6 +65,14 @@
       "$type": "color",
       "$value": "oklch(0.985 0 0)"
     },
+    "verified": {
+      "$type": "color",
+      "$value": "oklch(0.546 0.245 262.881)"
+    },
+    "verified-foreground": {
+      "$type": "color",
+      "$value": "oklch(1 0 0)"
+    },
     "border": {
       "$type": "color",
       "$value": "oklch(0.922 0 0)"
@@ -192,6 +200,14 @@
     "destructive-foreground-dark": {
       "$type": "color",
       "$value": "oklch(0.985 0 0)"
+    },
+    "verified-dark": {
+      "$type": "color",
+      "$value": "oklch(0.623 0.214 259.815)"
+    },
+    "verified-foreground-dark": {
+      "$type": "color",
+      "$value": "oklch(1 0 0)"
     },
     "border-dark": {
       "$type": "color",

@@ -17,11 +17,11 @@ import {
 } from './item-verification';
 
 import {
-  canCheckByEmail,
   canRequestVerification,
+  checksByEmail,
+  type ItemVerificationRow,
   type VerifiableItem,
 } from '@/board/item-verification';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -103,7 +103,9 @@ function teamReason(item: VerifiableItem, emailCheckable: boolean): string {
 
 type CodeStep = {
   step: 'code';
-  email: string;
+  /** Null when resumed from the API, which returns only the domain. */
+  email: string | null;
+  domain: string;
   sent: boolean;
   /** When "Resend code" is available again (epoch ms). */
   resendAt: number;
@@ -119,10 +121,37 @@ type Step =
   /** The board team already handles or decided this item. */
   | { step: 'conflict' };
 
+/**
+ * The step the API says the item is at: the code step while an emailed code
+ * can still be typed, the board team when only asking it is allowed, else
+ * the email form.
+ */
+export function initialStep(
+  verification: ItemVerificationRow | null,
+): { step: 'email' } | CodeStep | { step: 'team' } {
+  const check = verification?.emailCheck;
+  if (check) {
+    return {
+      step: 'code',
+      email: null,
+      domain: check.domain,
+      sent: true,
+      resendAt: Date.parse(check.resendAvailableAt),
+      expiresAt: Date.parse(check.codeExpiresAt),
+    };
+  }
+  if (verification?.nextStep === 'team') return { step: 'team' };
+  return { step: 'email' };
+}
+
 /** What the status view says for an item the worker can't act on. */
 function statusText(item: VerifiableItem): string {
   const status = item.verification?.status;
   if (status !== 'pending' && !canRequestVerification(item.verification)) {
+    if (status === 'needs_info') return m.itemVerification_needsInfoText();
+    if (status === 'rejected') return m.itemVerification_rejectedText();
+    if (status === 'unable_to_verify') return m.itemVerification_unableText();
+    if (status === 'revoked') return m.itemVerification_revokedText();
     const label = itemVerificationStatusLabel(item.verification);
     if (label) return label;
   }
@@ -164,7 +193,9 @@ export function ItemVerificationDialog({
   finalFocus: RefObject<HTMLElement | null>;
 }) {
   const router = useRouter();
-  const [state, setState] = useState<Step>({ step: 'email' });
+  const [state, setState] = useState<Step>(() =>
+    initialStep(item.verification),
+  );
   const [address, setAddress] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -178,13 +209,18 @@ export function ItemVerificationDialog({
   const idPrefix = `verify-${item.itemKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const domain = item.emailDomain ?? null;
 
-  // Each open starts over from the first step.
+  // Each open resumes where the API says the item is, or keeps a code
+  // sent from this page while the API still has it. The typed address stays.
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setState({ step: 'email' });
-      setAddress('');
+      const keep =
+        state.step === 'code' &&
+        state.email !== null &&
+        (!item.verification?.nextStep || item.verification.emailCheck);
+      if (!keep) setState(initialStep(item.verification));
+      setNow(Date.now());
       setCode('');
       setError(null);
     }
@@ -194,10 +230,7 @@ export function ItemVerificationDialog({
   // Re-derived each render: an edit that removes the website moves an open
   // dialog to the board team; a status the worker can't act on shows it.
   const emailCheck =
-    item.method === 'email_domain' &&
-    canCheckByEmail(item.verification) &&
-    startEmailCheck &&
-    confirmEmailCode
+    checksByEmail(item) && startEmailCheck && confirmEmailCode
       ? { startEmailCheck, confirmEmailCode }
       : null;
   const view =
@@ -246,12 +279,15 @@ export function ItemVerificationDialog({
         setState({
           step: 'code',
           email: to,
+          domain: result.data.emailDomain,
           sent: result.data.sent,
           resendAt: sentAt + (result.data.retryAfterSeconds ?? 60) * 1000,
           expiresAt: result.data.codeExpiresAt
             ? Date.parse(result.data.codeExpiresAt)
             : null,
         });
+        // Reopening, or reloading, then resumes at the code.
+        void refresh();
       } else if (result.code === NO_DOMAIN) {
         setState({ step: 'team' });
       } else if (result.code === CONFLICT) {
@@ -345,10 +381,6 @@ export function ItemVerificationDialog({
   };
 
   const close = () => onOpenChange(false);
-  const statusLabel = itemVerificationStatusLabel(item.verification);
-  const negative =
-    item.verification?.status === 'rejected' ||
-    item.verification?.status === 'revoked';
 
   const cancelButton = (
     <Button type="button" variant="outline" disabled={pending} onClick={close}>
@@ -380,8 +412,6 @@ export function ItemVerificationDialog({
       <>
         <Header
           item={item}
-          statusLabel={statusLabel}
-          negative={negative}
           description={teamReason(item, emailCheck !== null)}
         />
         {error ? <FieldError>{error}</FieldError> : null}
@@ -408,12 +438,7 @@ export function ItemVerificationDialog({
           void send(email);
         }}
       >
-        <Header
-          item={item}
-          statusLabel={statusLabel}
-          negative={negative}
-          description={m.itemVerification_emailIntro()}
-        />
+        <Header item={item} description={m.itemVerification_emailIntro()} />
         <Field data-invalid={error ? true : undefined} className="gap-1.5">
           <FieldLabel htmlFor={`${idPrefix}-email`}>
             {m.itemVerification_emailLabel()}
@@ -486,9 +511,11 @@ export function ItemVerificationDialog({
       >
         <Header
           item={item}
-          statusLabel={statusLabel}
-          negative={negative}
-          description={`${m.itemVerification_codeIntro({ email: state.email })} ${
+          description={`${
+            state.email
+              ? m.itemVerification_codeIntro({ email: state.email })
+              : m.itemVerification_codeIntroDomain({ domain: state.domain })
+          } ${
             state.sent
               ? m.itemVerification_linkHint()
               : m.itemVerification_alreadySentHint()
@@ -548,11 +575,11 @@ export function ItemVerificationDialog({
             <FieldError className="text-center">{shownError}</FieldError>
           ) : null}
         </Field>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="link"
+            size="inline"
             disabled={pending}
             onClick={() => {
               setError(null);
@@ -564,10 +591,17 @@ export function ItemVerificationDialog({
           </Button>
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
+            variant="link"
+            size="inline"
             disabled={pending || resendIn > 0}
-            onClick={() => void send(state.email)}
+            onClick={() => {
+              // A resumed code names only the domain: ask for the address.
+              if (state.email) void send(state.email);
+              else {
+                setError(null);
+                setState({ step: 'email' });
+              }
+            }}
           >
             {resendIn > 0
               ? m.itemVerification_resendInLabel({ seconds: resendIn })
@@ -600,13 +634,9 @@ export function ItemVerificationDialog({
 
 function Header({
   item,
-  statusLabel,
-  negative,
   description,
 }: {
   item: VerifiableItem;
-  statusLabel: string | null;
-  negative: boolean;
   description: string;
 }) {
   return (
@@ -614,11 +644,6 @@ function Header({
       <DialogTitle className="pe-8">
         {m.itemVerification_actionAriaLabel({ item: item.label })}
       </DialogTitle>
-      {statusLabel ? (
-        <Badge variant={negative ? 'destructive' : 'outline'}>
-          {statusLabel}
-        </Badge>
-      ) : null}
       <DialogDescription>{description}</DialogDescription>
     </DialogHeader>
   );

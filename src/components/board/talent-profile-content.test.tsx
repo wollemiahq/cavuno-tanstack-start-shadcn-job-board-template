@@ -166,6 +166,31 @@ describe('TalentProfileContent', () => {
     expect(screen.getByRole('heading', { name: 'Experience' })).toBeVisible();
   });
 
+  it('marks verified items with the tick beside the title', () => {
+    render(
+      <TalentProfileContent
+        vm={{
+          ...profileVm,
+          experiences: profileVm.experiences.map((item) => ({
+            ...item,
+            verification: { verifiedDomain: 'analytical.example' },
+          })),
+          education: profileVm.education.map((item) => ({
+            ...item,
+            verification: { verifiedDomain: null },
+          })),
+        }}
+        headingAs="h1"
+      />,
+    );
+
+    const workEmail = m.itemVerification_verifiedWorkEmailTooltip();
+    const verified = m.itemVerification_verifiedLabel();
+    expect(screen.getByRole('img', { name: workEmail })).toBeVisible();
+    expect(screen.getByRole('img', { name: verified })).toBeVisible();
+    expect(screen.queryByRole('button', { name: verified })).toBeNull();
+  });
+
   it('renders each field group: contact links in the header, featured work and Details sections', () => {
     const fields = {
       contact: [
