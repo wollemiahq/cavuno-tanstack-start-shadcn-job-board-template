@@ -26,9 +26,11 @@ vi.mock('../content/legal/impressum-availability', () => ({
 const ORIGIN = 'https://jobs.example';
 
 function plansBoard(plans: { purpose: string; kind: string }[]) {
-  const list = vi.fn(async () => ({
+  const list = vi.fn(async (params: { purpose?: string } = {}) => ({
     object: 'list' as const,
-    data: plans,
+    data: params.purpose
+      ? plans.filter((plan) => plan.purpose === params.purpose)
+      : plans,
     hasMore: false,
   }));
   // SAFETY: Plan-sitemap fake — only `plans.list()` is assigned onto the
@@ -212,6 +214,22 @@ describe('hosted-shaped sitemap context', () => {
         // Without candidate plans /pricing repeats /employers.
         expect(urls).not.toContain(`${ORIGIN}/pricing`);
       }
+    });
+
+    it('lists /employers exactly when it has an employer offer, as the footer links it', async () => {
+      for (const plans of [
+        [{ purpose: 'job_posting', kind: 'one_time' }],
+        [{ purpose: 'employer_service', kind: 'quote' }],
+      ]) {
+        expect(await marketingUrls(plansBoard(plans).fake)).toContain(
+          `${ORIGIN}/employers`,
+        );
+      }
+      const urls = await marketingUrls(
+        plansBoard([{ purpose: 'job_seeker', kind: 'subscription' }]).fake,
+        async () => [`${ORIGIN}/employers`],
+      );
+      expect(urls).not.toContain(`${ORIGIN}/employers`);
     });
 
     it('keeps the other entries when the plan read fails', async () => {

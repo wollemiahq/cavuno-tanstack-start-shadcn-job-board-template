@@ -19,7 +19,10 @@ import { COMPANY_JOBS_PREVIEW_COUNT } from '../board/company-jobs-preview';
 import { placeLinkSlug } from '../board/place-link';
 import { TALENT_PLACES_LIMIT } from '../board/talent-places';
 import { impressumHasContent } from '../content/legal/impressum-availability';
-import { hasPaidCandidatePlans } from './candidate-pricing';
+import {
+  hasEmployerOfferPage,
+  hasPaidCandidatePlans,
+} from './candidate-pricing';
 import { boardGlobalReadCache } from './read-cache';
 import { createSettledCache } from './settled-cache';
 
@@ -216,7 +219,9 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
 }
 
 /**
- * Plan pages this starter owns. `/job-seekers` redirects to `/jobs` unless
+ * Plan pages this starter owns. `/employers` always renders, but it is
+ * listed only when it has an offer, the rule under which the footer links
+ * it (otherwise it is an empty state). `/job-seekers` redirects to `/jobs` unless
  * the board sells a paid candidate plan, so it is listed only under the
  * same predicate its route loader uses. `/pricing` always renders, but it
  * compares candidate and employer plans: without paid candidate plans it
@@ -224,28 +229,34 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
  * them, the rule under which both plan pages link it.
  */
 const PLAN_PAGES = [
+  { path: '/employers', isLive: hasEmployerOfferPage },
   { path: '/job-seekers', isLive: hasPaidCandidatePlans },
   { path: '/pricing', isLive: hasPaidCandidatePlans },
 ] as const;
 
 /**
  * The plan pages that serve a page rather than a redirect. Reads the same
- * board-global, edge-cached plan list the root loader's nav gate reads, once
+ * board-global, edge-cached plan lists the root loader's nav gate reads, once
  * per snapshot build (not per sitemap request). A failed read is treated as
  * an empty catalogue, as the nav gate does: it must not take down the
  * sitemap's other buckets.
  */
 async function livePlanPagePaths(board: BoardSdk): Promise<string[]> {
   // Test doubles stub only the namespaces a case touches.
-  const plans = board.plans
-    ? await board.plans
-        .list({}, boardGlobalReadCache())
-        .then((page) => page.data)
-        .catch(() => [])
-    : [];
-  return PLAN_PAGES.filter((page) => page.isLive(plans)).map(
-    (page) => page.path,
-  );
+  const read = (params: { purpose?: 'employer_service' }) =>
+    board.plans
+      ? board.plans
+          .list(params, boardGlobalReadCache())
+          .then((page) => page.data)
+          .catch(() => [])
+      : Promise.resolve([]);
+  const [plans, employerServicePlans] = await Promise.all([
+    read({}),
+    read({ purpose: 'employer_service' }),
+  ]);
+  return PLAN_PAGES.filter((page) =>
+    page.isLive(plans, employerServicePlans),
+  ).map((page) => page.path);
 }
 
 /** Companies per catalog page, the list endpoint's maximum. */
