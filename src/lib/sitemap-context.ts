@@ -144,9 +144,7 @@ async function writePersistentContext(
       new Response(JSON.stringify({ context, expiresAt }), {
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': `public, max-age=${Math.floor(
-            SITEMAP_CONTEXT_TTL_MS / 1_000,
-          )}`,
+          'Cache-Control': `public, max-age=${Math.floor(SITEMAP_CONTEXT_TTL_MS / 1_000)}`,
         },
       }),
     );
@@ -213,14 +211,16 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
 }
 
 /**
- * Plan pages this starter owns. `/pricing` always renders (an empty state
- * when the board has no plans). `/job-seekers` redirects to `/jobs` unless
+ * Plan pages this starter owns. `/job-seekers` redirects to `/jobs` unless
  * the board sells a paid candidate plan, so it is listed only under the
- * same predicate its route loader uses.
+ * same predicate its route loader uses. `/pricing` always renders, but it
+ * compares candidate and employer plans: without paid candidate plans it
+ * repeats `/employers` (which the footer links), so it is listed only with
+ * them, the rule under which both plan pages link it.
  */
 const PLAN_PAGES = [
   { path: '/job-seekers', isLive: hasPaidCandidatePlans },
-  { path: '/pricing', isLive: () => true },
+  { path: '/pricing', isLive: hasPaidCandidatePlans },
 ] as const;
 
 /**
@@ -280,8 +280,8 @@ function withLocalMarketingPages(
 ): SitemapEntry[] {
   if (bucket !== 'marketing') return entries;
   // `/impressum` is listed exactly when the operator has written one
-  // (`impressumHasContent`), and each plan page exactly when its route serves
-  // it (`PLAN_PAGES`). Whatever the SDK or the published sitemap says about
+  // (`impressumHasContent`), and each plan page exactly when `PLAN_PAGES`
+  // says it is live. Whatever the SDK or the published sitemap says about
   // those pages is dropped when they are not live.
   const impressumPaths = impressumHasContent() ? [BOARD_PATHS.impressum] : [];
   const ownedPaths = [

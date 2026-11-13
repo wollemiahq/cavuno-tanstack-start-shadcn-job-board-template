@@ -682,7 +682,9 @@ describe('employer entry surfaces', () => {
     );
     fireEvent.change(
       screen.getByLabelText(m.employerOnboarding_searchPlaceholder()),
-      { target: { value: 'Acme' } },
+      {
+        target: { value: 'Acme' },
+      },
     );
     await act(() => vi.advanceTimersByTimeAsync(250));
     fireEvent.click(
@@ -695,7 +697,9 @@ describe('employer entry surfaces', () => {
     });
     fireEvent.change(
       within(dialog).getByLabelText(m.employerDashboard_nameLabel()),
-      { target: { value: 'Acme Ventures' } },
+      {
+        target: { value: 'Acme Ventures' },
+      },
     );
     fireEvent.click(
       within(dialog).getByRole('button', {
@@ -978,7 +982,9 @@ describe('employer entry surfaces', () => {
     );
     fireEvent.change(
       screen.getByLabelText(m.employerDashboard_workEmailLabel()),
-      { target: { value: 'owner@gmail.test' } },
+      {
+        target: { value: 'owner@gmail.test' },
+      },
     );
     fireEvent.click(
       screen.getByRole('button', {
@@ -1022,7 +1028,9 @@ describe('employer entry surfaces', () => {
     );
     fireEvent.change(
       screen.getByLabelText(m.employerDashboard_workEmailLabel()),
-      { target: { value: 'owner@gmail.test' } },
+      {
+        target: { value: 'owner@gmail.test' },
+      },
     );
     fireEvent.click(
       screen.getByRole('button', {
@@ -1125,6 +1133,12 @@ it('lists candidate benefits at the exact monthly price and links to candidate c
       name: m.employerLanding_subscribeLabel(),
     }),
   ).toHaveAttribute('href', '/account/access');
+  // A paid candidate plan puts `/pricing` in the sitemap, so it is linked.
+  expect(
+    screen.getByRole('link', {
+      name: m.employerLanding_compareAllPlansLabel(),
+    }),
+  ).toHaveAttribute('href', '/pricing');
   expect(
     screen.queryByText(m.employerLanding_featureListingDuration({ days: 30 })),
   ).not.toBeInTheDocument();

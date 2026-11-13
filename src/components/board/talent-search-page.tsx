@@ -118,6 +118,7 @@ export function TalentSearchPage({
   startAd,
   endAd,
   ads = ADS_OFF,
+  browseLocationsHref,
   profileUnlocks = false,
   placeRadius = null,
   distanceUnit = null,
@@ -148,6 +149,11 @@ export function TalentSearchPage({
   startAd?: AdPlacement;
   endAd?: AdPlacement;
   ads?: BoardAdsConfig;
+  /**
+   * The talent places directory, linked under the results when the directory
+   * is public (it is otherwise linked from the footer only).
+   */
+  browseLocationsHref?: string;
   profileUnlocks?: boolean;
   /**
    * The distance control of a city or locality `place` search; it replaces
@@ -808,6 +814,17 @@ export function TalentSearchPage({
                       onPageChange={onPageChange}
                     />
                   )}
+                  {browseLocationsHref ? (
+                    <Link
+                      to={browseLocationsHref}
+                      className={buttonVariants({
+                        variant: 'link',
+                        size: 'sm',
+                      })}
+                    >
+                      {m.talentSearch_browseLocationsLabel()}
+                    </Link>
+                  ) : null}
                 </SearchResultsList>
               }
               detail={

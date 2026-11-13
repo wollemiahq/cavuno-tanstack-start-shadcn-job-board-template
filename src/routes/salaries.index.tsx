@@ -107,21 +107,25 @@ function SalariesHub() {
           <HubSection
             title={crumbs.companies}
             seeAll={BOARD_PATHS.salaryCompanies}
+            seeAllLabel={m.salaryHub_seeAllCompaniesLabel()}
             items={companyItems}
           />
           <HubSection
             title={crumbs.titles}
             seeAll={BOARD_PATHS.salaryTitles}
+            seeAllLabel={m.salaryHub_seeAllTitlesLabel()}
             items={titleItems}
           />
           <HubSection
             title={crumbs.skills}
             seeAll={BOARD_PATHS.salarySkills}
+            seeAllLabel={m.salaryHub_seeAllSkillsLabel()}
             items={skillItems}
           />
           <HubSection
             title={crumbs.locations}
             seeAll={BOARD_PATHS.salaryLocations}
+            seeAllLabel={m.salaryHub_seeAllLocationsLabel()}
             items={locationItems}
           />
         </>
@@ -138,10 +142,13 @@ function SalariesHub() {
 function HubSection({
   title,
   seeAll,
+  seeAllLabel,
   items,
 }: {
   title: string;
   seeAll: string;
+  /** Names the list it opens: a bare "See all" tells crawlers nothing. */
+  seeAllLabel: string;
   items: RailItem[];
 }) {
   if (items.length === 0) return null;
@@ -153,7 +160,7 @@ function HubSection({
           to={seeAll}
           className={buttonVariants({ variant: 'link', size: 'sm' })}
         >
-          {m.salaryHub_seeAllLabel()}
+          {seeAllLabel}
         </Link>
       }
     >

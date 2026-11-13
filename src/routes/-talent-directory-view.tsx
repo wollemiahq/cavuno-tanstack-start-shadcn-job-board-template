@@ -1,3 +1,4 @@
+import { BOARD_PATHS } from '@cavuno/board/paths';
 /**
  * The talent directory screen shared by `/talent` and the talent location
  * pages (`/talent/locations/$location`): the restricted gate, or the search
@@ -118,6 +119,9 @@ export function TalentDirectoryView({
   return (
     <TalentSearchPage
       ads={board.ads}
+      // Restricted viewers returned above, so this viewer can open the
+      // places directory too.
+      browseLocationsHref={BOARD_PATHS.talentLocations}
       heading={heading}
       search={search}
       customFilterFields={customFilterFields}
