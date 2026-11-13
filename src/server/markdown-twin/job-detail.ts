@@ -12,7 +12,6 @@
  * for the URL, else 404s.
  */
 import {
-  isBoardApiError,
   isNotFound,
   type PublicBoard,
   type PublicJob,
@@ -25,21 +24,28 @@ import {
   type JobDetailVM,
 } from '../../board/job-detail-view-model';
 import { readBoardContext } from '../../lib/board-context-cache';
-import { localizePath } from '../../lib/localized-path';
-import {
-  markdownPathFor,
-  resolveMarkdownTwin,
-  type MarkdownTwin,
-} from '../../lib/markdown-twin/routes';
 import { jobTitleAtCompany } from '../../lib/page-title';
 import { selfUrl } from '../../lib/self-url';
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
 import { getJobDetailPage } from '../job-detail-page';
 import { getSimilarJobs, resolveRedirect } from '../queries';
-import { escapeInline, htmlToMarkdown, link, markdownDocument } from './format';
+import {
+  bulletList,
+  escapeInline,
+  htmlToMarkdown,
+  link,
+  markdownDocument,
+  section,
+} from './format';
+import {
+  managedRedirectTwin,
+  twinRedirect,
+  type ResolveRedirect,
+} from './managed-redirect';
 
 import type { JobFormLayoutSource } from '../../board/form-layout';
+import type { MarkdownTwin } from '../../lib/markdown-twin/routes';
 import type { MarkdownTwinResult } from './result';
 
 type JobSlugInput = { data: { jobSlug: string } };
@@ -52,9 +58,7 @@ export type JobTwinDependencies = {
     head: { links: ReadonlyArray<{ rel: string; href: string }> };
   }>;
   getSimilarJobs: (input: JobSlugInput) => Promise<{ data: PublicJobCard[] }>;
-  resolveRedirect: (input: {
-    data: { path: string };
-  }) => Promise<{ target: string | null }>;
+  resolveRedirect: ResolveRedirect;
   readBoardContext: () => Promise<
     Pick<PublicBoard, 'language' | 'customFields'> & JobFormLayoutSource
   >;
@@ -71,15 +75,6 @@ type JobDetailFacts = Pick<
   JobDetailVM,
   'facts' | 'customFields' | 'categoryChips' | 'skillChips'
 >;
-
-function bulletList(items: ReadonlyArray<string | null>): string | null {
-  const lines = items.filter((item) => item !== null);
-  return lines.length > 0 ? lines.map((line) => `- ${line}`).join('\n') : null;
-}
-
-function section(heading: string, body: string | null): string | null {
-  return body ? `## ${escapeInline(heading)}\n\n${body}` : null;
-}
 
 /** One custom-field answer as inline Markdown; rich text is a block. */
 function fieldValue(
@@ -164,47 +159,6 @@ function similarSection(
   );
 }
 
-/** The configured redirect for a missing job's URL, as a twin result. */
-async function missingJob(
-  twin: MarkdownTwin,
-  origin: string,
-  resolve: JobTwinDependencies['resolveRedirect'],
-): Promise<MarkdownTwinResult> {
-  let target: string | null;
-  try {
-    ({ target } = await resolve({
-      data: { path: decodedPath(twin.htmlPath) },
-    }));
-  } catch (error) {
-    // A refused lookup is not a page either way (see the catch-all loader).
-    if (isBoardApiError(error) && error.status === 403) {
-      return { type: 'notFound' };
-    }
-    throw error;
-  }
-  if (!target) return { type: 'notFound' };
-  // A target with a twin of its own keeps the reader on Markdown.
-  const targetUrl = new URL(target, origin);
-  if (targetUrl.origin === new URL(origin).origin) {
-    const twinUrl = new URL(markdownPathFor(targetUrl.pathname), targetUrl);
-    if (resolveMarkdownTwin({ method: 'GET', url: twinUrl.href })) {
-      return {
-        type: 'redirect',
-        location: twinUrl.pathname + targetUrl.search,
-      };
-    }
-  }
-  return { type: 'redirect', location: target };
-}
-
-function decodedPath(path: string): string {
-  try {
-    return decodeURI(path);
-  } catch {
-    return path;
-  }
-}
-
 export async function buildJobTwin(
   twin: MarkdownTwin,
   origin: string,
@@ -220,19 +174,14 @@ export async function buildJobTwin(
     page = await dependencies.getJobDetailPage({ data: { jobSlug } });
   } catch (error) {
     if (isNotFound(error)) {
-      return missingJob(twin, origin, dependencies.resolveRedirect);
+      return managedRedirectTwin(twin, origin, dependencies.resolveRedirect);
     }
     throw error;
   }
   const { job } = page;
   const actualCompanySlug = job.company?.slug;
   if (actualCompanySlug && job.slug && actualCompanySlug !== companySlug) {
-    return {
-      type: 'redirect',
-      location: markdownPathFor(
-        localizePath(jobDetailPath(actualCompanySlug, job.slug)),
-      ),
-    };
+    return twinRedirect(jobDetailPath(actualCompanySlug, job.slug));
   }
 
   const board = await dependencies.readBoardContext();

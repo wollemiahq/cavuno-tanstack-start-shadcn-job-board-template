@@ -5,9 +5,9 @@ import { PROGRAMMATIC_JOBS_PAGE_SIZE } from './-programmatic-jobs-constants';
 
 import {
   jobsListingLoaderDeps,
+  listingPageInput,
   type LocationJobsSearch,
 } from '@/lib/jobs-search';
-import { pageToOffset } from '@/lib/pagination';
 import {
   getJobsCategoryPage,
   getJobsLocationCategoryPage,
@@ -36,13 +36,7 @@ export function createJobsCategoryLoader(
     const result = await loadPage({
       data: {
         categorySlug: params.keyword,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        customEmploymentType: deps.customEmploymentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+        ...listingPageInput(deps, PROGRAMMATIC_JOBS_PAGE_SIZE),
       },
     });
     if (result.kind === 'not_found')
@@ -76,13 +70,7 @@ export function createJobsLocationCategoryLoader(
         locationSlug: params.location,
         categorySlug: params.keyword,
         within: deps.within,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        customEmploymentType: deps.customEmploymentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+        ...listingPageInput(deps, PROGRAMMATIC_JOBS_PAGE_SIZE),
       },
     });
     if (result.kind === 'not_found')
@@ -116,13 +104,7 @@ export function createJobsLocationLoader(
         locationSlug: params.location,
         within: deps.within,
         q: deps.q,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        customEmploymentType: deps.customEmploymentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+        ...listingPageInput(deps, PROGRAMMATIC_JOBS_PAGE_SIZE),
       },
     });
     if (result.kind === 'not_found')
@@ -156,13 +138,7 @@ export function createJobsLocationSkillLoader(
         locationSlug: params.location,
         skillSlug: params.skill,
         within: deps.within,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        customEmploymentType: deps.customEmploymentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+        ...listingPageInput(deps, PROGRAMMATIC_JOBS_PAGE_SIZE),
       },
     });
     if (result.kind === 'not_found')
@@ -194,13 +170,7 @@ export function createJobsSkillLoader(
     const result = await loadPage({
       data: {
         skillSlug: params.skill,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        customEmploymentType: deps.customEmploymentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        offset: pageToOffset(deps.page ?? 1, PROGRAMMATIC_JOBS_PAGE_SIZE),
-        limit: PROGRAMMATIC_JOBS_PAGE_SIZE,
+        ...listingPageInput(deps, PROGRAMMATIC_JOBS_PAGE_SIZE),
       },
     });
     if (result.kind === 'not_found')

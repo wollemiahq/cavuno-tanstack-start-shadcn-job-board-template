@@ -41,3 +41,14 @@ export function markdownDocument(
 ): string {
   return `${blocks.filter(Boolean).join('\n\n')}\n`;
 }
+
+/** A bullet list of the present items, or null when there are none. */
+export function bulletList(items: ReadonlyArray<string | null>): string | null {
+  const lines = items.filter((item) => item !== null);
+  return lines.length > 0 ? lines.map((line) => `- ${line}`).join('\n') : null;
+}
+
+/** A `##` section, or null when it has no body. */
+export function section(heading: string, body: string | null): string | null {
+  return body ? `## ${escapeInline(heading)}\n\n${body}` : null;
+}

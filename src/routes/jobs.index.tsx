@@ -10,18 +10,15 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import {
+  jobsIndexPageInput,
   jobsListingLoaderDeps,
   parseJobsIndexSearch,
 } from '../lib/jobs-search';
-import { pageToOffset } from '../lib/pagination';
 import { getJobsIndexPage } from '../server/jobs-listing-pages';
 import { JobsPage } from './-jobs-page';
 
 import { jsonLdHeadScripts } from '@/components/json-ld';
-import { customFieldRequestSearch } from '@/lib/custom-field-filters';
 import { workArrangementRedirect } from '@/lib/work-arrangement';
-
-const JOBS_PAGE_SIZE = 20;
 
 export const Route = createFileRoute('/jobs/')({
   // Full-bleed: the page opens with the gray hero band and owns its own
@@ -35,22 +32,7 @@ export const Route = createFileRoute('/jobs/')({
     if (target) throw redirect({ ...target, statusCode: 308 });
   },
   loaderDeps: ({ search }) => jobsListingLoaderDeps(search),
-  loader: async ({ deps }) => {
-    const offset = pageToOffset(deps.page ?? 1, JOBS_PAGE_SIZE);
-    return getJobsIndexPage({
-      data: {
-        q: deps.q,
-        remoteOption: deps.remoteOption,
-        employmentType: deps.employmentType,
-        customEmploymentType: deps.customEmploymentType,
-        seniority: deps.seniority,
-        sort: deps.sort,
-        customFields: customFieldRequestSearch(deps),
-        offset,
-        limit: JOBS_PAGE_SIZE,
-      },
-    });
-  },
+  loader: ({ deps }) => getJobsIndexPage({ data: jobsIndexPageInput(deps) }),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }

@@ -5,11 +5,13 @@ import {
 
 import { parseSearchRadiusWithin } from '@/board/search-radius';
 import {
+  customFieldRequestSearch,
   parseCustomFieldSearch,
   type CustomFieldSearch,
 } from '@/lib/custom-field-filters';
 import {
   pageSearchValue,
+  pageToOffset,
   parsePageParam,
   searchQueryString,
   searchString,
@@ -107,4 +109,34 @@ export function jobsListingLoaderDeps<T extends JobsSearch>(
 ): Omit<T, 'selectedJob'> {
   const { selectedJob: _selectedJob, ...listing } = search;
   return listing;
+}
+
+/**
+ * The filter, sort and page slice a jobs listing loader sends its page
+ * server function; the Markdown twins send the same.
+ */
+export function listingPageInput(search: JobsSearch, pageSize: number) {
+  return {
+    remoteOption: search.remoteOption,
+    employmentType: search.employmentType,
+    customEmploymentType: search.customEmploymentType,
+    seniority: search.seniority,
+    sort: search.sort,
+    offset: pageToOffset(search.page ?? 1, pageSize),
+    limit: pageSize,
+  };
+}
+
+/** Jobs per page on `/jobs`. */
+export const JOBS_INDEX_PAGE_SIZE = 20;
+
+/** What the `/jobs` loader sends its page server function. */
+export function jobsIndexPageInput(
+  search: Omit<JobsIndexSearch, 'selectedJob'>,
+) {
+  return {
+    q: search.q,
+    ...listingPageInput(search, JOBS_INDEX_PAGE_SIZE),
+    customFields: customFieldRequestSearch(search),
+  };
 }

@@ -33,6 +33,20 @@ export const MARKDOWN_TWIN_ROUTE = '/markdown-twin';
 
 /** The pages with a twin: canonical route template and builder kind. */
 export const MARKDOWN_TWIN_PAGES = [
+  { kind: 'home', template: '/' },
+  { kind: 'jobs', template: '/jobs/' },
+  { kind: 'jobsCategory', template: '/jobs/$keyword' },
+  { kind: 'jobsSkill', template: '/jobs/skills/$skill' },
+  { kind: 'jobsLocations', template: '/jobs/locations/' },
+  { kind: 'jobsLocation', template: '/jobs/locations/$location/' },
+  {
+    kind: 'jobsLocationCategory',
+    template: '/jobs/locations/$location/$keyword',
+  },
+  {
+    kind: 'jobsLocationSkill',
+    template: '/jobs/locations/$location/skills/$skill',
+  },
   { kind: 'job', template: '/companies/$companySlug/jobs/$jobSlug' },
 ] as const satisfies readonly {
   kind: string;
@@ -49,6 +63,8 @@ export interface MarkdownTwin {
   htmlPath: string;
   /** The twin's path as requested (`htmlPath` plus `.md`). */
   twinPath: string;
+  /** The request's query string (`?page=2`), or `''`. */
+  search: string;
 }
 
 /** The twin path for a localized page path: `/` is `/index.md`. */
@@ -64,10 +80,11 @@ export function markdownPathFor(
   return `${path}${MARKDOWN_SUFFIX}`;
 }
 
-/** The page path behind a twin path, or null when it is not one. */
-function htmlPathFor(
+/** The page path behind a twin path (`/index.md` is `/`), or null when
+ * it is not one. */
+export function markdownTwinPagePath(
   twinPath: string,
-  routing: LocaleRouting | undefined,
+  routing?: LocaleRouting,
 ): string | null {
   if (!twinPath.endsWith(MARKDOWN_SUFFIX)) return null;
   const path = twinPath.slice(0, -MARKDOWN_SUFFIX.length);
@@ -93,21 +110,24 @@ function decodeSegment(segment: string): string | null {
 function matchTemplate(
   template: string,
   segments: readonly string[],
-): Record<string, string> | null {
+): { params: Record<string, string>; staticSegments: number } | null {
   const parts = template.split('/').filter(Boolean);
   if (parts.length !== segments.length) return null;
   const params: Record<string, string> = {};
+  let staticSegments = 0;
   for (const [index, part] of parts.entries()) {
     const segment = segments[index]!;
     if (part.startsWith('$')) {
       const value = decodeSegment(segment);
       if (value === null) return null;
       params[part.slice(1)] = value;
-    } else if (part !== segment) {
+    } else if (part === segment) {
+      staticSegments += 1;
+    } else {
       return null;
     }
   }
-  return params;
+  return { params, staticSegments };
 }
 
 /** The twin a GET or HEAD request asks for by its `.md` URL, or null. */
@@ -116,18 +136,34 @@ export function resolveMarkdownTwin(
   routing?: LocaleRouting,
 ): MarkdownTwin | null {
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
-  const twinPath = new URL(request.url).pathname;
+  const url = new URL(request.url);
+  const twinPath = url.pathname;
   if (twinPath.startsWith('//')) return null;
-  const htmlPath = htmlPathFor(twinPath, routing);
+  const htmlPath = markdownTwinPagePath(twinPath, routing);
   if (htmlPath === null || isMachinePath(htmlPath, routing)) return null;
   const segments = canonicalPathname(htmlPath, routing)
     .split('/')
     .filter(Boolean);
+  // Like the router, a static segment beats a param: `/jobs/locations`
+  // is the locations directory, not a category called "locations".
+  let best: { twin: MarkdownTwin; staticSegments: number } | null = null;
   for (const page of MARKDOWN_TWIN_PAGES) {
-    const params = matchTemplate(page.template, segments);
-    if (params) return { kind: page.kind, params, htmlPath, twinPath };
+    const match = matchTemplate(page.template, segments);
+    if (!match || (best && best.staticSegments >= match.staticSegments)) {
+      continue;
+    }
+    best = {
+      twin: {
+        kind: page.kind,
+        params: match.params,
+        htmlPath,
+        twinPath,
+        search: url.search,
+      },
+      staticSegments: match.staticSegments,
+    };
   }
-  return null;
+  return best?.twin ?? null;
 }
 
 /**
