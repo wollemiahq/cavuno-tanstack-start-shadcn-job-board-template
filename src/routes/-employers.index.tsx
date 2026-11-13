@@ -1,21 +1,26 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from 'react';
 
-import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Link } from '@tanstack/react-router';
+import { Check } from 'lucide-react';
 
-import { m } from "../paraglide/messages";
-import { getLocale } from "../paraglide/runtime";
+import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 
-import { candidatePlanBenefits } from "@/board/candidate-plan-benefits";
+import { candidatePlanBenefits } from '@/board/candidate-plan-benefits';
 import {
   configuredMembershipCapacitySentence,
   customAttributeLines,
   planBenefitLines,
-} from "@/board/plan-benefits";
-import { planDescription, planName } from "@/board/plan-labels";
-import { Page, PageContent, PageHeader, PageSection } from "@/components/layout/page";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+} from '@/board/plan-benefits';
+import { planDescription, planName } from '@/board/plan-labels';
+import {
+  Page,
+  PageContent,
+  PageHeader,
+  PageSection,
+} from '@/components/layout/page';
+import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardAction,
@@ -24,11 +29,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { hasPaidCandidatePlans } from "@/lib/candidate-pricing";
-import { cn } from "@/lib/utils";
-import type { Plan } from "@cavuno/board";
+} from '@/components/ui/card';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { hasPaidCandidatePlans } from '@/lib/candidate-pricing';
+import { cn } from '@/lib/utils';
+import type { Plan } from '@cavuno/board';
 
 export type EmployersPageViewDependencies = {
   postingPlanLink: (input: {
@@ -37,11 +47,17 @@ export type EmployersPageViewDependencies = {
     children: ReactNode;
   }) => ReactElement;
   joinLink: (input: { className: string; children: ReactNode }) => ReactElement;
-  membershipLink?: (input: { className: string; children: ReactNode }) => ReactElement;
-  talentPlanLink?: (input: { className: string; children: ReactNode }) => ReactElement;
+  membershipLink?: (input: {
+    className: string;
+    children: ReactNode;
+  }) => ReactElement;
+  talentPlanLink?: (input: {
+    className: string;
+    children: ReactNode;
+  }) => ReactElement;
   talentPlanAction?: (input: {
     planId: string;
-    planKind: Plan["kind"];
+    planKind: Plan['kind'];
     className: string;
     children: ReactNode;
   }) => ReactElement;
@@ -54,7 +70,11 @@ const employersPageViewDependencies: EmployersPageViewDependencies = {
     </Link>
   ),
   joinLink: ({ className, children }) => (
-    <Link to="/auth/join" search={{ returnTo: "/employers" }} className={className}>
+    <Link
+      to="/auth/join"
+      search={{ returnTo: '/employers' }}
+      className={className}
+    >
       {children}
     </Link>
   ),
@@ -70,28 +90,29 @@ const employersPageViewDependencies: EmployersPageViewDependencies = {
   ),
 };
 
-function formatPrice(price: Plan["price"]): string {
+function formatPrice(price: Plan['price']): string {
   if (!price) return m.employerLanding_freeLabel();
   // Chrome-locale figure inside chrome-locale sentences (same rule as the
   // salary FAQ): the price agrees with the copy around it.
   return new Intl.NumberFormat(getLocale(), {
-    style: "currency",
+    style: 'currency',
     currency: price.currency.toUpperCase(),
     minimumFractionDigits: price.amountCents % 100 === 0 ? 0 : 2,
   }).format(price.amountCents / 100);
 }
 
-const intervalSuffix = (interval: Plan["billingInterval"]) =>
-  interval === "month"
+const intervalSuffix = (interval: Plan['billingInterval']) =>
+  interval === 'month'
     ? m.employerLanding_perMonthSuffix()
-    : interval === "year"
+    : interval === 'year'
       ? m.employerLanding_perYearSuffix()
-      : "";
+      : '';
 
 function planFeatures(plan: Plan) {
-  if (plan.purpose === "job_seeker") return candidatePlanBenefits(plan);
-  if (plan.purpose === "membership") return planBenefitLines(plan);
-  const grantsListings = plan.purpose !== "talent_access" && plan.featureSummary.maxActiveJobs > 0;
+  if (plan.purpose === 'job_seeker') return candidatePlanBenefits(plan);
+  if (plan.purpose === 'membership') return planBenefitLines(plan);
+  const grantsListings =
+    plan.purpose !== 'talent_access' && plan.featureSummary.maxActiveJobs > 0;
   return [
     grantsListings
       ? m.employerLanding_featureActiveJobs({
@@ -104,7 +125,8 @@ function planFeatures(plan: Plan) {
           days: plan.featureSummary.durationDays,
         })
       : null,
-    grantsListings && plan.features?.["jobs.featured_slots"]?.value === "unlimited"
+    grantsListings &&
+    plan.features?.['jobs.featured_slots']?.value === 'unlimited'
       ? m.employerCompany_featuredUnlimitedText()
       : grantsListings && plan.featureSummary.featuredSlots > 0
         ? m.employerLanding_featureFeaturedSlots({
@@ -147,7 +169,7 @@ function FeatureList({ features }: { features: string[] }) {
  * "Free" for an enterprise tier.
  */
 function PlanPrice({ plan }: { plan: Plan }) {
-  if (plan.pricingMode === "contact") {
+  if (plan.pricingMode === 'contact') {
     return (
       <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
         {plan.priceText?.trim() || m.memberships_contactPriceFallback()}
@@ -156,8 +178,10 @@ function PlanPrice({ plan }: { plan: Plan }) {
   }
   return (
     <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
-      {plan.kind === "free" ? m.employerLanding_freeLabel() : formatPrice(plan.price)}
-      {plan.kind !== "free" && plan.price ? (
+      {plan.kind === 'free'
+        ? m.employerLanding_freeLabel()
+        : formatPrice(plan.price)}
+      {plan.kind !== 'free' && plan.price ? (
         <span className="text-muted-foreground ms-1 text-sm font-normal">
           {intervalSuffix(plan.billingInterval)}
         </span>
@@ -173,28 +197,32 @@ function PlanCard({
   plan: Plan;
   dependencies: EmployersPageViewDependencies;
 }) {
-  const contact = plan.pricingMode === "contact";
+  const contact = plan.pricingMode === 'contact';
   const membershipCapacity =
-    plan.purpose === "membership" ? configuredMembershipCapacitySentence(plan) : null;
+    plan.purpose === 'membership'
+      ? configuredMembershipCapacitySentence(plan)
+      : null;
   const actionLabel = plan.invoiceOnly
     ? m.employerLanding_requestInvoiceLabel()
-    : plan.purpose === "job_posting"
+    : plan.purpose === 'job_posting'
       ? // A posting plan (free or one-off) is a job post, not a subscription.
         m.siteHeader_postJobLabel()
       : m.employerLanding_subscribeLabel();
   const actionClassName = cn(
     buttonVariants({
-      variant: plan.isRecommended ? "default" : "outline",
+      variant: plan.isRecommended ? 'default' : 'outline',
     }),
-    "w-full",
+    'w-full',
   );
 
   return (
-    <Card className={cn("h-full", plan.isRecommended && "ring-primary ring-2")}>
+    <Card className={cn('h-full', plan.isRecommended && 'ring-primary ring-2')}>
       <CardHeader>
         <CardTitle>{planName(plan)}</CardTitle>
         {planDescription(plan) ? (
-          <CardDescription className="whitespace-pre-line">{planDescription(plan)}</CardDescription>
+          <CardDescription className="whitespace-pre-line">
+            {planDescription(plan)}
+          </CardDescription>
         ) : null}
         {plan.isRecommended ? (
           <CardAction>
@@ -204,7 +232,9 @@ function PlanCard({
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-5">
         <PlanPrice plan={plan} />
-        <FeatureList features={contact ? planBenefitLines(plan) : planFeatures(plan)} />
+        <FeatureList
+          features={contact ? planBenefitLines(plan) : planFeatures(plan)}
+        />
         {membershipCapacity ? (
           <p className="text-foreground text-sm">{membershipCapacity}</p>
         ) : null}
@@ -216,34 +246,35 @@ function PlanCard({
           plan.ctaDestination ? (
             <a
               href={plan.ctaDestination}
-              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+              className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
             >
               {plan.ctaText?.trim() || m.memberships_contactCtaFallback()}
             </a>
           ) : null
-        ) : plan.purpose === "job_seeker" ? (
+        ) : plan.purpose === 'job_seeker' ? (
           <Link to="/account/access" className={actionClassName}>
             {m.employerLanding_subscribeLabel()}
           </Link>
-        ) : plan.purpose === "membership" ? (
+        ) : plan.purpose === 'membership' ? (
           (dependencies.membershipLink?.({
             className: actionClassName,
             children: m.memberships_joinLabel(),
           }) ?? null)
-        ) : plan.purpose === "job_posting" ? (
+        ) : plan.purpose === 'job_posting' ? (
           dependencies.postingPlanLink({
             planId: plan.id,
             className: actionClassName,
             children: actionLabel,
           })
-        ) : plan.purpose === "talent_access" && dependencies.talentPlanAction ? (
+        ) : plan.purpose === 'talent_access' &&
+          dependencies.talentPlanAction ? (
           dependencies.talentPlanAction({
             planId: plan.id,
             planKind: plan.kind,
             className: actionClassName,
             children: actionLabel,
           })
-        ) : plan.purpose === "talent_access" ? (
+        ) : plan.purpose === 'talent_access' ? (
           (dependencies.talentPlanLink?.({
             className: actionClassName,
             children: actionLabel,
@@ -284,18 +315,18 @@ function CandidateBenefits({ plans }: { plans: Plan[] }) {
   const enabled = new Set(
     plans.flatMap((plan) =>
       Object.entries(plan.features ?? {}).flatMap(([key, feature]) =>
-        feature.value === "true" ? [key] : [],
+        feature.value === 'true' ? [key] : [],
       ),
     ),
   );
   const cards = [
-    enabled.has("job_seeker.matches")
+    enabled.has('job_seeker.matches')
       ? {
           title: m.candidateLanding_matchesTitle(),
           description: m.candidateLanding_matchesDescription(),
         }
       : null,
-    enabled.has("job_seeker.job_alerts")
+    enabled.has('job_seeker.job_alerts')
       ? {
           title: m.candidateLanding_alertsTitle(),
           description: m.candidateLanding_alertsDescription(),
@@ -313,7 +344,9 @@ function CandidateBenefits({ plans }: { plans: Plan[] }) {
             <CardHeader>
               <CardTitle>{card.title}</CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground text-sm">{card.description}</CardContent>
+            <CardContent className="text-muted-foreground text-sm">
+              {card.description}
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -327,7 +360,7 @@ export function EmployersPageView({
   seo,
   dependencies = employersPageViewDependencies,
   billingAction,
-  audience = "employers",
+  audience = 'employers',
   title,
   description,
   candidateIntro = false,
@@ -348,17 +381,17 @@ export function EmployersPageView({
    * plan group, where a posting-only subscriber never saw it.
    */
   billingAction?: ReactNode;
-  audience?: "employers" | "candidates" | "all";
+  audience?: 'employers' | 'candidates' | 'all';
   title?: string;
   description?: string;
   candidateIntro?: boolean;
 }) {
-  const candidatePlans = plans.filter((plan) => plan.purpose === "job_seeker");
-  const jobPosting = plans.filter((plan) => plan.purpose === "job_posting");
-  const talentAccess = plans.filter((plan) => plan.purpose === "talent_access");
-  const memberships = plans.filter((plan) => plan.purpose === "membership");
-  const showCandidates = audience !== "employers";
-  const showEmployers = audience !== "candidates";
+  const candidatePlans = plans.filter((plan) => plan.purpose === 'job_seeker');
+  const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
+  const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
+  const memberships = plans.filter((plan) => plan.purpose === 'membership');
+  const showCandidates = audience !== 'employers';
+  const showEmployers = audience !== 'candidates';
   const empty =
     (!showCandidates || candidatePlans.length === 0) &&
     (!showEmployers ||
@@ -366,11 +399,12 @@ export function EmployersPageView({
         talentAccess.length === 0 &&
         contactPlans.length === 0 &&
         memberships.length === 0));
-  const pageDescription = description ?? m.employerLanding_subtitle({ boardName: seo.boardName });
+  const pageDescription =
+    description ?? m.employerLanding_subtitle({ boardName: seo.boardName });
   // The one-audience pages link `/pricing` exactly when the sitemap lists
   // it: when the board sells paid candidate plans (otherwise it repeats
   // `/employers`).
-  const linksPricing = audience !== "all" && hasPaidCandidatePlans(plans);
+  const linksPricing = audience !== 'all' && hasPaidCandidatePlans(plans);
 
   return (
     <Page width="wide">
@@ -387,8 +421,8 @@ export function EmployersPageView({
                   </Link>
                   <Link
                     to="/auth/sign-up"
-                    search={{ returnTo: "/account" }}
-                    className={buttonVariants({ variant: "outline" })}
+                    search={{ returnTo: '/account' }}
+                    className={buttonVariants({ variant: 'outline' })}
                   >
                     {m.candidateLanding_signUpAction()}
                   </Link>
@@ -444,7 +478,10 @@ export function EmployersPageView({
               </>
             ) : null}
             {linksPricing ? (
-              <Link to="/pricing" className={buttonVariants({ variant: "link" })}>
+              <Link
+                to="/pricing"
+                className={buttonVariants({ variant: 'link' })}
+              >
                 {m.employerLanding_compareAllPlansLabel()}
               </Link>
             ) : null}

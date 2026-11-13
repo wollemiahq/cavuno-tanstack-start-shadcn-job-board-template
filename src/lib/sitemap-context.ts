@@ -1,4 +1,4 @@
-import { BOARD_PATHS, talentLocationPath } from "@cavuno/board/paths";
+import { BOARD_PATHS, talentLocationPath } from '@cavuno/board/paths';
 import {
   MIN_JOBS_PER_INDEXED_PAGE,
   SITEMAP_CHUNK_SIZE,
@@ -9,17 +9,17 @@ import {
   type SitemapBucket,
   type SitemapIndexEntry,
   type SitemapUrlEntry,
-} from "@cavuno/board/sitemap";
+} from '@cavuno/board/sitemap';
 
-import { placeLinkSlug } from "../board/place-link";
-import { TALENT_PLACES_LIMIT } from "../board/talent-places";
-import { impressumHasContent } from "../content/legal/impressum-availability";
-import { hasPaidCandidatePlans } from "./candidate-pricing";
-import { boardGlobalReadCache } from "./read-cache";
-import { createSettledCache } from "./settled-cache";
+import { placeLinkSlug } from '../board/place-link';
+import { TALENT_PLACES_LIMIT } from '../board/talent-places';
+import { impressumHasContent } from '../content/legal/impressum-availability';
+import { hasPaidCandidatePlans } from './candidate-pricing';
+import { boardGlobalReadCache } from './read-cache';
+import { createSettledCache } from './settled-cache';
 
-import type { SettledCache } from "./settled-cache";
-import type { BoardSdk } from "@cavuno/board";
+import type { SettledCache } from './settled-cache';
+import type { BoardSdk } from '@cavuno/board';
 
 /**
  * One complete sitemap build, shared by the index and every numbered bucket.
@@ -60,19 +60,22 @@ const DEFAULT_SOURCE: SitemapSource = {
 // Hosted boards keep their complete context longer than the individual route
 // responses. This template mirrors that ratio: each XML response is cached for
 // five minutes while the shared catalog snapshot lives for one hour.
-export const SITEMAP_RESPONSE_CACHE_CONTROL = "public, max-age=300";
+export const SITEMAP_RESPONSE_CACHE_CONTROL = 'public, max-age=300';
 // The platform gateway only edge-caches a 200 GET when this header is present.
 // It caps fresh at 300s, then serves stale while refreshing in the background
 // for up to 24h. Browser Cache-Control alone is a cold miss after 5 minutes.
-export const SITEMAP_EDGE_CACHE_CONTROL = "public, max-age=300";
+export const SITEMAP_EDGE_CACHE_CONTROL = 'public, max-age=300';
 export const SITEMAP_CONTEXT_TTL_MS = 60 * 60 * 1_000;
 // v2: entries carry `lastModified`; a v1 snapshot holds bare strings.
-const SITEMAP_CONTEXT_CACHE_VERSION = "v2";
+const SITEMAP_CONTEXT_CACHE_VERSION = 'v2';
 
 // The origin key falls back to the request origin, so bound it per client.
 const SITEMAP_CONTEXT_MAX_ORIGINS = 8;
 
-let contextCache = new WeakMap<BoardSdk, SettledCache<string, SitemapContext>>();
+let contextCache = new WeakMap<
+  BoardSdk,
+  SettledCache<string, SitemapContext>
+>();
 let edgeCacheRefused = false;
 
 declare global {
@@ -104,7 +107,9 @@ async function readPersistentContext(
   origin: string,
 ): Promise<{ context: SitemapContext; expiresAt: number } | null> {
   try {
-    const response = await defaultEdgeCache()?.match(persistentCacheRequest(origin));
+    const response = await defaultEdgeCache()?.match(
+      persistentCacheRequest(origin),
+    );
     if (!response) return null;
     // SAFETY: The persistent entry is written only by writePersistentContext
     // below; the following bounds checks reject malformed or expired values.
@@ -138,8 +143,8 @@ async function writePersistentContext(
       persistentCacheRequest(origin),
       new Response(JSON.stringify({ context, expiresAt }), {
         headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": `public, max-age=${Math.floor(SITEMAP_CONTEXT_TTL_MS / 1_000)}`,
+          'Content-Type': 'application/json',
+          'Cache-Control': `public, max-age=${Math.floor(SITEMAP_CONTEXT_TTL_MS / 1_000)}`,
         },
       }),
     );
@@ -159,7 +164,7 @@ async function writePersistentContext(
 function memoizingBoardView(board: BoardSdk): BoardSdk {
   // Test doubles stub only the namespaces a case touches.
   if (!board.jobs) return board;
-  const inflight = new Map<string, ReturnType<BoardSdk["jobs"]["list"]>>();
+  const inflight = new Map<string, ReturnType<BoardSdk['jobs']['list']>>();
   const list = board.jobs.list.bind(board.jobs);
   return {
     ...board,
@@ -181,9 +186,9 @@ function memoizingBoardView(board: BoardSdk): BoardSdk {
 export function sitemapXmlResponse(xml: string): Response {
   return new Response(xml, {
     headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": SITEMAP_RESPONSE_CACHE_CONTROL,
-      "Cloudflare-CDN-Cache-Control": SITEMAP_EDGE_CACHE_CONTROL,
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': SITEMAP_RESPONSE_CACHE_CONTROL,
+      'Cloudflare-CDN-Cache-Control': SITEMAP_EDGE_CACHE_CONTROL,
     },
   });
 }
@@ -195,7 +200,7 @@ export function sitemapXmlResponse(xml: string): Response {
  * reject the whole file) or crashing every isolate that reads the snapshot.
  */
 function isoTimestamp(value: Date | string | undefined): string | undefined {
-  if (value === undefined || value === "") return undefined;
+  if (value === undefined || value === '') return undefined;
   const time = value instanceof Date ? value : new Date(value);
   return Number.isFinite(time.getTime()) ? time.toISOString() : undefined;
 }
@@ -214,8 +219,8 @@ function toSitemapEntry(entry: SitemapUrlEntry): SitemapEntry {
  * them, the rule under which both plan pages link it.
  */
 const PLAN_PAGES = [
-  { path: "/job-seekers", isLive: hasPaidCandidatePlans },
-  { path: "/pricing", isLive: hasPaidCandidatePlans },
+  { path: '/job-seekers', isLive: hasPaidCandidatePlans },
+  { path: '/pricing', isLive: hasPaidCandidatePlans },
 ] as const;
 
 /**
@@ -233,7 +238,9 @@ async function livePlanPagePaths(board: BoardSdk): Promise<string[]> {
         .then((page) => page.data)
         .catch(() => [])
     : [];
-  return PLAN_PAGES.filter((page) => page.isLive(plans)).map((page) => page.path);
+  return PLAN_PAGES.filter((page) => page.isLive(plans)).map(
+    (page) => page.path,
+  );
 }
 
 /**
@@ -249,7 +256,7 @@ async function talentLocationPaths(board: BoardSdk): Promise<string[]> {
   // Test doubles stub only the namespaces a case touches.
   if (!board.talent?.places || !board.context) return [];
   const { features } = await board.context();
-  if (features.talentDirectory !== "public") return [];
+  if (features.talentDirectory !== 'public') return [];
   const { data } = await board.talent.places.list({
     limit: TALENT_PLACES_LIMIT,
   });
@@ -271,16 +278,21 @@ function withLocalMarketingPages(
   planPaths: readonly string[],
   talentPaths: readonly string[],
 ): SitemapEntry[] {
-  if (bucket !== "marketing") return entries;
+  if (bucket !== 'marketing') return entries;
   // `/impressum` is listed exactly when the operator has written one
   // (`impressumHasContent`), and each plan page exactly when `PLAN_PAGES`
   // says it is live. Whatever the SDK or the published sitemap says about
   // those pages is dropped when they are not live.
   const impressumPaths = impressumHasContent() ? [BOARD_PATHS.impressum] : [];
-  const ownedPaths = [BOARD_PATHS.impressum, ...PLAN_PAGES.map((page) => page.path)];
+  const ownedPaths = [
+    BOARD_PATHS.impressum,
+    ...PLAN_PAGES.map((page) => page.path),
+  ];
   const livePaths = new Set<string>([...impressumPaths, ...planPaths]);
   const notLive = new Set(
-    ownedPaths.filter((path) => !livePaths.has(path)).map((path) => `${origin}${path}`),
+    ownedPaths
+      .filter((path) => !livePaths.has(path))
+      .map((path) => `${origin}${path}`),
   );
   const listed = entries.filter((entry) => !notLive.has(entry.url));
   const urls = new Set(listed.map((entry) => entry.url));
@@ -309,23 +321,29 @@ export async function buildSitemapContext(
     talentLocationPaths(board).catch((): string[] => []),
   ]);
   const built = await Promise.all(
-    listed.map(async ({ bucket, lastModified }): Promise<SitemapBucketContext> => {
-      const sdkEntries = await source.buildBucketEntries(catalog, origin, bucket);
-      const entries = withLocalMarketingPages(
-        origin,
-        bucket,
-        sdkEntries.map(toSitemapEntry),
-        planPaths,
-        talentPaths,
-      );
-      const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
-      const built: SitemapBucketContext = {
-        bucket,
-        chunks: chunks.length > 0 ? chunks : [[]],
-      };
-      const stamp = isoTimestamp(lastModified);
-      return stamp ? { ...built, lastModified: stamp } : built;
-    }),
+    listed.map(
+      async ({ bucket, lastModified }): Promise<SitemapBucketContext> => {
+        const sdkEntries = await source.buildBucketEntries(
+          catalog,
+          origin,
+          bucket,
+        );
+        const entries = withLocalMarketingPages(
+          origin,
+          bucket,
+          sdkEntries.map(toSitemapEntry),
+          planPaths,
+          talentPaths,
+        );
+        const chunks = chunk(entries, SITEMAP_CHUNK_SIZE);
+        const built: SitemapBucketContext = {
+          bucket,
+          chunks: chunks.length > 0 ? chunks : [[]],
+        };
+        const stamp = isoTimestamp(lastModified);
+        return stamp ? { ...built, lastModified: stamp } : built;
+      },
+    ),
   );
 
   return { buckets: built };
@@ -364,19 +382,30 @@ export async function loadSitemapContext(
   const persisted = await readPersistentContext(origin);
   if (persisted) {
     // Age the memo from when the shared snapshot was built.
-    snapshots.set(origin, persisted.context, persisted.expiresAt - SITEMAP_CONTEXT_TTL_MS);
+    snapshots.set(
+      origin,
+      persisted.context,
+      persisted.expiresAt - SITEMAP_CONTEXT_TTL_MS,
+    );
     return persisted.context;
   }
 
   const context = await buildSitemapContext(board, origin, source);
   const builtAt = Date.now();
   snapshots.set(origin, context, builtAt);
-  await writePersistentContext(origin, context, builtAt + SITEMAP_CONTEXT_TTL_MS);
+  await writePersistentContext(
+    origin,
+    context,
+    builtAt + SITEMAP_CONTEXT_TTL_MS,
+  );
   return context;
 }
 
 /** One `<sitemap>` per chunk file, each stamped with its bucket's freshness. */
-export function sitemapIndexEntries(origin: string, context: SitemapContext): SitemapIndexEntry[] {
+export function sitemapIndexEntries(
+  origin: string,
+  context: SitemapContext,
+): SitemapIndexEntry[] {
   return context.buckets.flatMap(({ bucket, lastModified, chunks }) =>
     chunks.map((_entries, chunkIndex) => {
       const url = `${origin}/sitemap/${bucketFilename(bucket, chunkIndex)}`;
@@ -390,7 +419,9 @@ export function findSitemapChunk(
   bucket: SitemapBucket,
   chunkIndex: number,
 ): readonly SitemapEntry[] | undefined {
-  return context.buckets.find((entry) => entry.bucket === bucket)?.chunks.at(chunkIndex);
+  return context.buckets
+    .find((entry) => entry.bucket === bucket)
+    ?.chunks.at(chunkIndex);
 }
 
 /** Test-only: isolate module-cache cases. */
