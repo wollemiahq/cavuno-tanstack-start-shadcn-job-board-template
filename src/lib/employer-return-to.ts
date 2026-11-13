@@ -1,5 +1,5 @@
 import { candidateReturnTo } from './candidate-return-to';
-import { canonicalPathname } from './localized-path';
+import { canonicalPathname, localizePath } from './localized-path';
 
 const EMPLOYER_DASHBOARD = '/employers/dashboard';
 
@@ -25,6 +25,23 @@ export function employerReturnTo(
     return undefined;
   }
   return returnTo;
+}
+
+/**
+ * Where a sign-in continues. Sign-in links return to `/account` by default,
+ * the candidate home; an employer goes to the employer dashboard instead,
+ * which opens their company directly when they have only one. Any other
+ * destination, and every candidate, is left as it is. The query string is
+ * kept: it carries the auth-flow parameters the completion step reads.
+ */
+export function signInReturnTo(
+  returnTo: string,
+  role: 'candidate' | 'employer' | undefined,
+): string {
+  if (role !== 'employer') return returnTo;
+  const url = new URL(returnTo, 'https://board.invalid');
+  if (canonicalPathname(url.pathname) !== '/account') return returnTo;
+  return `${localizePath(EMPLOYER_DASHBOARD)}${url.search}${url.hash}`;
 }
 
 /** The employer dashboard, carrying where to continue once a company exists. */

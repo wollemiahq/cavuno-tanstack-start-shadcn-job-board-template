@@ -10,12 +10,14 @@ import {
   type BoardAuthMethod,
 } from '@/lib/board-datalayer-events';
 import { candidateAuthSearch } from '@/lib/candidate-return-to';
+import { signInReturnTo } from '@/lib/employer-return-to';
 import { MAGIC_LINK_BROWSER_BINDING_PARAM } from '@/lib/magic-link-intent';
 import { OAUTH_BROWSER_BINDING_PARAM } from '@/lib/oauth-browser-binding';
 import { m } from '@/paraglide/messages';
+import type { BoardUser } from '@cavuno/board';
 
 type ExchangeResult =
-  | { ok: true; isNewUser: boolean }
+  | { ok: true; isNewUser: boolean; boardUser?: Pick<BoardUser, 'role'> }
   | { ok: false; message: string };
 const navigateBrowser = (href: string) => window.location.replace(href);
 
@@ -54,8 +56,13 @@ export function AuthLinkConfirmation({
   const finish = useCallback(
     (result: ExchangeResult) => {
       if (result.ok) {
+        // A new account keeps its destination so sign-up continues to
+        // email verification; only a returning employer is redirected.
+        const destination = result.isNewUser
+          ? returnTo
+          : signInReturnTo(returnTo, result.boardUser?.role);
         navigate(
-          resolvePostAuthConversionRedirect(returnTo, {
+          resolvePostAuthConversionRedirect(destination, {
             isNewUser: result.isNewUser,
             fallbackMethod: method,
           }),
