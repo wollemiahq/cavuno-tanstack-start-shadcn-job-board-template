@@ -127,11 +127,13 @@ function TitleLocationSalaryPage() {
       ) ?? '',
     jobCount: x.jobCount,
   }));
+  const childItems = toPlaceRail(salary.childLocations);
+  const otherItems = toPlaceRail(salary.otherLocations);
   const hasSalaryContent = Boolean(
     salary.overallSalary ||
     salary.bySeniority.length ||
-    salary.childLocations.length ||
-    salary.otherLocations.length ||
+    childItems.length ||
+    otherItems.length ||
     skillItems.length ||
     titleItems.length,
   );
@@ -192,14 +194,14 @@ function TitleLocationSalaryPage() {
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_citiesLabel(),
-              toPlaceRail(salary.childLocations),
+              childItems,
               getLocale(),
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_otherLocations(),
-              toPlaceRail(salary.otherLocations),
+              otherItems,
               getLocale(),
             )}
           />
