@@ -146,6 +146,7 @@ describe('localized URL segments', () => {
       '/sitemap.xml',
       '/sitemap/jobs-details-1.xml',
       '/robots.txt',
+      '/llms.txt',
       '/ads.txt',
       '/indexnow-key.txt',
       '/p/jane',

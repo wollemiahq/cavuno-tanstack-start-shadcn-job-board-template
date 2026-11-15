@@ -29,6 +29,7 @@ export const ROUTE_TEMPLATES = [
   '/impressum',
   '/indexnow-key.txt',
   '/job-seekers',
+  '/llms.txt',
   '/matches',
   '/memberships',
   '/messages',

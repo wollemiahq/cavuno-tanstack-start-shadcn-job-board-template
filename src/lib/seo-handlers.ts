@@ -4,6 +4,8 @@
  * starter cannot drift from hosted / Worker bytes.
  */
 export {
+  ROBOTS_CACHE_CONTROL,
+  SEO_FILE_CONTENT_TYPE,
   adsTxtResponse,
   googleSiteVerificationMeta,
   indexNowResponse,

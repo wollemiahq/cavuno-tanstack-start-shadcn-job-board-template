@@ -21,6 +21,7 @@ import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
 import { Route as JobSeekersRouteImport } from './routes/job-seekers'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as MembershipsRouteImport } from './routes/memberships'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -184,6 +185,11 @@ const IndexnowKeyDottxtRoute = IndexnowKeyDottxtRouteImport.update({
 const JobSeekersRoute = JobSeekersRouteImport.update({
   id: '/job-seekers',
   path: '/job-seekers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MatchesRoute = MatchesRouteImport.update({
@@ -746,6 +752,7 @@ export interface FileRoutesByFullPath {
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/job-seekers': typeof JobSeekersRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/matches': typeof MatchesRoute
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
@@ -864,6 +871,7 @@ export interface FileRoutesByTo {
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/job-seekers': typeof JobSeekersRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/matches': typeof MatchesRoute
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
@@ -983,6 +991,7 @@ export interface FileRoutesById {
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/job-seekers': typeof JobSeekersRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/matches': typeof MatchesRoute
   '/memberships': typeof MembershipsRoute
   '/messages': typeof MessagesRouteWithChildren
@@ -1103,6 +1112,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/indexnow-key.txt'
     | '/job-seekers'
+    | '/llms.txt'
     | '/matches'
     | '/memberships'
     | '/messages'
@@ -1221,6 +1231,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/indexnow-key.txt'
     | '/job-seekers'
+    | '/llms.txt'
     | '/matches'
     | '/memberships'
     | '/messages'
@@ -1339,6 +1350,7 @@ export interface FileRouteTypes {
     | '/impressum'
     | '/indexnow-key.txt'
     | '/job-seekers'
+    | '/llms.txt'
     | '/matches'
     | '/memberships'
     | '/messages'
@@ -1458,6 +1470,7 @@ export interface RootRouteChildren {
   ImpressumRoute: typeof ImpressumRoute
   IndexnowKeyDottxtRoute: typeof IndexnowKeyDottxtRoute
   JobSeekersRoute: typeof JobSeekersRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   MatchesRoute: typeof MatchesRoute
   MembershipsRoute: typeof MembershipsRoute
   MessagesRoute: typeof MessagesRouteWithChildren
@@ -1645,6 +1658,13 @@ declare module '@tanstack/react-router' {
       path: '/job-seekers'
       fullPath: '/job-seekers'
       preLoaderRoute: typeof JobSeekersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/matches': {
@@ -2430,6 +2450,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpressumRoute: ImpressumRoute,
   IndexnowKeyDottxtRoute: IndexnowKeyDottxtRoute,
   JobSeekersRoute: JobSeekersRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   MatchesRoute: MatchesRoute,
   MembershipsRoute: MembershipsRoute,
   MessagesRoute: MessagesRouteWithChildren,
