@@ -398,6 +398,16 @@
       width: max-content;
       max-width: none;
     }
+    /* Tables inside rendered API HTML (Prose wraps them). Unlike
+       .typeset-scroll the table keeps wrapping to fit; it scrolls only
+       when its cells cannot shrink any further. */
+    &:where(.typeset-scroll-fit) {
+      overflow-x: auto;
+      margin-block-start: var(--typeset-flow);
+    }
+    &:where(.typeset-scroll-fit > *) {
+      margin-block-start: 0;
+    }
     &:where(thead th) {
       font-weight: 500;
       text-align: start;
