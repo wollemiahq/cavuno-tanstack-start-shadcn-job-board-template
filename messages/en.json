@@ -3302,5 +3302,8 @@
   "mcpDocs_otherSteps": "Any client that supports remote MCP servers over Streamable HTTP can connect to the URL above.",
   "mcpDocs_toolsHeading": "What it can do",
   "mcpDocs_limitsHeading": "Limits",
-  "mcpDocs_limits": "Every tool only reads the board's public listings; nothing is saved or changed. Requests are rate limited per visitor and per board, and a limited request says when to retry."
+  "mcpDocs_limits": "Every tool only reads the board's public listings; nothing is saved or changed. Requests are rate limited per visitor and per board, and a limited request says when to retry.",
+  "employerNav_companyLabel": "Company",
+  "employerNav_teamLabel": "Team",
+  "employerNav_viewBoardLabel": "View job board"
 }

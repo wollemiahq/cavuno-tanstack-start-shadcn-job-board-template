@@ -6,6 +6,7 @@ import { initialsOf } from '../lib/initials';
 import { m } from '../paraglide/messages';
 import { signOut } from '../server/auth';
 
+import { EmployerIdentityAvatar } from '@/components/account-shell';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ export function HeaderAccountMenu({
   nativeApplications,
   jobRecommendationsEnabled,
   employerCompanies,
+  activeCompany = null,
   hasProductsPage = false,
   canPostJobs = true,
   onSignOut,
@@ -43,6 +45,11 @@ export function HeaderAccountMenu({
   nativeApplications: boolean;
   jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
+  /**
+   * The company the header's employer links point at: the trigger shows its
+   * logo and name, and the menu links back to the public board.
+   */
+  activeCompany?: { name: string; logoUrl: string | null } | null;
   /** The board sells digital products: show the Purchases library. */
   hasProductsPage?: boolean;
   /** Public job-posting SKUs exist — hide Post job when the board sells none. */
@@ -62,25 +69,61 @@ export function HeaderAccountMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            aria-label={m.siteHeader_accountLabel()}
-            data-test="account-menu"
+      {activeCompany ? (
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto gap-2 rounded-full py-1 pr-1 pl-3"
+              aria-label={m.siteHeader_accountLabel()}
+              data-test="account-menu"
+            />
+          }
+        >
+          <span className="hidden max-w-40 min-w-0 text-right leading-tight sm:grid">
+            <span className="truncate text-sm font-medium">
+              {user.displayName ?? user.email}
+            </span>
+            <span className="text-muted-foreground truncate text-xs font-normal">
+              {activeCompany.name}
+            </span>
+          </span>
+          <EmployerIdentityAvatar
+            name={activeCompany.name}
+            logoUrl={activeCompany.logoUrl}
+            size="sm"
           />
-        }
-      >
-        <Avatar size="sm">
-          <AvatarFallback>
-            {initialsOf(user.displayName ?? user.email)}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
+        </DropdownMenuTrigger>
+      ) : (
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label={m.siteHeader_accountLabel()}
+              data-test="account-menu"
+            />
+          }
+        >
+          <Avatar size="sm">
+            <AvatarFallback>
+              {initialsOf(user.displayName ?? user.email)}
+            </AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+      )}
       <DropdownMenuContent align="end" className="min-w-48">
+        {activeCompany ? (
+          <>
+            <DropdownMenuItem nativeButton={false} render={<Link to="/" />}>
+              {m.employerNav_viewBoardLabel()}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        ) : null}
         <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
           {m.accountShell_profileNav()}
         </DropdownMenuItem>

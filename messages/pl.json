@@ -3450,5 +3450,8 @@
   "mcpDocs_otherSteps": "Każdy klient obsługujący zdalne serwery MCP przez Streamable HTTP może połączyć się z adresem URL podanym wyżej.",
   "mcpDocs_toolsHeading": "Co potrafi",
   "mcpDocs_limitsHeading": "Limity",
-  "mcpDocs_limits": "Każde narzędzie tylko czyta publiczne ogłoszenia portalu pracy; nic nie jest zapisywane ani zmieniane. Liczba zapytań jest ograniczona dla każdego odwiedzającego i każdego portalu, a ograniczone zapytanie podaje, kiedy spróbować ponownie."
+  "mcpDocs_limits": "Każde narzędzie tylko czyta publiczne ogłoszenia portalu pracy; nic nie jest zapisywane ani zmieniane. Liczba zapytań jest ograniczona dla każdego odwiedzającego i każdego portalu, a ograniczone zapytanie podaje, kiedy spróbować ponownie.",
+  "employerNav_companyLabel": "Firma",
+  "employerNav_teamLabel": "Zespół",
+  "employerNav_viewBoardLabel": "Zobacz portal z ofertami pracy"
 }

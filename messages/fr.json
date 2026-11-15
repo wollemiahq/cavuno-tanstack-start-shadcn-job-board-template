@@ -3302,5 +3302,8 @@
   "mcpDocs_otherSteps": "Tout client compatible avec les serveurs MCP distants via Streamable HTTP peut se connecter à l’URL ci-dessus.",
   "mcpDocs_toolsHeading": "Ce qu’il peut faire",
   "mcpDocs_limitsHeading": "Limites",
-  "mcpDocs_limits": "Chaque outil lit uniquement les annonces publiques du site d’emploi ; rien n’est enregistré ni modifié. Les requêtes sont limitées par visiteur et par site, et une requête limitée indique quand réessayer."
+  "mcpDocs_limits": "Chaque outil lit uniquement les annonces publiques du site d’emploi ; rien n’est enregistré ni modifié. Les requêtes sont limitées par visiteur et par site, et une requête limitée indique quand réessayer.",
+  "employerNav_companyLabel": "Entreprise",
+  "employerNav_teamLabel": "Équipe",
+  "employerNav_viewBoardLabel": "Voir le site d'emploi"
 }

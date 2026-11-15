@@ -3302,5 +3302,8 @@
   "mcpDocs_otherSteps": "Cualquier cliente compatible con servidores MCP remotos mediante Streamable HTTP puede conectarse a la URL de arriba.",
   "mcpDocs_toolsHeading": "Qué puede hacer",
   "mcpDocs_limitsHeading": "Límites",
-  "mcpDocs_limits": "Cada herramienta solo lee las ofertas públicas de la bolsa de empleo; no se guarda ni se cambia nada. Las solicitudes tienen un límite por visitante y por bolsa de empleo, y una solicitud limitada indica cuándo volver a intentarlo."
+  "mcpDocs_limits": "Cada herramienta solo lee las ofertas públicas de la bolsa de empleo; no se guarda ni se cambia nada. Las solicitudes tienen un límite por visitante y por bolsa de empleo, y una solicitud limitada indica cuándo volver a intentarlo.",
+  "employerNav_companyLabel": "Empresa",
+  "employerNav_teamLabel": "Equipo",
+  "employerNav_viewBoardLabel": "Ver la bolsa de empleo"
 }

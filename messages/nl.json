@@ -3302,5 +3302,8 @@
   "mcpDocs_otherSteps": "Elke client die externe MCP-servers via Streamable HTTP ondersteunt, kan verbinding maken met de URL hierboven.",
   "mcpDocs_toolsHeading": "Wat het kan",
   "mcpDocs_limitsHeading": "Limieten",
-  "mcpDocs_limits": "Elke tool leest alleen de openbare vacatures van de vacaturebank; er wordt niets opgeslagen of gewijzigd. Verzoeken zijn per bezoeker en per vacaturebank beperkt, en een beperkt verzoek vertelt wanneer je het opnieuw kunt proberen."
+  "mcpDocs_limits": "Elke tool leest alleen de openbare vacatures van de vacaturebank; er wordt niets opgeslagen of gewijzigd. Verzoeken zijn per bezoeker en per vacaturebank beperkt, en een beperkt verzoek vertelt wanneer je het opnieuw kunt proberen.",
+  "employerNav_companyLabel": "Bedrijf",
+  "employerNav_teamLabel": "Team",
+  "employerNav_viewBoardLabel": "Vacaturebank bekijken"
 }

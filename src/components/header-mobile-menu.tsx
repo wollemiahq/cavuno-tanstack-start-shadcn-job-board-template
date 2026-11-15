@@ -9,14 +9,6 @@ import { cn } from '@/lib/utils';
 const mobileNavItemClassName =
   'flex items-center rounded-xl px-4 py-3 text-lg font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
 
-type MobileNavDestination =
-  | '/jobs'
-  | '/companies'
-  | '/talent'
-  | '/blog'
-  | '/memberships'
-  | '/products';
-
 /**
  * Mobile nav disclosure — a plain non-modal panel pinned from the header's
  * bottom edge to the viewport bottom. Deliberately NOT a Dialog/Sheet: the
@@ -31,7 +23,12 @@ export function HeaderMobileMenu({
   postJobLabel,
   onOpenChange,
 }: {
-  navLinks: ReadonlyArray<{ to: MobileNavDestination; label: string }>;
+  navLinks: ReadonlyArray<{
+    id: string;
+    to: string;
+    params?: Record<string, string>;
+    label: string;
+  }>;
   showPostJob: boolean;
   navigationLabel: string;
   postJobLabel: string;
@@ -75,8 +72,9 @@ export function HeaderMobileMenu({
       <nav aria-label={navigationLabel} className="px-4 py-6">
         {navLinks.map((item) => (
           <Link
-            key={item.to}
+            key={item.id}
             to={item.to}
+            params={item.params}
             className={cn(mobileNavItemClassName, 'hover:no-underline')}
             onClick={() => onOpenChange(false)}
           >
