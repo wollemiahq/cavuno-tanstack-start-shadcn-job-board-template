@@ -16,6 +16,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableSalaryItems,
   salarySkillLinkPath,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
@@ -80,8 +81,10 @@ function TitleLocationSalaryPage() {
   const locale = getLocale();
   const cat = salary.categoryCanonicalSlug;
 
+  // Place rows say whether the page they link to is indexed; keep noindex
+  // pages (too few jobs) out of the rails so crawl equity reaches real pages.
   const toPlaceRail = (rows: typeof salary.childLocations): RailItem[] =>
-    rows.map((x) => ({
+    indexableSalaryItems(rows).map((x) => ({
       name: x.placeName,
       href: salaryTitleInLocationPath(cat, x.placeSlug),
       range:
@@ -124,11 +127,13 @@ function TitleLocationSalaryPage() {
       ) ?? '',
     jobCount: x.jobCount,
   }));
+  const childItems = toPlaceRail(salary.childLocations);
+  const otherItems = toPlaceRail(salary.otherLocations);
   const hasSalaryContent = Boolean(
     salary.overallSalary ||
     salary.bySeniority.length ||
-    salary.childLocations.length ||
-    salary.otherLocations.length ||
+    childItems.length ||
+    otherItems.length ||
     skillItems.length ||
     titleItems.length,
   );
@@ -189,14 +194,14 @@ function TitleLocationSalaryPage() {
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_citiesLabel(),
-              toPlaceRail(salary.childLocations),
+              childItems,
               getLocale(),
             )}
           />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_otherLocations(),
-              toPlaceRail(salary.otherLocations),
+              otherItems,
               getLocale(),
             )}
           />
