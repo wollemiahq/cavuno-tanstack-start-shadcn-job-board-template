@@ -16,6 +16,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableSalaryItems,
   salarySkillLinkPath,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
@@ -80,8 +81,10 @@ function TitleLocationSalaryPage() {
   const locale = getLocale();
   const cat = salary.categoryCanonicalSlug;
 
+  // Place rows say whether the page they link to is indexed; keep noindex
+  // pages (too few jobs) out of the rails so crawl equity reaches real pages.
   const toPlaceRail = (rows: typeof salary.childLocations): RailItem[] =>
-    rows.map((x) => ({
+    indexableSalaryItems(rows).map((x) => ({
       name: x.placeName,
       href: salaryTitleInLocationPath(cat, x.placeSlug),
       range:
