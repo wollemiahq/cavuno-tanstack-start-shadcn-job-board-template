@@ -43,7 +43,7 @@ describe('MarkdownAlternateLink', () => {
   });
 
   it('links nothing on a page without a twin', () => {
-    expect(renderAt('/pricing')).toBe('');
+    expect(renderAt('/contact')).toBe('');
     expect(renderAt('/account')).toBe('');
   });
 

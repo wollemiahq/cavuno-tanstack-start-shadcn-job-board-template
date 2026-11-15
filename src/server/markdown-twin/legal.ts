@@ -1,6 +1,6 @@
 /**
- * The Markdown twins of the legal pages: privacy policy, terms of service,
- * cookie policy and impressum.
+ * The Markdown twins of the legal pages (privacy policy, terms of service,
+ * cookie policy, impressum) and the about page, which shares their view.
  *
  * Each builder calls the server function the page's loader calls, with the
  * same page type, so a page with no content (an impressum the operator has
@@ -27,11 +27,8 @@ export type LegalTwinDependencies = {
 
 const defaultDependencies: LegalTwinDependencies = { getLegalPageView };
 
-/** The legal pages with a twin. */
-export type LegalTwinPage = Exclude<LegalPageType, 'about'>;
-
 export async function buildLegalTwin(
-  type: LegalTwinPage,
+  type: LegalPageType,
   twin: MarkdownTwin,
   dependencies: LegalTwinDependencies = defaultDependencies,
 ): Promise<MarkdownTwinResult> {

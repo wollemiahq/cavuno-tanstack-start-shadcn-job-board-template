@@ -79,6 +79,21 @@ describe('legal twins', () => {
     });
   });
 
+  it('builds the about page from the same view', async () => {
+    dependencies.getLegalPageView.mockResolvedValue(
+      view({ title: 'About us', html: '<p>We list jobs.</p>' }),
+    );
+    const result = await buildLegalTwin(
+      'about',
+      twinFor('/about'),
+      dependencies,
+    );
+    expect(dependencies.getLegalPageView).toHaveBeenCalledWith({
+      data: { type: 'about' },
+    });
+    expect(result).toMatchObject({ body: '# About us\n\nWe list jobs.\n' });
+  });
+
   it('404s a page that has no content, as the page does', async () => {
     dependencies.getLegalPageView.mockRejectedValue(notFound());
     await expect(

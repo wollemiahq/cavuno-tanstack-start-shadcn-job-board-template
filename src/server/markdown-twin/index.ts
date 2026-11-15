@@ -34,6 +34,7 @@ import {
   buildJobsTwin,
 } from './jobs-listings';
 import { buildLegalTwin } from './legal';
+import { buildPricingTwin } from './pricing';
 import {
   buildCompanyCategorySalaryTwin,
   buildCompanySalariesTwin,
@@ -110,6 +111,8 @@ const BUILDERS = {
   termsOfService: (twin) => buildLegalTwin('terms-of-service', twin),
   cookiePolicy: (twin) => buildLegalTwin('cookie-policy', twin),
   impressum: (twin) => buildLegalTwin('impressum', twin),
+  about: (twin) => buildLegalTwin('about', twin),
+  pricing: (twin, origin) => buildPricingTwin(twin, origin),
 } satisfies MarkdownTwinBuilders;
 
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
