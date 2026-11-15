@@ -19,7 +19,6 @@ import {
 import {
   canRequestVerification,
   checksByEmail,
-  type ItemVerificationRow,
   type VerifiableItem,
 } from '@/board/item-verification';
 import { Button } from '@/components/ui/button';
@@ -54,6 +53,7 @@ import {
   reconcileCommittedAction,
   toastActionSuccess,
 } from '@/lib/action-toast';
+import type { MyItemVerification } from '@cavuno/board';
 
 const CONFLICT = 'item_verification_conflict';
 const NO_DOMAIN = 'item_verification_no_domain';
@@ -127,7 +127,7 @@ type Step =
  * the email form.
  */
 export function initialStep(
-  verification: ItemVerificationRow | null,
+  verification: MyItemVerification | null,
 ): { step: 'email' } | CodeStep | { step: 'team' } {
   const check = verification?.emailCheck;
   if (check) {
@@ -218,7 +218,7 @@ export function ItemVerificationDialog({
       const keep =
         state.step === 'code' &&
         state.email !== null &&
-        (!item.verification?.nextStep || item.verification.emailCheck);
+        (!item.verification || item.verification.emailCheck);
       if (!keep) setState(initialStep(item.verification));
       setNow(Date.now());
       setCode('');

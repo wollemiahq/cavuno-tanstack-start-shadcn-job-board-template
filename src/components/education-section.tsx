@@ -12,10 +12,7 @@ import {
   updateEducation,
 } from '../server/account';
 
-import {
-  educationVerifiableItem,
-  type ItemVerificationRow,
-} from '@/board/item-verification';
+import { educationVerifiableItem } from '@/board/item-verification';
 import { profileMonthLabel } from '@/board/profile-view-model';
 import { ItemVerificationTick } from '@/components/item-verification';
 import { MonthYearField } from '@/components/month-year-field';
@@ -65,7 +62,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { entityCopy } from '@/copy-groups/entity';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 import { stripProtocol, websiteDomain, websiteUrl } from '@/lib/website-domain';
-import type { CandidateEducation } from '@cavuno/board';
+import type { CandidateEducation, MyItemVerification } from '@cavuno/board';
 
 type Editing = { id: string | null } | null;
 
@@ -119,7 +116,7 @@ export function EducationSection({
    * Item verification statuses by item key, or `null` when the board does
    * not verify education (`board.context().verification.education`).
    */
-  verifications?: ReadonlyMap<string, ItemVerificationRow> | null;
+  verifications?: ReadonlyMap<string, MyItemVerification> | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Editing>(null);
@@ -452,7 +449,7 @@ function EducationVerification({
   verifications,
 }: {
   item: CandidateEducation;
-  verifications: ReadonlyMap<string, ItemVerificationRow> | null;
+  verifications: ReadonlyMap<string, MyItemVerification> | null;
 }) {
   const verifiable = educationVerifiableItem(item, verifications);
   return verifiable ? <ItemVerificationTick item={verifiable} /> : null;

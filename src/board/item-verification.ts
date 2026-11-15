@@ -2,7 +2,7 @@ import { websiteDomain } from '@/lib/website-domain';
 import type {
   CandidateEducation,
   CandidateExperience,
-  ItemVerification,
+  MyItemVerification,
   ProfileObjectReferences,
 } from '@cavuno/board';
 
@@ -14,24 +14,6 @@ import type {
  * editor renders, and renders nothing for an item the board does not verify.
  */
 
-export type ItemVerificationStatus = ItemVerification['status'];
-
-/**
- * A `listVerifications` row. `nextStep` says what the worker can do now:
- * check by email (or ask the board), only ask the board, or nothing.
- * `emailCheck` is set while an emailed code can still be typed; it names
- * only the address's domain. Both are optional so an older API still reads,
- * and the status alone decides as before.
- */
-export type ItemVerificationRow = ItemVerification & {
-  nextStep?: 'email' | 'team' | 'none';
-  emailCheck?: {
-    domain: string;
-    codeExpiresAt: string;
-    resendAvailableAt: string;
-  } | null;
-};
-
 /** How the worker confirms an item: by work or school email, or by asking the team. */
 export type ItemVerificationMethod = 'email_domain' | 'team';
 
@@ -40,7 +22,7 @@ export type VerifiableItem = {
   itemKey: string;
   label: string;
   method: ItemVerificationMethod;
-  verification: ItemVerificationRow | null;
+  verification: MyItemVerification | null;
   /**
    * The domain the work or school email should be at, when the item names a
    * website. A suggestion for the email field, not a rule: the Board API also
@@ -60,55 +42,34 @@ export function educationItemKey(id: string): string {
 
 /** Verifications by item key; an unreadable list reads as empty. */
 export function verificationsByKey(
-  list: { data: ItemVerificationRow[] } | null | undefined,
-): ReadonlyMap<string, ItemVerificationRow> {
+  list: { data: MyItemVerification[] } | null | undefined,
+): ReadonlyMap<string, MyItemVerification> {
   return new Map((list?.data ?? []).map((row) => [row.itemKey, row]));
 }
 
-/**
- * Statuses from which the worker may ask again, per the Board API. A rejected
- * item stays rejected until its checked details change (then it is `changed`).
- */
-const REQUESTABLE: ReadonlySet<ItemVerificationStatus> = new Set([
-  'unverified',
-  'changed',
-  'lapsed',
-  'needs_info',
-  'unable_to_verify',
-]);
-
+/** Whether the worker may ask now; an item the API lists no row for may. */
 export function canRequestVerification(
-  verification: Pick<ItemVerificationRow, 'status' | 'nextStep'> | null,
+  verification: Pick<MyItemVerification, 'nextStep'> | null,
 ): boolean {
-  if (verification?.nextStep) return verification.nextStep !== 'none';
-  return REQUESTABLE.has(verification?.status ?? 'unverified');
+  return verification === null || verification.nextStep !== 'none';
 }
-
-/** Statuses from which the Board API accepts an email-domain check. */
-const EMAIL_CHECKABLE: ReadonlySet<ItemVerificationStatus> = new Set([
-  'unverified',
-  'changed',
-  'lapsed',
-  'unable_to_verify',
-]);
 
 /** Whether an email-domain item may start an email check now; otherwise it goes to the team. */
 export function canCheckByEmail(
-  verification: Pick<ItemVerificationRow, 'status' | 'nextStep'> | null,
+  verification: Pick<MyItemVerification, 'nextStep'> | null,
 ): boolean {
-  if (verification?.nextStep) return verification.nextStep === 'email';
-  return EMAIL_CHECKABLE.has(verification?.status ?? 'unverified');
+  return verification === null || verification.nextStep === 'email';
 }
 
 /**
- * Whether the item is checked by email now. The API's `nextStep` decides
- * when it is there; otherwise the item's method and status do.
+ * Whether the item is checked by email now. The API's `nextStep` decides;
+ * an item with no row goes by its method.
  */
 export function checksByEmail(
   item: Pick<VerifiableItem, 'method' | 'verification'>,
 ): boolean {
-  if (item.verification?.nextStep) return canCheckByEmail(item.verification);
-  return item.method === 'email_domain' && canCheckByEmail(item.verification);
+  if (item.verification) return canCheckByEmail(item.verification);
+  return item.method === 'email_domain';
 }
 
 /**
@@ -123,7 +84,7 @@ export function experienceVerifiableItem(
     CandidateExperience,
     'id' | 'companyName' | 'companyUrl' | 'endDate'
   >,
-  verifications: ReadonlyMap<string, ItemVerificationRow> | null,
+  verifications: ReadonlyMap<string, MyItemVerification> | null,
 ): VerifiableItem | null {
   if (!verifications) return null;
   const itemKey = experienceItemKey(item.id);
@@ -143,7 +104,7 @@ export function experienceVerifiableItem(
  */
 export function educationVerifiableItem(
   item: Pick<CandidateEducation, 'id' | 'institutionName' | 'institutionUrl'>,
-  verifications: ReadonlyMap<string, ItemVerificationRow> | null,
+  verifications: ReadonlyMap<string, MyItemVerification> | null,
 ): VerifiableItem | null {
   if (!verifications) return null;
   const itemKey = educationItemKey(item.id);
@@ -185,7 +146,7 @@ function entryLabel(
  */
 export function collectionVerifiableItems(
   objectReferences: ProfileObjectReferences | null | undefined,
-  verifications: ReadonlyMap<string, ItemVerificationRow>,
+  verifications: ReadonlyMap<string, MyItemVerification>,
   options: { emailDomain: boolean },
 ): VerifiableItem[] {
   if (!objectReferences) return [];
