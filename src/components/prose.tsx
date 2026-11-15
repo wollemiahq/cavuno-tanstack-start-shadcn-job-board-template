@@ -1,5 +1,6 @@
 import type { ElementType, HTMLAttributes, ReactNode } from 'react';
 
+import { withScrollableTables } from '@/lib/scrollable-tables';
 import { cn } from '@/lib/utils';
 
 /**
@@ -33,6 +34,9 @@ import { cn } from '@/lib/utils';
  * server-side — never interpolate other strings into it), or `children` to
  * compose the prose column yourself (e.g. a legal page with its own heading
  * and a `not-typeset` facts card).
+ *
+ * Tables in `html` are wrapped so a wide one scrolls inside its own box
+ * instead of widening the page (src/lib/scrollable-tables.ts).
  */
 type ProseProps = Omit<
   HTMLAttributes<HTMLElement>,
@@ -57,7 +61,7 @@ export function Prose({
       <Tag
         className={classes}
         dir="auto"
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: withScrollableTables(html) }}
         {...props}
       />
     );
