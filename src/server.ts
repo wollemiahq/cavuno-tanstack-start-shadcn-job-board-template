@@ -52,7 +52,7 @@ import { matchClientErrorIngest } from './lib/client-error-ingest';
 import { CLIENT_ERROR_PATH } from './lib/client-error-report';
 import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
-import { isMachinePath } from './lib/localized-path';
+import { isMachinePath, stripLocalePrefix } from './lib/localized-path';
 import { localizedUrlRedirect } from './lib/localized-url-redirect';
 import {
   isMarkdownTwinRoutePath,
@@ -94,15 +94,26 @@ function localeDetectionRequest(request: Request): Request {
 const ACCEPTS_HTML = /(^|,)\s*(\*\/\*|text\/html)/;
 const HTML_ACCEPT = 'text/html,*/*;q=0.8';
 
+/** Pages on machine paths: their URLs are never localized, but Start
+ * renders them like any other page. */
+const MACHINE_PATH_PAGE =
+  /^\/(embed\/jobs|p\/[^/]+|mcp\/docs|coming-soon-gate)\/?$/;
+
 /** For a GET/HEAD page request whose Accept rules out HTML: a copy that
- * accepts HTML, so the page renders instead of a 406. Machine paths
- * (server functions, feeds, sitemaps, robots.txt, OG images) keep the
- * request as sent. */
+ * accepts HTML, so the page renders instead of a 406. Other machine paths
+ * (server functions, the MCP server, feeds, sitemaps, robots.txt, OG
+ * images) keep the request as sent. */
 function htmlPageRequest(request: Request): Request {
   if (request.method !== 'GET' && request.method !== 'HEAD') return request;
   const accept = request.headers.get('Accept');
   if (!accept || ACCEPTS_HTML.test(accept)) return request;
-  if (isMachinePath(new URL(request.url).pathname)) return request;
+  const { pathname } = new URL(request.url);
+  if (
+    isMachinePath(pathname) &&
+    !MACHINE_PATH_PAGE.test(stripLocalePrefix(pathname))
+  ) {
+    return request;
+  }
   const headers = new Headers(request.headers);
   headers.set('Accept', HTML_ACCEPT);
   return new Request(request, { headers });

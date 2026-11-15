@@ -35,8 +35,25 @@ vi.mock('./lib/public-html-cache', () => ({
   writePublicHtmlCache: async () => {},
 }));
 
-import { localizePath } from './lib/localized-path';
+import { isMachinePath, localizePath } from './lib/localized-path';
 import server from './server';
+
+/** A URL for every page route file (`p.$handle.tsx` is `/p/x`) whose URL
+ * is a machine path: never localized, but rendered like any other page. */
+const MACHINE_PATH_PAGES = Object.keys(import.meta.glob('./routes/*.tsx'))
+  .map((file) => file.slice('./routes/'.length, -'.tsx'.length))
+  .filter((name) => !name.startsWith('-') && !name.startsWith('__'))
+  .map(
+    (name) =>
+      `/${name
+        .split('.')
+        .filter((segment) => segment !== 'index')
+        .map((segment) =>
+          segment.startsWith('$') ? 'x' : segment.replace(/_$/, ''),
+        )
+        .join('/')}`,
+  )
+  .filter((path) => isMachinePath(path));
 
 const BROWSER_ACCEPT =
   'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
@@ -75,4 +92,24 @@ describe('server entry Accept handling', () => {
       expect(acceptSeenByStart()).toBe('text/plain');
     },
   );
+
+  it('finds the pages on machine paths', () => {
+    expect(MACHINE_PATH_PAGES).toEqual(
+      expect.arrayContaining(['/embed/jobs', '/p/x', '/mcp/docs']),
+    );
+  });
+
+  it.each(MACHINE_PATH_PAGES)(
+    'renders HTML, not a 406, for page %s asked for as Markdown',
+    async (path) => {
+      const response = await get(path, 'text/markdown');
+      expect(response.status).toBe(200);
+      expect(acceptSeenByStart()).toBe('text/html,*/*;q=0.8');
+    },
+  );
+
+  it('leaves the MCP server request as sent', async () => {
+    await get('/mcp', 'application/json');
+    expect(acceptSeenByStart()).toBe('application/json');
+  });
 });
