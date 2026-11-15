@@ -5,8 +5,10 @@
  *
  * Links are absolute on the board's published origin, in the board
  * language's URL words, like the sitemap. Pages the board does not serve
- * (a blog that is off, a legal page with no content, the MCP server when
- * it is off) are left out. Served and cached like robots.txt.
+ * (a blog that is off, an about or legal page with no content, the MCP
+ * server when it is off) are left out, under the rule each page's twin
+ * 404s by. The pricing page always renders, so its twin is always listed.
+ * Served and cached like robots.txt.
  */
 import { BOARD_PATHS } from '@cavuno/board/paths';
 
@@ -26,6 +28,8 @@ export interface LlmsTxtInput {
   /** One line about the board; left out when empty. */
   description: string;
   blogEnabled: boolean;
+  /** Whether the about page has content (its twin 404s without). */
+  aboutEnabled: boolean;
   mcpEnabled: boolean;
   /** Legal pages that have content, by canonical path. */
   legalPaths: ReadonlyArray<
@@ -56,6 +60,10 @@ export function llmsTxtBody(input: LlmsTxtInput): string {
     twinLink(origin, labels.companies, BOARD_PATHS.companies),
     twinLink(origin, labels.salaries, BOARD_PATHS.salaries),
     input.blogEnabled ? twinLink(origin, labels.blog, BOARD_PATHS.blog) : null,
+    input.aboutEnabled
+      ? twinLink(origin, labels.about, BOARD_PATHS.about)
+      : null,
+    twinLink(origin, labels.pricing, '/pricing'),
     input.mcpEnabled ? `- [MCP](${origin}/mcp/server-card)` : null,
   ];
   const description = input.description.replace(/\s+/g, ' ').trim();

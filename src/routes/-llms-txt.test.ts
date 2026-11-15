@@ -22,6 +22,7 @@ const input: LlmsTxtInput = {
   boardName: 'Robotics *Jobs*',
   description: 'Every robotics role\nin one place.',
   blogEnabled: true,
+  aboutEnabled: true,
   mcpEnabled: true,
   legalPaths: ['/privacy-policy'],
 };
@@ -44,6 +45,8 @@ describe('llmsTxtBody', () => {
         `- [${labels.companies}](${twin('/companies')})`,
         `- [${labels.salaries}](${twin('/salaries')})`,
         `- [${labels.blog}](${twin('/blog')})`,
+        `- [${labels.about}](${twin('/about')})`,
+        `- [${labels.pricing}](${twin('/pricing')})`,
         `- [MCP](${ORIGIN}/mcp/server-card)`,
         '',
         `- [${labels.privacyPolicy}](${twin('/privacy-policy')})`,
@@ -57,11 +60,13 @@ describe('llmsTxtBody', () => {
       ...input,
       description: '',
       blogEnabled: false,
+      aboutEnabled: false,
       mcpEnabled: false,
       legalPaths: [],
     });
     expect(body).not.toContain('>');
     expect(body).not.toContain(twin('/blog'));
+    expect(body).not.toContain(twin('/about'));
     expect(body).not.toContain('/mcp/');
     expect(body).not.toContain(twin('/privacy-policy'));
   });
@@ -90,6 +95,8 @@ describe('/llms.txt route', () => {
     const body = await response.text();
     expect(body).toMatch(/^# Robotics Jobs\n\n> \S/);
     expect(body).toContain(`(${twin('/terms-of-service')})`);
+    expect(body).toContain(`(${twin('/about')})`);
+    expect(body).toContain(`(${twin('/pricing')})`);
     expect(body).not.toContain(twin('/blog'));
   });
 
