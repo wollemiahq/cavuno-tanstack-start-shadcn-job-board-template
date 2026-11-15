@@ -45,6 +45,8 @@ async function handle(request: Request): Promise<Response> {
     boardName: context.name,
     description,
     blogEnabled: context.features.blog === true,
+    // The about page's loader 404s without content, as its twin does.
+    aboutEnabled: resolveLegalContent('about') !== null,
     mcpEnabled: context.features.mcp === true,
     // The rule each legal page's loader applies before it 404s.
     legalPaths: LEGAL_PAGES.flatMap(([type, path]) =>
