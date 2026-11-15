@@ -33,6 +33,25 @@ import {
   buildJobsSkillTwin,
   buildJobsTwin,
 } from './jobs-listings';
+import { buildLegalTwin } from './legal';
+import {
+  buildCompanyCategorySalaryTwin,
+  buildCompanySalariesTwin,
+  buildSalaryCompaniesTwin,
+  buildSalaryHubTwin,
+  buildSalaryLocationSkillsTwin,
+  buildSalaryLocationTitlesTwin,
+  buildSalaryLocationTwin,
+  buildSalaryLocationsTwin,
+  buildSalarySkillLocationTwin,
+  buildSalarySkillLocationsTwin,
+  buildSalarySkillTwin,
+  buildSalarySkillsTwin,
+  buildSalaryTitleLocationTwin,
+  buildSalaryTitleLocationsTwin,
+  buildSalaryTitleTwin,
+  buildSalaryTitlesTwin,
+} from './salaries';
 
 import type { MarkdownTwinResult } from './result';
 
@@ -64,6 +83,33 @@ const BUILDERS = {
   blog: (twin, origin) => buildBlogTwin(twin, origin),
   blogPost: (twin, origin) => buildBlogPostTwin(twin, origin),
   blogTag: (twin, origin) => buildBlogTagTwin(twin, origin),
+  salaries: (twin, origin) => buildSalaryHubTwin(twin, origin),
+  salaryCompanies: (twin, origin) => buildSalaryCompaniesTwin(twin, origin),
+  salaryTitles: (twin, origin) => buildSalaryTitlesTwin(twin, origin),
+  salarySkills: (twin, origin) => buildSalarySkillsTwin(twin, origin),
+  salaryLocations: (twin, origin) => buildSalaryLocationsTwin(twin, origin),
+  salaryTitle: (twin, origin) => buildSalaryTitleTwin(twin, origin),
+  salaryTitleLocations: (twin, origin) =>
+    buildSalaryTitleLocationsTwin(twin, origin),
+  salaryTitleLocation: (twin, origin) =>
+    buildSalaryTitleLocationTwin(twin, origin),
+  salarySkill: (twin, origin) => buildSalarySkillTwin(twin, origin),
+  salarySkillLocations: (twin, origin) =>
+    buildSalarySkillLocationsTwin(twin, origin),
+  salarySkillLocation: (twin, origin) =>
+    buildSalarySkillLocationTwin(twin, origin),
+  salaryLocation: (twin, origin) => buildSalaryLocationTwin(twin, origin),
+  salaryLocationTitles: (twin, origin) =>
+    buildSalaryLocationTitlesTwin(twin, origin),
+  salaryLocationSkills: (twin, origin) =>
+    buildSalaryLocationSkillsTwin(twin, origin),
+  companySalaries: (twin, origin) => buildCompanySalariesTwin(twin, origin),
+  companyCategorySalary: (twin, origin) =>
+    buildCompanyCategorySalaryTwin(twin, origin),
+  privacyPolicy: (twin) => buildLegalTwin('privacy-policy', twin),
+  termsOfService: (twin) => buildLegalTwin('terms-of-service', twin),
+  cookiePolicy: (twin) => buildLegalTwin('cookie-policy', twin),
+  impressum: (twin) => buildLegalTwin('impressum', twin),
 } satisfies MarkdownTwinBuilders;
 
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';

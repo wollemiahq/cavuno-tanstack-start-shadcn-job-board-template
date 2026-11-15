@@ -89,7 +89,7 @@ describe('server entry Markdown twins', () => {
   );
 
   it('leaves a page without a twin as today', async () => {
-    const path = localizePath('/companies/acme/salaries');
+    const path = localizePath('/about');
     const response = await get(path);
     expect(pathSeenByStart()).toBe(path);
     expect(startHandler.mock.lastCall?.[0].headers.get('accept')).toBe(

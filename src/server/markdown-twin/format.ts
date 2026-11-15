@@ -48,6 +48,21 @@ export function bulletList(items: ReadonlyArray<string | null>): string | null {
   return lines.length > 0 ? lines.map((line) => `- ${line}`).join('\n') : null;
 }
 
+/** A Markdown table of plain-text cells, or null when it has no rows. */
+export function table(
+  headers: readonly string[],
+  rows: ReadonlyArray<readonly string[]>,
+): string | null {
+  if (rows.length === 0) return null;
+  const line = (cells: readonly string[]) =>
+    `| ${cells.map((cell) => escapeInline(cell)).join(' | ')} |`;
+  return [
+    line(headers),
+    `| ${headers.map(() => '---').join(' | ')} |`,
+    ...rows.map(line),
+  ].join('\n');
+}
+
 /** A `##` section, or null when it has no body. */
 export function section(heading: string, body: string | null): string | null {
   return body ? `## ${escapeInline(heading)}\n\n${body}` : null;
