@@ -75,6 +75,54 @@ describe('resolveMarkdownTwin', () => {
     ['/blog.md', 'blog', {}],
     ['/blog/hello-world.md', 'blogPost', { postSlug: 'hello-world' }],
     ['/blog/tag/remote.md', 'blogTag', { tagSlug: 'remote' }],
+    ['/salaries.md', 'salaries', {}],
+    ['/salaries/companies.md', 'salaryCompanies', {}],
+    ['/salaries/titles.md', 'salaryTitles', {}],
+    ['/salaries/skills.md', 'salarySkills', {}],
+    ['/salaries/locations.md', 'salaryLocations', {}],
+    ['/salaries/titles/designer.md', 'salaryTitle', { slug: 'designer' }],
+    [
+      '/salaries/titles/designer/locations.md',
+      'salaryTitleLocations',
+      { slug: 'designer' },
+    ],
+    [
+      '/salaries/titles/designer/berlin.md',
+      'salaryTitleLocation',
+      { slug: 'designer', locationSlug: 'berlin' },
+    ],
+    ['/salaries/skills/python.md', 'salarySkill', { slug: 'python' }],
+    [
+      '/salaries/skills/python/locations.md',
+      'salarySkillLocations',
+      { slug: 'python' },
+    ],
+    [
+      '/salaries/skills/python/berlin.md',
+      'salarySkillLocation',
+      { slug: 'python', locationSlug: 'berlin' },
+    ],
+    ['/salaries/locations/berlin.md', 'salaryLocation', { slug: 'berlin' }],
+    [
+      '/salaries/locations/berlin/titles.md',
+      'salaryLocationTitles',
+      { slug: 'berlin' },
+    ],
+    [
+      '/salaries/locations/berlin/skills.md',
+      'salaryLocationSkills',
+      { slug: 'berlin' },
+    ],
+    ['/companies/acme/salaries.md', 'companySalaries', { companySlug: 'acme' }],
+    [
+      '/companies/acme/salaries/engineering.md',
+      'companyCategorySalary',
+      { companySlug: 'acme', categorySlug: 'engineering' },
+    ],
+    ['/privacy-policy.md', 'privacyPolicy', {}],
+    ['/terms-of-service.md', 'termsOfService', {}],
+    ['/cookie-policy.md', 'cookiePolicy', {}],
+    ['/impressum.md', 'impressum', {}],
   ])('resolves %s as the %s page', (path, kind, params) => {
     expect(resolveMarkdownTwin(get(path), ENGLISH_BOARD)).toMatchObject({
       kind,
@@ -99,6 +147,21 @@ describe('resolveMarkdownTwin', () => {
     expect(
       resolveMarkdownTwin(get('/fr/blog/etiquette/remote.md'), DUTCH_BOARD),
     ).toMatchObject({ kind: 'blogTag', params: { tagSlug: 'remote' } });
+  });
+
+  it('resolves localized salary and legal words', () => {
+    expect(
+      resolveMarkdownTwin(
+        get('/salarissen/functies/ontwerper/locaties.md'),
+        DUTCH_BOARD,
+      ),
+    ).toMatchObject({
+      kind: 'salaryTitleLocations',
+      params: { slug: 'ontwerper' },
+    });
+    expect(
+      resolveMarkdownTwin(get('/algemene-voorwaarden.md'), DUTCH_BOARD),
+    ).toMatchObject({ kind: 'termsOfService' });
   });
 
   it('answers HEAD as well as GET, and nothing else', () => {
@@ -126,7 +189,7 @@ describe('resolveMarkdownTwin', () => {
   it.each([
     ['the page itself', '/companies/acme/jobs/designer'],
     ['a twin of a twin', '/companies/acme/jobs/designer.md.md'],
-    ['a page without a twin yet', '/companies/acme/salaries.md'],
+    ['a page without a twin yet', '/about.md'],
     ['an author page', '/blog/author/jane.md'],
     ['a feed', '/jobs/rss.xml.md'],
     ['an unknown path', '/no/such/page.md'],
@@ -194,7 +257,7 @@ describe('Accept negotiation', () => {
   });
 
   it('leaves pages without a twin, twin URLs and other methods alone', () => {
-    expect(negotiate('/bedrijven/acme/salarissen')).toBeNull();
+    expect(negotiate('/over-ons')).toBeNull();
     expect(negotiate('/index')).toBeNull();
     expect(negotiate('/vacatures.md')).toBeNull();
     expect(negotiate('/vacatures', 'text/markdown', 'POST')).toBeNull();

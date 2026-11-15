@@ -59,6 +59,47 @@ export const MARKDOWN_TWIN_PAGES = [
   { kind: 'blog', template: '/blog/' },
   { kind: 'blogPost', template: '/blog/$postSlug' },
   { kind: 'blogTag', template: '/blog/tag/$tagSlug' },
+  { kind: 'salaries', template: '/salaries/' },
+  { kind: 'salaryCompanies', template: '/salaries/companies/' },
+  { kind: 'salaryTitles', template: '/salaries/titles/' },
+  { kind: 'salarySkills', template: '/salaries/skills/' },
+  { kind: 'salaryLocations', template: '/salaries/locations/' },
+  { kind: 'salaryTitle', template: '/salaries/titles/$slug/' },
+  {
+    kind: 'salaryTitleLocations',
+    template: '/salaries/titles/$slug/locations',
+  },
+  {
+    kind: 'salaryTitleLocation',
+    template: '/salaries/titles/$slug/$locationSlug',
+  },
+  { kind: 'salarySkill', template: '/salaries/skills/$slug/' },
+  {
+    kind: 'salarySkillLocations',
+    template: '/salaries/skills/$slug/locations',
+  },
+  {
+    kind: 'salarySkillLocation',
+    template: '/salaries/skills/$slug/$locationSlug',
+  },
+  { kind: 'salaryLocation', template: '/salaries/locations/$slug/' },
+  {
+    kind: 'salaryLocationTitles',
+    template: '/salaries/locations/$slug/titles',
+  },
+  {
+    kind: 'salaryLocationSkills',
+    template: '/salaries/locations/$slug/skills',
+  },
+  { kind: 'companySalaries', template: '/companies/$companySlug/salaries/' },
+  {
+    kind: 'companyCategorySalary',
+    template: '/companies/$companySlug/salaries/$categorySlug',
+  },
+  { kind: 'privacyPolicy', template: '/privacy-policy' },
+  { kind: 'termsOfService', template: '/terms-of-service' },
+  { kind: 'cookiePolicy', template: '/cookie-policy' },
+  { kind: 'impressum', template: '/impressum' },
 ] as const satisfies readonly {
   kind: string;
   template: (typeof ROUTE_TEMPLATES)[number];
