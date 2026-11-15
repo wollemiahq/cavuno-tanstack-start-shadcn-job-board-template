@@ -76,6 +76,7 @@ export const MACHINE_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
   'apply',
   'coming-soon-gate',
   'robots.txt',
+  'llms.txt',
   'ads.txt',
   'indexnow-key.txt',
   'site.webmanifest',

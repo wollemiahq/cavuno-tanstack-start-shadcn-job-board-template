@@ -85,7 +85,7 @@ describe('server entry Accept handling', () => {
     expect(acceptSeenByStart()).toBe(BROWSER_ACCEPT);
   });
 
-  it.each(['/robots.txt', '/jobs/rss.xml', '/sitemap.xml'])(
+  it.each(['/robots.txt', '/llms.txt', '/jobs/rss.xml', '/sitemap.xml'])(
     'leaves the request to server route %s as sent',
     async (path) => {
       await get(path, 'text/plain');
