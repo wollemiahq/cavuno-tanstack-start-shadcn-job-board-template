@@ -100,6 +100,8 @@ export const MARKDOWN_TWIN_PAGES = [
   { kind: 'termsOfService', template: '/terms-of-service' },
   { kind: 'cookiePolicy', template: '/cookie-policy' },
   { kind: 'impressum', template: '/impressum' },
+  { kind: 'about', template: '/about' },
+  { kind: 'pricing', template: '/pricing' },
 ] as const satisfies readonly {
   kind: string;
   template: (typeof ROUTE_TEMPLATES)[number];

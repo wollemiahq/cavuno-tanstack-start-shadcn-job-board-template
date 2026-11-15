@@ -50,6 +50,8 @@ function builders(build: MarkdownTwinBuilder): MarkdownTwinBuilders {
     termsOfService: build,
     cookiePolicy: build,
     impressum: build,
+    about: build,
+    pricing: build,
   };
 }
 

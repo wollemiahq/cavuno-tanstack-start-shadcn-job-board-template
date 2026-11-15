@@ -74,7 +74,7 @@ describe('server entry Accept handling', () => {
   });
 
   it('renders HTML, not a 406, for a page without a twin asked for as Markdown', async () => {
-    const response = await get(localizePath('/pricing'), 'text/markdown');
+    const response = await get(localizePath('/contact'), 'text/markdown');
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('text/html');
     expect(acceptSeenByStart()).toBe('text/html,*/*;q=0.8');

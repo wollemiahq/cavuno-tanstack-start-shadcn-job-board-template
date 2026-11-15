@@ -123,6 +123,8 @@ describe('resolveMarkdownTwin', () => {
     ['/terms-of-service.md', 'termsOfService', {}],
     ['/cookie-policy.md', 'cookiePolicy', {}],
     ['/impressum.md', 'impressum', {}],
+    ['/about.md', 'about', {}],
+    ['/pricing.md', 'pricing', {}],
   ])('resolves %s as the %s page', (path, kind, params) => {
     expect(resolveMarkdownTwin(get(path), ENGLISH_BOARD)).toMatchObject({
       kind,
@@ -149,7 +151,7 @@ describe('resolveMarkdownTwin', () => {
     ).toMatchObject({ kind: 'blogTag', params: { tagSlug: 'remote' } });
   });
 
-  it('resolves localized salary and legal words', () => {
+  it('resolves localized salary, legal, about and pricing words', () => {
     expect(
       resolveMarkdownTwin(
         get('/salarissen/functies/ontwerper/locaties.md'),
@@ -162,6 +164,12 @@ describe('resolveMarkdownTwin', () => {
     expect(
       resolveMarkdownTwin(get('/algemene-voorwaarden.md'), DUTCH_BOARD),
     ).toMatchObject({ kind: 'termsOfService' });
+    expect(resolveMarkdownTwin(get('/over-ons.md'), DUTCH_BOARD)).toMatchObject(
+      { kind: 'about', htmlPath: '/over-ons' },
+    );
+    expect(
+      resolveMarkdownTwin(get('/fr/tarifs.md'), DUTCH_BOARD),
+    ).toMatchObject({ kind: 'pricing', htmlPath: '/fr/tarifs' });
   });
 
   it('answers HEAD as well as GET, and nothing else', () => {
@@ -189,7 +197,7 @@ describe('resolveMarkdownTwin', () => {
   it.each([
     ['the page itself', '/companies/acme/jobs/designer'],
     ['a twin of a twin', '/companies/acme/jobs/designer.md.md'],
-    ['a page without a twin yet', '/about.md'],
+    ['a page without a twin', '/contact.md'],
     ['an author page', '/blog/author/jane.md'],
     ['a feed', '/jobs/rss.xml.md'],
     ['an unknown path', '/no/such/page.md'],
@@ -257,7 +265,7 @@ describe('Accept negotiation', () => {
   });
 
   it('leaves pages without a twin, twin URLs and other methods alone', () => {
-    expect(negotiate('/over-ons')).toBeNull();
+    expect(negotiate('/contact')).toBeNull();
     expect(negotiate('/index')).toBeNull();
     expect(negotiate('/vacatures.md')).toBeNull();
     expect(negotiate('/vacatures', 'text/markdown', 'POST')).toBeNull();

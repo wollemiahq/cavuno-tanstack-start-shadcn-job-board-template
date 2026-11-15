@@ -4,15 +4,16 @@ import { Link } from '@tanstack/react-router';
 import { Check } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
 
-import { candidatePlanBenefits } from '@/board/candidate-plan-benefits';
-import {
-  configuredMembershipCapacitySentence,
-  customAttributeLines,
-  planBenefitLines,
-} from '@/board/plan-benefits';
+import { configuredMembershipCapacitySentence } from '@/board/plan-benefits';
 import { planDescription, planName } from '@/board/plan-labels';
+import {
+  formatPlanPrice,
+  planCardFeatures,
+  planGroups,
+  planIntervalSuffix,
+  type PlanAudience,
+} from '@/board/plan-offer';
 import {
   Page,
   PageContent,
@@ -90,66 +91,6 @@ const employersPageViewDependencies: EmployersPageViewDependencies = {
   ),
 };
 
-function formatPrice(price: Plan['price']): string {
-  if (!price) return m.employerLanding_freeLabel();
-  // Chrome-locale figure inside chrome-locale sentences (same rule as the
-  // salary FAQ): the price agrees with the copy around it.
-  return new Intl.NumberFormat(getLocale(), {
-    style: 'currency',
-    currency: price.currency.toUpperCase(),
-    minimumFractionDigits: price.amountCents % 100 === 0 ? 0 : 2,
-  }).format(price.amountCents / 100);
-}
-
-const intervalSuffix = (interval: Plan['billingInterval']) =>
-  interval === 'month'
-    ? m.employerLanding_perMonthSuffix()
-    : interval === 'year'
-      ? m.employerLanding_perYearSuffix()
-      : '';
-
-function planFeatures(plan: Plan) {
-  if (plan.purpose === 'job_seeker') return candidatePlanBenefits(plan);
-  if (plan.purpose === 'membership') return planBenefitLines(plan);
-  const grantsListings =
-    plan.purpose !== 'talent_access' && plan.featureSummary.maxActiveJobs > 0;
-  return [
-    grantsListings
-      ? m.employerLanding_featureActiveJobs({
-          count: plan.featureSummary.maxActiveJobs,
-          countLabel: String(plan.featureSummary.maxActiveJobs),
-        })
-      : null,
-    grantsListings && plan.featureSummary.durationDays > 0
-      ? m.employerLanding_featureListingDuration({
-          days: plan.featureSummary.durationDays,
-        })
-      : null,
-    grantsListings &&
-    plan.features?.['jobs.featured_slots']?.value === 'unlimited'
-      ? m.employerCompany_featuredUnlimitedText()
-      : grantsListings && plan.featureSummary.featuredSlots > 0
-        ? m.employerLanding_featureFeaturedSlots({
-            count: plan.featureSummary.featuredSlots,
-            countLabel: String(plan.featureSummary.featuredSlots),
-          })
-        : null,
-    plan.talent
-      ? m.employerLanding_featureProfileUnlocks({
-          count: plan.talent.unlocksPerPeriod,
-          countLabel: String(plan.talent.unlocksPerPeriod),
-        })
-      : null,
-    plan.talent
-      ? m.employerLanding_featureMessages({
-          count: plan.talent.messagesPerPeriod,
-          countLabel: String(plan.talent.messagesPerPeriod),
-        })
-      : null,
-    ...customAttributeLines(plan),
-  ].filter((feature) => feature !== null);
-}
-
 function FeatureList({ features }: { features: string[] }) {
   return (
     <ul className="text-muted-foreground space-y-2 text-sm">
@@ -180,10 +121,10 @@ function PlanPrice({ plan }: { plan: Plan }) {
     <p className="font-heading text-foreground text-3xl font-semibold tracking-tight">
       {plan.kind === 'free'
         ? m.employerLanding_freeLabel()
-        : formatPrice(plan.price)}
+        : formatPlanPrice(plan.price)}
       {plan.kind !== 'free' && plan.price ? (
         <span className="text-muted-foreground ms-1 text-sm font-normal">
-          {intervalSuffix(plan.billingInterval)}
+          {planIntervalSuffix(plan.billingInterval)}
         </span>
       ) : null}
     </p>
@@ -232,9 +173,7 @@ function PlanCard({
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-5">
         <PlanPrice plan={plan} />
-        <FeatureList
-          features={contact ? planBenefitLines(plan) : planFeatures(plan)}
-        />
+        <FeatureList features={planCardFeatures(plan)} />
         {membershipCapacity ? (
           <p className="text-foreground text-sm">{membershipCapacity}</p>
         ) : null}
@@ -381,24 +320,14 @@ export function EmployersPageView({
    * plan group, where a posting-only subscriber never saw it.
    */
   billingAction?: ReactNode;
-  audience?: 'employers' | 'candidates' | 'all';
+  audience?: PlanAudience;
   title?: string;
   description?: string;
   candidateIntro?: boolean;
 }) {
   const candidatePlans = plans.filter((plan) => plan.purpose === 'job_seeker');
-  const jobPosting = plans.filter((plan) => plan.purpose === 'job_posting');
-  const talentAccess = plans.filter((plan) => plan.purpose === 'talent_access');
-  const memberships = plans.filter((plan) => plan.purpose === 'membership');
-  const showCandidates = audience !== 'employers';
-  const showEmployers = audience !== 'candidates';
-  const empty =
-    (!showCandidates || candidatePlans.length === 0) &&
-    (!showEmployers ||
-      (jobPosting.length === 0 &&
-        talentAccess.length === 0 &&
-        contactPlans.length === 0 &&
-        memberships.length === 0));
+  const groups = planGroups({ plans, contactPlans, audience });
+  const empty = groups.length === 0;
   const pageDescription =
     description ?? m.employerLanding_subtitle({ boardName: seo.boardName });
   // The one-audience pages link `/pricing` exactly when the sitemap lists
@@ -446,37 +375,14 @@ export function EmployersPageView({
           )
         ) : (
           <>
-            {showCandidates ? (
+            {groups.map((group) => (
               <PlanGroup
-                title={m.candidateLanding_plansHeading()}
-                plans={candidatePlans}
+                key={group.title}
+                title={group.title}
+                plans={group.plans}
                 dependencies={dependencies}
               />
-            ) : null}
-            {showEmployers ? (
-              <>
-                <PlanGroup
-                  title={m.employerLanding_jobPostingHeading()}
-                  plans={jobPosting}
-                  dependencies={dependencies}
-                />
-                <PlanGroup
-                  title={m.employerLanding_talentAccessHeading()}
-                  plans={talentAccess}
-                  dependencies={dependencies}
-                />
-                <PlanGroup
-                  title={m.employerLanding_enterpriseHeading()}
-                  plans={contactPlans}
-                  dependencies={dependencies}
-                />
-                <PlanGroup
-                  title={m.memberships_title()}
-                  plans={memberships}
-                  dependencies={dependencies}
-                />
-              </>
-            ) : null}
+            ))}
             {linksPricing ? (
               <Link
                 to="/pricing"
