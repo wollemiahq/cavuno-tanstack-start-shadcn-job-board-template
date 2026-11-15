@@ -272,7 +272,11 @@ const BUDGETS = {
     // The verified tick with its tooltip (#337): +1,148 B raw / +542 B gzip
     // measured before main's custom fields landed, most of it the list of
     // files the lazily loaded tooltip fetches on hover. Raised by that growth.
-    '/p/$handle': { raw: 127_867, gzip: 49_591 },
+    // Wide tables in rendered API HTML scroll inside their own box (Prose
+    // wraps them, src/lib/scrollable-tables.ts): measured 127,768 B raw /
+    // 49,618 B gzip against main's 127,575 / 49,487 (+193 / +131). Raised by
+    // exactly the measured growth, keeping main's headroom.
+    '/p/$handle': { raw: 128_060, gzip: 49_722 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

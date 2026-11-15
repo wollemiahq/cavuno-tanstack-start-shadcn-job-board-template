@@ -18,31 +18,14 @@ const OPEN = '<div class="typeset-scroll-fit" tabindex="0">';
 const CLOSE = '</div>';
 
 export function withScrollableTables(html: string): string {
-  let out = '';
-  let last = 0;
   let depth = 0;
+  const out = html.replace(TABLE_TAG, (tag, slash: string) => {
+    if (!slash) return depth++ === 0 ? OPEN + tag : tag;
+    if (depth === 0) return tag;
+    return --depth === 0 ? tag + CLOSE : tag;
+  });
 
-  for (const match of html.matchAll(TABLE_TAG)) {
-    const index = match.index;
-    const closing = match[1] === '/';
-
-    if (!closing) {
-      if (depth === 0) {
-        out += html.slice(last, index) + OPEN;
-        last = index;
-      }
-      depth++;
-    } else if (depth > 0) {
-      depth--;
-      if (depth === 0) {
-        const end = index + match[0].length;
-        out += html.slice(last, end) + CLOSE;
-        last = end;
-      }
-    }
-  }
-
-  // An unclosed table keeps its wrapper open to the end; close it so the
-  // markup stays balanced.
-  return out + html.slice(last) + (depth > 0 ? CLOSE : '');
+  // An unclosed table leaves its wrapper open; close it so the markup
+  // stays balanced.
+  return depth > 0 ? out + CLOSE : out;
 }
