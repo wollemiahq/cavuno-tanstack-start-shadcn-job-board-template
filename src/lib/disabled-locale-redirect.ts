@@ -14,12 +14,17 @@
  * no longer compiled. English needs no list; its words are the canonical
  * ones.
  *
+ * A Markdown twin (`/fr/emplois.md`) goes to the twin of the page its page
+ * URL goes to (`/jobs.md`): the page path is redirected, then `.md` is put
+ * back, so the last segment is read as a URL word and not as `emplois.md`.
+ *
  * Never loops: the target carries no disabled-locale prefix unless the
  * request stacked several, and each hop removes one.
  */
 import URL_WORDS from '../url-words.json';
 import { disabledLocaleOf } from './disabled-locale';
 import { delocalizeSegments, localizeSegments } from './localized-path';
+import { markdownPathFor, markdownTwinPagePath } from './markdown-twin/routes';
 
 import type { LocaleRouting } from './localized-path';
 import type { UrlWords } from './url-words';
@@ -36,6 +41,11 @@ export function disabledLocaleRedirectPath(
 ): string | null {
   const locale = disabledLocaleOf(pathname, routing?.isLocale);
   if (!locale) return null;
+  const twinPage = markdownTwinPagePath(pathname, routing);
+  if (twinPage !== null) {
+    const page = disabledLocaleRedirectPath(twinPage, routing, words);
+    return page === null ? null : markdownPathFor(page, routing);
+  }
   const rest = pathname.slice(locale.length + 1) || '/';
   // Read the rest as an unprefixed URL of a board whose language is the
   // disabled locale, back to canonical words.
