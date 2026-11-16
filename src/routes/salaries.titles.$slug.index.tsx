@@ -4,7 +4,7 @@
  */
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, salaryTitlePath } from '@cavuno/board/paths';
-import { Link, createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -18,7 +18,6 @@ import {
   companyCategorySalaryPath,
   formatSalaryRange,
   salaryTitleInLocationPath,
-  salaryTitleLocationsPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -36,7 +35,6 @@ import {
 } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
-import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 export const Route = createFileRoute('/salaries/titles/$slug/')({
@@ -191,17 +189,10 @@ function TitleSalaryPage() {
             )}
           />
           {locationItems.length > 0 ? (
-            <PageSection
-              title={m.salaryDetail_topLocations()}
-              actions={
-                <Link
-                  to={salaryTitleLocationsPath(salary.canonicalSlug)}
-                  className={buttonVariants({ variant: 'link', size: 'sm' })}
-                >
-                  {m.salaryDetail_seeAllLocationsLabel()}
-                </Link>
-              }
-            >
+            // No "see all locations" link: the Board API never indexes a
+            // title's locations index (`title_locations_index.indexable` is
+            // always false), and this page links only indexable pages.
+            <PageSection title={m.salaryDetail_topLocations()}>
               <SalaryRail vm={toSalaryRailVM('', locationItems, getLocale())} />
             </PageSection>
           ) : null}

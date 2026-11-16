@@ -157,6 +157,8 @@ export const getSalaryHubPage = createServerFn({ method: 'GET' })
         companies: companies.data,
         titles: titles.data,
         skills: skills.data,
+        // /salaries/skills is noindexed by this same verdict on its items.
+        skillsIndexIndexable: !isSalaryHubNoindex(skills.data),
         // Top-level places only (the hub preview); the index page shows the
         // full hierarchy.
         locations: locations.data.filter(

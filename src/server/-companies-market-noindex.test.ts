@@ -53,6 +53,8 @@ vi.mock('../lib/board', () => ({
 import {
   MIN_COMPANIES_PER_INDEXED_MARKET_PAGE,
   getCompaniesMarketPage,
+  indexedMarkets,
+  thinMarketSlugs,
 } from './companies-pages';
 
 async function robotsFor(
@@ -106,5 +108,51 @@ describe('market page thin-content floor', () => {
       content: 'noindex, follow',
     });
     expect(await robotsFor({}, 0, floor)).toBeUndefined();
+  });
+});
+
+describe('links to market pages', () => {
+  const floor = MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
+  const market = (slug: string, companyCount: number) => ({
+    slug,
+    companyCount,
+  });
+
+  it('keeps thin markets out of market link lists', () => {
+    expect(
+      indexedMarkets([market('big', floor), market('thin', floor - 1)]).map(
+        (m) => m.slug,
+      ),
+    ).toEqual(['big']);
+  });
+
+  it('names a company market thin from its count in the ranked list', () => {
+    const counts = {
+      data: [market('big', floor), market('thin', floor - 1)],
+      hasMore: false,
+    };
+    expect(
+      thinMarketSlugs([{ slug: 'big' }, { slug: 'thin' }], counts),
+    ).toEqual(['thin']);
+  });
+
+  it('treats a market past the last page as thin only when the tail is', () => {
+    const missing = [{ slug: 'unlisted' }];
+    expect(
+      thinMarketSlugs(missing, {
+        data: [market('a', floor + 3), market('b', floor - 1)],
+        hasMore: true,
+      }),
+    ).toEqual(['unlisted']);
+    expect(
+      thinMarketSlugs(missing, {
+        data: [market('a', floor + 3), market('b', floor)],
+        hasMore: true,
+      }),
+    ).toEqual([]);
+  });
+
+  it('links every market when the counts could not be read', () => {
+    expect(thinMarketSlugs([{ slug: 'any' }], null)).toEqual([]);
   });
 });

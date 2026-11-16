@@ -92,7 +92,7 @@ function openJobsHeading(count: number) {
 const rootApi = getRouteApi('__root__');
 
 function CompanyPage() {
-  const { company, jobs, similar, salarySummary, hasSalaries } =
+  const { company, jobs, similar, salarySummary, hasSalaries, thinMarkets } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
 
@@ -249,16 +249,25 @@ function CompanyPage() {
                     {m.employerProfile_marketsLabel()}
                   </span>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {company.markets.map((market) => (
-                      <Link
-                        key={market.slug}
-                        to="/companies/markets/$market"
-                        params={{ market: market.canonicalSlug }}
-                        className="focus-visible:ring-ring rounded-full transition-opacity hover:no-underline hover:opacity-75 focus-visible:ring-2 focus-visible:outline-none"
-                      >
-                        <Badge variant="secondary">{market.displayName}</Badge>
-                      </Link>
-                    ))}
+                    {company.markets.map((market) =>
+                      // A thin market's page is noindexed: name it, don't link it.
+                      thinMarkets.includes(market.slug) ? (
+                        <Badge key={market.slug} variant="secondary">
+                          {market.displayName}
+                        </Badge>
+                      ) : (
+                        <Link
+                          key={market.slug}
+                          to="/companies/markets/$market"
+                          params={{ market: market.canonicalSlug }}
+                          className="focus-visible:ring-ring rounded-full transition-opacity hover:no-underline hover:opacity-75 focus-visible:ring-2 focus-visible:outline-none"
+                        >
+                          <Badge variant="secondary">
+                            {market.displayName}
+                          </Badge>
+                        </Link>
+                      ),
+                    )}
                   </div>
                 </div>
               ) : null}
