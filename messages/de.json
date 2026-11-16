@@ -3302,5 +3302,8 @@
   "mcpDocs_otherSteps": "Jeder Client, der entfernte MCP-Server über Streamable HTTP unterstützt, kann sich mit der URL oben verbinden.",
   "mcpDocs_toolsHeading": "Was er kann",
   "mcpDocs_limitsHeading": "Grenzen",
-  "mcpDocs_limits": "Jedes Tool liest nur die öffentlichen Anzeigen der Jobbörse; nichts wird gespeichert oder geändert. Anfragen sind pro Besucher und pro Jobbörse begrenzt, und eine begrenzte Anfrage sagt, wann Sie es erneut versuchen können."
+  "mcpDocs_limits": "Jedes Tool liest nur die öffentlichen Anzeigen der Jobbörse; nichts wird gespeichert oder geändert. Anfragen sind pro Besucher und pro Jobbörse begrenzt, und eine begrenzte Anfrage sagt, wann Sie es erneut versuchen können.",
+  "employerNav_companyLabel": "Unternehmen",
+  "employerNav_teamLabel": "Team",
+  "employerNav_viewBoardLabel": "Jobbörse ansehen"
 }

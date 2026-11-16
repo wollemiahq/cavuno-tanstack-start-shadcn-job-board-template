@@ -1,12 +1,13 @@
 'use client';
 
 import { Link, useRouter } from '@tanstack/react-router';
+import { Check } from 'lucide-react';
 
 import { initialsOf } from '../lib/initials';
 import { m } from '../paraglide/messages';
 import { signOut } from '../server/auth';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,12 +16,10 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toastActionError } from '@/lib/action-toast';
+import { cn } from '@/lib/utils';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 
 export type SignOutAction = () => Promise<void | { ok: true }>;
@@ -28,25 +27,34 @@ export type SignOutAction = () => Promise<void | { ok: true }>;
 /** Authenticated-only header UI, split out of the anonymous public shell. */
 export function HeaderAccountMenu({
   user,
+  avatarUrl = null,
   hasAccessGrant,
   nativeApplications,
   jobRecommendationsEnabled,
   employerCompanies,
+  activeCompany = null,
   hasProductsPage = false,
-  canPostJobs = true,
   onSignOut,
   onSignOutPendingChange,
   signOutAction = signOut,
 }: {
   user: BoardUser;
+  /** The viewer's profile photo; initials stand in without one. */
+  avatarUrl?: string | null;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
   jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
+  /**
+   * The company the header's employer links point at: the trigger shows its
+   * name under the viewer's, and the menu links back to the public board.
+   */
+  activeCompany?: {
+    name: string;
+    slug: string | null;
+  } | null;
   /** The board sells digital products: show the Purchases library. */
   hasProductsPage?: boolean;
-  /** Public job-posting SKUs exist — hide Post job when the board sells none. */
-  canPostJobs?: boolean;
   onSignOut: () => void;
   onSignOutPendingChange: (pending: boolean) => void;
   signOutAction?: SignOutAction;
@@ -59,28 +67,102 @@ export function HeaderAccountMenu({
   // Matches, saved jobs and applications need a candidate profile (hosted
   // parity); profile, job alerts and settings work for every account.
   const isCandidate = user.role === 'candidate';
+  const viewerName = user.displayName ?? user.email;
+  const companiesGroup = (
+    <DropdownMenuGroup>
+      <DropdownMenuLabel>
+        {m.employerOnboarding_yourCompaniesTitle()}
+      </DropdownMenuLabel>
+      {companyWorkspaces.map((membership) => {
+        const current = membership.company.slug === activeCompany?.slug;
+        return (
+          <DropdownMenuItem
+            key={membership.id}
+            nativeButton={false}
+            aria-current={current ? 'true' : undefined}
+            render={
+              <Link
+                to="/employers/companies/$slug"
+                params={{ slug: membership.company.slug! }}
+                // The current company is marked below; the router would
+                // otherwise call it the current page on all its pages.
+                activeOptions={{ exact: true }}
+              />
+            }
+          >
+            <span className="min-w-0 flex-1 truncate">
+              {membership.company.name}
+            </span>
+            {current ? <Check aria-hidden="true" /> : null}
+          </DropdownMenuItem>
+        );
+      })}
+      <DropdownMenuItem
+        nativeButton={false}
+        render={<Link to="/employers/dashboard" search={{ add: true }} />}
+      >
+        {m.siteHeader_addNewCompanyLabel()}
+      </DropdownMenuItem>
+    </DropdownMenuGroup>
+  );
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            aria-label={m.siteHeader_accountLabel()}
-            data-test="account-menu"
+      {activeCompany ? (
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto gap-2 rounded-full py-1 pr-1 pl-1 sm:pr-3"
+              aria-label={m.siteHeader_accountLabel()}
+              data-test="account-menu"
+            />
+          }
+        >
+          <ViewerAvatar name={viewerName} avatarUrl={avatarUrl} />
+          <AccountIdentity
+            name={viewerName}
+            company={activeCompany.name}
+            className="hidden max-w-40 sm:grid"
           />
-        }
-      >
-        <Avatar size="sm">
-          <AvatarFallback>
-            {initialsOf(user.displayName ?? user.email)}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-48">
+        </DropdownMenuTrigger>
+      ) : (
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label={m.siteHeader_accountLabel()}
+              data-test="account-menu"
+            />
+          }
+        >
+          <ViewerAvatar name={viewerName} avatarUrl={avatarUrl} size="sm" />
+        </DropdownMenuTrigger>
+      )}
+      <DropdownMenuContent align="end" className="min-w-56">
+        {activeCompany ? (
+          <>
+            {/* Who and which company, as on the button, then the switcher. */}
+            <div className="flex items-center gap-3 px-2 py-2">
+              <ViewerAvatar name={viewerName} avatarUrl={avatarUrl} />
+              <AccountIdentity
+                name={viewerName}
+                company={activeCompany.name}
+                className="grid"
+              />
+            </div>
+            <DropdownMenuSeparator />
+            {companiesGroup}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem nativeButton={false} render={<Link to="/" />}>
+              {m.employerNav_viewBoardLabel()}
+            </DropdownMenuItem>
+          </>
+        ) : null}
         <DropdownMenuItem nativeButton={false} render={<Link to="/account" />}>
           {m.accountShell_profileNav()}
         </DropdownMenuItem>
@@ -133,73 +215,12 @@ export function HeaderAccountMenu({
         <DropdownMenuItem nativeButton={false} render={<Link to="/settings" />}>
           {m.accountShell_settingsNav()}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>
-            {m.employerOnboarding_yourCompaniesTitle()}
-          </DropdownMenuLabel>
-          {companyWorkspaces.map((membership) => (
-            <DropdownMenuSub key={membership.id}>
-              <DropdownMenuSubTrigger>
-                {membership.company.name}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.accountShell_jobsNav()}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug/profile"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.accountShell_companyProfileNav()}
-                </DropdownMenuItem>
-                {canPostJobs ? (
-                  <DropdownMenuItem
-                    nativeButton={false}
-                    render={
-                      <Link
-                        to="/employers/companies/$slug/jobs/new"
-                        params={{ slug: membership.company.slug! }}
-                      />
-                    }
-                  >
-                    {m.siteHeader_postJobLabel()}
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem
-                  nativeButton={false}
-                  render={
-                    <Link
-                      to="/employers/companies/$slug/members"
-                      params={{ slug: membership.company.slug! }}
-                    />
-                  }
-                >
-                  {m.accountShell_membersNav()}
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          ))}
-          <DropdownMenuItem
-            nativeButton={false}
-            render={<Link to="/employers/dashboard" search={{ add: true }} />}
-          >
-            {m.siteHeader_addNewCompanyLabel()}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+        {activeCompany ? null : (
+          <>
+            <DropdownMenuSeparator />
+            {companiesGroup}
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           data-test="account-menu-sign-out"
@@ -229,5 +250,43 @@ export function HeaderAccountMenu({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** The viewer's name over the company they are working on. */
+function AccountIdentity({
+  name,
+  company,
+  className,
+}: {
+  name: string;
+  company: string;
+  className: string;
+}) {
+  return (
+    <span className={cn('min-w-0 text-left leading-tight', className)}>
+      <span className="truncate text-sm font-medium">{name}</span>
+      <span className="text-muted-foreground truncate text-xs font-normal">
+        {company}
+      </span>
+    </span>
+  );
+}
+
+/** The viewer's photo, or their initials without one. */
+function ViewerAvatar({
+  name,
+  avatarUrl,
+  size = 'default',
+}: {
+  name: string;
+  avatarUrl: string | null;
+  size?: 'default' | 'sm';
+}) {
+  return (
+    <Avatar size={size}>
+      {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
+      <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+    </Avatar>
   );
 }

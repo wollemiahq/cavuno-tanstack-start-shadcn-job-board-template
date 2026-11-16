@@ -33,6 +33,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LAST_EMPLOYER_COMPANY_KEY } from '../hooks/use-last-employer-company';
 import {
   resolveHeaderSearchState,
   type HeaderSearchScope,
@@ -104,6 +105,8 @@ function renderHeader({
   features = allFeatures,
   talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
   user = null,
+  employerCompanies = null,
+  avatarUrl = null,
   hasAccessGrant = false,
   hasMembershipPage = false,
   hasProductsPage = false,
@@ -122,6 +125,8 @@ function renderHeader({
   features?: HeaderFeatures;
   talentDirectoryVisibility?: TalentDirectoryVisibility;
   user?: React.ComponentProps<typeof Header>['user'];
+  employerCompanies?: React.ComponentProps<typeof Header>['employerCompanies'];
+  avatarUrl?: string | null;
   hasAccessGrant?: boolean;
   hasMembershipPage?: boolean;
   hasProductsPage?: boolean;
@@ -251,6 +256,8 @@ function renderHeader({
         user={viewer}
         language="en"
         features={{ ...features, jobRecommendationsEnabled }}
+        employerCompanies={employerCompanies}
+        avatarUrl={avatarUrl}
         hasAccessGrant={hasAccessGrant}
         onSignOut={() => setViewer(null)}
         signOutAction={signOutMock}
@@ -331,6 +338,11 @@ function renderHeader({
       route('/p/$handle'),
       route('/blog'),
       route('/products'),
+      route('/memberships'),
+      route('/employers/companies/$slug'),
+      route('/employers/companies/$slug/profile'),
+      route('/employers/companies/$slug/members'),
+      route('/employers/companies/$slug/jobs/new'),
       route('/post'),
       route('/auth/sign-in'),
       route('/auth/join'),
@@ -579,6 +591,287 @@ describe('Header — Memberships link', () => {
     expect(
       screen.queryByRole('link', { name: m.nav_memberships() }),
     ).toBeNull();
+  });
+});
+
+describe('Header — employer navigation', () => {
+  const employer = {
+    id: 'user-2',
+    object: 'board_user',
+    role: 'employer',
+    email: 'len@northgate.example',
+    displayName: 'Len Kay',
+    emailVerified: true,
+    hasPassword: true,
+  } as const;
+  const membership = (
+    slug: string,
+    name: string,
+    status: 'approved' | 'awaiting_admin' = 'approved',
+  ) =>
+    ({
+      id: `membership-${slug}`,
+      object: 'company_membership',
+      status,
+      role: 'owner',
+      workEmail: null,
+      workEmailVerifiedAt: null,
+      company: {
+        id: `company-${slug}`,
+        name,
+        slug,
+        website: null,
+        logoUrl: null,
+      },
+    }) as const;
+  const primaryNav = () =>
+    screen.findByRole('navigation', {
+      name: m.siteHeader_primaryNavigationAriaLabel(),
+    });
+
+  // The header remembers the last company opened in this browser.
+  beforeEach(() => localStorage.clear());
+
+  it("gives an employer with one company that company's links instead of the public ones", async () => {
+    renderHeader({
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('pending-co', 'Pending Co', 'awaiting_admin'),
+      ],
+      hasMembershipPage: true,
+    });
+
+    const nav = await primaryNav();
+    expect(
+      await within(nav).findByRole('link', { name: m.accountShell_jobsNav() }),
+    ).toHaveAttribute('href', '/employers/companies/northgate');
+    expect(
+      within(nav).getByRole('link', { name: navigation.talent }),
+    ).toHaveAttribute('href', '/talent');
+    expect(
+      within(nav).getByRole('link', { name: m.employerNav_companyLabel() }),
+    ).toHaveAttribute('href', '/employers/companies/northgate/profile');
+    expect(
+      within(nav).getByRole('link', { name: m.employerNav_teamLabel() }),
+    ).toHaveAttribute('href', '/employers/companies/northgate/members');
+    expect(
+      within(nav).getByRole('link', { name: m.nav_memberships() }),
+    ).toHaveAttribute('href', '/memberships');
+    expect(
+      within(nav).queryByRole('link', { name: navigation.companies }),
+    ).toBeNull();
+    expect(
+      within(nav).queryByRole('link', { name: navigation.blog }),
+    ).toBeNull();
+
+    fireEvent.click(await findAccountButton());
+    expect(
+      await screen.findByRole('menuitem', {
+        name: m.employerNav_viewBoardLabel(),
+      }),
+    ).toHaveAttribute('href', '/');
+  });
+
+  it('lists the companies in the account menu as a switcher, marking the current one', async () => {
+    renderHeader({
+      initialEntry: '/employers/companies/second-co/profile',
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('second-co', 'Second Co'),
+      ],
+    });
+
+    fireEvent.click(await findAccountButton());
+    const current = await screen.findByRole('menuitem', { name: 'Second Co' });
+    const other = screen.getByRole('menuitem', {
+      name: 'Northgate Data Centres',
+    });
+    expect(current).toHaveAttribute('href', '/employers/companies/second-co');
+    expect(current).toHaveAttribute('aria-current', 'true');
+    expect(other).toHaveAttribute('href', '/employers/companies/northgate');
+    expect(other).not.toHaveAttribute('aria-current');
+    // The company's pages live in the header now, not in a submenu.
+    expect(
+      screen.queryByRole('menuitem', {
+        name: m.accountShell_companyProfileNav(),
+      }),
+    ).toBeNull();
+  });
+
+  it('marks only the section the employer is on as the current page', async () => {
+    const router = renderHeader({
+      initialEntry: '/employers/companies/northgate/jobs/new',
+      user: employer,
+      employerCompanies: [membership('northgate', 'Northgate Data Centres')],
+    });
+
+    const jobs = await within(await primaryNav()).findByRole('link', {
+      name: m.accountShell_jobsNav(),
+    });
+    const company = within(await primaryNav()).getByRole('link', {
+      name: m.employerNav_companyLabel(),
+    });
+    expect(jobs).toHaveAttribute('aria-current', 'page');
+    expect(company).not.toHaveAttribute('aria-current');
+
+    await act(() =>
+      router.navigate({
+        to: '/employers/companies/$slug/profile',
+        params: { slug: 'northgate' },
+      }),
+    );
+    await waitFor(() =>
+      expect(company).toHaveAttribute('aria-current', 'page'),
+    );
+    expect(jobs).not.toHaveAttribute('aria-current');
+  });
+
+  it('follows the company in the URL for an employer with several companies', async () => {
+    renderHeader({
+      initialEntry: '/employers/companies/second-co/members',
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('second-co', 'Second Co'),
+      ],
+    });
+
+    expect(
+      await within(await primaryNav()).findByRole('link', {
+        name: m.employerNav_teamLabel(),
+      }),
+    ).toHaveAttribute('href', '/employers/companies/second-co/members');
+  });
+
+  it('keeps the company the employer last opened on pages without one in the URL', async () => {
+    const router = renderHeader({
+      initialEntry: '/employers/companies/second-co/members',
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('second-co', 'Second Co'),
+      ],
+    });
+    await within(await primaryNav()).findByRole('link', {
+      name: m.employerNav_teamLabel(),
+    });
+
+    await act(() => router.navigate({ to: '/' }));
+
+    await waitFor(async () =>
+      expect(
+        within(await primaryNav()).getByRole('link', {
+          name: m.employerNav_teamLabel(),
+        }),
+      ).toHaveAttribute('href', '/employers/companies/second-co/members'),
+    );
+  });
+
+  it("shows the viewer's photo, not the company logo, on the account button", async () => {
+    // Base UI reveals an avatar <img> only once it reports loaded, which
+    // jsdom never does on its own.
+    vi.spyOn(window, 'Image').mockImplementation(function MockImage() {
+      const image = document.createElement('img');
+      Object.defineProperties(image, {
+        complete: { value: true },
+        naturalWidth: { value: 100 },
+      });
+      return image;
+    });
+    renderHeader({
+      user: employer,
+      avatarUrl: 'https://cdn.example/len.jpg',
+      employerCompanies: [
+        {
+          ...membership('northgate', 'Northgate Data Centres'),
+          company: {
+            ...membership('northgate', 'Northgate Data Centres').company,
+            logoUrl: 'https://cdn.example/northgate.png',
+          },
+        },
+      ],
+    });
+
+    const button = await findAccountButton();
+    await waitFor(() =>
+      expect(button.querySelector('img')).toHaveAttribute(
+        'src',
+        'https://cdn.example/len.jpg',
+      ),
+    );
+    expect(button).toHaveTextContent('Northgate Data Centres');
+    vi.mocked(window.Image).mockRestore();
+  });
+
+  it('keeps the public links for an employer with several companies and none in the URL', async () => {
+    // A remembered company the employer no longer belongs to is ignored.
+    localStorage.setItem(LAST_EMPLOYER_COMPANY_KEY, 'former-co');
+    renderHeader({
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('second-co', 'Second Co'),
+      ],
+    });
+
+    expect(
+      await within(await primaryNav()).findByRole('link', {
+        name: navigation.companies,
+      }),
+    ).toBeTruthy();
+    expect(
+      within(await primaryNav()).queryByRole('link', {
+        name: m.employerNav_teamLabel(),
+      }),
+    ).toBeNull();
+  });
+
+  it('leaves out the candidate link when the board has no candidate database', async () => {
+    renderHeader({
+      user: employer,
+      employerCompanies: [membership('northgate', 'Northgate Data Centres')],
+      talentDirectoryVisibility: 'off',
+    });
+
+    await within(await primaryNav()).findByRole('link', {
+      name: m.employerNav_teamLabel(),
+    });
+    expect(
+      within(await primaryNav()).queryByRole('link', {
+        name: navigation.talent,
+      }),
+    ).toBeNull();
+  });
+
+  it("puts the company's links in the mobile menu, marking only the current one", async () => {
+    renderHeader({
+      initialEntry: '/employers/companies/northgate/profile',
+      user: employer,
+      employerCompanies: [membership('northgate', 'Northgate Data Centres')],
+    });
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: m.siteHeader_openNavMenuAriaLabel(),
+      }),
+    );
+    const mobileMenu = await screen.findByRole('dialog', {
+      name: m.siteHeader_primaryNavigationAriaLabel(),
+    });
+    const company = within(mobileMenu).getByRole('link', {
+      name: m.employerNav_companyLabel(),
+    });
+    expect(company).toHaveAttribute(
+      'href',
+      '/employers/companies/northgate/profile',
+    );
+    expect(company).toHaveAttribute('aria-current', 'page');
+    // Jobs' path is a prefix of the profile page's; it must not be current.
+    expect(
+      within(mobileMenu).getByRole('link', { name: m.accountShell_jobsNav() }),
+    ).not.toHaveAttribute('aria-current');
   });
 });
 

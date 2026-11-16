@@ -1,10 +1,17 @@
 'use client';
 
-import { lazy, Suspense, useRef, useState, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { MENU_COLOR } from '#/starter-config';
 
-import { Link } from '@tanstack/react-router';
+import { Link, useParams, useRouterState } from '@tanstack/react-router';
 import {
   BadgeCheck,
   BookOpenText,
@@ -13,8 +20,10 @@ import {
   Loader2,
   Menu,
   ShoppingBag,
+  UserRound,
   Users,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 
 import { resolveTalentDirectoryVisibility } from '../board/board-feature-flags';
@@ -31,6 +40,7 @@ import type { LocationSearchState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
+import { useLastEmployerCompany } from '@/hooks/use-last-employer-company';
 import { employerPostDestination } from '@/lib/employer-post-destination';
 import type {
   HeaderSearchLocation,
@@ -54,6 +64,100 @@ import { cn } from '@/lib/utils';
 import type { BoardUser, CompanyMembership } from '@cavuno/board';
 const navItemClassName =
   'relative flex min-w-16 flex-col items-center justify-center gap-0.5 border-b-2 border-transparent px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50';
+
+/** A link in the header's primary navigation and the mobile menu. */
+export interface HeaderNavItem {
+  id: string;
+  to: string;
+  params?: Record<string, string>;
+  label: string;
+  icon: LucideIcon;
+  /**
+   * Set for the employer links, whose current page the header works out from
+   * the route; `undefined` leaves it to the router's path matching.
+   */
+  current?: boolean;
+}
+
+/**
+ * Which employer section the current page belongs to. Read from route ids,
+ * which stay the same in every board language, unlike the localized pathname.
+ */
+function employerSectionOf(
+  matches: ReadonlyArray<{ routeId: string }>,
+): 'jobs' | 'company' | 'team' | 'talent' | null {
+  const routeIds = matches.map((match) => match.routeId);
+  if (routeIds.includes('/employers/companies/$slug/profile')) return 'company';
+  if (routeIds.includes('/employers/companies/$slug/members')) return 'team';
+  if (routeIds.some((id) => id.startsWith('/employers/companies/$slug'))) {
+    return 'jobs';
+  }
+  if (routeIds.some((id) => id.startsWith('/talent'))) return 'talent';
+  return null;
+}
+
+/**
+ * The employer's links: their company's jobs, the candidate database when the
+ * board has one, the company profile, the team, and Memberships when the board
+ * sells them. The candidate and Memberships links keep the board's own labels
+ * and follow the same rules as the public links.
+ */
+function employerNavItems(
+  slug: string,
+  section: ReturnType<typeof employerSectionOf>,
+  publicLinks: ReadonlyMap<string, { label: string }>,
+): HeaderNavItem[] {
+  const params = { slug };
+  const talent = publicLinks.get('talent');
+  const memberships = publicLinks.get('memberships');
+  return [
+    {
+      id: 'jobs',
+      to: '/employers/companies/$slug',
+      params,
+      label: m.accountShell_jobsNav(),
+      icon: BriefcaseBusiness,
+      current: section === 'jobs',
+    },
+    ...(talent
+      ? [
+          {
+            id: 'talent',
+            to: '/talent',
+            label: talent.label,
+            icon: Users,
+            current: section === 'talent',
+          },
+        ]
+      : []),
+    {
+      id: 'company',
+      to: '/employers/companies/$slug/profile',
+      params,
+      label: m.employerNav_companyLabel(),
+      icon: Building2,
+      current: section === 'company',
+    },
+    {
+      id: 'team',
+      to: '/employers/companies/$slug/members',
+      params,
+      label: m.employerNav_teamLabel(),
+      icon: UserRound,
+      current: section === 'team',
+    },
+    ...(memberships
+      ? [
+          {
+            id: 'memberships',
+            to: '/memberships',
+            label: memberships.label,
+            icon: BadgeCheck,
+          },
+        ]
+      : []),
+  ];
+}
 
 const LazyAccountMenu = lazy(() =>
   import('./header-account-menu').then(({ HeaderAccountMenu }) => ({
@@ -107,6 +211,7 @@ export default function Header({
   features,
   hasAccessGrant = false,
   employerCompanies = null,
+  avatarUrl = null,
   onSignOut,
   signOutAction,
   talentDirectoryVisibility,
@@ -132,6 +237,8 @@ export default function Header({
   };
   hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
+  /** The viewer's profile photo, shown on the account button. */
+  avatarUrl?: string | null;
   onSignOut: () => void;
   signOutAction?: SignOutAction;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
@@ -214,6 +321,10 @@ export default function Header({
     setMarket: setSearchMarket,
   };
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const employerSection = useRouterState({
+    select: (state) => employerSectionOf(state.matches),
+  });
+  const routeParams = useParams({ strict: false });
   const copy = {
     jobSearch: jobSearchCopy(),
     nav: navCopy(),
@@ -284,6 +395,37 @@ export default function Header({
     const item = navById.get(id);
     return item ? [item] : [];
   });
+  // An employer working on one company gets that company's links in place of
+  // the public ones: the company in the URL, else the one they last opened in
+  // this browser, else their only company. Someone with several companies who
+  // has opened none yet keeps the public links and picks one from the account
+  // menu.
+  const routeCompanySlug =
+    employerSection && employerSection !== 'talent'
+      ? routeParams.slug
+      : undefined;
+  const companyWorkspaces = (employerCompanies ?? []).filter(
+    (membership) =>
+      membership.status === 'approved' && membership.company.slug !== null,
+  );
+  const [lastCompanySlug, rememberCompany] = useLastEmployerCompany();
+  const routeCompany = companyWorkspaces.find(
+    (membership) => membership.company.slug === routeCompanySlug,
+  )?.company;
+  const routeCompanyOpened = routeCompany?.slug ?? null;
+  useEffect(() => {
+    if (routeCompanyOpened) rememberCompany(routeCompanyOpened);
+  }, [rememberCompany, routeCompanyOpened]);
+  const activeCompany = user
+    ? (routeCompany ??
+      companyWorkspaces.find(
+        (membership) => membership.company.slug === lastCompanySlug,
+      )?.company ??
+      (companyWorkspaces.length === 1 ? companyWorkspaces[0]?.company : null))
+    : null;
+  const navItems: HeaderNavItem[] = activeCompany?.slug
+    ? employerNavItems(activeCompany.slug, employerSection, navById)
+    : visibleNavLinks.map((item) => ({ ...item }));
   const postRemoved = removedNav.has('post');
   const signInLabel = m.siteHeader_signInLabel();
   const signUpLabel = m.siteHeader_signUpLabel();
@@ -391,12 +533,13 @@ export default function Header({
       <Suspense fallback={null}>
         <LazyAccountMenu
           user={user}
+          avatarUrl={avatarUrl}
           hasAccessGrant={hasAccessGrant}
           nativeApplications={features.nativeApplications}
           jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}
           employerCompanies={employerCompanies}
+          activeCompany={activeCompany}
           hasProductsPage={hasProductsPage}
-          canPostJobs={features.publicJobSubmission}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}
           signOutAction={signOutAction}
@@ -446,17 +589,29 @@ export default function Header({
               data-slot="header-primary-navigation"
               className="col-start-2 row-start-1 hidden shrink-0 items-stretch gap-0.5 self-stretch justify-self-center xl:flex"
             >
-              {visibleNavLinks.map((item) => (
+              {navItems.map((item) => (
                 <Link
-                  key={item.to}
+                  key={item.id}
                   to={item.to}
-                  className={cn(navItemClassName, 'hover:no-underline')}
-                  activeProps={{
-                    className: cn(
-                      navItemClassName,
-                      'border-primary text-foreground hover:no-underline',
-                    ),
-                  }}
+                  params={item.params}
+                  className={cn(
+                    navItemClassName,
+                    'hover:no-underline',
+                    item.current && 'border-primary text-foreground',
+                  )}
+                  aria-current={item.current ? 'page' : undefined}
+                  {...(item.current === undefined
+                    ? {
+                        activeProps: {
+                          className: cn(
+                            navItemClassName,
+                            'border-primary text-foreground hover:no-underline',
+                          ),
+                        },
+                      }
+                    : // The company's Jobs link is a prefix of its other
+                      // pages; only an exact match may mark it current.
+                      { activeOptions: { exact: true } })}
                 >
                   <item.icon className="size-5" aria-hidden="true" />
                   {item.label}
@@ -506,7 +661,7 @@ export default function Header({
       {menuOpen ? (
         <Suspense fallback={null}>
           <LazyMobileMenu
-            navLinks={visibleNavLinks}
+            navLinks={navItems}
             showPostJob={!user && features.publicJobSubmission && !postRemoved}
             navigationLabel={m.siteHeader_primaryNavigationAriaLabel()}
             postJobLabel={copy.nav.post}
