@@ -126,6 +126,23 @@ export function indexableSalaryItems<T extends { indexable?: boolean }>(
   return items.filter((item) => item.indexable !== false);
 }
 
+/**
+ * Jobs a title-in-place salary page needs before the Board API indexes it
+ * (the API's `SALARY_MIN_JOBS_TO_INDEX`).
+ */
+export const SALARY_MIN_JOBS_TO_INDEX = 4;
+
+/**
+ * Rows that link title-in-place pages without an `indexable` flag (a title's
+ * top locations, a place's top titles) keep only pages the API indexes. The
+ * API decides from the pair's own job count, which is the row's `jobCount`.
+ */
+export function indexableByJobCount<T extends { jobCount: number }>(
+  rows: readonly T[],
+): T[] {
+  return rows.filter((row) => row.jobCount >= SALARY_MIN_JOBS_TO_INDEX);
+}
+
 /** Cross-axis: the skills fan-out inside a place's salary page. */
 export function salaryLocationSkillsPath(placeSlug: string): string {
   return `${salaryLocationPath(placeSlug)}/skills`;

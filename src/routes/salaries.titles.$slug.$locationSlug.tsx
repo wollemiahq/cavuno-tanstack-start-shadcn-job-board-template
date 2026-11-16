@@ -16,6 +16,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableByJobCount,
   indexableSalaryItems,
   salarySkillLinkPath,
   salaryTitleInLocationPath,
@@ -112,21 +113,24 @@ function TitleLocationSalaryPage() {
       ) ?? '',
     jobCount: x.jobCount,
   }));
-  const titleItems: RailItem[] = salary.topTitles.map((x) => ({
-    name: x.categoryName,
-    href: salaryTitleInLocationPath(
-      x.categorySlug,
-      salary.locationCanonicalSlug,
-    ),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
+  // Only titles whose page in this place is indexed (enough jobs).
+  const titleItems: RailItem[] = indexableByJobCount(salary.topTitles).map(
+    (x) => ({
+      name: x.categoryName,
+      href: salaryTitleInLocationPath(
+        x.categorySlug,
+        salary.locationCanonicalSlug,
+      ),
+      range:
+        formatSalaryRange(
+          locale,
+          x.avgSalaryMin,
+          x.avgSalaryMax,
+          salary.currency,
+        ) ?? '',
+      jobCount: x.jobCount,
+    }),
+  );
   const childItems = toPlaceRail(salary.childLocations);
   const otherItems = toPlaceRail(salary.otherLocations);
   const hasSalaryContent = Boolean(

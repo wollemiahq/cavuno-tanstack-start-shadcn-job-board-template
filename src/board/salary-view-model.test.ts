@@ -469,4 +469,14 @@ describe('salary links', () => {
     ];
     expect(indexableSalaryItems(items).map((i) => i.slug)).toEqual(['a', 'c']);
   });
+
+  it('keeps rows with enough jobs for their title-in-place page to be indexed', async () => {
+    const { indexableByJobCount, SALARY_MIN_JOBS_TO_INDEX: min } =
+      await import('./salary-view-model');
+    const rows = [
+      { slug: 'enough', jobCount: min },
+      { slug: 'thin', jobCount: min - 1 },
+    ];
+    expect(indexableByJobCount(rows).map((r) => r.slug)).toEqual(['enough']);
+  });
 });

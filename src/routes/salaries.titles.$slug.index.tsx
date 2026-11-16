@@ -17,6 +17,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 import {
   companyCategorySalaryPath,
   formatSalaryRange,
+  indexableByJobCount,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -92,7 +93,10 @@ function TitleSalaryPage() {
   // generic /salaries/locations/{place} page has no data for a place that only
   // exists inside this title's sample, so link the title×location page whose
   // loader resolves + 308s the inbound placeSlug to its canonical form.
-  const locationItems: RailItem[] = salary.topLocations.map((x) => ({
+  // Only places whose title-in-place page is indexed (enough jobs).
+  const locationItems: RailItem[] = indexableByJobCount(
+    salary.topLocations,
+  ).map((x) => ({
     name: x.placeName,
     href: salaryTitleInLocationPath(salary.canonicalSlug, x.placeSlug),
     range:
