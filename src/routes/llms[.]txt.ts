@@ -1,6 +1,6 @@
 /**
- * `/llms.txt`: the board's Markdown index for language models, linking the
- * Markdown twins of its main pages. See ../server/llms-txt.ts.
+ * `/llms.txt`: the board's Markdown index for language models, linking its
+ * main pages. See ../server/llms-txt.ts.
  *
  * Like robots.txt it is a discovery file for the whole deployment: it reads
  * the primary board (never a demo cookie's board) and is not behind the
@@ -45,7 +45,7 @@ async function handle(request: Request): Promise<Response> {
     boardName: context.name,
     description,
     blogEnabled: context.features.blog === true,
-    // The about page's loader 404s without content, as its twin does.
+    // The about page's loader 404s without content.
     aboutEnabled: resolveLegalContent('about') !== null,
     mcpEnabled: context.features.mcp === true,
     // The rule each legal page's loader applies before it 404s.

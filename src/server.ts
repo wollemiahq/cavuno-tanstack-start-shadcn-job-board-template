@@ -21,14 +21,7 @@
  * asking for text/markdown, say) would get Start's 406; it gets the HTML
  * page instead (htmlPageRequest).
  *
- * Markdown twins: a `/x.md` URL for a page with a twin
- * (src/lib/markdown-twin/routes.ts) is handed to Start addressed to the
- * internal twin route, with the original URL still used for locale
- * detection and the cache key. Outside requests for that route 404.
- * A request for the page URL itself whose Accept lists text/markdown
- * (q above 0) is served exactly as its `/x.md` twin, from the twin's cache
- * key. HTML responses of pages with a twin carry `Vary: Accept`, and the
- * root document links the twin (src/components/markdown-alternate-link.tsx).
+ * A page URL ending in `.md` 308s to the page (src/lib/md-url-redirect.ts).
  *
  * An uncaught server error, or a 500 that Start rendered itself, logs one
  * `starter_server_error` line (src/lib/server-error-log.server.ts).
@@ -54,15 +47,7 @@ import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
 import { isMachinePath, stripLocalePrefix } from './lib/localized-path';
 import { localizedUrlRedirect } from './lib/localized-url-redirect';
-import {
-  isMarkdownTwinRoutePath,
-  markdownTwinRedirectLocation,
-  markdownTwinRouteRequest,
-  markdownTwinUrlRequest,
-  negotiatedMarkdownTwin,
-  pageMarkdownTwin,
-  resolveMarkdownTwin,
-} from './lib/markdown-twin/routes';
+import { mdUrlRedirect } from './lib/md-url-redirect';
 import {
   readPublicHtmlCache,
   withPublicHtmlCacheHeaders,
@@ -119,24 +104,6 @@ function htmlPageRequest(request: Request): Request {
   return new Request(request, { headers });
 }
 
-/** A page with a Markdown twin answers HTML or Markdown by Accept, so its
- * HTML says so to shared caches. */
-function withVaryAccept(request: Request, response: Response): Response {
-  if (!pageMarkdownTwin(request)) return response;
-  if (!response.headers.get('content-type')?.includes('text/html')) {
-    return response;
-  }
-  const vary = response.headers.get('Vary') ?? '';
-  if (/(^|,)\s*(accept|\*)\s*(,|$)/i.test(vary)) return response;
-  const headers = new Headers(response.headers);
-  headers.set('Vary', vary ? `${vary}, Accept` : 'Accept');
-  return new Response(response.body, {
-    headers,
-    status: response.status,
-    statusText: response.statusText,
-  });
-}
-
 const startHandler = createStartHandler(defaultStreamHandler);
 
 interface WorkerEnvironment {}
@@ -144,46 +111,23 @@ interface WorkerEnvironment {}
 type ExecutionContext = { waitUntil(promise: Promise<unknown>): void };
 
 async function serve(
-  incoming: Request,
+  request: Request,
   executionContext?: ExecutionContext,
 ): Promise<Response> {
-  const authFlow = captureAuthFlow(incoming);
-  if (authFlow) return withBaselineSecurityHeaders(authFlow, incoming);
-  const pathname = new URL(incoming.url).pathname;
+  const authFlow = captureAuthFlow(request);
+  if (authFlow) return withBaselineSecurityHeaders(authFlow, request);
+  const pathname = new URL(request.url).pathname;
   if (pathname === CLIENT_ERROR_PATH || pathname === `${CLIENT_ERROR_PATH}/`) {
     const clientError = await matchClientErrorIngest(
-      incoming,
+      request,
       getServerEnv(),
       executionContext?.waitUntil.bind(executionContext),
     );
-    if (clientError) return withBaselineSecurityHeaders(clientError, incoming);
+    if (clientError) return withBaselineSecurityHeaders(clientError, request);
   }
 
-  if (isMarkdownTwinRoutePath(pathname)) {
-    return withBaselineSecurityHeaders(
-      new Response('Not Found\n', {
-        status: 404,
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-      }),
-      incoming,
-    );
-  }
-  // Markdown asked for on the page URL: from here on, the twin's request.
-  const negotiated = negotiatedMarkdownTwin(incoming);
-  const request = negotiated
-    ? markdownTwinUrlRequest(incoming, negotiated)
-    : incoming;
-  const twin = resolveMarkdownTwin(request);
-  const twinRedirect = twin && markdownTwinRedirectLocation(request, twin);
-  if (twinRedirect) {
-    return withBaselineSecurityHeaders(
-      new Response(null, {
-        status: 308,
-        headers: { Location: twinRedirect, 'Cache-Control': 'max-age=86400' },
-      }),
-      request,
-    );
-  }
+  const mdRedirect = mdUrlRedirect(request);
+  if (mdRedirect) return withBaselineSecurityHeaders(mdRedirect, request);
 
   // Canonical (English) segments 308 to the board's localized URL before
   // anything renders or reads the cache; the router rewrite stays the
@@ -198,17 +142,11 @@ async function serve(
 
   const rendered = await paraglideMiddleware(
     localeDetectionRequest(request),
-    () =>
-      startHandler(
-        twin ? markdownTwinRouteRequest(request) : htmlPageRequest(request),
-      ),
+    () => startHandler(htmlPageRequest(request)),
   );
-  const response = withVaryAccept(
+  const response = withPublicHtmlCacheHeaders(
     request,
-    withPublicHtmlCacheHeaders(
-      request,
-      withBaselineSecurityHeaders(rendered, request),
-    ),
+    withBaselineSecurityHeaders(rendered, request),
   );
   // Always a promise now, and one that never rejects — a cache the
   // runtime refuses must not turn a rendered page into an error.

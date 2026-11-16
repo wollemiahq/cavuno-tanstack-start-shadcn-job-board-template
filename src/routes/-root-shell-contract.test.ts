@@ -17,9 +17,6 @@ vi.mock('@/components/alternate-links', () => ({
       href: `${origin}/fixture-locale`,
     }),
 }));
-vi.mock('@/components/markdown-alternate-link', () => ({
-  MarkdownAlternateLink: () => null,
-}));
 vi.mock('@/components/client-error-reporting-boot', () => ({
   ClientErrorReportingBoot: () => null,
 }));

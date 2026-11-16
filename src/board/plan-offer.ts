@@ -1,8 +1,8 @@
 /**
  * What a plan card on the plan pages (`/employers`, `/job-seekers`,
  * `/pricing`) says: the price and the feature lines, and which groups the
- * cards fall into. Shared by the page view and the pricing Markdown twin so
- * the two never disagree.
+ * cards fall into. Shared by the plan pages so they
+ * never disagree.
  */
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';

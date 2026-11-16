@@ -1,25 +1,23 @@
 /**
  * `/llms.txt`: a short Markdown index of the board for language models
  * (https://llmstxt.org): the board name, a one-line description, and links
- * to the Markdown twins of its main pages (src/lib/markdown-twin/routes.ts).
+ * to its main pages.
  *
  * Links are absolute on the board's published origin, in the board
  * language's URL words, like the sitemap. Pages the board does not serve
  * (a blog that is off, an about or legal page with no content, the MCP
- * server when it is off) are left out, under the rule each page's twin
- * 404s by. The pricing page always renders, so its twin is always listed.
+ * server when it is off) are left out, under the rule each page 404s by.
+ * The pricing page always renders, so it is always listed.
  * Served and cached like robots.txt.
  */
 import { BOARD_PATHS } from '@cavuno/board/paths';
 
 import { breadcrumbsCopy } from '../copy-groups/breadcrumbs';
 import { localizePath } from '../lib/localized-path';
-import { markdownPathFor } from '../lib/markdown-twin/routes';
 import {
   ROBOTS_CACHE_CONTROL,
   SEO_FILE_CONTENT_TYPE,
 } from '../lib/seo-handlers';
-import { escapeInline } from './markdown-twin/format';
 
 export interface LlmsTxtInput {
   /** The board's published origin, no trailing slash. */
@@ -28,7 +26,7 @@ export interface LlmsTxtInput {
   /** One line about the board; left out when empty. */
   description: string;
   blogEnabled: boolean;
-  /** Whether the about page has content (its twin 404s without). */
+  /** Whether the about page has content (it 404s without). */
   aboutEnabled: boolean;
   mcpEnabled: boolean;
   /** Legal pages that have content, by canonical path. */
@@ -40,9 +38,16 @@ export interface LlmsTxtInput {
   >;
 }
 
-function twinLink(origin: string, label: string, canonicalPath: string) {
-  const url = `${origin}${markdownPathFor(localizePath(canonicalPath))}`;
-  return `- [${escapeInline(label)}](${url})`;
+/** Board content as one line of inline Markdown text, never markup. */
+function escapeInline(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[\\`*_[\]<>#|~]/g, '\\$&');
+}
+
+function pageLink(origin: string, label: string, canonicalPath: string) {
+  return `- [${escapeInline(label)}](${origin}${localizePath(canonicalPath)})`;
 }
 
 export function llmsTxtBody(input: LlmsTxtInput): string {
@@ -55,15 +60,15 @@ export function llmsTxtBody(input: LlmsTxtInput): string {
   };
   const { origin } = input;
   const pages = [
-    twinLink(origin, labels.home, '/'),
-    twinLink(origin, labels.jobs, BOARD_PATHS.jobs),
-    twinLink(origin, labels.companies, BOARD_PATHS.companies),
-    twinLink(origin, labels.salaries, BOARD_PATHS.salaries),
-    input.blogEnabled ? twinLink(origin, labels.blog, BOARD_PATHS.blog) : null,
+    pageLink(origin, labels.home, '/'),
+    pageLink(origin, labels.jobs, BOARD_PATHS.jobs),
+    pageLink(origin, labels.companies, BOARD_PATHS.companies),
+    pageLink(origin, labels.salaries, BOARD_PATHS.salaries),
+    input.blogEnabled ? pageLink(origin, labels.blog, BOARD_PATHS.blog) : null,
     input.aboutEnabled
-      ? twinLink(origin, labels.about, BOARD_PATHS.about)
+      ? pageLink(origin, labels.about, BOARD_PATHS.about)
       : null,
-    twinLink(origin, labels.pricing, '/pricing'),
+    pageLink(origin, labels.pricing, '/pricing'),
     input.mcpEnabled ? `- [MCP](${origin}/mcp/server-card)` : null,
   ];
   const description = input.description.replace(/\s+/g, ' ').trim();
@@ -72,7 +77,7 @@ export function llmsTxtBody(input: LlmsTxtInput): string {
     description ? `> ${escapeInline(description)}` : null,
     pages.filter((line) => line !== null).join('\n'),
     input.legalPaths
-      .map((path) => twinLink(origin, legalLabels[path], path))
+      .map((path) => pageLink(origin, legalLabels[path], path))
       .join('\n') || null,
   ]
     .filter((block) => block !== null)
