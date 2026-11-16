@@ -20,7 +20,9 @@ import {
   useRouterState,
   type ErrorComponentProps,
 } from '@tanstack/react-router';
+import { createIsomorphicFn } from '@tanstack/react-start';
 
+import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
@@ -37,6 +39,7 @@ import { useKeywordSuggestions } from './-use-keyword-suggestions';
 import { useLocationSuggestions } from './-use-location-suggestions';
 
 import { AlternateLinks } from '@/components/alternate-links';
+import { AnalyticsScripts } from '@/components/analytics-scripts';
 import { AppRouteErrorPage } from '@/components/app-route-error';
 import { BoardAnalyticsBoot } from '@/components/board-analytics-boot';
 import { BoardAuthConversionTracker } from '@/components/board-auth-conversion-tracker';
@@ -98,15 +101,28 @@ import { talentSearchFromHeader } from '@/lib/talent-search';
 import { publishTalentSearchEdit } from '@/lib/talent-search-edits';
 import { useViewerUnreadCount } from '@/lib/use-viewer-unread-count';
 
-const LazyFooter = lazy(() =>
-  import('../components/Footer').then((mod) => ({ default: mod.default })),
-);
+// Server: static components. Client: lazy chunks. SSR renders the footer and
+// analytics on every page; see header-search-enhanced.tsx for why a
+// server-side React.lazy there can hang the isolate. The lazies below stay
+// plain: SSR has no session (no user, empty preview), so it never renders
+// them.
+const LazyFooter = createIsomorphicFn()
+  .server(() => Footer)
+  .client(() =>
+    lazy(() =>
+      import('../components/Footer').then((mod) => ({ default: mod.default })),
+    ),
+  )();
 
-const LazyAnalyticsScripts = lazy(() =>
-  import('@/components/analytics-scripts').then(({ AnalyticsScripts }) => ({
-    default: AnalyticsScripts,
-  })),
-);
+const LazyAnalyticsScripts = createIsomorphicFn()
+  .server(() => AnalyticsScripts)
+  .client(() =>
+    lazy(() =>
+      import('@/components/analytics-scripts').then(({ AnalyticsScripts }) => ({
+        default: AnalyticsScripts,
+      })),
+    ),
+  )();
 
 const LazyMessagesDockController = lazy(() =>
   import('./-messages-dock-controller').then(({ MessagesDockController }) => ({

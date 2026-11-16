@@ -2,12 +2,19 @@
 
 import { lazy, Suspense, useRef } from 'react';
 
+import { createIsomorphicFn } from '@tanstack/react-start';
 import { Search, X } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 
 import type { HeaderSearchProps } from '@/components/Header';
-import type { LocationComboboxHandle } from '@/components/location-combobox';
+import { HeaderSearchBlogField } from '@/components/header-search-blog-field';
+import { HeaderSearchCompanyField } from '@/components/header-search-company-field';
+import { JobsSearchFields } from '@/components/jobs-search-fields';
+import {
+  LocationCombobox,
+  type LocationComboboxHandle,
+} from '@/components/location-combobox';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import {
@@ -18,33 +25,53 @@ import {
 } from '@/components/ui/input-group';
 import type { HeaderSearchScope } from '@/lib/header-search';
 
-const LazyJobsSearchFields = lazy(() =>
-  import('@/components/jobs-search-fields').then(({ JobsSearchFields }) => ({
-    default: JobsSearchFields,
-  })),
-);
+// Server: static components. Client: lazy chunks. A server-side React.lazy
+// caches its import() promise in module scope; if the request that started
+// it ends first (a HEAD, a dropped connection), workerd never settles it and
+// every later render in the isolate suspends forever. The Start compiler
+// strips the .server() branch and its imports from the client build, so the
+// shared shell is unchanged. Keep the <Suspense> wrappers: hydration matches.
+const LazyJobsSearchFields = createIsomorphicFn()
+  .server(() => JobsSearchFields)
+  .client(() =>
+    lazy(() =>
+      import('@/components/jobs-search-fields').then(
+        ({ JobsSearchFields }) => ({ default: JobsSearchFields }),
+      ),
+    ),
+  )();
 
-const LazyHeaderSearchBlogField = lazy(() =>
-  import('@/components/header-search-blog-field').then(
-    ({ HeaderSearchBlogField }) => ({
-      default: HeaderSearchBlogField,
-    }),
-  ),
-);
+const LazyHeaderSearchBlogField = createIsomorphicFn()
+  .server(() => HeaderSearchBlogField)
+  .client(() =>
+    lazy(() =>
+      import('@/components/header-search-blog-field').then(
+        ({ HeaderSearchBlogField }) => ({ default: HeaderSearchBlogField }),
+      ),
+    ),
+  )();
 
-const LazyHeaderSearchCompanyField = lazy(() =>
-  import('@/components/header-search-company-field').then(
-    ({ HeaderSearchCompanyField }) => ({
-      default: HeaderSearchCompanyField,
-    }),
-  ),
-);
+const LazyHeaderSearchCompanyField = createIsomorphicFn()
+  .server(() => HeaderSearchCompanyField)
+  .client(() =>
+    lazy(() =>
+      import('@/components/header-search-company-field').then(
+        ({ HeaderSearchCompanyField }) => ({
+          default: HeaderSearchCompanyField,
+        }),
+      ),
+    ),
+  )();
 
-const LazyLocationCombobox = lazy(() =>
-  import('@/components/location-combobox').then(({ LocationCombobox }) => ({
-    default: LocationCombobox,
-  })),
-);
+const LazyLocationCombobox = createIsomorphicFn()
+  .server(() => LocationCombobox)
+  .client(() =>
+    lazy(() =>
+      import('@/components/location-combobox').then(({ LocationCombobox }) => ({
+        default: LocationCombobox,
+      })),
+    ),
+  )();
 
 function HeaderSearchFieldsFallback({ fields }: { fields: 1 | 2 }) {
   return Array.from({ length: fields }, (_, index) => (
