@@ -7,7 +7,7 @@ import { useCallback, useSyncExternalStore } from 'react';
  * pages without a company in the URL. Only the public company slug is kept,
  * in this browser; the header checks it against the viewer's memberships.
  */
-const STORAGE_KEY = 'cavuno:last-employer-company';
+export const LAST_EMPLOYER_COMPANY_KEY = 'cavuno:last-employer-company';
 
 const listeners = new Set<() => void>();
 
@@ -24,7 +24,7 @@ function subscribe(callback: () => void) {
 // WebView without DOM storage; both mean nothing is remembered.
 function getSnapshot(): string | null {
   try {
-    return localStorage.getItem(STORAGE_KEY);
+    return localStorage.getItem(LAST_EMPLOYER_COMPANY_KEY);
   } catch {
     return null;
   }
@@ -42,8 +42,8 @@ export function useLastEmployerCompany(): [
   const slug = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const remember = useCallback((next: string) => {
     try {
-      if (localStorage.getItem(STORAGE_KEY) === next) return;
-      localStorage.setItem(STORAGE_KEY, next);
+      if (localStorage.getItem(LAST_EMPLOYER_COMPANY_KEY) === next) return;
+      localStorage.setItem(LAST_EMPLOYER_COMPANY_KEY, next);
     } catch {
       return;
     }

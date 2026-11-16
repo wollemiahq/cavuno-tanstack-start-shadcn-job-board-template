@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
+import type { HeaderNavItem } from '@/components/Header';
 import { cn } from '@/lib/utils';
 
 const mobileNavItemClassName =
@@ -23,12 +24,9 @@ export function HeaderMobileMenu({
   postJobLabel,
   onOpenChange,
 }: {
-  navLinks: ReadonlyArray<{
-    id: string;
-    to: string;
-    params?: Record<string, string>;
-    label: string;
-  }>;
+  navLinks: ReadonlyArray<
+    Pick<HeaderNavItem, 'id' | 'to' | 'params' | 'label' | 'current'>
+  >;
   showPostJob: boolean;
   navigationLabel: string;
   postJobLabel: string;
@@ -77,6 +75,14 @@ export function HeaderMobileMenu({
             params={item.params}
             className={cn(mobileNavItemClassName, 'hover:no-underline')}
             onClick={() => onOpenChange(false)}
+            {...(item.current === undefined
+              ? {}
+              : // As in the header bar: the company's Jobs link is a prefix of
+                // its other pages, so the header decides which one is current.
+                {
+                  activeOptions: { exact: true },
+                  'aria-current': item.current ? ('page' as const) : undefined,
+                })}
           >
             {item.label}
           </Link>

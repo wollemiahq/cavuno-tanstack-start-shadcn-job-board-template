@@ -16,6 +16,7 @@ import {
 } from './-employers.company-profile';
 
 import { boardForms } from '@/board/form-layout';
+import { useRootSession } from '@/components/root-session';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
@@ -41,6 +42,7 @@ function CompanyProfilePage() {
   const data = Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
   const router = useRouter();
+  const { refreshSession } = useRootSession();
   return (
     <CompanyProfilePageView
       data={{ ...data, formLayout: boardForms(board)?.company ?? null }}
@@ -48,7 +50,11 @@ function CompanyProfilePage() {
         updateCompany,
         uploadCompanyLogo,
         deleteCompany,
-        invalidate: () => router.invalidate(),
+        // The header shows the company's name from the session, so a rename
+        // re-reads the session as well as this page.
+        invalidate: async () => {
+          await Promise.all([router.invalidate(), refreshSession()]);
+        },
         navigateToDashboard: () =>
           router.navigate({ to: '/employers/dashboard' }),
         toastError: (message) => void toastActionError(message),

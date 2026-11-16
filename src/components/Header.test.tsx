@@ -33,6 +33,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LAST_EMPLOYER_COMPANY_KEY } from '../hooks/use-last-employer-company';
 import {
   resolveHeaderSearchState,
   type HeaderSearchScope,
@@ -806,7 +807,7 @@ describe('Header — employer navigation', () => {
 
   it('keeps the public links for an employer with several companies and none in the URL', async () => {
     // A remembered company the employer no longer belongs to is ignored.
-    localStorage.setItem('cavuno:last-employer-company', 'former-co');
+    localStorage.setItem(LAST_EMPLOYER_COMPANY_KEY, 'former-co');
     renderHeader({
       user: employer,
       employerCompanies: [
@@ -844,8 +845,9 @@ describe('Header — employer navigation', () => {
     ).toBeNull();
   });
 
-  it("puts the company's links in the mobile menu", async () => {
+  it("puts the company's links in the mobile menu, marking only the current one", async () => {
     renderHeader({
+      initialEntry: '/employers/companies/northgate/profile',
       user: employer,
       employerCompanies: [membership('northgate', 'Northgate Data Centres')],
     });
@@ -858,11 +860,18 @@ describe('Header — employer navigation', () => {
     const mobileMenu = await screen.findByRole('dialog', {
       name: m.siteHeader_primaryNavigationAriaLabel(),
     });
+    const company = within(mobileMenu).getByRole('link', {
+      name: m.employerNav_companyLabel(),
+    });
+    expect(company).toHaveAttribute(
+      'href',
+      '/employers/companies/northgate/profile',
+    );
+    expect(company).toHaveAttribute('aria-current', 'page');
+    // Jobs' path is a prefix of the profile page's; it must not be current.
     expect(
-      within(mobileMenu).getByRole('link', {
-        name: m.employerNav_companyLabel(),
-      }),
-    ).toHaveAttribute('href', '/employers/companies/northgate/profile');
+      within(mobileMenu).getByRole('link', { name: m.accountShell_jobsNav() }),
+    ).not.toHaveAttribute('aria-current');
   });
 });
 
