@@ -73,12 +73,20 @@ describe('server entry Accept handling', () => {
     startHandler.mockClear();
   });
 
-  it('renders HTML, not a 406, for a page without a twin asked for as Markdown', async () => {
-    const response = await get(localizePath('/contact'), 'text/markdown');
-    expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toContain('text/html');
-    expect(acceptSeenByStart()).toBe('text/html,*/*;q=0.8');
-  });
+  it.each([
+    ['/', 'text/markdown'],
+    ['/companies/acme/jobs/engineer', 'text/markdown'],
+    ['/contact', 'text/markdown'],
+    ['/jobs', 'application/json'],
+  ])(
+    'renders HTML, not a 406, for page %s asked for as %s',
+    async (path, accept) => {
+      const response = await get(localizePath(path), accept);
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('text/html');
+      expect(acceptSeenByStart()).toBe('text/html,*/*;q=0.8');
+    },
+  );
 
   it('passes a browser Accept through unchanged', async () => {
     await get('/', BROWSER_ACCEPT);
@@ -111,5 +119,31 @@ describe('server entry Accept handling', () => {
   it('leaves the MCP server request as sent', async () => {
     await get('/mcp', 'application/json');
     expect(acceptSeenByStart()).toBe('application/json');
+  });
+});
+
+describe('server entry retired .md URLs', () => {
+  beforeEach(() => {
+    startHandler.mockClear();
+  });
+
+  it.each([
+    ['/index.md', '/'],
+    ['/jobs.md?page=2', '/jobs?page=2'],
+    ['/companies/acme/jobs/engineer.md', '/companies/acme/jobs/engineer'],
+  ])('308s %s to the page %s', async (path, location) => {
+    for (const method of ['GET', 'HEAD']) {
+      const response = await server.fetch(
+        new Request(`https://board.example${path}`, { method }),
+      );
+      expect(response.status).toBe(308);
+      expect(response.headers.get('location')).toBe(location);
+    }
+    expect(startHandler).not.toHaveBeenCalled();
+  });
+
+  it('leaves machine paths to their routes', async () => {
+    await get('/sitemap.xml.md', 'text/plain');
+    expect(startHandler).toHaveBeenCalledTimes(1);
   });
 });

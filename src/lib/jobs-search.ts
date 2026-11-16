@@ -113,7 +113,7 @@ export function jobsListingLoaderDeps<T extends JobsSearch>(
 
 /**
  * The filter, sort and page slice a jobs listing loader sends its page
- * server function; the Markdown twins send the same.
+ * server function.
  */
 export function listingPageInput(search: JobsSearch, pageSize: number) {
   return {

@@ -1,5 +1,4 @@
 import { canonicalPathname } from './localized-path';
-import { markdownTwinPagePath } from './markdown-twin/routes';
 import { talentProfileParam } from './talent-profile-path';
 
 /**
@@ -78,9 +77,7 @@ function pathnameWithoutLocale(pathname: string): string {
 }
 
 export function isPublicDocumentPath(pathname: string): boolean {
-  // A Markdown twin (`/x.md`, `/index.md`) is as public as its page.
-  const page = markdownTwinPagePath(pathname) ?? pathname;
-  const normalized = pathnameWithoutLocale(page);
+  const normalized = pathnameWithoutLocale(pathname);
   if (PUBLIC_DOCUMENT_PATHS.has(normalized)) return true;
   if (talentProfileParam(normalized) !== null) return true;
   return PUBLIC_DOCUMENT_PREFIXES.some(
@@ -106,14 +103,6 @@ export function isAnonymousPublicDocumentRequest(request: Request): boolean {
   return !carriesDocVaryCookie(request.headers.get('cookie'));
 }
 
-/** HTML pages and their Markdown twins. */
-function isCacheableDocumentType(contentType: string | null): boolean {
-  return (
-    !!contentType &&
-    (contentType.includes('text/html') || contentType.includes('text/markdown'))
-  );
-}
-
 /** Attach separate browser and shared-edge freshness policies. */
 export function withPublicHtmlCacheHeaders(
   request: Request,
@@ -123,7 +112,7 @@ export function withPublicHtmlCacheHeaders(
     !isAnonymousPublicDocumentRequest(request) ||
     response.status !== 200 ||
     response.headers.has('set-cookie') ||
-    !isCacheableDocumentType(response.headers.get('content-type'))
+    !response.headers.get('content-type')?.includes('text/html')
   ) {
     return response;
   }
@@ -131,9 +120,7 @@ export function withPublicHtmlCacheHeaders(
   const headers = new Headers(response.headers);
   headers.set('Cache-Control', BROWSER_CACHE_CONTROL);
   headers.set('Cloudflare-CDN-Cache-Control', EDGE_CACHE_CONTROL);
-  if (!/(^|,)\s*cookie\s*(,|$)/i.test(headers.get('Vary') ?? '')) {
-    headers.append('Vary', 'Cookie');
-  }
+  headers.append('Vary', 'Cookie');
   headers.set('X-Cavuno-Doc-Vary', DOC_VARY_COOKIE_PREFIXES.join(', '));
   return new Response(response.body, {
     headers,

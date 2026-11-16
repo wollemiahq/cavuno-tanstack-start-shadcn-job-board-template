@@ -27,12 +27,12 @@ const input: LlmsTxtInput = {
   legalPaths: ['/privacy-policy'],
 };
 
-function twin(path: string) {
-  return `${ORIGIN}${localizePath(path)}.md`;
+function page(path: string) {
+  return `${ORIGIN}${localizePath(path)}`;
 }
 
 describe('llmsTxtBody', () => {
-  it('names the board and links the twins of its main pages', () => {
+  it('names the board and links its main pages', () => {
     const labels = breadcrumbsCopy();
     expect(llmsTxtBody(input)).toBe(
       [
@@ -40,16 +40,16 @@ describe('llmsTxtBody', () => {
         '',
         '> Every robotics role in one place.',
         '',
-        `- [${labels.home}](${ORIGIN}/index.md)`,
-        `- [${labels.jobs}](${twin('/jobs')})`,
-        `- [${labels.companies}](${twin('/companies')})`,
-        `- [${labels.salaries}](${twin('/salaries')})`,
-        `- [${labels.blog}](${twin('/blog')})`,
-        `- [${labels.about}](${twin('/about')})`,
-        `- [${labels.pricing}](${twin('/pricing')})`,
+        `- [${labels.home}](${page('/')})`,
+        `- [${labels.jobs}](${page('/jobs')})`,
+        `- [${labels.companies}](${page('/companies')})`,
+        `- [${labels.salaries}](${page('/salaries')})`,
+        `- [${labels.blog}](${page('/blog')})`,
+        `- [${labels.about}](${page('/about')})`,
+        `- [${labels.pricing}](${page('/pricing')})`,
         `- [MCP](${ORIGIN}/mcp/server-card)`,
         '',
-        `- [${labels.privacyPolicy}](${twin('/privacy-policy')})`,
+        `- [${labels.privacyPolicy}](${page('/privacy-policy')})`,
         '',
       ].join('\n'),
     );
@@ -65,10 +65,10 @@ describe('llmsTxtBody', () => {
       legalPaths: [],
     });
     expect(body).not.toContain('>');
-    expect(body).not.toContain(twin('/blog'));
-    expect(body).not.toContain(twin('/about'));
+    expect(body).not.toContain(page('/blog'));
+    expect(body).not.toContain(page('/about'));
     expect(body).not.toContain('/mcp/');
-    expect(body).not.toContain(twin('/privacy-policy'));
+    expect(body).not.toContain(page('/privacy-policy'));
   });
 });
 
@@ -94,10 +94,10 @@ describe('/llms.txt route', () => {
     expect(response.headers.get('cache-control')).toMatch(/^public, /);
     const body = await response.text();
     expect(body).toMatch(/^# Robotics Jobs\n\n> \S/);
-    expect(body).toContain(`(${twin('/terms-of-service')})`);
-    expect(body).toContain(`(${twin('/about')})`);
-    expect(body).toContain(`(${twin('/pricing')})`);
-    expect(body).not.toContain(twin('/blog'));
+    expect(body).toContain(`(${page('/terms-of-service')})`);
+    expect(body).toContain(`(${page('/about')})`);
+    expect(body).toContain(`(${page('/pricing')})`);
+    expect(body).not.toContain(page('/blog'));
   });
 
   it('answers HEAD without a body', async () => {

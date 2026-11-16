@@ -45,21 +45,6 @@ describe('disabled locale redirect path', () => {
     ).toBe('/companies/acme');
   });
 
-  it("sends a twin to the board-language page's twin", () => {
-    expect(disabledLocaleRedirectPath('/fr/emplois.md', ENGLISH_BOARD)).toBe(
-      '/jobs.md',
-    );
-    expect(
-      disabledLocaleRedirectPath('/fr/emplois/lieux/paris.md', ENGLISH_BOARD),
-    ).toBe('/jobs/locations/paris.md');
-    expect(disabledLocaleRedirectPath('/en/jobs.md', DUTCH_BOARD)).toBe(
-      '/vacatures.md',
-    );
-    expect(disabledLocaleRedirectPath('/fr/index.md', ENGLISH_BOARD)).toBe(
-      '/index.md',
-    );
-  });
-
   it('only strips the prefix from a path that is no page', () => {
     expect(disabledLocaleRedirectPath('/en/old/page', DUTCH_BOARD)).toBe(
       '/old/page',
