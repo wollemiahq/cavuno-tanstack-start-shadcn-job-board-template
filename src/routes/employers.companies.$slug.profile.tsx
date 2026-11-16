@@ -17,7 +17,11 @@ import {
 
 import { boardForms } from '@/board/form-layout';
 import { useRootSession } from '@/components/root-session';
-import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
+import {
+  reconcileCommittedAction,
+  toastActionError,
+  toastActionSuccess,
+} from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
@@ -50,10 +54,12 @@ function CompanyProfilePage() {
         updateCompany,
         uploadCompanyLogo,
         deleteCompany,
-        // The header shows the company's name from the session, so a rename
-        // re-reads the session as well as this page.
         invalidate: async () => {
-          await Promise.all([router.invalidate(), refreshSession()]);
+          await router.invalidate();
+          // The header shows the company's name from the session, so a rename
+          // re-reads it too. Kept out of this page's result: a failed re-read
+          // only leaves the header stale, and must not lock the form.
+          void reconcileCommittedAction(refreshSession);
         },
         navigateToDashboard: () =>
           router.navigate({ to: '/employers/dashboard' }),
