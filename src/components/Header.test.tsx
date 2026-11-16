@@ -666,6 +666,33 @@ describe('Header — employer navigation', () => {
     ).toHaveAttribute('href', '/');
   });
 
+  it('lists the companies in the account menu as a switcher, marking the current one', async () => {
+    renderHeader({
+      initialEntry: '/employers/companies/second-co/profile',
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('second-co', 'Second Co'),
+      ],
+    });
+
+    fireEvent.click(await findAccountButton());
+    const current = await screen.findByRole('menuitem', { name: 'Second Co' });
+    const other = screen.getByRole('menuitem', {
+      name: 'Northgate Data Centres',
+    });
+    expect(current).toHaveAttribute('href', '/employers/companies/second-co');
+    expect(current).toHaveAttribute('aria-current', 'true');
+    expect(other).toHaveAttribute('href', '/employers/companies/northgate');
+    expect(other).not.toHaveAttribute('aria-current');
+    // The company's pages live in the header now, not in a submenu.
+    expect(
+      screen.queryByRole('menuitem', {
+        name: m.accountShell_companyProfileNav(),
+      }),
+    ).toBeNull();
+  });
+
   it('marks only the section the employer is on as the current page', async () => {
     const router = renderHeader({
       initialEntry: '/employers/companies/northgate/jobs/new',

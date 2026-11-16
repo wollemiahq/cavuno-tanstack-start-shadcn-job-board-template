@@ -518,7 +518,6 @@ export default function Header({
           employerCompanies={employerCompanies}
           activeCompany={activeCompany}
           hasProductsPage={hasProductsPage}
-          canPostJobs={features.publicJobSubmission}
           onSignOut={onSignOut}
           onSignOutPendingChange={setSigningOut}
           signOutAction={signOutAction}
