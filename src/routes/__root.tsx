@@ -273,8 +273,14 @@ function RootChrome({
   impressumAvailable: boolean;
   mcpServerAvailable: boolean;
 }) {
-  const { user, employerCompanies, hasAccessGrant, preview, clearSession } =
-    useRootSession();
+  const {
+    user,
+    avatarUrl,
+    employerCompanies,
+    hasAccessGrant,
+    preview,
+    clearSession,
+  } = useRootSession();
   const [messagingUnreadCount, publishMessagingUnreadCount] =
     useViewerUnreadCount(user?.id ?? null);
   const isFullBleed = useRouterState({
@@ -539,6 +545,7 @@ function RootChrome({
       features={board.features}
       hasAccessGrant={hasAccessGrant}
       employerCompanies={employerCompanies}
+      avatarUrl={avatarUrl}
       onSignOut={clearSession}
       talentDirectoryVisibility={board.talentDirectoryVisibility}
       hasMembershipPage={offerGate.hasMembershipPage}

@@ -7,8 +7,7 @@ import { initialsOf } from '../lib/initials';
 import { m } from '../paraglide/messages';
 import { signOut } from '../server/auth';
 
-import { EmployerIdentityAvatar } from '@/components/account-shell';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,6 +27,7 @@ export type SignOutAction = () => Promise<void | { ok: true }>;
 /** Authenticated-only header UI, split out of the anonymous public shell. */
 export function HeaderAccountMenu({
   user,
+  avatarUrl = null,
   hasAccessGrant,
   nativeApplications,
   jobRecommendationsEnabled,
@@ -39,18 +39,19 @@ export function HeaderAccountMenu({
   signOutAction = signOut,
 }: {
   user: BoardUser;
+  /** The viewer's profile photo; initials stand in without one. */
+  avatarUrl?: string | null;
   hasAccessGrant: boolean;
   nativeApplications: boolean;
   jobRecommendationsEnabled: boolean;
   employerCompanies: CompanyMembership[] | null;
   /**
    * The company the header's employer links point at: the trigger shows its
-   * logo and name, and the menu links back to the public board.
+   * name under the viewer's, and the menu links back to the public board.
    */
   activeCompany?: {
     name: string;
     slug: string | null;
-    logoUrl: string | null;
   } | null;
   /** The board sells digital products: show the Purchases library. */
   hasProductsPage?: boolean;
@@ -66,6 +67,7 @@ export function HeaderAccountMenu({
   // Matches, saved jobs and applications need a candidate profile (hosted
   // parity); profile, job alerts and settings work for every account.
   const isCandidate = user.role === 'candidate';
+  const viewerName = user.displayName ?? user.email;
   const companiesGroup = (
     <DropdownMenuGroup>
       <DropdownMenuLabel>
@@ -118,13 +120,9 @@ export function HeaderAccountMenu({
             />
           }
         >
-          <EmployerIdentityAvatar
-            name={activeCompany.name}
-            logoUrl={activeCompany.logoUrl}
-            size="default"
-          />
+          <ViewerAvatar name={viewerName} avatarUrl={avatarUrl} />
           <AccountIdentity
-            name={user.displayName ?? user.email}
+            name={viewerName}
             company={activeCompany.name}
             className="hidden max-w-40 sm:grid"
           />
@@ -142,11 +140,7 @@ export function HeaderAccountMenu({
             />
           }
         >
-          <Avatar size="sm">
-            <AvatarFallback>
-              {initialsOf(user.displayName ?? user.email)}
-            </AvatarFallback>
-          </Avatar>
+          <ViewerAvatar name={viewerName} avatarUrl={avatarUrl} size="sm" />
         </DropdownMenuTrigger>
       )}
       <DropdownMenuContent align="end" className="min-w-56">
@@ -154,13 +148,9 @@ export function HeaderAccountMenu({
           <>
             {/* Who and which company, as on the button, then the switcher. */}
             <div className="flex items-center gap-3 px-2 py-2">
-              <EmployerIdentityAvatar
-                name={activeCompany.name}
-                logoUrl={activeCompany.logoUrl}
-                size="default"
-              />
+              <ViewerAvatar name={viewerName} avatarUrl={avatarUrl} />
               <AccountIdentity
-                name={user.displayName ?? user.email}
+                name={viewerName}
                 company={activeCompany.name}
                 className="grid"
               />
@@ -280,5 +270,23 @@ function AccountIdentity({
         {company}
       </span>
     </span>
+  );
+}
+
+/** The viewer's photo, or their initials without one. */
+function ViewerAvatar({
+  name,
+  avatarUrl,
+  size = 'default',
+}: {
+  name: string;
+  avatarUrl: string | null;
+  size?: 'default' | 'sm';
+}) {
+  return (
+    <Avatar size={size}>
+      {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
+      <AvatarFallback>{initialsOf(name)}</AvatarFallback>
+    </Avatar>
   );
 }

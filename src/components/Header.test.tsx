@@ -105,6 +105,7 @@ function renderHeader({
   talentDirectoryVisibility = features.talentDirectory ? 'public' : 'off',
   user = null,
   employerCompanies = null,
+  avatarUrl = null,
   hasAccessGrant = false,
   hasMembershipPage = false,
   hasProductsPage = false,
@@ -124,6 +125,7 @@ function renderHeader({
   talentDirectoryVisibility?: TalentDirectoryVisibility;
   user?: React.ComponentProps<typeof Header>['user'];
   employerCompanies?: React.ComponentProps<typeof Header>['employerCompanies'];
+  avatarUrl?: string | null;
   hasAccessGrant?: boolean;
   hasMembershipPage?: boolean;
   hasProductsPage?: boolean;
@@ -254,6 +256,7 @@ function renderHeader({
         language="en"
         features={{ ...features, jobRecommendationsEnabled }}
         employerCompanies={employerCompanies}
+        avatarUrl={avatarUrl}
         hasAccessGrant={hasAccessGrant}
         onSignOut={() => setViewer(null)}
         signOutAction={signOutMock}
@@ -625,6 +628,9 @@ describe('Header — employer navigation', () => {
       name: m.siteHeader_primaryNavigationAriaLabel(),
     });
 
+  // The header remembers the last company opened in this browser.
+  beforeEach(() => localStorage.clear());
+
   it("gives an employer with one company that company's links instead of the public ones", async () => {
     renderHeader({
       user: employer,
@@ -738,7 +744,69 @@ describe('Header — employer navigation', () => {
     ).toHaveAttribute('href', '/employers/companies/second-co/members');
   });
 
+  it('keeps the company the employer last opened on pages without one in the URL', async () => {
+    const router = renderHeader({
+      initialEntry: '/employers/companies/second-co/members',
+      user: employer,
+      employerCompanies: [
+        membership('northgate', 'Northgate Data Centres'),
+        membership('second-co', 'Second Co'),
+      ],
+    });
+    await within(await primaryNav()).findByRole('link', {
+      name: m.employerNav_teamLabel(),
+    });
+
+    await act(() => router.navigate({ to: '/' }));
+
+    await waitFor(async () =>
+      expect(
+        within(await primaryNav()).getByRole('link', {
+          name: m.employerNav_teamLabel(),
+        }),
+      ).toHaveAttribute('href', '/employers/companies/second-co/members'),
+    );
+  });
+
+  it("shows the viewer's photo, not the company logo, on the account button", async () => {
+    // Base UI reveals an avatar <img> only once it reports loaded, which
+    // jsdom never does on its own.
+    vi.spyOn(window, 'Image').mockImplementation(function MockImage() {
+      const image = document.createElement('img');
+      Object.defineProperties(image, {
+        complete: { value: true },
+        naturalWidth: { value: 100 },
+      });
+      return image;
+    });
+    renderHeader({
+      user: employer,
+      avatarUrl: 'https://cdn.example/len.jpg',
+      employerCompanies: [
+        {
+          ...membership('northgate', 'Northgate Data Centres'),
+          company: {
+            ...membership('northgate', 'Northgate Data Centres').company,
+            logoUrl: 'https://cdn.example/northgate.png',
+          },
+        },
+      ],
+    });
+
+    const button = await findAccountButton();
+    await waitFor(() =>
+      expect(button.querySelector('img')).toHaveAttribute(
+        'src',
+        'https://cdn.example/len.jpg',
+      ),
+    );
+    expect(button).toHaveTextContent('Northgate Data Centres');
+    vi.mocked(window.Image).mockRestore();
+  });
+
   it('keeps the public links for an employer with several companies and none in the URL', async () => {
+    // A remembered company the employer no longer belongs to is ignored.
+    localStorage.setItem('cavuno:last-employer-company', 'former-co');
     renderHeader({
       user: employer,
       employerCompanies: [

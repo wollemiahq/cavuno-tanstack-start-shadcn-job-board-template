@@ -126,7 +126,7 @@ function previewFallback() {
 }
 
 /**
- * Viewer identity for signed-in chrome. Memberships and entitlements follow in
+ * Viewer identity (user and profile photo) for signed-in chrome. Memberships and entitlements follow in
  * separate RPCs so Account is not blocked on companies / paywall / preview.
  */
 export const getRootSessionShellData = createServerFn({
@@ -136,14 +136,22 @@ export const getRootSessionShellData = createServerFn({
   .handler(async ({ context }) => {
     const headers = context.boardAccessHeaders;
     if (!context.session) {
-      return { user: null };
+      return { user: null, avatarUrl: null };
     }
+    const board = getBoard();
     try {
-      return {
-        user: await getBoard().me.retrieve(undefined, { headers }),
-      };
+      const [user, avatarUrl] = await Promise.all([
+        board.me.retrieve(undefined, { headers }),
+        // The account button shows the viewer's photo. A failed read only
+        // costs the photo: the button falls back to initials.
+        board.me.profile
+          .retrieve(undefined, { headers })
+          .then((profile) => profile.avatarUrl ?? null)
+          .catch(() => null),
+      ]);
+      return { user, avatarUrl };
     } catch {
-      return { user: null };
+      return { user: null, avatarUrl: null };
     }
   });
 

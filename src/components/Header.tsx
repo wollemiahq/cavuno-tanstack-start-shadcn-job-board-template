@@ -1,6 +1,13 @@
 'use client';
 
-import { lazy, Suspense, useRef, useState, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { MENU_COLOR } from '#/starter-config';
 
@@ -33,6 +40,7 @@ import type { LocationSearchState } from '@/components/location-combobox';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { jobSearchCopy } from '@/copy-groups/job-search';
 import { navCopy } from '@/copy-groups/nav';
+import { useLastEmployerCompany } from '@/hooks/use-last-employer-company';
 import { employerPostDestination } from '@/lib/employer-post-destination';
 import type {
   HeaderSearchLocation,
@@ -203,6 +211,7 @@ export default function Header({
   features,
   hasAccessGrant = false,
   employerCompanies = null,
+  avatarUrl = null,
   onSignOut,
   signOutAction,
   talentDirectoryVisibility,
@@ -228,6 +237,8 @@ export default function Header({
   };
   hasAccessGrant?: boolean;
   employerCompanies?: CompanyMembership[] | null;
+  /** The viewer's profile photo, shown on the account button. */
+  avatarUrl?: string | null;
   onSignOut: () => void;
   signOutAction?: SignOutAction;
   talentDirectoryVisibility: 'off' | 'public' | 'employers_only' | null;
@@ -385,9 +396,10 @@ export default function Header({
     return item ? [item] : [];
   });
   // An employer working on one company gets that company's links in place of
-  // the public ones: the company in the URL, else their only company. Someone
-  // with several companies and none in the URL keeps the public links and
-  // picks a company from the account menu.
+  // the public ones: the company in the URL, else the one they last opened in
+  // this browser, else their only company. Someone with several companies who
+  // has opened none yet keeps the public links and picks one from the account
+  // menu.
   const routeCompanySlug =
     employerSection && employerSection !== 'talent'
       ? routeParams.slug
@@ -396,9 +408,18 @@ export default function Header({
     (membership) =>
       membership.status === 'approved' && membership.company.slug !== null,
   );
+  const [lastCompanySlug, rememberCompany] = useLastEmployerCompany();
+  const routeCompany = companyWorkspaces.find(
+    (membership) => membership.company.slug === routeCompanySlug,
+  )?.company;
+  const routeCompanyOpened = routeCompany?.slug ?? null;
+  useEffect(() => {
+    if (routeCompanyOpened) rememberCompany(routeCompanyOpened);
+  }, [rememberCompany, routeCompanyOpened]);
   const activeCompany = user
-    ? (companyWorkspaces.find(
-        (membership) => membership.company.slug === routeCompanySlug,
+    ? (routeCompany ??
+      companyWorkspaces.find(
+        (membership) => membership.company.slug === lastCompanySlug,
       )?.company ??
       (companyWorkspaces.length === 1 ? companyWorkspaces[0]?.company : null))
     : null;
@@ -512,6 +533,7 @@ export default function Header({
       <Suspense fallback={null}>
         <LazyAccountMenu
           user={user}
+          avatarUrl={avatarUrl}
           hasAccessGrant={hasAccessGrant}
           nativeApplications={features.nativeApplications}
           jobRecommendationsEnabled={features.jobRecommendationsEnabled ?? true}

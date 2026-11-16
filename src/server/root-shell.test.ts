@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     tipFallback: vi.fn(),
     contact: vi.fn(),
     me: vi.fn(),
+    profile: vi.fn(),
     grant: vi.fn(),
     companies: vi.fn(),
     preview: vi.fn(),
@@ -47,7 +48,11 @@ vi.mock('../lib/env', () => ({
 }));
 vi.mock('../lib/board', () => ({
   getBoard: () => ({
-    me: { retrieve: mocks.me, access: { grant: mocks.grant } },
+    me: {
+      retrieve: mocks.me,
+      profile: { retrieve: mocks.profile },
+      access: { grant: mocks.grant },
+    },
     companies: { list: mocks.companies },
   }),
 }));
@@ -167,22 +172,46 @@ describe('public and session shells', () => {
     });
   });
   it('anonymous session makes no viewer calls', async () => {
-    expect(await getRootSessionShellData()).toEqual({ user: null });
+    expect(await getRootSessionShellData()).toEqual({
+      user: null,
+      avatarUrl: null,
+    });
     expect(mocks.me).not.toHaveBeenCalled();
+    expect(mocks.profile).not.toHaveBeenCalled();
   });
-  it('authenticated chrome reads only identity with access headers', async () => {
+  it('authenticated chrome reads only identity and photo with access headers', async () => {
     const headers = { 'x-board-access': 'fixture' };
     mocks.me.mockResolvedValue({ id: 'viewer' });
+    mocks.profile.mockResolvedValue({
+      avatarUrl: 'https://cdn.example/me.jpg',
+    });
     mocks.context = { session: {}, boardAccessHeaders: headers };
-    expect(await getRootSessionShellData()).toEqual({ user: { id: 'viewer' } });
+    expect(await getRootSessionShellData()).toEqual({
+      user: { id: 'viewer' },
+      avatarUrl: 'https://cdn.example/me.jpg',
+    });
     expect(mocks.me).toHaveBeenCalledWith(undefined, { headers });
+    expect(mocks.profile).toHaveBeenCalledWith(undefined, { headers });
     expect(mocks.companies).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();
     expect(mocks.preview).not.toHaveBeenCalled();
   });
+  it('a failed photo read keeps the viewer signed in', async () => {
+    mocks.me.mockResolvedValue({ id: 'viewer' });
+    mocks.profile.mockRejectedValue(new Error('offline'));
+    mocks.context = { session: {}, boardAccessHeaders: {} };
+    expect(await getRootSessionShellData()).toEqual({
+      user: { id: 'viewer' },
+      avatarUrl: null,
+    });
+  });
   it('identity failure returns anonymous chrome', async () => {
     mocks.me.mockRejectedValue(new Error('offline'));
+    mocks.profile.mockResolvedValue({ avatarUrl: null });
     mocks.context = { session: {}, boardAccessHeaders: {} };
-    expect(await getRootSessionShellData()).toEqual({ user: null });
+    expect(await getRootSessionShellData()).toEqual({
+      user: null,
+      avatarUrl: null,
+    });
   });
 });

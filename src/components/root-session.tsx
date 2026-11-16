@@ -42,6 +42,8 @@ export const EMPTY_ROOT_PREVIEW: RootPreview = {
 
 export type RootSessionValue = {
   user: BoardUser | null;
+  /** The viewer's profile photo, for the account button. */
+  avatarUrl: string | null;
   employerCompanies: CompanyMembership[] | null;
   hasAccessGrant: boolean;
   talentAccess: TalentAccessGrant;
@@ -88,6 +90,7 @@ const rootSessionDependencies: RootSessionDependencies = {
 
 const RootSessionContext = createContext<RootSessionContextValue>({
   user: null,
+  avatarUrl: null,
   employerCompanies: null,
   hasAccessGrant: false,
   talentAccess: EMPTY_TALENT_ACCESS,
@@ -122,6 +125,7 @@ export function RootSessionProvider({
 }) {
   const [session, setSession] = useState<RootSessionValue>({
     user: null,
+    avatarUrl: null,
     employerCompanies: null,
     hasAccessGrant: false,
     talentAccess: EMPTY_TALENT_ACCESS,
@@ -139,9 +143,11 @@ export function RootSessionProvider({
           throw new TypeError('Invalid root session shell response');
         }
         const user = data.user;
+        const avatarUrl = data.avatarUrl ?? null;
         setSession((current) => ({
           ...current,
           user,
+          avatarUrl,
           ready: true,
         }));
         if (user?.emailVerified) {
@@ -187,6 +193,7 @@ export function RootSessionProvider({
     setSession((current) => ({
       ...current,
       user: null,
+      avatarUrl: null,
       employerCompanies: null,
       hasAccessGrant: false,
       talentAccess: EMPTY_TALENT_ACCESS,
@@ -198,7 +205,8 @@ export function RootSessionProvider({
     // failed read, not a sign-out: keep the current session and report it.
     if (!data?.user) throw new Error('Session user refresh failed');
     const user = data.user;
-    setSession((current) => ({ ...current, user }));
+    const avatarUrl = data.avatarUrl ?? null;
+    setSession((current) => ({ ...current, user, avatarUrl }));
     // Same gate as the mount chain: memberships are only readable once the
     // email is verified. A failed slice keeps its current value.
     const [companies, entitlements] = await Promise.allSettled([
