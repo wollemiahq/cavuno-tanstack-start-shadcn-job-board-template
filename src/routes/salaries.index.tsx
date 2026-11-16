@@ -47,7 +47,8 @@ export const Route = createFileRoute('/salaries/')({
 });
 
 function SalariesHub() {
-  const { companies, titles, skills, locations } = Route.useLoaderData();
+  const { companies, titles, skills, locations, skillsIndexIndexable } =
+    Route.useLoaderData();
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
@@ -125,7 +126,10 @@ function SalariesHub() {
           />
           <HubSection
             title={crumbs.skills}
-            seeAll={BOARD_PATHS.salarySkills}
+            // The skills index is noindexed when no skill page can be
+            // indexed (skill salary pages never are), so link it only when
+            // it is indexable.
+            seeAll={skillsIndexIndexable ? BOARD_PATHS.salarySkills : null}
             seeAllLabel={m.salaryHub_seeAllSkillsLabel()}
             items={skillItems}
           />
@@ -153,7 +157,8 @@ function HubSection({
   items,
 }: {
   title: string;
-  seeAll: string;
+  /** The full list's path; `null` when that page is noindexed, so no link. */
+  seeAll: string | null;
   /** Names the list it opens: a bare "See all" tells crawlers nothing. */
   seeAllLabel: string;
   items: RailItem[];
@@ -163,12 +168,14 @@ function HubSection({
     <PageSection
       title={title}
       actions={
-        <Link
-          to={seeAll}
-          className={buttonVariants({ variant: 'link', size: 'sm' })}
-        >
-          {seeAllLabel}
-        </Link>
+        seeAll ? (
+          <Link
+            to={seeAll}
+            className={buttonVariants({ variant: 'link', size: 'sm' })}
+          >
+            {seeAllLabel}
+          </Link>
+        ) : undefined
       }
     >
       <SalaryRail vm={toSalaryRailVM('', items, getLocale())} />
