@@ -11,7 +11,7 @@
  * auth and picks the role; the redirects here are UX, not the security
  * boundary.
  */
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, lazy, Suspense, type ReactNode } from 'react';
 
 import {
   createFileRoute,
@@ -39,16 +39,12 @@ import { EmployerAccountPageView } from './-account-employer-page';
 import { useGlobalLocationSuggestions } from './-use-global-location-suggestions';
 
 import { boardForms } from '@/board/form-layout';
-import {
-  collectionVerifiableItems,
-  verificationsByKey,
-} from '@/board/item-verification';
+import { verificationsByKey } from '@/board/item-verification';
 import {
   CandidateProfilePendingPage,
   CandidateRouteErrorPage,
 } from '@/components/candidate-route-state';
 import { CandidateShell } from '@/components/candidate-shell';
-import { ItemVerificationCard } from '@/components/item-verification';
 import {
   ProfileCompletenessCard,
   type ProfileChecklistItem,
@@ -62,6 +58,15 @@ import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { headTitle } from '@/lib/page-title';
 
 const rootApi = getRouteApi('__root__');
+
+// The collection verification card loads only when a field verifies.
+const LazyCollectionVerificationCard = lazy(() =>
+  import('@/components/collection-verification-card').then(
+    ({ CollectionVerificationCard }) => ({
+      default: CollectionVerificationCard,
+    }),
+  ),
+);
 
 const SECTION_KEYS: readonly TalentSectionKey[] = [
   'experience',
@@ -98,11 +103,6 @@ function CandidateAccountPage({
   } = account;
   const { board } = rootApi.useLoaderData();
   const verifications = verificationsByKey(verificationList);
-  const collectionItems = collectionVerifiableItems(
-    objectReferences,
-    verifications,
-    { emailDomain: true },
-  );
   const profileLocationSuggestions = useGlobalLocationSuggestions();
   const experienceLocationSuggestions = useGlobalLocationSuggestions();
 
@@ -251,7 +251,17 @@ function CandidateAccountPage({
           </CardContent>
         </Card>
 
-        <ItemVerificationCard items={collectionItems} />
+        {objectReferences?.definitions.some(
+          (definition) => definition.verification,
+        ) ? (
+          <Suspense fallback={null}>
+            <LazyCollectionVerificationCard
+              objectReferences={objectReferences}
+              verifications={verifications}
+              emailDomain
+            />
+          </Suspense>
+        ) : null}
 
         {sectionOrder.map((key) => (
           <Fragment key={key}>{sections[key]}</Fragment>

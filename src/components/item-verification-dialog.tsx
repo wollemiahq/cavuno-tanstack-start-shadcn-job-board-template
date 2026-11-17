@@ -15,6 +15,7 @@ import {
   type ItemVerificationActions,
   itemVerificationStatusLabel,
 } from './item-verification';
+import { ItemVerificationDetails } from './item-verification-details';
 
 import {
   canRequestVerification,
@@ -97,6 +98,8 @@ function teamReason(item: VerifiableItem, emailCheckable: boolean): string {
     if (item.itemKey.startsWith('education:')) {
       return m.itemVerification_teamEducationBody();
     }
+    // A collection item the board's team checks by design.
+    return m.itemVerification_teamDetailsBody();
   }
   return m.itemVerification_noEmailCheckBody();
 }
@@ -414,6 +417,7 @@ export function ItemVerificationDialog({
           item={item}
           description={teamReason(item, emailCheck !== null)}
         />
+        <ItemVerificationDetails details={item.details} />
         {error ? <FieldError>{error}</FieldError> : null}
         <DialogFooter>
           {cancelButton}

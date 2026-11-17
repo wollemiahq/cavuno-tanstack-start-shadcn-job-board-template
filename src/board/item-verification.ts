@@ -3,7 +3,6 @@ import type {
   CandidateEducation,
   CandidateExperience,
   MyItemVerification,
-  ProfileObjectReferences,
 } from '@cavuno/board';
 
 /**
@@ -29,6 +28,16 @@ export type VerifiableItem = {
    * accepts a subdomain of it.
    */
   emailDomain?: string | null;
+  /**
+   * The details the check covers, as the owner's form holds them (private
+   * ones too: only the owner's pages build these items). Collection items only.
+   */
+  details?: { label: string; text: string }[];
+  /**
+   * Where those details are edited, when one the check covers is empty:
+   * the item then asks for them before it can be verified.
+   */
+  missingDetailsId?: string;
 };
 
 /** The API's item keys for built-in entries. */
@@ -116,71 +125,4 @@ export function educationVerifiableItem(
     verification: verifications.get(itemKey) ?? null,
     emailDomain: emailDomain ?? null,
   };
-}
-
-type Selection = ProfileObjectReferences['selections'][number];
-
-function entryLabel(
-  selection: Selection,
-  entry: Selection['entries'][number],
-  checkedFieldKeys: readonly string[],
-): string {
-  // Text, number and list values name the entry; a yes/no answer does not.
-  const detail = checkedFieldKeys
-    .flatMap((key) => {
-      const value = entry.values[key];
-      if (value === undefined || value === true || value === false) return [];
-      return [value].flat().map(String);
-    })
-    .map((text) => text.trim())
-    .filter(Boolean)
-    .join(', ');
-  const title = selection.titleOverride ?? selection.title;
-  return detail ? `${title}: ${detail}` : title;
-}
-
-/**
- * The stored collection selections the board verifies: a field with
- * verification set up (its definition carries `verification`), one item per
- * repeatable entry, or the selection itself when the field has no entries.
- */
-export function collectionVerifiableItems(
-  objectReferences: ProfileObjectReferences | null | undefined,
-  verifications: ReadonlyMap<string, MyItemVerification>,
-  options: { emailDomain: boolean },
-): VerifiableItem[] {
-  if (!objectReferences) return [];
-  const items: VerifiableItem[] = [];
-  for (const definition of objectReferences.definitions) {
-    const config = definition.verification;
-    if (!config) continue;
-    const method: ItemVerificationMethod =
-      options.emailDomain && config.verifiedBy === 'email_domain'
-        ? 'email_domain'
-        : 'team';
-    const hasEntries = (definition.entryDefinitions?.length ?? 0) > 0;
-    for (const selection of objectReferences.selections) {
-      if (selection.fieldKey !== definition.key) continue;
-      const base = `ref:${selection.fieldKey}:${selection.recordId}`;
-      if (!hasEntries) {
-        items.push({
-          itemKey: base,
-          label: selection.titleOverride ?? selection.title,
-          method,
-          verification: verifications.get(base) ?? null,
-        });
-        continue;
-      }
-      for (const entry of selection.entries) {
-        const itemKey = `${base}:${entry.key}`;
-        items.push({
-          itemKey,
-          label: entryLabel(selection, entry, config.checkedFieldKeys),
-          method,
-          verification: verifications.get(itemKey) ?? null,
-        });
-      }
-    }
-  }
-  return items;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ComponentProps } from 'react';
 
 import { m } from '../paraglide/messages';
 
@@ -13,6 +13,8 @@ import type { CustomFieldUploads } from '@/components/custom-field-files-input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Field,
+  FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldLegend,
@@ -39,6 +41,11 @@ const LazyRichTextEditor = lazy(() =>
   })),
 );
 
+// A read-only rich text answer (a board-managed detail) is rare.
+const LazyProse = lazy(() =>
+  import('@/components/prose').then(({ Prose }) => ({ default: Prose })),
+);
+
 // The gallery and file input (with its menu) loads only on a form that has
 // such a field: the job forms never do, and most boards' profiles don't.
 const LazyCustomFieldFilesInput = lazy(() =>
@@ -46,6 +53,25 @@ const LazyCustomFieldFilesInput = lazy(() =>
     ({ CustomFieldFilesInput }) => ({ default: CustomFieldFilesInput }),
   ),
 );
+
+// A profile collection field (its picker, and the detail inputs of each
+// chosen entry) loads only on a form that has one.
+const LazyProfileCollectionField = lazy(() =>
+  import('@/components/profile-collection-field').then(
+    ({ ProfileCollectionField }) => ({ default: ProfileCollectionField }),
+  ),
+);
+
+/** A company or talent collection field, loaded on first use. */
+export function ProfileCollectionField(
+  props: ComponentProps<typeof LazyProfileCollectionField>,
+) {
+  return (
+    <Suspense fallback={<Skeleton className="h-9 w-full" />}>
+      <LazyProfileCollectionField {...props} />
+    </Suspense>
+  );
+}
 
 /**
  * The API caps a rich text custom field answer at 20,000 characters of
@@ -88,13 +114,18 @@ function numberValue(value: CustomFieldValue | undefined): number | '' {
  * select values store option KEYS, never labels — the same contract
  * `resolveCustomFieldDisplay` reads back on the job page. `required` comes
  * from the form layout when there is one (a hidden field is never required),
- * otherwise from the definition.
+ * otherwise from the definition. The same control draws a collection
+ * selection's details, which pass their own `id` (a field key repeats across
+ * selections) and are `readOnly` when the owner may not edit them.
  */
 export function CustomFieldInput({
   definition,
   value,
   required = definition.required,
   uploads,
+  id = `custom-field-${definition.key}`,
+  readOnly = false,
+  error,
   onChange,
 }: {
   definition: CustomFieldDefinition;
@@ -102,10 +133,27 @@ export function CustomFieldInput({
   required?: boolean;
   /** The owner's upload and saved files; gallery and file fields need it. */
   uploads?: CustomFieldUploads;
+  id?: string;
+  /** Shown but not editable: the board manages this answer. */
+  readOnly?: boolean;
+  /** A validation message to show under the field. */
+  error?: string | null;
   onChange: (value: CustomFieldValue) => void;
 }) {
-  const id = `custom-field-${definition.key}`;
   const label = customFieldLabel(definition);
+  const invalid = error ? true : undefined;
+  // Help text, the private note and the error, under every type's control.
+  const notes = (
+    <>
+      {'helpText' in definition && definition.helpText ? (
+        <FieldDescription>{definition.helpText}</FieldDescription>
+      ) : null}
+      {'visibility' in definition && definition.visibility === 'private' ? (
+        <FieldDescription>{m.customField_privateNote()}</FieldDescription>
+      ) : null}
+      {error ? <FieldError>{error}</FieldError> : null}
+    </>
+  );
 
   switch (definition.type) {
     case 'short_text':
@@ -114,39 +162,47 @@ export function CustomFieldInput({
     case 'email':
     case 'phone':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Input
             id={id}
             type={INPUT_TYPES[definition.type]}
             required={required}
+            readOnly={readOnly}
+            aria-invalid={invalid}
             value={textValue(value)}
             onChange={(event) => onChange(event.target.value)}
           />
+          {notes}
         </Field>
       );
     case 'long_text':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Textarea
             id={id}
             rows={3}
             required={required}
+            readOnly={readOnly}
+            aria-invalid={invalid}
             value={textValue(value)}
             onChange={(event) => onChange(event.target.value)}
           />
+          {notes}
         </Field>
       );
     case 'number':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Input
             id={id}
             type="number"
             inputMode="numeric"
             required={required}
+            readOnly={readOnly}
+            aria-invalid={invalid}
             min={definition.min}
             max={definition.max}
             value={numberValue(value)}
@@ -157,24 +213,27 @@ export function CustomFieldInput({
               );
             }}
           />
+          {notes}
         </Field>
       );
     case 'boolean':
       return (
-        <Field orientation="horizontal" className="w-fit">
+        <Field data-invalid={invalid} className="w-fit">
           <FieldLabel className="cursor-pointer">
             <Checkbox
               id={id}
               checked={value === true}
+              disabled={readOnly}
               onCheckedChange={(checked) => onChange(checked === true)}
             />
             {label}
           </FieldLabel>
+          {notes}
         </Field>
       );
     case 'single_select':
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Select
             items={(definition.options ?? []).map((option) => ({
@@ -182,10 +241,11 @@ export function CustomFieldInput({
               label: customFieldOptionLabel(definition.key, option),
             }))}
             required={required}
+            disabled={readOnly}
             value={textValue(value) || null}
             onValueChange={(next) => onChange(searchString(next) ?? '')}
           >
-            <SelectTrigger id={id} className="w-full">
+            <SelectTrigger id={id} className="w-full" aria-invalid={invalid}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -196,12 +256,13 @@ export function CustomFieldInput({
               ))}
             </SelectContent>
           </Select>
+          {notes}
         </Field>
       );
     case 'multi_select': {
       const selected = Array.isArray(value) ? value : [];
       return (
-        <FieldSet>
+        <FieldSet id={id} data-invalid={invalid}>
           <FieldLegend variant="label">{label}</FieldLegend>
           <FieldGroup className="flex-row flex-wrap gap-4">
             {(definition.options ?? []).map((option) => {
@@ -215,6 +276,7 @@ export function CustomFieldInput({
                   <Checkbox
                     id={optionId}
                     checked={selected.includes(option.key)}
+                    disabled={readOnly}
                     onCheckedChange={(checked) =>
                       onChange(
                         checked
@@ -230,28 +292,37 @@ export function CustomFieldInput({
               );
             })}
           </FieldGroup>
+          {notes}
         </FieldSet>
       );
     }
     case 'rich_text':
       return (
-        <Field>
+        <Field id={id} data-invalid={invalid}>
           <FieldLabel>{label}</FieldLabel>
-          <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-            <LazyRichTextEditor
-              value={textValue(value)}
-              onChange={(html) => onChange(isRichTextEmpty(html) ? '' : html)}
-              ariaLabel={label}
-              maxCharacters={CUSTOM_FIELD_RICH_TEXT_MAX_CHARACTERS}
-            />
-          </Suspense>
+          {readOnly ? (
+            // Sanitized by the Board API, like every stored rich text answer.
+            <Suspense fallback={null}>
+              <LazyProse html={textValue(value)} />
+            </Suspense>
+          ) : (
+            <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+              <LazyRichTextEditor
+                value={textValue(value)}
+                onChange={(html) => onChange(isRichTextEmpty(html) ? '' : html)}
+                ariaLabel={label}
+                maxCharacters={CUSTOM_FIELD_RICH_TEXT_MAX_CHARACTERS}
+              />
+            </Suspense>
+          )}
+          {notes}
         </Field>
       );
     case 'image_gallery':
     case 'file':
       if (!uploads) return null;
       return (
-        <Field>
+        <Field data-invalid={invalid}>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <Suspense fallback={<Skeleton className="h-9 w-32" />}>
             <LazyCustomFieldFilesInput
@@ -264,6 +335,7 @@ export function CustomFieldInput({
               onChange={onChange}
             />
           </Suspense>
+          {notes}
         </Field>
       );
     default:
