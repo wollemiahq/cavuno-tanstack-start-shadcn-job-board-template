@@ -15,10 +15,16 @@ import {
   resubscribeJobAlert,
   unsubscribeJobAlert,
 } from '../server/alerts-manage';
-import { getAnchorJobPaths, getSeoBase } from '../server/queries';
+import {
+  getAlertFilterNames,
+  getAnchorJobPaths,
+  getSeoBase,
+} from '../server/queries';
 
 import {
+  resolveAlertFilterNames,
   resolveAnchorJobPaths,
+  type AlertFilterNames,
   type AnchorJobPaths,
 } from '@/board/job-alert-match';
 import { headTitle } from '@/lib/page-title';
@@ -27,7 +33,11 @@ import type { JobAlertManageState } from '@cavuno/board';
 type AlertManageSeo = { boardName: string };
 // `empty`: the token is valid but no alerts remain (the last one was deleted).
 export type ManageData =
-  | { state: JobAlertManageState; anchorJobPaths: AnchorJobPaths }
+  | {
+      state: JobAlertManageState;
+      anchorJobPaths: AnchorJobPaths;
+      filterNames: AlertFilterNames;
+    }
   | { empty: true }
   | { error: true };
 export type LoaderData = ManageData & { seo: AlertManageSeo };
@@ -56,6 +66,9 @@ export type AlertManageDependencies = {
   getAnchorJobPaths: (options: {
     data: { jobSlugs: string[] };
   }) => Promise<AnchorJobPaths>;
+  getAlertFilterNames: (options: {
+    data: { categorySlugs: string[]; placeIds: string[] };
+  }) => Promise<AlertFilterNames>;
   getSeoBase: () => Promise<AlertManageSeo>;
   resubscribeJobAlert: (options: {
     data: { link: string };
@@ -67,6 +80,7 @@ export type AlertManageDependencies = {
 
 export const alertManageDependencies: AlertManageDependencies = {
   deleteJobAlertPreference,
+  getAlertFilterNames,
   getJobAlertManageState,
   getAnchorJobPaths,
   getSeoBase,
@@ -103,11 +117,17 @@ export function createAlertManageLoader(
       // blocked): the notice says to use the link from a recent email.
       if (state === 'link_expired') return { error: true, seo };
       if (!state) return { empty: true, seo };
-      const anchorJobPaths = await resolveAnchorJobPaths(
-        state.preferences,
-        dependencies.getAnchorJobPaths,
-      );
-      return { state, anchorJobPaths, seo };
+      const [anchorJobPaths, filterNames] = await Promise.all([
+        resolveAnchorJobPaths(
+          state.preferences,
+          dependencies.getAnchorJobPaths,
+        ),
+        resolveAlertFilterNames(
+          state.preferences,
+          dependencies.getAlertFilterNames,
+        ),
+      ]);
+      return { state, anchorJobPaths, filterNames, seo };
     } catch {
       return { error: true, seo: await seoPromise };
     }

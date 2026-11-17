@@ -19,7 +19,10 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
-import { validateAnchorJobInput } from '../lib/anchor-job-input';
+import {
+  validateAlertFilterNamesInput,
+  validateAnchorJobInput,
+} from '../lib/anchor-job-input';
 import { getBoard } from '../lib/board';
 import { APPLY_GATEWAY_QUERY } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
@@ -44,7 +47,10 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
-import type { AnchorJobPaths } from '../board/job-alert-match';
+import type {
+  AlertFilterNames,
+  AnchorJobPaths,
+} from '../board/job-alert-match';
 import type { BoardContextFooter } from '../components/Footer';
 import type { PlanOfferGate } from '../lib/board-context-cache-core';
 import type {
@@ -352,6 +358,49 @@ export const getAnchorJobPaths = createServerFn({ method: 'GET' })
         }),
       );
       return Object.fromEntries(entries.flat());
+    }),
+  );
+
+/**
+ * Names for job alerts' category slugs and place ids, so an alert reads as
+ * words. Display only: a category or place that doesn't resolve is left out
+ * of the map, and the caller falls back.
+ */
+export const getAlertFilterNames = createServerFn({ method: 'GET' })
+  .validator(validateAlertFilterNamesInput)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async (h): Promise<AlertFilterNames> => {
+      const [categories, places] = await Promise.all([
+        Promise.all(
+          data.categorySlugs.map(async (slug) => {
+            try {
+              const term = await getBoard().taxonomy.categories.resolve(slug, {
+                headers: h,
+              });
+              return [[slug, term.displayName] as const];
+            } catch (error) {
+              if (isNotFound(error)) return [];
+              throw error;
+            }
+          }),
+        ),
+        data.placeIds.length
+          ? getBoard()
+              .taxonomy.places.list(undefined, { headers: h })
+              .then(({ data: all }) =>
+                all.flatMap((place) =>
+                  data.placeIds.includes(place.id)
+                    ? [[place.id, place.displayName] as const]
+                    : [],
+                ),
+              )
+          : [],
+      ]);
+      return {
+        categories: Object.fromEntries(categories.flat()),
+        places: Object.fromEntries(places),
+      };
     }),
   );
 

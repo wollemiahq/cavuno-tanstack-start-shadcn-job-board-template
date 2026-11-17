@@ -173,6 +173,25 @@
   "alertManager_searchAlertLabel": "Jobsuche",
   "alertManager_similarJobsAlertLabel": "Ähnliche Jobs",
   "jobAlertMatch_quotedQuery": "„{query}“",
+  "jobAlertMatch_salaryUpTo": "Bis {amount}",
+  "jobAlertMatch_salaryFrom": "Ab {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Jobs in {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Jobs in {categories} und {count} weiteren",
+        "countPlural=*": "Jobs in {categories} und {count} weiteren"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Jobs zu „{query}“",
   "jobAlertMatch_similarTo": "Jobs ähnlich wie {title}",
   "alertManager_saveChangesLabel": "Änderungen speichern",
   "alertManager_saveError": "Benachrichtigung konnte nicht gespeichert werden — du kannst höchstens 10 haben.",
@@ -191,8 +210,9 @@
   "alertsConfirm_waitlistedBody": "Dein Jobalarm ist bestätigt. Er startet, sobald das Board an weitere Personen senden kann.",
   "alertsConfirm_waitlistedHeading": "Du stehst auf der Warteliste",
   "alertsManage_actionErrorText": "Etwas ist schiefgelaufen. Versuche es erneut.",
-  "alertsManage_activeBadge": "Aktiv",
   "alertsManage_allJobsText": "Alle Jobs",
+  "alertsManage_awaitingBadge": "Wartet auf Bestätigung",
+  "alertsManage_description": "Jobalarme für {email}, einmal pro Woche.",
   "alertsManage_deleteLabel": "Löschen",
   "alertsManage_emptyBody": "Du hast alle deine Job-Alerts gelöscht und bekommst keine Alert-E-Mails mehr.",
   "alertsManage_emptyTitle": "Keine Job-Alerts mehr",
@@ -2554,10 +2574,11 @@
   "settings_channelMessage": "Nachrichten",
   "settings_channelRecommendedJobs": "Job-Match",
   "settings_emailNotificationsText": "E-Mail-Benachrichtigungen",
-  "settings_goToAccountLabel": "Zum Konto",
   "settings_linkExpiredBody": "Dieser Abmeldelink ist ungültig oder abgelaufen. Melde dich an, um deine E-Mail-Einstellungen zu verwalten.",
   "settings_linkExpiredHeading": "Link abgelaufen",
-  "settings_signInLabel": "Anmelden",
+  "settings_allEmailSettingsLink": "Anmelden, um alle E-Mail-Einstellungen zu verwalten",
+  "settings_unsubscribeBody": "Damit stoppst du nur die {channel}-E-Mails. Deine anderen E-Mails von {board} bleiben, wie sie sind.",
+  "settings_unsubscribeTitle": "{channel}-E-Mails von {board} stoppen",
   "settings_title": "Einstellungen",
   "settings_unsubscribedBody": "Du erhältst keine {channel}-E-Mails mehr. Du kannst sie jederzeit in deinen Kontoeinstellungen wieder aktivieren.",
   "settings_unsubscribedHeading": "Du hast dich abgemeldet",

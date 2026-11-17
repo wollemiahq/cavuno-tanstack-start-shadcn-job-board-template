@@ -173,6 +173,25 @@
   "alertManager_searchAlertLabel": "Búsqueda de empleo",
   "alertManager_similarJobsAlertLabel": "Ofertas similares",
   "jobAlertMatch_quotedQuery": "«{query}»",
+  "jobAlertMatch_salaryUpTo": "Hasta {amount}",
+  "jobAlertMatch_salaryFrom": "Desde {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Empleos de {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Empleos de {categories} y {count} más",
+        "countPlural=*": "Empleos de {categories} y {count} más"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Empleos de «{query}»",
   "jobAlertMatch_similarTo": "Ofertas similares a {title}",
   "alertManager_saveChangesLabel": "Guardar cambios",
   "alertManager_saveError": "No se ha podido guardar la alerta: puedes tener 10 como máximo.",
@@ -191,8 +210,9 @@
   "alertsConfirm_waitlistedBody": "Tu alerta de empleo está confirmada. Empezará en cuanto el portal pueda enviar a más personas.",
   "alertsConfirm_waitlistedHeading": "Estás en la lista de espera",
   "alertsManage_actionErrorText": "Se ha producido un error. Inténtalo de nuevo.",
-  "alertsManage_activeBadge": "Activa",
   "alertsManage_allJobsText": "Todas las ofertas",
+  "alertsManage_awaitingBadge": "Pendiente de confirmación",
+  "alertsManage_description": "Alertas para {email}, una vez por semana.",
   "alertsManage_deleteLabel": "Eliminar",
   "alertsManage_emptyBody": "Has eliminado todas tus alertas de empleo, así que no recibirás más correos de alertas.",
   "alertsManage_emptyTitle": "No te quedan alertas de empleo",
@@ -2554,10 +2574,11 @@
   "settings_channelMessage": "mensaje",
   "settings_channelRecommendedJobs": "empleos afines",
   "settings_emailNotificationsText": "Notificaciones por correo",
-  "settings_goToAccountLabel": "Ir a la cuenta",
   "settings_linkExpiredBody": "Este enlace para darse de baja no es válido o ha caducado. Inicia sesión para gestionar tus preferencias de correo.",
   "settings_linkExpiredHeading": "Enlace caducado",
-  "settings_signInLabel": "Iniciar sesión",
+  "settings_allEmailSettingsLink": "Inicia sesión para gestionar todos tus ajustes de correo",
+  "settings_unsubscribeBody": "Esto solo detiene los correos de tipo {channel}. Tus demás correos de {board} no cambian.",
+  "settings_unsubscribeTitle": "Dejar de recibir correos de tipo {channel} de {board}",
   "settings_title": "Ajustes",
   "settings_unsubscribedBody": "Ya no recibirás correos de tipo {channel}. Puedes volver a activarlos cuando quieras desde los ajustes de tu cuenta.",
   "settings_unsubscribedHeading": "Te has dado de baja",

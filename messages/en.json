@@ -173,6 +173,25 @@
   "alertManager_searchAlertLabel": "Job search",
   "alertManager_similarJobsAlertLabel": "Similar jobs",
   "jobAlertMatch_quotedQuery": "“{query}”",
+  "jobAlertMatch_salaryUpTo": "Up to {amount}",
+  "jobAlertMatch_salaryFrom": "From {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Jobs in {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Jobs in {categories} and {count} more",
+        "countPlural=*": "Jobs in {categories} and {count} more"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Jobs matching “{query}”",
   "jobAlertMatch_similarTo": "Jobs similar to {title}",
   "alertManager_saveChangesLabel": "Save changes",
   "alertManager_saveError": "Couldn’t save the alert — you can have at most 10.",
@@ -191,8 +210,9 @@
   "alertsConfirm_waitlistedBody": "Your job alert is confirmed. It starts as soon as the board can send to more people.",
   "alertsConfirm_waitlistedHeading": "You're on the waitlist",
   "alertsManage_actionErrorText": "Something went wrong. Try again.",
-  "alertsManage_activeBadge": "Active",
   "alertsManage_allJobsText": "All jobs",
+  "alertsManage_awaitingBadge": "Waiting for confirmation",
+  "alertsManage_description": "Alerts for {email}, sent once a week.",
   "alertsManage_deleteLabel": "Delete",
   "alertsManage_emptyBody": "You've deleted all your job alerts, so you won't get any more alert emails.",
   "alertsManage_emptyTitle": "No job alerts left",
@@ -2554,10 +2574,11 @@
   "settings_channelMessage": "message",
   "settings_channelRecommendedJobs": "job match",
   "settings_emailNotificationsText": "Email notifications",
-  "settings_goToAccountLabel": "Go to account",
   "settings_linkExpiredBody": "This unsubscribe link is invalid or has expired. Sign in to manage your email preferences.",
   "settings_linkExpiredHeading": "Link expired",
-  "settings_signInLabel": "Sign in",
+  "settings_allEmailSettingsLink": "Sign in to manage all your email settings",
+  "settings_unsubscribeBody": "This stops {channel} emails only. Your other emails from {board} stay as they are.",
+  "settings_unsubscribeTitle": "Stop {channel} emails from {board}",
   "settings_title": "Settings",
   "settings_unsubscribedBody": "You’ll no longer receive {channel} emails. You can turn them back on any time from your account settings.",
   "settings_unsubscribedHeading": "You’re unsubscribed",

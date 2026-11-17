@@ -212,6 +212,7 @@ describe('settings unsubscribe recovery', () => {
       mode: 'unsubscribe',
       channel: 'recommendedJobEmails',
       link: LINK,
+      seo: { boardName: 'Acme Board' },
     });
     expect(unsubscribeWithLink).not.toHaveBeenCalled();
     expect(getNotificationPreferences).not.toHaveBeenCalled();
@@ -221,6 +222,7 @@ describe('settings unsubscribe recovery', () => {
       mode: 'unsubscribe',
       channel: 'recommendedJobEmails',
       link: LINK,
+      seo: { boardName: 'Acme Board' },
     });
     const channel = m.settings_channelRecommendedJobs();
     expect(unsubscribeWithLink).not.toHaveBeenCalled();
@@ -257,6 +259,7 @@ describe('settings unsubscribe recovery', () => {
       mode: 'unsubscribe',
       channel: 'messageEmails',
       link: LINK,
+      seo: { boardName: 'Acme Board' },
     });
     const name = m.settings_unsubscribeCta({
       channel: m.settings_channelMessage(),
@@ -270,7 +273,9 @@ describe('settings unsubscribe recovery', () => {
       }),
     ).toBeInTheDocument();
     expect(
-      within(alert).getByRole('link', { name: m.settings_signInLabel() }),
+      within(alert).getByRole('link', {
+        name: m.settings_allEmailSettingsLink(),
+      }),
     ).toBeInTheDocument();
   });
 
@@ -287,6 +292,7 @@ describe('settings unsubscribe recovery', () => {
       mode: 'unsubscribe',
       channel: 'messageEmails',
       link: LINK,
+      seo: { boardName: 'Acme Board' },
     });
     const name = m.settings_unsubscribeCta({
       channel: m.settings_channelMessage(),
@@ -330,7 +336,7 @@ describe('settings unsubscribe recovery', () => {
     await renderSettingsData({ mode: 'unsubscribe-failed' });
 
     expect(
-      screen.getByRole('link', { name: m.settings_signInLabel() }),
+      screen.getByRole('link', { name: m.settings_allEmailSettingsLink() }),
     ).toHaveAttribute(
       'href',
       `/auth/sign-in?returnTo=${encodeURIComponent(localizePath('/settings'))}`,

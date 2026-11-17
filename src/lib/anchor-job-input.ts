@@ -16,3 +16,27 @@ export function validateAnchorJobInput(input: { jobSlugs?: unknown }) {
     ],
   };
 }
+
+/**
+ * Bound the alert filter names a page asks for: one alert list's category
+ * slugs and place ids, as short strings, deduped.
+ */
+export function validateAlertFilterNamesInput(input: {
+  categorySlugs?: unknown;
+  placeIds?: unknown;
+}) {
+  const strings = (values: readonly unknown[]) => [
+    ...new Set(
+      values.slice(0, 20).flatMap((value) => {
+        const text = searchString(value);
+        return text && text.length <= 200 ? [text] : [];
+      }),
+    ),
+  ];
+  return {
+    categorySlugs: strings(
+      Array.isArray(input?.categorySlugs) ? input.categorySlugs : [],
+    ),
+    placeIds: strings(Array.isArray(input?.placeIds) ? input.placeIds : []),
+  };
+}

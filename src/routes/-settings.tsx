@@ -11,7 +11,7 @@
  *    because link checkers open every link in a message: the page offers
  *    one Unsubscribe button, and the person's click unsubscribes.
  */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { isBoardApiError } from '@cavuno/board';
 import { isRedirect, Link, redirect } from '@tanstack/react-router';
@@ -44,6 +44,14 @@ import { Page, PageContent } from '@/components/layout/page';
 import { Text } from '@/components/text';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
   incomingAuthSearch,
   mergeAuthConversionSearch,
   type LocationAuthSearch,
@@ -51,6 +59,7 @@ import {
 import { candidateLoaderError } from '@/lib/candidate-loader-error';
 import { candidateAuthSearch } from '@/lib/candidate-return-to';
 import { headTitle } from '@/lib/page-title';
+import { cn } from '@/lib/utils';
 
 type Channel = 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
 
@@ -218,7 +227,12 @@ export function SettingsPageView({
   dependencies = settingsRouteDependencies,
 }: {
   data:
-    | { mode: 'unsubscribe'; channel: Channel; link: string }
+    | {
+        mode: 'unsubscribe';
+        channel: Channel;
+        link: string;
+        seo: { boardName: string };
+      }
     | { mode: 'unsubscribe-failed' }
     | {
         mode: 'settings';
@@ -234,6 +248,7 @@ export function SettingsPageView({
       <UnsubscribeLinkPage
         channel={data.channel}
         link={data.link}
+        board={data.seo.boardName}
         dependencies={dependencies}
       />
     );
@@ -255,34 +270,70 @@ export function SettingsPageView({
 }
 
 /**
+ * The card every email-link state of the page shows: a title saying what
+ * it is about, one line, the action if there is one, and the way to the
+ * rest of the person's email settings (signing in reaches them).
+ */
+function EmailLinkCard({
+  title,
+  body,
+  role,
+  children,
+}: {
+  title: string;
+  body: string;
+  role?: 'alert' | 'status';
+  children?: ReactNode;
+}) {
+  return (
+    <Page width="narrow">
+      <PageContent>
+        <div className="py-10">
+          <Card role={role} className="mx-auto max-w-md">
+            <CardHeader>
+              <CardTitle>
+                <h1 className="font-heading text-xl font-semibold tracking-tight">
+                  {title}
+                </h1>
+              </CardTitle>
+              <CardDescription>{body}</CardDescription>
+            </CardHeader>
+            {children ? (
+              <CardContent className="space-y-3">{children}</CardContent>
+            ) : null}
+            <CardFooter className="border-t">
+              <Link
+                to="/auth/sign-in"
+                search={candidateAuthSearch('/settings')}
+                // Flush with the card's text, which the link variant's
+                // padding would indent.
+                className={cn(
+                  buttonVariants({ variant: 'link', size: 'sm' }),
+                  'px-0',
+                )}
+              >
+                {m.settings_allEmailSettingsLink()}
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
+      </PageContent>
+    </Page>
+  );
+}
+
+/**
  * The link can't unsubscribe: it was malformed or expired, or the API
  * refused it. Signing in reaches the same settings, so it's never a dead
  * end. `alert` announces it when it replaces the button after a tap.
  */
 function LinkExpiredPage({ alert = false }: { alert?: boolean }) {
   return (
-    <Page width="narrow">
-      <PageContent>
-        <div
-          role={alert ? 'alert' : undefined}
-          className="space-y-3 py-10 text-center"
-        >
-          <h1 className="font-heading text-3xl font-semibold tracking-tight">
-            {m.settings_linkExpiredHeading()}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {m.settings_linkExpiredBody()}
-          </p>
-          <Link
-            to="/auth/sign-in"
-            search={candidateAuthSearch('/settings')}
-            className={buttonVariants({ variant: 'outline' })}
-          >
-            {m.settings_signInLabel()}
-          </Link>
-        </div>
-      </PageContent>
-    </Page>
+    <EmailLinkCard
+      role={alert ? 'alert' : undefined}
+      title={m.settings_linkExpiredHeading()}
+      body={m.settings_linkExpiredBody()}
+    />
   );
 }
 
@@ -293,10 +344,12 @@ function LinkExpiredPage({ alert = false }: { alert?: boolean }) {
 function UnsubscribeLinkPage({
   channel,
   link,
+  board,
   dependencies,
 }: {
   channel: Channel;
   link: string;
+  board: string;
   dependencies: SettingsRouteDependencies;
 }) {
   const [state, setState] = useState<
@@ -320,43 +373,33 @@ function UnsubscribeLinkPage({
     }
   };
 
+  if (state === 'done') {
+    return (
+      <EmailLinkCard
+        role="status"
+        title={m.settings_unsubscribedHeading()}
+        body={m.settings_unsubscribedBody({ channel: channelName })}
+      />
+    );
+  }
   return (
-    <Page width="narrow">
-      <PageContent>
-        <div className="space-y-3 py-10 text-center">
-          {state === 'done' ? (
-            <div role="status" className="space-y-3">
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
-                {m.settings_unsubscribedHeading()}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {m.settings_unsubscribedBody({ channel: channelName })}
-              </p>
-              <Link
-                to="/account"
-                className={buttonVariants({ variant: 'outline' })}
-              >
-                {m.settings_goToAccountLabel()}
-              </Link>
-            </div>
-          ) : (
-            <>
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
-                {m.settings_emailNotificationsText()}
-              </h1>
-              <Button disabled={state === 'pending'} onClick={unsubscribe}>
-                {m.settings_unsubscribeCta({ channel: channelName })}
-              </Button>
-              {state === 'retry' ? (
-                <p role="alert" className="text-destructive text-sm">
-                  {m.alertsManage_actionErrorText()}
-                </p>
-              ) : null}
-            </>
-          )}
-        </div>
-      </PageContent>
-    </Page>
+    <EmailLinkCard
+      title={m.settings_unsubscribeTitle({ channel: channelName, board })}
+      body={m.settings_unsubscribeBody({ channel: channelName, board })}
+    >
+      <Button
+        className="w-full"
+        disabled={state === 'pending'}
+        onClick={unsubscribe}
+      >
+        {m.settings_unsubscribeCta({ channel: channelName })}
+      </Button>
+      {state === 'retry' ? (
+        <p role="alert" className="text-destructive text-sm">
+          {m.alertsManage_actionErrorText()}
+        </p>
+      ) : null}
+    </EmailLinkCard>
   );
 }
 
