@@ -70,6 +70,7 @@ const compactShellPrefixes = [
   '/account',
   '/alerts',
   '/auth',
+  '/email-preferences',
   '/employers',
   '/job-seekers',
   '/me',

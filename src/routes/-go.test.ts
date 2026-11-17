@@ -54,6 +54,12 @@ describe('/go/* mount — createGoHandler', () => {
     expect(locationPathAndSearch(res)).toBe('/alerts/confirm?token=t');
   });
 
+  it("GET /go/email-preferences?token=t → 302 the site's own /email-preferences?token=t", async () => {
+    const res = await getGo('/go/email-preferences?token=t');
+    expect(res.status).toBe(302);
+    expect(locationPathAndSearch(res)).toBe('/email-preferences?token=t');
+  });
+
   it('GET /go/job/anything degrades to /jobs when lookupJob is unwired', async () => {
     const res = await getGo('/go/job/anything');
     expect(res.status).toBe(302);
