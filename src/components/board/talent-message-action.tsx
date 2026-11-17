@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 
 export type StartTalentConversation = (input: {
   candidateBoardUserId: string;
@@ -62,7 +63,18 @@ export function TalentMessageAction({
           <DialogTitle>
             {m.talentMessage_title({ name: candidateName })}
           </DialogTitle>
-          <DialogDescription>{m.talentMessage_description()}</DialogDescription>
+          <DialogDescription>
+            {m.talentMessage_description()}
+            {action.freeConversationsRemaining
+              ? ` ${m.talentMessage_freeTrialBody({
+                  count: action.freeConversationsRemaining,
+                  countLabel:
+                    action.freeConversationsRemaining.toLocaleString(
+                      getLocale(),
+                    ),
+                })}`
+              : null}
+          </DialogDescription>
         </DialogHeader>
         <Composer
           disabled={false}

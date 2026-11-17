@@ -52,6 +52,7 @@ export function TalentUnlockGate({
   companyId,
   surface,
   creditsRemaining,
+  freeTrial = false,
   plans,
   profile,
   busy,
@@ -62,6 +63,11 @@ export function TalentUnlockGate({
   companyId?: string;
   surface: 'unlock_needed' | 'out_of_unlocks' | 'no_plan';
   creditsRemaining: number;
+  /**
+   * The employer has no plan, so `creditsRemaining` is the board's free
+   * trial: say the unlock is free instead of spending from a plan.
+   */
+  freeTrial?: boolean;
   plans: Plan[];
   /**
    * The redacted profile, rendered beneath the upsell as a silhouette. The
@@ -73,6 +79,10 @@ export function TalentUnlockGate({
   onUpgrade: (planId: string) => Promise<void> | void;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const freeUnlockLine = m.talentUnlock_freeTrialBody({
+    count: creditsRemaining,
+    countLabel: creditsRemaining.toLocaleString(getLocale()),
+  });
 
   if (surface === 'no_plan') {
     return (
@@ -156,13 +166,19 @@ export function TalentUnlockGate({
             <CardTitle>{m.talentUnlock_neededTitle()}</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground space-y-2 text-sm">
-            <p>{m.talentUnlock_neededBody()}</p>
-            <p>
-              {m.talentUnlock_creditsRemaining({
-                count: creditsRemaining,
-                countLabel: creditsRemaining.toLocaleString(getLocale()),
-              })}
-            </p>
+            {freeTrial ? (
+              <p>{freeUnlockLine}</p>
+            ) : (
+              <>
+                <p>{m.talentUnlock_neededBody()}</p>
+                <p>
+                  {m.talentUnlock_creditsRemaining({
+                    count: creditsRemaining,
+                    countLabel: creditsRemaining.toLocaleString(getLocale()),
+                  })}
+                </p>
+              </>
+            )}
           </CardContent>
           <CardFooter>
             <Button
@@ -180,7 +196,7 @@ export function TalentUnlockGate({
                 {m.talentUnlock_confirmTitle()}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {m.talentUnlock_confirmBody()}
+                {freeTrial ? freeUnlockLine : m.talentUnlock_confirmBody()}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

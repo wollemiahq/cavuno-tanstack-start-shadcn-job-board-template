@@ -2664,6 +2664,20 @@
   "talentLists_sourcedHeading": "Zelf gevonden kandidaten",
   "talentLists_triggerLabel": "Opgeslagen zoekopdrachten",
   "talentMessage_description": "Stel jezelf voor en leg uit waarom je contact opneemt.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dit is je laatste gratis gesprek.",
+        "countPlural=*": "Hiermee begin je een van je {countLabel} gratis gesprekken."
+      }
+    }
+  ],
   "talentMessage_title": "Bericht aan {name}",
   "talentSave_jobLabel": "Op shortlist zetten voor",
   "talentSave_saveLabel": "Opslaan",
@@ -2890,6 +2904,20 @@
       "match": {
         "countPlural=one": "Nog {countLabel} profieltegoed beschikbaar.",
         "countPlural=*": "Nog {countLabel} profieltegoeden beschikbaar."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dit is je laatste gratis profieltegoed.",
+        "countPlural=*": "Dit gebruikt een van je {countLabel} gratis profieltegoeden."
       }
     }
   ],

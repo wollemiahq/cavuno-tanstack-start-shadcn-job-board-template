@@ -17,6 +17,7 @@ import { TalentUnlockGate, TalentUnlockPending } from './-talent-unlock-gate';
 import { profileLayoutFields } from '@/board/custom-field-display';
 import {
   employerCanStartMessage,
+  employerFreeConversationsRemaining,
   isOpaqueTalentRoute,
   isRedactedTalentProfile,
   resolveTalentProfileSurface,
@@ -81,6 +82,14 @@ async function readCandidateCompanyAccess(
  * `@/lib/talent-profile-path`.
  */
 export const cavunoPage = 'talentProfile';
+
+/**
+ * Route-contract features this site supports. `talentFreeTrial`: the talent
+ * pages let an employer spend the board's free unlocks and conversations
+ * before they hold a plan, so the dashboard offers the free trial setting.
+ * Remove it if the talent pages stop gating on remaining credits.
+ */
+export const cavunoFeatures = ['talentFreeTrial'] as const;
 
 export const Route = createFileRoute('/p/$handle')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -276,6 +285,7 @@ function TalentProfilePage() {
         companySelector={companySelector}
         surface={surface}
         creditsRemaining={candidateAccess?.unlockCreditsRemaining ?? 0}
+        freeTrial={candidateAccess?.hasActiveTalentSubscription === false}
         plans={plans}
         profile={profile}
         busy={busy}
@@ -341,6 +351,9 @@ function TalentProfilePage() {
       canStartMessage={Boolean(
         scopedGrant && employerCanStartMessage(scopedGrant),
       )}
+      freeConversationsRemaining={
+        scopedGrant ? employerFreeConversationsRemaining(scopedGrant) : null
+      }
       messagingEnabled={board.features.messaging}
       fieldLayout={profileLayoutFields(board.forms?.talent)}
       locationHref={location.href}
