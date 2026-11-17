@@ -30,12 +30,14 @@ const prefs = {
   jobAlerts: {
     confirmed: true,
     unsubscribed: false,
+    waitlisted: false,
     alerts: [
       {
         id: 'alert-1',
         label: 'Design jobs',
         frequency: 'weekly',
         isActive: true,
+        paused: false,
         awaitingConfirmation: false,
         kind: 'filters',
         anchorJob: null,
