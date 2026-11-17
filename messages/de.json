@@ -2666,6 +2666,20 @@
   "talentLists_sourcedHeading": "Aus der Talentsuche",
   "talentLists_triggerLabel": "Gespeicherte Suchen",
   "talentMessage_description": "Stelle dich kurz vor und erkläre, warum du Kontakt aufnimmst.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Damit beginnst du dein letztes kostenloses Gespräch.",
+        "countPlural=*": "Damit beginnst du eines deiner {countLabel} kostenlosen Gespräche."
+      }
+    }
+  ],
   "talentMessage_title": "Nachricht an {name}",
   "talentSave_jobLabel": "Auf die Shortlist für",
   "talentSave_saveLabel": "Speichern",
@@ -2892,6 +2906,20 @@
       "match": {
         "countPlural=one": "{countLabel} Freischaltung übrig.",
         "countPlural=*": "{countLabel} Freischaltungen übrig."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Das ist deine letzte kostenlose Profil-Freischaltung.",
+        "countPlural=*": "Das nutzt eine deiner {countLabel} kostenlosen Profil-Freischaltungen."
       }
     }
   ],

@@ -2666,6 +2666,20 @@
   "talentLists_sourcedHeading": "Sourced",
   "talentLists_triggerLabel": "Saved searches",
   "talentMessage_description": "Introduce yourself and explain why you’re reaching out.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "This starts your last free conversation.",
+        "countPlural=*": "This starts one of your {countLabel} free conversations."
+      }
+    }
+  ],
   "talentMessage_title": "Message {name}",
   "talentSave_jobLabel": "Shortlist for",
   "talentSave_saveLabel": "Save",
@@ -2892,6 +2906,20 @@
       "match": {
         "countPlural=one": "{countLabel} unlock remaining.",
         "countPlural=*": "{countLabel} unlocks remaining."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "This is your last free profile unlock.",
+        "countPlural=*": "This uses one of your {countLabel} free profile unlocks."
       }
     }
   ],

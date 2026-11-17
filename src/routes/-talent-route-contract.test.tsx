@@ -31,6 +31,7 @@ import {
   type TalentListingSearch,
 } from '@/lib/talent-search';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import { renderRouted } from '@/test/render-routed';
 
 const getTalentIndexPage =
@@ -717,6 +718,34 @@ describe('opaque talent profile unlock gate', () => {
     );
 
     await waitFor(() => expect(onUnlock).toHaveBeenCalledOnce());
+  });
+
+  it('says a free trial unlock is free, and when it is the last one', async () => {
+    await renderRouted(
+      <TalentUnlockGate
+        surface="unlock_needed"
+        creditsRemaining={1}
+        freeTrial
+        plans={[]}
+        profile={redactedProfile}
+        busy={null}
+        onUnlock={vi.fn()}
+        onUpgrade={vi.fn()}
+      />,
+    );
+    const lastFree = m.talentUnlock_freeTrialBody({
+      count: 1,
+      countLabel: (1).toLocaleString(getLocale()),
+    });
+    expect(screen.getByText(lastFree)).toBeVisible();
+    expect(screen.queryByText(m.talentUnlock_neededBody())).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.talentUnlock_confirmAction() }),
+    );
+    const dialog = screen.getByRole('alertdialog');
+    expect(within(dialog).getByText(lastFree)).toBeVisible();
+    expect(within(dialog).queryByText(m.talentUnlock_confirmBody())).toBeNull();
   });
 
   it('offers in-place plan upgrades when unlock credits are exhausted', async () => {

@@ -16,6 +16,7 @@ import { profileLayoutFields } from '@/board/custom-field-display';
 import { getTalentSearchLabels } from '@/board/talent-search-labels';
 import {
   employerCanStartMessage,
+  employerFreeConversationsRemaining,
   sellsTalentProfileUnlocks,
   toTalentCardVM,
   type TalentDetailViewer,
@@ -92,6 +93,8 @@ export function TalentDirectoryView({
             kind: 'employer',
             hasTalentAccess: talentAccess.hasTalentAccess,
             canStartMessage: employerCanStartMessage(talentAccess),
+            freeConversationsRemaining:
+              employerFreeConversationsRemaining(talentAccess),
           }
         : { kind: 'candidate' };
   const profileUnlocks = sellsTalentProfileUnlocks(talentAccess.accessModel);
