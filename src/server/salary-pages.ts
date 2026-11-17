@@ -369,7 +369,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            locations.data.map((l) => ({
+            indexableSalaryItems(locations.data).map((l) => ({
               name: l.placeName,
               url: selfUrl(seo.origin, salaryLocationPath(l.placeSlug)),
             })),
@@ -645,12 +645,30 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
         salary.currency,
       );
       const faqs = composeSalaryFaqs(faqEntries);
+      const isCity =
+        salary.adminLevel === 'city' || salary.adminLevel === 'locality';
       const jsonLd = asJsonObjects(
         [
-          locationSalaryJsonLd(salary, {
-            occupationUrl: ({ categorySlug }) =>
-              selfUrl(seo.origin, salaryTitlePath(categorySlug)),
-          }),
+          locationSalaryJsonLd(
+            {
+              ...salary,
+              topCategories: indexableSalaryItems(salary.topCategories),
+            },
+            {
+              // Same targets as the page's top-title cards: title-in-city on a
+              // city, the title page elsewhere.
+              occupationUrl: ({ categorySlug }) =>
+                selfUrl(
+                  seo.origin,
+                  isCity
+                    ? salaryTitleInLocationPath(
+                        categorySlug,
+                        salary.canonicalSlug,
+                      )
+                    : salaryTitlePath(categorySlug),
+                ),
+            },
+          ),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },
@@ -689,6 +707,9 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Rows carry the Board API's verdict for the page each links to; list
+      // only indexable pages.
+      const locations = indexableSalaryItems(payload.locations);
       const c = breadcrumbsCopy();
       const head = noindexFollow(
         {
@@ -705,8 +726,8 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_titleLocationsMetaDescription({
                 title: payload.categoryName,
-                count: payload.locations.length,
-                countLabel: String(payload.locations.length),
+                count: locations.length,
+                countLabel: String(locations.length),
               }),
             },
           ],
@@ -725,7 +746,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.locations.map((l) => ({
+            locations.map((l) => ({
               name: l.placeName,
               url: boardUrl(
                 seo.origin,
@@ -754,7 +775,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, head, jsonLd };
+      return { data: { ...payload, locations }, seo, head, jsonLd };
     }),
   );
 
@@ -771,6 +792,9 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Nothing links this noindex page, and every row's target (a skill salary
+      // page) is noindex, so a visitor who lands here sees the full list.
+      const locations = payload.locations;
       const c = breadcrumbsCopy();
       const head = noindexFollow(
         {
@@ -787,8 +811,8 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_skillLocationsMetaDescription({
                 skill: payload.skillName,
-                count: payload.locations.length,
-                countLabel: String(payload.locations.length),
+                count: locations.length,
+                countLabel: String(locations.length),
               }),
             },
           ],
@@ -807,7 +831,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.locations.map((l) => ({
+            locations.map((l) => ({
               name: l.placeName,
               url: boardUrl(
                 seo.origin,
@@ -836,7 +860,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, head, jsonLd };
+      return { data: { ...payload, locations }, seo, head, jsonLd };
     }),
   );
 
@@ -853,6 +877,9 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Rows carry the Board API's verdict for the page each links to; list
+      // only indexable pages.
+      const titles = indexableSalaryItems(payload.titles);
       const c = breadcrumbsCopy();
       // Flat hosted shape: Home › Salaries › Locations › {Place}(linked) › Titles.
       const breadcrumbTrail = [
@@ -880,7 +907,7 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_titlesInPlaceMetaDescription({
                 place: payload.placeName,
-                count: payload.titles.length,
+                count: titles.length,
               }),
             },
           ],
@@ -899,7 +926,7 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.titles.map((t) => ({
+            titles.map((t) => ({
               name: t.name,
               url: boardUrl(
                 seo.origin,
@@ -928,7 +955,13 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, breadcrumbTrail, head, jsonLd };
+      return {
+        data: { ...payload, titles },
+        seo,
+        breadcrumbTrail,
+        head,
+        jsonLd,
+      };
     }),
   );
 
@@ -945,6 +978,9 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Nothing links this noindex page, and every row's target (a skill salary
+      // page) is noindex, so a visitor who lands here sees the full list.
+      const skills = payload.skills;
       const c = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: c.home, href: BOARD_PATHS.home },
@@ -971,7 +1007,7 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_skillsInPlaceMetaDescription({
                 place: payload.placeName,
-                count: payload.skills.length,
+                count: skills.length,
               }),
             },
           ],
@@ -990,7 +1026,7 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.skills.map((s) => ({
+            skills.map((s) => ({
               name: s.name,
               url: boardUrl(
                 seo.origin,
@@ -1019,7 +1055,13 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, breadcrumbTrail, head, jsonLd };
+      return {
+        data: { ...payload, skills },
+        seo,
+        breadcrumbTrail,
+        head,
+        jsonLd,
+      };
     }),
   );
 

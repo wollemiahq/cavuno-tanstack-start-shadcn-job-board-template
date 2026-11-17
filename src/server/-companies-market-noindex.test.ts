@@ -50,23 +50,17 @@ vi.mock('../lib/board', () => ({
     },
   }),
 }));
-import {
-  MIN_COMPANIES_PER_INDEXED_MARKET_PAGE,
-  getCompaniesMarketPage,
-  indexedMarkets,
-  thinMarketSlugs,
-} from './companies-pages';
+import { getCompaniesMarketPage } from './companies-pages';
 
-async function robotsFor(
+async function marketPage(
   data: { query?: string },
-  count?: number,
-  companyCount?: number,
+  indexable: boolean | undefined,
 ) {
-  const envelope = { data: [], count };
+  const envelope = { data: [], count: 0 };
   mocks.resolve.mockResolvedValue({
     displayName: 'Fixture',
     redirectTo: null,
-    companyCount,
+    indexable,
   });
   mocks.list.mockResolvedValue(envelope);
   mocks.search.mockResolvedValue(envelope);
@@ -74,7 +68,15 @@ async function robotsFor(
     data: { marketSlug: 'fixture', offset: 0, limit: 24, ...data },
   });
   if (result.kind !== 'ok') throw new Error(`unexpected ${result.kind}`);
-  return result.head.meta.find((tag) => 'name' in tag && tag.name === 'robots');
+  return result;
+}
+
+async function robotsFor(
+  data: { query?: string },
+  indexable: boolean | undefined,
+) {
+  const { head } = await marketPage(data, indexable);
+  return head.meta.find((tag) => 'name' in tag && tag.name === 'robots');
 }
 
 beforeEach(() => {
@@ -82,77 +84,33 @@ beforeEach(() => {
   mocks.tree.mockResolvedValue({ data: [] });
 });
 
-describe('market page thin-content floor', () => {
-  it('noindexes a market listing fewer companies than the floor', async () => {
-    expect(
-      await robotsFor({}, MIN_COMPANIES_PER_INDEXED_MARKET_PAGE - 1),
-    ).toEqual({ name: 'robots', content: 'noindex, follow' });
-  });
-
-  it('indexes a market at the floor', async () => {
-    expect(
-      await robotsFor({}, MIN_COMPANIES_PER_INDEXED_MARKET_PAGE),
-    ).toBeUndefined();
-  });
-
-  it('leaves a search view and a listing without a total alone', async () => {
-    expect(await robotsFor({ query: 'fixture' }, 0)).toBeUndefined();
-    expect(await robotsFor({}, undefined)).toBeUndefined();
-  });
-
-  it("uses the market's companyCount over the listing total when present", async () => {
-    const floor = MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
-    // Text matches lift the listing over the floor; the tagged count does not.
-    expect(await robotsFor({}, floor + 10, floor - 1)).toEqual({
+describe("market page robots follow the API's indexable verdict", () => {
+  it('noindexes a market the API marks not indexable', async () => {
+    expect(await robotsFor({}, false)).toEqual({
       name: 'robots',
       content: 'noindex, follow',
     });
-    expect(await robotsFor({}, 0, floor)).toBeUndefined();
+  });
+
+  it('indexes a market the API marks indexable, or that has no verdict', async () => {
+    expect(await robotsFor({}, true)).toBeUndefined();
+    expect(await robotsFor({}, undefined)).toBeUndefined();
+  });
+
+  it('leaves a search view alone', async () => {
+    expect(await robotsFor({ query: 'fixture' }, false)).toBeUndefined();
   });
 });
 
-describe('links to market pages', () => {
-  const floor = MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
-  const market = (slug: string, companyCount: number) => ({
-    slug,
-    companyCount,
-  });
-
-  it('keeps thin markets out of market link lists', () => {
-    expect(
-      indexedMarkets([market('big', floor), market('thin', floor - 1)]).map(
-        (m) => m.slug,
-      ),
-    ).toEqual(['big']);
-  });
-
-  it('names a company market thin from its count in the ranked list', () => {
-    const counts = {
-      data: [market('big', floor), market('thin', floor - 1)],
-      hasMore: false,
-    };
-    expect(
-      thinMarketSlugs([{ slug: 'big' }, { slug: 'thin' }], counts),
-    ).toEqual(['thin']);
-  });
-
-  it('treats a market past the last page as thin only when the tail is', () => {
-    const missing = [{ slug: 'unlisted' }];
-    expect(
-      thinMarketSlugs(missing, {
-        data: [market('a', floor + 3), market('b', floor - 1)],
-        hasMore: true,
-      }),
-    ).toEqual(['unlisted']);
-    expect(
-      thinMarketSlugs(missing, {
-        data: [market('a', floor + 3), market('b', floor)],
-        hasMore: true,
-      }),
-    ).toEqual([]);
-  });
-
-  it('links every market when the counts could not be read', () => {
-    expect(thinMarketSlugs([{ slug: 'any' }], null)).toEqual([]);
+describe('market link lists', () => {
+  it('keep only markets the API marks indexable', async () => {
+    mocks.tree.mockResolvedValue({
+      data: [
+        { slug: 'linked', indexable: true },
+        { slug: 'unlinked', indexable: false },
+      ],
+    });
+    const { markets } = await marketPage({}, true);
+    expect(markets.map((market) => market.slug)).toEqual(['linked']);
   });
 });
