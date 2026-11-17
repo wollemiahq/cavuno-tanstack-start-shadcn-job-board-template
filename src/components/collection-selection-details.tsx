@@ -51,8 +51,11 @@ function DetailInputs({
       errors.invalid?.id === id
         ? errors.invalid.message
         : // A refusal names a detail key, not which entry or row, so only an
-          // empty required input can be the one refused. Others show beside Save.
-          refused?.code === 'custom_field_required' && isCustomFieldEmpty(value)
+          // empty required input the owner can fill is the one refused. Others show
+          // beside Save.
+          definition.editableByOwner &&
+            refused?.code === 'custom_field_required' &&
+            isCustomFieldEmpty(value)
           ? refused.message
           : null;
     return (
