@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { isRedirect } from '@tanstack/react-router';
 import {
   cleanup,
   fireEvent,
@@ -14,18 +15,19 @@ import {
   createAlertManageLoader,
   type AlertManageDependencies,
   type ManageData,
+  type ManageSearch,
 } from './-alerts.manage-loader';
 
 import { m } from '@/paraglide/messages';
 import type { JobAlertManageState } from '@cavuno/board';
 
 const invalidate = vi.fn<() => Promise<void>>();
-const clearUnsubscribeIntent = vi.fn<() => void>();
 const dependencies: AlertManageDependencies = {
   deleteJobAlertPreference: vi.fn(),
   getJobAlertManageState: vi.fn(),
   getAnchorJobPaths: vi.fn(),
   getSeoBase: vi.fn(),
+  keepJobAlertManageLink: vi.fn(),
   resubscribeJobAlert: vi.fn(),
   unsubscribeJobAlert: vi.fn(),
 };
@@ -54,19 +56,29 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function renderManage(
-  data: ManageData,
-  search: { subscription?: string; token?: string; unsubscribe?: true } = {},
-) {
+const LINK = '0123456789abcdef';
+const kept: ManageSearch = { link: LINK };
+
+function renderManage(data: ManageData, search: ManageSearch = {}) {
   render(
     <ManagePageView
       data={data}
       search={search}
       invalidate={invalidate}
-      clearUnsubscribeIntent={clearUnsubscribeIntent}
       dependencies={dependencies}
     />,
   );
+}
+
+/** Runs the loader, returning the redirect it throws, if any. */
+async function loadManage(deps: ManageSearch) {
+  vi.mocked(dependencies.getSeoBase).mockResolvedValue({ boardName: 'Board' });
+  try {
+    return { data: await createAlertManageLoader(dependencies)({ deps }) };
+  } catch (error) {
+    if (!isRedirect(error)) throw error;
+    return { redirect: error.options };
+  }
 }
 
 describe('public job-alert management', () => {
@@ -83,7 +95,7 @@ describe('public job-alert management', () => {
   it('uses the owned Alert composition for the unsubscribed state', () => {
     renderManage(
       { state: { ...state, unsubscribed: true }, anchorJobPaths: {} },
-      { subscription: 'subscription-1', token: 'subscription-token' },
+      kept,
     );
 
     expect(
@@ -94,10 +106,7 @@ describe('public job-alert management', () => {
   });
 
   it('uses the owned Item composition for each alert preference', () => {
-    renderManage(
-      { state, anchorJobPaths: {} },
-      { subscription: 'subscription-1', token: 'subscription-token' },
-    );
+    renderManage({ state, anchorJobPaths: {} }, kept);
 
     const item = screen
       .getByText(m.alertsManage_allJobsText())
@@ -111,10 +120,8 @@ describe('public job-alert management', () => {
     vi.mocked(dependencies.unsubscribeJobAlert).mockRejectedValue(
       new Error('unsubscribe unavailable'),
     );
-    renderManage(
-      { state, anchorJobPaths: {} },
-      { subscription: 'subscription-1', token: 'subscription-token' },
-    );
+    invalidate.mockResolvedValue();
+    renderManage({ state, anchorJobPaths: {} }, kept);
     fireEvent.click(
       screen.getByRole('button', {
         name: m.alertsManage_unsubscribeAllLabel(),
@@ -132,7 +139,8 @@ describe('public job-alert management', () => {
         }),
       ).toBeEnabled();
     });
-    expect(invalidate).not.toHaveBeenCalled();
+    // The state is read again, so an expired link shows its notice.
+    expect(invalidate).toHaveBeenCalledOnce();
   });
 
   it('reports a committed unsubscribe as saved when refresh fails', async () => {
@@ -141,10 +149,7 @@ describe('public job-alert management', () => {
       success: true,
     });
     invalidate.mockRejectedValue(new Error('refresh unavailable'));
-    renderManage(
-      { state, anchorJobPaths: {} },
-      { subscription: 'subscription-1', token: 'subscription-token' },
-    );
+    renderManage({ state, anchorJobPaths: {} }, kept);
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -164,57 +169,100 @@ describe('public job-alert management', () => {
   });
 
   it('shows the no-alerts state, not the invalid link, once every alert is deleted', async () => {
-    vi.mocked(dependencies.getSeoBase).mockResolvedValue({
-      boardName: 'Board',
-    });
     vi.mocked(dependencies.getJobAlertManageState).mockResolvedValue(null);
-    const data = await createAlertManageLoader(dependencies)({
-      deps: { subscription: 'subscription-1', token: 'subscription-token' },
-    });
+    const { data } = await loadManage(kept);
     expect(data).toMatchObject({ empty: true });
 
-    renderManage(data, {
-      subscription: 'subscription-1',
-      token: 'subscription-token',
-    });
+    renderManage(data!, kept);
     expect(screen.getByText(m.alertsManage_emptyTitle())).toBeInTheDocument();
     expect(screen.queryByText(m.alertsManage_invalidTitle())).toBeNull();
   });
 
-  it('unsubscribes once on arrival from the email unsubscribe link', async () => {
+  it('keeps the link in a cookie and opens the page with only its key', async () => {
+    vi.mocked(dependencies.keepJobAlertManageLink).mockResolvedValue(LINK);
+    const { redirect } = await loadManage({
+      subscription: 'subscription-1',
+      token: 'subscription-token',
+      unsubscribe: true,
+    });
+
+    expect(dependencies.keepJobAlertManageLink).toHaveBeenCalledWith({
+      data: { subscription: 'subscription-1', token: 'subscription-token' },
+    });
+    expect(redirect).toMatchObject({
+      to: '/alerts/manage',
+      search: { link: LINK, unsubscribe: true },
+    });
+    expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
+  });
+
+  it('opens a malformed link with no key, so the page says it is invalid', async () => {
+    vi.mocked(dependencies.keepJobAlertManageLink).mockResolvedValue(null);
+    const { redirect } = await loadManage({
+      subscription: 'subscription-1',
+      token: 'bad;token',
+    });
+
+    expect(redirect).toMatchObject({ search: {} });
+  });
+
+  it('opening the unsubscribe link only reads; the click unsubscribes', async () => {
+    vi.mocked(dependencies.getJobAlertManageState).mockResolvedValue(state);
+    const { data } = await loadManage({ link: LINK, unsubscribe: true });
+    expect(dependencies.getJobAlertManageState).toHaveBeenCalledWith({
+      data: { link: LINK },
+    });
+    for (const write of [
+      dependencies.unsubscribeJobAlert,
+      dependencies.resubscribeJobAlert,
+      dependencies.deleteJobAlertPreference,
+    ]) {
+      expect(write).not.toHaveBeenCalled();
+    }
+
     vi.mocked(dependencies.unsubscribeJobAlert).mockResolvedValue({
       object: 'job_alert_manage_result',
       success: true,
     });
     invalidate.mockResolvedValue();
-    renderManage(
-      { state, anchorJobPaths: {} },
-      {
-        subscription: 'subscription-1',
-        token: 'subscription-token',
-        unsubscribe: true,
-      },
-    );
+    renderManage(data!, { link: LINK, unsubscribe: true });
+    expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
 
-    await waitFor(() => expect(clearUnsubscribeIntent).toHaveBeenCalledOnce());
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.alertsManage_unsubscribeAllLabel(),
+      }),
+    );
+    await waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
     expect(dependencies.unsubscribeJobAlert).toHaveBeenCalledExactlyOnceWith({
-      data: { subscriptionId: 'subscription-1', token: 'subscription-token' },
+      data: { link: LINK },
     });
-    expect(invalidate).toHaveBeenCalledOnce();
   });
 
-  it('skips the unsubscribe call when already unsubscribed', () => {
+  it('shows only the unsubscribed line when the link is already off', () => {
     renderManage(
       { state: { ...state, unsubscribed: true }, anchorJobPaths: {} },
-      {
-        subscription: 'subscription-1',
-        token: 'subscription-token',
-        unsubscribe: true,
-      },
+      { link: LINK, unsubscribe: true },
     );
 
+    expect(
+      screen.getByText(m.alertsManage_unsubscribedText()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: m.alertsManage_unsubscribeAllLabel(),
+      }),
+    ).toBeNull();
     expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
-    expect(clearUnsubscribeIntent).toHaveBeenCalledOnce();
+  });
+
+  it('says to use a recent email once the kept link has expired', async () => {
+    vi.mocked(dependencies.getJobAlertManageState).mockResolvedValue(
+      'link_expired',
+    );
+    const { data } = await loadManage(kept);
+
+    expect(data).toMatchObject({ error: true });
   });
 
   it('names a similar-job alert’s job and quotes a search alert’s keywords', () => {
@@ -244,7 +292,7 @@ describe('public job-alert management', () => {
         },
         anchorJobPaths: {},
       },
-      { subscription: 'subscription-1', token: 'subscription-token' },
+      kept,
     );
 
     // Without a resolved job link the title shows as plain text.
