@@ -54,6 +54,8 @@ vi.mock('../lib/board', () => ({
   }),
 }));
 
+import { salaryTitleInLocationPath } from '../board/salary-view-model';
+import { selfUrl } from '../lib/self-url';
 import {
   getLocationSalaryPage,
   getSalaryHubPage,
@@ -254,7 +256,10 @@ describe('location salary page structured data', () => {
     });
     const jsonLd = JSON.stringify(page.jsonLd);
     expect(jsonLd).toContain(
-      'https://fixture.example/salaries/titles/title-in/fixture-city',
+      selfUrl(
+        'https://fixture.example',
+        salaryTitleInLocationPath('title-in', 'fixture-city'),
+      ),
     );
     expect(jsonLd).not.toContain('title-out');
   });
