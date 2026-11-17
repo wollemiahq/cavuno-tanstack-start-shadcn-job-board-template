@@ -3309,6 +3309,8 @@
   "emailPreferences_title": "Preferencias de correo",
   "emailPreferences_invalidTitle": "Este enlace no es válido",
   "emailPreferences_invalidBody": "Usa el enlace del correo más reciente de {board} para gestionar tus correos.",
+  "emailPreferences_expiredTitle": "Vuelve a abrir el enlace de tu correo",
+  "emailPreferences_expiredBody": "Para proteger tus preferencias, esta página deja de funcionar después de una hora. Abre el enlace del correo más reciente de {board}. Si vuelve a pasar, permite las cookies en este sitio.",
   "emailPreferences_description": "Elige los correos que recibes de {board}.",
   "emailPreferences_jobAlertsTitle": "Alertas de empleo",
   "emailPreferences_jobAlertsOff": "Las alertas de empleo están desactivadas.",

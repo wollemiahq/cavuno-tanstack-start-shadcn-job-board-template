@@ -12,6 +12,7 @@ import {
   keepEmailPreferencesToken,
   unsubscribeAllEmailPreferences,
   updateEmailPreferences,
+  type EmailPreferencesRead,
 } from '../server/email-preferences';
 import { getSeoBase } from '../server/queries';
 
@@ -19,24 +20,29 @@ import { headTitle } from '@/lib/page-title';
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
 
 type Seo = { boardName: string };
-/** `prefs` is null when the link's token is missing or not valid. */
+/** `person` names whose token the server keeps; see the server functions. */
 export type EmailPreferencesData = {
-  prefs: EmailPreferences | null;
+  prefs: EmailPreferencesRead;
+  person: string | undefined;
   seo: Seo;
 };
-export type EmailPreferencesSearch = { token?: string };
+export type EmailPreferencesSearch = { token?: string; person?: string };
 
-/** The reads and changes use the token the server keeps in its cookie. */
+/** The reads and changes name the person whose token the server keeps. */
 export type EmailPreferencesDependencies = {
   keepEmailPreferencesToken: (options: {
     data: { token: string };
-  }) => Promise<void>;
-  getEmailPreferences: () => Promise<EmailPreferences | null>;
+  }) => Promise<string>;
+  getEmailPreferences: (options: {
+    data: { person?: string };
+  }) => Promise<EmailPreferencesRead>;
   getSeoBase: () => Promise<Seo>;
   updateEmailPreferences: (options: {
-    data: { changes: EmailPreferencesUpdate };
+    data: { person: string; changes: EmailPreferencesUpdate };
   }) => Promise<EmailPreferences>;
-  unsubscribeAllEmailPreferences: () => Promise<EmailPreferences>;
+  unsubscribeAllEmailPreferences: (options: {
+    data: { person: string };
+  }) => Promise<EmailPreferences>;
 };
 
 export const emailPreferencesDependencies: EmailPreferencesDependencies = {
@@ -55,19 +61,23 @@ export function createEmailPreferencesLoader(
   }: {
     deps: EmailPreferencesSearch;
   }): Promise<EmailPreferencesData> => {
-    // The link's token goes into the cookie, and the page opens again
-    // without it, before any script on it runs.
+    // The link's token goes into the cookie, and the page opens again with
+    // only its fingerprint, before any script on it runs.
     if (deps.token) {
-      await dependencies.keepEmailPreferencesToken({
+      const person = await dependencies.keepEmailPreferencesToken({
         data: { token: deps.token },
       });
-      throw redirect({ to: '/email-preferences', search: {}, replace: true });
+      throw redirect({
+        to: '/email-preferences',
+        search: { person },
+        replace: true,
+      });
     }
     const [prefs, seo] = await Promise.all([
-      dependencies.getEmailPreferences(),
+      dependencies.getEmailPreferences({ data: { person: deps.person } }),
       dependencies.getSeoBase(),
     ]);
-    return { prefs, seo };
+    return { prefs, person: deps.person, seo };
   };
 }
 

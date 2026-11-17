@@ -3309,6 +3309,8 @@
   "emailPreferences_title": "E-mailvoorkeuren",
   "emailPreferences_invalidTitle": "Deze link is niet geldig",
   "emailPreferences_invalidBody": "Gebruik de link in de nieuwste e-mail van {board} om je e-mails te beheren.",
+  "emailPreferences_expiredTitle": "Open de link uit je e-mail opnieuw",
+  "emailPreferences_expiredBody": "Om je instellingen te beschermen, werkt deze pagina na een uur niet meer. Open de link in de nieuwste e-mail van {board}. Gebeurt dit steeds, sta dan cookies toe voor deze site.",
   "emailPreferences_description": "Kies welke e-mails je van {board} ontvangt.",
   "emailPreferences_jobAlertsTitle": "Vacaturemails",
   "emailPreferences_jobAlertsOff": "Vacaturemails staan uit.",

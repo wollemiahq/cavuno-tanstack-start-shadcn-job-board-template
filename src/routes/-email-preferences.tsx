@@ -83,17 +83,27 @@ export function EmailPreferencesPageView({
   const [failed, setFailed] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  if (!prefs) {
+  // Set whenever there are preferences to show: they were read for them.
+  const person = data.person ?? '';
+
+  if (prefs === 'invalid_link' || prefs === 'link_expired') {
+    const expired = prefs === 'link_expired';
     return (
       <Page width="narrow">
         <PageContent>
           <Empty>
             <EmptyHeader>
               <EmptyTitle>
-                <h1>{m.emailPreferences_invalidTitle()}</h1>
+                <h1>
+                  {expired
+                    ? m.emailPreferences_expiredTitle()
+                    : m.emailPreferences_invalidTitle()}
+                </h1>
               </EmptyTitle>
               <EmptyDescription>
-                {m.emailPreferences_invalidBody({ board })}
+                {expired
+                  ? m.emailPreferences_expiredBody({ board })
+                  : m.emailPreferences_invalidBody({ board })}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -109,10 +119,11 @@ export function EmailPreferencesPageView({
       setPrefs(await action());
     } catch {
       setFailed(true);
-      // Show what is true now: a link that stopped working turns into the
-      // invalid-link page, and an alert or topic removed elsewhere goes.
+      // Show what is true now: a link that stopped working, or a token no
+      // longer kept, turns into its notice, and an alert or topic removed
+      // elsewhere goes.
       try {
-        setPrefs(await dependencies.getEmailPreferences());
+        setPrefs(await dependencies.getEmailPreferences({ data: { person } }));
       } catch {
         // Keep what the page shows; the error says the change didn't save.
       }
@@ -121,7 +132,9 @@ export function EmailPreferencesPageView({
     }
   };
   const update = (changes: EmailPreferencesUpdate) =>
-    run(() => dependencies.updateEmailPreferences({ data: { changes } }));
+    run(() =>
+      dependencies.updateEmailPreferences({ data: { person, changes } }),
+    );
   // Turning something on is the person's opt-in, recorded with the wording
   // they saw; turning it off sends only the change.
   const optIn = (consentText: string) => ({ consentText, source: SOURCE });
@@ -311,7 +324,9 @@ export function EmailPreferencesPageView({
                     onClick={() => {
                       setConfirming(false);
                       void run(() =>
-                        dependencies.unsubscribeAllEmailPreferences(),
+                        dependencies.unsubscribeAllEmailPreferences({
+                          data: { person },
+                        }),
                       );
                     }}
                   >

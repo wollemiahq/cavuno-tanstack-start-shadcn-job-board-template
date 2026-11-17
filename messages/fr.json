@@ -3309,6 +3309,8 @@
   "emailPreferences_title": "Préférences e-mail",
   "emailPreferences_invalidTitle": "Ce lien n'est pas valide",
   "emailPreferences_invalidBody": "Utilisez le lien du dernier e-mail reçu de {board} pour gérer vos e-mails.",
+  "emailPreferences_expiredTitle": "Rouvrez le lien de votre e-mail",
+  "emailPreferences_expiredBody": "Pour protéger vos préférences, cette page cesse de fonctionner après une heure. Ouvrez le lien du dernier e-mail reçu de {board}. Si cela se reproduit, autorisez les cookies pour ce site.",
   "emailPreferences_description": "Choisissez les e-mails que vous recevez de {board}.",
   "emailPreferences_jobAlertsTitle": "Alertes d'emploi",
   "emailPreferences_jobAlertsOff": "Les alertes d'emploi sont désactivées.",

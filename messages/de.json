@@ -3309,6 +3309,8 @@
   "emailPreferences_title": "E-Mail-Einstellungen",
   "emailPreferences_invalidTitle": "Dieser Link ist ungültig",
   "emailPreferences_invalidBody": "Nutze den Link in der neuesten E-Mail von {board}, um deine E-Mails zu verwalten.",
+  "emailPreferences_expiredTitle": "Öffne den Link aus deiner E-Mail erneut",
+  "emailPreferences_expiredBody": "Zum Schutz deiner Einstellungen funktioniert diese Seite nur eine Stunde lang. Öffne den Link in der neuesten E-Mail von {board}. Wenn das immer wieder passiert, erlaube Cookies für diese Website.",
   "emailPreferences_description": "Wähle, welche E-Mails du von {board} bekommst.",
   "emailPreferences_jobAlertsTitle": "Jobalarme",
   "emailPreferences_jobAlertsOff": "Jobalarme sind ausgeschaltet.",

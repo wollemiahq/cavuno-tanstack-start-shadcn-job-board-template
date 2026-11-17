@@ -8,8 +8,9 @@
  * link there with their own tokens.
  *
  * The link's `?token` never stays in the address bar: the loader keeps it
- * in an httpOnly cookie and redirects to `/email-preferences`, so analytics,
- * referrers and screenshots don't capture it, and a reload still works.
+ * in an httpOnly cookie and redirects to `/email-preferences?person=…`, its
+ * fingerprint, so analytics, referrers and screenshots don't capture it, a
+ * reload still works, and each tab acts only for the person it shows.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -26,8 +27,9 @@ export const Route = createFileRoute('/email-preferences')({
   staticData: { ownsMain: true },
   validateSearch: (search: UrlSearchInput): EmailPreferencesSearch => ({
     token: searchString(search.token),
+    person: searchString(search.person),
   }),
-  loaderDeps: ({ search }) => ({ token: search.token }),
+  loaderDeps: ({ search }) => ({ token: search.token, person: search.person }),
   loader: createEmailPreferencesLoader(),
   // Changes are made on the page, so a cached load would show the
   // preferences from before them on Back.

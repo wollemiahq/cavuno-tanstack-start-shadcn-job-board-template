@@ -22,6 +22,7 @@ import { m } from '@/paraglide/messages';
 import type { EmailPreferences } from '@cavuno/board';
 
 const BOARD = 'Example Board';
+const PERSON = '0123456789abcdef';
 
 const prefs = {
   object: 'email_preferences',
@@ -70,7 +71,7 @@ function renderPage(
 ) {
   render(
     <EmailPreferencesPageView
-      data={{ prefs, seo: { boardName: BOARD }, ...data }}
+      data={{ prefs, person: PERSON, seo: { boardName: BOARD }, ...data }}
       dependencies={deps}
     />,
   );
@@ -83,14 +84,15 @@ afterEach(() => {
 });
 
 describe('email preferences loader', () => {
-  it('keeps the link token in the cookie and opens the page again without it', async () => {
+  it('keeps the link token in the cookie and opens the page again with only its fingerprint', async () => {
     const deps = dependencies();
+    deps.keepEmailPreferencesToken.mockResolvedValue(PERSON);
     const load = createEmailPreferencesLoader(deps);
     await expect(load({ deps: { token: 'tok' } })).rejects.toSatisfy(
       isRedirect,
     );
     await expect(load({ deps: { token: 'tok' } })).rejects.toMatchObject({
-      options: { to: '/email-preferences', search: {} },
+      options: { to: '/email-preferences', search: { person: PERSON } },
     });
     expect(deps.keepEmailPreferencesToken).toHaveBeenCalledWith({
       data: { token: 'tok' },
@@ -98,13 +100,17 @@ describe('email preferences loader', () => {
     expect(deps.getEmailPreferences).not.toHaveBeenCalled();
   });
 
-  it('reads with the token the cookie keeps, and marks the page noindex', async () => {
+  it('reads with the token kept for the person, and marks the page noindex', async () => {
     const deps = dependencies();
     deps.getEmailPreferences.mockResolvedValue(prefs);
     const load = createEmailPreferencesLoader(deps);
-    expect(await load({ deps: {} })).toEqual({
+    expect(await load({ deps: { person: PERSON } })).toEqual({
       prefs,
+      person: PERSON,
       seo: { boardName: BOARD },
+    });
+    expect(deps.getEmailPreferences).toHaveBeenCalledWith({
+      data: { person: PERSON },
     });
     expect(deps.keepEmailPreferencesToken).not.toHaveBeenCalled();
     expect(emailPreferencesHead(undefined).meta).toContainEqual({
@@ -116,10 +122,21 @@ describe('email preferences loader', () => {
 
 describe('email preferences page', () => {
   it('explains an invalid link instead of showing switches', () => {
-    renderPage({ prefs: null });
+    renderPage({ prefs: 'invalid_link' });
     expect(
       screen.getByText(m.emailPreferences_invalidTitle()),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
+
+  it('asks to open the email link again when no token is kept, not that the link is invalid', () => {
+    renderPage({ prefs: 'link_expired' });
+    expect(
+      screen.getByText(m.emailPreferences_expiredTitle()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(m.emailPreferences_invalidTitle()),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
@@ -144,6 +161,7 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
       data: {
+        person: PERSON,
         changes: {
           marketing: true,
           consentText: m.emailPreferences_marketingConsent({ board: BOARD }),
@@ -169,6 +187,7 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenLastCalledWith({
       data: {
+        person: PERSON,
         changes: { topics: [{ key: 'events', subscribed: false }] },
       },
     });
@@ -179,6 +198,7 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenLastCalledWith({
       data: {
+        person: PERSON,
         changes: {
           topics: [{ key: 'salary-reports', subscribed: true }],
           consentText: m.emailPreferences_topicConsent({
@@ -211,6 +231,7 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
       data: {
+        person: PERSON,
         changes: { alerts: [{ id: 'alert-1', delete: true }] },
       },
     });
@@ -236,7 +257,7 @@ describe('email preferences page', () => {
   it('turns into the invalid-link page when the link stopped working mid-visit', async () => {
     const deps = dependencies();
     deps.updateEmailPreferences.mockRejectedValue(new Error('403'));
-    deps.getEmailPreferences.mockResolvedValue(null);
+    deps.getEmailPreferences.mockResolvedValue('invalid_link');
     renderPage({}, deps);
 
     fireEvent.click(
@@ -275,7 +296,7 @@ describe('email preferences page', () => {
     );
     await waitFor(() =>
       expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
-        data: { changes: { jobMatches: false } },
+        data: { person: PERSON, changes: { jobMatches: false } },
       }),
     );
   });
@@ -302,6 +323,8 @@ describe('email preferences page', () => {
         screen.getByText(m.emailPreferences_unsubscribedAll({ board: BOARD })),
       ).toBeInTheDocument(),
     );
-    expect(deps.unsubscribeAllEmailPreferences).toHaveBeenCalledTimes(1);
+    expect(deps.unsubscribeAllEmailPreferences).toHaveBeenCalledWith({
+      data: { person: PERSON },
+    });
   });
 });

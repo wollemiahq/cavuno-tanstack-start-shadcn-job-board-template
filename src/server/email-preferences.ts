@@ -5,10 +5,11 @@
  * every change is a person's click.
  *
  * The link's token goes straight into an httpOnly cookie
- * (src/lib/email-preferences-cookie.ts) and the page redirects to itself
- * without it, so no page script, analytics tag, referrer or screenshot sees
- * it. Every read and change below uses the cookie's token, and all are
- * POSTs, so the token never sits in a URL or an access log.
+ * (src/lib/email-preferences-cookie.ts) under a fingerprint, and the page
+ * redirects to itself with only the fingerprint (`?person=`), so no page
+ * script, analytics tag, referrer or screenshot sees the token. Every read
+ * and change below names the person and uses the token kept for them, and
+ * all are POSTs, so the token never sits in a URL or an access log.
  */
 import { isBoardApiError } from '@cavuno/board';
 import { createServerFn } from '@tanstack/react-start';
@@ -20,13 +21,23 @@ import {
 
 import { getBoard } from '../lib/board';
 import {
-  clearEmailPreferencesCookie,
-  readEmailPreferencesCookie,
-  serializeEmailPreferencesCookie,
+  dropEmailPreferencesEntry,
+  emailPreferencesPerson,
+  findEmailPreferencesToken,
+  isEmailPreferencesPerson,
+  keepEmailPreferencesEntry,
 } from '../lib/email-preferences-cookie';
 import { requestOrigin } from '../lib/request-origin';
 
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
+
+/**
+ * The page's read: the person's preferences, or why there are none to show.
+ */
+export type EmailPreferencesRead =
+  | EmailPreferences
+  | 'invalid_link'
+  | 'link_expired';
 
 /**
  * The changes with the page they were made on, for consent evidence: only
@@ -48,66 +59,100 @@ export function withConsentPage(
   return { ...rest, pageUrl: url.toString() };
 }
 
-/** The token the cookie keeps; null when there is none. */
-function cookieToken(): string | null {
-  return readEmailPreferencesCookie(getRequestHeader('cookie') ?? null);
+const cookieHeader = () => getRequestHeader('cookie') ?? null;
+
+/** The token kept for `person`: null when the cookie holds none for them. */
+function keptToken(person: string | undefined): string | null {
+  if (!person || !isEmailPreferencesPerson(person)) return null;
+  return findEmailPreferencesToken(cookieHeader(), person);
 }
 
-function requireCookieToken(): string {
-  const token = cookieToken();
-  if (!token) throw new Error('email_preferences_token_missing');
-  return token;
+function renew(person: string, token: string) {
+  const cookie = keepEmailPreferencesEntry(cookieHeader(), person, token);
+  if (cookie) appendResponseHeader('Set-Cookie', cookie);
 }
 
-/** Keeps the link's token in the cookie. It is checked on the next read. */
+/**
+ * Runs `action` with the token kept for `person`, renewing it. Throws when
+ * none is kept; the page then reads again and says to open the email's link.
+ */
+async function withKeptToken<T>(
+  person: string,
+  action: (token: string) => Promise<T>,
+): Promise<T> {
+  const token = keptToken(person);
+  if (!token) throw new Error('email_preferences_link_expired');
+  const result = await action(token);
+  renew(person, token);
+  return result;
+}
+
+/**
+ * Keeps the link's token in the cookie, under the fingerprint it returns.
+ * The token is checked on the next read.
+ */
 export const keepEmailPreferencesToken = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
-  .handler(({ data }) => {
-    const cookie = serializeEmailPreferencesCookie(data.token);
-    appendResponseHeader('Set-Cookie', cookie ?? clearEmailPreferencesCookie());
+  .handler(async ({ data }): Promise<string> => {
+    const person = await emailPreferencesPerson(data.token);
+    renew(person, data.token);
+    return person;
   });
 
 /**
- * The person's preferences, or null when there is no token or it is not
- * valid. A valid token's cookie is renewed; an invalid one is cleared.
+ * What the page shows: the person's preferences; `link_expired` when no
+ * token is kept for them (an hour passed, or cookies are blocked); or
+ * `invalid_link` when there is no person or the API rejects the token,
+ * which also drops it.
  */
-export const getEmailPreferences = createServerFn({ method: 'POST' }).handler(
-  async (): Promise<EmailPreferences | null> => {
-    const token = cookieToken();
-    if (!token) return null;
+export const getEmailPreferences = createServerFn({ method: 'POST' })
+  .validator((input: { person?: string }) => input)
+  .handler(async ({ data }): Promise<EmailPreferencesRead> => {
+    if (!data.person) return 'invalid_link';
+    const token = keptToken(data.person);
+    if (!token) return 'link_expired';
     try {
       const prefs = await getBoard().emailPreferences.get(token);
-      const cookie = serializeEmailPreferencesCookie(token);
-      if (cookie) appendResponseHeader('Set-Cookie', cookie);
+      renew(data.person, token);
       return prefs;
     } catch (error) {
       if (
         isBoardApiError(error) &&
         error.code === 'email_preferences_token_invalid'
       ) {
-        appendResponseHeader('Set-Cookie', clearEmailPreferencesCookie());
-        return null;
+        appendResponseHeader(
+          'Set-Cookie',
+          dropEmailPreferencesEntry(cookieHeader(), data.person),
+        );
+        return 'invalid_link';
       }
       throw error;
     }
-  },
-);
+  });
 
 export const updateEmailPreferences = createServerFn({ method: 'POST' })
-  .validator((input: { changes: EmailPreferencesUpdate }) => input)
-  .handler(async ({ data }): Promise<EmailPreferences> => {
-    return getBoard().emailPreferences.update(
-      requireCookieToken(),
-      withConsentPage(
-        data.changes,
-        getRequest().headers.get('referer'),
-        requestOrigin(),
+  .validator(
+    (input: { person: string; changes: EmailPreferencesUpdate }) => input,
+  )
+  .handler(({ data }): Promise<EmailPreferences> =>
+    withKeptToken(data.person, (token) =>
+      getBoard().emailPreferences.update(
+        token,
+        withConsentPage(
+          data.changes,
+          getRequest().headers.get('referer'),
+          requestOrigin(),
+        ),
       ),
-    );
-  });
+    ),
+  );
 
 export const unsubscribeAllEmailPreferences = createServerFn({
   method: 'POST',
-}).handler((): Promise<EmailPreferences> =>
-  getBoard().emailPreferences.unsubscribeAll(requireCookieToken()),
-);
+})
+  .validator((input: { person: string }) => input)
+  .handler(({ data }): Promise<EmailPreferences> =>
+    withKeptToken(data.person, (token) =>
+      getBoard().emailPreferences.unsubscribeAll(token),
+    ),
+  );

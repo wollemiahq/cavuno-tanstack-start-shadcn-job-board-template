@@ -3309,6 +3309,8 @@
   "emailPreferences_title": "Email preferences",
   "emailPreferences_invalidTitle": "This link isn't valid",
   "emailPreferences_invalidBody": "Use the link in the newest email you got from {board} to manage your email.",
+  "emailPreferences_expiredTitle": "Open your email link again",
+  "emailPreferences_expiredBody": "To keep your settings private, this page stops working after an hour. Open the link in the newest email you got from {board}. If this keeps happening, allow cookies for this site.",
   "emailPreferences_description": "Choose the email you get from {board}.",
   "emailPreferences_jobAlertsTitle": "Job alerts",
   "emailPreferences_jobAlertsOff": "Job alerts are off.",

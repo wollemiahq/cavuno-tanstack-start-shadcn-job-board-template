@@ -3457,6 +3457,8 @@
   "emailPreferences_title": "Ustawienia e-mail",
   "emailPreferences_invalidTitle": "Ten link jest nieprawidłowy",
   "emailPreferences_invalidBody": "Użyj linku z najnowszego e-maila od {board}, aby zarządzać wiadomościami.",
+  "emailPreferences_expiredTitle": "Otwórz ponownie link z e-maila",
+  "emailPreferences_expiredBody": "Aby chronić Twoje ustawienia, ta strona przestaje działać po godzinie. Otwórz link z najnowszego e-maila od {board}. Jeśli to się powtarza, zezwól na pliki cookie dla tej witryny.",
   "emailPreferences_description": "Wybierz, jakie e-maile otrzymujesz od {board}.",
   "emailPreferences_jobAlertsTitle": "Alerty o ofertach pracy",
   "emailPreferences_jobAlertsOff": "Alerty o ofertach pracy są wyłączone.",
