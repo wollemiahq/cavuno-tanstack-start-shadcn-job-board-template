@@ -16,7 +16,8 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
-  salarySkillInLocationPath,
+  indexableSalaryItems,
+  salarySkillLinkPath,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -79,10 +80,28 @@ function SkillLocationSalaryPage() {
   const locale = getLocale();
   const sk = salary.skillCanonicalSlug;
 
-  const toPlaceRail = (rows: typeof salary.childLocations): RailItem[] =>
-    rows.map((x) => ({
-      name: x.placeName,
-      href: salarySkillInLocationPath(sk, x.placeSlug),
+  // Skills link their jobs page: skill salary pages are never indexed, so the
+  // rows' `indexable` (for the salary page) does not apply. Titles stay scoped
+  // to this place.
+  const skillItems: RailItem[] = salary.topSkills.map((x) => ({
+    name: x.skillName,
+    href: salarySkillLinkPath(x.skillSlug),
+    range:
+      formatSalaryRange(
+        locale,
+        x.avgSalaryMin,
+        x.avgSalaryMax,
+        salary.currency,
+      ) ?? '',
+    jobCount: x.jobCount,
+  }));
+  const titleItems: RailItem[] = indexableSalaryItems(salary.topTitles).map(
+    (x) => ({
+      name: x.categoryName,
+      href: salaryTitleInLocationPath(
+        x.categorySlug,
+        salary.locationCanonicalSlug,
+      ),
       range:
         formatSalaryRange(
           locale,
@@ -91,42 +110,11 @@ function SkillLocationSalaryPage() {
           salary.currency,
         ) ?? '',
       jobCount: x.jobCount,
-    }));
-
-  // Cross-axis rails stay scoped to THIS place (skill/title salaries in the
-  // current location), matching the hosted board — not the bare axis pages.
-  const skillItems: RailItem[] = salary.topSkills.map((x) => ({
-    name: x.skillName,
-    href: salarySkillInLocationPath(x.skillSlug, salary.locationCanonicalSlug),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
-  const titleItems: RailItem[] = salary.topTitles.map((x) => ({
-    name: x.categoryName,
-    href: salaryTitleInLocationPath(
-      x.categorySlug,
-      salary.locationCanonicalSlug,
-    ),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
+    }),
+  );
   const hasSalaryContent = Boolean(
     salary.overallSalary ||
     salary.bySeniority.length ||
-    salary.childLocations.length ||
-    salary.otherLocations.length ||
     skillItems.length ||
     titleItems.length,
   );
@@ -184,20 +172,6 @@ function SkillLocationSalaryPage() {
             </PageSection>
           ) : null}
 
-          <SalaryRail
-            vm={toSalaryRailVM(
-              m.salaryDetail_citiesLabel(),
-              toPlaceRail(salary.childLocations),
-              getLocale(),
-            )}
-          />
-          <SalaryRail
-            vm={toSalaryRailVM(
-              m.salaryDetail_otherLocations(),
-              toPlaceRail(salary.otherLocations),
-              getLocale(),
-            )}
-          />
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_topSkills(),

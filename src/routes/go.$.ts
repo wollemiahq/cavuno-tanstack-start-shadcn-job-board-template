@@ -13,7 +13,11 @@
 import { createGoHandler } from '@cavuno/board/go';
 import { createFileRoute } from '@tanstack/react-router';
 
-const goHandler = createGoHandler({});
+// The site serves its own preferences page, so footer links land here
+// rather than on the Cavuno-hosted one.
+const goHandler = createGoHandler({
+  emailPreferencesPath: '/email-preferences',
+});
 
 export const Route = createFileRoute('/go/$')({
   server: {

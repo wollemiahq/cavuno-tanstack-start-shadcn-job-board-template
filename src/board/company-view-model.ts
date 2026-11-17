@@ -40,7 +40,8 @@ export interface CompanyCardVM {
 export interface CompanyDetailMarketVM {
   key: string;
   name: string;
-  href: string;
+  /** `null` when the Board API marks the market page not indexable. */
+  href: string | null;
 }
 
 export interface CompanyDetailVM extends Omit<
@@ -129,7 +130,7 @@ export function toCompanyDetailVM(
     marketChips: company.markets.map((market) => ({
       key: market.slug,
       name: market.displayName,
-      href: companyMarketPath(market.canonicalSlug),
+      href: market.indexable ? companyMarketPath(market.canonicalSlug) : null,
     })),
     marketsHeading: labels.markets,
     websiteHref,

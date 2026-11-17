@@ -20,7 +20,9 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableSalaryItems,
   salarySkillLinkPath,
+  salaryTitleInLocationPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -99,14 +101,20 @@ function LocationSalaryPage() {
     href: c.href,
   }));
 
-  // The API's top titles and skills for a place are board-wide figures, not
-  // the place's: the counts match the board-wide title pages, and the
-  // "{Title} in {Place}" page 404s where the place has too little data. So
-  // each card links the board-wide title page its figures come from, and
-  // skills link their jobs page (skill salary pages are never indexed).
-  const categoryItems: RailItem[] = salary.topCategories.map((x) => ({
+  // Every linked row carries the Board API's `indexable` verdict for the page
+  // it links to; rails keep only indexable pages. On a city the top titles
+  // are that title in this city and link the title-by-location page; on a
+  // region or country they are board-wide and link the title page. Skills
+  // link their jobs page (skill salary pages are never indexed).
+  const isCity =
+    salary.adminLevel === 'city' || salary.adminLevel === 'locality';
+  const categoryItems: RailItem[] = indexableSalaryItems(
+    salary.topCategories,
+  ).map((x) => ({
     name: x.categoryName,
-    href: salaryTitlePath(x.categorySlug),
+    href: isCity
+      ? salaryTitleInLocationPath(x.categorySlug, salary.canonicalSlug)
+      : salaryTitlePath(x.categorySlug),
     range:
       formatSalaryRange(
         locale,
@@ -116,6 +124,18 @@ function LocationSalaryPage() {
       ) ?? '',
     jobCount: x.jobCount,
   }));
+  const toCityItem = cityItem(locale, salary.currency);
+  const childItems = indexableSalaryItems(salary.childLocations).map(
+    toCityItem,
+  );
+  const regionGroups = salary.childLocationsByRegion.map((group) => ({
+    regionSlug: group.regionSlug,
+    regionName: group.regionName,
+    items: indexableSalaryItems(group.cities).map(toCityItem),
+  }));
+  const siblingItems = indexableSalaryItems(salary.siblingLocations).map(
+    toCityItem,
+  );
   const skillItems: RailItem[] = salary.topSkills.map((x) => ({
     name: x.skillName,
     href: salarySkillLinkPath(x.skillSlug),
@@ -130,9 +150,9 @@ function LocationSalaryPage() {
   }));
   const hasSalaryContent = Boolean(
     salary.overallSalary ||
-    salary.childLocations.length ||
-    salary.childLocationsByRegion.length ||
-    salary.siblingLocations.length ||
+    childItems.length ||
+    regionGroups.some((group) => group.items.length) ||
+    siblingItems.length ||
     categoryItems.length ||
     skillItems.length ||
     faqs.length,
@@ -172,36 +192,28 @@ function LocationSalaryPage() {
             />
           ) : null}
 
-          {salary.childLocations.length > 0 ? (
-            <SalaryRail
-              vm={toSalaryRailVM(
-                m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
-                salary.childLocations.map(cityItem(locale, salary.currency)),
-                getLocale(),
-              )}
-            />
-          ) : null}
+          <SalaryRail
+            vm={toSalaryRailVM(
+              m.salaryDetail_citiesInPlaceLabel({ place: salary.placeName }),
+              childItems,
+              getLocale(),
+            )}
+          />
 
-          {salary.childLocationsByRegion.map((group) => (
+          {regionGroups.map((group) => (
             <SalaryRail
               key={group.regionSlug}
-              vm={toSalaryRailVM(
-                group.regionName,
-                group.cities.map(cityItem(locale, salary.currency)),
-                getLocale(),
-              )}
+              vm={toSalaryRailVM(group.regionName, group.items, getLocale())}
             />
           ))}
 
-          {salary.siblingLocations.length > 0 ? (
-            <SalaryRail
-              vm={toSalaryRailVM(
-                m.salaryDetail_otherLocations(),
-                salary.siblingLocations.map(cityItem(locale, salary.currency)),
-                getLocale(),
-              )}
-            />
-          ) : null}
+          <SalaryRail
+            vm={toSalaryRailVM(
+              m.salaryDetail_otherLocations(),
+              siblingItems,
+              getLocale(),
+            )}
+          />
 
           {categoryItems.length > 0 ? (
             <PageSection title={m.salaryDetail_topTitles()}>

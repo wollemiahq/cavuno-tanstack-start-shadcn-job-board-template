@@ -26,6 +26,7 @@ export const ROUTE_TEMPLATES = [
   '/coming-soon-gate',
   '/contact',
   '/cookie-policy',
+  '/email-preferences',
   '/impressum',
   '/indexnow-key.txt',
   '/job-seekers',

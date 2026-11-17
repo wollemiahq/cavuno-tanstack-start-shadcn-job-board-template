@@ -17,6 +17,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 import {
   companyCategorySalaryPath,
   formatSalaryRange,
+  indexableSalaryItems,
   salaryTitleInLocationPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
@@ -75,7 +76,9 @@ function TitleSalaryPage() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
-  const companyItems: RailItem[] = salary.topCompanies.map((x) => ({
+  const companyItems: RailItem[] = indexableSalaryItems(
+    salary.topCompanies,
+  ).map((x) => ({
     name: x.companyName,
     href: companyCategorySalaryPath(x.companySlug, salary.canonicalSlug),
     range:
@@ -92,7 +95,9 @@ function TitleSalaryPage() {
   // generic /salaries/locations/{place} page has no data for a place that only
   // exists inside this title's sample, so link the title×location page whose
   // loader resolves + 308s the inbound placeSlug to its canonical form.
-  const locationItems: RailItem[] = salary.topLocations.map((x) => ({
+  const locationItems: RailItem[] = indexableSalaryItems(
+    salary.topLocations,
+  ).map((x) => ({
     name: x.placeName,
     href: salaryTitleInLocationPath(salary.canonicalSlug, x.placeSlug),
     range:
@@ -116,7 +121,9 @@ function TitleSalaryPage() {
       ) ?? '',
     jobCount: x.jobCount,
   }));
-  const relatedItems: RailItem[] = salary.relatedTitles.map((x) => ({
+  const relatedItems: RailItem[] = indexableSalaryItems(
+    salary.relatedTitles,
+  ).map((x) => ({
     name: x.categoryName,
     href: salaryTitlePath(x.categorySlug),
     range:
