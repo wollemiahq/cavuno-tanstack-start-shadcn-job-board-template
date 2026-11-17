@@ -215,6 +215,31 @@ function McpConsentError({ message }: { message: string }) {
   );
 }
 
+/**
+ * Schemes that would run or show something inside this site instead of
+ * opening the assistant. The Board API only issues https, loopback http and
+ * known app callbacks; this keeps the page safe if that list ever grows
+ * wrong, without having to list every app's own scheme here.
+ */
+const UNSAFE_CALLBACK_SCHEMES: ReadonlySet<string> = new Set([
+  'javascript:',
+  'data:',
+  'vbscript:',
+  'blob:',
+  'file:',
+  'about:',
+]);
+
+/** An absolute URL with a scheme that opens the assistant. */
+function isOpenableCallback(location: string): boolean {
+  try {
+    return !UNSAFE_CALLBACK_SCHEMES.has(new URL(location).protocol);
+  } catch {
+    // Relative or protocol-relative: not a callback this page should open.
+    return false;
+  }
+}
+
 function McpConsentReturn({
   location,
   assignLocation,
@@ -222,9 +247,13 @@ function McpConsentReturn({
   location: string;
   assignLocation: (url: string) => void;
 }) {
+  const openable = isOpenableCallback(location);
   useEffect(() => {
-    assignLocation(location);
-  }, [assignLocation, location]);
+    if (openable) assignLocation(location);
+  }, [assignLocation, location, openable]);
+  if (!openable) {
+    return <McpConsentError message={boardErrorMessage({ code: 'unknown' })} />;
+  }
   return (
     <AuthCard
       title={m.mcpConsent_returnTitle()}

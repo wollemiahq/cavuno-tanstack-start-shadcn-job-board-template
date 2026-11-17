@@ -48,6 +48,7 @@ vi.mock('./board-access', () => ({
 }));
 
 import { mcpAuthorizeRedirect } from '../lib/mcp-authorize-query';
+import { m } from '../paraglide/messages';
 import { decideMcpConsent, getMcpConsentStep } from './mcp-consent';
 
 beforeEach(() => vi.clearAllMocks());
@@ -115,6 +116,23 @@ describe('getMcpConsentStep', () => {
     expect(mocks.fetch.mock.calls[0]?.[0]).toBe(
       '/mcp/consent?request=abc&from=signed_in',
     );
+  });
+
+  it('shows a rate limit as a step on the page', async () => {
+    mocks.fetch.mockRejectedValue(
+      new BoardApiError({
+        status: 429,
+        code: 'rate_limited',
+        message: 'Too many requests',
+        raw: null,
+      }),
+    );
+    await expect(
+      getMcpConsentStep({ data: { search: '?client_id=a' } }),
+    ).resolves.toEqual({
+      next: 'error',
+      message: m.boardError_rateLimitedText(),
+    });
   });
 
   it('is not found when the board has no MCP sign-in for this site', async () => {

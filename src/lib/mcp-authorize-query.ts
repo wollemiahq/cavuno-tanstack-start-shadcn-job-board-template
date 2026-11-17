@@ -11,7 +11,7 @@
  */
 import { AUTH_CONVERSION_PARAMS } from './board-datalayer-events';
 
-export const MCP_AUTHORIZE_PATH = '/oauth/authorize';
+const MCP_AUTHORIZE_PATH = '/oauth/authorize';
 const PARAM = 'oauth';
 
 /**
@@ -30,10 +30,11 @@ function isAuthMarker(key: string): boolean {
  * stripping them is not a different consent request, so it must not fetch
  * the step again.
  */
-export function withoutAuthMarkers<T extends object>(search: T) {
+export function withoutAuthMarkers<T extends object>(search: T): Partial<T> {
+  // SAFETY: only keys of `search` are kept, each with its own value.
   return Object.fromEntries(
     Object.entries(search).filter(([key]) => !isAuthMarker(key)),
-  );
+  ) as Partial<T>;
 }
 
 function toBase64Url(text: string): string {

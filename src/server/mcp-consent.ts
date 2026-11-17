@@ -18,8 +18,10 @@ import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { mcpAuthorizeQuery } from '../lib/mcp-authorize-query';
 import { gatedRead } from './board-access';
 
+import { boardErrorMessage } from '@/lib/board-error-message';
+
 /** Text with emphasised parts, as the API words the redirect notice. */
-export type McpConsentInline = string | { strong: string };
+type McpConsentInline = string | { strong: string };
 
 export type McpConsentStep =
   | {
@@ -57,7 +59,7 @@ export const getMcpConsentStep = createServerFn({ method: 'GET' })
   .validator((input: { search: string }) => input)
   .middleware([boardAccessMiddleware])
   .handler(({ context, data }) =>
-    gatedRead(context, async (headers) => {
+    gatedRead(context, async (headers): Promise<McpConsentStep> => {
       noStore();
       const query = mcpAuthorizeQuery(data.search);
       try {
@@ -66,8 +68,14 @@ export const getMcpConsentStep = createServerFn({ method: 'GET' })
           { headers },
         );
       } catch (error) {
+        if (!isBoardApiError(error)) throw error;
         // The board has no MCP sign-in for this site: no such page.
-        if (isBoardApiError(error) && error.status === 404) throw notFound();
+        if (error.status === 404) throw notFound();
+        // Too many tries: a message in the page, not the site's error page,
+        // mid-way through connecting an assistant.
+        if (error.status === 429) {
+          return { next: 'error', message: boardErrorMessage(error) };
+        }
         throw error;
       }
     }),

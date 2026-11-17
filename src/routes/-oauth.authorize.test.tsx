@@ -187,6 +187,22 @@ describe('/oauth/authorize view', () => {
     ).toHaveAttribute('href', location);
   });
 
+  it('never opens a callback that would run inside this site', () => {
+    const assignLocation = vi.fn();
+    render(
+      <McpConsentView
+        step={{ next: 'redirect', location: 'javascript:alert(1)' }}
+        decide={vi.fn()}
+        assignLocation={assignLocation}
+      />,
+    );
+    expect(assignLocation).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { name: m.mcpConsent_errorTitle() }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
   it('shows the API’s error', () => {
     render(
       <McpConsentView
