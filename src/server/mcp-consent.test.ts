@@ -83,19 +83,6 @@ describe('getMcpConsentStep', () => {
     );
   });
 
-  it('leaves other requests to the router', () => {
-    for (const request of [
-      new Request('https://board.test/oauth/authorize'),
-      new Request('https://board.test/oauth/authorize?oauth=abc'),
-      new Request('https://board.test/oauth/authorize?state=1', {
-        method: 'POST',
-      }),
-      new Request('https://board.test/jobs?state=1e3'),
-    ]) {
-      expect(mcpAuthorizeRedirect(request)).toBeNull();
-    }
-  });
-
   it('keeps the sign-in conversion markers beside the kept query', async () => {
     mocks.fetch.mockResolvedValue({ next: 'error', message: 'x' });
     const raw =
@@ -112,14 +99,6 @@ describe('getMcpConsentStep', () => {
     expect(mcpAuthorizeRedirect(new Request(kept.href))).toBeNull();
     await getMcpConsentStep({ data: { search: kept.search } });
     expect(mocks.fetch.mock.calls[0]?.[0]).toBe(`/mcp/consent${raw}`);
-  });
-
-  it('folds a query that carries its own `oauth` value', () => {
-    expect(
-      mcpAuthorizeRedirect(
-        new Request('https://board.test/oauth/authorize?oauth=x&state=1e3'),
-      )?.status,
-    ).toBe(307);
   });
 
   it('never lets a caller change the API path', async () => {

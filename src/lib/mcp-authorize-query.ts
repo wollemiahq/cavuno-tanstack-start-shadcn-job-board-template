@@ -9,18 +9,31 @@
  * value, base64url text the router leaves as it is, and the consent step
  * reads it back out (`mcpAuthorizeQuery`).
  */
-import { CAVUNO_AUTH_PARAM } from './board-datalayer-events';
+import { AUTH_CONVERSION_PARAMS } from './board-datalayer-events';
 
 export const MCP_AUTHORIZE_PATH = '/oauth/authorize';
 const PARAM = 'oauth';
 
 /**
- * The sign-in conversion markers (`cavuno_auth*`) a sign-in appends to its
- * return. They stay beside the kept query too, where the conversion tracker
- * reads and strips them; their values are words the router keeps.
+ * The sign-in conversion markers a sign-in appends to its return. They stay
+ * beside the kept query too, where the conversion tracker reads and strips
+ * them; their values are words the router keeps.
  */
+const AUTH_MARKERS: ReadonlySet<string> = new Set(AUTH_CONVERSION_PARAMS);
+
 function isAuthMarker(key: string): boolean {
-  return key.startsWith(CAVUNO_AUTH_PARAM);
+  return AUTH_MARKERS.has(key);
+}
+
+/**
+ * The page's search without the markers, to key its loader on: the tracker
+ * stripping them is not a different consent request, so it must not fetch
+ * the step again.
+ */
+export function withoutAuthMarkers<T extends object>(search: T) {
+  return Object.fromEntries(
+    Object.entries(search).filter(([key]) => !isAuthMarker(key)),
+  );
 }
 
 function toBase64Url(text: string): string {

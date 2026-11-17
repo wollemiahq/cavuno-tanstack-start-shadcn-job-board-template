@@ -1,6 +1,7 @@
 /** The board MCP server's sign-in consent page; see `-oauth.authorize.tsx`. */
 import { createFileRoute } from '@tanstack/react-router';
 
+import { withoutAuthMarkers } from '../lib/mcp-authorize-query';
 import { m } from '../paraglide/messages';
 import { decideMcpConsent } from '../server/mcp-consent';
 import { loadMcpConsent, McpConsentView } from './-oauth.authorize';
@@ -10,7 +11,7 @@ import { headTitle } from '@/lib/page-title';
 const assignLocation = (url: string) => window.location.assign(url);
 
 export const Route = createFileRoute('/oauth/authorize')({
-  loaderDeps: ({ search }) => ({ search }),
+  loaderDeps: ({ search }) => ({ search: withoutAuthMarkers(search) }),
   loader: ({ location }) => loadMcpConsent(location.searchStr),
   head: ({ loaderData }) => ({
     meta: [
