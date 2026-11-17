@@ -124,12 +124,6 @@ import type {
   UpdateEmployerCompanyBody,
 } from '@cavuno/board';
 
-/**
- * A company's LinkedIn page always lives under `/company/`, so that segment is
- * part of the field's prefix — the employer types (and sees) just the slug.
- * The strip list keeps the bare-domain form second so pasting a URL without
- * `/company` still normalizes instead of doubling the segment.
- */
 // The collection verification card loads only when a field verifies.
 const LazyCollectionVerificationCard = lazy(() =>
   import('@/components/collection-verification-card').then(
@@ -139,6 +133,12 @@ const LazyCollectionVerificationCard = lazy(() =>
   ),
 );
 
+/**
+ * A company's LinkedIn page always lives under `/company/`, so that segment is
+ * part of the field's prefix — the employer types (and sees) just the slug.
+ * The strip list keeps the bare-domain form second so pasting a URL without
+ * `/company` still normalizes instead of doubling the segment.
+ */
 const LINKEDIN_COMPANY_DOMAIN = 'linkedin.com/company';
 const LINKEDIN_COMPANY_DOMAINS = [LINKEDIN_COMPANY_DOMAIN, 'linkedin.com'];
 

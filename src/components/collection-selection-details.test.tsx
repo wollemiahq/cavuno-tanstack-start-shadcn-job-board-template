@@ -118,4 +118,28 @@ describe('CollectionSelectionDetails', () => {
     );
     expect(onChange.mock.calls[1]![0][0].entries).toEqual([white.entries[0]]);
   });
+
+  it('places a refused detail only on an empty required input, since a refusal does not say which row', () => {
+    const blank: ProfileSelection = {
+      ...white,
+      id: 'blue',
+      name: 'Blue card',
+      entries: [{ key: 'e2', values: {} }],
+    };
+    render(
+      <CollectionSelectionDetails
+        definition={definition}
+        value={[white, blank]}
+        errors={{
+          byKey: {
+            number: { code: 'custom_field_required', message: 'Add a number' },
+            issuer: { code: 'validation_bad_request', message: 'Bad issuer' },
+          },
+        }}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByText('Add a number')).toHaveLength(1);
+    expect(screen.queryByText('Bad issuer')).not.toBeInTheDocument();
+  });
 });

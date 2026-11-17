@@ -50,9 +50,9 @@ function DetailInputs({
     const error =
       errors.invalid?.id === id
         ? errors.invalid.message
-        : refused &&
-            (refused.code !== 'custom_field_required' ||
-              isCustomFieldEmpty(value))
+        : // A refusal names a detail key, not which entry or row, so only an
+          // empty required input can be the one refused. Others show beside Save.
+          refused?.code === 'custom_field_required' && isCustomFieldEmpty(value)
           ? refused.message
           : null;
     return (

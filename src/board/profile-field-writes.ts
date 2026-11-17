@@ -164,15 +164,24 @@ function isEmpty(value: ProfileFieldValue | undefined | null) {
 
 /**
  * Required Yes/No answers with nothing stored, as No. The API requires an
- * answer to every required field, and an untouched checkbox means No.
+ * answer to every required field, and an untouched checkbox means No. A
+ * board-managed answer is left alone: the API refuses an owner writing it.
  */
 export function withUnsetRequiredBooleans(
-  definitions: ReadonlyArray<{ key: string; type?: string; required: boolean }>,
+  definitions: ReadonlyArray<{
+    key: string;
+    type?: string;
+    required: boolean;
+    editableByOwner?: boolean;
+  }>,
   values: Readonly<ProfileDetailValues>,
 ) {
   const unset = definitions.filter(
-    ({ key, type, required }) =>
-      required && type === 'boolean' && isEmpty(values[key]),
+    ({ key, type, required, editableByOwner }) =>
+      required &&
+      type === 'boolean' &&
+      editableByOwner !== false &&
+      isEmpty(values[key]),
   );
   return {
     ...values,

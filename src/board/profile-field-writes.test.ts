@@ -179,6 +179,11 @@ describe('collection details', () => {
       }),
       detail('wallet', { type: 'boolean', required: true }),
       detail('issuer', { editableByOwner: false }),
+      detail('checked', {
+        type: 'boolean',
+        required: true,
+        editableByOwner: false,
+      }),
     ],
     entryDefinitions: [detail('number', { required: true })],
   });
