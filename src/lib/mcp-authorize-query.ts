@@ -9,8 +9,19 @@
  * value, base64url text the router leaves as it is, and the consent step
  * reads it back out (`mcpAuthorizeQuery`).
  */
+import { CAVUNO_AUTH_PARAM } from './board-datalayer-events';
+
 export const MCP_AUTHORIZE_PATH = '/oauth/authorize';
 const PARAM = 'oauth';
+
+/**
+ * The sign-in conversion markers (`cavuno_auth*`) a sign-in appends to its
+ * return. They stay beside the kept query too, where the conversion tracker
+ * reads and strips them; their values are words the router keeps.
+ */
+function isAuthMarker(key: string): boolean {
+  return key.startsWith(CAVUNO_AUTH_PARAM);
+}
 
 function toBase64Url(text: string): string {
   return btoa(text)
@@ -25,7 +36,7 @@ function fromBase64Url(value: string): string {
 
 /** The `oauth` value when the search is exactly this site's kept form. */
 function keptValue(params: URLSearchParams): string | null {
-  const keys = [...params.keys()];
+  const keys = [...params.keys()].filter((key) => !isAuthMarker(key));
   return keys.length === 1 && keys[0] === PARAM ? params.get(PARAM) : null;
 }
 
@@ -41,6 +52,9 @@ export function mcpAuthorizeRedirect(request: Request): Response | null {
   if (keptValue(url.searchParams) !== null) return null;
   const kept = new URL(MCP_AUTHORIZE_PATH, url);
   kept.searchParams.set(PARAM, toBase64Url(url.search.slice(1)));
+  for (const [key, value] of url.searchParams) {
+    if (isAuthMarker(key)) kept.searchParams.append(key, value);
+  }
   return new Response(null, {
     status: 307,
     headers: { location: `${kept.pathname}${kept.search}` },

@@ -96,6 +96,32 @@ describe('getMcpConsentStep', () => {
     }
   });
 
+  it('keeps the sign-in conversion markers beside the kept query', async () => {
+    mocks.fetch.mockResolvedValue({ next: 'error', message: 'x' });
+    const raw =
+      '?request=eyJ&from=signed_in&cavuno_auth=login&cavuno_auth_method=password';
+    const kept = new URL(
+      mcpAuthorizeRedirect(
+        new Request(`https://board.test/oauth/authorize${raw}`),
+      )?.headers.get('location') ?? '',
+      'https://board.test',
+    );
+    expect(kept.searchParams.get('cavuno_auth')).toBe('login');
+    expect(kept.searchParams.get('cavuno_auth_method')).toBe('password');
+    // Served as it is from here on, and the API still gets the whole query.
+    expect(mcpAuthorizeRedirect(new Request(kept.href))).toBeNull();
+    await getMcpConsentStep({ data: { search: kept.search } });
+    expect(mocks.fetch.mock.calls[0]?.[0]).toBe(`/mcp/consent${raw}`);
+  });
+
+  it('folds a query that carries its own `oauth` value', () => {
+    expect(
+      mcpAuthorizeRedirect(
+        new Request('https://board.test/oauth/authorize?oauth=x&state=1e3'),
+      )?.status,
+    ).toBe(307);
+  });
+
   it('never lets a caller change the API path', async () => {
     mocks.fetch.mockResolvedValue({ next: 'error', message: 'x' });
     await getMcpConsentStep({ data: { search: '/../../other-board' } });

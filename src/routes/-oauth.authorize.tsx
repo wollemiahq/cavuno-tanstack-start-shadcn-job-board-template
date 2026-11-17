@@ -84,15 +84,7 @@ export function McpConsentView({
   }) => Promise<McpConsentResult>;
   assignLocation: (url: string) => void;
 }) {
-  if (step.next === 'error') {
-    return (
-      <AuthCard title={m.mcpConsent_errorTitle()}>
-        <p className="text-muted-foreground text-center text-sm leading-6">
-          {step.message}
-        </p>
-      </AuthCard>
-    );
-  }
+  if (step.next === 'error') return <McpConsentError message={step.message} />;
   if (step.next === 'redirect') {
     return (
       <McpConsentReturn
@@ -147,11 +139,13 @@ function McpConsentChoice({
     setPending(false);
   }
 
-  if (outcome) {
+  if (outcome?.next === 'error') {
+    return <McpConsentError message={outcome.message} />;
+  }
+  if (outcome?.next === 'redirect') {
     return (
-      <McpConsentView
-        step={outcome}
-        decide={decide}
+      <McpConsentReturn
+        location={outcome.location}
         assignLocation={assignLocation}
       />
     );
@@ -207,6 +201,16 @@ function McpConsentChoice({
           {m.mcpConsent_cancelLabel()}
         </Button>
       </div>
+    </AuthCard>
+  );
+}
+
+function McpConsentError({ message }: { message: string }) {
+  return (
+    <AuthCard title={m.mcpConsent_errorTitle()}>
+      <p className="text-muted-foreground text-center text-sm leading-6">
+        {message}
+      </p>
     </AuthCard>
   );
 }
