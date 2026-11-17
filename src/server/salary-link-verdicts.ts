@@ -27,6 +27,9 @@ const failedCache = createSettledCache<string, true>({
   maxEntries: 2_000,
 });
 
+/** Long enough for a normal cold read (p90 about 1 s), short of a stall. */
+const VERDICT_DEADLINE_MS = 1_500;
+
 /**
  * The cached answer for `key`, or `read`'s. `read` resolves the slug to
  * link (or `null`); a not-found error means `null`, any other error means
@@ -39,6 +42,27 @@ async function cachedVerdict(
   const cached = verdictCache.get(key);
   if (cached !== undefined) return cached;
   if (failedCache.get(key)) return null;
+  // The link is optional, so the page never waits long for it: past the
+  // deadline the page renders without it, and the read, still owned by
+  // this request, stores its answer if it settles before the request ends.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      failedCache.set(key, true);
+      resolve(null);
+    }, VERDICT_DEADLINE_MS);
+  });
+  try {
+    return await Promise.race([readVerdict(key, read), deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function readVerdict(
+  key: string,
+  read: () => Promise<string | null>,
+): Promise<string | null> {
   const readAt = Date.now();
   try {
     const value = await read();
@@ -49,7 +73,9 @@ async function cachedVerdict(
       verdictCache.set(key, null, readAt);
       return null;
     }
-    failedCache.set(key, true, readAt);
+    // Stamped when the failure lands, so a slow failure still gets the
+    // full back-off instead of expiring on arrival.
+    failedCache.set(key, true);
     console.warn(
       JSON.stringify({
         message: 'cross-link verdict read failed',

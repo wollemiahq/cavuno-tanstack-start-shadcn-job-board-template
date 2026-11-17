@@ -144,4 +144,19 @@ describe('role jobs page verdict', () => {
     mocks.resolve.mockRejectedValue(new Error('taxonomy down'));
     expect(await jobsCategorySlug('other-role', {})).toBeNull();
   });
+  it('renders without the link when the read stalls, and backs off', async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.resolve.mockReturnValue(new Promise(() => {}));
+      const verdict = jobsCategorySlug('stalled-role', {});
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect(await verdict).toBeNull();
+
+      mocks.resolve.mockClear();
+      expect(await jobsCategorySlug('stalled-role', {})).toBeNull();
+      expect(mocks.resolve).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
