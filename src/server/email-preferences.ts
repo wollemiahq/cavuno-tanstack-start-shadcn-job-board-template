@@ -9,16 +9,28 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
+import { requestOrigin } from '../lib/request-origin';
 
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
 
-/** The page the request came from, without its token, for consent evidence. */
-function pageUrlWithoutToken(): string | undefined {
-  const referer = getRequest().headers.get('referer');
-  if (!referer || !URL.canParse(referer)) return undefined;
+/**
+ * The changes with the page they were made on, for consent evidence: only
+ * when they carry consent wording, only a page on this site, and without the
+ * link's `token`. A `pageUrl` the browser sent is never kept.
+ */
+export function withConsentPage(
+  changes: EmailPreferencesUpdate,
+  referer: string | null,
+  origin: string,
+): EmailPreferencesUpdate {
+  const { pageUrl: _sent, ...rest } = changes;
+  if (rest.consentText === undefined || !referer || !URL.canParse(referer)) {
+    return rest;
+  }
   const url = new URL(referer);
+  if (url.origin !== origin) return rest;
   url.searchParams.delete('token');
-  return url.toString();
+  return { ...rest, pageUrl: url.toString() };
 }
 
 /** The person's preferences, or null when the link's token is not valid. */
@@ -43,13 +55,14 @@ export const updateEmailPreferences = createServerFn({ method: 'POST' })
     (input: { token: string; changes: EmailPreferencesUpdate }) => input,
   )
   .handler(async ({ data }): Promise<EmailPreferences> => {
-    const changes: EmailPreferencesUpdate = { ...data.changes };
-    // Consent evidence records the page it was given on.
-    if (changes.consentText !== undefined) {
-      const pageUrl = pageUrlWithoutToken();
-      if (pageUrl !== undefined) changes.pageUrl = pageUrl;
-    }
-    return getBoard().emailPreferences.update(data.token, changes);
+    return getBoard().emailPreferences.update(
+      data.token,
+      withConsentPage(
+        data.changes,
+        getRequest().headers.get('referer'),
+        requestOrigin(),
+      ),
+    );
   });
 
 export const unsubscribeAllEmailPreferences = createServerFn({

@@ -25,6 +25,10 @@ export const Route = createFileRoute('/email-preferences')({
   }),
   loaderDeps: ({ search }) => ({ token: search.token }),
   loader: createEmailPreferencesLoader(),
+  // Changes are made on the page, so a cached load would show the
+  // preferences from before them on Back.
+  staleTime: 0,
+  gcTime: 0,
   head: ({ loaderData }) => emailPreferencesHead(loaderData),
   component: EmailPreferencesPage,
 });

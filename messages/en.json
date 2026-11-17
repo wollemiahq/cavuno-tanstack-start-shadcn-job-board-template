@@ -3313,7 +3313,6 @@
   "emailPreferences_jobAlertsTitle": "Job alerts",
   "emailPreferences_jobAlertsOff": "Job alerts are off.",
   "emailPreferences_jobAlertsNone": "You have no job alerts.",
-  "emailPreferences_alertUntitled": "Job alert",
   "emailPreferences_alertWeekly": "Weekly",
   "emailPreferences_alertAwaiting": "Not sending yet: click the link in this alert's confirmation email.",
   "emailPreferences_deleteAlert": "Delete",

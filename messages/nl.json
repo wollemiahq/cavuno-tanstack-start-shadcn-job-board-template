@@ -3313,7 +3313,6 @@
   "emailPreferences_jobAlertsTitle": "Vacaturemails",
   "emailPreferences_jobAlertsOff": "Vacaturemails staan uit.",
   "emailPreferences_jobAlertsNone": "Je hebt geen vacaturemails.",
-  "emailPreferences_alertUntitled": "Vacaturemail",
   "emailPreferences_alertWeekly": "Wekelijks",
   "emailPreferences_alertAwaiting": "Nog niet actief: klik op de link in de bevestigingsmail van deze vacaturemail.",
   "emailPreferences_deleteAlert": "Verwijderen",

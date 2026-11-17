@@ -3461,7 +3461,6 @@
   "emailPreferences_jobAlertsTitle": "Alerty o ofertach pracy",
   "emailPreferences_jobAlertsOff": "Alerty o ofertach pracy są wyłączone.",
   "emailPreferences_jobAlertsNone": "Nie masz alertów o ofertach pracy.",
-  "emailPreferences_alertUntitled": "Alert o ofertach pracy",
   "emailPreferences_alertWeekly": "Co tydzień",
   "emailPreferences_alertAwaiting": "Jeszcze nie wysyłamy: kliknij link w e-mailu potwierdzającym ten alert.",
   "emailPreferences_deleteAlert": "Usuń",

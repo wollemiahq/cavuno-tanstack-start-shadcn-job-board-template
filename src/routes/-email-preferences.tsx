@@ -1,11 +1,12 @@
 import { useState } from 'react';
 
 import {
-  unsubscribeAllEmailPreferences,
-  updateEmailPreferences,
-} from '../server/email-preferences';
+  emailPreferencesDependencies,
+  type EmailPreferencesData,
+  type EmailPreferencesDependencies,
+} from './-email-preferences-loader';
 
-import type { EmailPreferencesData } from './-email-preferences-loader';
+import { jobAlertMatch, searchKeywordsText } from '@/board/job-alert-match';
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -20,36 +21,44 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+} from '@/components/ui/field';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/components/ui/item';
 import { Switch } from '@/components/ui/switch';
 import { m } from '@/paraglide/messages';
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
 
-/** Labels the page's consents with, as the contact's Source. */
+/** Recorded as the consent's `source`. */
 const SOURCE = 'email-preferences';
-
-export type EmailPreferencesPageDependencies = {
-  updateEmailPreferences: (options: {
-    data: { token: string; changes: EmailPreferencesUpdate };
-  }) => Promise<EmailPreferences>;
-  unsubscribeAllEmailPreferences: (options: {
-    data: { token: string };
-  }) => Promise<EmailPreferences>;
-};
-
-const defaultDependencies: EmailPreferencesPageDependencies = {
-  updateEmailPreferences,
-  unsubscribeAllEmailPreferences,
-};
 
 type PreferenceAlert = EmailPreferences['jobAlerts']['alerts'][number];
 
+/** The alert's own name, else what it matches, as `/alerts/manage` says it. */
 function alertLabel(alert: PreferenceAlert) {
-  return (
-    alert.label ??
-    alert.anchorJob?.title ??
-    alert.filters.query ??
-    m.emailPreferences_alertUntitled()
-  );
+  if (alert.label) return alert.label;
+  const match = jobAlertMatch(alert);
+  if (match.kind === 'similar_job') {
+    return match.anchorJob
+      ? m.jobAlertMatch_similarTo({ title: match.anchorJob.title })
+      : m.alertManager_similarJobsAlertLabel();
+  }
+  return searchKeywordsText(match) ?? m.alertsManage_allJobsText();
 }
 
 /**
@@ -59,11 +68,16 @@ function alertLabel(alert: PreferenceAlert) {
 export function EmailPreferencesPageView({
   data,
   token,
-  dependencies = defaultDependencies,
+  dependencies = emailPreferencesDependencies,
 }: {
   data: EmailPreferencesData;
   token: string | undefined;
-  dependencies?: EmailPreferencesPageDependencies;
+  dependencies?: Pick<
+    EmailPreferencesDependencies,
+    | 'getEmailPreferences'
+    | 'updateEmailPreferences'
+    | 'unsubscribeAllEmailPreferences'
+  >;
 }) {
   const board = data.seo.boardName;
   const [prefs, setPrefs] = useState(data.prefs);
@@ -75,14 +89,16 @@ export function EmailPreferencesPageView({
     return (
       <Page width="narrow">
         <PageContent>
-          <div className="space-y-2 py-4">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              {m.emailPreferences_invalidTitle()}
-            </h1>
-            <p className="text-muted-foreground">
-              {m.emailPreferences_invalidBody({ board })}
-            </p>
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>
+                <h1>{m.emailPreferences_invalidTitle()}</h1>
+              </EmptyTitle>
+              <EmptyDescription>
+                {m.emailPreferences_invalidBody({ board })}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         </PageContent>
       </Page>
     );
@@ -95,6 +111,13 @@ export function EmailPreferencesPageView({
       setPrefs(await action());
     } catch {
       setFailed(true);
+      // Show what is true now: a link that stopped working turns into the
+      // invalid-link page, and an alert or topic removed elsewhere goes.
+      try {
+        setPrefs(await dependencies.getEmailPreferences({ data: { token } }));
+      } catch {
+        // Keep what the page shows; the error says the change didn't save.
+      }
     } finally {
       setPending(false);
     }
@@ -103,6 +126,9 @@ export function EmailPreferencesPageView({
     run(() =>
       dependencies.updateEmailPreferences({ data: { token, changes } }),
     );
+  // Turning something on is the person's opt-in, recorded with the wording
+  // they saw; turning it off sends only the change.
+  const optIn = (consentText: string) => ({ consentText, source: SOURCE });
 
   const marketingConsent = m.emailPreferences_marketingConsent({ board });
   const marketingOn = prefs.marketing.subscribed;
@@ -147,35 +173,34 @@ export function EmailPreferencesPageView({
                 {m.emailPreferences_jobAlertsNone()}
               </p>
             ) : (
-              <ul className="divide-border divide-y rounded-lg border">
+              <ul className="space-y-3">
                 {jobAlerts.alerts.map((alert) => (
-                  <li
-                    key={alert.id}
-                    className="flex items-center justify-between gap-4 p-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {alertLabel(alert)}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {alert.awaitingConfirmation
-                          ? m.emailPreferences_alertAwaiting()
-                          : m.emailPreferences_alertWeekly()}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pending}
-                      aria-label={m.emailPreferences_deleteAlertLabel({
-                        label: alertLabel(alert),
-                      })}
-                      onClick={() =>
-                        update({ alerts: [{ id: alert.id, delete: true }] })
-                      }
-                    >
-                      {m.emailPreferences_deleteAlert()}
-                    </Button>
+                  <li key={alert.id}>
+                    <Item variant="outline">
+                      <ItemContent>
+                        <ItemTitle>{alertLabel(alert)}</ItemTitle>
+                        <ItemDescription>
+                          {alert.awaitingConfirmation
+                            ? m.emailPreferences_alertAwaiting()
+                            : m.emailPreferences_alertWeekly()}
+                        </ItemDescription>
+                      </ItemContent>
+                      <ItemActions>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={pending}
+                          aria-label={m.emailPreferences_deleteAlertLabel({
+                            label: alertLabel(alert),
+                          })}
+                          onClick={() =>
+                            update({ alerts: [{ id: alert.id, delete: true }] })
+                          }
+                        >
+                          {m.emailPreferences_deleteAlert()}
+                        </Button>
+                      </ItemActions>
+                    </Item>
                   </li>
                 ))}
               </ul>
@@ -206,11 +231,7 @@ export function EmailPreferencesPageView({
             onCheckedChange={(checked) =>
               update(
                 checked
-                  ? {
-                      marketing: true,
-                      consentText: marketingConsent,
-                      source: SOURCE,
-                    }
+                  ? { marketing: true, ...optIn(marketingConsent) }
                   : { marketing: false },
               )
             }
@@ -227,29 +248,37 @@ export function EmailPreferencesPageView({
                 </p>
               ) : null}
               <ul className="space-y-3">
-                {topics.map((topic) => (
-                  <li key={topic.key}>
-                    <PreferenceSwitch
-                      id={`ep-topic-${topic.key}`}
-                      title={topic.name}
-                      // A topic narrows marketing: off with it.
-                      checked={marketingOn && topic.subscribed}
-                      disabled={pending || !marketingOn}
-                      onCheckedChange={(checked) => {
-                        const changes: EmailPreferencesUpdate = {
-                          topics: [{ key: topic.key, subscribed: checked }],
-                        };
-                        if (checked) {
-                          changes.consentText = m.emailPreferences_topicConsent(
-                            { topic: topic.name, board },
-                          );
-                          changes.source = SOURCE;
+                {topics.map((topic) => {
+                  const change = (subscribed: boolean) => ({
+                    topics: [{ key: topic.key, subscribed }],
+                  });
+                  return (
+                    <li key={topic.key}>
+                      <PreferenceSwitch
+                        id={`ep-topic-${topic.key}`}
+                        title={topic.name}
+                        // A topic narrows marketing: off with it.
+                        checked={marketingOn && topic.subscribed}
+                        disabled={pending || !marketingOn}
+                        onCheckedChange={(checked) =>
+                          update(
+                            checked
+                              ? {
+                                  ...change(true),
+                                  ...optIn(
+                                    m.emailPreferences_topicConsent({
+                                      topic: topic.name,
+                                      board,
+                                    }),
+                                  ),
+                                }
+                              : change(false),
+                          )
                         }
-                        void update(changes);
-                      }}
-                    />
-                  </li>
-                ))}
+                      />
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ) : null}
@@ -320,26 +349,28 @@ function PreferenceSwitch({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="space-y-1">
-        <label id={`${id}-label`} htmlFor={id} className="font-medium">
+    <Field orientation="horizontal">
+      <FieldContent>
+        <FieldLabel id={`${id}-label`} htmlFor={id}>
           {title}
-        </label>
+        </FieldLabel>
         {description ? (
-          <p id={`${id}-description`} className="text-muted-foreground text-sm">
+          <FieldDescription id={`${id}-description`}>
             {description}
-          </p>
+          </FieldDescription>
         ) : null}
-      </div>
+      </FieldContent>
       <Switch
         id={id}
         checked={checked}
         disabled={disabled}
-        // Base UI's switch is a span, which a <label for> does not name.
+        // Named explicitly: in the browser check, the `role="switch"`
+        // element took no name from the label's `for`, which reaches the
+        // switch's hidden input.
         aria-labelledby={`${id}-label`}
         aria-describedby={description ? `${id}-description` : undefined}
         onCheckedChange={onCheckedChange}
       />
-    </div>
+    </Field>
   );
 }
