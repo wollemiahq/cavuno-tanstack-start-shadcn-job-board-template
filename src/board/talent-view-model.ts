@@ -214,15 +214,33 @@ export function sellsTalentProfileUnlocks(
   return accessModel === 'paid_unlocks_and_messaging';
 }
 
+/**
+ * Whether an employer can start a conversation. Credits decide, not a plan:
+ * a board's free trial gives employers message credits before they hold one
+ * (`hasTalentAccess` stays false until they do).
+ */
 export function employerCanStartMessage(access: {
   hasTalentAccess: boolean;
   accessModel: TalentAccess['accessModel'];
   hasUnlimitedMessages: boolean;
   messageCreditsRemaining: number;
 }) {
-  if (!access.hasTalentAccess) return false;
-  if (access.accessModel === 'none') return true;
+  if (access.accessModel === 'none') return access.hasTalentAccess;
   return access.hasUnlimitedMessages || access.messageCreditsRemaining > 0;
+}
+
+/**
+ * Free conversations left on the board's free trial, or `null` when the
+ * employer is not on it. An employer with no plan can only hold free
+ * credits, so every remaining message credit is a free one.
+ */
+export function employerFreeConversationsRemaining(access: {
+  hasTalentAccess: boolean;
+  messageCreditsRemaining: number;
+}): number | null {
+  return !access.hasTalentAccess && access.messageCreditsRemaining > 0
+    ? access.messageCreditsRemaining
+    : null;
 }
 
 /** The URL param a card's `detailHref` selects (`id` or `handle`). */
@@ -468,6 +486,8 @@ export type TalentDetailViewer =
        * honest for boards that do not sell message credits.
        */
       canStartMessage?: boolean;
+      /** Free conversations left on the board's free trial, if on it. */
+      freeConversationsRemaining?: number | null;
     };
 
 export interface TalentDetailCtaLabels {
@@ -488,6 +508,8 @@ export interface TalentDetailCtaComposer {
   label: string;
   /** The candidate's board-user id — present even on a redacted profile. */
   candidateBoardUserId: string;
+  /** Free conversations left when this one would use the free trial. */
+  freeConversationsRemaining?: number;
 }
 
 export interface TalentDetailCta {
@@ -505,9 +527,10 @@ export interface TalentDetailCta {
  *  - anonymous               → Message routes to sign-in (`signInHref`).
  *  - candidate               → no Message (candidates can't cold-message
  *                              candidates); only the View-profile link.
- *  - employer, no access     → Message routes to pricing (`pricingHref`).
- *  - employer, access, no message credits → same pricing upsell (upgrade).
- *  - employer, has access    → composer targeting the candidate's board-user id.
+ *  - employer, can't message → Message routes to pricing (`pricingHref`),
+ *                              labelled Upgrade when they hold a plan.
+ *  - employer, can message   → composer targeting the candidate's board-user
+ *                              id (a plan's credits or the free trial's).
  *
  * `conversations.start` accepts the candidate's board-user id and converges
  * on an existing employer↔candidate conversation. A paywall-redacted profile
@@ -552,12 +575,16 @@ export function resolveTalentDetailCta(input: {
     };
   } else if (viewer.kind === 'employer') {
     const canStartMessage = viewer.canStartMessage ?? viewer.hasTalentAccess;
-    if (viewer.hasTalentAccess && canStartMessage) {
-      message = {
+    if (canStartMessage) {
+      const compose: TalentDetailCtaComposer = {
         kind: 'compose',
         label: labels.message,
         candidateBoardUserId: input.candidateBoardUserId,
       };
+      if (viewer.freeConversationsRemaining) {
+        compose.freeConversationsRemaining = viewer.freeConversationsRemaining;
+      }
+      message = compose;
     } else {
       message = {
         kind: 'link',
@@ -643,11 +670,12 @@ export function resolveTalentProfileSurface(input: {
   if (access.alreadyUnlocked || access.hasUnlimitedUnlocks) {
     return 'profile';
   }
-  if (!access.hasActiveTalentSubscription) {
-    return 'no_plan';
-  }
+  // Free trial unlocks count here too, before the employer holds a plan.
   if (access.unlockCreditsRemaining > 0) {
     return 'unlock_needed';
+  }
+  if (!access.hasActiveTalentSubscription) {
+    return 'no_plan';
   }
   return 'out_of_unlocks';
 }

@@ -273,7 +273,11 @@ const BUDGETS = {
     // wraps them, src/lib/scrollable-tables.ts): measured 127,768 B raw /
     // 49,618 B gzip against main's 127,575 / 49,487 (+193 / +131). Raised by
     // exactly the measured growth, keeping main's headroom.
-    '/p/$handle': { raw: 128_060, gzip: 49_722 },
+    // The free talent trial (#401): the unlock gate and confirmation say
+    // when an unlock is free, with its plural message. Measured 128,759 B
+    // raw / 49,917 B gzip against main's 127,781 / 49,657 (+978 / +260).
+    // Raised by exactly the measured growth, keeping main's headroom.
+    '/p/$handle': { raw: 129_038, gzip: 49_982 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

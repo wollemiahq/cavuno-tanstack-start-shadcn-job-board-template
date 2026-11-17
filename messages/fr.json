@@ -2664,6 +2664,20 @@
   "talentLists_sourcedHeading": "Candidats sourcés",
   "talentLists_triggerLabel": "Recherches enregistrées",
   "talentMessage_description": "Présentez-vous et expliquez la raison de votre prise de contact.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "C’est votre dernière conversation gratuite.",
+        "countPlural=*": "Cela lance l’une de vos {countLabel} conversations gratuites."
+      }
+    }
+  ],
   "talentMessage_title": "Contacter {name}",
   "talentSave_jobLabel": "Présélectionner pour",
   "talentSave_saveLabel": "Enregistrer",
@@ -2890,6 +2904,20 @@
       "match": {
         "countPlural=one": "{countLabel} déblocage restant.",
         "countPlural=*": "{countLabel} déblocages restants."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "C’est votre dernier déblocage de profil gratuit.",
+        "countPlural=*": "Cela utilise l’un de vos {countLabel} déblocages de profil gratuits."
       }
     }
   ],

@@ -2778,6 +2778,22 @@
   "talentLists_sourcedHeading": "Pozyskani kandydaci",
   "talentLists_triggerLabel": "Zapisane wyszukiwania",
   "talentMessage_description": "Przedstaw się i wyjaśnij, dlaczego się kontaktujesz.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "To Twoja ostatnia bezpłatna rozmowa.",
+        "countPlural=few": "Rozpoczynasz jedną z Twoich {countLabel} bezpłatnych rozmów.",
+        "countPlural=many": "Rozpoczynasz jedną z Twoich {countLabel} bezpłatnych rozmów.",
+        "countPlural=*": "Rozpoczynasz jedną z Twoich {countLabel} bezpłatnych rozmów."
+      }
+    }
+  ],
   "talentMessage_title": "Napisz do: {name}",
   "talentSave_jobLabel": "Dodaj do krótkiej listy oferty",
   "talentSave_saveLabel": "Zapisz",
@@ -3020,6 +3036,22 @@
         "countPlural=few": "Pozostały Ci {countLabel} odblokowania.",
         "countPlural=many": "Pozostało Ci {countLabel} odblokowań.",
         "countPlural=*": "Pozostało Ci {countLabel} odblokowania."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "To Twoje ostatnie bezpłatne odblokowanie profilu.",
+        "countPlural=few": "To jedno z Twoich {countLabel} bezpłatnych odblokowań profilu.",
+        "countPlural=many": "To jedno z Twoich {countLabel} bezpłatnych odblokowań profilu.",
+        "countPlural=*": "To jedno z Twoich {countLabel} bezpłatnych odblokowań profilu."
       }
     }
   ],

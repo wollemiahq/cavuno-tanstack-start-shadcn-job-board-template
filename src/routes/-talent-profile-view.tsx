@@ -32,6 +32,7 @@ export function TalentProfilePageView({
   user,
   hasTalentAccess = false,
   canStartMessage,
+  freeConversationsRemaining = null,
   messagingEnabled,
   fieldLayout,
   locationHref,
@@ -43,6 +44,8 @@ export function TalentProfilePageView({
   user: Pick<NonNullable<RootSessionValue['user']>, 'role'> | null;
   hasTalentAccess?: boolean;
   canStartMessage?: boolean;
+  /** Free conversations left on the board's free trial, if on it. */
+  freeConversationsRemaining?: number | null;
   messagingEnabled: boolean;
   /** The talent form's custom and collection fields, in form order. */
   fieldLayout?: readonly DisplayFieldSource[];
@@ -61,6 +64,7 @@ export function TalentProfilePageView({
             kind: 'employer',
             hasTalentAccess,
             canStartMessage: canStartMessage ?? hasTalentAccess,
+            freeConversationsRemaining,
           }
         : { kind: 'candidate' };
   const cta = resolveTalentDetailCta({
