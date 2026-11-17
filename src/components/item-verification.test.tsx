@@ -19,8 +19,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { ItemVerificationCard } from './collection-verification-card';
 import {
-  ItemVerificationCard,
   type ItemVerificationActions,
   ItemVerificationTick,
 } from './item-verification';
@@ -694,5 +694,57 @@ describe('ItemVerificationCard', () => {
     expect(
       screen.getByRole('button', { name: verifyName() }),
     ).toBeInTheDocument();
+  });
+
+  const cardItem: VerifiableItem = {
+    itemKey: 'ref:cards:rec1:e1',
+    label: 'Site card',
+    method: 'team',
+    verification: null,
+    details: [{ label: 'Card number', text: 'A-1' }],
+  };
+
+  it('shows the checked details, and the board team checks them', async () => {
+    await mount(
+      <ItemVerificationCard
+        items={[cardItem]}
+        actions={{ requestReview: vi.fn() }}
+      />,
+    );
+    expect(screen.getByText('A-1')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: verifyName('Site card') }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByText(m.itemVerification_teamDetailsBody()),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('A-1')).toBeInTheDocument();
+  });
+
+  it('asks for an empty checked detail instead of offering to verify', async () => {
+    const section = document.createElement('fieldset');
+    section.id = 'details-cards-rec1-e1';
+    const input = document.createElement('input');
+    section.appendChild(input);
+    section.scrollIntoView = vi.fn();
+    document.body.appendChild(section);
+    await mount(
+      <ItemVerificationCard
+        items={[{ ...cardItem, missingDetailsId: section.id }]}
+        actions={{ requestReview: vi.fn() }}
+      />,
+    );
+    expect(
+      screen.queryByRole('button', { name: verifyName('Site card') }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.itemVerification_addDetailsAriaLabel({ item: 'Site card' }),
+      }),
+    );
+    expect(section.scrollIntoView).toHaveBeenCalled();
+    expect(input).toHaveFocus();
+    section.remove();
   });
 });

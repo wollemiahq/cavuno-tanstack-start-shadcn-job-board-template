@@ -16,6 +16,7 @@ import { SalaryNotFoundPage } from './-salary-page-layout';
 import {
   companyCategorySalaryPath,
   formatSalaryRange,
+  indexableSalaryItems,
   toOverallSalaryVM,
   toSalaryFaqVM,
   toSalaryRailVM,
@@ -65,19 +66,23 @@ function CompanySalaryPage() {
   const { salary, company, faqs } = Route.useLoaderData();
   const locale = getLocale();
 
-  const categoryItems: RailItem[] = salary.byCategory.map((x) => ({
-    name: x.categoryName,
-    href: companyCategorySalaryPath(salary.companySlug, x.categorySlug),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
-  const competitorItems: RailItem[] = salary.competitors.map((x) => ({
+  const categoryItems: RailItem[] = indexableSalaryItems(salary.byCategory).map(
+    (x) => ({
+      name: x.categoryName,
+      href: companyCategorySalaryPath(salary.companySlug, x.categorySlug),
+      range:
+        formatSalaryRange(
+          locale,
+          x.avgSalaryMin,
+          x.avgSalaryMax,
+          salary.currency,
+        ) ?? '',
+      jobCount: x.jobCount,
+    }),
+  );
+  const competitorItems: RailItem[] = indexableSalaryItems(
+    salary.competitors,
+  ).map((x) => ({
     name: x.companyName,
     href: companySalaryPath(x.companySlug),
     range:
@@ -90,7 +95,9 @@ function CompanySalaryPage() {
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
-  const locationItems: RailItem[] = salary.topLocations.map((x) => ({
+  const locationItems: RailItem[] = indexableSalaryItems(
+    salary.topLocations,
+  ).map((x) => ({
     name: x.locationName,
     href: salaryLocationPath(x.placeSlug),
     range:

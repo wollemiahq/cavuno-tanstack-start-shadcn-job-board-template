@@ -10,7 +10,7 @@
  * URLs, and `logoUrl` — so every field round-trips. The public `company` read
  * still supplies the header's public-page link and the markets card.
  */
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, lazy, Suspense, useState, type ReactNode } from 'react';
 
 import { Await } from '@tanstack/react-router';
 import { ExternalLinkIcon } from 'lucide-react';
@@ -64,18 +64,17 @@ import {
   type CompanyFormBuiltinKey,
   type ProfileFormEntry,
 } from '@/board/form-layout';
-import {
-  collectionVerifiableItems,
-  verificationsByKey,
-} from '@/board/item-verification';
+import { verificationsByKey } from '@/board/item-verification';
+import type { ProfileFieldViolation } from '@/board/profile-field-violations';
 import {
   initialProfileSelections,
+  missingSelectionDetail,
   profileCustomFieldsBody,
   profileObjectReferencesBody,
+  withUnsetRequiredBooleans,
   type ProfileFieldValue,
   type ProfileSelections,
 } from '@/board/profile-field-writes';
-import { CollectionFieldPicker } from '@/components/collection-field-picker';
 import type {
   CustomFieldUploadResult,
   CustomFieldUploads,
@@ -84,12 +83,12 @@ import {
   CustomFieldInput,
   hasCustomFieldInput,
   isCustomFieldEmpty,
+  ProfileCollectionField,
 } from '@/components/custom-fields-group';
 import {
   EmployerProfileViewsStat,
   EmployerProfileViewsStatPending,
 } from '@/components/employer/employer-profile-views-stat';
-import { ItemVerificationCard } from '@/components/item-verification';
 import { Page, PageContent } from '@/components/layout/page';
 import { LogoUpload } from '@/components/logo-upload';
 import {
@@ -116,10 +115,23 @@ import {
 import { boardErrorMessage } from '@/lib/board-error-message';
 import type { UrlSearchInput } from '@/lib/pagination';
 import type {
+  ProfileFieldRefusal,
+  RefusedWrite,
+} from '@/lib/profile-field-refusal';
+import type {
   BoardProfileFormField,
   EmployerProfileViewsPoint,
   UpdateEmployerCompanyBody,
 } from '@cavuno/board';
+
+// The collection verification card loads only when a field verifies.
+const LazyCollectionVerificationCard = lazy(() =>
+  import('@/components/collection-verification-card').then(
+    ({ CollectionVerificationCard }) => ({
+      default: CollectionVerificationCard,
+    }),
+  ),
+);
 
 /**
  * A company's LinkedIn page always lives under `/company/`, so that segment is
@@ -264,6 +276,15 @@ export type CompanyProfileViewData = {
   profileViews?: CompanyProfileLoaderData['profileViews'];
 };
 
+type ProfileFieldWriteResult =
+  | { ok: true }
+  | {
+      ok: false;
+      code: string;
+      message: string;
+      fieldViolations?: ProfileFieldViolation[];
+    };
+
 export type CompanyProfileViewActions = {
   updateCompany: (
     ...args: Parameters<typeof updateCompany>
@@ -281,10 +302,10 @@ export type CompanyProfileViewActions = {
   /** Custom field and collection writes; the server functions by default. */
   updateCompanyCustomFields?: (
     ...args: Parameters<typeof updateCompanyCustomFields>
-  ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+  ) => Promise<ProfileFieldWriteResult>;
   updateCompanyObjectReferences?: (
     ...args: Parameters<typeof updateCompanyObjectReferences>
-  ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+  ) => Promise<ProfileFieldWriteResult>;
   listCompanyObjectReferenceChoices?: (
     ...args: Parameters<typeof listCompanyObjectReferenceChoices>
   ) => Promise<{ data: { id: string; name: string }[] }>;
@@ -391,20 +412,24 @@ export function CompanyProfilePageView({
             actions={actions}
           />
 
-          <ItemVerificationCard
-            items={collectionVerifiableItems(
-              profileFields?.objectReferences,
-              verificationsByKey(profileFields?.verifications),
-              { emailDomain: false },
-            )}
-            actions={{
-              requestReview: (itemKey) =>
-                (
-                  actions.submitCompanyItemVerification ??
-                  submitCompanyItemVerification
-                )({ data: { slug: workspace.slug, itemKey } }),
-            }}
-          />
+          {profileFields?.objectReferences?.definitions.some(
+            (definition) => definition.verification,
+          ) ? (
+            <Suspense fallback={null}>
+              <LazyCollectionVerificationCard
+                objectReferences={profileFields.objectReferences}
+                verifications={verificationsByKey(profileFields.verifications)}
+                emailDomain={false}
+                actions={{
+                  requestReview: (itemKey) =>
+                    (
+                      actions.submitCompanyItemVerification ??
+                      submitCompanyItemVerification
+                    )({ data: { slug: workspace.slug, itemKey } }),
+                }}
+              />
+            </Suspense>
+          ) : null}
 
           <CompanyDeleteDangerZone
             slug={workspace.slug}
@@ -531,6 +556,8 @@ function ProfileEditorCard({
   >('idle');
   const [message, setMessage] = useState('');
   const [invalidField, setInvalidField] = useState<string | null>(null);
+  // The fields the API refused on the last save.
+  const [refusal, setRefusal] = useState<ProfileFieldRefusal | null>(null);
 
   /**
    * The first required field left empty that native validation cannot see:
@@ -561,6 +588,22 @@ function ProfileEditorCard({
         };
       }
     }
+    // A required detail of a chosen entry, wherever its field is.
+    for (const entry of entries) {
+      if (entry.kind !== 'collection') continue;
+      const detail = missingSelectionDetail(
+        entry.definition,
+        selections[entry.key],
+      );
+      if (detail) {
+        return {
+          id: detail.id,
+          message: m.profileForm_fieldRequiredError({
+            field: customFieldLabel(detail.definition),
+          }),
+        };
+      }
+    }
     return null;
   }
 
@@ -568,6 +611,7 @@ function ProfileEditorCard({
     if (uploading > 0) return;
     const missing = missingRequired();
     setInvalidField(missing?.id ?? null);
+    setRefusal(null);
     if (missing) {
       setStatus('error');
       setMessage(missing.message);
@@ -637,20 +681,35 @@ function ProfileEditorCard({
       setMessage(boardErrorMessage(result));
       return;
     }
+    const customEntries = entries.flatMap((entry) =>
+      entry.kind === 'custom'
+        ? [{ ...entry, type: entry.definition.type }]
+        : [],
+    );
     const values = profileCustomFieldsBody(
-      entries.flatMap((entry) => (entry.kind === 'custom' ? [entry.key] : [])),
-      customValues,
+      customEntries.map((entry) => entry.key),
+      // An unanswered required Yes/No goes as No even when untouched.
+      withUnsetRequiredBooleans(customEntries, customValues),
       storedValues,
     );
+    // The refusal mapper loads only when a save is refused.
+    const refused = async (failure: RefusedWrite) => {
+      const { profileFieldRefusal } =
+        await import('@/lib/profile-field-refusal');
+      setStatus('error');
+      setMessage('');
+      setRefusal(
+        profileFieldRefusal(failure, {
+          customFields: profileFields?.customFields?.definitions,
+          collectionFields: profileFields?.objectReferences?.definitions,
+        }),
+      );
+    };
     if (values) {
       const written = await (
         actions.updateCompanyCustomFields ?? updateCompanyCustomFields
       )({ data: { slug, body: { values } } });
-      if (!written.ok) {
-        setStatus('error');
-        setMessage(boardErrorMessage(written));
-        return;
-      }
+      if (!written.ok) return await refused(written);
     }
     const references = profileObjectReferencesBody(
       entries.flatMap((entry) =>
@@ -664,11 +723,7 @@ function ProfileEditorCard({
       const written = await (
         actions.updateCompanyObjectReferences ?? updateCompanyObjectReferences
       )({ data: { slug, body: references } });
-      if (!written.ok) {
-        setStatus('error');
-        setMessage(boardErrorMessage(written));
-        return;
-      }
+      if (!written.ok) return await refused(written);
     }
     setStatus('committed');
     try {
@@ -845,6 +900,7 @@ function ProfileEditorCard({
           required={entry.required}
           value={customValues[entry.key]}
           uploads={uploads}
+          error={refusal?.byKey[entry.key]?.message}
           onChange={(value) =>
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }))
           }
@@ -852,14 +908,22 @@ function ProfileEditorCard({
       );
     }
     return (
-      <CollectionFieldPicker
+      <ProfileCollectionField
         definition={entry.definition}
         value={selections[entry.key] ?? []}
         onChange={(value) =>
           setSelections((prev) => ({ ...prev, [entry.key]: value }))
         }
         loadChoices={(search) => loadChoices(entry.key, search)}
-        error={invalidField === formEntryKey(entry) ? message : null}
+        error={
+          invalidField === formEntryKey(entry)
+            ? message
+            : refusal?.byKey[entry.key]?.message
+        }
+        detailErrors={{
+          invalid: invalidField ? { id: invalidField, message } : null,
+          byKey: refusal?.byKey,
+        }}
       />
     );
   }
@@ -922,7 +986,9 @@ function ProfileEditorCard({
                 ? m.employerCompany_savingLabel()
                 : m.employerCompany_saveCompanyLabel()}
             </Button>
-            {status === 'error' || (status === 'committed' && message) ? (
+            {refusal ? (
+              <FieldError errors={refusal.messages} />
+            ) : status === 'error' || (status === 'committed' && message) ? (
               <FieldError>{message}</FieldError>
             ) : null}
           </div>

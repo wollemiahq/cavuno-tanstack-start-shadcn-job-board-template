@@ -6,10 +6,9 @@ import { isNotFound } from '@cavuno/board';
 import {
   BOARD_PATHS,
   companySalaryPath,
-  salarySkillPath,
   salaryTitlePath,
 } from '@cavuno/board/paths';
-import { Link, createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -21,8 +20,8 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
-  salarySkillInLocationPath,
-  salarySkillLocationsPath,
+  indexableSalaryItems,
+  salarySkillLinkPath,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -39,7 +38,6 @@ import {
 } from '@/components/board/salary-sections';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
-import { buttonVariants } from '@/components/ui/button';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 export const Route = createFileRoute('/salaries/skills/$slug/')({
@@ -78,7 +76,9 @@ function SkillSalaryPage() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
-  const companyItems: RailItem[] = salary.topCompanies.map((x) => ({
+  const companyItems: RailItem[] = indexableSalaryItems(
+    salary.topCompanies,
+  ).map((x) => ({
     name: x.companyName,
     href: companySalaryPath(x.companySlug),
     range:
@@ -91,36 +91,25 @@ function SkillSalaryPage() {
     jobCount: x.jobCount,
     logoPath: x.logoPath,
   }));
-  // Cross-axis: "{Skill} salaries in {Place}" (mirrors the hosted board). The
-  // skill×location loader resolves + 308s the inbound placeSlug, so the target
-  // always has data — unlike the generic /salaries/locations/{place} page.
-  const locationItems: RailItem[] = salary.topLocations.map((x) => ({
-    name: x.placeName,
-    href: salarySkillInLocationPath(salary.canonicalSlug, x.placeSlug),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
-  const titleItems: RailItem[] = salary.topTitles.map((x) => ({
-    name: x.categoryName,
-    href: salaryTitlePath(x.categorySlug),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
+  const titleItems: RailItem[] = indexableSalaryItems(salary.topTitles).map(
+    (x) => ({
+      name: x.categoryName,
+      href: salaryTitlePath(x.categorySlug),
+      range:
+        formatSalaryRange(
+          locale,
+          x.avgSalaryMin,
+          x.avgSalaryMax,
+          salary.currency,
+        ) ?? '',
+      jobCount: x.jobCount,
+    }),
+  );
+  // Related skills link their jobs page: skill salary pages are never
+  // indexed, so the rows' `indexable` (for the salary page) does not apply.
   const relatedItems: RailItem[] = salary.relatedSkills.map((x) => ({
     name: x.skillName,
-    href: salarySkillPath(x.skillSlug),
+    href: salarySkillLinkPath(x.skillSlug),
     range:
       formatSalaryRange(
         locale,
@@ -134,7 +123,6 @@ function SkillSalaryPage() {
     salary.overallSalary ||
     salary.bySeniority.length ||
     companyItems.length ||
-    locationItems.length ||
     titleItems.length ||
     relatedItems.length ||
     faqs.length,
@@ -193,21 +181,6 @@ function SkillSalaryPage() {
               getLocale(),
             )}
           />
-          {locationItems.length > 0 ? (
-            <PageSection
-              title={m.salaryDetail_topLocations()}
-              actions={
-                <Link
-                  to={salarySkillLocationsPath(salary.canonicalSlug)}
-                  className={buttonVariants({ variant: 'link', size: 'sm' })}
-                >
-                  {m.salaryDetail_seeAllLocationsLabel()}
-                </Link>
-              }
-            >
-              <SalaryRail vm={toSalaryRailVM('', locationItems, getLocale())} />
-            </PageSection>
-          ) : null}
           <SalaryRail
             vm={toSalaryRailVM(
               m.salaryDetail_topTitles(),

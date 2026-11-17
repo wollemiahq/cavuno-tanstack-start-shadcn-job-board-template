@@ -132,14 +132,19 @@ export const listCompanyObjectReferenceChoices = createServerFn({
 
 // ── Candidate profile ───────────────────────────────────────────────────
 
-/** Additive write of the candidate's editable profile custom fields. */
+/**
+ * Additive write of the candidate's editable profile custom fields. A
+ * refused write comes back as a result, with the fields it refused.
+ */
 export const updateProfileCustomFields = createServerFn({ method: 'POST' })
   .validator((input: UpdateProfileFieldValuesBody) => input)
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.profile.updateCustomFields(data, { headers });
+    return run(() =>
+      getBoard().me.profile.updateCustomFields(data, { headers }),
+    );
   });
 
 /**
@@ -177,7 +182,9 @@ export const updateProfileObjectReferences = createServerFn({
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.profile.updateObjectReferences(data, { headers });
+    return run(() =>
+      getBoard().me.profile.updateObjectReferences(data, { headers }),
+    );
   });
 
 /** Active choices of one editable candidate collection field. */

@@ -1,5 +1,4 @@
 import {
-  companyMarketPath,
   jobsCategoryPath,
   jobsLocationCategoryPath,
   jobsLocationSkillPath,
@@ -22,8 +21,7 @@ export function relatedSearchesTitle(): string {
 }
 
 /**
- * Map the browse API's `RelatedSearch[]` (job `category`/`skill` terms and
- * company `market` terms) to the
+ * Map the jobs browse API's `RelatedSearch[]` (`category`/`skill` terms) to the
  * crawlable `TaxonomyChip`s the listing rail renders. The href for each term
  * comes from the `@cavuno/board/paths` helper for its type — never a
  * hand-built path — so the rail's internal-linking spine matches the hosted
@@ -37,11 +35,15 @@ export function relatedSearchesToChips(
 ): TaxonomyChip[] {
   // Show the board-language `displayName`; link the board-language
   // `canonicalSlug` (the English `slug` page redirects on a translated board).
-  return (related ?? []).map((r) => ({
-    key: `${r.type}-${r.slug}`,
-    name: r.displayName,
-    href: chipHref(r, placeSlug),
-  }));
+  // Job related searches carry only category and skill terms. A `market` term
+  // (companies lists) has no indexable verdict here, so it is never linked.
+  return (related ?? [])
+    .filter((r) => r.type !== 'market')
+    .map((r) => ({
+      key: `${r.type}-${r.slug}`,
+      name: r.displayName,
+      href: chipHref(r, placeSlug),
+    }));
 }
 
 /**
@@ -52,7 +54,6 @@ export function relatedSearchesToChips(
  * Below the floor, and off a place, the chip links the board-wide page.
  */
 function chipHref(r: RelatedSearch, placeSlug?: string | null): string {
-  if (r.type === 'market') return companyMarketPath(r.canonicalSlug);
   if (placeSlug && r.count >= MIN_JOBS_PER_INDEXED_PAGE) {
     return r.type === 'skill'
       ? jobsLocationSkillPath(placeSlug, r.canonicalSlug)

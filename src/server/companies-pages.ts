@@ -25,6 +25,7 @@ import { createServerFn } from '@tanstack/react-start';
 
 import {
   companyCategorySalaryPath,
+  indexableSalaryItems,
   salaryCompanyCategoryTitle,
   salaryCompanyMetaDescription,
   salaryCompanyTitle,
@@ -34,11 +35,9 @@ import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { headTitle } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
-import { createSettledCache } from '../lib/settled-cache';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
-import { listingCacheKey } from './listing-place-cache';
 import { isSalaryPageNoindex, noindexFollow } from './place-listing-helpers';
 import { profileCustomFilters } from './profile-filter-fields';
 
@@ -189,7 +188,7 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
       return {
         page: pageResult.page,
         searchUnavailable: pageResult.searchUnavailable,
-        markets: indexedMarkets(markets?.data ?? []),
+        markets: indexableMarkets(markets?.data ?? []),
         seo,
         head,
         jsonLd,
@@ -199,117 +198,13 @@ export const getCompaniesIndexPage = createServerFn({ method: 'GET' })
   );
 
 /**
- * A market page lists at least this many companies to be indexed. It matches
- * the hosted board's market-page floor (`MIN_COMPANIES_PER_INDEXED_MARKET_PAGE`),
- * which also keeps thinner markets out of the board's sitemap.
+ * Markets whose pages the Board API marks indexable, so link lists point only
+ * at market pages that can be indexed (the others render `noindex, follow`).
  */
-export const MIN_COMPANIES_PER_INDEXED_MARKET_PAGE = 5;
-
-/**
- * True when the plain market page has fewer companies than the floor. A search
- * view is left alone (it canonicalizes to the plain page), and so is a missing
- * count (an older API).
- *
- * `count` is the market's `companyCount` (the companies tagged with it, the
- * number the board's sitemap uses) when the API returns it, else the listing's
- * total, which also counts untagged companies whose text matches the market.
- */
-export function isThinMarketPage(
-  query: string | undefined,
-  count: number | undefined,
-): boolean {
-  if (query || count === undefined) return false;
-  return count < MIN_COMPANIES_PER_INDEXED_MARKET_PAGE;
-}
-
-type MarketCount = { readonly slug: string; readonly companyCount: number };
-
-/**
- * Markets from the ranked list whose pages are indexed, so link lists point
- * only at market pages that can be indexed (a thin market page is
- * `noindex, follow`).
- */
-export function indexedMarkets<T extends MarketCount>(
+function indexableMarkets<T extends { readonly indexable: boolean }>(
   markets: readonly T[],
 ): T[] {
-  return markets.filter(
-    (market) => !isThinMarketPage(undefined, market.companyCount),
-  );
-}
-
-/** The board's markets ranked by company count: one page of the list. */
-export type MarketCounts = {
-  readonly data: readonly MarketCount[];
-  readonly hasMore: boolean;
-};
-
-/**
- * Source slugs of a company's markets whose pages are noindexed as thin, so
- * the profile shows them as plain chips instead of links.
- *
- * The list is ranked by company count, so a market missing from a list with
- * more pages has no more companies than the list's last entry: it is thin
- * when that entry is. Anything else unknown (no list, or a market the full
- * list leaves out) stays linked, as the market page itself stays indexed
- * without a count.
- */
-export function thinMarketSlugs(
-  markets: readonly { readonly slug: string }[],
-  counts: MarketCounts | null,
-): string[] {
-  if (!counts) return [];
-  const bySlug = new Map(counts.data.map((m) => [m.slug, m.companyCount]));
-  const last = counts.data.at(-1);
-  const tailIsThin =
-    counts.hasMore &&
-    last !== undefined &&
-    isThinMarketPage(undefined, last.companyCount);
-  return markets
-    .filter((market) => {
-      const count = bySlug.get(market.slug);
-      if (count !== undefined) return isThinMarketPage(undefined, count);
-      return tailIsThin;
-    })
-    .map((market) => market.slug);
-}
-
-/** Page size of the market-count read: the API's maximum. */
-const MARKET_COUNTS_LIMIT = 200;
-
-/** Market company counts per data source; they change slowly. */
-const marketCountsCache = createSettledCache<string, MarketCounts>({
-  ttlMs: 5 * 60_000,
-  maxEntries: 50,
-});
-
-/**
- * The board's market company counts, cached settled. A failed read returns
- * `null` (every market stays linked) and is not stored.
- */
-async function readMarketCounts(
-  headers: Record<string, string>,
-): Promise<MarketCounts | null> {
-  const key = listingCacheKey('company-market-counts');
-  const cached = marketCountsCache.get(key);
-  if (cached) return cached;
-  const readAt = Date.now();
-  try {
-    const list = await getBoard().companies.markets(
-      { limit: MARKET_COUNTS_LIMIT },
-      { headers },
-    );
-    const value: MarketCounts = {
-      data: list.data.map((m) => ({
-        slug: m.slug,
-        companyCount: m.companyCount,
-      })),
-      hasMore: list.hasMore,
-    };
-    marketCountsCache.set(key, value, readAt);
-    return value;
-  } catch {
-    return null;
-  }
+  return markets.filter((market) => market.indexable);
 }
 
 /**
@@ -417,7 +312,9 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
             },
           ],
         },
-        isThinMarketPage(data.query, market.companyCount ?? page.count),
+        // A search view canonicalizes to the plain page and is left alone; an
+        // absent verdict (an older API) stays indexable.
+        !data.query && market.indexable === false,
       );
       const c = breadcrumbsCopy();
       const jsonLd = asJsonObjects(
@@ -437,7 +334,7 @@ export const getCompaniesMarketPage = createServerFn({ method: 'GET' })
         market,
         page,
         searchUnavailable,
-        markets: indexedMarkets(markets?.data ?? []),
+        markets: indexableMarkets(markets?.data ?? []),
         seo,
         head,
         jsonLd,
@@ -490,7 +387,10 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
           );
           return {
             overallSalary: salary.overallSalary,
-            byCategory: salary.topCategories.slice(
+            // Only the profile's link rail reads these, so drop noindexed
+            // categories before the cut: a top-N of hidden rows would
+            // leave the teaser empty while indexable categories exist.
+            byCategory: indexableSalaryItems(salary.topCategories).slice(
               0,
               COMPANY_SALARY_SUMMARY_CATEGORIES,
             ),
@@ -502,17 +402,12 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
         }
       });
 
-      const [company, jobs, seo, salarySummary, marketCounts] =
-        await Promise.all([
-          companyP,
-          jobsP,
-          seoP,
-          salarySummaryP,
-          readMarketCounts(headers),
-        ]);
-      // Thin market pages are noindexed; the profile shows those markets as
-      // plain chips so its links point only at indexable market pages.
-      const thinMarkets = thinMarketSlugs(company.markets, marketCounts);
+      const [company, jobs, seo, salarySummary] = await Promise.all([
+        companyP,
+        jobsP,
+        seoP,
+        salarySummaryP,
+      ]);
       const hasSalaries = companySalarySampleCount(company) > 0;
       // Meta is summary + open-role count — never strip full HTML description.
       const openCount = company.publishedJobCount ?? jobs.count ?? 0;
@@ -583,7 +478,6 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
         jobs,
         salarySummary,
         hasSalaries,
-        thinMarkets,
         seo,
         head,
         jsonLd,
@@ -763,13 +657,16 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
       const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
-          companySalaryJsonLd(salary, {
-            occupationUrl: ({ categorySlug }) =>
-              boardUrl(
-                seo.origin,
-                companyCategorySalaryPath(salary.companySlug, categorySlug),
-              ),
-          }),
+          companySalaryJsonLd(
+            { ...salary, byCategory: indexableSalaryItems(salary.byCategory) },
+            {
+              occupationUrl: ({ categorySlug }) =>
+                boardUrl(
+                  seo.origin,
+                  companyCategorySalaryPath(salary.companySlug, categorySlug),
+                ),
+            },
+          ),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },

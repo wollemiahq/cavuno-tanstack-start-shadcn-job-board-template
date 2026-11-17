@@ -281,7 +281,7 @@ export function CompanySearchResultDetail({
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {vm.marketChips.map((market) =>
-                interactive ? (
+                interactive && market.href ? (
                   <Badge
                     key={market.key}
                     variant="outline"

@@ -1169,7 +1169,7 @@ describe('ProfileForm — committed overview refresh', () => {
       target: { value: 'chosen-handle' },
     });
     fireEvent.click(
-      screen.getByRole('button', {
+      await screen.findByRole('button', {
         name: m.placeTags_removeAriaLabel({ name: 'Sample certificate' }),
       }),
     );
@@ -1313,5 +1313,160 @@ describe('ProfileForm — signed-in session refresh', () => {
       ),
     );
     expect(mocks.toastActionReconciliationError).not.toHaveBeenCalled();
+  });
+});
+
+describe('ProfileForm: collection details and refused saves', () => {
+  const suggestions = {
+    suggestions: [],
+    loading: false,
+    onQueryChange: vi.fn(),
+  };
+  const detail = (key: string, label: string, overrides = {}) => ({
+    key,
+    label,
+    type: 'short_text' as const,
+    required: false,
+    visibility: 'public' as const,
+    editableByOwner: true,
+    ...overrides,
+  });
+  const fields: TalentProfileFields = {
+    customFields: {
+      definitions: [
+        detail('abroad', 'Based abroad', { type: 'boolean', required: true }),
+      ],
+      values: {},
+      customFieldMedia: {},
+    },
+    objectReferences: {
+      definitions: [
+        {
+          key: 'cards',
+          label: 'Site cards',
+          typeId: 'card',
+          multiple: true,
+          visibility: 'public',
+          editableByOwner: true,
+          allowOverrides: false,
+          valueDefinitions: [detail('occupation', 'Occupation')],
+          entryDefinitions: [
+            detail('number', 'Card number', {
+              required: true,
+              visibility: 'private',
+            }),
+          ],
+        },
+      ],
+      selections: [
+        {
+          fieldKey: 'cards',
+          fieldLabel: 'Site cards',
+          recordId: 'white',
+          title: 'White card',
+          valueDefinitions: [],
+          entryDefinitions: [],
+          values: {},
+          entries: [],
+          fields: [],
+          attributes: {},
+        },
+      ],
+    },
+  };
+  const submit = () =>
+    fireEvent.submit(document.querySelector('[data-test="profile-form"]')!);
+  async function mount() {
+    mocks.updateProfile.mockResolvedValue({ ok: true });
+    await renderWithRouter(
+      <ProfileForm
+        profile={profile}
+        profileFields={fields}
+        language="en"
+        dependencies={{
+          ...mocks,
+          listObjectReferenceChoices: vi.fn().mockResolvedValue({ data: [] }),
+        }}
+        locationSuggestions={suggestions}
+      />,
+    );
+  }
+
+  it('edits a chosen entry’s details and rows, and saves them with a row key', async () => {
+    mocks.updateCustomFields.mockResolvedValue({ ok: true, data: {} });
+    mocks.updateObjectReferences.mockResolvedValue({ ok: true, data: {} });
+    await mount();
+    fireEvent.change(await screen.findByLabelText('Occupation'), {
+      target: { value: 'Rigger' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: m.collectionField_addEntryLabel() }),
+    );
+    // A required detail left empty names itself before the round trip.
+    submit();
+    expect(
+      await screen.findAllByText(
+        m.profileForm_fieldRequiredError({ field: 'Card number' }),
+      ),
+    ).not.toHaveLength(0);
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+    expect(screen.getByText(m.customField_privateNote())).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Card number'), {
+      target: { value: 'A-1' },
+    });
+    submit();
+    await waitFor(() =>
+      expect(mocks.updateObjectReferences).toHaveBeenCalledWith({
+        data: {
+          selections: [
+            {
+              fieldKey: 'cards',
+              recordId: 'white',
+              values: { occupation: 'Rigger' },
+              entries: [
+                {
+                  key: expect.stringMatching(/^[A-Za-z][A-Za-z0-9_-]*$/),
+                  values: { number: 'A-1' },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+    // The untouched required Yes/No goes as No.
+    expect(mocks.updateCustomFields).toHaveBeenCalledWith({
+      data: { values: { abroad: false } },
+    });
+  });
+
+  it('puts each refused field’s message on the field and in the summary', async () => {
+    mocks.updateCustomFields.mockResolvedValue({ ok: true, data: {} });
+    mocks.updateObjectReferences.mockResolvedValue({
+      ok: false,
+      code: 'validation_bad_request',
+      message: 'Refused',
+      fieldViolations: [
+        {
+          fieldKey: 'occupation',
+          code: 'custom_field_required',
+          message: 'Wire text',
+        },
+      ],
+    });
+    await mount();
+    fireEvent.change(await screen.findByLabelText('Occupation'), {
+      target: { value: 'Rigger' },
+    });
+    submit();
+    const message = m.profileForm_fieldRequiredError({ field: 'Occupation' });
+    // A required refusal marks only the empty inputs, so it is the summary.
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Occupation'), {
+      target: { value: '' },
+    });
+    expect(screen.getAllByText(message)).toHaveLength(2);
+    expect(mocks.toastActionError).not.toHaveBeenCalled();
   });
 });

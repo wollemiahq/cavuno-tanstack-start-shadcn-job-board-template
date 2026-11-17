@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { collectionVerifiableItems } from './collection-verification';
 import {
   canCheckByEmail,
   canRequestVerification,
   checksByEmail,
-  collectionVerifiableItems,
   educationVerifiableItem,
   experienceVerifiableItem,
   verificationsByKey,
@@ -227,12 +227,14 @@ describe('collectionVerifiableItems', () => {
         label: 'Electrician',
         method: 'email_domain',
         verification: null,
+        details: [],
       },
       {
         itemKey: 'ref:cards:rec2:e1',
         label: 'Site card: A-123',
         method: 'team',
         verification: expect.objectContaining({ status: 'pending' }),
+        details: [{ label: 'Number', text: 'A-123' }],
       },
     ]);
     // Company profiles have no email check, so every item goes to the team.
@@ -240,5 +242,70 @@ describe('collectionVerifiableItems', () => {
       collectionVerifiableItems(references, list(), { emailDomain: false })[0]
         ?.method,
     ).toBe('team');
+  });
+
+  it('lists the checked details, private ones too, and points an item with an empty one at its inputs', () => {
+    const references: ProfileObjectReferences = {
+      definitions: [
+        {
+          ...definition,
+          key: 'cards',
+          valueDefinitions: [
+            {
+              key: 'colour',
+              label: 'Colour',
+              type: 'single_select',
+              required: false,
+              visibility: 'public',
+              editableByOwner: true,
+              options: [{ key: 'blue', label: 'Blue' }],
+            },
+          ],
+          entryDefinitions: [
+            {
+              key: 'number',
+              label: 'Card number',
+              type: 'short_text',
+              required: false,
+              visibility: 'private',
+              editableByOwner: true,
+            },
+          ],
+          verification: {
+            checkedFieldKeys: ['colour', 'number'],
+            validity: { kind: 'never' },
+            verifiedBy: 'team',
+            required: false,
+          },
+        },
+      ],
+      selections: [
+        selection('cards', 'rec1', 'Site card', [
+          { key: 'e1', values: { number: 'A-1' } },
+          { key: 'e2', values: {} },
+        ]),
+      ],
+    };
+    references.selections[0]!.values = { colour: 'blue' };
+
+    expect(
+      collectionVerifiableItems(references, list(), { emailDomain: false }),
+    ).toEqual([
+      expect.objectContaining({
+        itemKey: 'ref:cards:rec1:e1',
+        details: [
+          { label: 'Colour', text: 'Blue' },
+          { label: 'Card number', text: 'A-1' },
+        ],
+      }),
+      expect.objectContaining({
+        itemKey: 'ref:cards:rec1:e2',
+        details: [{ label: 'Colour', text: 'Blue' }],
+        missingDetailsId: 'details-cards-rec1-e2',
+      }),
+    ]);
+    expect(
+      collectionVerifiableItems(references, list(), { emailDomain: false })[0],
+    ).not.toHaveProperty('missingDetailsId');
   });
 });
