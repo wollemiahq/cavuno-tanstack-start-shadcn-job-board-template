@@ -108,7 +108,6 @@ export const updateEmailPreferences = createServerFn({ method: 'POST' })
 
 export const unsubscribeAllEmailPreferences = createServerFn({
   method: 'POST',
-}).handler(
-  (): Promise<EmailPreferences> =>
-    getBoard().emailPreferences.unsubscribeAll(requireCookieToken()),
+}).handler((): Promise<EmailPreferences> =>
+  getBoard().emailPreferences.unsubscribeAll(requireCookieToken()),
 );
