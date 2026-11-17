@@ -9,8 +9,13 @@
  * the person it shows, even after another person's link is opened in the
  * same browser; the key, made fresh for each browser, tells analytics tags
  * nothing about who the person is; and each cookie lasts an hour from its
- * own last use. Reopening the same link reuses its key.
+ * own last use. Reopening the same link reuses its key. At most a few are
+ * kept, so another site sending the browser through junk links can't fill
+ * it with cookies until the board's requests are too large to serve.
  */
+
+/** Cookies kept at once; keeping another drops the oldest first. */
+export const EMAIL_PREFERENCES_LIMIT = 5;
 
 const PREFIX = '__Host-cavuno_ep_';
 const MAX_AGE_SECONDS = 60 * 60;
@@ -65,6 +70,21 @@ export function findEmailPreferencesPerson(
     if (keptToken === token) return person;
   }
   return null;
+}
+
+/**
+ * The keys to drop before keeping a new one, oldest first (browsers send
+ * cookies of the same path in the order they were made), so no more than
+ * the limit are kept.
+ */
+export function emailPreferencesPeopleToDrop(
+  cookieHeader: string | null,
+): string[] {
+  const people = [...kept(cookieHeader).keys()];
+  return people.slice(
+    0,
+    Math.max(0, people.length - EMAIL_PREFERENCES_LIMIT + 1),
+  );
 }
 
 /**

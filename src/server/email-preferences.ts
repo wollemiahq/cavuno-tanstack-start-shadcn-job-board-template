@@ -22,6 +22,7 @@ import {
 import { getBoard } from '../lib/board';
 import {
   dropEmailPreferencesEntry,
+  emailPreferencesPeopleToDrop,
   findEmailPreferencesPerson,
   findEmailPreferencesToken,
   isEmailPreferencesPerson,
@@ -91,16 +92,21 @@ async function withKeptToken<T>(
 
 /**
  * Keeps the link's token in a cookie, under the key it returns (the one
- * already holding it, else a new one). Null for a malformed token, which
- * is never kept; any other token is checked on the next read.
+ * already holding it, else a new one, dropping the oldest past the limit).
+ * Null for a malformed token, which is never kept; any other token is
+ * checked on the next read.
  */
 export const keepEmailPreferencesToken = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
   .handler(({ data }): string | null => {
     if (!isEmailPreferencesToken(data.token)) return null;
-    const person =
-      findEmailPreferencesPerson(cookieHeader(), data.token) ??
-      newEmailPreferencesPerson();
+    const known = findEmailPreferencesPerson(cookieHeader(), data.token);
+    if (!known) {
+      for (const person of emailPreferencesPeopleToDrop(cookieHeader())) {
+        appendResponseHeader('Set-Cookie', dropEmailPreferencesEntry(person));
+      }
+    }
+    const person = known ?? newEmailPreferencesPerson();
     renew(person, data.token);
     return person;
   });

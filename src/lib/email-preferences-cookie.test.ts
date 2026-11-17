@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   dropEmailPreferencesEntry,
+  EMAIL_PREFERENCES_LIMIT,
+  emailPreferencesPeopleToDrop,
   findEmailPreferencesPerson,
   findEmailPreferencesToken,
   keepEmailPreferencesEntry,
@@ -53,6 +55,25 @@ describe('email preferences cookies', () => {
     const dropped = dropEmailPreferencesEntry(a);
     expect(dropped.startsWith(`__Host-cavuno_ep_${a}=;`)).toBe(true);
     expect(dropped).toContain('Max-Age=0');
+  });
+
+  it('keeps at most the limit, dropping the oldest first', () => {
+    const people = Array.from({ length: EMAIL_PREFERENCES_LIMIT + 2 }, () =>
+      newEmailPreferencesPerson(),
+    );
+    const header = sentBack(
+      ...people.map((person, i) =>
+        keepEmailPreferencesEntry(person, `u${i}.t`),
+      ),
+    );
+    // Room for one more: the three oldest go.
+    expect(emailPreferencesPeopleToDrop(header)).toEqual(people.slice(0, 3));
+    expect(
+      emailPreferencesPeopleToDrop(
+        sentBack(keepEmailPreferencesEntry(people[0]!, 'u0.t')),
+      ),
+    ).toEqual([]);
+    expect(emailPreferencesPeopleToDrop(null)).toEqual([]);
   });
 
   it('never writes or reads a value that is not a plain token', () => {
