@@ -24,7 +24,7 @@ import {
   type SessionContext,
 } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
-import { emailLink } from './email-link';
+import { dottedCodec, emailLink } from './email-link';
 import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
@@ -88,27 +88,27 @@ export const updateNotificationPreference = createServerFn({ method: 'POST' })
 // link changes nothing, because link checkers open every link in a message:
 // the unsubscribe is the person's click on the page's button.
 
-const unsubscribeLink = emailLink(EMAIL_LINK_PREFIXES.settingsUnsubscribe);
-const ID = /^[A-Za-z0-9_-]+$/;
 const CHANNELS: readonly StarterNotificationChannel[] = [
   'messageEmails',
   'applicationEmails',
   'recommendedJobEmails',
 ];
 
-function isChannel(value: string): value is StarterNotificationChannel {
-  return CHANNELS.some((channel) => channel === value);
+function asChannel(value: string): StarterNotificationChannel | null {
+  return CHANNELS.find((channel) => channel === value) ?? null;
 }
 
-/** The board user, channel and token kept under `key`, or null. */
-function keptUnsubscribe(key: string): StarterUnsubscribeBody | null {
-  const [boardUserId, channel, token, extra] = (
-    unsubscribeLink.find(key) ?? ''
-  ).split('.');
-  return boardUserId && channel && isChannel(channel) && token && !extra
-    ? { boardUserId, channel, token }
-    : null;
-}
+const unsubscribeLink = emailLink<StarterUnsubscribeBody>(
+  EMAIL_LINK_PREFIXES.settingsUnsubscribe,
+  dottedCodec(
+    ({ boardUserId, channel, token }) => [boardUserId, channel, token],
+    ([boardUserId, channel, token]) => {
+      const known = asChannel(channel);
+      return known ? { boardUserId, channel: known, token } : null;
+    },
+    3,
+  ),
+);
 
 /**
  * Keeps the link's board user, channel and token in a cookie, under the
@@ -117,36 +117,28 @@ function keptUnsubscribe(key: string): StarterUnsubscribeBody | null {
 export const keepUnsubscribeLink = createServerFn({ method: 'POST' })
   .validator((input: StarterUnsubscribeBody) => input)
   .handler(({ data }): string | null =>
-    ID.test(data.boardUserId) && isChannel(data.channel) && ID.test(data.token)
-      ? unsubscribeLink.keep(
-          `${data.boardUserId}.${data.channel}.${data.token}`,
-        )
-      : null,
+    asChannel(data.channel) ? unsubscribeLink.keep(data) : null,
   );
 
 /** The channel the link kept under `link` unsubscribes from, or null. */
 export const getUnsubscribeLinkChannel = createServerFn({ method: 'POST' })
   .validator((input: { link: string }) => input)
   .handler(({ data }): StarterNotificationChannel | null => {
-    const kept = keptUnsubscribe(data.link);
-    if (kept) unsubscribeLink.renew(data.link, linkValue(kept));
+    const kept = unsubscribeLink.find(data.link);
+    if (kept) unsubscribeLink.renew(data.link);
     return kept?.channel ?? null;
   });
-
-function linkValue(kept: StarterUnsubscribeBody): string {
-  return `${kept.boardUserId}.${kept.channel}.${kept.token}`;
-}
 
 /** The person's click: unsubscribes with the link kept under `link`. */
 export const unsubscribeWithLink = createServerFn({ method: 'POST' })
   .validator((input: { link: string }) => input)
   .handler(async ({ data }) => {
-    const kept = keptUnsubscribe(data.link);
-    if (!kept) throw new Error('email_link_expired');
-    // SAFETY: StarterUnsubscribeBody is the SDK body with the channel narrowed
-    // to the starter-supported notification channels.
-    await getBoard().me.notificationPreferences.unsubscribeWithToken(
-      kept as UnsubscribeBody,
+    await unsubscribeLink.withValue(data.link, (kept) =>
+      // SAFETY: StarterUnsubscribeBody is the SDK body with the channel
+      // narrowed to the starter-supported notification channels.
+      getBoard().me.notificationPreferences.unsubscribeWithToken(
+        kept as UnsubscribeBody,
+      ),
     );
     return { ok: true as const };
   });

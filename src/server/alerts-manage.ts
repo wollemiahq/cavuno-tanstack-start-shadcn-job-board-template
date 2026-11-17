@@ -12,31 +12,20 @@ import { createServerFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
 import { EMAIL_LINK_PREFIXES } from '../lib/email-link-cookies';
-import { emailLink } from './email-link';
+import { dottedCodec, emailLink } from './email-link';
 
 import type { JobAlertManageState } from '@cavuno/board';
 
-const link = emailLink(EMAIL_LINK_PREFIXES.alertsManage);
-const PART = /^[A-Za-z0-9_-]+$/;
+type Manage = { subscriptionId: string; token: string };
 
-/** The subscription and token kept under `key`, or null. */
-function kept(key: string): { subscriptionId: string; token: string } | null {
-  const [subscriptionId, token, extra] = (link.find(key) ?? '').split('.');
-  return subscriptionId && token && extra === undefined
-    ? { subscriptionId, token }
-    : null;
-}
-
-async function withKept<T>(
-  key: string,
-  action: (manage: { subscriptionId: string; token: string }) => Promise<T>,
-): Promise<T> {
-  const manage = kept(key);
-  if (!manage) throw new Error('email_link_expired');
-  const result = await action(manage);
-  link.renew(key, `${manage.subscriptionId}.${manage.token}`);
-  return result;
-}
+const link = emailLink<Manage>(
+  EMAIL_LINK_PREFIXES.alertsManage,
+  dottedCodec(
+    ({ subscriptionId, token }) => [subscriptionId, token],
+    ([subscriptionId, token]) => ({ subscriptionId, token }),
+    2,
+  ),
+);
 
 /**
  * Keeps the link's subscription and token in a cookie, under the key it
@@ -45,9 +34,7 @@ async function withKept<T>(
 export const keepJobAlertManageLink = createServerFn({ method: 'POST' })
   .validator((input: { subscription: string; token: string }) => input)
   .handler(({ data }): string | null =>
-    PART.test(data.subscription) && PART.test(data.token)
-      ? link.keep(`${data.subscription}.${data.token}`)
-      : null,
+    link.keep({ subscriptionId: data.subscription, token: data.token }),
   );
 
 /**
@@ -59,14 +46,14 @@ export const getJobAlertManageState = createServerFn({ method: 'POST' })
   .validator((input: { link: string }) => input)
   .handler(
     async ({ data }): Promise<JobAlertManageState | null | 'link_expired'> => {
-      const manage = kept(data.link);
+      const manage = link.find(data.link);
       if (!manage) return 'link_expired';
       try {
         const state = await getBoard().jobAlerts.manage({
           subscription: manage.subscriptionId,
           token: manage.token,
         });
-        link.renew(data.link, `${manage.subscriptionId}.${manage.token}`);
+        link.renew(data.link);
         return state;
       } catch (error) {
         if (isNotFound(error)) return null;
@@ -78,13 +65,17 @@ export const getJobAlertManageState = createServerFn({ method: 'POST' })
 export const unsubscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: { link: string }) => input)
   .handler(({ data }) =>
-    withKept(data.link, (manage) => getBoard().jobAlerts.unsubscribe(manage)),
+    link.withValue(data.link, (manage) =>
+      getBoard().jobAlerts.unsubscribe(manage),
+    ),
   );
 
 export const resubscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: { link: string }) => input)
   .handler(({ data }) =>
-    withKept(data.link, (manage) => getBoard().jobAlerts.resubscribe(manage)),
+    link.withValue(data.link, (manage) =>
+      getBoard().jobAlerts.resubscribe(manage),
+    ),
   );
 
 /** Deletes one alert with its own manage token, from the page's state. */
@@ -93,7 +84,7 @@ export const deleteJobAlertPreference = createServerFn({ method: 'POST' })
     (input: { link: string; preferenceId: string; token: string }) => input,
   )
   .handler(({ data }) =>
-    withKept(data.link, ({ subscriptionId }) =>
+    link.withValue(data.link, ({ subscriptionId }) =>
       getBoard().jobAlerts.deletePreference({
         subscriptionId,
         preferenceId: data.preferenceId,

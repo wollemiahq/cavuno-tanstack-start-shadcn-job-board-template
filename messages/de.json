@@ -2554,7 +2554,6 @@
   "settings_unsubscribedBody": "Du erhältst keine {channel}-E-Mails mehr. Du kannst sie jederzeit in deinen Kontoeinstellungen wieder aktivieren.",
   "settings_unsubscribedHeading": "Du hast dich abgemeldet",
   "settings_unsubscribeCta": "{channel}-E-Mails abbestellen",
-  "settings_unsubscribeError": "Das hat nicht geklappt. Öffne den Abmeldelink in deiner E-Mail erneut.",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Konto",
   "siteHeader_addNewCompanyLabel": "Neues Unternehmen hinzufügen",

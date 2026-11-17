@@ -2554,7 +2554,6 @@
   "settings_unsubscribedBody": "Vous ne recevrez plus les e-mails « {channel} ». Vous pouvez les réactiver à tout moment depuis les paramètres de votre compte.",
   "settings_unsubscribedHeading": "Vous êtes désabonné",
   "settings_unsubscribeCta": "Se désabonner des e-mails « {channel} »",
-  "settings_unsubscribeError": "Cela n'a pas fonctionné. Rouvrez le lien de désabonnement de votre e-mail.",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Compte",
   "siteHeader_addNewCompanyLabel": "Ajouter une nouvelle entreprise",

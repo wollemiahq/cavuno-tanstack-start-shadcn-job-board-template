@@ -2554,7 +2554,6 @@
   "settings_unsubscribedBody": "Je ontvangt geen e-mails meer over {channel}. Je kunt ze op elk moment weer inschakelen via je accountinstellingen.",
   "settings_unsubscribedHeading": "Je bent afgemeld",
   "settings_unsubscribeCta": "Afmelden voor e-mails over {channel}",
-  "settings_unsubscribeError": "Dat is niet gelukt. Open de afmeldlink in je e-mail opnieuw.",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Account",
   "siteHeader_addNewCompanyLabel": "Nieuw bedrijf toevoegen",

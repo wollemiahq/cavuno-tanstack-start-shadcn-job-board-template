@@ -108,7 +108,11 @@ export const settingsRouteDependencies: SettingsRouteDependencies = {
   updatePassword,
 };
 
-/** In `?link=` for a malformed email link, which is never kept. */
+/**
+ * In `?link=` for a malformed email link, which is never kept. Any `?link`
+ * means the email-link branch (no `?link` is signed-in settings), and this
+ * one is never a cookie key (16 hex characters), so it reads as expired.
+ */
 const INVALID_LINK = 'invalid';
 
 export function createSettingsLoader(
@@ -139,9 +143,9 @@ export function createSettingsLoader(
     if (deps.link !== undefined) {
       // Nothing kept under the key (an hour passed, cookies are blocked,
       // or the link was malformed): the page says the link has expired.
-      const channel = await dependencies
-        .getUnsubscribeLinkChannel({ data: { link: deps.link } })
-        .catch(() => null);
+      const channel = await dependencies.getUnsubscribeLinkChannel({
+        data: { link: deps.link },
+      });
       return channel
         ? { mode: 'unsubscribe' as const, channel, link: deps.link, seo }
         : { mode: 'unsubscribe-failed' as const, seo };
@@ -234,29 +238,7 @@ export function SettingsPageView({
     );
   }
 
-  if (data.mode === 'unsubscribe-failed') {
-    return (
-      <Page width="narrow">
-        <PageContent>
-          <div className="space-y-3 py-10 text-center">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              {m.settings_linkExpiredHeading()}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {m.settings_linkExpiredBody()}
-            </p>
-            <Link
-              to="/auth/sign-in"
-              search={candidateAuthSearch('/settings')}
-              className={buttonVariants({ variant: 'outline' })}
-            >
-              {m.settings_signInLabel()}
-            </Link>
-          </div>
-        </PageContent>
-      </Page>
-    );
-  }
+  if (data.mode === 'unsubscribe-failed') return <LinkExpiredPage />;
 
   // Signed-in mode renders inside the candidate shell; the anonymous
   // unsubscribe-token branches above stay bare (no session, no sidebar).
@@ -268,6 +250,38 @@ export function SettingsPageView({
       jobRecommendationsEnabled={jobRecommendationsEnabled}
       dependencies={dependencies}
     />
+  );
+}
+
+/**
+ * The link can't unsubscribe: it was malformed or expired, or the API
+ * refused it. Signing in reaches the same settings, so it's never a dead
+ * end. `alert` announces it when it replaces the button after a tap.
+ */
+function LinkExpiredPage({ alert = false }: { alert?: boolean }) {
+  return (
+    <Page width="narrow">
+      <PageContent>
+        <div
+          role={alert ? 'alert' : undefined}
+          className="space-y-3 py-10 text-center"
+        >
+          <h1 className="font-heading text-3xl font-semibold tracking-tight">
+            {m.settings_linkExpiredHeading()}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {m.settings_linkExpiredBody()}
+          </p>
+          <Link
+            to="/auth/sign-in"
+            search={candidateAuthSearch('/settings')}
+            className={buttonVariants({ variant: 'outline' })}
+          >
+            {m.settings_signInLabel()}
+          </Link>
+        </div>
+      </PageContent>
+    </Page>
   );
 }
 
@@ -288,6 +302,7 @@ function UnsubscribeLinkPage({
     'idle',
   );
   const channelName = CHANNEL_NAMES[channel]();
+  if (state === 'failed') return <LinkExpiredPage alert />;
   const unsubscribe = async () => {
     setState('pending');
     try {
@@ -325,11 +340,6 @@ function UnsubscribeLinkPage({
               <Button disabled={state === 'pending'} onClick={unsubscribe}>
                 {m.settings_unsubscribeCta({ channel: channelName })}
               </Button>
-              {state === 'failed' ? (
-                <p role="alert" className="text-destructive text-sm">
-                  {m.settings_unsubscribeError()}
-                </p>
-              ) : null}
             </>
           )}
         </div>

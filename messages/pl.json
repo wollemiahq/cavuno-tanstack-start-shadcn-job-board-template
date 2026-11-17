@@ -2664,7 +2664,6 @@
   "settings_unsubscribedBody": "Nie będziesz już otrzymywać powiadomień: {channel}. Możesz je włączyć ponownie w ustawieniach konta.",
   "settings_unsubscribedHeading": "Zrezygnowano z subskrypcji",
   "settings_unsubscribeCta": "Zrezygnuj z powiadomień: {channel}",
-  "settings_unsubscribeError": "Nie udało się. Otwórz ponownie link do rezygnacji z e-maila.",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Konto",
   "siteHeader_addNewCompanyLabel": "Dodaj nową firmę",

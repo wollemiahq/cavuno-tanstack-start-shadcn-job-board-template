@@ -50,7 +50,11 @@ export function withConsentPage(
   return { ...rest, pageUrl: url.toString() };
 }
 
-const link = emailLink(EMAIL_LINK_PREFIXES.emailPreferences);
+// The token is kept as it is; the API checks it on each read.
+const link = emailLink<string>(EMAIL_LINK_PREFIXES.emailPreferences, {
+  encode: (token) => token,
+  decode: (raw) => raw,
+});
 
 /**
  * Keeps the link's token in a cookie, under the key it returns (the one
@@ -76,7 +80,7 @@ export const getEmailPreferences = createServerFn({ method: 'POST' })
     if (!token) return 'link_expired';
     try {
       const prefs = await getBoard().emailPreferences.get(token);
-      link.renew(data.person, token);
+      link.renew(data.person);
       return prefs;
     } catch (error) {
       if (

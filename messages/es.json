@@ -2554,7 +2554,6 @@
   "settings_unsubscribedBody": "Ya no recibirás correos de tipo {channel}. Puedes volver a activarlos cuando quieras desde los ajustes de tu cuenta.",
   "settings_unsubscribedHeading": "Te has dado de baja",
   "settings_unsubscribeCta": "Darse de baja de los correos de tipo {channel}",
-  "settings_unsubscribeError": "No se ha podido. Vuelve a abrir el enlace para darte de baja de tu correo.",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Cuenta",
   "siteHeader_addNewCompanyLabel": "Añadir empresa nueva",

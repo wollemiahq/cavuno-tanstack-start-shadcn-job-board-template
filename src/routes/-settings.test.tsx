@@ -14,6 +14,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -228,15 +229,17 @@ describe('settings unsubscribe recovery', () => {
       }),
     );
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      m.settings_unsubscribedBody({ channel }),
-    );
+    expect(
+      within(await screen.findByRole('status')).getByRole('heading', {
+        name: m.settings_unsubscribedHeading(),
+      }),
+    ).toBeInTheDocument();
     expect(unsubscribeWithLink).toHaveBeenCalledExactlyOnceWith({
       data: { link: LINK },
     });
   });
 
-  it('keeps the button and says to reopen the link when the click fails', async () => {
+  it('offers sign-in when the click fails, so a refused link is no dead end', async () => {
     unsubscribeWithLink.mockRejectedValue(new Error('email_link_expired'));
     await renderSettingsData({
       mode: 'unsubscribe',
@@ -248,10 +251,30 @@ describe('settings unsubscribe recovery', () => {
     });
     fireEvent.click(screen.getByRole('button', { name }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      m.settings_unsubscribeError(),
-    );
-    expect(screen.getByRole('button', { name })).toBeEnabled();
+    const alert = await screen.findByRole('alert');
+    expect(
+      within(alert).getByRole('heading', {
+        name: m.settings_linkExpiredHeading(),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(alert).getByRole('link', { name: m.settings_signInLabel() }),
+    ).toBeInTheDocument();
+  });
+
+  it('opens a malformed link on a key that is never kept', async () => {
+    keepUnsubscribeLink.mockResolvedValue(null);
+    let error;
+    try {
+      await createSettingsLoader(dependencies)(
+        settingsLoaderContext({ ...EMAIL_LINK, token: 'bad;token' }),
+      );
+    } catch (thrown) {
+      error = thrown;
+    }
+
+    if (!isRedirect(error)) throw new Error('Expected a redirect');
+    expect(error.options.search).toEqual({ link: 'invalid' });
   });
 
   it('shows the expired-link page when nothing is kept under the key', async () => {

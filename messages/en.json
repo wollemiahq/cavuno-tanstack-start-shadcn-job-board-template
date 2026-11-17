@@ -2554,7 +2554,6 @@
   "settings_unsubscribedBody": "You’ll no longer receive {channel} emails. You can turn them back on any time from your account settings.",
   "settings_unsubscribedHeading": "You’re unsubscribed",
   "settings_unsubscribeCta": "Unsubscribe from {channel} emails",
-  "settings_unsubscribeError": "That didn't work. Open the Unsubscribe link in your email again.",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Account",
   "siteHeader_addNewCompanyLabel": "Add new company",
