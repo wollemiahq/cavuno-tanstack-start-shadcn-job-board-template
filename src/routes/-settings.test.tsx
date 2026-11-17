@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { BoardApiError } from '@cavuno/board';
 import {
   RouterProvider,
   isRedirect,
@@ -239,8 +240,19 @@ describe('settings unsubscribe recovery', () => {
     });
   });
 
-  it('offers sign-in when the click fails, so a refused link is no dead end', async () => {
-    unsubscribeWithLink.mockRejectedValue(new Error('email_link_expired'));
+  it.each([
+    ['its cookie expired', new Error('email_link_expired')],
+    [
+      'the API refused its token',
+      new BoardApiError({
+        status: 401,
+        code: 'board_auth_invalid_token',
+        message: 'Invalid or expired unsubscribe link',
+        raw: undefined,
+      }),
+    ],
+  ])('offers sign-in when the link fails because %s', async (_, failure) => {
+    unsubscribeWithLink.mockRejectedValue(failure);
     await renderSettingsData({
       mode: 'unsubscribe',
       channel: 'messageEmails',
@@ -260,6 +272,34 @@ describe('settings unsubscribe recovery', () => {
     expect(
       within(alert).getByRole('link', { name: m.settings_signInLabel() }),
     ).toBeInTheDocument();
+  });
+
+  it('keeps the button for another try when the API is briefly down', async () => {
+    unsubscribeWithLink.mockRejectedValue(
+      new BoardApiError({
+        status: 503,
+        code: 'service_unavailable',
+        message: 'Try again',
+        raw: undefined,
+      }),
+    );
+    await renderSettingsData({
+      mode: 'unsubscribe',
+      channel: 'messageEmails',
+      link: LINK,
+    });
+    const name = m.settings_unsubscribeCta({
+      channel: m.settings_channelMessage(),
+    });
+    fireEvent.click(screen.getByRole('button', { name }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.alertsManage_actionErrorText(),
+    );
+    expect(screen.getByRole('button', { name })).toBeEnabled();
+    expect(
+      screen.queryByRole('heading', { name: m.settings_linkExpiredHeading() }),
+    ).toBeNull();
   });
 
   it('opens a malformed link on a key that is never kept', async () => {

@@ -13,6 +13,7 @@
  */
 import { useState } from 'react';
 
+import { isBoardApiError } from '@cavuno/board';
 import { isRedirect, Link, redirect } from '@tanstack/react-router';
 
 import { DangerZone } from '../components/danger-zone';
@@ -298,18 +299,24 @@ function UnsubscribeLinkPage({
   link: string;
   dependencies: SettingsRouteDependencies;
 }) {
-  const [state, setState] = useState<'idle' | 'pending' | 'done' | 'failed'>(
-    'idle',
-  );
+  const [state, setState] = useState<
+    'idle' | 'pending' | 'done' | 'refused' | 'retry'
+  >('idle');
   const channelName = CHANNEL_NAMES[channel]();
-  if (state === 'failed') return <LinkExpiredPage alert />;
+  if (state === 'refused') return <LinkExpiredPage alert />;
   const unsubscribe = async () => {
     setState('pending');
     try {
       await dependencies.unsubscribeWithLink({ data: { link } });
       setState('done');
-    } catch {
-      setState('failed');
+    } catch (error) {
+      // The link can't work when its cookie is gone or the API refused it
+      // (a wrong or tampered token, or a deleted person): any 4xx but 429.
+      // A 429, a 5xx or a lost connection can be tried again.
+      const refused = isBoardApiError(error)
+        ? error.status >= 400 && error.status < 500 && error.status !== 429
+        : error instanceof Error && error.message === 'email_link_expired';
+      setState(refused ? 'refused' : 'retry');
     }
   };
 
@@ -340,6 +347,11 @@ function UnsubscribeLinkPage({
               <Button disabled={state === 'pending'} onClick={unsubscribe}>
                 {m.settings_unsubscribeCta({ channel: channelName })}
               </Button>
+              {state === 'retry' ? (
+                <p role="alert" className="text-destructive text-sm">
+                  {m.alertsManage_actionErrorText()}
+                </p>
+              ) : null}
             </>
           )}
         </div>
