@@ -56,7 +56,6 @@ export const unsubscribeAllEmailPreferences = createServerFn({
   method: 'POST',
 })
   .validator((input: { token: string }) => input)
-  .handler(
-    ({ data }): Promise<EmailPreferences> =>
-      getBoard().emailPreferences.unsubscribeAll(data.token),
+  .handler(({ data }): Promise<EmailPreferences> =>
+    getBoard().emailPreferences.unsubscribeAll(data.token),
   );
