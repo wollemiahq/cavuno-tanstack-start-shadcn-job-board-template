@@ -21,14 +21,6 @@ const related: RelatedSearch[] = [
     displayName: 'Technik',
     count: 4,
   },
-  {
-    type: 'market',
-    slug: 'robotics',
-    canonicalSlug: 'robotik',
-    term: 'Robotics',
-    displayName: 'Robotik',
-    count: 3,
-  },
 ];
 
 describe('relatedSearchesToChips', () => {
@@ -40,11 +32,6 @@ describe('relatedSearchesToChips', () => {
         href: '/jobs/skills/kuenstliche-intelligenz',
       },
       { key: 'category-engineering', name: 'Technik', href: '/jobs/technik' },
-      {
-        key: 'market-robotics',
-        name: 'Robotik',
-        href: '/companies/markets/robotik',
-      },
     ]);
   });
 });
@@ -61,7 +48,6 @@ describe('relatedSearchesToChips on a place', () => {
       '/jobs/locations/berlin/skills/kuenstliche-intelligenz',
       // Below the thin-content floor: the board-wide page, never a thin combination.
       '/jobs/technik',
-      '/companies/markets/robotik',
       '/jobs/locations/berlin/sicherheit',
     ]);
   });
@@ -70,7 +56,6 @@ describe('relatedSearchesToChips on a place', () => {
     expect(relatedSearchesToChips(onPlace, null).map((c) => c.href)).toEqual([
       '/jobs/skills/kuenstliche-intelligenz',
       '/jobs/technik',
-      '/companies/markets/robotik',
       '/jobs/sicherheit',
     ]);
   });

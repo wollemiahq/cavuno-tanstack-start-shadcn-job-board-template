@@ -21,6 +21,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 
 import {
   formatSalaryRange,
+  indexableSalaryItems,
   salarySkillInLocationPath,
   salarySkillLocationsPath,
   toOverallSalaryVM,
@@ -78,7 +79,9 @@ function SkillSalaryPage() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
-  const companyItems: RailItem[] = salary.topCompanies.map((x) => ({
+  const companyItems: RailItem[] = indexableSalaryItems(
+    salary.topCompanies,
+  ).map((x) => ({
     name: x.companyName,
     href: companySalaryPath(x.companySlug),
     range:
@@ -94,7 +97,9 @@ function SkillSalaryPage() {
   // Cross-axis: "{Skill} salaries in {Place}" (mirrors the hosted board). The
   // skill×location loader resolves + 308s the inbound placeSlug, so the target
   // always has data — unlike the generic /salaries/locations/{place} page.
-  const locationItems: RailItem[] = salary.topLocations.map((x) => ({
+  const locationItems: RailItem[] = indexableSalaryItems(
+    salary.topLocations,
+  ).map((x) => ({
     name: x.placeName,
     href: salarySkillInLocationPath(salary.canonicalSlug, x.placeSlug),
     range:
@@ -106,19 +111,23 @@ function SkillSalaryPage() {
       ) ?? '',
     jobCount: x.jobCount,
   }));
-  const titleItems: RailItem[] = salary.topTitles.map((x) => ({
-    name: x.categoryName,
-    href: salaryTitlePath(x.categorySlug),
-    range:
-      formatSalaryRange(
-        locale,
-        x.avgSalaryMin,
-        x.avgSalaryMax,
-        salary.currency,
-      ) ?? '',
-    jobCount: x.jobCount,
-  }));
-  const relatedItems: RailItem[] = salary.relatedSkills.map((x) => ({
+  const titleItems: RailItem[] = indexableSalaryItems(salary.topTitles).map(
+    (x) => ({
+      name: x.categoryName,
+      href: salaryTitlePath(x.categorySlug),
+      range:
+        formatSalaryRange(
+          locale,
+          x.avgSalaryMin,
+          x.avgSalaryMax,
+          salary.currency,
+        ) ?? '',
+      jobCount: x.jobCount,
+    }),
+  );
+  const relatedItems: RailItem[] = indexableSalaryItems(
+    salary.relatedSkills,
+  ).map((x) => ({
     name: x.skillName,
     href: salarySkillPath(x.skillSlug),
     range:

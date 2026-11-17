@@ -853,6 +853,9 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Rows carry the Board API's verdict for the page each links to; list
+      // only indexable pages.
+      const titles = indexableSalaryItems(payload.titles);
       const c = breadcrumbsCopy();
       // Flat hosted shape: Home › Salaries › Locations › {Place}(linked) › Titles.
       const breadcrumbTrail = [
@@ -880,7 +883,7 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_titlesInPlaceMetaDescription({
                 place: payload.placeName,
-                count: payload.titles.length,
+                count: titles.length,
               }),
             },
           ],
@@ -899,7 +902,7 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.titles.map((t) => ({
+            titles.map((t) => ({
               name: t.name,
               url: boardUrl(
                 seo.origin,
@@ -928,7 +931,13 @@ export const getLocationTitlesPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, breadcrumbTrail, head, jsonLd };
+      return {
+        data: { ...payload, titles },
+        seo,
+        breadcrumbTrail,
+        head,
+        jsonLd,
+      };
     }),
   );
 
@@ -945,6 +954,9 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Rows carry the Board API's verdict for the page each links to; list
+      // only indexable pages.
+      const skills = indexableSalaryItems(payload.skills);
       const c = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: c.home, href: BOARD_PATHS.home },
@@ -971,7 +983,7 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_skillsInPlaceMetaDescription({
                 place: payload.placeName,
-                count: payload.skills.length,
+                count: skills.length,
               }),
             },
           ],
@@ -990,7 +1002,7 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.skills.map((s) => ({
+            skills.map((s) => ({
               name: s.name,
               url: boardUrl(
                 seo.origin,
@@ -1019,7 +1031,13 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, breadcrumbTrail, head, jsonLd };
+      return {
+        data: { ...payload, skills },
+        seo,
+        breadcrumbTrail,
+        head,
+        jsonLd,
+      };
     }),
   );
 

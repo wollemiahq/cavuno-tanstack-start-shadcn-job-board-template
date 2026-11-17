@@ -91,6 +91,14 @@ describe('company view models', () => {
             slug: 'developer-tools',
             canonicalSlug: 'developer-tools',
             displayName: 'Developer tools',
+            indexable: true,
+          },
+          {
+            name: 'Robotics',
+            slug: 'robotics',
+            canonicalSlug: 'robotics',
+            displayName: 'Robotics',
+            indexable: false,
           },
         ],
       } satisfies PublicCompanyDetail,
@@ -104,6 +112,8 @@ describe('company view models', () => {
         name: 'Developer tools',
         href: '/companies/markets/developer-tools',
       },
+      // A market page the API marks not indexable is named, not linked.
+      { key: 'robotics', name: 'Robotics', href: null },
     ]);
     expect(vm.websiteHref).toBe('https://acme.example');
     expect(vm.websiteLabel).toBe('acme.example');

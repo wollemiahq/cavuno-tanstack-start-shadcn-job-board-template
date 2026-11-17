@@ -17,6 +17,7 @@ import { SalaryPendingPage } from './-salary-pending-page';
 import {
   companyCategorySalaryPath,
   formatSalaryRange,
+  indexableSalaryItems,
   toOverallSalaryVM,
   toSalaryBreadcrumbVM,
   toSalaryFaqVM,
@@ -84,7 +85,9 @@ function CompanyCategorySalaryPage() {
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
-  const competitorItems: RailItem[] = salary.competitors.map((x) => ({
+  const competitorItems: RailItem[] = indexableSalaryItems(
+    salary.competitors,
+  ).map((x) => ({
     name: x.companyName,
     href: companyCategorySalaryPath(
       x.companySlug,

@@ -59,12 +59,19 @@ function LocationTree({
     <ul className="space-y-1.5">
       {nodes.map((n) => (
         <li key={n.placeSlug}>
-          <Link
-            to={salaryLocationPath(n.placeSlug)}
-            className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            {n.placeName}
-          </Link>
+          {/* A place whose page the Board API marks not indexable is named,
+              not linked; its indexable children below still link. An absent
+              flag (an older API) stays linked. */}
+          {n.indexable === false ? (
+            <span className="text-foreground font-medium">{n.placeName}</span>
+          ) : (
+            <Link
+              to={salaryLocationPath(n.placeSlug)}
+              className="text-foreground outline-ring hover:text-foreground/80 rounded-xs font-medium transition-colors hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {n.placeName}
+            </Link>
+          )}
           <span className="text-muted-foreground text-sm tabular-nums">
             {' · '}
             {formatSalaryRange(locale, n.avgSalaryMin, n.avgSalaryMax, null) ??

@@ -92,7 +92,7 @@ function openJobsHeading(count: number) {
 const rootApi = getRouteApi('__root__');
 
 function CompanyPage() {
-  const { company, jobs, similar, salarySummary, hasSalaries, thinMarkets } =
+  const { company, jobs, similar, salarySummary, hasSalaries } =
     Route.useLoaderData();
   const { board } = rootApi.useLoaderData();
 
@@ -250,8 +250,8 @@ function CompanyPage() {
                   </span>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {company.markets.map((market) =>
-                      // A thin market's page is noindexed: name it, don't link it.
-                      thinMarkets.includes(market.slug) ? (
+                      // A noindexed market page: name it, don't link it.
+                      !market.indexable ? (
                         <Badge key={market.slug} variant="secondary">
                           {market.displayName}
                         </Badge>
