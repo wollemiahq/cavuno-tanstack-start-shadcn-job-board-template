@@ -67,11 +67,9 @@ function alertLabel(alert: PreferenceAlert) {
  */
 export function EmailPreferencesPageView({
   data,
-  token,
   dependencies = emailPreferencesDependencies,
 }: {
   data: EmailPreferencesData;
-  token: string | undefined;
   dependencies?: Pick<
     EmailPreferencesDependencies,
     | 'getEmailPreferences'
@@ -85,7 +83,7 @@ export function EmailPreferencesPageView({
   const [failed, setFailed] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  if (!prefs || !token) {
+  if (!prefs) {
     return (
       <Page width="narrow">
         <PageContent>
@@ -114,7 +112,7 @@ export function EmailPreferencesPageView({
       // Show what is true now: a link that stopped working turns into the
       // invalid-link page, and an alert or topic removed elsewhere goes.
       try {
-        setPrefs(await dependencies.getEmailPreferences({ data: { token } }));
+        setPrefs(await dependencies.getEmailPreferences());
       } catch {
         // Keep what the page shows; the error says the change didn't save.
       }
@@ -123,9 +121,7 @@ export function EmailPreferencesPageView({
     }
   };
   const update = (changes: EmailPreferencesUpdate) =>
-    run(() =>
-      dependencies.updateEmailPreferences({ data: { token, changes } }),
-    );
+    run(() => dependencies.updateEmailPreferences({ data: { changes } }));
   // Turning something on is the person's opt-in, recorded with the wording
   // they saw; turning it off sends only the change.
   const optIn = (consentText: string) => ({ consentText, source: SOURCE });
@@ -315,9 +311,7 @@ export function EmailPreferencesPageView({
                     onClick={() => {
                       setConfirming(false);
                       void run(() =>
-                        dependencies.unsubscribeAllEmailPreferences({
-                          data: { token },
-                        }),
+                        dependencies.unsubscribeAllEmailPreferences(),
                       );
                     }}
                   >

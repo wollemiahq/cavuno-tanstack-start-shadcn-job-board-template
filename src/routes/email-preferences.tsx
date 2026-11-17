@@ -6,6 +6,10 @@
  *
  * The older `/alerts/manage` and `/settings` pages stay: emails already sent
  * link there with their own tokens.
+ *
+ * The link's `?token` never stays in the address bar: the loader keeps it
+ * in an httpOnly cookie and redirects to `/email-preferences`, so analytics,
+ * referrers and screenshots don't capture it, and a reload still works.
  */
 import { createFileRoute } from '@tanstack/react-router';
 
@@ -34,7 +38,5 @@ export const Route = createFileRoute('/email-preferences')({
 });
 
 function EmailPreferencesPage() {
-  const data = Route.useLoaderData();
-  const { token } = Route.useSearch();
-  return <EmailPreferencesPageView data={data} token={token} />;
+  return <EmailPreferencesPageView data={Route.useLoaderData()} />;
 }

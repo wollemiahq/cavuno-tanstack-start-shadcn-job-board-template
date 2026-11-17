@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { isRedirect } from '@tanstack/react-router';
 import {
   cleanup,
   fireEvent,
@@ -51,6 +52,8 @@ const prefs = {
 
 function dependencies() {
   return {
+    keepEmailPreferencesToken:
+      vi.fn<EmailPreferencesDependencies['keepEmailPreferencesToken']>(),
     getEmailPreferences:
       vi.fn<EmailPreferencesDependencies['getEmailPreferences']>(),
     getSeoBase: vi.fn(async () => ({ boardName: BOARD })),
@@ -64,12 +67,10 @@ function dependencies() {
 function renderPage(
   data: Partial<EmailPreferencesData>,
   deps = dependencies(),
-  token: string | undefined = 'tok',
 ) {
   render(
     <EmailPreferencesPageView
       data={{ prefs, seo: { boardName: BOARD }, ...data }}
-      token={token}
       dependencies={deps}
     />,
   );
@@ -82,14 +83,30 @@ afterEach(() => {
 });
 
 describe('email preferences loader', () => {
-  it('reads nothing without a token, and marks the page noindex', async () => {
+  it('keeps the link token in the cookie and opens the page again without it', async () => {
     const deps = dependencies();
     const load = createEmailPreferencesLoader(deps);
-    expect(await load({ deps: {} })).toEqual({
-      prefs: null,
-      seo: { boardName: BOARD },
+    await expect(load({ deps: { token: 'tok' } })).rejects.toSatisfy(
+      isRedirect,
+    );
+    await expect(load({ deps: { token: 'tok' } })).rejects.toMatchObject({
+      options: { to: '/email-preferences', search: {} },
+    });
+    expect(deps.keepEmailPreferencesToken).toHaveBeenCalledWith({
+      data: { token: 'tok' },
     });
     expect(deps.getEmailPreferences).not.toHaveBeenCalled();
+  });
+
+  it('reads with the token the cookie keeps, and marks the page noindex', async () => {
+    const deps = dependencies();
+    deps.getEmailPreferences.mockResolvedValue(prefs);
+    const load = createEmailPreferencesLoader(deps);
+    expect(await load({ deps: {} })).toEqual({
+      prefs,
+      seo: { boardName: BOARD },
+    });
+    expect(deps.keepEmailPreferencesToken).not.toHaveBeenCalled();
     expect(emailPreferencesHead(undefined).meta).toContainEqual({
       name: 'robots',
       content: 'noindex',
@@ -127,7 +144,6 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
       data: {
-        token: 'tok',
         changes: {
           marketing: true,
           consentText: m.emailPreferences_marketingConsent({ board: BOARD }),
@@ -153,7 +169,6 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenLastCalledWith({
       data: {
-        token: 'tok',
         changes: { topics: [{ key: 'events', subscribed: false }] },
       },
     });
@@ -164,7 +179,6 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenLastCalledWith({
       data: {
-        token: 'tok',
         changes: {
           topics: [{ key: 'salary-reports', subscribed: true }],
           consentText: m.emailPreferences_topicConsent({
@@ -197,7 +211,6 @@ describe('email preferences page', () => {
     );
     expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
       data: {
-        token: 'tok',
         changes: { alerts: [{ id: 'alert-1', delete: true }] },
       },
     });
@@ -262,7 +275,7 @@ describe('email preferences page', () => {
     );
     await waitFor(() =>
       expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
-        data: { token: 'tok', changes: { jobMatches: false } },
+        data: { changes: { jobMatches: false } },
       }),
     );
   });
@@ -289,8 +302,6 @@ describe('email preferences page', () => {
         screen.getByText(m.emailPreferences_unsubscribedAll({ board: BOARD })),
       ).toBeInTheDocument(),
     );
-    expect(deps.unsubscribeAllEmailPreferences).toHaveBeenCalledWith({
-      data: { token: 'tok' },
-    });
+    expect(deps.unsubscribeAllEmailPreferences).toHaveBeenCalledTimes(1);
   });
 });

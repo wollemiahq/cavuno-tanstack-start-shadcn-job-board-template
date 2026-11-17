@@ -4,9 +4,12 @@
  * page into the shared client entry. The loader only reads: mail scanners
  * open the footer link before people do.
  */
+import { redirect } from '@tanstack/react-router';
+
 import { m } from '../paraglide/messages';
 import {
   getEmailPreferences,
+  keepEmailPreferencesToken,
   unsubscribeAllEmailPreferences,
   updateEmailPreferences,
 } from '../server/email-preferences';
@@ -23,20 +26,21 @@ export type EmailPreferencesData = {
 };
 export type EmailPreferencesSearch = { token?: string };
 
+/** The reads and changes use the token the server keeps in its cookie. */
 export type EmailPreferencesDependencies = {
-  getEmailPreferences: (options: {
+  keepEmailPreferencesToken: (options: {
     data: { token: string };
-  }) => Promise<EmailPreferences | null>;
+  }) => Promise<void>;
+  getEmailPreferences: () => Promise<EmailPreferences | null>;
   getSeoBase: () => Promise<Seo>;
   updateEmailPreferences: (options: {
-    data: { token: string; changes: EmailPreferencesUpdate };
+    data: { changes: EmailPreferencesUpdate };
   }) => Promise<EmailPreferences>;
-  unsubscribeAllEmailPreferences: (options: {
-    data: { token: string };
-  }) => Promise<EmailPreferences>;
+  unsubscribeAllEmailPreferences: () => Promise<EmailPreferences>;
 };
 
 export const emailPreferencesDependencies: EmailPreferencesDependencies = {
+  keepEmailPreferencesToken,
   getEmailPreferences,
   getSeoBase,
   updateEmailPreferences,
@@ -51,10 +55,16 @@ export function createEmailPreferencesLoader(
   }: {
     deps: EmailPreferencesSearch;
   }): Promise<EmailPreferencesData> => {
+    // The link's token goes into the cookie, and the page opens again
+    // without it, before any script on it runs.
+    if (deps.token) {
+      await dependencies.keepEmailPreferencesToken({
+        data: { token: deps.token },
+      });
+      throw redirect({ to: '/email-preferences', search: {}, replace: true });
+    }
     const [prefs, seo] = await Promise.all([
-      deps.token
-        ? dependencies.getEmailPreferences({ data: { token: deps.token } })
-        : null,
+      dependencies.getEmailPreferences(),
       dependencies.getSeoBase(),
     ]);
     return { prefs, seo };
