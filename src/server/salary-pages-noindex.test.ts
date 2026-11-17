@@ -37,6 +37,7 @@ const api = vi.hoisted(() => ({
   titlesList: vi.fn(),
   skillsList: vi.fn(),
   locationsList: vi.fn(),
+  locationRetrieve: vi.fn(),
   companiesList: vi.fn(),
 }));
 vi.mock('../lib/board', () => ({
@@ -44,13 +45,17 @@ vi.mock('../lib/board', () => ({
     salaries: {
       titles: { retrieve: api.titleRetrieve, list: api.titlesList },
       skills: { retrieve: api.skillRetrieve, list: api.skillsList },
-      locations: { list: api.locationsList },
+      locations: {
+        list: api.locationsList,
+        retrieve: api.locationRetrieve,
+      },
       companies: { list: api.companiesList },
     },
   }),
 }));
 
 import {
+  getLocationSalaryPage,
   getSalaryHubPage,
   getSalaryTitlesIndexPage,
   getSkillSalaryPage,
@@ -213,5 +218,44 @@ describe('salary hub robots meta', () => {
     );
     const page = await getSalaryHubPage();
     expect(page.head.meta).toContainEqual(noindexMeta);
+  });
+});
+
+describe('location salary page structured data', () => {
+  function titleRow(categorySlug: string, indexable: boolean) {
+    return {
+      categorySlug,
+      categoryName: categorySlug,
+      avgSalaryMin: 90_000,
+      avgSalaryMax: 120_000,
+      jobCount: 12,
+      indexable,
+    };
+  }
+
+  it('lists only indexable top titles, at the title-in-city page on a city', async () => {
+    api.locationRetrieve.mockResolvedValue({
+      object: 'location_salary_detail',
+      sourceSlug: 'fixture-city',
+      canonicalSlug: 'fixture-city',
+      placeName: 'Fixture city',
+      adminLevel: 'city',
+      overallSalary: overall(20),
+      childLocations: [],
+      childLocationsByRegion: [],
+      siblingLocations: [],
+      topCategories: [titleRow('title-in', true), titleRow('title-out', false)],
+      topSkills: [],
+      currency: 'USD',
+      indexable: true,
+    });
+    const page = await getLocationSalaryPage({
+      data: { slug: 'fixture-city' },
+    });
+    const jsonLd = JSON.stringify(page.jsonLd);
+    expect(jsonLd).toContain(
+      'https://fixture.example/salaries/titles/title-in/fixture-city',
+    );
+    expect(jsonLd).not.toContain('title-out');
   });
 });

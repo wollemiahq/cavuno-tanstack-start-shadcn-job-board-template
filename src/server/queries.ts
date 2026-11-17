@@ -19,7 +19,6 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
-import { indexableSalaryItems } from '../board/salary-view-model';
 import { validateAnchorJobInput } from '../lib/anchor-job-input';
 import { getBoard } from '../lib/board';
 import { APPLY_GATEWAY_QUERY } from '../lib/board';
@@ -1185,7 +1184,7 @@ export const getCompanySalarySummary = createServerFn({ method: 'GET' })
         );
         return {
           overallSalary: salary.overallSalary,
-          byCategory: indexableSalaryItems(salary.topCategories).slice(
+          byCategory: salary.topCategories.slice(
             0,
             COMPANY_SALARY_SUMMARY_CATEGORIES,
           ),

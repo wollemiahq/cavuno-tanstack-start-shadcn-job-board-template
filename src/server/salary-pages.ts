@@ -369,7 +369,7 @@ export const getSalaryLocationsIndexPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            locations.data.map((l) => ({
+            indexableSalaryItems(locations.data).map((l) => ({
               name: l.placeName,
               url: selfUrl(seo.origin, salaryLocationPath(l.placeSlug)),
             })),
@@ -645,12 +645,30 @@ export const getLocationSalaryPage = createServerFn({ method: 'GET' })
         salary.currency,
       );
       const faqs = composeSalaryFaqs(faqEntries);
+      const isCity =
+        salary.adminLevel === 'city' || salary.adminLevel === 'locality';
       const jsonLd = asJsonObjects(
         [
-          locationSalaryJsonLd(salary, {
-            occupationUrl: ({ categorySlug }) =>
-              selfUrl(seo.origin, salaryTitlePath(categorySlug)),
-          }),
+          locationSalaryJsonLd(
+            {
+              ...salary,
+              topCategories: indexableSalaryItems(salary.topCategories),
+            },
+            {
+              // Same targets as the page's top-title cards: title-in-city on a
+              // city, the title page elsewhere.
+              occupationUrl: ({ categorySlug }) =>
+                selfUrl(
+                  seo.origin,
+                  isCity
+                    ? salaryTitleInLocationPath(
+                        categorySlug,
+                        salary.canonicalSlug,
+                      )
+                    : salaryTitlePath(categorySlug),
+                ),
+            },
+          ),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },

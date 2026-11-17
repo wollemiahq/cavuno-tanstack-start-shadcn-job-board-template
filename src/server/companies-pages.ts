@@ -387,7 +387,7 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
           );
           return {
             overallSalary: salary.overallSalary,
-            byCategory: indexableSalaryItems(salary.topCategories).slice(
+            byCategory: salary.topCategories.slice(
               0,
               COMPANY_SALARY_SUMMARY_CATEGORIES,
             ),
@@ -654,13 +654,16 @@ export const getCompanySalariesPage = createServerFn({ method: 'GET' })
       const faqs = composeSalaryFaqs(faqEntries);
       const jsonLd = asJsonObjects(
         [
-          companySalaryJsonLd(salary, {
-            occupationUrl: ({ categorySlug }) =>
-              boardUrl(
-                seo.origin,
-                companyCategorySalaryPath(salary.companySlug, categorySlug),
-              ),
-          }),
+          companySalaryJsonLd(
+            { ...salary, byCategory: indexableSalaryItems(salary.byCategory) },
+            {
+              occupationUrl: ({ categorySlug }) =>
+                boardUrl(
+                  seo.origin,
+                  companyCategorySalaryPath(salary.companySlug, categorySlug),
+                ),
+            },
+          ),
           faqJsonLd(faqs),
           createBreadcrumbJsonLd([
             { label: c.home, href: selfUrl(seo.origin, '/') },

@@ -13,6 +13,7 @@ import { toJobCardVM } from '@/board/job-view-model';
 import {
   companyCategorySalaryPath,
   formatSalaryRange,
+  indexableSalaryItems,
   toOverallSalaryVM,
   toSalaryRailVM,
   type RailItem,
@@ -110,20 +111,20 @@ function CompanyPage() {
         salarySummary.currency,
       )
     : null;
-  const salaryCategoryItems: RailItem[] = salarySummary.byCategory.map(
-    (category) => ({
-      name: category.categoryName,
-      href: companyCategorySalaryPath(company.slug, category.categorySlug),
-      range:
-        formatSalaryRange(
-          getLocale(),
-          category.avgSalaryMin,
-          category.avgSalaryMax,
-          salarySummary.currency,
-        ) ?? '',
-      jobCount: category.jobCount,
-    }),
-  );
+  const salaryCategoryItems: RailItem[] = indexableSalaryItems(
+    salarySummary.byCategory,
+  ).map((category) => ({
+    name: category.categoryName,
+    href: companyCategorySalaryPath(company.slug, category.categorySlug),
+    range:
+      formatSalaryRange(
+        getLocale(),
+        category.avgSalaryMin,
+        category.avgSalaryMax,
+        salarySummary.currency,
+      ) ?? '',
+    jobCount: category.jobCount,
+  }));
   const salaryCategoriesVM = toSalaryRailVM(
     undefined,
     salaryCategoryItems,
