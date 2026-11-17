@@ -43,9 +43,14 @@ export function localizedUrlRedirect(
   const location = localizedRedirectLocation(request, routing);
   if (location === null) return null;
   // Bounded: an uncached 308 is kept forever, so a later board-language
-  // change would strand returning visitors on the old word.
+  // change would strand returning visitors on the old word. An email link's
+  // `?token` is a credential, so its redirect is never stored, like /go's.
+  const hasToken = new URL(request.url).searchParams.has('token');
   return new Response(null, {
     status: 308,
-    headers: { Location: location, 'Cache-Control': 'max-age=86400' },
+    headers: {
+      Location: location,
+      'Cache-Control': hasToken ? 'private, no-store' : 'max-age=86400',
+    },
   });
 }

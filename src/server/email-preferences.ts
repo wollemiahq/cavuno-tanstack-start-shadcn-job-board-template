@@ -5,7 +5,7 @@
  * every change is a person's click.
  *
  * The link's token goes straight into an httpOnly cookie
- * (src/lib/email-preferences-cookie.ts) under a random key, and the page
+ * (src/lib/email-link-cookies.ts) under a random key, and the page
  * redirects to itself with only the key (`?person=`), so no page script,
  * analytics tag, referrer or screenshot sees the token. Every read
  * and change below names the person and uses the token kept for them, and
@@ -13,24 +13,12 @@
  */
 import { isBoardApiError } from '@cavuno/board';
 import { createServerFn } from '@tanstack/react-start';
-import {
-  appendResponseHeader,
-  getRequest,
-  getRequestHeader,
-} from '@tanstack/react-start/server';
+import { getRequest } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
-import {
-  dropEmailPreferencesEntry,
-  emailPreferencesPeopleToDrop,
-  findEmailPreferencesPerson,
-  findEmailPreferencesToken,
-  isEmailPreferencesPerson,
-  isEmailPreferencesToken,
-  keepEmailPreferencesEntry,
-  newEmailPreferencesPerson,
-} from '../lib/email-preferences-cookie';
+import { EMAIL_LINK_PREFIXES } from '../lib/email-link-cookies';
 import { requestOrigin } from '../lib/request-origin';
+import { emailLink } from './email-link';
 
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
 
@@ -62,33 +50,7 @@ export function withConsentPage(
   return { ...rest, pageUrl: url.toString() };
 }
 
-const cookieHeader = () => getRequestHeader('cookie') ?? null;
-
-/** The token kept for `person`: null when the cookie holds none for them. */
-function keptToken(person: string | undefined): string | null {
-  if (!person || !isEmailPreferencesPerson(person)) return null;
-  return findEmailPreferencesToken(cookieHeader(), person);
-}
-
-function renew(person: string, token: string) {
-  const cookie = keepEmailPreferencesEntry(person, token);
-  if (cookie) appendResponseHeader('Set-Cookie', cookie);
-}
-
-/**
- * Runs `action` with the token kept for `person`, renewing it. Throws when
- * none is kept; the page then reads again and says to open the email's link.
- */
-async function withKeptToken<T>(
-  person: string,
-  action: (token: string) => Promise<T>,
-): Promise<T> {
-  const token = keptToken(person);
-  if (!token) throw new Error('email_preferences_link_expired');
-  const result = await action(token);
-  renew(person, token);
-  return result;
-}
+const link = emailLink(EMAIL_LINK_PREFIXES.emailPreferences);
 
 /**
  * Keeps the link's token in a cookie, under the key it returns (the one
@@ -98,18 +60,7 @@ async function withKeptToken<T>(
  */
 export const keepEmailPreferencesToken = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
-  .handler(({ data }): string | null => {
-    if (!isEmailPreferencesToken(data.token)) return null;
-    const known = findEmailPreferencesPerson(cookieHeader(), data.token);
-    if (!known) {
-      for (const person of emailPreferencesPeopleToDrop(cookieHeader())) {
-        appendResponseHeader('Set-Cookie', dropEmailPreferencesEntry(person));
-      }
-    }
-    const person = known ?? newEmailPreferencesPerson();
-    renew(person, data.token);
-    return person;
-  });
+  .handler(({ data }): string | null => link.keep(data.token));
 
 /**
  * What the page shows: the person's preferences; `link_expired` when no
@@ -121,21 +72,18 @@ export const getEmailPreferences = createServerFn({ method: 'POST' })
   .validator((input: { person?: string }) => input)
   .handler(async ({ data }): Promise<EmailPreferencesRead> => {
     if (!data.person) return 'invalid_link';
-    const token = keptToken(data.person);
+    const token = link.find(data.person);
     if (!token) return 'link_expired';
     try {
       const prefs = await getBoard().emailPreferences.get(token);
-      renew(data.person, token);
+      link.renew(data.person, token);
       return prefs;
     } catch (error) {
       if (
         isBoardApiError(error) &&
         error.code === 'email_preferences_token_invalid'
       ) {
-        appendResponseHeader(
-          'Set-Cookie',
-          dropEmailPreferencesEntry(data.person),
-        );
+        link.drop(data.person);
         return 'invalid_link';
       }
       throw error;
@@ -147,7 +95,7 @@ export const updateEmailPreferences = createServerFn({ method: 'POST' })
     (input: { person: string; changes: EmailPreferencesUpdate }) => input,
   )
   .handler(({ data }): Promise<EmailPreferences> =>
-    withKeptToken(data.person, (token) =>
+    link.withValue(data.person, (token) =>
       getBoard().emailPreferences.update(
         token,
         withConsentPage(
@@ -164,7 +112,7 @@ export const unsubscribeAllEmailPreferences = createServerFn({
 })
   .validator((input: { person: string }) => input)
   .handler(({ data }): Promise<EmailPreferences> =>
-    withKeptToken(data.person, (token) =>
+    link.withValue(data.person, (token) =>
       getBoard().emailPreferences.unsubscribeAll(token),
     ),
   );

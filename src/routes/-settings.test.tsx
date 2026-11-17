@@ -2,6 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import {
   RouterProvider,
+  isRedirect,
   createMemoryHistory,
   createRootRoute,
   createRoute,
@@ -33,8 +34,14 @@ const requestSetPassword =
   vi.fn<SettingsRouteDependencies['requestSetPassword']>();
 const updateNotificationPreference =
   vi.fn<SettingsRouteDependencies['updateNotificationPreference']>();
-const unsubscribeWithToken =
-  vi.fn<SettingsRouteDependencies['unsubscribeWithToken']>();
+const keepUnsubscribeLink =
+  vi.fn<SettingsRouteDependencies['keepUnsubscribeLink']>();
+const getUnsubscribeLinkChannel =
+  vi.fn<SettingsRouteDependencies['getUnsubscribeLinkChannel']>();
+const unsubscribeWithLink =
+  vi.fn<SettingsRouteDependencies['unsubscribeWithLink']>();
+const getNotificationPreferences =
+  vi.fn<SettingsRouteDependencies['getNotificationPreferences']>();
 const dependencies: SettingsRouteDependencies = {
   ...settingsRouteDependencies,
   getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
@@ -42,20 +49,29 @@ const dependencies: SettingsRouteDependencies = {
   updatePassword,
   requestSetPassword,
   updateNotificationPreference,
-  unsubscribeWithToken,
+  keepUnsubscribeLink,
+  getUnsubscribeLinkChannel,
+  unsubscribeWithLink,
+  getNotificationPreferences,
 };
 
-function settingsLoaderContext() {
+const LINK = '0123456789abcdef';
+
+const EMAIL_LINK = {
+  token: 'signed-token',
+  boardUserId: 'candidate-1',
+  channel: 'recommendedJobEmails' as const,
+};
+
+function settingsLoaderContext(
+  deps: Parameters<ReturnType<typeof createSettingsLoader>>[0]['deps'],
+) {
   const pathname = '/settings';
   return {
     abortController: new AbortController(),
     preload: false,
     params: {},
-    deps: {
-      token: 'signed-token',
-      boardUserId: 'candidate-1',
-      channel: 'recommendedJobEmails' as const,
-    },
+    deps,
     context: { origin: 'https://board.example' },
     location: {
       href: pathname,
@@ -164,21 +180,87 @@ async function renderSettingsData(
 }
 
 describe('settings unsubscribe recovery', () => {
-  it('accepts a signed recommendation-email unsubscribe before auth', async () => {
-    unsubscribeWithToken.mockResolvedValue({ ok: true });
-    await expect(
-      createSettingsLoader(dependencies)(settingsLoaderContext()),
-    ).resolves.toMatchObject({
-      mode: 'unsubscribed',
+  it('keeps the email link in a cookie and opens the page with only its key', async () => {
+    keepUnsubscribeLink.mockResolvedValue(LINK);
+    let error;
+    try {
+      await createSettingsLoader(dependencies)(
+        settingsLoaderContext(EMAIL_LINK),
+      );
+    } catch (thrown) {
+      error = thrown;
+    }
+
+    if (!isRedirect(error)) throw new Error('Expected a redirect');
+    expect(error.options).toMatchObject({
+      to: '/settings',
+      search: { link: LINK },
+    });
+    expect(keepUnsubscribeLink).toHaveBeenCalledWith({ data: EMAIL_LINK });
+    expect(unsubscribeWithLink).not.toHaveBeenCalled();
+    expect(getNotificationPreferences).not.toHaveBeenCalled();
+  });
+
+  it('opening the link only reads, before auth; the click unsubscribes', async () => {
+    getUnsubscribeLinkChannel.mockResolvedValue('recommendedJobEmails');
+    const data = await createSettingsLoader(dependencies)(
+      settingsLoaderContext({ link: LINK }),
+    );
+    expect(data).toMatchObject({
+      mode: 'unsubscribe',
       channel: 'recommendedJobEmails',
+      link: LINK,
     });
-    expect(unsubscribeWithToken).toHaveBeenCalledWith({
-      data: {
-        token: 'signed-token',
-        boardUserId: 'candidate-1',
-        channel: 'recommendedJobEmails',
-      },
+    expect(unsubscribeWithLink).not.toHaveBeenCalled();
+    expect(getNotificationPreferences).not.toHaveBeenCalled();
+
+    unsubscribeWithLink.mockResolvedValue({ ok: true });
+    await renderSettingsData({
+      mode: 'unsubscribe',
+      channel: 'recommendedJobEmails',
+      link: LINK,
     });
+    const channel = m.settings_channelRecommendedJobs();
+    expect(unsubscribeWithLink).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.settings_unsubscribeCta({ channel }),
+      }),
+    );
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      m.settings_unsubscribedBody({ channel }),
+    );
+    expect(unsubscribeWithLink).toHaveBeenCalledExactlyOnceWith({
+      data: { link: LINK },
+    });
+  });
+
+  it('keeps the button and says to reopen the link when the click fails', async () => {
+    unsubscribeWithLink.mockRejectedValue(new Error('email_link_expired'));
+    await renderSettingsData({
+      mode: 'unsubscribe',
+      channel: 'messageEmails',
+      link: LINK,
+    });
+    const name = m.settings_unsubscribeCta({
+      channel: m.settings_channelMessage(),
+    });
+    fireEvent.click(screen.getByRole('button', { name }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      m.settings_unsubscribeError(),
+    );
+    expect(screen.getByRole('button', { name })).toBeEnabled();
+  });
+
+  it('shows the expired-link page when nothing is kept under the key', async () => {
+    getUnsubscribeLinkChannel.mockResolvedValue(null);
+    await expect(
+      createSettingsLoader(dependencies)(
+        settingsLoaderContext({ link: 'invalid' }),
+      ),
+    ).resolves.toMatchObject({ mode: 'unsubscribe-failed' });
   });
 
   it('returns an expired-link recipient to settings after sign in', async () => {

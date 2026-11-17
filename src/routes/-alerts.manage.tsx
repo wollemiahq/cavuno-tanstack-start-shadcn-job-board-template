@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -83,20 +83,18 @@ export function ManagePageView({
   data,
   search,
   invalidate,
-  clearUnsubscribeIntent,
   dependencies = alertManageDependencies,
 }: {
   data: ManageData;
   search: ManageSearch;
   invalidate: () => Promise<void>;
-  clearUnsubscribeIntent: () => void;
   dependencies?: AlertManageDependencies;
 }) {
   const [pending, setPending] = useState(false);
   const [actionError, setActionError] = useState<
     'mutation' | 'reconciliation' | null
   >(null);
-  const { subscription, token } = search;
+  const { link } = search;
   const state = 'state' in data ? data.state : null;
   const anchorJobPaths = 'state' in data ? data.anchorJobPaths : {};
 
@@ -106,8 +104,11 @@ export function ManagePageView({
     try {
       await action();
     } catch {
-      setPending(false);
       setActionError('mutation');
+      // Reloads the page's state; when the hour-long cookie has gone, the
+      // page then says to use the link from a recent email.
+      await invalidate().catch(() => undefined);
+      setPending(false);
       return;
     }
     try {
@@ -118,28 +119,6 @@ export function ManagePageView({
     setPending(false);
   };
 
-  // One-click unsubscribe from the email link. The ref keeps it to a single
-  // request (StrictMode double-runs effects); once handled, the param goes so
-  // a reload doesn't unsubscribe again after a resubscribe.
-  const unsubscribeHandled = useRef(false);
-  const wantsUnsubscribe = Boolean(
-    search.unsubscribe && state && subscription && token,
-  );
-  useEffect(() => {
-    if (!wantsUnsubscribe || unsubscribeHandled.current) return;
-    unsubscribeHandled.current = true;
-    if (state?.unsubscribed) {
-      clearUnsubscribeIntent();
-      return;
-    }
-    void run(async () => {
-      await dependencies.unsubscribeJobAlert({
-        data: { subscriptionId: subscription!, token: token! },
-      });
-    }).then(clearUnsubscribeIntent);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per arrival
-  }, [wantsUnsubscribe]);
-
   if ('empty' in data) {
     return (
       <ManageNotice
@@ -148,7 +127,7 @@ export function ManagePageView({
       />
     );
   }
-  if (!state || !subscription || !token) {
+  if (!state || !link) {
     return (
       <ManageNotice
         title={m.alertsManage_invalidTitle()}
@@ -189,7 +168,7 @@ export function ManagePageView({
                   onClick={() =>
                     run(async () => {
                       await dependencies.resubscribeJobAlert({
-                        data: { subscriptionId: subscription, token },
+                        data: { link },
                       });
                     })
                   }
@@ -199,14 +178,14 @@ export function ManagePageView({
               </AlertDescription>
             </Alert>
           ) : (
+            // From the email's Unsubscribe link, the one thing the person
+            // came to do; opening the link changed nothing.
             <Button
-              variant="outline"
+              variant={search.unsubscribe ? 'default' : 'outline'}
               disabled={pending}
               onClick={() =>
                 run(async () => {
-                  await dependencies.unsubscribeJobAlert({
-                    data: { subscriptionId: subscription, token },
-                  });
+                  await dependencies.unsubscribeJobAlert({ data: { link } });
                 })
               }
             >
@@ -247,7 +226,7 @@ export function ManagePageView({
                         run(async () => {
                           await dependencies.deleteJobAlertPreference({
                             data: {
-                              subscriptionId: subscription,
+                              link,
                               preferenceId: preference.id,
                               token: preference.manageToken,
                             },
