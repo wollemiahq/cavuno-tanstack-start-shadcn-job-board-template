@@ -56,7 +56,8 @@
     "onboarding": "onboarding",
     "success": "gelukt",
     "checkout-canceled": "betaling-geannuleerd",
-    "settings": "instellingen"
+    "settings": "instellingen",
+    "email-preferences": "e-mailvoorkeuren"
   },
   "de": {
     "jobs": "jobs",
@@ -116,7 +117,8 @@
     "onboarding": "onboarding",
     "success": "erfolg",
     "checkout-canceled": "zahlung-abgebrochen",
-    "settings": "einstellungen"
+    "settings": "einstellungen",
+    "email-preferences": "e-mail-einstellungen"
   },
   "fr": {
     "jobs": "emplois",
@@ -176,7 +178,8 @@
     "onboarding": "onboarding",
     "success": "succes",
     "checkout-canceled": "paiement-annule",
-    "settings": "parametres"
+    "settings": "parametres",
+    "email-preferences": "preferences-email"
   },
   "es": {
     "jobs": "empleos",
@@ -236,7 +239,8 @@
     "onboarding": "onboarding",
     "success": "exito",
     "checkout-canceled": "pago-cancelado",
-    "settings": "ajustes"
+    "settings": "ajustes",
+    "email-preferences": "preferencias-de-correo"
   },
   "pt": {
     "jobs": "empregos",
@@ -296,7 +300,8 @@
     "onboarding": "onboarding",
     "success": "sucesso",
     "checkout-canceled": "pagamento-cancelado",
-    "settings": "configuracoes"
+    "settings": "configuracoes",
+    "email-preferences": "preferencias-de-email"
   },
   "it": {
     "jobs": "offerte-lavoro",
@@ -356,7 +361,8 @@
     "onboarding": "onboarding",
     "success": "completato",
     "checkout-canceled": "pagamento-annullato",
-    "settings": "impostazioni"
+    "settings": "impostazioni",
+    "email-preferences": "preferenze-email"
   },
   "pl": {
     "jobs": "praca",
@@ -416,7 +422,8 @@
     "onboarding": "onboarding",
     "success": "sukces",
     "checkout-canceled": "platnosc-anulowana",
-    "settings": "ustawienia"
+    "settings": "ustawienia",
+    "email-preferences": "ustawienia-e-mail"
   },
   "cs": {
     "jobs": "prace",
@@ -476,7 +483,8 @@
     "onboarding": "onboarding",
     "success": "hotovo",
     "checkout-canceled": "platba-zrusena",
-    "settings": "nastaveni"
+    "settings": "nastaveni",
+    "email-preferences": "nastaveni-e-mailu"
   },
   "tr": {
     "jobs": "is-ilanlari",
@@ -536,7 +544,8 @@
     "onboarding": "onboarding",
     "success": "basarili",
     "checkout-canceled": "odeme-iptal-edildi",
-    "settings": "ayarlar"
+    "settings": "ayarlar",
+    "email-preferences": "e-posta-tercihleri"
   },
   "sv": {
     "jobs": "lediga-jobb",
@@ -596,7 +605,8 @@
     "onboarding": "kom-igang",
     "success": "klart",
     "checkout-canceled": "betalning-avbruten",
-    "settings": "installningar"
+    "settings": "installningar",
+    "email-preferences": "e-postinstallningar"
   },
   "da": {
     "jobs": "job",
@@ -656,7 +666,8 @@
     "onboarding": "kom-i-gang",
     "success": "gennemfoert",
     "checkout-canceled": "betaling-annulleret",
-    "settings": "indstillinger"
+    "settings": "indstillinger",
+    "email-preferences": "e-mail-praeferencer"
   },
   "nb": {
     "jobs": "stillinger",
@@ -716,7 +727,8 @@
     "onboarding": "kom-i-gang",
     "success": "fullfort",
     "checkout-canceled": "betaling-avbrutt",
-    "settings": "innstillinger"
+    "settings": "innstillinger",
+    "email-preferences": "e-postinnstillinger"
   },
   "fi": {
     "jobs": "tyopaikat",
@@ -776,6 +788,7 @@
     "onboarding": "aloitus",
     "success": "onnistui",
     "checkout-canceled": "maksu-peruttu",
-    "settings": "asetukset"
+    "settings": "asetukset",
+    "email-preferences": "sahkopostiasetukset"
   }
 }

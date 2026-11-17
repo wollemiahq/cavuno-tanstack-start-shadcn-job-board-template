@@ -18,6 +18,7 @@ import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as ComingSoonGateRouteImport } from './routes/coming-soon-gate'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
+import { Route as EmailPreferencesRouteImport } from './routes/email-preferences'
 import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as IndexnowKeyDottxtRouteImport } from './routes/indexnow-key[.]txt'
 import { Route as JobSeekersRouteImport } from './routes/job-seekers'
@@ -169,6 +170,11 @@ const ContactRoute = ContactRouteImport.update({
 const CookiePolicyRoute = CookiePolicyRouteImport.update({
   id: '/cookie-policy',
   path: '/cookie-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailPreferencesRoute = EmailPreferencesRouteImport.update({
+  id: '/email-preferences',
+  path: '/email-preferences',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImpressumRoute = ImpressumRouteImport.update({
@@ -743,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/email-preferences': typeof EmailPreferencesRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/job-seekers': typeof JobSeekersRoute
@@ -861,6 +868,7 @@ export interface FileRoutesByTo {
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/email-preferences': typeof EmailPreferencesRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/job-seekers': typeof JobSeekersRoute
@@ -980,6 +988,7 @@ export interface FileRoutesById {
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/email-preferences': typeof EmailPreferencesRoute
   '/impressum': typeof ImpressumRoute
   '/indexnow-key.txt': typeof IndexnowKeyDottxtRoute
   '/job-seekers': typeof JobSeekersRoute
@@ -1100,6 +1109,7 @@ export interface FileRouteTypes {
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
+    | '/email-preferences'
     | '/impressum'
     | '/indexnow-key.txt'
     | '/job-seekers'
@@ -1218,6 +1228,7 @@ export interface FileRouteTypes {
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
+    | '/email-preferences'
     | '/impressum'
     | '/indexnow-key.txt'
     | '/job-seekers'
@@ -1336,6 +1347,7 @@ export interface FileRouteTypes {
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
+    | '/email-preferences'
     | '/impressum'
     | '/indexnow-key.txt'
     | '/job-seekers'
@@ -1455,6 +1467,7 @@ export interface RootRouteChildren {
   ComingSoonGateRoute: typeof ComingSoonGateRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
+  EmailPreferencesRoute: typeof EmailPreferencesRoute
   ImpressumRoute: typeof ImpressumRoute
   IndexnowKeyDottxtRoute: typeof IndexnowKeyDottxtRoute
   JobSeekersRoute: typeof JobSeekersRoute
@@ -1624,6 +1637,13 @@ declare module '@tanstack/react-router' {
       path: '/cookie-policy'
       fullPath: '/cookie-policy'
       preLoaderRoute: typeof CookiePolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email-preferences': {
+      id: '/email-preferences'
+      path: '/email-preferences'
+      fullPath: '/email-preferences'
+      preLoaderRoute: typeof EmailPreferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/impressum': {
@@ -2427,6 +2447,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComingSoonGateRoute: ComingSoonGateRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
+  EmailPreferencesRoute: EmailPreferencesRoute,
   ImpressumRoute: ImpressumRoute,
   IndexnowKeyDottxtRoute: IndexnowKeyDottxtRoute,
   JobSeekersRoute: JobSeekersRoute,

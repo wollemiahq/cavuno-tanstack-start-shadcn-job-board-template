@@ -136,7 +136,7 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(manifest.roles.mePurchases).toBe('/me/purchases');
   });
 
-  it('real src/routes file tree publishes the tip role', () => {
+  it('real src/routes file tree publishes the tip and email preferences roles', () => {
     const routesDir = resolve(process.cwd(), 'src/routes');
     const paths = readdirSync(routesDir)
       .filter((name) => !name.startsWith('-') && /\.(tsx?|jsx?)$/.test(name))
@@ -149,6 +149,7 @@ describe('/.well-known/cavuno.json mount', () => {
     );
     const { manifest } = compileManifest(enumerateRouteEntries(paths), markers);
     expect(manifest.roles.tip).toBe('/tip');
+    expect(manifest.roles.emailPreferences).toBe('/email-preferences');
   });
 
   it('routeEntriesFromTanStackRouteTree converts $param → :param', () => {
