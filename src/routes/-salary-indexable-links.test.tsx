@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import type { ComponentType } from 'react';
-
 import {
   createMemoryHistory,
   createRootRoute,
   createRouter,
   RouterProvider,
+  type RouteComponent,
 } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -30,7 +29,7 @@ vi.mock('@tanstack/react-router', async (original) => {
 import { Route as LocationRoute } from './salaries.locations.$slug.index';
 import { Route as LocationsIndexRoute } from './salaries.locations.index';
 
-async function renderPage(Page: ComponentType) {
+async function renderPage(Page: RouteComponent) {
   const rootRoute = createRootRoute({ component: Page });
   const router = createRouter({
     routeTree: rootRoute,
