@@ -71,6 +71,9 @@ export const MACHINE_FIRST_SEGMENTS: ReadonlySet<string> = new Set([
   // The board's MCP server and its setup page (`/mcp`, `/mcp/docs`): the
   // URL assistants and directory listings are given.
   'mcp',
+  // The MCP server's sign-in consent page, whose URL the server publishes in
+  // its OAuth metadata.
+  'oauth',
   'embed',
   'p',
   'apply',

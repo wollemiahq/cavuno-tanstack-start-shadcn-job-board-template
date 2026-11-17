@@ -192,6 +192,7 @@ describe('resolveShellBreadcrumb — authed surfaces (footer trails everywhere)'
     authConfirmEmailChange: 'Confirm your new email',
     authOauthComplete: 'OAuth label',
     employerInviteAccept: 'Invite label',
+    mcpConsent: 'Consent label',
   };
   const resolve = (pathname: string, entities = {}) =>
     resolveShellBreadcrumb({ pathname, labels, privateLabels, entities });

@@ -72,6 +72,7 @@ import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
 import { Route as MePurchasesRouteImport } from './routes/me.purchases'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
+import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
 import { Route as PostSuccessRouteImport } from './routes/post_.success'
@@ -443,6 +444,11 @@ const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
   path: '/$conversationId',
   getParentRoute: () => MessagesRoute,
 } as any)
+const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
+  id: '/oauth/authorize',
+  path: '/oauth/authorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PHandleRoute = PHandleRouteImport.update({
   id: '/p/$handle',
   path: '/p/$handle',
@@ -791,6 +797,7 @@ export interface FileRoutesByFullPath {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
@@ -909,6 +916,7 @@ export interface FileRoutesByTo {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
@@ -1028,6 +1036,7 @@ export interface FileRoutesById {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
   '/p/$handle': typeof PHandleRoute
   '/post_/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post_/success': typeof PostSuccessRoute
@@ -1148,6 +1157,7 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
+    | '/oauth/authorize'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
@@ -1266,6 +1276,7 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
+    | '/oauth/authorize'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
@@ -1384,6 +1395,7 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
+    | '/oauth/authorize'
     | '/p/$handle'
     | '/post_/checkout-canceled'
     | '/post_/success'
@@ -1502,6 +1514,7 @@ export interface RootRouteChildren {
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   MePurchasesRoute: typeof MePurchasesRoute
+  OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   PHandleRoute: typeof PHandleRoute
   PostCheckoutCanceledRoute: typeof PostCheckoutCanceledRoute
   PostSuccessRoute: typeof PostSuccessRoute
@@ -2004,6 +2017,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesConversationIdRouteImport
       parentRoute: typeof MessagesRoute
     }
+    '/oauth/authorize': {
+      id: '/oauth/authorize'
+      path: '/oauth/authorize'
+      fullPath: '/oauth/authorize'
+      preLoaderRoute: typeof OauthAuthorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$handle': {
       id: '/p/$handle'
       path: '/p/$handle'
@@ -2474,6 +2494,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   MePurchasesRoute: MePurchasesRoute,
+  OauthAuthorizeRoute: OauthAuthorizeRoute,
   PHandleRoute: PHandleRoute,
   PostCheckoutCanceledRoute: PostCheckoutCanceledRoute,
   PostSuccessRoute: PostSuccessRoute,

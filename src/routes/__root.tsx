@@ -462,6 +462,7 @@ function RootChrome({
       authConfirmEmailChange: m.authConfirmEmailChange_title(),
       authOauthComplete: m.authOauthComplete_title(),
       employerInviteAccept: m.employerInviteAccept_title(),
+      mcpConsent: m.mcpConsent_title(),
     },
     entities: {
       ...breadcrumbEntities,
