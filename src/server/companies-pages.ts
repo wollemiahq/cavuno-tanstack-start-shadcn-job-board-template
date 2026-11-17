@@ -387,7 +387,10 @@ export const getCompanyProfilePage = createServerFn({ method: 'GET' })
           );
           return {
             overallSalary: salary.overallSalary,
-            byCategory: salary.topCategories.slice(
+            // Only the profile's link rail reads these, so drop noindexed
+            // categories before the cut: a top-N of hidden rows would
+            // leave the teaser empty while indexable categories exist.
+            byCategory: indexableSalaryItems(salary.topCategories).slice(
               0,
               COMPANY_SALARY_SUMMARY_CATEGORIES,
             ),
