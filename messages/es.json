@@ -538,6 +538,7 @@
     }
   ],
   "categoryPage_notFoundText": "Categoría no encontrada.",
+  "categoryPage_salariesLink": "Ver salarios de {category}",
   "commandDialog_searchPlaceholder": "Busca un comando para ejecutar...",
   "commandDialog_title": "Paleta de comandos",
   "common_closeLabel": "Cerrar",
@@ -619,6 +620,7 @@
   "companySalaries_categoryHeading": "Salarios de {category} en {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Datos salariales de {category} en {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Salarios de {category} en {company}: {range}/año en {jobCount} ofertas.",
+  "companySalaries_companyJobsLink": "Ofertas de {company}",
   "companySalaries_heading": "Salarios en {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +656,7 @@
   "companySalaries_notFoundCompanyCategory": "No hay datos salariales para esta empresa y categoría.",
   "companySalaries_otherCompaniesHiringLabel": "Otras empresas que contratan perfiles de {category}",
   "companySalaries_otherCompaniesLabel": "Otras empresas",
+  "companySalaries_roleSalariesLink": "Salarios de {category} en todas las empresas",
   "companySalaries_salariesByRoleLabel": "Salarios por puesto",
   "companySalaries_seniorityHeading": "Salario por nivel de experiencia",
   "companySalaries_topLocationsLabel": "Principales ubicaciones",
@@ -1411,6 +1414,10 @@
   "jobDetail_additionalDetailsHeading": "Detalles adicionales",
   "jobDetail_breadcrumbAriaLabel": "Ruta de navegación",
   "jobDetail_categoriesHeading": "Categorías",
+  "jobDetail_companyJobsFallbackLink": "Todas las ofertas de esta empresa",
+  "jobDetail_companyJobsLink": "Todas las ofertas de {company}",
+  "jobDetail_companySalariesFallbackLink": "Salarios en esta empresa",
+  "jobDetail_companySalariesLink": "Salarios en {company}",
   "jobDetail_customFieldNoLabel": "No",
   "jobDetail_customFieldYesLabel": "Sí",
   "jobDetail_educationLabel": "Formación",
@@ -2389,6 +2396,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Salarios en {place}: {range}/año en {jobCount} ofertas.",
   "salaryDetail_relatedSkills": "Competencias relacionadas",
   "salaryDetail_relatedTitles": "Puestos relacionados",
+  "salaryDetail_roleJobsLink": "Ver ofertas de {title}",
   "salaryDetail_seeAllLocationsLabel": "Ver todas las ubicaciones",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Ver todas las competencias en {place}",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Ver todos los puestos en {place}",

@@ -538,6 +538,7 @@
     }
   ],
   "categoryPage_notFoundText": "Category not found.",
+  "categoryPage_salariesLink": "See {category} salaries",
   "commandDialog_searchPlaceholder": "Search for a command to run...",
   "commandDialog_title": "Command Palette",
   "common_closeLabel": "Close",
@@ -619,6 +620,7 @@
   "companySalaries_categoryHeading": "{category} salaries at {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "{category} salary data at {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "{category} salaries at {company}: {range}/year across {jobCount} jobs.",
+  "companySalaries_companyJobsLink": "Jobs at {company}",
   "companySalaries_heading": "{company} salaries",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +656,7 @@
   "companySalaries_notFoundCompanyCategory": "No salary data for this company and category.",
   "companySalaries_otherCompaniesHiringLabel": "Other companies hiring {category}",
   "companySalaries_otherCompaniesLabel": "Other companies",
+  "companySalaries_roleSalariesLink": "{category} salaries across all companies",
   "companySalaries_salariesByRoleLabel": "Salaries by role",
   "companySalaries_seniorityHeading": "Salary by seniority",
   "companySalaries_topLocationsLabel": "Top locations",
@@ -1411,6 +1414,10 @@
   "jobDetail_additionalDetailsHeading": "Additional details",
   "jobDetail_breadcrumbAriaLabel": "Breadcrumb",
   "jobDetail_categoriesHeading": "Categories",
+  "jobDetail_companyJobsFallbackLink": "All jobs at this company",
+  "jobDetail_companyJobsLink": "All jobs at {company}",
+  "jobDetail_companySalariesFallbackLink": "Salaries at this company",
+  "jobDetail_companySalariesLink": "Salaries at {company}",
   "jobDetail_customFieldNoLabel": "No",
   "jobDetail_customFieldYesLabel": "Yes",
   "jobDetail_educationLabel": "Education",
@@ -2389,6 +2396,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Salaries in {place}: {range}/year across {jobCount} jobs.",
   "salaryDetail_relatedSkills": "Related skills",
   "salaryDetail_relatedTitles": "Related titles",
+  "salaryDetail_roleJobsLink": "Browse {title} jobs",
   "salaryDetail_seeAllLocationsLabel": "See all locations",
   "salaryDetail_seeAllSkillsInPlaceLabel": "See all skills in {place}",
   "salaryDetail_seeAllTitlesInPlaceLabel": "See all titles in {place}",

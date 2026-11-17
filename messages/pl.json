@@ -548,6 +548,7 @@
     }
   ],
   "categoryPage_notFoundText": "Nie znaleziono kategorii.",
+  "categoryPage_salariesLink": "Zobacz wynagrodzenia: {category}",
   "commandDialog_searchPlaceholder": "Wyszukaj polecenie do uruchomienia...",
   "commandDialog_title": "Paleta poleceń",
   "common_closeLabel": "Zamknij",
@@ -635,6 +636,7 @@
   "companySalaries_categoryHeading": "Wynagrodzenia: {category} w firmie {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Dane o wynagrodzeniach: {category} w firmie {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Wynagrodzenia: {category} w firmie {company} — {range}/rok. Liczba ofert: {jobCount}.",
+  "companySalaries_companyJobsLink": "Oferty firmy {company}",
   "companySalaries_heading": "Wynagrodzenia w firmie {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -674,6 +676,7 @@
   "companySalaries_notFoundCompanyCategory": "Brak danych o wynagrodzeniach dla tej firmy i kategorii.",
   "companySalaries_otherCompaniesHiringLabel": "Inne firmy rekrutujące: {category}",
   "companySalaries_otherCompaniesLabel": "Inne firmy",
+  "companySalaries_roleSalariesLink": "Wynagrodzenia: {category} we wszystkich firmach",
   "companySalaries_salariesByRoleLabel": "Wynagrodzenia według stanowiska",
   "companySalaries_seniorityHeading": "Wynagrodzenie według poziomu stanowiska",
   "companySalaries_topLocationsLabel": "Najczęstsze lokalizacje",
@@ -1463,6 +1466,10 @@
   "jobDetail_additionalDetailsHeading": "Dodatkowe informacje",
   "jobDetail_breadcrumbAriaLabel": "Ścieżka nawigacji",
   "jobDetail_categoriesHeading": "Kategorie",
+  "jobDetail_companyJobsFallbackLink": "Wszystkie oferty tej firmy",
+  "jobDetail_companyJobsLink": "Wszystkie oferty firmy {company}",
+  "jobDetail_companySalariesFallbackLink": "Wynagrodzenia w tej firmie",
+  "jobDetail_companySalariesLink": "Wynagrodzenia w firmie {company}",
   "jobDetail_customFieldNoLabel": "Nie",
   "jobDetail_customFieldYesLabel": "Tak",
   "jobDetail_educationLabel": "Wykształcenie",
@@ -2493,6 +2500,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Wynagrodzenia: {place} — {range}/rok. Liczba ofert: {jobCount}.",
   "salaryDetail_relatedSkills": "Powiązane umiejętności",
   "salaryDetail_relatedTitles": "Powiązane stanowiska",
+  "salaryDetail_roleJobsLink": "Zobacz oferty: {title}",
   "salaryDetail_seeAllLocationsLabel": "Zobacz wszystkie lokalizacje",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Zobacz wszystkie umiejętności: {place}",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Zobacz wszystkie stanowiska: {place}",

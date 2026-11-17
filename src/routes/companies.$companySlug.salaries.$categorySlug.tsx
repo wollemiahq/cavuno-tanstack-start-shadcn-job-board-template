@@ -4,7 +4,7 @@ import {
   companyPath,
   companySalaryPath,
 } from '@cavuno/board/paths';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -35,6 +35,7 @@ import {
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { textLinkClass } from '@/lib/text-link';
 
 export const Route = createFileRoute(
   '/companies/$companySlug/salaries/$categorySlug',
@@ -80,7 +81,7 @@ export const Route = createFileRoute(
 });
 
 function CompanyCategorySalaryPage() {
-  const { salary, faqs } = Route.useLoaderData();
+  const { salary, faqs, roleSalarySlug, roleJobsSlug } = Route.useLoaderData();
   // UI breadcrumb trail — component-only copy family (rides the route chunk).
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
@@ -133,6 +134,39 @@ function CompanyCategorySalaryPage() {
         getLocale(),
       )}
       title={heading}
+      links={
+        <>
+          <Link
+            to="/companies/$companySlug/jobs"
+            params={{ companySlug: salary.companySlug }}
+            className={textLinkClass}
+          >
+            {m.companySalaries_companyJobsLink({
+              company: salary.companyName,
+            })}
+          </Link>
+          {roleJobsSlug ? (
+            <Link
+              to="/jobs/$keyword"
+              params={{ keyword: roleJobsSlug }}
+              className={textLinkClass}
+            >
+              {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
+            </Link>
+          ) : null}
+          {roleSalarySlug ? (
+            <Link
+              to="/salaries/titles/$slug"
+              params={{ slug: roleSalarySlug }}
+              className={textLinkClass}
+            >
+              {m.companySalaries_roleSalariesLink({
+                category: salary.categoryName,
+              })}
+            </Link>
+          ) : null}
+        </>
+      }
     >
       {hasSalaryContent ? (
         <>

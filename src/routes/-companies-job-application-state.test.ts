@@ -134,6 +134,27 @@ describe('full job application state', () => {
   });
 });
 
+describe('company salaries link verdict', () => {
+  it('links company salaries only when the company has a salary sample', async () => {
+    expect(await loadJobDetail(jobDetailLoaderInput())).toMatchObject({
+      companySalariesIndexable: false,
+    });
+
+    getCompany.mockResolvedValue({
+      ...publicCompanyFixture('acme'),
+      salarySampleCount: 4,
+    });
+    expect(await loadJobDetail(jobDetailLoaderInput())).toMatchObject({
+      companySalariesIndexable: true,
+    });
+
+    getCompany.mockRejectedValue(new Error('Company unavailable'));
+    expect(await loadJobDetail(jobDetailLoaderInput())).toMatchObject({
+      companySalariesIndexable: false,
+    });
+  });
+});
+
 describe('a missing job', () => {
   it('308s to the managed redirect for the localized URL', async () => {
     getJobDetailPage.mockRejectedValue(

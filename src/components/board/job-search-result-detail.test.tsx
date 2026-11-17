@@ -63,6 +63,7 @@ const vm: JobDetailVM = {
     logoUrl: null,
     websiteHref: 'https://acme.example',
     websiteLabel: 'acme.example',
+    slug: 'acme',
     href: '/companies/acme',
     intro: 'Acme builds tools for modern product teams.',
     viewProfileLabel: 'View company profile',

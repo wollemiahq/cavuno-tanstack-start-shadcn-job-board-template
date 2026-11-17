@@ -384,12 +384,15 @@ export function JobSearchResultDetail({
   saveSlot,
   loading = false,
   loadingLabel = m.ui_loadingLabel(),
+  companySalariesLinked = false,
 }: {
   vm: JobDetailVM;
   applySlot?: React.ReactNode;
   saveSlot?: React.ReactNode;
   loading?: boolean;
   loadingLabel?: string;
+  /** The company card links its salaries page, as on the job page. */
+  companySalariesLinked?: boolean;
 }) {
   return (
     <article aria-busy={loading} className="max-w-full min-w-0">
@@ -447,7 +450,12 @@ export function JobSearchResultDetail({
             </section>
           ) : null}
 
-          {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
+          {vm.company ? (
+            <JobAboutCompanyCard
+              company={vm.company}
+              salariesLinked={companySalariesLinked}
+            />
+          ) : null}
         </div>
       )}
     </article>

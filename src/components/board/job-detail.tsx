@@ -112,6 +112,7 @@ export function JobDetail({
   secondaryActions,
   similarSlot,
   alertSlot,
+  companySalariesLinked = false,
 }: {
   vm: JobDetailVM;
   /** Native/external apply CTA — the route wires this (client interactivity). */
@@ -123,6 +124,8 @@ export function JobDetail({
   similarSlot?: React.ReactNode;
   /** Alert signup form wired by the route. */
   alertSlot?: React.ReactNode;
+  /** The company card links its salaries page (API says it is indexable). */
+  companySalariesLinked?: boolean;
 }) {
   return (
     <PageLayout
@@ -227,7 +230,12 @@ export function JobDetail({
             className="mx-auto"
           />
           {alertSlot}
-          {vm.company ? <JobAboutCompanyCard company={vm.company} /> : null}
+          {vm.company ? (
+            <JobAboutCompanyCard
+              company={vm.company}
+              salariesLinked={companySalariesLinked}
+            />
+          ) : null}
           {similarSlot}
         </>
       }

@@ -59,6 +59,7 @@ import {
   isSalaryPageNoindex,
   noindexFollow,
 } from './place-listing-helpers';
+import { jobsCategorySlug } from './salary-link-verdicts';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import { composeSalaryFaqs } from '@/lib/salary-faq';
@@ -395,13 +396,15 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
-      const [salary, seo] = await Promise.all([
+      // The role's jobs page is linked only when its category exists.
+      const [salary, seo, roleJobsSlug] = await Promise.all([
         getBoard().salaries.titles.retrieve(
           data.slug,
           { locale: getLocale() },
           { headers },
         ),
         seoBase(),
+        jobsCategorySlug(data.slug, headers),
       ]);
       const locale = seo.language;
       const c = breadcrumbsCopy();
@@ -473,7 +476,7 @@ export const getTitleSalaryPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { salary, seo, head, jsonLd, faqs };
+      return { salary, seo, head, jsonLd, faqs, roleJobsSlug };
     }),
   );
 
@@ -1072,7 +1075,8 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
   .middleware([boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
-      const [salary, seo] = await Promise.all([
+      // The role's jobs page is linked only when its category exists.
+      const [salary, seo, roleJobsSlug] = await Promise.all([
         getBoard().salaries.titles.location(
           data.slug,
           data.locationSlug,
@@ -1080,6 +1084,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
           { headers },
         ),
         seoBase(),
+        jobsCategorySlug(data.slug, headers),
       ]);
       const locale = seo.language;
       const c = breadcrumbsCopy();
@@ -1171,7 +1176,7 @@ export const getTitleLocationSalaryPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { salary, seo, head, jsonLd };
+      return { salary, seo, head, jsonLd, roleJobsSlug };
     }),
   );
 

@@ -51,7 +51,24 @@ vi.mock('../lib/board', () => ({
       },
       companies: { list: api.companiesList },
     },
+    // The title page's role jobs link: no category for these fixtures.
+    taxonomy: {
+      categories: {
+        resolve: async () => {
+          const { BoardApiError } = await import('@cavuno/board');
+          throw new BoardApiError({
+            status: 404,
+            code: 'not_found',
+            message: 'Not found',
+            raw: undefined,
+          });
+        },
+      },
+    },
   }),
+}));
+vi.mock('../lib/data-source.server', () => ({
+  getDataSource: () => 'board',
 }));
 
 import { salaryTitleInLocationPath } from '../board/salary-view-model';

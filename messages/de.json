@@ -538,6 +538,7 @@
     }
   ],
   "categoryPage_notFoundText": "Kategorie nicht gefunden.",
+  "categoryPage_salariesLink": "Gehälter für {category} ansehen",
   "commandDialog_searchPlaceholder": "Befehl suchen…",
   "commandDialog_title": "Befehlspalette",
   "common_closeLabel": "Schließen",
@@ -619,6 +620,7 @@
   "companySalaries_categoryHeading": "Gehälter für {category} bei {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Gehaltsdaten für {category} bei {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Gehälter für {category} bei {company}: {range}/Jahr aus {jobCount} Jobs.",
+  "companySalaries_companyJobsLink": "Jobs bei {company}",
   "companySalaries_heading": "Gehälter bei {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +656,7 @@
   "companySalaries_notFoundCompanyCategory": "Keine Gehaltsdaten für dieses Unternehmen und diese Kategorie.",
   "companySalaries_otherCompaniesHiringLabel": "Weitere Unternehmen, die {category} einstellen",
   "companySalaries_otherCompaniesLabel": "Weitere Unternehmen",
+  "companySalaries_roleSalariesLink": "Gehälter für {category} bei allen Unternehmen",
   "companySalaries_salariesByRoleLabel": "Gehälter nach Rolle",
   "companySalaries_seniorityHeading": "Gehalt nach Erfahrungslevel",
   "companySalaries_topLocationsLabel": "Top-Standorte",
@@ -1411,6 +1414,10 @@
   "jobDetail_additionalDetailsHeading": "Weitere Details",
   "jobDetail_breadcrumbAriaLabel": "Seitenpfad",
   "jobDetail_categoriesHeading": "Kategorien",
+  "jobDetail_companyJobsFallbackLink": "Alle Jobs bei diesem Unternehmen",
+  "jobDetail_companyJobsLink": "Alle Jobs bei {company}",
+  "jobDetail_companySalariesFallbackLink": "Gehälter bei diesem Unternehmen",
+  "jobDetail_companySalariesLink": "Gehälter bei {company}",
   "jobDetail_customFieldNoLabel": "Nein",
   "jobDetail_customFieldYesLabel": "Ja",
   "jobDetail_educationLabel": "Ausbildung",
@@ -2389,6 +2396,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Gehälter in {place}: {range}/Jahr aus {jobCount} Jobs.",
   "salaryDetail_relatedSkills": "Ähnliche Fähigkeiten",
   "salaryDetail_relatedTitles": "Ähnliche Jobtitel",
+  "salaryDetail_roleJobsLink": "{title}-Jobs ansehen",
   "salaryDetail_seeAllLocationsLabel": "Alle Standorte anzeigen",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Alle Fähigkeiten in {place} anzeigen",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Alle Jobtitel in {place} anzeigen",

@@ -8,17 +8,26 @@ export function SalaryPageLayout({
   breadcrumb: _breadcrumb,
   title,
   description,
+  links,
   children,
 }: {
   breadcrumb: BreadcrumbData;
   title: string;
   description?: string;
+  /** Links to related pages, shown under the heading on every state. */
+  links?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <Page width="wide">
       <PageContent
-        header={<PageHeader title={title} description={description} />}
+        header={
+          <PageHeader title={title} description={description}>
+            {links ? (
+              <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">{links}</p>
+            ) : null}
+          </PageHeader>
+        }
       >
         {children}
       </PageContent>

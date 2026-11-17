@@ -538,6 +538,7 @@
     }
   ],
   "categoryPage_notFoundText": "Catégorie introuvable.",
+  "categoryPage_salariesLink": "Voir les salaires {category}",
   "commandDialog_searchPlaceholder": "Rechercher une commande…",
   "commandDialog_title": "Palette de commandes",
   "common_closeLabel": "Fermer",
@@ -619,6 +620,7 @@
   "companySalaries_categoryHeading": "Salaires {category} chez {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Données de salaire {category} chez {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Salaires {category} chez {company} : {range}/an sur {jobCount} offres.",
+  "companySalaries_companyJobsLink": "Offres chez {company}",
   "companySalaries_heading": "Salaires chez {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +656,7 @@
   "companySalaries_notFoundCompanyCategory": "Aucune donnée de salaire pour cette entreprise et cette catégorie.",
   "companySalaries_otherCompaniesHiringLabel": "Autres entreprises qui recrutent en {category}",
   "companySalaries_otherCompaniesLabel": "Autres entreprises",
+  "companySalaries_roleSalariesLink": "Salaires {category} dans toutes les entreprises",
   "companySalaries_salariesByRoleLabel": "Salaires par poste",
   "companySalaries_seniorityHeading": "Salaire par niveau d’expérience",
   "companySalaries_topLocationsLabel": "Meilleurs lieux",
@@ -1411,6 +1414,10 @@
   "jobDetail_additionalDetailsHeading": "Informations complémentaires",
   "jobDetail_breadcrumbAriaLabel": "Fil d'Ariane",
   "jobDetail_categoriesHeading": "Catégories",
+  "jobDetail_companyJobsFallbackLink": "Toutes les offres de cette entreprise",
+  "jobDetail_companyJobsLink": "Toutes les offres chez {company}",
+  "jobDetail_companySalariesFallbackLink": "Salaires dans cette entreprise",
+  "jobDetail_companySalariesLink": "Salaires chez {company}",
   "jobDetail_customFieldNoLabel": "Non",
   "jobDetail_customFieldYesLabel": "Oui",
   "jobDetail_educationLabel": "Formation",
@@ -2389,6 +2396,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Salaires à {place} : {range}/an sur {jobCount} offres.",
   "salaryDetail_relatedSkills": "Compétences similaires",
   "salaryDetail_relatedTitles": "Intitulés similaires",
+  "salaryDetail_roleJobsLink": "Voir les offres {title}",
   "salaryDetail_seeAllLocationsLabel": "Voir tous les lieux",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Voir toutes les compétences à {place}",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Voir tous les intitulés à {place}",
