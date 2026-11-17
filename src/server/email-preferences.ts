@@ -5,9 +5,9 @@
  * every change is a person's click.
  *
  * The link's token goes straight into an httpOnly cookie
- * (src/lib/email-preferences-cookie.ts) under a fingerprint, and the page
- * redirects to itself with only the fingerprint (`?person=`), so no page
- * script, analytics tag, referrer or screenshot sees the token. Every read
+ * (src/lib/email-preferences-cookie.ts) under a random key, and the page
+ * redirects to itself with only the key (`?person=`), so no page script,
+ * analytics tag, referrer or screenshot sees the token. Every read
  * and change below names the person and uses the token kept for them, and
  * all are POSTs, so the token never sits in a URL or an access log.
  */
@@ -22,10 +22,12 @@ import {
 import { getBoard } from '../lib/board';
 import {
   dropEmailPreferencesEntry,
-  emailPreferencesPerson,
+  findEmailPreferencesPerson,
   findEmailPreferencesToken,
   isEmailPreferencesPerson,
+  isEmailPreferencesToken,
   keepEmailPreferencesEntry,
+  newEmailPreferencesPerson,
 } from '../lib/email-preferences-cookie';
 import { requestOrigin } from '../lib/request-origin';
 
@@ -68,7 +70,7 @@ function keptToken(person: string | undefined): string | null {
 }
 
 function renew(person: string, token: string) {
-  const cookie = keepEmailPreferencesEntry(cookieHeader(), person, token);
+  const cookie = keepEmailPreferencesEntry(person, token);
   if (cookie) appendResponseHeader('Set-Cookie', cookie);
 }
 
@@ -88,13 +90,17 @@ async function withKeptToken<T>(
 }
 
 /**
- * Keeps the link's token in the cookie, under the fingerprint it returns.
- * The token is checked on the next read.
+ * Keeps the link's token in a cookie, under the key it returns (the one
+ * already holding it, else a new one). Null for a malformed token, which
+ * is never kept; any other token is checked on the next read.
  */
 export const keepEmailPreferencesToken = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)
-  .handler(async ({ data }): Promise<string> => {
-    const person = await emailPreferencesPerson(data.token);
+  .handler(({ data }): string | null => {
+    if (!isEmailPreferencesToken(data.token)) return null;
+    const person =
+      findEmailPreferencesPerson(cookieHeader(), data.token) ??
+      newEmailPreferencesPerson();
     renew(person, data.token);
     return person;
   });
@@ -122,7 +128,7 @@ export const getEmailPreferences = createServerFn({ method: 'POST' })
       ) {
         appendResponseHeader(
           'Set-Cookie',
-          dropEmailPreferencesEntry(cookieHeader(), data.person),
+          dropEmailPreferencesEntry(data.person),
         );
         return 'invalid_link';
       }

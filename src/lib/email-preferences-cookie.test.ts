@@ -2,73 +2,65 @@ import { describe, expect, it } from 'vitest';
 
 import {
   dropEmailPreferencesEntry,
-  EMAIL_PREFERENCES_COOKIE,
-  EMAIL_PREFERENCES_LIMIT,
-  emailPreferencesPerson,
+  findEmailPreferencesPerson,
   findEmailPreferencesToken,
   keepEmailPreferencesEntry,
+  newEmailPreferencesPerson,
 } from './email-preferences-cookie';
 
-/** The `Cookie` request header a browser sends back for a `Set-Cookie`. */
-function sentBack(setCookie: string | null): string {
-  if (!setCookie) throw new Error('expected a Set-Cookie value');
-  return setCookie.split(';')[0]!;
+/** The `Cookie` request header a browser sends back for `Set-Cookie`s. */
+function sentBack(...setCookies: Array<string | null>): string {
+  return setCookies
+    .map((setCookie) => {
+      if (!setCookie) throw new Error('expected a Set-Cookie value');
+      return setCookie.split(';')[0]!;
+    })
+    .join('; ');
 }
 
-describe('email preferences cookie', () => {
-  it("keeps two people's tokens apart, each under its own fingerprint", async () => {
-    const a = await emailPreferencesPerson('userA.aaaa');
-    const b = await emailPreferencesPerson('userB.bbbb');
-    let header = sentBack(keepEmailPreferencesEntry(null, a, 'userA.aaaa'));
-    header = `theme=dark; ${sentBack(keepEmailPreferencesEntry(header, b, 'userB.bbbb'))}`;
+describe('email preferences cookies', () => {
+  it("keeps two people's tokens apart, each in its own cookie", () => {
+    const a = newEmailPreferencesPerson();
+    const b = newEmailPreferencesPerson();
+    const header = `theme=dark; ${sentBack(
+      keepEmailPreferencesEntry(a, 'userA.aaaa'),
+      keepEmailPreferencesEntry(b, 'userB.bbbb'),
+    )}`;
 
     // A tab opened for A still acts for A after B's link is opened.
     expect(findEmailPreferencesToken(header, a)).toBe('userA.aaaa');
     expect(findEmailPreferencesToken(header, b)).toBe('userB.bbbb');
-    expect(a).toMatch(/^[0-9a-f]{16}$/);
-    expect(a).not.toBe(b);
-
-    header = sentBack(dropEmailPreferencesEntry(header, a));
-    expect(findEmailPreferencesToken(header, a)).toBeNull();
-    expect(findEmailPreferencesToken(header, b)).toBe('userB.bbbb');
+    // Reopening a link reuses its key.
+    expect(findEmailPreferencesPerson(header, 'userB.bbbb')).toBe(b);
+    expect(findEmailPreferencesPerson(header, 'userC.cccc')).toBeNull();
   });
 
-  it('is host-only, httpOnly, secure and short-lived, and clears when empty', async () => {
-    const a = await emailPreferencesPerson('userA.aaaa');
-    const kept = keepEmailPreferencesEntry(null, a, 'userA.aaaa')!;
-    expect(EMAIL_PREFERENCES_COOKIE.startsWith('__Host-')).toBe(true);
-    expect(kept.startsWith(`${EMAIL_PREFERENCES_COOKIE}=`)).toBe(true);
+  it('names each cookie by a fresh random key, not one derived from the token', () => {
+    const keys = new Set(
+      Array.from({ length: 20 }, () => newEmailPreferencesPerson()),
+    );
+    expect(keys.size).toBe(20);
+    for (const key of keys) expect(key).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it('is host-only, httpOnly, secure and lasts an hour from its own use', () => {
+    const a = newEmailPreferencesPerson();
+    const kept = keepEmailPreferencesEntry(a, 'userA.aaaa')!;
+    expect(kept.startsWith(`__Host-cavuno_ep_${a}=userA.aaaa;`)).toBe(true);
     for (const attribute of ['HttpOnly', 'Secure', 'Path=/', 'Max-Age=3600']) {
       expect(kept).toContain(attribute);
     }
-    expect(dropEmailPreferencesEntry(sentBack(kept), a)).toContain('Max-Age=0');
+    const dropped = dropEmailPreferencesEntry(a);
+    expect(dropped.startsWith(`__Host-cavuno_ep_${a}=;`)).toBe(true);
+    expect(dropped).toContain('Max-Age=0');
   });
 
-  it('holds a few people, dropping the oldest first', async () => {
-    let header: string | null = null;
-    const people: string[] = [];
-    for (let i = 0; i <= EMAIL_PREFERENCES_LIMIT; i++) {
-      const person = await emailPreferencesPerson(`user${i}.t`);
-      people.push(person);
-      header = sentBack(
-        keepEmailPreferencesEntry(header, person, `user${i}.t`),
-      );
-    }
-    expect(findEmailPreferencesToken(header, people[0]!)).toBeNull();
-    expect(findEmailPreferencesToken(header, people.at(-1)!)).toBe(
-      `user${EMAIL_PREFERENCES_LIMIT}.t`,
-    );
-  });
-
-  it('never writes or reads a value that is not a plain token', async () => {
-    const a = await emailPreferencesPerson('x');
-    expect(keepEmailPreferencesEntry(null, a, 'a;b')).toBeNull();
-    expect(keepEmailPreferencesEntry(null, 'not-a-print', 'tok')).toBeNull();
+  it('never writes or reads a value that is not a plain token', () => {
+    const a = newEmailPreferencesPerson();
+    expect(keepEmailPreferencesEntry(a, 'a;b')).toBeNull();
+    expect(keepEmailPreferencesEntry('not-a-key', 'tok')).toBeNull();
     expect(
-      findEmailPreferencesToken(
-        `${EMAIL_PREFERENCES_COOKIE}=${encodeURIComponent(`${a}:a;b`)}`,
-        a,
-      ),
+      findEmailPreferencesToken(`__Host-cavuno_ep_${a}=a%3Bb`, a),
     ).toBeNull();
     expect(findEmailPreferencesToken(null, a)).toBeNull();
   });

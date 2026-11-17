@@ -8,8 +8,8 @@
  * link there with their own tokens.
  *
  * The link's `?token` never stays in the address bar: the loader keeps it
- * in an httpOnly cookie and redirects to `/email-preferences?person=…`, its
- * fingerprint, so analytics, referrers and screenshots don't capture it, a
+ * in an httpOnly cookie and redirects to `/email-preferences?person=…`, a
+ * random key for that cookie, so analytics, referrers and screenshots don't capture it, a
  * reload still works, and each tab acts only for the person it shows.
  */
 import { createFileRoute } from '@tanstack/react-router';

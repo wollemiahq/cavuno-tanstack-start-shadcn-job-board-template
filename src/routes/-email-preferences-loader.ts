@@ -32,7 +32,7 @@ export type EmailPreferencesSearch = { token?: string; person?: string };
 export type EmailPreferencesDependencies = {
   keepEmailPreferencesToken: (options: {
     data: { token: string };
-  }) => Promise<string>;
+  }) => Promise<string | null>;
   getEmailPreferences: (options: {
     data: { person?: string };
   }) => Promise<EmailPreferencesRead>;
@@ -61,15 +61,16 @@ export function createEmailPreferencesLoader(
   }: {
     deps: EmailPreferencesSearch;
   }): Promise<EmailPreferencesData> => {
-    // The link's token goes into the cookie, and the page opens again with
-    // only its fingerprint, before any script on it runs.
+    // The link's token goes into a cookie, and the page opens again with
+    // only its key, before any script on it runs. A malformed token is not
+    // kept, so the page opens with no person: the invalid-link notice.
     if (deps.token) {
       const person = await dependencies.keepEmailPreferencesToken({
         data: { token: deps.token },
       });
       throw redirect({
         to: '/email-preferences',
-        search: { person },
+        search: person ? { person } : {},
         replace: true,
       });
     }

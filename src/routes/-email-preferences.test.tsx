@@ -84,7 +84,7 @@ afterEach(() => {
 });
 
 describe('email preferences loader', () => {
-  it('keeps the link token in the cookie and opens the page again with only its fingerprint', async () => {
+  it('keeps the link token in the cookie and opens the page again with only its key', async () => {
     const deps = dependencies();
     deps.keepEmailPreferencesToken.mockResolvedValue(PERSON);
     const load = createEmailPreferencesLoader(deps);
@@ -98,6 +98,15 @@ describe('email preferences loader', () => {
       data: { token: 'tok' },
     });
     expect(deps.getEmailPreferences).not.toHaveBeenCalled();
+  });
+
+  it('opens with no person when the link token is malformed, so the page says it is invalid', async () => {
+    const deps = dependencies();
+    deps.keepEmailPreferencesToken.mockResolvedValue(null);
+    const load = createEmailPreferencesLoader(deps);
+    await expect(load({ deps: { token: 'bad;x' } })).rejects.toMatchObject({
+      options: { to: '/email-preferences', search: {} },
+    });
   });
 
   it('reads with the token kept for the person, and marks the page noindex', async () => {
