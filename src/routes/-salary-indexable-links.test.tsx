@@ -28,6 +28,9 @@ vi.mock('@tanstack/react-router', async (original) => {
 
 import { Route as LocationRoute } from './salaries.locations.$slug.index';
 import { Route as LocationsIndexRoute } from './salaries.locations.index';
+import { Route as SkillRoute } from './salaries.skills.$slug.index';
+
+import { salarySkillLinkPath } from '@/board/salary-view-model';
 
 async function renderPage(Page: RouteComponent) {
   const rootRoute = createRootRoute({ component: Page });
@@ -154,5 +157,34 @@ describe('salary locations index tree', () => {
 
     expect(screen.getByText('country-out')).toBeInTheDocument();
     expect(hrefs()).toEqual(['/salaries/locations/city-in']);
+  });
+});
+
+describe('skill salary page rails', () => {
+  it("links a related skill to the skill's jobs page, whatever its salary flag", async () => {
+    loader.data = {
+      salary: {
+        canonicalSlug: 'fixture-skill',
+        skillName: 'Fixture skill',
+        currency: 'USD',
+        overallSalary: null,
+        bySeniority: [],
+        topCompanies: [],
+        topLocations: [{ ...place('skill-place', true) }],
+        topTitles: [],
+        relatedSkills: [
+          {
+            ...row,
+            skillName: 'related',
+            skillSlug: 'related',
+            indexable: false,
+          },
+        ],
+      },
+      faqs: [],
+    };
+    await renderPage(SkillRoute.options.component!);
+
+    expect(hrefs()).toEqual([salarySkillLinkPath('related')]);
   });
 });

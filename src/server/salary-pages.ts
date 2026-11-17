@@ -792,9 +792,9 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      // Rows carry the Board API's verdict for the page each links to; list
-      // only indexable pages.
-      const locations = indexableSalaryItems(payload.locations);
+      // Nothing links this noindex page, and every row's target (a skill salary
+      // page) is noindex, so a visitor who lands here sees the full list.
+      const locations = payload.locations;
       const c = breadcrumbsCopy();
       const head = noindexFollow(
         {
@@ -978,9 +978,9 @@ export const getLocationSkillsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
-      // Rows carry the Board API's verdict for the page each links to; list
-      // only indexable pages.
-      const skills = indexableSalaryItems(payload.skills);
+      // Nothing links this noindex page, and every row's target (a skill salary
+      // page) is noindex, so a visitor who lands here sees the full list.
+      const skills = payload.skills;
       const c = breadcrumbsCopy();
       const breadcrumbTrail = [
         { name: c.home, href: BOARD_PATHS.home },
