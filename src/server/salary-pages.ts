@@ -689,6 +689,9 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Rows carry the Board API's verdict for the page each links to; list
+      // only indexable pages.
+      const locations = indexableSalaryItems(payload.locations);
       const c = breadcrumbsCopy();
       const head = noindexFollow(
         {
@@ -705,8 +708,8 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_titleLocationsMetaDescription({
                 title: payload.categoryName,
-                count: payload.locations.length,
-                countLabel: String(payload.locations.length),
+                count: locations.length,
+                countLabel: String(locations.length),
               }),
             },
           ],
@@ -725,7 +728,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.locations.map((l) => ({
+            locations.map((l) => ({
               name: l.placeName,
               url: boardUrl(
                 seo.origin,
@@ -754,7 +757,7 @@ export const getTitleLocationsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, head, jsonLd };
+      return { data: { ...payload, locations }, seo, head, jsonLd };
     }),
   );
 
@@ -771,6 +774,9 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // Rows carry the Board API's verdict for the page each links to; list
+      // only indexable pages.
+      const locations = indexableSalaryItems(payload.locations);
       const c = breadcrumbsCopy();
       const head = noindexFollow(
         {
@@ -787,8 +793,8 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
               name: 'description',
               content: m.salaryDetail_skillLocationsMetaDescription({
                 skill: payload.skillName,
-                count: payload.locations.length,
-                countLabel: String(payload.locations.length),
+                count: locations.length,
+                countLabel: String(locations.length),
               }),
             },
           ],
@@ -807,7 +813,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
       const jsonLd = asJsonObjects(
         [
           itemListJsonLd(
-            payload.locations.map((l) => ({
+            locations.map((l) => ({
               name: l.placeName,
               url: boardUrl(
                 seo.origin,
@@ -836,7 +842,7 @@ export const getSkillLocationsPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { data: payload, seo, head, jsonLd };
+      return { data: { ...payload, locations }, seo, head, jsonLd };
     }),
   );
 

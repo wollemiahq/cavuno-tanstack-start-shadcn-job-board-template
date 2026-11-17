@@ -25,6 +25,7 @@ beforeEach(() => {
         canonicalSlug: 'industrieroboter',
         displayName: 'Industrieroboter',
         companyCount: 12,
+        indexable: true,
       },
     ],
   });

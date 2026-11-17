@@ -176,6 +176,7 @@ const company = {
       slug: 'hiring',
       canonicalSlug: 'hiring',
       displayName: 'Hiring',
+      indexable: true,
     },
   ],
   links: { public: 'https://jobs.example/companies/northstar-labs' },
