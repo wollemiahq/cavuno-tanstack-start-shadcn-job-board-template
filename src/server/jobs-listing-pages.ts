@@ -33,6 +33,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
+import { contentLocaleQuery } from '../lib/content-locale';
 import { localizePath } from '../lib/localized-path';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
@@ -513,7 +514,12 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       // on client-side navigation) in front of the listing + SEO batch.
       const [category, listResult, seo] = await Promise.all([
         resolveOrNull(
-          board.taxonomy.categories.resolve(data.categorySlug, { headers }),
+          // The landing copy (intro, title, description) in the visitor's
+          // language; board-language pages send no locale.
+          board.taxonomy.categories.resolve(data.categorySlug, {
+            headers,
+            ...contentLocaleQuery(),
+          }),
         ),
         settled(
           readReachablePage(data.offset, data.limit, (offset) =>
@@ -729,7 +735,10 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         ? data.locationSlug
         : null;
       const placeRead = resolveOrNull(
-        board.taxonomy.places.resolve(data.locationSlug, { headers }),
+        board.taxonomy.places.resolve(data.locationSlug, {
+          headers,
+          ...contentLocaleQuery(),
+        }),
       );
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
