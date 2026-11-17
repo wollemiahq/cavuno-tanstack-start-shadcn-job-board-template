@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { isBoardApiError } from '@cavuno/board';
+
 import {
   emailPreferencesDependencies,
   type EmailPreferencesData,
@@ -80,7 +82,9 @@ export function EmailPreferencesPageView({
   const board = data.seo.boardName;
   const [prefs, setPrefs] = useState(data.prefs);
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  // What the last change says: why it failed, or a link on its way.
+  const [failed, setFailed] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
 
   // Set whenever there are preferences to show: they were read for them.
@@ -112,13 +116,25 @@ export function EmailPreferencesPageView({
     );
   }
 
-  const run = async (action: () => Promise<EmailPreferences>) => {
+  const run = async (
+    action: () => Promise<EmailPreferences>,
+    after?: {
+      notice?: (prefs: EmailPreferences) => string | null;
+      errors?: Partial<Record<string, string>>;
+    },
+  ) => {
     setPending(true);
-    setFailed(false);
+    setFailed(null);
+    setNotice(null);
     try {
-      setPrefs(await action());
-    } catch {
-      setFailed(true);
+      const next = await action();
+      setPrefs(next);
+      setNotice(after?.notice?.(next) ?? null);
+    } catch (error) {
+      setFailed(
+        (isBoardApiError(error) ? after?.errors?.[error.code] : undefined) ??
+          m.emailPreferences_actionError(),
+      );
       // Show what is true now: a link that stopped working, or a token no
       // longer kept, turns into its notice, and an alert or topic removed
       // elsewhere goes.
@@ -131,9 +147,29 @@ export function EmailPreferencesPageView({
       setPending(false);
     }
   };
-  const update = (changes: EmailPreferencesUpdate) =>
-    run(() =>
-      dependencies.updateEmailPreferences({ data: { person, changes } }),
+  const update = (
+    changes: EmailPreferencesUpdate,
+    after?: Parameters<typeof run>[1],
+  ) =>
+    run(
+      () => dependencies.updateEmailPreferences({ data: { person, changes } }),
+      after,
+    );
+  // Back on, alerts that wait for a confirmation link get a fresh one; when
+  // it can't go out, nothing changes and the API says why.
+  const setJobAlerts = (on: boolean) =>
+    update(
+      { jobAlerts: on },
+      {
+        notice: (next) =>
+          on && next.jobAlerts.alerts.some((a) => a.awaitingConfirmation)
+            ? m.emailPreferences_jobAlertsLinkSent()
+            : null,
+        errors: {
+          rate_limited: m.emailPreferences_jobAlertsThrottled(),
+          job_alert_email_suppressed: m.emailPreferences_jobAlertsSuppressed(),
+        },
+      },
     );
   // Turning something on is the person's opt-in, recorded with the wording
   // they saw; turning it off sends only the change.
@@ -163,9 +199,12 @@ export function EmailPreferencesPageView({
 
           {failed ? (
             <Alert variant="destructive">
-              <AlertDescription>
-                {m.emailPreferences_actionError()}
-              </AlertDescription>
+              <AlertDescription>{failed}</AlertDescription>
+            </Alert>
+          ) : null}
+          {notice ? (
+            <Alert role="status">
+              <AlertDescription>{notice}</AlertDescription>
             </Alert>
           ) : null}
 
@@ -173,46 +212,45 @@ export function EmailPreferencesPageView({
             <h2 id="ep-job-alerts" className="text-lg font-semibold">
               {m.emailPreferences_jobAlertsTitle()}
             </h2>
-            {jobAlerts.unsubscribed ? (
-              <p className="text-muted-foreground text-sm">
-                {m.emailPreferences_jobAlertsOff()}
-              </p>
-            ) : jobAlerts.alerts.length === 0 ? (
+            {jobAlerts.alerts.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 {m.emailPreferences_jobAlertsNone()}
               </p>
             ) : (
-              <ul className="space-y-3">
-                {jobAlerts.alerts.map((alert) => (
-                  <li key={alert.id}>
-                    <Item variant="outline">
-                      <ItemContent>
-                        <ItemTitle>{alertLabel(alert)}</ItemTitle>
-                        <ItemDescription>
-                          {alert.awaitingConfirmation
-                            ? m.emailPreferences_alertAwaiting()
-                            : m.emailPreferences_alertWeekly()}
-                        </ItemDescription>
-                      </ItemContent>
-                      <ItemActions>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pending}
-                          aria-label={m.emailPreferences_deleteAlertLabel({
-                            label: alertLabel(alert),
-                          })}
-                          onClick={() =>
-                            update({ alerts: [{ id: alert.id, delete: true }] })
-                          }
-                        >
-                          {m.emailPreferences_deleteAlert()}
-                        </Button>
-                      </ItemActions>
-                    </Item>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <PreferenceSwitch
+                  id="ep-job-alerts-all"
+                  title={m.emailPreferences_jobAlertsAll()}
+                  // Neither off nor waiting for room reads as sending.
+                  description={
+                    jobAlerts.unsubscribed
+                      ? m.emailPreferences_jobAlertsOff()
+                      : jobAlerts.waitlisted
+                        ? m.emailPreferences_jobAlertsWaitlisted({ board })
+                        : m.emailPreferences_jobAlertsDescription()
+                  }
+                  checked={!jobAlerts.unsubscribed}
+                  disabled={pending}
+                  onCheckedChange={setJobAlerts}
+                />
+                <ul className="space-y-3">
+                  {jobAlerts.alerts.map((alert) => (
+                    <li key={alert.id}>
+                      <AlertRow
+                        alert={alert}
+                        jobAlertsOff={jobAlerts.unsubscribed}
+                        pending={pending}
+                        onPausedChange={(paused) =>
+                          update({ alerts: [{ id: alert.id, paused }] })
+                        }
+                        onDelete={() =>
+                          update({ alerts: [{ id: alert.id, delete: true }] })
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </section>
 
@@ -339,6 +377,60 @@ export function EmailPreferencesPageView({
         </div>
       </PageContent>
     </Page>
+  );
+}
+
+/**
+ * One alert: its switch (on while it isn't paused; off and disabled while
+ * job alerts are off) and Delete. One waiting for its confirmation link has
+ * no switch, because the page can't start it.
+ */
+function AlertRow({
+  alert,
+  jobAlertsOff,
+  pending,
+  onPausedChange,
+  onDelete,
+}: {
+  alert: PreferenceAlert;
+  jobAlertsOff: boolean;
+  pending: boolean;
+  onPausedChange: (paused: boolean) => void;
+  onDelete: () => void;
+}) {
+  const label = alertLabel(alert);
+  return (
+    <Item variant="outline">
+      <ItemContent>
+        <ItemTitle>{label}</ItemTitle>
+        <ItemDescription>
+          {alert.awaitingConfirmation
+            ? m.emailPreferences_alertAwaiting()
+            : alert.paused
+              ? m.emailPreferences_alertPaused()
+              : m.emailPreferences_alertWeekly()}
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions>
+        {alert.awaitingConfirmation ? null : (
+          <Switch
+            aria-label={label}
+            checked={!jobAlertsOff && !alert.paused}
+            disabled={pending || jobAlertsOff}
+            onCheckedChange={(on) => onPausedChange(!on)}
+          />
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pending}
+          aria-label={m.emailPreferences_deleteAlertLabel({ label })}
+          onClick={onDelete}
+        >
+          {m.emailPreferences_deleteAlert()}
+        </Button>
+      </ItemActions>
+    </Item>
   );
 }
 

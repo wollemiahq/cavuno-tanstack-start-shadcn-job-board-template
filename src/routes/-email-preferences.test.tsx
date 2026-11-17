@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
+import { BoardApiError } from '@cavuno/board';
 import { isRedirect } from '@tanstack/react-router';
 import {
   cleanup,
@@ -247,6 +248,129 @@ describe('email preferences page', () => {
       },
     });
   });
+
+  it('shows a paused alert and a waitlisted board as not sending', () => {
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: {
+          ...prefs.jobAlerts,
+          waitlisted: true,
+          alerts: [{ ...prefs.jobAlerts.alerts[0], paused: true }],
+        },
+      },
+    });
+    expect(
+      screen.getByText(
+        m.emailPreferences_jobAlertsWaitlisted({ board: BOARD }),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(m.emailPreferences_alertPaused()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(m.emailPreferences_alertWeekly()),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('switch', { name: 'Design jobs' }),
+    ).not.toBeChecked();
+    expect(
+      screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
+    ).toBeChecked();
+  });
+
+  it('keeps the alerts listed while job alerts are off, each switched off and disabled', () => {
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
+      },
+    });
+    expect(
+      screen.getByText(m.emailPreferences_jobAlertsOff()),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
+    ).not.toBeChecked();
+    const alert = screen.getByRole('switch', { name: 'Design jobs' });
+    expect(alert).not.toBeChecked();
+    // Base UI marks a disabled switch with aria-disabled, not `disabled`.
+    expect(alert).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('pausing an alert sends only that alert', async () => {
+    const deps = dependencies();
+    deps.updateEmailPreferences.mockResolvedValue(prefs);
+    renderPage({}, deps);
+    fireEvent.click(screen.getByRole('switch', { name: 'Design jobs' }));
+    await waitFor(() =>
+      expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
+        data: {
+          person: PERSON,
+          changes: { alerts: [{ id: 'alert-1', paused: true }] },
+        },
+      }),
+    );
+  });
+
+  it('turning job alerts back on says a confirmation link is on its way', async () => {
+    const deps = dependencies();
+    deps.updateEmailPreferences.mockResolvedValue({
+      ...prefs,
+      jobAlerts: {
+        ...prefs.jobAlerts,
+        alerts: [{ ...prefs.jobAlerts.alerts[0], awaitingConfirmation: true }],
+      },
+    });
+    renderPage(
+      {
+        prefs: {
+          ...prefs,
+          jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
+        },
+      },
+      deps,
+    );
+    fireEvent.click(
+      screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
+    );
+    expect(
+      await screen.findByText(m.emailPreferences_jobAlertsLinkSent()),
+    ).toBeInTheDocument();
+    expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
+      data: { person: PERSON, changes: { jobAlerts: true } },
+    });
+  });
+
+  it.each([
+    ['rate_limited', 429, () => m.emailPreferences_jobAlertsThrottled()],
+    [
+      'job_alert_email_suppressed',
+      409,
+      () => m.emailPreferences_jobAlertsSuppressed(),
+    ],
+  ] as const)(
+    'says why job alerts did not turn back on (%s)',
+    async (code, status, message) => {
+      const deps = dependencies();
+      deps.updateEmailPreferences.mockRejectedValue(
+        new BoardApiError({ status, code, message: code, raw: null }),
+      );
+      const off = {
+        ...prefs,
+        jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
+      };
+      deps.getEmailPreferences.mockResolvedValue(off);
+      renderPage({ prefs: off }, deps);
+      fireEvent.click(
+        screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
+      );
+      expect(await screen.findByText(message())).toBeInTheDocument();
+      expect(
+        screen.queryByText(m.emailPreferences_actionError()),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it('shows an error and the preferences as they are now when a change fails', async () => {
     const deps = dependencies();
