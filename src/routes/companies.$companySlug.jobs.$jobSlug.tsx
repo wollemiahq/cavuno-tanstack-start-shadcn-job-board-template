@@ -85,6 +85,7 @@ function JobDetailPage() {
     companySummary,
     companyMembershipPlanName,
     applicationState,
+    companySalariesIndexable,
   } = Route.useLoaderData();
   const { companySlug } = Route.useParams();
   const { board } = rootApi.useLoaderData();
@@ -110,6 +111,7 @@ function JobDetailPage() {
     <>
       <JobDetail
         vm={vm}
+        companySalariesLinked={companySalariesIndexable}
         applySlot={
           <ApplyButton
             key={job.id}

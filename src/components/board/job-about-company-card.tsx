@@ -16,8 +16,14 @@ import {
 
 export function JobAboutCompanyCard({
   company,
+  salariesLinked = false,
 }: {
   company: JobDetailCompanyVM;
+  /**
+   * Link the company's salaries page. Only when the Board API marks that page
+   * indexable (the job-detail loader reads the verdict).
+   */
+  salariesLinked?: boolean;
 }) {
   return (
     <Card data-slot="job-detail-company" size="sm">
@@ -54,7 +60,7 @@ export function JobAboutCompanyCard({
           </p>
         ) : null}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex-col items-stretch gap-2">
         <Link
           to={company.href}
           className={buttonVariants({
@@ -64,6 +70,26 @@ export function JobAboutCompanyCard({
         >
           {company.viewProfileLabel}
         </Link>
+        <Link
+          to="/companies/$companySlug/jobs"
+          params={{ companySlug: company.slug }}
+          className={buttonVariants({ variant: 'link' })}
+        >
+          {company.name
+            ? m.jobDetail_companyJobsLink({ company: company.name })
+            : m.jobDetail_companyJobsFallbackLink()}
+        </Link>
+        {salariesLinked ? (
+          <Link
+            to="/companies/$companySlug/salaries"
+            params={{ companySlug: company.slug }}
+            className={buttonVariants({ variant: 'link' })}
+          >
+            {company.name
+              ? m.jobDetail_companySalariesLink({ company: company.name })
+              : m.jobDetail_companySalariesFallbackLink()}
+          </Link>
+        ) : null}
       </CardFooter>
     </Card>
   );

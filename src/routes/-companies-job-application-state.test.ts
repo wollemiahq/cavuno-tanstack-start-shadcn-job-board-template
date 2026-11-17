@@ -55,6 +55,7 @@ beforeEach(() => {
     },
     head: { meta: [], links: [] },
     jsonLd: [],
+    companySalariesIndexable: false,
     breadcrumbTrail: [
       { name: 'Home', href: '/' },
       { name: 'Jobs', href: '/jobs' },

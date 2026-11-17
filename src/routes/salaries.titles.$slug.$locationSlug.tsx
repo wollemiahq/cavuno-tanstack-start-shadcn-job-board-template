@@ -4,7 +4,7 @@
  */
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, salaryTitlePath } from '@cavuno/board/paths';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -34,6 +34,7 @@ import {
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { textLinkClass } from '@/lib/text-link';
 
 export const Route = createFileRoute('/salaries/titles/$slug/$locationSlug')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -157,6 +158,15 @@ function TitleLocationSalaryPage() {
         getLocale(),
       )}
       title={heading}
+      links={
+        <Link
+          to="/jobs/$keyword"
+          params={{ keyword: cat }}
+          className={textLinkClass}
+        >
+          {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
+        </Link>
+      }
     >
       {hasSalaryContent ? (
         <>

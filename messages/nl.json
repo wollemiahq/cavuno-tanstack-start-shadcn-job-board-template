@@ -538,6 +538,7 @@
     }
   ],
   "categoryPage_notFoundText": "Categorie niet gevonden.",
+  "categoryPage_salariesLink": "Salarissen voor {category} bekijken",
   "commandDialog_searchPlaceholder": "Zoek een opdracht om uit te voeren…",
   "commandDialog_title": "Opdrachtpalet",
   "common_closeLabel": "Sluiten",
@@ -619,6 +620,7 @@
   "companySalaries_categoryHeading": "Salarissen voor {category} bij {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Salarisgegevens voor {category} bij {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Salarissen voor {category} bij {company}: {range} per jaar, gebaseerd op {jobCount} vacatures.",
+  "companySalaries_companyJobsLink": "Vacatures bij {company}",
   "companySalaries_heading": "Salarissen bij {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +656,7 @@
   "companySalaries_notFoundCompanyCategory": "Geen salarisgegevens voor dit bedrijf en deze categorie.",
   "companySalaries_otherCompaniesHiringLabel": "Andere bedrijven die personeel zoeken voor {category}",
   "companySalaries_otherCompaniesLabel": "Andere bedrijven",
+  "companySalaries_roleSalariesLink": "Salarissen voor {category} bij alle bedrijven",
   "companySalaries_salariesByRoleLabel": "Salarissen per functie",
   "companySalaries_seniorityHeading": "Salaris per ervaringsniveau",
   "companySalaries_topLocationsLabel": "Toplocaties",
@@ -1411,6 +1414,10 @@
   "jobDetail_additionalDetailsHeading": "Aanvullende gegevens",
   "jobDetail_breadcrumbAriaLabel": "Broodkruimelpad",
   "jobDetail_categoriesHeading": "Categorieën",
+  "jobDetail_companyJobsFallbackLink": "Alle vacatures bij dit bedrijf",
+  "jobDetail_companyJobsLink": "Alle vacatures bij {company}",
+  "jobDetail_companySalariesFallbackLink": "Salarissen bij dit bedrijf",
+  "jobDetail_companySalariesLink": "Salarissen bij {company}",
   "jobDetail_customFieldNoLabel": "Nee",
   "jobDetail_customFieldYesLabel": "Ja",
   "jobDetail_educationLabel": "Opleiding",
@@ -2389,6 +2396,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Salarissen in {place}: {range} per jaar, op basis van {jobCount} vacatures.",
   "salaryDetail_relatedSkills": "Verwante vaardigheden",
   "salaryDetail_relatedTitles": "Verwante functies",
+  "salaryDetail_roleJobsLink": "Vacatures in {title} bekijken",
   "salaryDetail_seeAllLocationsLabel": "Alle locaties bekijken",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Alle vaardigheden in {place} bekijken",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Alle functies in {place} bekijken",

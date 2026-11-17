@@ -87,6 +87,7 @@ export function createJobDetailLoader(
         head: page.head,
         jsonLd: page.jsonLd,
         breadcrumbTrail: page.breadcrumbTrail,
+        companySalariesIndexable: page.companySalariesIndexable,
         applicationState,
       };
     } catch (error) {

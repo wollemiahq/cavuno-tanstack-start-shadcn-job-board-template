@@ -40,6 +40,7 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { isSalaryPageNoindex, noindexFollow } from './place-listing-helpers';
 import { profileCustomFilters } from './profile-filter-fields';
+import { indexableSalaryTitleSlugs } from './salary-link-verdicts';
 
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 import type { CustomFieldSearch } from '@/lib/custom-field-filters';
@@ -694,7 +695,7 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [salary, seo] = await Promise.all([
+      const [salary, seo, salaryTitles] = await Promise.all([
         board.companies.salaries.category(
           data.companySlug,
           data.categorySlug,
@@ -702,7 +703,13 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
           { headers },
         ),
         seoBase(),
+        indexableSalaryTitleSlugs(headers),
       ]);
+      // The role's board-wide salary page, linked only when the salary
+      // titles hub marks it indexable.
+      const roleSalaryIndexable = salaryTitles.has(
+        salary.categoryCanonicalSlug,
+      );
       const locale = seo.language;
       const range = salary.overallSalary
         ? formatSalaryStatRange(
@@ -790,6 +797,6 @@ export const getCompanyCategorySalaryPage = createServerFn({ method: 'GET' })
           ]),
         ].filter((entry) => entry !== null),
       );
-      return { salary, seo, head, jsonLd, faqs };
+      return { salary, seo, head, jsonLd, faqs, roleSalaryIndexable };
     }),
   );

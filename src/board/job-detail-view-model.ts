@@ -56,6 +56,8 @@ export interface JobDetailCompanyVM {
   websiteHref: string | null;
   /** Website without the protocol, for display. */
   websiteLabel: string | null;
+  /** Company slug, for typed links to its jobs and salaries pages. */
+  slug: string;
   /** Company profile path (canonical). */
   href: string;
   intro: string | null;
@@ -331,6 +333,7 @@ export function toJobDetailVM(
         logoUrl: company.logoUrl ?? null,
         websiteHref: website,
         websiteLabel: website ? website.replace(/^https?:\/\//, '') : null,
+        slug: company.slug,
         href: companyPath(company.slug),
         intro: companyIntro,
         viewProfileLabel: copy.viewCompanyProfileLabel,
