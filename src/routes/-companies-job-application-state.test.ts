@@ -55,7 +55,6 @@ beforeEach(() => {
     },
     head: { meta: [], links: [] },
     jsonLd: [],
-    companySalariesIndexable: false,
     breadcrumbTrail: [
       { name: 'Home', href: '/' },
       { name: 'Jobs', href: '/jobs' },
@@ -131,6 +130,27 @@ describe('full job application state', () => {
     expect(data).toMatchObject({
       job: { slug: 'platform-engineer' },
       applicationState: 'unknown',
+    });
+  });
+});
+
+describe('company salaries link verdict', () => {
+  it('links company salaries only when the company has a salary sample', async () => {
+    expect(await loadJobDetail(jobDetailLoaderInput())).toMatchObject({
+      companySalariesIndexable: false,
+    });
+
+    getCompany.mockResolvedValue({
+      ...publicCompanyFixture('acme'),
+      salarySampleCount: 4,
+    });
+    expect(await loadJobDetail(jobDetailLoaderInput())).toMatchObject({
+      companySalariesIndexable: true,
+    });
+
+    getCompany.mockRejectedValue(new Error('Company unavailable'));
+    expect(await loadJobDetail(jobDetailLoaderInput())).toMatchObject({
+      companySalariesIndexable: false,
     });
   });
 });

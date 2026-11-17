@@ -8,6 +8,8 @@ import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { MasterDetailLink } from '@/components/master-detail-link';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { jobDestination } from '@/lib/master-detail-destination';
+import { textLinkClass } from '@/lib/text-link';
+import { cn } from '@/lib/utils';
 
 export function JobSearchResult({
   vm,
@@ -60,7 +62,7 @@ export function JobSearchResult({
                     <Link
                       to="/companies/$companySlug"
                       params={{ companySlug: vm.companySlug }}
-                      className="relative z-10 hover:underline"
+                      className={cn(textLinkClass, 'relative z-10')}
                     >
                       {vm.companyName}
                     </Link>

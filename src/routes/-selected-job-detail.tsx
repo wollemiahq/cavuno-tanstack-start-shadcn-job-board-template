@@ -148,6 +148,7 @@ export function SelectedJobDetail({
       loadingLabel={m.jobSearch_detailLoadingLabel()}
       applySlot={inertOnError(applySlot)}
       saveSlot={inertOnError(saveSlotNode)}
+      companySalariesLinked={state.companyHasSalaries}
     />
   ) : undefined;
 

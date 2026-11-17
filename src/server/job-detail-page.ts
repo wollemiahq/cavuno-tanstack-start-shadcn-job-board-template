@@ -23,7 +23,6 @@ import { boardLanguageUrl } from '../lib/self-url';
 import { m } from '../paraglide/messages';
 import { isLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
-import { indexableCompanySalarySlugs } from './salary-link-verdicts';
 
 import { jobBreadcrumbItems, jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
 
@@ -48,17 +47,11 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
   .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [job, boardContext, origin, salaryCompanies] = await Promise.all([
+      const [job, boardContext, origin] = await Promise.all([
         board.jobs.retrieve(data.jobSlug, APPLY_GATEWAY_QUERY, { headers }),
         readBoardContext(),
         readPublicOrigin(),
-        indexableCompanySalarySlugs(headers),
       ]);
-      // The company card links the employer's salaries page only when the
-      // salary companies hub marks it indexable.
-      const companySalariesIndexable = job.company?.slug
-        ? salaryCompanies.has(job.company.slug)
-        : false;
       const seo = {
         boardName: boardContext.name,
         language: boardContext.language,
@@ -156,13 +149,6 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         ].filter((entry) => entry !== null),
       );
 
-      return {
-        job,
-        seo,
-        head,
-        jsonLd,
-        breadcrumbTrail,
-        companySalariesIndexable,
-      };
+      return { job, seo, head, jsonLd, breadcrumbTrail };
     }),
   );

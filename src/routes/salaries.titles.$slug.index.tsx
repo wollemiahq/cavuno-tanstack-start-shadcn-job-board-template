@@ -73,7 +73,7 @@ export const Route = createFileRoute('/salaries/titles/$slug/')({
 });
 
 function TitleSalaryPage() {
-  const { salary, faqs } = Route.useLoaderData();
+  const { salary, faqs, roleJobsSlug } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
@@ -159,13 +159,16 @@ function TitleSalaryPage() {
       )}
       title={m.salaryDetail_titleHeading({ title: salary.categoryName })}
       links={
-        <Link
-          to="/jobs/$keyword"
-          params={{ keyword: salary.canonicalSlug }}
-          className={textLinkClass}
-        >
-          {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
-        </Link>
+        // Only when the role's jobs category exists.
+        roleJobsSlug ? (
+          <Link
+            to="/jobs/$keyword"
+            params={{ keyword: roleJobsSlug }}
+            className={textLinkClass}
+          >
+            {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
+          </Link>
+        ) : undefined
       }
     >
       {hasSalaryContent ? (

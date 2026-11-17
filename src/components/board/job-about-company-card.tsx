@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { textLinkClass } from '@/lib/text-link';
 
 export function JobAboutCompanyCard({
   company,
@@ -59,8 +60,35 @@ export function JobAboutCompanyCard({
             {company.intro}
           </p>
         ) : null}
+
+        <ul className="space-y-1 text-sm [overflow-wrap:anywhere]">
+          <li>
+            <Link
+              to="/companies/$companySlug/jobs"
+              params={{ companySlug: company.slug }}
+              className={textLinkClass}
+            >
+              {company.name
+                ? m.jobDetail_companyJobsLink({ company: company.name })
+                : m.jobDetail_companyJobsFallbackLink()}
+            </Link>
+          </li>
+          {salariesLinked ? (
+            <li>
+              <Link
+                to="/companies/$companySlug/salaries"
+                params={{ companySlug: company.slug }}
+                className={textLinkClass}
+              >
+                {company.name
+                  ? m.jobDetail_companySalariesLink({ company: company.name })
+                  : m.jobDetail_companySalariesFallbackLink()}
+              </Link>
+            </li>
+          ) : null}
+        </ul>
       </CardContent>
-      <CardFooter className="flex-col items-stretch gap-2">
+      <CardFooter>
         <Link
           to={company.href}
           className={buttonVariants({
@@ -70,26 +98,6 @@ export function JobAboutCompanyCard({
         >
           {company.viewProfileLabel}
         </Link>
-        <Link
-          to="/companies/$companySlug/jobs"
-          params={{ companySlug: company.slug }}
-          className={buttonVariants({ variant: 'link' })}
-        >
-          {company.name
-            ? m.jobDetail_companyJobsLink({ company: company.name })
-            : m.jobDetail_companyJobsFallbackLink()}
-        </Link>
-        {salariesLinked ? (
-          <Link
-            to="/companies/$companySlug/salaries"
-            params={{ companySlug: company.slug }}
-            className={buttonVariants({ variant: 'link' })}
-          >
-            {company.name
-              ? m.jobDetail_companySalariesLink({ company: company.name })
-              : m.jobDetail_companySalariesFallbackLink()}
-          </Link>
-        ) : null}
       </CardFooter>
     </Card>
   );

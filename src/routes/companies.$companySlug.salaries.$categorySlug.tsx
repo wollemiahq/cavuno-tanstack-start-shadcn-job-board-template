@@ -81,7 +81,7 @@ export const Route = createFileRoute(
 });
 
 function CompanyCategorySalaryPage() {
-  const { salary, faqs, roleSalaryIndexable } = Route.useLoaderData();
+  const { salary, faqs, roleSalarySlug, roleJobsSlug } = Route.useLoaderData();
   // UI breadcrumb trail — component-only copy family (rides the route chunk).
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
@@ -145,17 +145,19 @@ function CompanyCategorySalaryPage() {
               company: salary.companyName,
             })}
           </Link>
-          <Link
-            to="/jobs/$keyword"
-            params={{ keyword: salary.categoryCanonicalSlug }}
-            className={textLinkClass}
-          >
-            {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
-          </Link>
-          {roleSalaryIndexable ? (
+          {roleJobsSlug ? (
+            <Link
+              to="/jobs/$keyword"
+              params={{ keyword: roleJobsSlug }}
+              className={textLinkClass}
+            >
+              {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
+            </Link>
+          ) : null}
+          {roleSalarySlug ? (
             <Link
               to="/salaries/titles/$slug"
-              params={{ slug: salary.categoryCanonicalSlug }}
+              params={{ slug: roleSalarySlug }}
               className={textLinkClass}
             >
               {m.companySalaries_roleSalariesLink({

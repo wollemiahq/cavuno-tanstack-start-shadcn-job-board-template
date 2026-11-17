@@ -28,6 +28,7 @@ vi.mock('@tanstack/react-router', async (original) => {
 
 import { m } from '../paraglide/messages';
 import { Route as CompanyCategorySalaryRoute } from './companies.$companySlug.salaries.$categorySlug';
+import { Route as TitleSalaryRoute } from './salaries.titles.$slug.index';
 
 import type { JobDetailCompanyVM } from '@/board/job-detail-view-model';
 import { JobAboutCompanyCard } from '@/components/board/job-about-company-card';
@@ -85,7 +86,7 @@ describe('job detail company card', () => {
   });
 });
 
-function companyCategoryData(roleSalaryIndexable: boolean) {
+function companyCategoryData(roleSalarySlug: string | null) {
   return {
     salary: {
       companySlug: 'fixture-company',
@@ -98,7 +99,8 @@ function companyCategoryData(roleSalaryIndexable: boolean) {
       competitors: [],
     },
     faqs: [],
-    roleSalaryIndexable,
+    roleSalarySlug,
+    roleJobsSlug: 'fixture-role',
   };
 }
 
@@ -107,7 +109,7 @@ describe('company role salary page links', () => {
     m.companySalaries_roleSalariesLink({ category: 'Fixture role' });
 
   it("links the company's jobs and the role's jobs, empty state included", async () => {
-    loader.data = companyCategoryData(false);
+    loader.data = companyCategoryData(null);
     await renderPage(CompanyCategorySalaryRoute.options.component!);
 
     expect(
@@ -119,15 +121,48 @@ describe('company role salary page links', () => {
   });
 
   it('links the role salary page only when the API marks it indexable', async () => {
-    loader.data = companyCategoryData(false);
+    loader.data = companyCategoryData(null);
     await renderPage(CompanyCategorySalaryRoute.options.component!);
     expect(
       screen.queryByRole('link', { name: roleSalaries() }),
     ).not.toBeInTheDocument();
 
     cleanup();
-    loader.data = companyCategoryData(true);
+    loader.data = companyCategoryData('fixture-role');
     await renderPage(CompanyCategorySalaryRoute.options.component!);
     expect(hrefOf(roleSalaries())).toBe('/salaries/titles/fixture-role');
+  });
+});
+
+describe('salary title page jobs link', () => {
+  const roleJobs = () => m.salaryDetail_roleJobsLink({ title: 'Fixture role' });
+  const titleData = (roleJobsSlug: string | null) => ({
+    salary: {
+      canonicalSlug: 'fixture-role',
+      categoryName: 'Fixture role',
+      currency: 'USD',
+      overallSalary: null,
+      bySeniority: [],
+      topCompanies: [],
+      topLocations: [],
+      topSkills: [],
+      relatedTitles: [],
+    },
+    faqs: [],
+    roleJobsSlug,
+  });
+
+  it('links the jobs category the role resolves to', async () => {
+    loader.data = titleData('fixture-role-canonical');
+    await renderPage(TitleSalaryRoute.options.component!);
+    expect(hrefOf(roleJobs())).toBe('/jobs/fixture-role-canonical');
+  });
+
+  it('shows no jobs link when the role has no jobs category', async () => {
+    loader.data = titleData(null);
+    await renderPage(TitleSalaryRoute.options.component!);
+    expect(
+      screen.queryByRole('link', { name: roleJobs() }),
+    ).not.toBeInTheDocument();
   });
 });
