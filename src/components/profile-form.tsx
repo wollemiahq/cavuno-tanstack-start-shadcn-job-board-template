@@ -37,12 +37,13 @@ import {
 } from '@/board/form-layout';
 import {
   initialProfileSelections,
+  missingSelectionDetail,
   profileCustomFieldsBody,
   profileObjectReferencesBody,
+  withUnsetRequiredBooleans,
   type ProfileFieldValue,
   type ProfileSelections,
 } from '@/board/profile-field-writes';
-import { CollectionFieldPicker } from '@/components/collection-field-picker';
 import type {
   CustomFieldUploadResult,
   CustomFieldUploads,
@@ -51,6 +52,7 @@ import {
   CustomFieldInput,
   hasCustomFieldInput,
   isCustomFieldEmpty,
+  ProfileCollectionField,
 } from '@/components/custom-fields-group';
 import type { LocationSuggestionState } from '@/components/location-combobox';
 import { LocationSuggestField } from '@/components/location-suggest-field';
@@ -97,6 +99,10 @@ import {
   suggestedHandle,
 } from '@/lib/candidate-handle';
 import { searchString } from '@/lib/pagination';
+import type {
+  ProfileFieldRefusal,
+  RefusedWrite,
+} from '@/lib/profile-field-refusal';
 import type {
   CandidateProfile,
   MyCandidateProfileFieldValues,
@@ -518,6 +524,8 @@ export function ProfileForm({
     id: string;
     message: string;
   } | null>(null);
+  // The fields the API refused on the last save.
+  const [refusal, setRefusal] = useState<ProfileFieldRefusal | null>(null);
 
   /**
    * The label of a required built-in left empty, or `null` when it has a
@@ -590,6 +598,22 @@ export function ProfileForm({
         };
       }
     }
+    // A required detail of a chosen entry, wherever its field is.
+    for (const entry of inlineEntries) {
+      if (entry.kind !== 'collection') continue;
+      const detail = missingSelectionDetail(
+        entry.definition,
+        selections[entry.key],
+      );
+      if (detail) {
+        return {
+          id: detail.id,
+          message: m.profileForm_fieldRequiredError({
+            field: customFieldLabel(detail.definition),
+          }),
+        };
+      }
+    }
     return null;
   }
 
@@ -651,6 +675,7 @@ export function ProfileForm({
     if (saving.current) return;
     const missing = missingRequired();
     setInvalid(missing);
+    setRefusal(null);
     setHandleShowsProblem(true);
     if (handleIssue) {
       handleInput.current?.focus();
@@ -729,19 +754,38 @@ export function ProfileForm({
         handleInput.current?.focus();
         return;
       }
+      // An unanswered required Yes/No goes as No even when untouched.
+      const customEntries = inlineEntries.flatMap((entry) =>
+        entry.kind === 'custom'
+          ? [{ ...entry, type: entry.definition.type }]
+          : [],
+      );
       const values = profileCustomFieldsBody(
-        inlineEntries.flatMap((entry) =>
-          entry.kind === 'custom' && editedCustomFields.current.has(entry.key)
+        customEntries.flatMap((entry) =>
+          editedCustomFields.current.has(entry.key) ||
+          (entry.required && entry.type === 'boolean')
             ? [entry.key]
             : [],
         ),
-        customValues,
+        withUnsetRequiredBooleans(customEntries, customValues),
         storedValues,
       );
+      // The refusal mapper loads only when a save is refused.
+      const refused = async (failure: RefusedWrite) => {
+        const { profileFieldRefusal } =
+          await import('@/lib/profile-field-refusal');
+        setRefusal(
+          profileFieldRefusal(failure, {
+            customFields: profileFields?.customFields?.definitions,
+            collectionFields: profileFields?.objectReferences?.definitions,
+          }),
+        );
+      };
       if (values) {
-        await (dependencies.updateCustomFields ?? updateProfileCustomFields)({
-          data: { values },
-        });
+        const written = await (
+          dependencies.updateCustomFields ?? updateProfileCustomFields
+        )({ data: { values } });
+        if (written.ok === false) return await refused(written);
       }
       const references = profileObjectReferencesBody(
         inlineEntries.flatMap((entry) =>
@@ -755,9 +799,10 @@ export function ProfileForm({
         profileFields?.objectReferences?.definitions ?? [],
       );
       if (references) {
-        await (
+        const written = await (
           dependencies.updateObjectReferences ?? updateProfileObjectReferences
         )({ data: references });
+        if (written.ok === false) return await refused(written);
       }
       void dependencies.toastActionSuccess();
       await reconcileCommittedAction(async () => {
@@ -1176,6 +1221,7 @@ export function ProfileForm({
           required={entry.required}
           value={customValues[entry.key]}
           uploads={uploads}
+          error={refusal?.byKey[entry.key]?.message}
           onChange={(value) => {
             editedCustomFields.current.add(entry.key);
             setCustomValues((prev) => ({ ...prev, [entry.key]: value }));
@@ -1184,7 +1230,7 @@ export function ProfileForm({
       );
     }
     return (
-      <CollectionFieldPicker
+      <ProfileCollectionField
         definition={entry.definition}
         value={selections[entry.key] ?? []}
         onChange={(value) => {
@@ -1192,7 +1238,12 @@ export function ProfileForm({
           setSelections((prev) => ({ ...prev, [entry.key]: value }));
         }}
         loadChoices={(search) => loadChoices(entry.key, search)}
-        error={invalid?.id === formEntryKey(entry) ? invalid.message : null}
+        error={
+          invalid?.id === formEntryKey(entry)
+            ? invalid.message
+            : refusal?.byKey[entry.key]?.message
+        }
+        detailErrors={{ invalid, byKey: refusal?.byKey }}
       />
     );
   }
@@ -1267,7 +1318,11 @@ export function ProfileForm({
               ? m.profileForm_savingLabel()
               : m.profileForm_saveLabel()}
           </Button>
-          {invalid ? <FieldError>{invalid.message}</FieldError> : null}
+          {invalid ? (
+            <FieldError>{invalid.message}</FieldError>
+          ) : refusal ? (
+            <FieldError errors={refusal.messages} />
+          ) : null}
         </div>
       </FieldGroup>
     </form>

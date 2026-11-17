@@ -14,14 +14,6 @@ import {
   type VerifiableItem,
 } from '@/board/item-verification';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
 import { VerifiedTick, verifiedTooltipText } from '@/components/verified-tick';
 import type { ItemVerification } from '@cavuno/board';
 
@@ -186,48 +178,5 @@ export function ItemVerificationTick({
         </Suspense>
       ) : null}
     </>
-  );
-}
-
-/**
- * The collection items a board verifies, each with its indicator.
- * Renders nothing when the board verifies none of the stored selections.
- */
-export function ItemVerificationCard({
-  items,
-  actions,
-}: {
-  items: readonly VerifiableItem[];
-  actions?: ItemVerificationActions;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <Card id="verification" data-test="item-verification-card">
-      <CardHeader>
-        <CardTitle>
-          <h2>{m.itemVerification_heading()}</h2>
-        </CardTitle>
-        <CardDescription>{m.itemVerification_intro()}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-2">
-          {items.map((item) => (
-            <Item
-              key={item.itemKey}
-              variant="outline"
-              size="sm"
-              render={<li />}
-            >
-              <ItemContent>
-                <ItemTitle className="flex-wrap gap-1.5">
-                  {item.label}
-                  <ItemVerificationTick item={item} actions={actions} />
-                </ItemTitle>
-              </ItemContent>
-            </Item>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
   );
 }

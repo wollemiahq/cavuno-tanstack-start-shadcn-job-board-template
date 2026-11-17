@@ -50,6 +50,10 @@ import {
   parseJobFormViolations,
   type JobFormViolation,
 } from '@/board/job-form';
+import {
+  parseProfileFieldViolations,
+  type ProfileFieldViolation,
+} from '@/board/profile-field-violations';
 import { searchString } from '@/lib/pagination';
 import type {
   SavedPeopleFilters,
@@ -64,6 +68,8 @@ export type ActionResult<T> =
       message: string;
       /** The broken Job form rules of a `jobs_constraint_violation`. */
       violations?: JobFormViolation[];
+      /** The fields a profile custom field or collection write refused. */
+      fieldViolations?: ProfileFieldViolation[];
       /** The body fields a `validation_bad_request` refused, by name. */
       fields?: string[];
     };
@@ -84,6 +90,8 @@ export async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
     };
     const violations = parseJobFormViolations(error.details);
     if (violations.length > 0) failure.violations = violations;
+    const fieldViolations = parseProfileFieldViolations(error.details);
+    if (fieldViolations.length > 0) failure.fieldViolations = fieldViolations;
     const fields = refusedFields(error.details);
     if (error.code === 'validation_bad_request' && fields.length > 0) {
       failure.fields = fields;
