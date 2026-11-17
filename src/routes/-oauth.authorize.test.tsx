@@ -47,7 +47,7 @@ function load(step: McpConsentStep, search = '?client_id=a&state=1e3') {
 }
 
 describe('/oauth/authorize loader', () => {
-  it('asks the API with the query exactly as the assistant sent it', async () => {
+  it('asks the API with the page’s search', async () => {
     const { result, getMcpConsentStep } = load(consent);
     await expect(result).resolves.toMatchObject({ step: consent });
     expect(getMcpConsentStep).toHaveBeenCalledWith({
@@ -121,7 +121,7 @@ describe('/oauth/authorize view', () => {
     });
   });
 
-  it('cancels, and shows the API’s reason when the decision fails', async () => {
+  it('cancels, and shows the API’s answer in place of the choice', async () => {
     const decide = vi.fn().mockResolvedValue({
       ok: true,
       data: { next: 'error', message: 'This page expired.' },
@@ -135,14 +135,40 @@ describe('/oauth/authorize view', () => {
       />,
     );
 
-    const cancel = screen.getByRole('button', {
-      name: m.mcpConsent_cancelLabel(),
-    });
-    fireEvent.click(cancel);
-    expect(await screen.findByText('This page expired.')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: m.mcpConsent_cancelLabel() }),
+    );
+    expect(
+      await screen.findByRole('heading', { name: m.mcpConsent_errorTitle() }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('This page expired.')).toBeInTheDocument();
     expect(decide.mock.calls[0]?.[0].data.decision).toBe('deny');
+    expect(screen.queryByRole('button')).toBeNull();
     expect(assignLocation).not.toHaveBeenCalled();
-    expect(cancel).toBeEnabled();
+  });
+
+  it('keeps the choice when the call fails, so it can be tried again', async () => {
+    const decide = vi.fn().mockResolvedValue({
+      ok: false,
+      code: 'rate_limited',
+      message: 'Too many requests',
+    });
+    render(
+      <McpConsentView
+        step={consent}
+        decide={decide}
+        assignLocation={vi.fn()}
+      />,
+    );
+
+    const allow = screen.getByRole('button', {
+      name: m.mcpConsent_allowLabel(),
+    });
+    fireEvent.click(allow);
+    expect(
+      await screen.findByText(m.boardError_rateLimitedText()),
+    ).toBeInTheDocument();
+    expect(allow).toBeEnabled();
   });
 
   it('sends the browser on to an app-scheme callback', () => {

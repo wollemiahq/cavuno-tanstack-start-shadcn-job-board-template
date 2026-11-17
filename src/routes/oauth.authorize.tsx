@@ -10,6 +10,7 @@ import { headTitle } from '@/lib/page-title';
 const assignLocation = (url: string) => window.location.assign(url);
 
 export const Route = createFileRoute('/oauth/authorize')({
+  loaderDeps: ({ search }) => ({ search }),
   loader: ({ location }) => loadMcpConsent(location.searchStr),
   head: ({ loaderData }) => ({
     meta: [

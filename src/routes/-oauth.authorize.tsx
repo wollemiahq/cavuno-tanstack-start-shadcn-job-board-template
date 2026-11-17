@@ -15,6 +15,7 @@ import { AuthCard, FormError } from '../components/auth-form';
 import { m } from '../paraglide/messages';
 import {
   getMcpConsentStep,
+  type McpConsentDecision,
   type McpConsentResult,
   type McpConsentStep,
 } from '../server/mcp-consent';
@@ -118,11 +119,14 @@ function McpConsentChoice({
   decide: Parameters<typeof McpConsentView>[0]['decide'];
   assignLocation: (url: string) => void;
 }) {
-  const [pending, setPending] = useState<'allow' | 'deny' | null>(null);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Allow or Cancel went through: back to the assistant, or an error no
+  // second click would change (an expired page, say).
+  const [outcome, setOutcome] = useState<McpConsentDecision | null>(null);
 
   async function submit(decision: 'allow' | 'deny') {
-    setPending(decision);
+    setPending(true);
     setError(null);
     try {
       const result = await decide({
@@ -132,20 +136,25 @@ function McpConsentChoice({
           decision,
         },
       });
-      if (!result.ok) {
-        setError(boardErrorMessage(result));
-      } else if (result.data.next === 'redirect') {
-        // Back to the assistant, which may be another site or an app. The
-        // buttons stay disabled while the browser leaves.
-        assignLocation(result.data.location);
+      if (result.ok) {
+        setOutcome(result.data);
         return;
-      } else {
-        setError(result.data.message);
       }
+      setError(boardErrorMessage(result));
     } catch {
       setError(boardErrorMessage({ code: 'unknown' }));
     }
-    setPending(null);
+    setPending(false);
+  }
+
+  if (outcome) {
+    return (
+      <McpConsentView
+        step={outcome}
+        decide={decide}
+        assignLocation={assignLocation}
+      />
+    );
   }
 
   return (
@@ -157,8 +166,8 @@ function McpConsentChoice({
         <p className="text-foreground font-medium">{step.trust.label}</p>
         <p className="text-muted-foreground">{step.trust.description}</p>
       </div>
-      {step.scopes.map((scope) => (
-        <p key={scope} className="text-foreground text-sm leading-6">
+      {step.scopes.map((scope, index) => (
+        <p key={index} className="text-foreground text-sm leading-6">
           {scope}
         </p>
       ))}
@@ -182,7 +191,7 @@ function McpConsentChoice({
           type="button"
           size="lg"
           className="w-full"
-          disabled={pending !== null}
+          disabled={pending}
           onClick={() => void submit('allow')}
         >
           {m.mcpConsent_allowLabel()}
@@ -192,7 +201,7 @@ function McpConsentChoice({
           variant="outline"
           size="lg"
           className="w-full sm:order-first"
-          disabled={pending !== null}
+          disabled={pending}
           onClick={() => void submit('deny')}
         >
           {m.mcpConsent_cancelLabel()}

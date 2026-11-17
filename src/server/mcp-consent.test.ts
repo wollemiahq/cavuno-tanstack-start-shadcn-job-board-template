@@ -56,7 +56,9 @@ describe('getMcpConsentStep', () => {
   it('sends the Board API the query the assistant sent', async () => {
     mocks.fetch.mockResolvedValue({ next: 'error', message: 'x' });
     // Values the router would change: `1e3` becomes `1000`.
-    const raw = '?client_id=a&state=1e3&scope=a+b&n=12345678901234567890';
+    // `request` is also a standard OAuth parameter (RFC 9101).
+    const raw =
+      '?client_id=a&request=eyJ&state=1e3&scope=a+b&n=12345678901234567890';
     const routerCopy = (search: string) =>
       defaultStringifySearch(defaultParseSearch(search));
     expect(routerCopy(raw)).not.toBe(raw);
@@ -85,7 +87,6 @@ describe('getMcpConsentStep', () => {
     for (const request of [
       new Request('https://board.test/oauth/authorize'),
       new Request('https://board.test/oauth/authorize?oauth=abc'),
-      new Request('https://board.test/oauth/authorize?request=abc'),
       new Request('https://board.test/oauth/authorize?state=1', {
         method: 'POST',
       }),
@@ -93,6 +94,12 @@ describe('getMcpConsentStep', () => {
     ]) {
       expect(mcpAuthorizeRedirect(request)).toBeNull();
     }
+  });
+
+  it('never lets a caller change the API path', async () => {
+    mocks.fetch.mockResolvedValue({ next: 'error', message: 'x' });
+    await getMcpConsentStep({ data: { search: '/../../other-board' } });
+    expect(mocks.fetch.mock.calls[0]?.[0]).toBe('/mcp/consent');
   });
 
   it('sends Cavuno’s own sign-in return as it is', async () => {
