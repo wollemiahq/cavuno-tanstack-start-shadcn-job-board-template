@@ -3422,7 +3422,7 @@
   "emailPreferences_topicsOffHint": "Activez les actualités et offres pour choisir des sujets.",
   "emailPreferences_topicConsent": "Envoyez-moi les e-mails {topic} de {board}.",
   "emailPreferences_unsubscribeAll": "Se désabonner de tout",
-  "emailPreferences_unsubscribeAllHint": "Arrêtez d'un coup les alertes d'emploi, offres correspondantes et actualités de {board}.",
+  "emailPreferences_unsubscribeAllHint": "Arrêtez en une fois les alertes d'emploi, les offres correspondantes et les actualités de {board}.",
   "emailPreferences_unsubscribeAllTitle": "Se désabonner de tous les e-mails ?",
   "emailPreferences_unsubscribeAllBody": "Cela désactive vos alertes d'emploi, offres correspondantes et actualités de {board}. Vous pouvez vous réinscrire à tout moment.",
   "emailPreferences_unsubscribeAllConfirm": "Se désabonner",

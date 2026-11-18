@@ -11,6 +11,7 @@ import {
 
 import { describeJobAlert } from '@/board/job-alert-description';
 import type { AlertFilterNames } from '@/board/job-alert-match';
+import { anchorJobTitleText } from '@/components/anchor-job-title';
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -241,22 +242,26 @@ export function EmailPreferencesPageView({
                   disabled={pending}
                   onCheckedChange={setJobAlerts}
                 />
-                {jobAlerts.alerts.map((alert) => (
-                  <Fragment key={alert.id}>
-                    <FieldSeparator />
-                    <AlertRow
-                      alert={alert}
-                      filterNames={data.filterNames}
-                      pending={pending}
-                      onPausedChange={(paused) =>
-                        update({ alerts: [{ id: alert.id, paused }] })
-                      }
-                      onDelete={() =>
-                        update({ alerts: [{ id: alert.id, delete: true }] })
-                      }
-                    />
-                  </Fragment>
-                ))}
+                <FieldSeparator />
+                <ul className="flex flex-col gap-6">
+                  {jobAlerts.alerts.map((alert, index) => (
+                    <li key={alert.id} className="flex flex-col gap-6">
+                      {index > 0 ? <FieldSeparator /> : null}
+                      <AlertRow
+                        alert={alert}
+                        filterNames={data.filterNames}
+                        canPause={jobAlerts.confirmed}
+                        pending={pending}
+                        onPausedChange={(paused) =>
+                          update({ alerts: [{ id: alert.id, paused }] })
+                        }
+                        onDelete={() =>
+                          update({ alerts: [{ id: alert.id, delete: true }] })
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
               </>
             )}
           </PreferenceCard>
@@ -442,23 +447,22 @@ function PreferenceCard({
 function AlertRow({
   alert,
   filterNames,
+  canPause,
   pending,
   onPausedChange,
   onDelete,
 }: {
   alert: PreferenceAlert;
   filterNames: AlertFilterNames;
+  /** False when the hub would ignore a pause: an unconfirmed person. */
+  canPause: boolean;
   pending: boolean;
   onPausedChange: (paused: boolean) => void;
   onDelete: () => void;
 }) {
   const { headline, criteria } = describeJobAlert(alert, filterNames);
   // A similar-job alert without a name is named by its job, unlinked here.
-  const label =
-    headline ??
-    (alert.anchorJob
-      ? m.jobAlertMatch_similarTo({ title: alert.anchorJob.title })
-      : m.alertManager_similarJobsAlertLabel());
+  const label = headline ?? anchorJobTitleText(alert.anchorJob);
   const detail = alert.awaitingConfirmation
     ? m.emailPreferences_alertAwaiting()
     : criteria.join(' · ');
@@ -476,10 +480,11 @@ function AlertRow({
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
+            // Stays enabled while a change saves, so the menu can hand focus
+            // back to it; the items wait instead.
             <Button
               variant="ghost"
               size="icon-sm"
-              disabled={pending}
               aria-label={m.emailPreferences_alertActionsLabel({ label })}
             />
           }
@@ -487,14 +492,21 @@ function AlertRow({
           <MoreHorizontal aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {alert.awaitingConfirmation ? null : (
-            <DropdownMenuItem onClick={() => onPausedChange(!alert.paused)}>
+          {alert.awaitingConfirmation || !canPause ? null : (
+            <DropdownMenuItem
+              disabled={pending}
+              onClick={() => onPausedChange(!alert.paused)}
+            >
               {alert.paused
                 ? m.emailPreferences_resumeAlert()
                 : m.emailPreferences_pauseAlert()}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem variant="destructive" onClick={onDelete}>
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={pending}
+            onClick={onDelete}
+          >
             {m.emailPreferences_deleteAlert()}
           </DropdownMenuItem>
         </DropdownMenuContent>

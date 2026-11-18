@@ -98,9 +98,9 @@ function alertActions(label: string) {
   });
 }
 
-/** The row of the alert with this name. */
+/** The list item of the alert with this name. */
 function alertRow(label: string) {
-  const row = alertActions(label).closest('[data-slot="field"]');
+  const row = alertActions(label).closest('li');
   expect(row).toBeInstanceOf(HTMLElement);
   // SAFETY: checked to be an HTMLElement on the line above.
   return row as HTMLElement;
@@ -402,6 +402,68 @@ describe('email preferences page', () => {
     expect(
       alertRow(m.jobAlertMatch_jobsInMore({ categories: 'A, B', count: 2 })),
     ).toBeInTheDocument();
+  });
+
+  it('names a similar-job alert without a label by its job', () => {
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: {
+          ...prefs.jobAlerts,
+          alerts: [
+            {
+              ...prefs.jobAlerts.alerts[0],
+              label: null,
+              kind: 'similar_job',
+              anchorJob: { id: 'job-1', slug: 'pilot', title: 'Line pilot' },
+            },
+          ],
+        },
+      },
+    });
+    expect(
+      alertActions(m.jobAlertMatch_similarTo({ title: 'Line pilot' })),
+    ).toBeInTheDocument();
+  });
+
+  it('offers only Delete to a person who never confirmed, since a pause would do nothing', async () => {
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: { ...prefs.jobAlerts, confirmed: false, unsubscribed: true },
+      },
+    });
+    expect(await openAlertMenu('Design jobs')).toEqual([
+      m.emailPreferences_deleteAlert(),
+    ]);
+  });
+
+  it('keeps the menu button focusable while a change saves, with its items waiting', async () => {
+    const deps = dependencies();
+    let finish: (value: EmailPreferences) => void = () => {};
+    deps.updateEmailPreferences.mockReturnValue(
+      new Promise<EmailPreferences>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    renderPage({}, deps);
+    await openAlertMenu('Design jobs');
+    fireEvent.click(
+      screen.getByRole('menuitem', { name: m.emailPreferences_pauseAlert() }),
+    );
+    await waitFor(() =>
+      expect(deps.updateEmailPreferences).toHaveBeenCalledTimes(1),
+    );
+    expect(alertActions('Design jobs')).toBeEnabled();
+    await openAlertMenu('Design jobs');
+    for (const item of screen.getAllByRole('menuitem')) {
+      expect(item).toHaveAttribute('aria-disabled', 'true');
+    }
+    fireEvent.click(
+      screen.getByRole('menuitem', { name: m.emailPreferences_deleteAlert() }),
+    );
+    expect(deps.updateEmailPreferences).toHaveBeenCalledTimes(1);
+    finish(prefs);
   });
 
   it('lets an alert waiting for its confirmation link only be deleted', async () => {

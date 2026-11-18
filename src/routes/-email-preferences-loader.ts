@@ -85,8 +85,8 @@ export function createEmailPreferencesLoader(
       });
     }
     // The names need the alerts, so they follow the preferences read, in
-    // parallel with the board's name. A change only removes alerts, so the
-    // names read here cover every alert the page shows later.
+    // parallel with the board's name. They cover the alerts read here; an
+    // alert that first appears in a later re-read falls back to its slugs.
     const [{ prefs, filterNames }, seo] = await Promise.all([
       dependencies
         .getEmailPreferences({ data: { person: deps.person } })
