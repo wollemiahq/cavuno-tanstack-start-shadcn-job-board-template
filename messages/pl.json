@@ -3566,6 +3566,7 @@
   "emailPreferences_jobAlertsThrottled": "Przed chwilą poproszono o e-mail potwierdzający. Spróbuj ponownie za kilka minut.",
   "emailPreferences_jobAlertsSuppressed": "Nie możemy wysyłać e-maili na ten adres, więc nie wysłano linku potwierdzającego. Alerty pozostają wyłączone.",
   "emailPreferences_alertAwaiting": "Jeszcze nie wysyłamy: kliknij link w e-mailu potwierdzającym ten alert.",
+  "emailPreferences_alertAwaitingJobAlertsOff": "Włącz ponownie alerty o ofertach pracy, aby dostać nowy link potwierdzający.",
   "emailPreferences_alertActionsLabel": "Działania dla alertu: {label}",
   "emailPreferences_pauseAlert": "Wstrzymaj alert",
   "emailPreferences_resumeAlert": "Wznów alert",
