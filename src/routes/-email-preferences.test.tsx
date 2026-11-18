@@ -435,6 +435,50 @@ describe('email preferences page', () => {
     ).toBeInTheDocument();
   });
 
+  it('says a keyword-only alert matches any location and job type, and one with a place does not', () => {
+    const base = { ...prefs.jobAlerts.alerts[0], label: null };
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: {
+          ...prefs.jobAlerts,
+          alerts: [
+            { ...base, id: 'alert-keyword', filters: { query: 'pilot' } },
+            {
+              ...base,
+              id: 'alert-place',
+              filters: { query: 'cabin crew', placeIds: ['place-berlin'] },
+            },
+            {
+              ...base,
+              id: 'alert-similar',
+              kind: 'similar_job',
+              anchorJob: { id: 'job-1', slug: 'pilot', title: 'Line pilot' },
+            },
+          ],
+        },
+      },
+      filterNames: { categories: {}, places: { 'place-berlin': 'Berlin' } },
+    });
+    const any = m.jobAlertMatch_anyCriteria();
+    expect(
+      within(
+        alertRow(m.jobAlertMatch_jobsMatching({ query: 'pilot' })),
+      ).getByText(any),
+    ).toBeInTheDocument();
+    const placed = within(
+      alertRow(m.jobAlertMatch_jobsMatching({ query: 'cabin crew' })),
+    );
+    expect(placed.getByText('Berlin')).toBeInTheDocument();
+    expect(placed.queryByText(any)).not.toBeInTheDocument();
+    // A similar-job alert matches its job's location and type, not any.
+    expect(
+      within(
+        alertRow(m.jobAlertMatch_similarTo({ title: 'Line pilot' })),
+      ).queryByText(any),
+    ).not.toBeInTheDocument();
+  });
+
   it('offers only Delete to a person who never confirmed, since a pause would do nothing', async () => {
     renderPage({
       prefs: {

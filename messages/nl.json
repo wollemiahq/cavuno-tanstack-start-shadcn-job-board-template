@@ -173,6 +173,7 @@
   "alertManager_searchAlertLabel": "Zoekopdracht",
   "alertManager_similarJobsAlertLabel": "Vergelijkbare vacatures",
   "jobAlertMatch_quotedQuery": "‘{query}’",
+  "jobAlertMatch_anyCriteria": "Elke locatie · elk dienstverband",
   "jobAlertMatch_salaryUpTo": "Tot {amount}",
   "jobAlertMatch_salaryFrom": "Vanaf {amount}",
   "jobAlertMatch_salaryRange": "{min}–{max}",
