@@ -101,6 +101,7 @@ describe('/authorize view', () => {
       <McpConsentView
         step={consent}
         boardName={BOARD}
+        boardLogoUrl={null}
         decide={decide}
         assignLocation={assignLocation}
       />,
@@ -147,6 +148,7 @@ describe('/authorize view', () => {
       <McpConsentView
         step={consent}
         boardName={BOARD}
+        boardLogoUrl={null}
         decide={decide}
         assignLocation={assignLocation}
       />,
@@ -174,6 +176,7 @@ describe('/authorize view', () => {
       <McpConsentView
         step={consent}
         boardName={BOARD}
+        boardLogoUrl={null}
         decide={decide}
         assignLocation={vi.fn()}
       />,
@@ -196,6 +199,7 @@ describe('/authorize view', () => {
       <McpConsentView
         step={{ next: 'redirect', location }}
         boardName={BOARD}
+        boardLogoUrl={null}
         decide={vi.fn()}
         assignLocation={assignLocation}
       />,
@@ -212,6 +216,7 @@ describe('/authorize view', () => {
       <McpConsentView
         step={{ next: 'redirect', location: 'javascript:alert(1)' }}
         boardName={BOARD}
+        boardLogoUrl={null}
         decide={vi.fn()}
         assignLocation={assignLocation}
       />,
@@ -249,6 +254,7 @@ describe('/authorize view', () => {
       <McpConsentView
         step={step}
         boardName={BOARD}
+        boardLogoUrl={null}
         decide={vi.fn()}
         assignLocation={vi.fn()}
       />,

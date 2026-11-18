@@ -37,6 +37,7 @@ function McpConsentPage() {
     <McpConsentView
       step={step}
       boardName={board.name}
+      boardLogoUrl={board.logoUrl}
       decide={decideMcpConsent}
       assignLocation={assignLocation}
     />

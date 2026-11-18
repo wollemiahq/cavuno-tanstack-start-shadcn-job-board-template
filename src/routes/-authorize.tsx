@@ -19,6 +19,7 @@ import {
   consentTrust,
 } from '../board/mcp-consent-copy';
 import { AuthCard, FormError } from '../components/auth-form';
+import { McpConsentMark } from '../components/mcp-consent-mark';
 import { localizePath } from '../lib/localized-path';
 import { MCP_CONSENT_PATH } from '../lib/mcp-authorize-query';
 import { m } from '../paraglide/messages';
@@ -92,11 +93,13 @@ export async function loadMcpConsent(
 export function McpConsentView({
   step,
   boardName,
+  boardLogoUrl,
   decide,
   assignLocation,
 }: {
   step: McpConsentPageStep;
   boardName: string;
+  boardLogoUrl: string | null;
   decide: (input: {
     data: {
       request: string;
@@ -121,6 +124,7 @@ export function McpConsentView({
     <McpConsentChoice
       step={step}
       boardName={boardName}
+      boardLogoUrl={boardLogoUrl}
       decide={decide}
       assignLocation={assignLocation}
     />
@@ -130,11 +134,13 @@ export function McpConsentView({
 function McpConsentChoice({
   step,
   boardName,
+  boardLogoUrl,
   decide,
   assignLocation,
 }: {
   step: Extract<McpConsentStep, { next: 'consent' }>;
   boardName: string;
+  boardLogoUrl: string | null;
   decide: Parameters<typeof McpConsentView>[0]['decide'];
   assignLocation: (url: string) => void;
 }) {
@@ -184,6 +190,14 @@ function McpConsentChoice({
     <AuthCard
       title={consentHeading(step, boardName)}
       supportingText={m.mcpConsent_signedInAs({ email: step.email })}
+      mark={
+        <McpConsentMark
+          clientName={step.clientName}
+          knownAssistant={step.knownAssistant}
+          boardName={boardName}
+          boardLogoUrl={boardLogoUrl}
+        />
+      }
     >
       <div className="grid gap-1 text-sm leading-6">
         <p className="text-foreground font-medium">{trust.label}</p>
