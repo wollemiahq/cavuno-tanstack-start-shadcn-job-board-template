@@ -14,8 +14,12 @@ import {
   updateEmailPreferences,
   type EmailPreferencesRead,
 } from '../server/email-preferences';
-import { getSeoBase } from '../server/queries';
+import { getAlertFilterNames, getSeoBase } from '../server/queries';
 
+import {
+  resolveAlertFilterNames,
+  type AlertFilterNames,
+} from '@/board/job-alert-match';
 import { headTitle } from '@/lib/page-title';
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
 
@@ -25,6 +29,8 @@ export type EmailPreferencesData = {
   prefs: EmailPreferencesRead;
   person: string | undefined;
   seo: Seo;
+  /** The alerts' category and place names, to describe them in words. */
+  filterNames: AlertFilterNames;
 };
 export type EmailPreferencesSearch = { token?: string; person?: string };
 
@@ -37,6 +43,9 @@ export type EmailPreferencesDependencies = {
     data: { person?: string };
   }) => Promise<EmailPreferencesRead>;
   getSeoBase: () => Promise<Seo>;
+  getAlertFilterNames: (options: {
+    data: { categorySlugs: string[]; placeIds: string[] };
+  }) => Promise<AlertFilterNames>;
   updateEmailPreferences: (options: {
     data: { person: string; changes: EmailPreferencesUpdate };
   }) => Promise<EmailPreferences>;
@@ -49,6 +58,7 @@ export const emailPreferencesDependencies: EmailPreferencesDependencies = {
   keepEmailPreferencesToken,
   getEmailPreferences,
   getSeoBase,
+  getAlertFilterNames,
   updateEmailPreferences,
   unsubscribeAllEmailPreferences,
 };
@@ -74,11 +84,24 @@ export function createEmailPreferencesLoader(
         replace: true,
       });
     }
-    const [prefs, seo] = await Promise.all([
-      dependencies.getEmailPreferences({ data: { person: deps.person } }),
+    // The names need the alerts, so they follow the preferences read, in
+    // parallel with the board's name. They cover the alerts read here; an
+    // alert that first appears in a later re-read falls back to its slugs.
+    const [{ prefs, filterNames }, seo] = await Promise.all([
+      dependencies
+        .getEmailPreferences({ data: { person: deps.person } })
+        .then(async (prefs) => ({
+          prefs,
+          filterNames: await resolveAlertFilterNames(
+            prefs === 'invalid_link' || prefs === 'link_expired'
+              ? []
+              : prefs.jobAlerts.alerts,
+            dependencies.getAlertFilterNames,
+          ),
+        })),
       dependencies.getSeoBase(),
     ]);
-    return { prefs, person: deps.person, seo };
+    return { prefs, person: deps.person, seo, filterNames };
   };
 }
 
