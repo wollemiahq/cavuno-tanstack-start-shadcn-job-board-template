@@ -44,8 +44,11 @@ import {
 } from '@/components/ui/item';
 import { Switch } from '@/components/ui/switch';
 import { m } from '@/paraglide/messages';
-import type { BOARD_API_ERROR_CODES } from '@cavuno/board';
-import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
+import type {
+  BOARD_API_ERROR_CODES,
+  EmailPreferences,
+  EmailPreferencesUpdate,
+} from '@cavuno/board';
 
 /** Recorded as the consent's `source`. */
 const SOURCE = 'email-preferences';
@@ -139,9 +142,9 @@ export function EmailPreferencesPageView({
       setMessage({
         tone: 'error',
         text:
-          (isBoardApiError(error)
-            ? // SAFETY: a code with no message here reads undefined.
-              errors?.[error.code as keyof ErrorMessages]
+          (isBoardApiError(error) && errors && Object.hasOwn(errors, error.code)
+            ? // SAFETY: Object.hasOwn checked the code is one of its keys.
+              errors[error.code as keyof ErrorMessages]
             : undefined) ?? m.emailPreferences_actionError(),
       });
       // Show what is true now: a link that stopped working, or a token no
