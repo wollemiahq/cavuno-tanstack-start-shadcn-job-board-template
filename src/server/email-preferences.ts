@@ -20,7 +20,11 @@ import { EMAIL_LINK_PREFIXES } from '../lib/email-link-cookies';
 import { requestOrigin } from '../lib/request-origin';
 import { emailLink } from './email-link';
 
-import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
+import type {
+  EmailPreferences,
+  EmailPreferencesUpdate,
+  EmailPreferencesUpdateResult,
+} from '@cavuno/board';
 
 /**
  * The page's read: the person's preferences, or why there are none to show.
@@ -98,7 +102,7 @@ export const updateEmailPreferences = createServerFn({ method: 'POST' })
   .validator(
     (input: { person: string; changes: EmailPreferencesUpdate }) => input,
   )
-  .handler(({ data }): Promise<EmailPreferences> =>
+  .handler(({ data }): Promise<EmailPreferencesUpdateResult> =>
     link.withValue(data.person, (token) =>
       getBoard().emailPreferences.update(
         token,

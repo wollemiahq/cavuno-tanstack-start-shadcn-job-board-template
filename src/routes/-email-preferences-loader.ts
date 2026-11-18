@@ -21,7 +21,11 @@ import {
   type AlertFilterNames,
 } from '@/board/job-alert-match';
 import { headTitle } from '@/lib/page-title';
-import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
+import type {
+  EmailPreferences,
+  EmailPreferencesUpdate,
+  EmailPreferencesUpdateResult,
+} from '@cavuno/board';
 
 type Seo = { boardName: string };
 /** `person` names whose token the server keeps; see the server functions. */
@@ -48,7 +52,7 @@ export type EmailPreferencesDependencies = {
   }) => Promise<AlertFilterNames>;
   updateEmailPreferences: (options: {
     data: { person: string; changes: EmailPreferencesUpdate };
-  }) => Promise<EmailPreferences>;
+  }) => Promise<EmailPreferencesUpdateResult>;
   unsubscribeAllEmailPreferences: (options: {
     data: { person: string };
   }) => Promise<EmailPreferences>;
