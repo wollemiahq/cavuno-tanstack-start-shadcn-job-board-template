@@ -108,7 +108,12 @@ const BUDGETS = {
   // The `.md` page URLs and their head link were removed: measured
   // 710,321 B raw / 225,920 B gzip against main's 714,161 / 226,771. Raw
   // lowered to the measurement plus the usual ~4 KB headroom.
-  shell: { raw: 714_300, gzip: 231_637 },
+  // The MCP consent page (#399: /authorize, its route entry, localized
+  // route template and breadcrumb label; the page itself is split out)
+  // measured 714,426 B raw against the 714,300 budget, +896 B over main's
+  // 713,530; gzip stayed inside (225,806 of 231,637 B). Accepted by the
+  // operator on 2026-11-18; raw rebaselined with ~4 KB headroom.
+  shell: { raw: 718_400, gzip: 231_637 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
