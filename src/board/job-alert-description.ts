@@ -51,8 +51,9 @@ function placesText(
   placeIds: readonly string[],
   placeNames: Record<string, string>,
 ): string | null {
-  const named = placeIds.flatMap((id) => placeNames[id] ?? []);
-  const unnamed = placeIds.length - named.length;
+  const ids = [...new Set(placeIds)];
+  const named = ids.flatMap((id) => placeNames[id] ?? []);
+  const unnamed = ids.length - named.length;
   if (unnamed === 0) return named.length ? named.join(', ') : null;
   return named.length
     ? `${named.join(', ')}, ${m.jobAlertMatch_morePlaces({ count: unnamed })}`
