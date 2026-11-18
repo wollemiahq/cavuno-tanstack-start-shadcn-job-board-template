@@ -204,10 +204,7 @@
   "jobAlertMatch_jobsMatching": "Oferty dla „{query}”",
   "jobAlertMatch_morePlaces": [
     {
-      "declarations": [
-        "input count",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{count} inne miejsce",
@@ -219,10 +216,7 @@
   ],
   "jobAlertMatch_places": [
     {
-      "declarations": [
-        "input count",
-        "local countPlural = count: plural"
-      ],
+      "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
         "countPlural=one": "{count} miejsce",
