@@ -20,9 +20,7 @@ minimumReleaseAgeExclude:
 # vulnerable releases. Remove these once the parent ranges resolve to the
 # patched versions without an override.
 overrides:
-  '@hono/node-server': 2.1.9
-  # GHSA-p6vx-979v-rg4c and later: router-core and solid-js (devtools) lock
-  # older seroval lines.
+  # solid-js (TanStack devtools) pins seroval ~1.5, below the fixes up to 1.6.11.
   'seroval@<1.6.11': 1.8.1
   'seroval-plugins@<1.6.11': 1.8.0
   # miniflare pins undici exactly.
