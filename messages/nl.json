@@ -173,6 +173,45 @@
   "alertManager_searchAlertLabel": "Zoekopdracht",
   "alertManager_similarJobsAlertLabel": "Vergelijkbare vacatures",
   "jobAlertMatch_quotedQuery": "‘{query}’",
+  "jobAlertMatch_salaryUpTo": "Tot {amount}",
+  "jobAlertMatch_salaryFrom": "Vanaf {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Vacatures in {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Vacatures in {categories} en {count} andere",
+        "countPlural=*": "Vacatures in {categories} en {count} andere"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Vacatures voor ‘{query}’",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "nog {count} plaats",
+        "countPlural=*": "nog {count} plaatsen"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} plaats",
+        "countPlural=*": "{count} plaatsen"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Vacatures vergelijkbaar met {title}",
   "alertManager_saveChangesLabel": "Wijzigingen opslaan",
   "alertManager_saveError": "De melding kon niet worden opgeslagen. Je kunt er maximaal 10 hebben.",
@@ -191,8 +230,9 @@
   "alertsConfirm_waitlistedBody": "Je vacature-alert is bevestigd. Hij start zodra het jobboard naar meer mensen kan versturen.",
   "alertsConfirm_waitlistedHeading": "Je staat op de wachtlijst",
   "alertsManage_actionErrorText": "Er is iets misgegaan. Probeer het opnieuw.",
-  "alertsManage_activeBadge": "Actief",
   "alertsManage_allJobsText": "Alle vacatures",
+  "alertsManage_awaitingBadge": "Wacht op bevestiging",
+  "alertsManage_description": "Vacaturemails voor {email}, één keer per week.",
   "alertsManage_deleteLabel": "Verwijderen",
   "alertsManage_emptyBody": "Je hebt al je vacature-alerts verwijderd, dus je krijgt geen alert-e-mails meer.",
   "alertsManage_emptyTitle": "Geen vacature-alerts meer",
@@ -2554,10 +2594,11 @@
   "settings_channelMessage": "berichten",
   "settings_channelRecommendedJobs": "passende vacatures",
   "settings_emailNotificationsText": "E-mailmeldingen",
-  "settings_goToAccountLabel": "Naar je account",
   "settings_linkExpiredBody": "Deze afmeldlink is ongeldig of verlopen. Log in om je e-mailvoorkeuren te beheren.",
   "settings_linkExpiredHeading": "Link verlopen",
-  "settings_signInLabel": "Inloggen",
+  "settings_allEmailSettingsLink": "Log in om al je e-mailinstellingen te beheren",
+  "settings_unsubscribeBody": "Dit stopt alleen de e-mails over {channel}. Je andere e-mails van {board} blijven zoals ze zijn.",
+  "settings_unsubscribeTitle": "Geen e-mails meer over {channel} van {board}",
   "settings_title": "Instellingen",
   "settings_unsubscribedBody": "Je ontvangt geen e-mails meer over {channel}. Je kunt ze op elk moment weer inschakelen via je accountinstellingen.",
   "settings_unsubscribedHeading": "Je bent afgemeld",

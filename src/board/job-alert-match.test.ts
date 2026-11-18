@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { m } from '../paraglide/messages';
 import {
   jobAlertMatch,
+  resolveAlertFilterNames,
   resolveAnchorJobPaths,
   searchKeywordsText,
   taxonomySlug,
+  type DescribableJobAlert,
   type JobAlertMatchSource,
   type JobAlertSearchMatch,
 } from './job-alert-match';
@@ -19,6 +21,13 @@ function alert(overrides: Partial<JobAlertMatchSource>): JobAlertMatchSource {
     filters: { query: null, jobFunctions: [] },
     ...overrides,
   };
+}
+
+function describable(
+  filters: DescribableJobAlert['filters'],
+  kind: DescribableJobAlert['kind'] = 'filters',
+): DescribableJobAlert {
+  return { kind, anchorJob: null, label: null, filters };
 }
 
 function searchMatch(source: JobAlertMatchSource): JobAlertSearchMatch {
@@ -136,5 +145,47 @@ describe('resolveAnchorJobPaths', () => {
       resolveAnchorJobPaths([alert({ kind: 'search' })], getAnchorJobPaths),
     ).resolves.toEqual({});
     expect(getAnchorJobPaths).not.toHaveBeenCalled();
+  });
+});
+
+describe('resolveAlertFilterNames', () => {
+  it('asks once for each category and place, and falls back to none if that fails', async () => {
+    const names = {
+      categories: { chef: 'Chef', baker: 'Baker' },
+      places: { 'place-leeds': 'Leeds' },
+    };
+    const getAlertFilterNames = vi.fn().mockResolvedValue(names);
+    const alerts: DescribableJobAlert[] = [
+      describable({ jobFunctions: ['chef'] }),
+      describable({ jobFunctions: ['chef', 'baker'] }),
+      describable(
+        { query: 'pilot', placeIds: ['place-leeds', 'place-leeds'] },
+        'search',
+      ),
+      { ...describable({}, 'similar_job'), anchorJob },
+    ];
+
+    await expect(
+      resolveAlertFilterNames(alerts, getAlertFilterNames),
+    ).resolves.toEqual(names);
+    expect(getAlertFilterNames).toHaveBeenCalledExactlyOnceWith({
+      data: { categorySlugs: ['chef', 'baker'], placeIds: ['place-leeds'] },
+    });
+
+    getAlertFilterNames.mockRejectedValue(new Error('taxonomy unavailable'));
+    await expect(
+      resolveAlertFilterNames(alerts, getAlertFilterNames),
+    ).resolves.toEqual({ categories: {}, places: {} });
+  });
+
+  it('makes no request without a category or place', async () => {
+    const getAlertFilterNames = vi.fn();
+    await expect(
+      resolveAlertFilterNames(
+        [describable({ query: 'pilot' }, 'search')],
+        getAlertFilterNames,
+      ),
+    ).resolves.toEqual({ categories: {}, places: {} });
+    expect(getAlertFilterNames).not.toHaveBeenCalled();
   });
 });

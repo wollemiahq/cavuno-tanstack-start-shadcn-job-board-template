@@ -173,6 +173,45 @@
   "alertManager_searchAlertLabel": "Recherche d’emploi",
   "alertManager_similarJobsAlertLabel": "Offres similaires",
   "jobAlertMatch_quotedQuery": "« {query} »",
+  "jobAlertMatch_salaryUpTo": "Jusqu'à {amount}",
+  "jobAlertMatch_salaryFrom": "À partir de {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Offres en {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Offres en {categories} et {count} autre",
+        "countPlural=*": "Offres en {categories} et {count} autres"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Offres pour « {query} »",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} autre lieu",
+        "countPlural=*": "{count} autres lieux"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} lieu",
+        "countPlural=*": "{count} lieux"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Offres similaires à {title}",
   "alertManager_saveChangesLabel": "Enregistrer les modifications",
   "alertManager_saveError": "Impossible d'enregistrer l'alerte — vous pouvez en avoir 10 au maximum.",
@@ -191,8 +230,9 @@
   "alertsConfirm_waitlistedBody": "Votre alerte emploi est confirmée. Elle démarrera dès que le site pourra envoyer à davantage de personnes.",
   "alertsConfirm_waitlistedHeading": "Vous êtes sur la liste d'attente",
   "alertsManage_actionErrorText": "Une erreur s’est produite. Réessayez.",
-  "alertsManage_activeBadge": "Active",
   "alertsManage_allJobsText": "Toutes les offres",
+  "alertsManage_awaitingBadge": "En attente de confirmation",
+  "alertsManage_description": "Alertes pour {email}, envoyées une fois par semaine.",
   "alertsManage_deleteLabel": "Supprimer",
   "alertsManage_emptyBody": "Vous avez supprimé toutes vos alertes emploi : vous ne recevrez plus d'e-mails d'alerte.",
   "alertsManage_emptyTitle": "Plus aucune alerte emploi",
@@ -2554,10 +2594,11 @@
   "settings_channelMessage": "message",
   "settings_channelRecommendedJobs": "offres correspondantes",
   "settings_emailNotificationsText": "Notifications par e-mail",
-  "settings_goToAccountLabel": "Accéder au compte",
   "settings_linkExpiredBody": "Ce lien de désabonnement est invalide ou a expiré. Connectez-vous pour gérer vos préférences d'e-mail.",
   "settings_linkExpiredHeading": "Lien expiré",
-  "settings_signInLabel": "Se connecter",
+  "settings_allEmailSettingsLink": "Connectez-vous pour gérer tous vos paramètres d'e-mail",
+  "settings_unsubscribeBody": "Cela n'arrête que les e-mails « {channel} ». Vos autres e-mails de {board} ne changent pas.",
+  "settings_unsubscribeTitle": "Arrêter les e-mails « {channel} » de {board}",
   "settings_title": "Paramètres",
   "settings_unsubscribedBody": "Vous ne recevrez plus les e-mails « {channel} ». Vous pouvez les réactiver à tout moment depuis les paramètres de votre compte.",
   "settings_unsubscribedHeading": "Vous êtes désabonné",

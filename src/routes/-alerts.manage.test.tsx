@@ -7,6 +7,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,11 +22,13 @@ import {
 import { m } from '@/paraglide/messages';
 import type { JobAlertManageState } from '@cavuno/board';
 
+const NO_NAMES = { categories: {}, places: {} };
 const invalidate = vi.fn<() => Promise<void>>();
 const dependencies: AlertManageDependencies = {
   deleteJobAlertPreference: vi.fn(),
   getJobAlertManageState: vi.fn(),
   getAnchorJobPaths: vi.fn(),
+  getAlertFilterNames: vi.fn(),
   getSeoBase: vi.fn(),
   keepJobAlertManageLink: vi.fn(),
   resubscribeJobAlert: vi.fn(),
@@ -94,7 +97,11 @@ describe('public job-alert management', () => {
 
   it('uses the owned Alert composition for the unsubscribed state', () => {
     renderManage(
-      { state: { ...state, unsubscribed: true }, anchorJobPaths: {} },
+      {
+        state: { ...state, unsubscribed: true },
+        anchorJobPaths: {},
+        filterNames: NO_NAMES,
+      },
       kept,
     );
 
@@ -106,11 +113,9 @@ describe('public job-alert management', () => {
   });
 
   it('uses the owned Item composition for each alert preference', () => {
-    renderManage({ state, anchorJobPaths: {} }, kept);
+    renderManage({ state, anchorJobPaths: {}, filterNames: NO_NAMES }, kept);
 
-    const item = screen
-      .getByText(m.alertsManage_allJobsText())
-      .closest('[data-slot="item"]');
+    const item = screen.getByText('Design jobs').closest('[data-slot="item"]');
     expect(item).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-content"]')).not.toBeNull();
     expect(item?.querySelector('[data-slot="item-actions"]')).not.toBeNull();
@@ -121,7 +126,7 @@ describe('public job-alert management', () => {
       new Error('unsubscribe unavailable'),
     );
     invalidate.mockResolvedValue();
-    renderManage({ state, anchorJobPaths: {} }, kept);
+    renderManage({ state, anchorJobPaths: {}, filterNames: NO_NAMES }, kept);
     fireEvent.click(
       screen.getByRole('button', {
         name: m.alertsManage_unsubscribeAllLabel(),
@@ -149,7 +154,7 @@ describe('public job-alert management', () => {
       success: true,
     });
     invalidate.mockRejectedValue(new Error('refresh unavailable'));
-    renderManage({ state, anchorJobPaths: {} }, kept);
+    renderManage({ state, anchorJobPaths: {}, filterNames: NO_NAMES }, kept);
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -183,7 +188,6 @@ describe('public job-alert management', () => {
     const { redirect } = await loadManage({
       subscription: 'subscription-1',
       token: 'subscription-token',
-      unsubscribe: true,
     });
 
     expect(dependencies.keepJobAlertManageLink).toHaveBeenCalledWith({
@@ -191,7 +195,7 @@ describe('public job-alert management', () => {
     });
     expect(redirect).toMatchObject({
       to: '/alerts/manage',
-      search: { link: LINK, unsubscribe: true },
+      search: { link: LINK },
     });
     expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
   });
@@ -208,7 +212,7 @@ describe('public job-alert management', () => {
 
   it('opening the unsubscribe link only reads; the click unsubscribes', async () => {
     vi.mocked(dependencies.getJobAlertManageState).mockResolvedValue(state);
-    const { data } = await loadManage({ link: LINK, unsubscribe: true });
+    const { data } = await loadManage({ link: LINK });
     expect(dependencies.getJobAlertManageState).toHaveBeenCalledWith({
       data: { link: LINK },
     });
@@ -225,7 +229,7 @@ describe('public job-alert management', () => {
       success: true,
     });
     invalidate.mockResolvedValue();
-    renderManage(data!, { link: LINK, unsubscribe: true });
+    renderManage(data!, { link: LINK });
     expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
 
     fireEvent.click(
@@ -241,8 +245,12 @@ describe('public job-alert management', () => {
 
   it('shows only the unsubscribed line when the link is already off', () => {
     renderManage(
-      { state: { ...state, unsubscribed: true }, anchorJobPaths: {} },
-      { link: LINK, unsubscribe: true },
+      {
+        state: { ...state, unsubscribed: true },
+        anchorJobPaths: {},
+        filterNames: NO_NAMES,
+      },
+      { link: LINK },
     );
 
     expect(
@@ -265,14 +273,15 @@ describe('public job-alert management', () => {
     expect(data).toMatchObject({ error: true });
   });
 
-  it('names a similar-job alert’s job and quotes a search alert’s keywords', () => {
+  it('describes each alert in words from its filters, and badges only one that is not sending', () => {
+    const base = { ...state.preferences[0], label: null };
     renderManage(
       {
         state: {
           ...state,
           preferences: [
             {
-              ...state.preferences[0],
+              ...base,
               id: 'preference-similar',
               kind: 'similar_job',
               anchorJob: {
@@ -280,29 +289,175 @@ describe('public job-alert management', () => {
                 slug: 'senior-chef',
                 title: 'Senior chef',
               },
-              filters: { placeIds: ['place-berlin'] },
             },
             {
-              ...state.preferences[0],
+              ...base,
               id: 'preference-search',
               kind: 'search',
-              filters: { query: 'python', remoteOptions: ['remote'] },
+              filters: {
+                query: 'pilot',
+                jobFunctions: ['flight-ops'],
+                placeIds: ['place-berlin', 'place-gone'],
+                remoteOptions: ['remote'],
+                seniorityLevels: ['senior'],
+              },
+            },
+            {
+              ...base,
+              id: 'preference-named',
+              label: 'Weekend shifts',
+              isActive: false,
+              filters: { query: 'chef', jobFunctions: ['kitchen'] },
+            },
+            {
+              ...base,
+              id: 'preference-salary',
+              label: 'Odd currency',
+              filters: {
+                placeIds: ['place-gone'],
+                salaryMin: 50000,
+                salaryCurrency: '12$',
+              },
             },
           ],
         },
         anchorJobPaths: {},
+        filterNames: {
+          categories: { 'flight-ops': 'Flight operations' },
+          places: { 'place-berlin': 'Berlin' },
+        },
       },
       kept,
     );
 
+    const row = (title: string) => {
+      const item = screen.getByText(title).closest('[data-slot="item"]');
+      expect(item).toBeInstanceOf(HTMLElement);
+      // SAFETY: checked to be an HTMLElement on the line above.
+      return item as HTMLElement;
+    };
     // Without a resolved job link the title shows as plain text.
     expect(
-      screen.getByText(m.jobAlertMatch_similarTo({ title: 'Senior chef' })),
+      row(m.jobAlertMatch_similarTo({ title: 'Senior chef' })),
+    ).toBeInTheDocument();
+    // Names stand in for slugs and ids; a place the board doesn't name is
+    // counted, so the alert never reads as matching everywhere.
+    const search = row(m.jobAlertMatch_jobsMatching({ query: 'pilot' }));
+    expect(
+      within(search).getByText(
+        [
+          'Flight operations',
+          `Berlin, ${m.jobAlertMatch_morePlaces({ count: 1 })}`,
+          m.label_remoteRemote(),
+          m.label_senioritySenior(),
+        ].join(' · '),
+      ),
+    ).toBeInTheDocument();
+    // A named alert keeps its keywords and an unresolved category as words.
+    const named = row('Weekend shifts');
+    expect(
+      within(named).getByText(
+        [m.jobAlertMatch_quotedQuery({ query: 'chef' }), 'kitchen'].join(' · '),
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(m.jobAlertMatch_quotedQuery({ query: 'python' }), {
-        exact: false,
-      }),
+      within(named).getByText(m.alertsManage_pausedBadge()),
+    ).toBeInTheDocument();
+    // A stored currency that isn't a currency code leaves the salary out
+    // instead of failing the page.
+    expect(
+      within(row('Odd currency')).getByText(
+        m.jobAlertMatch_places({ count: 1 }),
+      ),
+    ).toBeInTheDocument();
+    // A sending alert carries no badge at all.
+    expect(screen.getAllByText(m.alertsManage_pausedBadge())).toHaveLength(1);
+    expect(screen.queryByText(m.alertsManage_awaitingBadge())).toBeNull();
+  });
+
+  it('names at most two categories in a title, then how many more', () => {
+    const base = { ...state.preferences[0], label: null };
+    const names = {
+      categories: {
+        a: 'Alpha',
+        b: 'Bravo',
+        c: 'Charlie',
+        d: 'Delta',
+        e: 'Echo',
+      },
+      places: {},
+    };
+    renderManage(
+      {
+        state: {
+          ...state,
+          preferences: [
+            {
+              ...base,
+              id: 'five',
+              filters: { jobFunctions: ['a', 'b', 'c', 'd', 'e'] },
+            },
+            {
+              ...base,
+              id: 'three',
+              filters: { jobFunctions: ['c', 'd', 'e'] },
+            },
+            { ...base, id: 'two', filters: { jobFunctions: ['d', 'e'] } },
+          ],
+        },
+        anchorJobPaths: {},
+        filterNames: names,
+      },
+      kept,
+    );
+    expect(
+      screen.getByText(
+        m.jobAlertMatch_jobsInMore({ categories: 'Alpha, Bravo', count: 3 }),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        m.jobAlertMatch_jobsInMore({ categories: 'Charlie, Delta', count: 1 }),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(m.jobAlertMatch_jobsIn({ categories: 'Delta, Echo' })),
+    ).toBeInTheDocument();
+  });
+
+  it('badges no alert once the address is unsubscribed, which turned them all off', () => {
+    renderManage(
+      {
+        state: {
+          ...state,
+          unsubscribed: true,
+          preferences: [{ ...state.preferences[0], isActive: false }],
+        },
+        anchorJobPaths: {},
+        filterNames: NO_NAMES,
+      },
+      kept,
+    );
+    expect(screen.queryByText(m.alertsManage_pausedBadge())).toBeNull();
+    expect(
+      screen.getByText(m.alertsManage_unsubscribedText()),
+    ).toBeInTheDocument();
+  });
+
+  it('badges every alert as waiting while the address is not confirmed', () => {
+    renderManage(
+      {
+        state: { ...state, confirmed: false },
+        anchorJobPaths: {},
+        filterNames: NO_NAMES,
+      },
+      kept,
+    );
+    const item = screen.getByText('Design jobs').closest('[data-slot="item"]');
+    expect(item).toBeInstanceOf(HTMLElement);
+    // SAFETY: checked to be an HTMLElement on the line above.
+    expect(
+      within(item as HTMLElement).getByText(m.alertsManage_awaitingBadge()),
     ).toBeInTheDocument();
   });
 });
