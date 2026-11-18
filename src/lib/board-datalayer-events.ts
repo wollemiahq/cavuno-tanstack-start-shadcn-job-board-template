@@ -14,6 +14,13 @@ export const CAVUNO_AUTH_METHOD_PARAM = 'cavuno_auth_method';
 export const CAVUNO_AUTH_INTENT_PARAM = 'cavuno_auth_intent';
 /** Staged on returnTo during OAuth so the completion redirect knows the provider. */
 export const CAVUNO_OAUTH_PROVIDER_PARAM = 'cavuno_oauth_provider';
+/** Every conversion marker a landing page strips once it has read them. */
+export const AUTH_CONVERSION_PARAMS = [
+  CAVUNO_AUTH_PARAM,
+  CAVUNO_AUTH_METHOD_PARAM,
+  CAVUNO_AUTH_INTENT_PARAM,
+  CAVUNO_OAUTH_PROVIDER_PARAM,
+] as const;
 
 export type BoardAuthMethod = 'password' | 'google' | 'linkedin' | 'magic_link';
 export type BoardAuthEvent = 'sign_up' | 'login';
@@ -260,10 +267,7 @@ export function stripAuthConversionSearchParams(
   search: URLSearchParams,
 ): string {
   const next = new URLSearchParams(search);
-  next.delete(CAVUNO_AUTH_PARAM);
-  next.delete(CAVUNO_AUTH_METHOD_PARAM);
-  next.delete(CAVUNO_AUTH_INTENT_PARAM);
-  next.delete(CAVUNO_OAUTH_PROVIDER_PARAM);
+  for (const key of AUTH_CONVERSION_PARAMS) next.delete(key);
   const serialized = next.toString();
   return serialized ? `?${serialized}` : '';
 }

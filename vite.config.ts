@@ -504,7 +504,7 @@ function viteConfig(command: ConfigEnv['command']) {
             // so the error and not-found components keep their default lazy
             // groups here; left out, they stayed in the shell every page loads.
             splitBehavior: ({ routeId }) =>
-              /^\/(?:account(?:_|\/|$)|alerts(?:\/|$)|auth(?:\/|$)|employers(?:\/|$)|me(?:\/|$)|messages(?:\/|$)|post(?:\/|$)|settings(?:\/|$))/.test(
+              /^\/(?:account(?:_|\/|$)|alerts(?:\/|$)|auth(?:\/|$)|authorize$|employers(?:\/|$)|me(?:\/|$)|messages(?:\/|$)|post(?:\/|$)|settings(?:\/|$))/.test(
                 routeId,
               )
                 ? [

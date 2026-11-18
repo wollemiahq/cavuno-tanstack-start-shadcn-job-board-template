@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdsDottxtRouteImport } from './routes/ads[.]txt'
 import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as AuthorizeRouteImport } from './routes/authorize'
 import { Route as ComingSoonGateRouteImport } from './routes/coming-soon-gate'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -155,6 +156,11 @@ const AdsDottxtRoute = AdsDottxtRouteImport.update({
 const ApplyRoute = ApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthorizeRoute = AuthorizeRouteImport.update({
+  id: '/authorize',
+  path: '/authorize',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComingSoonGateRoute = ComingSoonGateRouteImport.update({
@@ -746,6 +752,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/authorize': typeof AuthorizeRoute
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -865,6 +872,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/authorize': typeof AuthorizeRoute
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -985,6 +993,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/authorize': typeof AuthorizeRoute
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -1106,6 +1115,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/authorize'
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
@@ -1225,6 +1235,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/authorize'
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
@@ -1344,6 +1355,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/authorize'
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
@@ -1464,6 +1476,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdsDottxtRoute: typeof AdsDottxtRoute
   ApplyRoute: typeof ApplyRoute
+  AuthorizeRoute: typeof AuthorizeRoute
   ComingSoonGateRoute: typeof ComingSoonGateRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
@@ -1616,6 +1629,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/authorize': {
+      id: '/authorize'
+      path: '/authorize'
+      fullPath: '/authorize'
+      preLoaderRoute: typeof AuthorizeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coming-soon-gate': {
@@ -2444,6 +2464,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdsDottxtRoute: AdsDottxtRoute,
   ApplyRoute: ApplyRoute,
+  AuthorizeRoute: AuthorizeRoute,
   ComingSoonGateRoute: ComingSoonGateRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,

@@ -23,6 +23,7 @@ export const ROUTE_TEMPLATES = [
   '/account',
   '/ads.txt',
   '/apply',
+  '/authorize',
   '/coming-soon-gate',
   '/contact',
   '/cookie-policy',

@@ -72,6 +72,8 @@ export interface ShellBreadcrumbPrivateLabels {
   authConfirmEmailChange: string;
   authOauthComplete: string;
   employerInviteAccept: string;
+  /** The MCP server's sign-in consent page (`/authorize`). */
+  mcpConsent: string;
 }
 
 type ShellBreadcrumbItem = { name: string; href?: string };
@@ -417,6 +419,11 @@ export function resolveShellBreadcrumb({
 
   if (section === 'saved-jobs') {
     items.push({ name: priv('savedJobs', 'saved-jobs') });
+    return finish(items);
+  }
+
+  if (section === 'authorize') {
+    items.push({ name: priv('mcpConsent', 'authorize') });
     return finish(items);
   }
 

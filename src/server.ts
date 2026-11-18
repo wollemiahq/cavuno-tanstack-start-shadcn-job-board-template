@@ -23,6 +23,9 @@
  *
  * A page URL ending in `.md` 308s to the page (src/lib/md-url-redirect.ts).
  *
+ * The MCP consent page's OAuth query is first folded into one value the
+ * router keeps (src/lib/mcp-authorize-query.ts).
+ *
  * An uncaught server error, or a 500 that Start rendered itself, logs one
  * `starter_server_error` line (src/lib/server-error-log.server.ts).
  *
@@ -47,6 +50,7 @@ import { getServerEnv } from './lib/env';
 import { LOCALE_HEADER } from './lib/locale-middleware';
 import { isMachinePath, stripLocalePrefix } from './lib/localized-path';
 import { localizedUrlRedirect } from './lib/localized-url-redirect';
+import { mcpAuthorizeRedirect } from './lib/mcp-authorize-query';
 import { mdUrlRedirect } from './lib/md-url-redirect';
 import {
   readPublicHtmlCache,
@@ -124,6 +128,13 @@ async function serve(
       executionContext?.waitUntil.bind(executionContext),
     );
     if (clientError) return withBaselineSecurityHeaders(clientError, request);
+  }
+
+  // Before the router can re-serialize the assistant's OAuth query, and
+  // before the URL-word redirect, which keeps the folded query as it is.
+  const authorizeRedirect = mcpAuthorizeRedirect(request);
+  if (authorizeRedirect) {
+    return withBaselineSecurityHeaders(authorizeRedirect, request);
   }
 
   const mdRedirect = mdUrlRedirect(request);
