@@ -8,10 +8,10 @@ import { getLocale } from '../paraglide/runtime';
 
 import type {
   McpConsentAccountScope,
-  McpConsentErrorCode,
   McpConsentStep,
   McpConsentSubject,
 } from '../server/mcp-consent';
+import { boardErrorMessage } from '@/lib/board-error-message';
 
 type ConsentStep = Extract<McpConsentStep, { next: 'consent' }>;
 
@@ -133,15 +133,11 @@ function noAccountText(
 }
 
 /**
- * Why the person can't connect. A code this site doesn't know yet shows the
- * API's message, in English.
+ * Why the person can't connect. A code this site doesn't know yet gets the
+ * site's usual wording for an unknown error (`boardErrorMessage`).
  */
 export function consentErrorText(
-  error: {
-    code?: McpConsentErrorCode | string;
-    message: string;
-    accountScopes?: McpConsentAccountScope[];
-  },
+  error: Extract<McpConsentStep, { next: 'error' }>,
   boardName: string,
 ): string {
   switch (error.code) {
@@ -161,8 +157,7 @@ export function consentErrorText(
       return m.mcpConsent_errorExpired();
     case 'unavailable':
       return m.mcpConsent_errorUnavailable();
-    // `rate_limited` is worded already, by this site.
     default:
-      return error.message;
+      return boardErrorMessage(error);
   }
 }

@@ -11,15 +11,15 @@ import { useEffect, useState } from 'react';
 
 import { redirect } from '@tanstack/react-router';
 
-import { AuthCard, FormError } from '../components/auth-form';
-import { mcpConsentReturnTo } from '../lib/mcp-authorize-query';
 import {
   consentErrorText,
   consentHeading,
   consentRedirectNotice,
   consentScopes,
   consentTrust,
-} from '../lib/mcp-consent-copy';
+} from '../board/mcp-consent-copy';
+import { AuthCard, FormError } from '../components/auth-form';
+import { mcpConsentReturnTo } from '../lib/mcp-authorize-query';
 import { m } from '../paraglide/messages';
 import {
   getMcpConsentStep,

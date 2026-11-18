@@ -12,6 +12,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { loadMcpConsent, McpConsentView } from './-authorize';
 
+import { boardErrorMessage } from '@/lib/board-error-message';
+import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 import type { McpConsentStep } from '@/server/mcp-consent';
 
@@ -66,7 +68,9 @@ describe('/authorize loader', () => {
     await expect(result).rejects.toMatchObject({
       options: {
         to,
-        search: { returnTo: '/authorize?request=abc&from=signed_in' },
+        search: {
+          returnTo: `${localizePath('/authorize')}?request=abc&from=signed_in`,
+        },
       },
     });
   });
@@ -228,8 +232,11 @@ describe('/authorize view', () => {
       { code: 'not_signed_in' },
       m.mcpConsent_errorNotSignedIn({ board: BOARD }),
     ],
-    // A code this site doesn't know yet: the API's own message.
-    [{ code: 'something_new' }, 'API wording.'],
+    // A code this site doesn't know yet: the site's unknown-error wording.
+    [
+      { code: 'something_new' },
+      boardErrorMessage({ code: 'something_new', message: 'API wording.' }),
+    ],
   ] as const)('words the error %o', (error, text) => {
     // SAFETY: a valid error step, except that `something_new` stands in for
     // a code a newer Board API may send.
