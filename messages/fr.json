@@ -173,6 +173,7 @@
   "alertManager_searchAlertLabel": "Recherche d’emploi",
   "alertManager_similarJobsAlertLabel": "Offres similaires",
   "jobAlertMatch_quotedQuery": "« {query} »",
+  "jobAlertMatch_anyCriteria": "Tous les lieux · tous les types de poste",
   "jobAlertMatch_salaryUpTo": "Jusqu'à {amount}",
   "jobAlertMatch_salaryFrom": "À partir de {amount}",
   "jobAlertMatch_salaryRange": "{min}–{max}",

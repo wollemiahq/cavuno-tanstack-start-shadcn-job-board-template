@@ -69,8 +69,9 @@ export type JobAlertDescription = {
 /**
  * A search or filter alert in words, so a person can tell their alerts
  * apart: a headline (its name, else its keywords, else its categories) and
- * the rest of what it matches. A similar-job alert is described by its
- * anchor job (`AnchorJobTitle`) unless it has a name.
+ * the rest of what it matches, or that nothing else narrows it. A
+ * similar-job alert is described by its anchor job (`AnchorJobTitle`)
+ * unless it has a name, with no criteria.
  */
 export function describeJobAlert(
   alert: DescribableJobAlert,
@@ -121,5 +122,10 @@ export function describeJobAlert(
     ),
     salaryText(filters),
   ].filter((part): part is string => part !== null);
-  return { headline, criteria };
+  // Only a keyword or category narrows it: say so, rather than leave the
+  // line under the headline empty.
+  return {
+    headline,
+    criteria: criteria.length ? criteria : [m.jobAlertMatch_anyCriteria()],
+  };
 }
