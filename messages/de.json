@@ -3444,6 +3444,7 @@
   "emailPreferences_jobAlertsThrottled": "Gerade eben wurde eine Bestätigungs-E-Mail angefordert. Versuche es in ein paar Minuten noch einmal.",
   "emailPreferences_jobAlertsSuppressed": "Wir können an diese Adresse keine E-Mails senden, daher wurde kein Bestätigungslink verschickt. Deine Alarme bleiben aus.",
   "emailPreferences_alertAwaiting": "Noch nicht aktiv: Klicke auf den Link in der Bestätigungs-E-Mail dieses Alarms.",
+  "emailPreferences_alertAwaitingJobAlertsOff": "Schalte Jobalarme wieder ein, um einen neuen Bestätigungslink zu erhalten.",
   "emailPreferences_alertActionsLabel": "Aktionen für Jobalarm: {label}",
   "emailPreferences_pauseAlert": "Alarm pausieren",
   "emailPreferences_resumeAlert": "Alarm fortsetzen",

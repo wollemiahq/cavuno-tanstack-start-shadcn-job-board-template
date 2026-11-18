@@ -124,10 +124,10 @@ export function EmailPreferencesPageView({
   }
 
   /** Applies a change and returns what the API says now; null if it failed. */
-  const run = async (
-    action: () => Promise<EmailPreferences>,
+  const run = async <Result extends EmailPreferences>(
+    action: () => Promise<Result>,
     errors?: ErrorMessages,
-  ): Promise<EmailPreferences | null> => {
+  ): Promise<Result | null> => {
     setPending(true);
     setMessage(null);
     try {
@@ -161,8 +161,9 @@ export function EmailPreferencesPageView({
       () => dependencies.updateEmailPreferences({ data: { person, changes } }),
       errors,
     );
-  // Back on, alerts that wait for a confirmation link get a fresh one; when
-  // it can't go out, nothing changes and the API says why.
+  // Back on, alerts that wait for a confirmation link get a fresh one, and
+  // the API says when it queued one; when it can't go out, nothing changes
+  // and the API says why.
   const setJobAlerts = async (on: boolean) => {
     const next = await update(
       { jobAlerts: on },
@@ -174,7 +175,7 @@ export function EmailPreferencesPageView({
           }
         : undefined,
     );
-    if (on && next?.jobAlerts.alerts.some((a) => a.awaitingConfirmation)) {
+    if (next?.confirmationEmailQueued) {
       setMessage({
         tone: 'status',
         text: m.emailPreferences_jobAlertsLinkSent(),
@@ -251,6 +252,7 @@ export function EmailPreferencesPageView({
                         alert={alert}
                         filterNames={data.filterNames}
                         canPause={jobAlerts.confirmed}
+                        jobAlertsOff={jobAlerts.unsubscribed}
                         pending={pending}
                         onPausedChange={(paused) =>
                           update({ alerts: [{ id: alert.id, paused }] })
@@ -439,7 +441,8 @@ function PreferenceCard({
 
 /**
  * One alert, named as `/alerts/manage` names it, with what else it matches
- * (or, while it waits for its confirmation link, that) and a Paused badge.
+ * (or, while it waits for its confirmation link, that, and with job alerts
+ * off, how to get a fresh link) and a Paused badge.
  * It has no switch: the job alerts switch is the only one. Its ⋯ menu
  * pauses or resumes it and deletes it; one waiting for its link can only be
  * deleted, because the page can't start it.
@@ -448,6 +451,7 @@ function AlertRow({
   alert,
   filterNames,
   canPause,
+  jobAlertsOff,
   pending,
   onPausedChange,
   onDelete,
@@ -456,6 +460,8 @@ function AlertRow({
   filterNames: AlertFilterNames;
   /** False when the hub would ignore a pause: an unconfirmed person. */
   canPause: boolean;
+  /** Job alerts are off, so an alert waiting for its link needs them on. */
+  jobAlertsOff: boolean;
   pending: boolean;
   onPausedChange: (paused: boolean) => void;
   onDelete: () => void;
@@ -463,9 +469,11 @@ function AlertRow({
   const { headline, criteria } = describeJobAlert(alert, filterNames);
   // A similar-job alert without a name is named by its job, unlinked here.
   const label = headline ?? anchorJobTitleText(alert.anchorJob);
-  const detail = alert.awaitingConfirmation
-    ? m.emailPreferences_alertAwaiting()
-    : criteria.join(' · ');
+  const detail = !alert.awaitingConfirmation
+    ? criteria.join(' · ')
+    : jobAlertsOff
+      ? m.emailPreferences_alertAwaitingJobAlertsOff()
+      : m.emailPreferences_alertAwaiting();
   return (
     <Field orientation="horizontal">
       <FieldContent>

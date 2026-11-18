@@ -3444,6 +3444,7 @@
   "emailPreferences_jobAlertsThrottled": "Er is zojuist een bevestigingsmail aangevraagd. Probeer het over een paar minuten opnieuw.",
   "emailPreferences_jobAlertsSuppressed": "We kunnen geen e-mail naar dit adres sturen, dus er is geen bevestigingslink verstuurd. Je vacaturemails blijven uit.",
   "emailPreferences_alertAwaiting": "Nog niet actief: klik op de link in de bevestigingsmail van deze vacaturemail.",
+  "emailPreferences_alertAwaitingJobAlertsOff": "Zet vacaturemails weer aan om een nieuwe bevestigingslink te krijgen.",
   "emailPreferences_alertActionsLabel": "Acties voor vacaturemail: {label}",
   "emailPreferences_pauseAlert": "Vacaturemail pauzeren",
   "emailPreferences_resumeAlert": "Vacaturemail hervatten",

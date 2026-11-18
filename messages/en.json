@@ -3444,6 +3444,7 @@
   "emailPreferences_jobAlertsThrottled": "A confirmation email was requested a moment ago. Try again in a couple of minutes.",
   "emailPreferences_jobAlertsSuppressed": "We can’t send email to this address, so no confirmation link was sent. Your alerts stay off.",
   "emailPreferences_alertAwaiting": "Not sending yet: click the link in this alert's confirmation email.",
+  "emailPreferences_alertAwaitingJobAlertsOff": "Turn job alerts back on to get a fresh confirmation link.",
   "emailPreferences_alertActionsLabel": "Actions for job alert: {label}",
   "emailPreferences_pauseAlert": "Pause alert",
   "emailPreferences_resumeAlert": "Resume alert",

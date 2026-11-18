@@ -3444,6 +3444,7 @@
   "emailPreferences_jobAlertsThrottled": "Un e-mail de confirmation a été demandé il y a un instant. Réessayez dans quelques minutes.",
   "emailPreferences_jobAlertsSuppressed": "Nous ne pouvons pas envoyer d'e-mails à cette adresse, aucun lien de confirmation n'a donc été envoyé. Vos alertes restent désactivées.",
   "emailPreferences_alertAwaiting": "Pas encore envoyée : cliquez sur le lien de l'e-mail de confirmation de cette alerte.",
+  "emailPreferences_alertAwaitingJobAlertsOff": "Réactivez les alertes d'emploi pour recevoir un nouveau lien de confirmation.",
   "emailPreferences_alertActionsLabel": "Actions pour l'alerte d'emploi : {label}",
   "emailPreferences_pauseAlert": "Mettre l'alerte en pause",
   "emailPreferences_resumeAlert": "Reprendre l'alerte",

@@ -21,7 +21,10 @@ import {
 } from './-email-preferences-loader';
 
 import { m } from '@/paraglide/messages';
-import type { EmailPreferences } from '@cavuno/board';
+import type {
+  EmailPreferences,
+  EmailPreferencesUpdateResult,
+} from '@cavuno/board';
 
 const BOARD = 'Example Board';
 const NO_NAMES = { categories: {}, places: {} };
@@ -55,6 +58,14 @@ const prefs = {
     { key: 'salary-reports', name: 'Salary reports', subscribed: false },
   ],
 } satisfies EmailPreferences;
+
+/** What a change returns: the preferences, and whether it emailed a link. */
+function updated(
+  next: EmailPreferences,
+  confirmationEmailQueued = false,
+): EmailPreferencesUpdateResult {
+  return { ...next, confirmationEmailQueued };
+}
 
 function dependencies() {
   return {
@@ -189,10 +200,9 @@ describe('email preferences page', () => {
 
   it('turning marketing on sends only that change, with consent wording naming the board', async () => {
     const deps = dependencies();
-    deps.updateEmailPreferences.mockResolvedValue({
-      ...prefs,
-      marketing: { subscribed: true },
-    });
+    deps.updateEmailPreferences.mockResolvedValue(
+      updated({ ...prefs, marketing: { subscribed: true } }),
+    );
     renderPage({}, deps);
 
     const topic = screen.getByRole('switch', { name: 'Events' });
@@ -225,7 +235,7 @@ describe('email preferences page', () => {
   it('a topic sends only itself, with wording naming it and the board only when turned on', async () => {
     const deps = dependencies();
     const marketingOn = { ...prefs, marketing: { subscribed: true } };
-    deps.updateEmailPreferences.mockResolvedValue(marketingOn);
+    deps.updateEmailPreferences.mockResolvedValue(updated(marketingOn));
     renderPage({ prefs: marketingOn }, deps);
 
     fireEvent.click(screen.getByRole('switch', { name: 'Events' }));
@@ -260,10 +270,9 @@ describe('email preferences page', () => {
 
   it('deleting an alert from its menu sends only that alert', async () => {
     const deps = dependencies();
-    deps.updateEmailPreferences.mockResolvedValue({
-      ...prefs,
-      jobAlerts: { ...prefs.jobAlerts, alerts: [] },
-    });
+    deps.updateEmailPreferences.mockResolvedValue(
+      updated({ ...prefs, jobAlerts: { ...prefs.jobAlerts, alerts: [] } }),
+    );
     renderPage({}, deps);
 
     await openAlertMenu('Design jobs');
@@ -324,7 +333,7 @@ describe('email preferences page', () => {
       ...prefs,
       jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
     };
-    deps.updateEmailPreferences.mockResolvedValue(off);
+    deps.updateEmailPreferences.mockResolvedValue(updated(off));
     renderPage({ prefs: off }, deps);
     expect(
       screen.getByText(m.emailPreferences_jobAlertsOff()),
@@ -440,9 +449,9 @@ describe('email preferences page', () => {
 
   it('keeps the menu button focusable while a change saves, with its items waiting', async () => {
     const deps = dependencies();
-    let finish: (value: EmailPreferences) => void = () => {};
+    let finish: (value: EmailPreferencesUpdateResult) => void = () => {};
     deps.updateEmailPreferences.mockReturnValue(
-      new Promise<EmailPreferences>((resolve) => {
+      new Promise<EmailPreferencesUpdateResult>((resolve) => {
         finish = resolve;
       }),
     );
@@ -463,7 +472,7 @@ describe('email preferences page', () => {
       screen.getByRole('menuitem', { name: m.emailPreferences_deleteAlert() }),
     );
     expect(deps.updateEmailPreferences).toHaveBeenCalledTimes(1);
-    finish(prefs);
+    finish(updated(prefs));
   });
 
   it('lets an alert waiting for its confirmation link only be deleted', async () => {
@@ -488,6 +497,28 @@ describe('email preferences page', () => {
     ]);
   });
 
+  it('tells an alert waiting for its link to turn job alerts back on while they are off', () => {
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: {
+          ...prefs.jobAlerts,
+          unsubscribed: true,
+          alerts: [
+            { ...prefs.jobAlerts.alerts[0], awaitingConfirmation: true },
+          ],
+        },
+      },
+    });
+    const row = within(alertRow('Design jobs'));
+    expect(
+      row.getByText(m.emailPreferences_alertAwaitingJobAlertsOff()),
+    ).toBeInTheDocument();
+    expect(
+      row.queryByText(m.emailPreferences_alertAwaiting()),
+    ).not.toBeInTheDocument();
+  });
+
   it.each([
     [false, m.emailPreferences_pauseAlert, true],
     [true, m.emailPreferences_resumeAlert, false],
@@ -502,7 +533,7 @@ describe('email preferences page', () => {
           alerts: [{ ...prefs.jobAlerts.alerts[0], paused }],
         },
       };
-      deps.updateEmailPreferences.mockResolvedValue(before);
+      deps.updateEmailPreferences.mockResolvedValue(updated(before));
       renderPage({ prefs: before }, deps);
       expect(await openAlertMenu('Design jobs')).toEqual([
         item(),
@@ -520,34 +551,56 @@ describe('email preferences page', () => {
     },
   );
 
-  it('turning job alerts back on says a confirmation link is on its way', async () => {
-    const deps = dependencies();
-    deps.updateEmailPreferences.mockResolvedValue({
-      ...prefs,
-      jobAlerts: {
-        ...prefs.jobAlerts,
-        alerts: [{ ...prefs.jobAlerts.alerts[0], awaitingConfirmation: true }],
-      },
-    });
-    renderPage(
-      {
-        prefs: {
-          ...prefs,
-          jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
+  it.each([
+    [true, true],
+    [false, false],
+  ])(
+    'turning job alerts back on says a link is on its way only when the API queued one (queued=%s)',
+    async (queued, shown) => {
+      const deps = dependencies();
+      // Both answers leave the alert waiting for its link: only the API
+      // knows whether this change emailed one.
+      deps.updateEmailPreferences.mockResolvedValue(
+        updated(
+          {
+            ...prefs,
+            jobAlerts: {
+              ...prefs.jobAlerts,
+              alerts: [
+                { ...prefs.jobAlerts.alerts[0], awaitingConfirmation: true },
+              ],
+            },
+          },
+          queued,
+        ),
+      );
+      renderPage(
+        {
+          prefs: {
+            ...prefs,
+            jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
+          },
         },
-      },
-      deps,
-    );
-    fireEvent.click(
-      screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
-    );
-    expect(
-      await screen.findByText(m.emailPreferences_jobAlertsLinkSent()),
-    ).toBeInTheDocument();
-    expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
-      data: { person: PERSON, changes: { jobAlerts: true } },
-    });
-  });
+        deps,
+      );
+      fireEvent.click(
+        screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
+      );
+      await waitFor(() =>
+        expect(
+          screen.getByRole('switch', {
+            name: m.emailPreferences_jobAlertsAll(),
+          }),
+        ).toBeChecked(),
+      );
+      expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
+        data: { person: PERSON, changes: { jobAlerts: true } },
+      });
+      expect(
+        screen.queryByText(m.emailPreferences_jobAlertsLinkSent()) !== null,
+      ).toBe(shown);
+    },
+  );
 
   it.each([
     ['rate_limited', 429, () => m.emailPreferences_jobAlertsThrottled()],
@@ -644,7 +697,7 @@ describe('email preferences page', () => {
     cleanup();
 
     const deps = dependencies();
-    deps.updateEmailPreferences.mockResolvedValue(prefs);
+    deps.updateEmailPreferences.mockResolvedValue(updated(prefs));
     renderPage(
       {
         prefs: {

@@ -3444,6 +3444,7 @@
   "emailPreferences_jobAlertsThrottled": "Se pidió un correo de confirmación hace un momento. Inténtalo de nuevo en un par de minutos.",
   "emailPreferences_jobAlertsSuppressed": "No podemos enviar correos a esta dirección, así que no se envió ningún enlace de confirmación. Tus alertas siguen desactivadas.",
   "emailPreferences_alertAwaiting": "Aún no se envía: haz clic en el enlace del correo de confirmación de esta alerta.",
+  "emailPreferences_alertAwaitingJobAlertsOff": "Vuelve a activar las alertas de empleo para recibir un nuevo enlace de confirmación.",
   "emailPreferences_alertActionsLabel": "Acciones de la alerta de empleo: {label}",
   "emailPreferences_pauseAlert": "Pausar alerta",
   "emailPreferences_resumeAlert": "Reanudar alerta",
