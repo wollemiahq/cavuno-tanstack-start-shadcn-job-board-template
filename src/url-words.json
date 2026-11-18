@@ -57,7 +57,8 @@
     "success": "gelukt",
     "checkout-canceled": "betaling-geannuleerd",
     "settings": "instellingen",
-    "email-preferences": "e-mailvoorkeuren"
+    "email-preferences": "e-mailvoorkeuren",
+    "authorize": "autoriseren"
   },
   "de": {
     "jobs": "jobs",
@@ -118,7 +119,8 @@
     "success": "erfolg",
     "checkout-canceled": "zahlung-abgebrochen",
     "settings": "einstellungen",
-    "email-preferences": "e-mail-einstellungen"
+    "email-preferences": "e-mail-einstellungen",
+    "authorize": "autorisieren"
   },
   "fr": {
     "jobs": "emplois",
@@ -179,7 +181,8 @@
     "success": "succes",
     "checkout-canceled": "paiement-annule",
     "settings": "parametres",
-    "email-preferences": "preferences-email"
+    "email-preferences": "preferences-email",
+    "authorize": "autoriser"
   },
   "es": {
     "jobs": "empleos",
@@ -240,7 +243,8 @@
     "success": "exito",
     "checkout-canceled": "pago-cancelado",
     "settings": "ajustes",
-    "email-preferences": "preferencias-de-correo"
+    "email-preferences": "preferencias-de-correo",
+    "authorize": "autorizar"
   },
   "pt": {
     "jobs": "empregos",
@@ -301,7 +305,8 @@
     "success": "sucesso",
     "checkout-canceled": "pagamento-cancelado",
     "settings": "configuracoes",
-    "email-preferences": "preferencias-de-email"
+    "email-preferences": "preferencias-de-email",
+    "authorize": "autorizar"
   },
   "it": {
     "jobs": "offerte-lavoro",
@@ -362,7 +367,8 @@
     "success": "completato",
     "checkout-canceled": "pagamento-annullato",
     "settings": "impostazioni",
-    "email-preferences": "preferenze-email"
+    "email-preferences": "preferenze-email",
+    "authorize": "autorizza"
   },
   "pl": {
     "jobs": "praca",
@@ -423,7 +429,8 @@
     "success": "sukces",
     "checkout-canceled": "platnosc-anulowana",
     "settings": "ustawienia",
-    "email-preferences": "ustawienia-e-mail"
+    "email-preferences": "ustawienia-e-mail",
+    "authorize": "autoryzuj"
   },
   "cs": {
     "jobs": "prace",
@@ -484,7 +491,8 @@
     "success": "hotovo",
     "checkout-canceled": "platba-zrusena",
     "settings": "nastaveni",
-    "email-preferences": "nastaveni-e-mailu"
+    "email-preferences": "nastaveni-e-mailu",
+    "authorize": "autorizovat"
   },
   "tr": {
     "jobs": "is-ilanlari",
@@ -545,7 +553,8 @@
     "success": "basarili",
     "checkout-canceled": "odeme-iptal-edildi",
     "settings": "ayarlar",
-    "email-preferences": "e-posta-tercihleri"
+    "email-preferences": "e-posta-tercihleri",
+    "authorize": "yetkilendir"
   },
   "sv": {
     "jobs": "lediga-jobb",
@@ -606,7 +615,8 @@
     "success": "klart",
     "checkout-canceled": "betalning-avbruten",
     "settings": "installningar",
-    "email-preferences": "e-postinstallningar"
+    "email-preferences": "e-postinstallningar",
+    "authorize": "auktorisera"
   },
   "da": {
     "jobs": "job",
@@ -667,7 +677,8 @@
     "success": "gennemfoert",
     "checkout-canceled": "betaling-annulleret",
     "settings": "indstillinger",
-    "email-preferences": "e-mail-praeferencer"
+    "email-preferences": "e-mail-praeferencer",
+    "authorize": "autoriser"
   },
   "nb": {
     "jobs": "stillinger",
@@ -728,7 +739,8 @@
     "success": "fullfort",
     "checkout-canceled": "betaling-avbrutt",
     "settings": "innstillinger",
-    "email-preferences": "e-postinnstillinger"
+    "email-preferences": "e-postinnstillinger",
+    "authorize": "autoriser"
   },
   "fi": {
     "jobs": "tyopaikat",
@@ -789,6 +801,7 @@
     "success": "onnistui",
     "checkout-canceled": "maksu-peruttu",
     "settings": "asetukset",
-    "email-preferences": "sahkopostiasetukset"
+    "email-preferences": "sahkopostiasetukset",
+    "authorize": "valtuuta"
   }
 }

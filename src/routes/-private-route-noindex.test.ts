@@ -17,10 +17,10 @@ import { settingsHead } from './-settings';
 import { Route as AccountRoute } from './account';
 import { Route as ConfirmEmailChangeRoute } from './auth.confirm-email-change';
 import { Route as SignInRoute } from './auth.sign-in';
+import { Route as AuthorizeRoute } from './authorize';
 import { Route as MatchesRoute } from './matches';
 import { Route as AlertsRoute } from './me.alerts';
 import { Route as MessagesRoute } from './messages';
-import { Route as OAuthAuthorizeRoute } from './oauth.authorize';
 import { Route as PostCanceledRoute } from './post_.checkout-canceled';
 import { Route as PostSuccessRoute } from './post_.success';
 import { Route as SavedRoute } from './saved-jobs';
@@ -40,7 +40,7 @@ const privateRouteHeads = [
     '/auth/confirm-email-change',
     ConfirmEmailChangeRoute.options.head?.toString(),
   ],
-  ['/oauth/authorize', OAuthAuthorizeRoute.options.head?.toString()],
+  ['/authorize', AuthorizeRoute.options.head?.toString()],
   ['/post/success', PostSuccessRoute.options.head?.toString()],
   ['/post/checkout-canceled', PostCanceledRoute.options.head?.toString()],
 ] as const;

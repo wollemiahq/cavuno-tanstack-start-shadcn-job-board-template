@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdsDottxtRouteImport } from './routes/ads[.]txt'
 import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as AuthorizeRouteImport } from './routes/authorize'
 import { Route as ComingSoonGateRouteImport } from './routes/coming-soon-gate'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
@@ -73,7 +74,6 @@ import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
 import { Route as MePurchasesRouteImport } from './routes/me.purchases'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
-import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
 import { Route as PostSuccessRouteImport } from './routes/post_.success'
@@ -156,6 +156,11 @@ const AdsDottxtRoute = AdsDottxtRouteImport.update({
 const ApplyRoute = ApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthorizeRoute = AuthorizeRouteImport.update({
+  id: '/authorize',
+  path: '/authorize',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComingSoonGateRoute = ComingSoonGateRouteImport.update({
@@ -449,11 +454,6 @@ const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
   id: '/$conversationId',
   path: '/$conversationId',
   getParentRoute: () => MessagesRoute,
-} as any)
-const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
-  id: '/oauth/authorize',
-  path: '/oauth/authorize',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const PHandleRoute = PHandleRouteImport.update({
   id: '/p/$handle',
@@ -752,6 +752,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/authorize': typeof AuthorizeRoute
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -804,7 +805,6 @@ export interface FileRoutesByFullPath {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
-  '/oauth/authorize': typeof OauthAuthorizeRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
@@ -872,6 +872,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/authorize': typeof AuthorizeRoute
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -924,7 +925,6 @@ export interface FileRoutesByTo {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
-  '/oauth/authorize': typeof OauthAuthorizeRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
@@ -993,6 +993,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/ads.txt': typeof AdsDottxtRoute
   '/apply': typeof ApplyRoute
+  '/authorize': typeof AuthorizeRoute
   '/coming-soon-gate': typeof ComingSoonGateRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
@@ -1045,7 +1046,6 @@ export interface FileRoutesById {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
-  '/oauth/authorize': typeof OauthAuthorizeRoute
   '/p/$handle': typeof PHandleRoute
   '/post_/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post_/success': typeof PostSuccessRoute
@@ -1115,6 +1115,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/authorize'
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
@@ -1167,7 +1168,6 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
-    | '/oauth/authorize'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
@@ -1235,6 +1235,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/authorize'
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
@@ -1287,7 +1288,6 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
-    | '/oauth/authorize'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
@@ -1355,6 +1355,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/ads.txt'
     | '/apply'
+    | '/authorize'
     | '/coming-soon-gate'
     | '/contact'
     | '/cookie-policy'
@@ -1407,7 +1408,6 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
-    | '/oauth/authorize'
     | '/p/$handle'
     | '/post_/checkout-canceled'
     | '/post_/success'
@@ -1476,6 +1476,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdsDottxtRoute: typeof AdsDottxtRoute
   ApplyRoute: typeof ApplyRoute
+  AuthorizeRoute: typeof AuthorizeRoute
   ComingSoonGateRoute: typeof ComingSoonGateRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
@@ -1527,7 +1528,6 @@ export interface RootRouteChildren {
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   MePurchasesRoute: typeof MePurchasesRoute
-  OauthAuthorizeRoute: typeof OauthAuthorizeRoute
   PHandleRoute: typeof PHandleRoute
   PostCheckoutCanceledRoute: typeof PostCheckoutCanceledRoute
   PostSuccessRoute: typeof PostSuccessRoute
@@ -1629,6 +1629,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/authorize': {
+      id: '/authorize'
+      path: '/authorize'
+      fullPath: '/authorize'
+      preLoaderRoute: typeof AuthorizeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coming-soon-gate': {
@@ -2036,13 +2043,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/messages/$conversationId'
       preLoaderRoute: typeof MessagesConversationIdRouteImport
       parentRoute: typeof MessagesRoute
-    }
-    '/oauth/authorize': {
-      id: '/oauth/authorize'
-      path: '/oauth/authorize'
-      fullPath: '/oauth/authorize'
-      preLoaderRoute: typeof OauthAuthorizeRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/p/$handle': {
       id: '/p/$handle'
@@ -2464,6 +2464,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdsDottxtRoute: AdsDottxtRoute,
   ApplyRoute: ApplyRoute,
+  AuthorizeRoute: AuthorizeRoute,
   ComingSoonGateRoute: ComingSoonGateRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
@@ -2515,7 +2516,6 @@ const rootRouteChildren: RootRouteChildren = {
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   MePurchasesRoute: MePurchasesRoute,
-  OauthAuthorizeRoute: OauthAuthorizeRoute,
   PHandleRoute: PHandleRoute,
   PostCheckoutCanceledRoute: PostCheckoutCanceledRoute,
   PostSuccessRoute: PostSuccessRoute,

@@ -65,14 +65,14 @@ describe('getMcpConsentStep', () => {
     expect(routerCopy(raw)).not.toBe(raw);
 
     const redirect = mcpAuthorizeRedirect(
-      new Request(`https://board.test/oauth/authorize${raw}`),
+      new Request(`https://board.test/authorize${raw}`),
     );
     expect(redirect?.status).toBe(307);
     const kept = new URL(
       redirect?.headers.get('location') ?? '',
       'https://board.test',
     );
-    expect(kept.pathname).toBe('/oauth/authorize');
+    expect(kept.pathname).toBe('/authorize');
     await getMcpConsentStep({ data: { search: routerCopy(kept.search) } });
 
     expect(mocks.fetch).toHaveBeenCalledWith(`/mcp/consent${raw}`, {
@@ -90,7 +90,7 @@ describe('getMcpConsentStep', () => {
       '?request=eyJ&from=signed_in&cavuno_auth=login&cavuno_auth_method=password';
     const kept = new URL(
       mcpAuthorizeRedirect(
-        new Request(`https://board.test/oauth/authorize${raw}`),
+        new Request(`https://board.test/authorize${raw}`),
       )?.headers.get('location') ?? '',
       'https://board.test',
     );
@@ -131,6 +131,7 @@ describe('getMcpConsentStep', () => {
       getMcpConsentStep({ data: { search: '?client_id=a' } }),
     ).resolves.toEqual({
       next: 'error',
+      code: 'rate_limited',
       message: m.boardError_rateLimitedText(),
     });
   });

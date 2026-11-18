@@ -10,7 +10,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { loadMcpConsent, McpConsentView } from './-oauth.authorize';
+import { loadMcpConsent, McpConsentView } from './-authorize';
 
 import { m } from '@/paraglide/messages';
 import type { McpConsentStep } from '@/server/mcp-consent';
@@ -26,16 +26,17 @@ const consent: Extract<McpConsentStep, { next: 'consent' }> = {
   consentToken: 'token-1',
   clientName: '<b>Evil</b> Assistant',
   knownAssistant: null,
-  heading: 'Assistant X would like access to your board account',
-  trust: { label: 'Unverified application', description: 'Trust note.' },
-  scopes: ['It can read your profile.', 'It can read your companies.'],
-  redirectNotice: [
-    'Authorizing will redirect you to ',
-    { strong: 'x.test' },
-    '.',
-  ],
   email: 'ada@example.com',
+  trustLevel: 'unverified',
+  publisherHost: null,
+  redirectHost: 'x.test',
+  access: {
+    candidate: null,
+    employer: { reads: ['profiles', 'jobs'], changes: ['jobs'] },
+  },
 };
+
+const BOARD = 'Acme Jobs';
 
 function load(step: McpConsentStep, search = '?client_id=a&state=1e3') {
   const getMcpConsentStep = vi.fn().mockResolvedValue(step);
@@ -46,7 +47,7 @@ function load(step: McpConsentStep, search = '?client_id=a&state=1e3') {
   return { result, getMcpConsentStep };
 }
 
-describe('/oauth/authorize loader', () => {
+describe('/authorize loader', () => {
   it('asks the API with the page’s search', async () => {
     const { result, getMcpConsentStep } = load(consent);
     await expect(result).resolves.toMatchObject({ step: consent });
@@ -58,12 +59,15 @@ describe('/oauth/authorize loader', () => {
   it.each([
     ['sign_in', '/auth/sign-in'],
     ['verify_email', '/auth/verify-email-required'],
-  ] as const)('sends %s to %s with the returned returnTo', async (next, to) => {
+  ] as const)('sends %s to %s, to come back to this page', async (next, to) => {
     const returnTo = '/oauth/authorize?request=abc&from=signed_in';
     const result = load({ next, returnTo }).result;
     await expect(result).rejects.toSatisfy(isRedirect);
     await expect(result).rejects.toMatchObject({
-      options: { to, search: { returnTo } },
+      options: {
+        to,
+        search: { returnTo: '/authorize?request=abc&from=signed_in' },
+      },
     });
   });
 
@@ -82,7 +86,7 @@ describe('/oauth/authorize loader', () => {
   });
 });
 
-describe('/oauth/authorize view', () => {
+describe('/authorize view', () => {
   it('shows the request as text and allows it', async () => {
     const decide = vi.fn().mockResolvedValue({
       ok: true,
@@ -91,18 +95,26 @@ describe('/oauth/authorize view', () => {
     const assignLocation = vi.fn();
     const { container } = render(
       <McpConsentView
-        step={{ ...consent, scopes: [consent.clientName] }}
+        step={consent}
+        boardName={BOARD}
         decide={decide}
         assignLocation={assignLocation}
       />,
     );
 
     expect(
-      screen.getByRole('heading', { name: consent.heading }),
+      screen.getByRole('heading', {
+        name: m.mcpConsent_heading({
+          client: consent.clientName,
+          board: BOARD,
+        }),
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText(consent.clientName)).toBeInTheDocument();
     expect(container.querySelector('b')).toBeNull();
     expect(screen.getByText('x.test').tagName).toBe('STRONG');
+    expect(
+      screen.getByText(m.mcpConsent_trustUnverifiedText()),
+    ).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole('button', { name: m.mcpConsent_allowLabel() }),
@@ -124,12 +136,13 @@ describe('/oauth/authorize view', () => {
   it('cancels, and shows the API’s answer in place of the choice', async () => {
     const decide = vi.fn().mockResolvedValue({
       ok: true,
-      data: { next: 'error', message: 'This page expired.' },
+      data: { next: 'error', code: 'expired', message: 'This page expired.' },
     });
     const assignLocation = vi.fn();
     render(
       <McpConsentView
         step={consent}
+        boardName={BOARD}
         decide={decide}
         assignLocation={assignLocation}
       />,
@@ -141,7 +154,7 @@ describe('/oauth/authorize view', () => {
     expect(
       await screen.findByRole('heading', { name: m.mcpConsent_errorTitle() }),
     ).toBeInTheDocument();
-    expect(screen.getByText('This page expired.')).toBeInTheDocument();
+    expect(screen.getByText(m.mcpConsent_errorExpired())).toBeInTheDocument();
     expect(decide.mock.calls[0]?.[0].data.decision).toBe('deny');
     expect(screen.queryByRole('button')).toBeNull();
     expect(assignLocation).not.toHaveBeenCalled();
@@ -156,6 +169,7 @@ describe('/oauth/authorize view', () => {
     render(
       <McpConsentView
         step={consent}
+        boardName={BOARD}
         decide={decide}
         assignLocation={vi.fn()}
       />,
@@ -177,6 +191,7 @@ describe('/oauth/authorize view', () => {
     render(
       <McpConsentView
         step={{ next: 'redirect', location }}
+        boardName={BOARD}
         decide={vi.fn()}
         assignLocation={assignLocation}
       />,
@@ -192,6 +207,7 @@ describe('/oauth/authorize view', () => {
     render(
       <McpConsentView
         step={{ next: 'redirect', location: 'javascript:alert(1)' }}
+        boardName={BOARD}
         decide={vi.fn()}
         assignLocation={assignLocation}
       />,
@@ -203,10 +219,29 @@ describe('/oauth/authorize view', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('shows the API’s error', () => {
+  it.each([
+    [
+      { code: 'no_account', accountScopes: ['employer'] },
+      m.mcpConsent_errorNoEmployerAccount({ board: BOARD }),
+    ],
+    [
+      { code: 'not_signed_in' },
+      m.mcpConsent_errorNotSignedIn({ board: BOARD }),
+    ],
+    // A code this site doesn't know yet: the API's own message.
+    [{ code: 'something_new' }, 'API wording.'],
+  ] as const)('words the error %o', (error, text) => {
+    // SAFETY: a valid error step, except that `something_new` stands in for
+    // a code a newer Board API may send.
+    const step = {
+      next: 'error',
+      message: 'API wording.',
+      ...error,
+    } as Extract<McpConsentStep, { next: 'error' }>;
     render(
       <McpConsentView
-        step={{ next: 'error', message: 'Unknown assistant.' }}
+        step={step}
+        boardName={BOARD}
         decide={vi.fn()}
         assignLocation={vi.fn()}
       />,
@@ -214,6 +249,6 @@ describe('/oauth/authorize view', () => {
     expect(
       screen.getByRole('heading', { name: m.mcpConsent_errorTitle() }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Unknown assistant.')).toBeInTheDocument();
+    expect(screen.getByText(text)).toBeInTheDocument();
   });
 });

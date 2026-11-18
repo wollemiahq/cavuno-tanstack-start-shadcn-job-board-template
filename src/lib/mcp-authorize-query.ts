@@ -1,5 +1,6 @@
 /**
- * The query an assistant sends to `/oauth/authorize`, kept byte for byte.
+ * The query an assistant's sign-in link carries to this site's consent page
+ * (`/authorize`, in the board's words), kept byte for byte.
  *
  * The router coerces search values that look like JSON and redirects a
  * document request to its own re-serialized URL before any loader runs, so
@@ -10,8 +11,10 @@
  * reads it back out (`mcpAuthorizeQuery`).
  */
 import { AUTH_CONVERSION_PARAMS } from './board-datalayer-events';
+import { canonicalPathname, localizePath } from './localized-path';
 
-const MCP_AUTHORIZE_PATH = '/oauth/authorize';
+/** The consent page's canonical path; served under the board's own word. */
+export const MCP_CONSENT_PATH = '/authorize';
 const PARAM = 'oauth';
 
 /**
@@ -62,9 +65,11 @@ function keptValue(params: URLSearchParams): string | null {
 export function mcpAuthorizeRedirect(request: Request): Response | null {
   if (request.method !== 'GET' && request.method !== 'HEAD') return null;
   const url = new URL(request.url);
-  if (url.pathname !== MCP_AUTHORIZE_PATH || !url.search) return null;
+  if (!url.search || canonicalPathname(url.pathname) !== MCP_CONSENT_PATH) {
+    return null;
+  }
   if (keptValue(url.searchParams) !== null) return null;
-  const kept = new URL(MCP_AUTHORIZE_PATH, url);
+  const kept = new URL(url.pathname, url);
   kept.searchParams.set(PARAM, toBase64Url(url.search.slice(1)));
   for (const [key, value] of url.searchParams) {
     if (isAuthMarker(key)) kept.searchParams.append(key, value);
@@ -92,4 +97,14 @@ export function mcpAuthorizeQuery(search: string): string {
     // own error step.
     return '';
   }
+}
+
+/**
+ * This page, in the board's words, with the query of the Board API's
+ * `returnTo` (which names Cavuno's `/oauth/authorize`): sign-in comes back
+ * here directly.
+ */
+export function mcpConsentReturnTo(returnTo: string): string {
+  const { search } = new URL(returnTo, 'https://board.invalid');
+  return `${localizePath(MCP_CONSENT_PATH)}${search}`;
 }

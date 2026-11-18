@@ -4,14 +4,22 @@
  * sign in, verify the email, the Allow/Cancel choice, or straight back to
  * the assistant.
  *
- * The step's own copy (heading, trust line, what the assistant can do) comes
- * from the API in English, the same words as the board's other consent pages.
+ * The API gives the step as facts; the page words them in the board's
+ * language (`mcp-consent-copy.ts`).
  */
 import { useEffect, useState } from 'react';
 
 import { redirect } from '@tanstack/react-router';
 
 import { AuthCard, FormError } from '../components/auth-form';
+import { mcpConsentReturnTo } from '../lib/mcp-authorize-query';
+import {
+  consentErrorText,
+  consentHeading,
+  consentRedirectNotice,
+  consentScopes,
+  consentTrust,
+} from '../lib/mcp-consent-copy';
 import { m } from '../paraglide/messages';
 import {
   getMcpConsentStep,
@@ -44,17 +52,17 @@ export async function loadMcpConsent(
     actions.getSeoBase().catch(() => undefined),
   ]);
   switch (step.next) {
-    // `returnTo` is this page with the request sealed into it, so the
-    // visitor comes back here once they are signed in and verified.
+    // `returnTo` carries the request sealed into it, so the visitor comes
+    // back here once they are signed in and verified.
     case 'sign_in':
       throw redirect({
         to: '/auth/sign-in',
-        search: { returnTo: step.returnTo },
+        search: { returnTo: mcpConsentReturnTo(step.returnTo) },
       });
     case 'verify_email':
       throw redirect({
         to: '/auth/verify-email-required',
-        search: { returnTo: step.returnTo },
+        search: { returnTo: mcpConsentReturnTo(step.returnTo) },
       });
     case 'redirect':
       // A web callback is a plain redirect. An app's own scheme
@@ -71,10 +79,12 @@ export async function loadMcpConsent(
 
 export function McpConsentView({
   step,
+  boardName,
   decide,
   assignLocation,
 }: {
   step: McpConsentPageStep;
+  boardName: string;
   decide: (input: {
     data: {
       request: string;
@@ -84,7 +94,9 @@ export function McpConsentView({
   }) => Promise<McpConsentResult>;
   assignLocation: (url: string) => void;
 }) {
-  if (step.next === 'error') return <McpConsentError message={step.message} />;
+  if (step.next === 'error') {
+    return <McpConsentError message={consentErrorText(step, boardName)} />;
+  }
   if (step.next === 'redirect') {
     return (
       <McpConsentReturn
@@ -96,6 +108,7 @@ export function McpConsentView({
   return (
     <McpConsentChoice
       step={step}
+      boardName={boardName}
       decide={decide}
       assignLocation={assignLocation}
     />
@@ -104,10 +117,12 @@ export function McpConsentView({
 
 function McpConsentChoice({
   step,
+  boardName,
   decide,
   assignLocation,
 }: {
   step: Extract<McpConsentStep, { next: 'consent' }>;
+  boardName: string;
   decide: Parameters<typeof McpConsentView>[0]['decide'];
   assignLocation: (url: string) => void;
 }) {
@@ -140,7 +155,7 @@ function McpConsentChoice({
   }
 
   if (outcome?.next === 'error') {
-    return <McpConsentError message={outcome.message} />;
+    return <McpConsentError message={consentErrorText(outcome, boardName)} />;
   }
   if (outcome?.next === 'redirect') {
     return (
@@ -151,32 +166,27 @@ function McpConsentChoice({
     );
   }
 
+  const trust = consentTrust(step);
+  const notice = consentRedirectNotice(step);
   return (
     <AuthCard
-      title={step.heading}
+      title={consentHeading(step, boardName)}
       supportingText={m.mcpConsent_signedInAs({ email: step.email })}
     >
       <div className="grid gap-1 text-sm leading-6">
-        <p className="text-foreground font-medium">{step.trust.label}</p>
-        <p className="text-muted-foreground">{step.trust.description}</p>
+        <p className="text-foreground font-medium">{trust.label}</p>
+        <p className="text-muted-foreground">{trust.description}</p>
       </div>
-      {step.scopes.map((scope, index) => (
-        <p key={index} className="text-foreground text-sm leading-6">
-          {scope}
+      {consentScopes(step, boardName).map((paragraph) => (
+        <p key={paragraph} className="text-foreground text-sm leading-6">
+          {paragraph}
         </p>
       ))}
-      {step.redirectNotice ? (
+      {notice ? (
         <p className="text-muted-foreground text-sm leading-6">
-          {step.redirectNotice.map((part, index) =>
-            // oxlint-disable-next-line anti-slop/no-runtime-typeof -- selects the text member of the API's typed inline union
-            typeof part === 'string' ? (
-              part
-            ) : (
-              <strong key={index} className="text-foreground font-medium">
-                {part.strong}
-              </strong>
-            ),
-          )}
+          {notice.before}
+          <strong className="text-foreground font-medium">{notice.host}</strong>
+          {notice.after}
         </p>
       ) : null}
       <FormError message={error} />

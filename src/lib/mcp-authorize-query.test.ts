@@ -8,9 +8,9 @@ import {
 describe('mcpAuthorizeRedirect', () => {
   it('leaves other requests to the router', () => {
     for (const request of [
-      new Request('https://board.test/oauth/authorize'),
-      new Request('https://board.test/oauth/authorize?oauth=abc'),
-      new Request('https://board.test/oauth/authorize?state=1', {
+      new Request('https://board.test/authorize'),
+      new Request('https://board.test/authorize?oauth=abc'),
+      new Request('https://board.test/authorize?state=1', {
         method: 'POST',
       }),
       new Request('https://board.test/jobs?state=1e3'),
@@ -22,7 +22,7 @@ describe('mcpAuthorizeRedirect', () => {
   it('folds a query that carries its own `oauth` value', () => {
     expect(
       mcpAuthorizeRedirect(
-        new Request('https://board.test/oauth/authorize?oauth=x&state=1e3'),
+        new Request('https://board.test/authorize?oauth=x&state=1e3'),
       )?.status,
     ).toBe(307);
   });

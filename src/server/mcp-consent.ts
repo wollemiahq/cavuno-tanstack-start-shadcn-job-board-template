@@ -1,11 +1,11 @@
 /**
- * The board MCP server's consent step (`/oauth/authorize`), rendered in this
- * site's own layout. The Board API checks the assistant's OAuth request and
+ * The board MCP server's consent step, on this site's own consent page
+ * (`/authorize`, the `assistantConsent` page). The Board API checks the assistant's OAuth request and
  * the signed-in visitor and says which step comes next; this site only
  * renders that step and passes the visitor's Allow or Cancel back.
  *
- * The SDK has no methods for these two calls yet, so they go through
- * `client.fetch` with types written here from the published schema
+ * Until the SDK this site pins has `board.mcpConsent`, the two calls go
+ * through `client.fetch` with types written here from the published schema
  * (`getBoardMcpConsent`, `submitBoardMcpConsent`).
  */
 import { isBoardApiError } from '@cavuno/board';
@@ -20,9 +20,27 @@ import { gatedRead } from './board-access';
 
 import { boardErrorMessage } from '@/lib/board-error-message';
 
-/** Text with emphasised parts, as the API words the redirect notice. */
-type McpConsentInline = string | { strong: string };
+/** Why the person can't connect; `rate_limited` is this site's own. */
+export type McpConsentErrorCode =
+  | 'invalid_link'
+  | 'unknown_client'
+  | 'client_rejected'
+  | 'redirect_mismatch'
+  | 'not_signed_in'
+  | 'no_account'
+  | 'expired'
+  | 'unavailable'
+  | 'rate_limited';
 
+export type McpConsentAccountScope = 'candidate' | 'employer';
+
+export type McpConsentSubject = 'profiles' | 'jobs' | 'applicants';
+
+/**
+ * The step as facts, which the page words in the board's language. The API
+ * also sends the step in English (`heading`, `trust`, `scopes`, …); only an
+ * error's `message` is read, for a code this site doesn't know yet.
+ */
 export type McpConsentStep =
   | {
       next: 'consent';
@@ -31,15 +49,26 @@ export type McpConsentStep =
       consentToken: string;
       clientName: string;
       knownAssistant: string | null;
-      heading: string;
-      trust: { label: string; description: string };
-      scopes: string[];
-      redirectNotice: McpConsentInline[] | null;
       email: string;
+      trustLevel: 'domain_verified' | 'verified' | 'unverified';
+      publisherHost: string | null;
+      redirectHost: string;
+      access: {
+        candidate: 'account' | 'searches' | null;
+        employer: {
+          reads: McpConsentSubject[];
+          changes: McpConsentSubject[];
+        } | null;
+      };
     }
   | { next: 'sign_in' | 'verify_email'; returnTo: string }
   | { next: 'redirect'; location: string }
-  | { next: 'error'; message: string };
+  | {
+      next: 'error';
+      code: McpConsentErrorCode;
+      message: string;
+      accountScopes?: McpConsentAccountScope[];
+    };
 
 export type McpConsentDecision = Extract<
   McpConsentStep,
@@ -74,7 +103,11 @@ export const getMcpConsentStep = createServerFn({ method: 'GET' })
         // Too many tries: a message in the page, not the site's error page,
         // mid-way through connecting an assistant.
         if (error.status === 429) {
-          return { next: 'error', message: boardErrorMessage(error) };
+          return {
+            next: 'error',
+            code: 'rate_limited',
+            message: boardErrorMessage(error),
+          };
         }
         throw error;
       }

@@ -86,7 +86,7 @@ const HTML_ACCEPT = 'text/html,*/*;q=0.8';
 /** Pages on machine paths: their URLs are never localized, but Start
  * renders them like any other page. */
 const MACHINE_PATH_PAGE =
-  /^\/(embed\/jobs|p\/[^/]+|mcp\/docs|oauth\/authorize|coming-soon-gate)\/?$/;
+  /^\/(embed\/jobs|p\/[^/]+|mcp\/docs|coming-soon-gate)\/?$/;
 
 /** For a GET/HEAD page request whose Accept rules out HTML: a copy that
  * accepts HTML, so the page renders instead of a 406. Other machine paths
@@ -130,7 +130,8 @@ async function serve(
     if (clientError) return withBaselineSecurityHeaders(clientError, request);
   }
 
-  // Before the router can re-serialize the assistant's OAuth query.
+  // Before the router can re-serialize the assistant's OAuth query, and
+  // before the URL-word redirect, which keeps the folded query as it is.
   const authorizeRedirect = mcpAuthorizeRedirect(request);
   if (authorizeRedirect) {
     return withBaselineSecurityHeaders(authorizeRedirect, request);
