@@ -192,6 +192,32 @@
     }
   ],
   "jobAlertMatch_jobsMatching": "Vacatures voor ‘{query}’",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "nog {count} plaats",
+        "countPlural=*": "nog {count} plaatsen"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} plaats",
+        "countPlural=*": "{count} plaatsen"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Vacatures vergelijkbaar met {title}",
   "alertManager_saveChangesLabel": "Wijzigingen opslaan",
   "alertManager_saveError": "De melding kon niet worden opgeslagen. Je kunt er maximaal 10 hebben.",

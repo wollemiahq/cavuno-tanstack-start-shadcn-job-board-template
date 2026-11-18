@@ -188,7 +188,6 @@ describe('public job-alert management', () => {
     const { redirect } = await loadManage({
       subscription: 'subscription-1',
       token: 'subscription-token',
-      unsubscribe: true,
     });
 
     expect(dependencies.keepJobAlertManageLink).toHaveBeenCalledWith({
@@ -196,7 +195,7 @@ describe('public job-alert management', () => {
     });
     expect(redirect).toMatchObject({
       to: '/alerts/manage',
-      search: { link: LINK, unsubscribe: true },
+      search: { link: LINK },
     });
     expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
   });
@@ -213,7 +212,7 @@ describe('public job-alert management', () => {
 
   it('opening the unsubscribe link only reads; the click unsubscribes', async () => {
     vi.mocked(dependencies.getJobAlertManageState).mockResolvedValue(state);
-    const { data } = await loadManage({ link: LINK, unsubscribe: true });
+    const { data } = await loadManage({ link: LINK });
     expect(dependencies.getJobAlertManageState).toHaveBeenCalledWith({
       data: { link: LINK },
     });
@@ -230,7 +229,7 @@ describe('public job-alert management', () => {
       success: true,
     });
     invalidate.mockResolvedValue();
-    renderManage(data!, { link: LINK, unsubscribe: true });
+    renderManage(data!, { link: LINK });
     expect(dependencies.unsubscribeJobAlert).not.toHaveBeenCalled();
 
     fireEvent.click(
@@ -251,7 +250,7 @@ describe('public job-alert management', () => {
         anchorJobPaths: {},
         filterNames: NO_NAMES,
       },
-      { link: LINK, unsubscribe: true },
+      { link: LINK },
     );
 
     expect(
@@ -310,6 +309,16 @@ describe('public job-alert management', () => {
               isActive: false,
               filters: { query: 'chef', jobFunctions: ['kitchen'] },
             },
+            {
+              ...base,
+              id: 'preference-salary',
+              label: 'Odd currency',
+              filters: {
+                placeIds: ['place-gone'],
+                salaryMin: 50000,
+                salaryCurrency: '12$',
+              },
+            },
           ],
         },
         anchorJobPaths: {},
@@ -331,13 +340,14 @@ describe('public job-alert management', () => {
     expect(
       row(m.jobAlertMatch_similarTo({ title: 'Senior chef' })),
     ).toBeInTheDocument();
-    // Names stand in for slugs and ids; a place that didn't resolve goes.
+    // Names stand in for slugs and ids; a place the board doesn't name is
+    // counted, so the alert never reads as matching everywhere.
     const search = row(m.jobAlertMatch_jobsMatching({ query: 'pilot' }));
     expect(
       within(search).getByText(
         [
           'Flight operations',
-          'Berlin',
+          `Berlin, ${m.jobAlertMatch_morePlaces({ count: 1 })}`,
           m.label_remoteRemote(),
           m.label_senioritySenior(),
         ].join(' · '),
@@ -352,6 +362,13 @@ describe('public job-alert management', () => {
     ).toBeInTheDocument();
     expect(
       within(named).getByText(m.alertsManage_pausedBadge()),
+    ).toBeInTheDocument();
+    // A stored currency that isn't a currency code leaves the salary out
+    // instead of failing the page.
+    expect(
+      within(row('Odd currency')).getByText(
+        m.jobAlertMatch_places({ count: 1 }),
+      ),
     ).toBeInTheDocument();
     // A sending alert carries no badge at all.
     expect(screen.getAllByText(m.alertsManage_pausedBadge())).toHaveLength(1);

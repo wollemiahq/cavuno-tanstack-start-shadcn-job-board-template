@@ -192,6 +192,32 @@
     }
   ],
   "jobAlertMatch_jobsMatching": "Empleos de «{query}»",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} lugar más",
+        "countPlural=*": "{count} lugares más"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} lugar",
+        "countPlural=*": "{count} lugares"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Ofertas similares a {title}",
   "alertManager_saveChangesLabel": "Guardar cambios",
   "alertManager_saveError": "No se ha podido guardar la alerta: puedes tener 10 como máximo.",

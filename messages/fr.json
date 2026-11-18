@@ -192,6 +192,32 @@
     }
   ],
   "jobAlertMatch_jobsMatching": "Offres pour « {query} »",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} autre lieu",
+        "countPlural=*": "{count} autres lieux"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} lieu",
+        "countPlural=*": "{count} lieux"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Offres similaires à {title}",
   "alertManager_saveChangesLabel": "Enregistrer les modifications",
   "alertManager_saveError": "Impossible d'enregistrer l'alerte — vous pouvez en avoir 10 au maximum.",

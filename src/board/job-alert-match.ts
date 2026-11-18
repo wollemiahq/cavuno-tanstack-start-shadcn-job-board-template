@@ -1,7 +1,5 @@
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
 
-import { enumLabel } from '@/lib/enum-labels';
 import type { JobAlertAnchorJob, JobAlertKind } from '@cavuno/board';
 
 /** The Board API caps an alert's search keywords at 200 characters. */
@@ -140,7 +138,7 @@ export type AlertFilterNames = {
   places: Record<string, string>;
 };
 
-/** An alert as both alert lists have it, with every stored filter. */
+/** A stored job alert with every filter it can carry. */
 export interface DescribableJobAlert extends JobAlertMatchSource {
   label: string | null;
   filters: JobAlertMatchSource['filters'] & {
@@ -153,96 +151,10 @@ export interface DescribableJobAlert extends JobAlertMatchSource {
   };
 }
 
-function salaryText({
-  salaryMin,
-  salaryMax,
-  salaryCurrency,
-}: DescribableJobAlert['filters']): string | null {
-  if (!salaryCurrency || (salaryMin == null && salaryMax == null)) return null;
-  const money = (amount: number) =>
-    new Intl.NumberFormat(getLocale(), {
-      style: 'currency',
-      currency: salaryCurrency,
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(amount);
-  if (salaryMin != null && salaryMax != null)
-    return m.jobAlertMatch_salaryRange({
-      min: money(salaryMin),
-      max: money(salaryMax),
-    });
-  return salaryMin != null
-    ? m.jobAlertMatch_salaryFrom({ amount: money(salaryMin) })
-    : m.jobAlertMatch_salaryUpTo({ amount: money(salaryMax!) });
-}
-
-/** An alert's headline (null: name its anchor job) and its other filters. */
-export type JobAlertDescription = {
-  headline: string | null;
-  criteria: string[];
-};
-
 /**
- * A search or filter alert in words, so a person can tell their alerts
- * apart: a headline (its name, else its keywords, else its categories) and
- * the rest of what it matches. A similar-job alert is described by its
- * anchor job (`AnchorJobTitle`) unless it has a name.
- */
-export function describeJobAlert(
-  alert: DescribableJobAlert,
-  names: AlertFilterNames,
-): JobAlertDescription {
-  const match = jobAlertMatch(alert);
-  if (match.kind === 'similar_job') {
-    return { headline: alert.label, criteria: [] };
-  }
-  const list = (values: string[]) => (values.length ? values.join(', ') : null);
-  // A category the board no longer resolves still reads as words.
-  const roleNames = match.roles.map(
-    (slug) => names.categories[slug] ?? slug.replaceAll('-', ' '),
-  );
-  const roles = list(roleNames);
-  // A title stays short: two categories, then how many more.
-  const rolesTitle =
-    roleNames.length > 2
-      ? m.jobAlertMatch_jobsInMore({
-          categories: roleNames.slice(0, 2).join(', '),
-          count: roleNames.length - 2,
-        })
-      : roles
-        ? m.jobAlertMatch_jobsIn({ categories: roles })
-        : null;
-  const keywords = match.keywords
-    ? m.jobAlertMatch_quotedQuery({ query: match.keywords })
-    : null;
-  const headline =
-    alert.label ??
-    (match.keywords
-      ? m.jobAlertMatch_jobsMatching({ query: match.keywords })
-      : (rolesTitle ?? m.alertsManage_allJobsText()));
-  const { filters } = alert;
-  const criteria = [
-    alert.label ? keywords : null,
-    alert.label || match.keywords ? roles : null,
-    list((filters.placeIds ?? []).flatMap((id) => names.places[id] ?? [])),
-    list(
-      (filters.remoteOptions ?? []).map(
-        (option) => enumLabel(option) ?? option.replaceAll('_', ' '),
-      ),
-    ),
-    list(
-      (filters.seniorityLevels ?? []).map(
-        (level) => enumLabel(level) ?? level.replaceAll('_', ' '),
-      ),
-    ),
-    salaryText(filters),
-  ].filter((part): part is string => part !== null);
-  return { headline, criteria };
-}
-
-/**
- * Names for the alerts' categories and places. Display only: if they can't
- * be read, the alerts show category slugs as words and leave places out.
+ * Names for the alerts' categories and places, each asked for once. Display
+ * only: if they can't be read, the alerts show category slugs as words and
+ * count their places.
  */
 export async function resolveAlertFilterNames(
   alerts: readonly DescribableJobAlert[],
@@ -250,11 +162,17 @@ export async function resolveAlertFilterNames(
     data: { categorySlugs: string[]; placeIds: string[] };
   }) => Promise<AlertFilterNames>,
 ): Promise<AlertFilterNames> {
-  const categorySlugs = alerts.flatMap((alert) => {
-    const match = jobAlertMatch(alert);
-    return match.kind === 'similar_job' ? [] : match.roles;
-  });
-  const placeIds = alerts.flatMap((alert) => alert.filters.placeIds ?? []);
+  const categorySlugs = [
+    ...new Set(
+      alerts.flatMap((alert) => {
+        const match = jobAlertMatch(alert);
+        return match.kind === 'similar_job' ? [] : match.roles;
+      }),
+    ),
+  ];
+  const placeIds = [
+    ...new Set(alerts.flatMap((alert) => alert.filters.placeIds ?? [])),
+  ];
   const none = { categories: {}, places: {} };
   if (!categorySlugs.length && !placeIds.length) return none;
   return getAlertFilterNames({ data: { categorySlugs, placeIds } }).catch(

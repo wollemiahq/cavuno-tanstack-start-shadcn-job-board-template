@@ -8,8 +8,8 @@ import {
   type ManageSearch,
 } from './-alerts.manage-loader';
 
+import { describeJobAlert } from '@/board/job-alert-description';
 import {
-  describeJobAlert,
   type AlertFilterNames,
   type AnchorJobPaths,
 } from '@/board/job-alert-match';

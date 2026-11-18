@@ -10,9 +10,9 @@
  * `/alerts/manage?link=…`, a random key for that cookie, so analytics,
  * referrers and screenshots don't capture them.
  *
- * The email's Unsubscribe link is the manage link plus `unsubscribe=1`.
- * Opening it changes nothing, because link checkers open every link in a
- * message: the page offers one "Unsubscribe from job alerts" button.
+ * The email's Unsubscribe link is the manage link plus `unsubscribe=1`,
+ * which the page ignores. Opening it changes nothing, because link checkers
+ * open every link in a message; unsubscribing takes the header's button.
  *
  * In-place filter editing is intentionally omitted: stored filters use place
  * IDs while the subscribe/update body uses place slugs (not reversible), so
@@ -36,12 +36,6 @@ export const Route = createFileRoute('/alerts/manage')({
     subscription: searchString(search.subscription),
     token: searchString(search.token),
     link: searchString(search.link),
-    unsubscribe:
-      searchString(search.unsubscribe) === '1' ||
-      search.unsubscribe === 1 ||
-      search.unsubscribe === true
-        ? true
-        : undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: createAlertManageLoader(),

@@ -43,14 +43,14 @@ export type ManageData =
 export type LoaderData = ManageData & { seo: AlertManageSeo };
 /**
  * `subscription` and `token` come from the email link and leave the address
- * at once; `link` is the key of the cookie that keeps them. `unsubscribe`
- * marks the email's Unsubscribe link: the page offers that as a button.
+ * at once; `link` is the key of the cookie that keeps them. The email's
+ * Unsubscribe link opens the same page (its `unsubscribe=1` is ignored):
+ * Unsubscribe from all alerts is in the header.
  */
 export type ManageSearch = {
   subscription?: string;
   token?: string;
   link?: string;
-  unsubscribe?: true;
 };
 
 export type AlertManageDependencies = {
@@ -102,7 +102,6 @@ export function createAlertManageLoader(
       });
       const search: ManageSearch = {};
       if (link) search.link = link;
-      if (deps.unsubscribe) search.unsubscribe = true;
       throw redirect({ to: '/alerts/manage', search, replace: true });
     }
     // Started before the branch so it overlaps the manage-state read.

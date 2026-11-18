@@ -192,6 +192,32 @@
     }
   ],
   "jobAlertMatch_jobsMatching": "Jobs matching “{query}”",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} more place",
+        "countPlural=*": "{count} more places"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} place",
+        "countPlural=*": "{count} places"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Jobs similar to {title}",
   "alertManager_saveChangesLabel": "Save changes",
   "alertManager_saveError": "Couldn’t save the alert — you can have at most 10.",
