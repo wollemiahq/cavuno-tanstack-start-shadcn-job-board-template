@@ -119,6 +119,7 @@ export function JobSearchPage({
   countedHeading,
   resultsScope,
   introHtml,
+  introLink,
   relatedSearches,
   relatedSearchesPlace,
   onFiltersChange,
@@ -162,6 +163,8 @@ export function JobSearchPage({
    * (a category or place `introHtml`), rendered as-is.
    */
   introHtml?: string;
+  /** A related page linked under the intro, such as the role's salaries. */
+  introLink?: React.ReactNode;
   relatedSearches?: RelatedSearch[];
   /** Scopes category and skill chips to this place's combination pages. */
   relatedSearchesPlace?: string | null;
@@ -214,9 +217,12 @@ export function JobSearchPage({
       scope={resultsScope}
     />
   );
-  const intro = introHtml ? (
-    <Prose data-slot="listing-intro" html={introHtml} />
-  ) : null;
+  const intro = (
+    <>
+      {introHtml ? <Prose data-slot="listing-intro" html={introHtml} /> : null}
+      {introLink ? <p className="text-sm">{introLink}</p> : null}
+    </>
+  );
   return (
     <Page width="wide" fill>
       <main

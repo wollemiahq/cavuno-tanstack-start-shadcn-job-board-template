@@ -8,7 +8,7 @@
  * Head meta is computed in getJobsCategoryPage so `@cavuno/board/seo` stays
  * out of the universal client entry.
  */
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { jobsListingLoaderDeps, parseJobsSearch } from '../lib/jobs-search';
 import { m } from '../paraglide/messages';
@@ -17,6 +17,7 @@ import { createJobsCategoryLoader } from './-jobs-taxonomy-loaders';
 
 import { JobsNotFound } from '@/components/board/jobs-not-found';
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { textLinkClass } from '@/lib/text-link';
 import { workArrangementRedirect } from '@/lib/work-arrangement';
 import { PROGRAMMATIC_JOBS_PAGE_SIZE } from '@/routes/-programmatic-jobs-constants';
 import { ProgrammaticJobsView } from '@/routes/-programmatic-jobs-view';
@@ -43,8 +44,14 @@ export const Route = createFileRoute('/jobs/$keyword')({
 });
 
 function CategoryPage() {
-  const { category, introHtml, list, relatedSearches, reachableCount } =
-    Route.useLoaderData();
+  const {
+    category,
+    introHtml,
+    list,
+    relatedSearches,
+    reachableCount,
+    salaryTitleSlug,
+  } = Route.useLoaderData();
   const { keyword } = Route.useParams();
   const search = Route.useSearch();
   return (
@@ -57,6 +64,18 @@ function CategoryPage() {
         })
       }
       introHtml={introHtml}
+      introLink={
+        // Only when the salary titles hub marks the role's page indexable.
+        salaryTitleSlug ? (
+          <Link
+            to="/salaries/titles/$slug"
+            params={{ slug: salaryTitleSlug }}
+            className={textLinkClass}
+          >
+            {m.categoryPage_salariesLink({ category: category.displayName })}
+          </Link>
+        ) : undefined
+      }
       count={list.count}
       gatedCount={list.gatedCount}
       reachableCount={reachableCount}

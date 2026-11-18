@@ -48,6 +48,20 @@ vi.mock('../lib/board', () => ({
   getBoard: () => ({
     taxonomy: { categories: { resolve: mocks.resolve } },
     jobs: { list: mocks.list, search: mocks.search },
+    // The cross-link salary verdict: no salary page for these fixtures.
+    salaries: {
+      titles: {
+        retrieve: async () => {
+          const { BoardApiError } = await import('@cavuno/board');
+          throw new BoardApiError({
+            status: 404,
+            code: 'not_found',
+            message: 'Not found',
+            raw: undefined,
+          });
+        },
+      },
+    },
   }),
 }));
 

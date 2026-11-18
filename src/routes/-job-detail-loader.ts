@@ -87,6 +87,9 @@ export function createJobDetailLoader(
         head: page.head,
         jsonLd: page.jsonLd,
         breadcrumbTrail: page.breadcrumbTrail,
+        // A company salaries page is indexable whenever it exists, which the
+        // salary sample count already on the company read tells us.
+        companySalariesIndexable: (company?.salarySampleCount ?? 0) > 0,
         applicationState,
       };
     } catch (error) {

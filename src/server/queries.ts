@@ -19,7 +19,10 @@ import { createServerFn } from '@tanstack/react-start';
 import { getRequest } from '@tanstack/react-start/server';
 
 import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
-import { validateAnchorJobInput } from '../lib/anchor-job-input';
+import {
+  validateAlertFilterNamesInput,
+  validateAnchorJobInput,
+} from '../lib/anchor-job-input';
 import { getBoard } from '../lib/board';
 import { APPLY_GATEWAY_QUERY } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
@@ -44,7 +47,10 @@ import { getLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 import { readTalentDirectory } from './talent-directory-read';
 
-import type { AnchorJobPaths } from '../board/job-alert-match';
+import type {
+  AlertFilterNames,
+  AnchorJobPaths,
+} from '../board/job-alert-match';
 import type { BoardContextFooter } from '../components/Footer';
 import type { PlanOfferGate } from '../lib/board-context-cache-core';
 import type {
@@ -54,9 +60,6 @@ import type {
   CompaniesSearchBody,
   CompanyMarketsListQuery,
   EmbedJobsQuery,
-  JobAlertDeletePreferenceInput,
-  JobAlertManageQuery,
-  JobAlertManageTokenInput,
   JobAlertSubscribeInput,
   JobAlertUpdatePreferenceInput,
   JobsListQuery,
@@ -359,6 +362,49 @@ export const getAnchorJobPaths = createServerFn({ method: 'GET' })
   );
 
 /**
+ * Names for job alerts' category slugs and place ids, so an alert reads as
+ * words. Display only: a category or place that doesn't resolve is left out
+ * of the map, and the caller falls back.
+ */
+export const getAlertFilterNames = createServerFn({ method: 'GET' })
+  .validator(validateAlertFilterNamesInput)
+  .middleware([boardAccessMiddleware])
+  .handler(({ data, context }) =>
+    gatedRead(context, async (h): Promise<AlertFilterNames> => {
+      const [categories, places] = await Promise.all([
+        Promise.all(
+          data.categorySlugs.map(async (slug) => {
+            try {
+              const term = await getBoard().taxonomy.categories.resolve(slug, {
+                headers: h,
+              });
+              return [[slug, term.displayName] as const];
+            } catch (error) {
+              if (isNotFound(error)) return [];
+              throw error;
+            }
+          }),
+        ),
+        data.placeIds.length
+          ? getBoard()
+              .taxonomy.places.list(undefined, { headers: h })
+              .then(({ data: all }) =>
+                all.flatMap((place) =>
+                  data.placeIds.includes(place.id)
+                    ? [[place.id, place.displayName] as const]
+                    : [],
+                ),
+              )
+          : [],
+      ]);
+      return {
+        categories: Object.fromEntries(categories.flat()),
+        places: Object.fromEntries(places),
+      };
+    }),
+  );
+
+/**
  * Location autocomplete — `places.list({ q })` powers the listing search bar's
  * location field. Gated like the other content reads (the hosted board's
  * places endpoint sits behind the password wall too).
@@ -569,35 +615,9 @@ export const resendJobAlertConfirmation = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
   .handler(({ data }) => getBoard().jobAlerts.resendConfirmation(data));
 
-// A valid token whose subscription has no alerts left reads as 404 (the API
-// only finds a subscription through its alerts), so deleting the last alert
-// lands here. Return null for that case; a bad token still throws.
-export const getJobAlertManageState = createServerFn({ method: 'GET' })
-  .validator((input: JobAlertManageQuery) => input)
-  .handler(async ({ data }) => {
-    try {
-      return await getBoard().jobAlerts.manage(data);
-    } catch (error) {
-      if (isNotFound(error)) return null;
-      throw error;
-    }
-  });
-
-export const unsubscribeJobAlert = createServerFn({ method: 'POST' })
-  .validator((input: JobAlertManageTokenInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.unsubscribe(data));
-
-export const resubscribeJobAlert = createServerFn({ method: 'POST' })
-  .validator((input: JobAlertManageTokenInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.resubscribe(data));
-
 export const updateJobAlertPreference = createServerFn({ method: 'POST' })
   .validator((input: JobAlertUpdatePreferenceInput) => input)
   .handler(({ data }) => getBoard().jobAlerts.updatePreference(data));
-
-export const deleteJobAlertPreference = createServerFn({ method: 'POST' })
-  .validator((input: JobAlertDeletePreferenceInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.deletePreference(data));
 
 export const getSimilarJobs = createServerFn({ method: 'GET' })
   .validator((input: { jobSlug: string; limit?: number }) => input)

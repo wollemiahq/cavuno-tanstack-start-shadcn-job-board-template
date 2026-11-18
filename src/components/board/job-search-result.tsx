@@ -1,11 +1,15 @@
 import type { ReactNode } from 'react';
 
+import { Link } from '@tanstack/react-router';
+
 import type { JobCardVM } from '@/board/job-view-model';
 import { CompanyAvatar } from '@/components/board/company-avatar';
 import { RelativeTimestamp } from '@/components/board/relative-timestamp';
 import { MasterDetailLink } from '@/components/master-detail-link';
 import { SearchResultCard } from '@/components/search-results/search-results';
 import { jobDestination } from '@/lib/master-detail-destination';
+import { textLinkClass } from '@/lib/text-link';
+import { cn } from '@/lib/utils';
 
 export function JobSearchResult({
   vm,
@@ -52,7 +56,19 @@ export function JobSearchResult({
                   className="text-foreground mt-0.5 truncate text-sm font-semibold"
                   dir="auto"
                 >
-                  {vm.companyName}
+                  {vm.companySlug ? (
+                    // Above the title's stretched link, so it stays a
+                    // separate crawlable anchor to the company profile.
+                    <Link
+                      to="/companies/$companySlug"
+                      params={{ companySlug: vm.companySlug }}
+                      className={cn(textLinkClass, 'relative z-10')}
+                    >
+                      {vm.companyName}
+                    </Link>
+                  ) : (
+                    vm.companyName
+                  )}
                 </p>
               ) : null}
             </div>

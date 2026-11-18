@@ -52,6 +52,7 @@ import {
   settled,
   trailBreadcrumbJsonLd,
 } from './place-listing-helpers';
+import { indexableSalaryTitleSlug } from './salary-link-verdicts';
 
 import {
   customFieldLabel,
@@ -512,7 +513,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
       // Category resolve used to be a separate `await` in the route loader,
       // serializing an extra upstream round trip (and an extra /_serverFn hop
       // on client-side navigation) in front of the listing + SEO batch.
-      const [category, listResult, seo] = await Promise.all([
+      const [category, listResult, seo, salaryTitleSlug] = await Promise.all([
         resolveOrNull(
           // The landing copy (intro, title, description) in the visitor's
           // language; board-language pages send no locale.
@@ -530,6 +531,7 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
           ),
         ),
         seoBase(),
+        indexableSalaryTitleSlug(data.categorySlug, headers),
       ]);
       if (!category) return { kind: 'not_found' as const };
       if (category.redirectTo) {
@@ -589,6 +591,8 @@ export const getJobsCategoryPage = createServerFn({ method: 'GET' })
         head,
         jsonLd,
         reachableCount: reachableCountOf(list),
+        // The role's salary page, linked only when it is indexable.
+        salaryTitleSlug,
       };
     }),
   );

@@ -4,7 +4,7 @@
  */
 import { isNotFound } from '@cavuno/board';
 import { BOARD_PATHS, salaryTitlePath } from '@cavuno/board/paths';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
@@ -37,6 +37,7 @@ import {
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageSection } from '@/components/layout/page';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
+import { textLinkClass } from '@/lib/text-link';
 
 export const Route = createFileRoute('/salaries/titles/$slug/')({
   staticData: { fullBleed: true, ownsMain: true },
@@ -72,7 +73,7 @@ export const Route = createFileRoute('/salaries/titles/$slug/')({
 });
 
 function TitleSalaryPage() {
-  const { salary, faqs } = Route.useLoaderData();
+  const { salary, faqs, roleJobsSlug } = Route.useLoaderData();
   const crumbs = breadcrumbsCopy();
   const locale = getLocale();
 
@@ -157,6 +158,18 @@ function TitleSalaryPage() {
         getLocale(),
       )}
       title={m.salaryDetail_titleHeading({ title: salary.categoryName })}
+      links={
+        // Only when the role's jobs category exists.
+        roleJobsSlug ? (
+          <Link
+            to="/jobs/$keyword"
+            params={{ keyword: roleJobsSlug }}
+            className={textLinkClass}
+          >
+            {m.salaryDetail_roleJobsLink({ title: salary.categoryName })}
+          </Link>
+        ) : undefined
+      }
     >
       {hasSalaryContent ? (
         <>

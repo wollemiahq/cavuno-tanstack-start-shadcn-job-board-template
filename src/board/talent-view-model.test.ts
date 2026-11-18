@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveFieldDisplay } from './custom-field-display';
 import {
   employerCanStartMessage,
+  employerFreeConversationsRemaining,
   groupTalentProfileFields,
   isRedactedTalentDirectoryEntry,
   resolveTalentDetailCta,
@@ -534,6 +535,41 @@ describe('resolveTalentDetailCta', () => {
     });
   });
 
+  it('lets an employer on the free trial message without a plan', () => {
+    const trial = {
+      hasTalentAccess: false,
+      accessModel: 'paid_messaging' as const,
+      hasUnlimitedMessages: false,
+      messageCreditsRemaining: 2,
+    };
+    expect(employerCanStartMessage(trial)).toBe(true);
+    expect(employerFreeConversationsRemaining(trial)).toBe(2);
+    expect(
+      resolveTalentDetailCta({
+        ...base,
+        viewer: {
+          kind: 'employer',
+          hasTalentAccess: false,
+          canStartMessage: true,
+          freeConversationsRemaining: 2,
+        },
+      }).message,
+    ).toEqual({
+      kind: 'compose',
+      label: 'Message',
+      candidateBoardUserId: 'bu_ada',
+      freeConversationsRemaining: 2,
+    });
+    // A plan's credits are not free ones.
+    expect(
+      employerFreeConversationsRemaining({ ...trial, hasTalentAccess: true }),
+    ).toBeNull();
+    // Once the trial is used up the employer is sent to the plans.
+    expect(
+      employerCanStartMessage({ ...trial, messageCreditsRemaining: 0 }),
+    ).toBe(false);
+  });
+
   it('treats an inert paywall as messageable even with zero remaining credits', () => {
     expect(
       employerCanStartMessage({
@@ -664,6 +700,26 @@ describe('resolveTalentProfileSurface', () => {
         candidateAccessReady: true,
       }),
     ).toBe('unlock_needed');
+  });
+
+  it('offers a free trial unlock to an employer without a plan', () => {
+    const trial = {
+      ...unlockNeeded,
+      hasActiveTalentSubscription: false,
+      unlockCreditsRemaining: 2,
+    };
+    const surface = (candidateAccess: typeof trial) =>
+      resolveTalentProfileSurface({
+        routeParam: 'bu_ada-lovelace',
+        profile: redacted,
+        sellsUnlocks: true,
+        viewerRole: 'employer',
+        candidateAccess,
+        candidateAccessReady: true,
+      });
+    expect(surface(trial)).toBe('unlock_needed');
+    // After the last free unlock they see the plans.
+    expect(surface({ ...trial, unlockCreditsRemaining: 0 })).toBe('no_plan');
   });
 
   it('upsells an employer who is out of unlocks', () => {

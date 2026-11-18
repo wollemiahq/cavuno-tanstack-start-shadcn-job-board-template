@@ -13,6 +13,11 @@ export type SelectedJobState = {
   /** The company's membership plan name — public identity on the about card. */
   companyMembershipPlanName: string | null;
   /**
+   * The company has salary data, so its (always indexable) salaries page
+   * exists; read from the company's `salarySampleCount`.
+   */
+  companyHasSalaries?: boolean;
+  /**
    * The private candidate read is independent from the public job. `unknown`
    * keeps the detail readable without turning a failed lookup into permission
    * to submit another application.
@@ -105,6 +110,7 @@ export function useSelectedJob(
             job,
             companySummary: company?.summary ?? null,
             companyMembershipPlanName: company?.membership?.planName ?? null,
+            companyHasSalaries: (company?.salarySampleCount ?? 0) > 0,
             applicationState: application.status,
           });
           return;
@@ -128,6 +134,7 @@ export function useSelectedJob(
           job,
           companySummary: company?.summary ?? null,
           companyMembershipPlanName: company?.membership?.planName ?? null,
+          companyHasSalaries: (company?.salarySampleCount ?? 0) > 0,
           applicationState: application.status,
         });
       } catch (cause: unknown) {

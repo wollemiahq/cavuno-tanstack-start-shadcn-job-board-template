@@ -173,6 +173,45 @@
   "alertManager_searchAlertLabel": "Zoekopdracht",
   "alertManager_similarJobsAlertLabel": "Vergelijkbare vacatures",
   "jobAlertMatch_quotedQuery": "‘{query}’",
+  "jobAlertMatch_salaryUpTo": "Tot {amount}",
+  "jobAlertMatch_salaryFrom": "Vanaf {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Vacatures in {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Vacatures in {categories} en {count} andere",
+        "countPlural=*": "Vacatures in {categories} en {count} andere"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Vacatures voor ‘{query}’",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "nog {count} plaats",
+        "countPlural=*": "nog {count} plaatsen"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} plaats",
+        "countPlural=*": "{count} plaatsen"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Vacatures vergelijkbaar met {title}",
   "alertManager_saveChangesLabel": "Wijzigingen opslaan",
   "alertManager_saveError": "De melding kon niet worden opgeslagen. Je kunt er maximaal 10 hebben.",
@@ -191,8 +230,9 @@
   "alertsConfirm_waitlistedBody": "Je vacature-alert is bevestigd. Hij start zodra het jobboard naar meer mensen kan versturen.",
   "alertsConfirm_waitlistedHeading": "Je staat op de wachtlijst",
   "alertsManage_actionErrorText": "Er is iets misgegaan. Probeer het opnieuw.",
-  "alertsManage_activeBadge": "Actief",
   "alertsManage_allJobsText": "Alle vacatures",
+  "alertsManage_awaitingBadge": "Wacht op bevestiging",
+  "alertsManage_description": "Vacaturemails voor {email}, één keer per week.",
   "alertsManage_deleteLabel": "Verwijderen",
   "alertsManage_emptyBody": "Je hebt al je vacature-alerts verwijderd, dus je krijgt geen alert-e-mails meer.",
   "alertsManage_emptyTitle": "Geen vacature-alerts meer",
@@ -538,6 +578,7 @@
     }
   ],
   "categoryPage_notFoundText": "Categorie niet gevonden.",
+  "categoryPage_salariesLink": "Salarissen voor {category} bekijken",
   "commandDialog_searchPlaceholder": "Zoek een opdracht om uit te voeren…",
   "commandDialog_title": "Opdrachtpalet",
   "common_closeLabel": "Sluiten",
@@ -619,6 +660,7 @@
   "companySalaries_categoryHeading": "Salarissen voor {category} bij {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Salarisgegevens voor {category} bij {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Salarissen voor {category} bij {company}: {range} per jaar, gebaseerd op {jobCount} vacatures.",
+  "companySalaries_companyJobsLink": "Vacatures bij {company}",
   "companySalaries_heading": "Salarissen bij {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +696,7 @@
   "companySalaries_notFoundCompanyCategory": "Geen salarisgegevens voor dit bedrijf en deze categorie.",
   "companySalaries_otherCompaniesHiringLabel": "Andere bedrijven die personeel zoeken voor {category}",
   "companySalaries_otherCompaniesLabel": "Andere bedrijven",
+  "companySalaries_roleSalariesLink": "Salarissen voor {category} bij alle bedrijven",
   "companySalaries_salariesByRoleLabel": "Salarissen per functie",
   "companySalaries_seniorityHeading": "Salaris per ervaringsniveau",
   "companySalaries_topLocationsLabel": "Toplocaties",
@@ -1411,6 +1454,10 @@
   "jobDetail_additionalDetailsHeading": "Aanvullende gegevens",
   "jobDetail_breadcrumbAriaLabel": "Broodkruimelpad",
   "jobDetail_categoriesHeading": "Categorieën",
+  "jobDetail_companyJobsFallbackLink": "Alle vacatures bij dit bedrijf",
+  "jobDetail_companyJobsLink": "Alle vacatures bij {company}",
+  "jobDetail_companySalariesFallbackLink": "Salarissen bij dit bedrijf",
+  "jobDetail_companySalariesLink": "Salarissen bij {company}",
   "jobDetail_customFieldNoLabel": "Nee",
   "jobDetail_customFieldYesLabel": "Ja",
   "jobDetail_educationLabel": "Opleiding",
@@ -2389,6 +2436,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Salarissen in {place}: {range} per jaar, op basis van {jobCount} vacatures.",
   "salaryDetail_relatedSkills": "Verwante vaardigheden",
   "salaryDetail_relatedTitles": "Verwante functies",
+  "salaryDetail_roleJobsLink": "Vacatures in {title} bekijken",
   "salaryDetail_seeAllLocationsLabel": "Alle locaties bekijken",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Alle vaardigheden in {place} bekijken",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Alle functies in {place} bekijken",
@@ -2544,14 +2592,17 @@
   "settings_backToAccountLabel": "Terug naar je account",
   "settings_channelApplicationUpdate": "updates over sollicitaties",
   "settings_channelMessage": "berichten",
+  "settings_channelRecommendedJobs": "passende vacatures",
   "settings_emailNotificationsText": "E-mailmeldingen",
-  "settings_goToAccountLabel": "Naar je account",
   "settings_linkExpiredBody": "Deze afmeldlink is ongeldig of verlopen. Log in om je e-mailvoorkeuren te beheren.",
   "settings_linkExpiredHeading": "Link verlopen",
-  "settings_signInLabel": "Inloggen",
+  "settings_allEmailSettingsLink": "Log in om al je e-mailinstellingen te beheren",
+  "settings_unsubscribeBody": "Dit stopt alleen de e-mails over {channel}. Je andere e-mails van {board} blijven zoals ze zijn.",
+  "settings_unsubscribeTitle": "Geen e-mails meer over {channel} van {board}",
   "settings_title": "Instellingen",
   "settings_unsubscribedBody": "Je ontvangt geen e-mails meer over {channel}. Je kunt ze op elk moment weer inschakelen via je accountinstellingen.",
   "settings_unsubscribedHeading": "Je bent afgemeld",
+  "settings_unsubscribeCta": "Afmelden voor e-mails over {channel}",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Account",
   "siteHeader_addNewCompanyLabel": "Nieuw bedrijf toevoegen",
@@ -2664,6 +2715,20 @@
   "talentLists_sourcedHeading": "Zelf gevonden kandidaten",
   "talentLists_triggerLabel": "Opgeslagen zoekopdrachten",
   "talentMessage_description": "Stel jezelf voor en leg uit waarom je contact opneemt.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dit is je laatste gratis gesprek.",
+        "countPlural=*": "Hiermee begin je een van je {countLabel} gratis gesprekken."
+      }
+    }
+  ],
   "talentMessage_title": "Bericht aan {name}",
   "talentSave_jobLabel": "Op shortlist zetten voor",
   "talentSave_saveLabel": "Opslaan",
@@ -2890,6 +2955,20 @@
       "match": {
         "countPlural=one": "Nog {countLabel} profieltegoed beschikbaar.",
         "countPlural=*": "Nog {countLabel} profieltegoeden beschikbaar."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dit is je laatste gratis profieltegoed.",
+        "countPlural=*": "Dit gebruikt een van je {countLabel} gratis profieltegoeden."
       }
     }
   ],
@@ -3331,19 +3410,27 @@
   "emailPreferences_jobAlertsTitle": "Vacaturemails",
   "emailPreferences_jobAlertsOff": "Vacaturemails staan uit.",
   "emailPreferences_jobAlertsNone": "Je hebt geen vacaturemails.",
-  "emailPreferences_alertWeekly": "Wekelijks",
+  "emailPreferences_jobAlertsAll": "Mijn vacaturemails versturen",
+  "emailPreferences_jobAlertsDescription": "Een wekelijkse e-mail met nieuwe vacatures voor elke vacaturemail.",
+  "emailPreferences_jobAlertsLinkSent": "Kijk in je inbox: er is een link onderweg om je e-mailadres te bevestigen. Je vacaturemails starten zodra je erop klikt.",
+  "emailPreferences_jobAlertsThrottled": "Er is zojuist een bevestigingsmail aangevraagd. Probeer het over een paar minuten opnieuw.",
+  "emailPreferences_jobAlertsSuppressed": "We kunnen geen e-mail naar dit adres sturen, dus er is geen bevestigingslink verstuurd. Je vacaturemails blijven uit.",
   "emailPreferences_alertAwaiting": "Nog niet actief: klik op de link in de bevestigingsmail van deze vacaturemail.",
-  "emailPreferences_deleteAlert": "Verwijderen",
-  "emailPreferences_deleteAlertLabel": "Vacaturemail verwijderen: {label}",
+  "emailPreferences_alertActionsLabel": "Acties voor vacaturemail: {label}",
+  "emailPreferences_pauseAlert": "Vacaturemail pauzeren",
+  "emailPreferences_resumeAlert": "Vacaturemail hervatten",
+  "emailPreferences_deleteAlert": "Vacaturemail verwijderen",
   "emailPreferences_jobMatchesTitle": "Wekelijkse passende vacatures",
   "emailPreferences_jobMatchesDescription": "Vacatures die bij je profiel passen, één keer per week.",
   "emailPreferences_jobMatchesWaitlisted": "Aan. De e-mails starten zodra {board} er ruimte voor heeft.",
   "emailPreferences_marketingTitle": "Nieuws en aanbiedingen",
   "emailPreferences_marketingConsent": "Stuur me nieuws en aanbiedingen van {board}.",
+  "emailPreferences_otherEmailsTitle": "Andere e-mails",
   "emailPreferences_topicsTitle": "Onderwerpen",
   "emailPreferences_topicsOffHint": "Zet nieuws en aanbiedingen aan om onderwerpen te kiezen.",
   "emailPreferences_topicConsent": "Stuur me e-mails over {topic} van {board}.",
   "emailPreferences_unsubscribeAll": "Overal voor afmelden",
+  "emailPreferences_unsubscribeAllHint": "Zet vacaturemails, passende vacatures en nieuws van {board} in één keer uit.",
   "emailPreferences_unsubscribeAllTitle": "Afmelden voor alle e-mails?",
   "emailPreferences_unsubscribeAllBody": "Hiermee zet je vacaturemails, passende vacatures en nieuws van {board} uit. Je kunt je altijd opnieuw aanmelden.",
   "emailPreferences_unsubscribeAllConfirm": "Afmelden",

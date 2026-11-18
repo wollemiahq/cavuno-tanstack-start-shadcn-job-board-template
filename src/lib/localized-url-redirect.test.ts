@@ -117,4 +117,13 @@ describe('localized URL redirect', () => {
     expect(response?.headers.get('Location')).toBe('/vacatures');
     expect(response?.headers.get('Cache-Control')).toBe('max-age=86400');
   });
+
+  it('never lets a cache store the redirect of an email link with a token', () => {
+    const response = localizedUrlRedirect(
+      new Request('https://board.example/settings?token=t&boardUserId=u'),
+      DUTCH_BOARD,
+    );
+    expect(response?.status).toBe(308);
+    expect(response?.headers.get('Cache-Control')).toBe('private, no-store');
+  });
 });

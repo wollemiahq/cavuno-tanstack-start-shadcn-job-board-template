@@ -37,6 +37,7 @@ export const Route = createFileRoute('/settings')({
     token: searchString(search.token),
     boardUserId: searchString(search.boardUserId),
     channel: asChannel(search.channel),
+    link: searchString(search.link),
   }),
   loaderDeps: ({ search }) => search,
   loader: createSettingsLoader(),

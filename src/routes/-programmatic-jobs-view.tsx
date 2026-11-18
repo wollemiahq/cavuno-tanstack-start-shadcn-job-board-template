@@ -39,6 +39,7 @@ export function ProgrammaticJobsView({
   countedHeading,
   resultsScope,
   introHtml,
+  introLink,
   count,
   gatedCount,
   reachableCount,
@@ -61,6 +62,8 @@ export function ProgrammaticJobsView({
   resultsScope?: (range: ResultsRange | null) => React.ReactNode;
   /** The landing page's pre-sanitized intro HTML; see `JobSearchPage`. */
   introHtml?: string;
+  /** See `JobSearchPage` `introLink`. */
+  introLink?: React.ReactNode;
   count?: number;
   gatedCount?: number;
   /** The search's reachable depth; see `JobSearchPage`. */
@@ -121,6 +124,7 @@ export function ProgrammaticJobsView({
         countedHeading={countedHeading}
         resultsScope={resultsScope}
         introHtml={introHtml}
+        introLink={introLink}
         count={count}
         gatedCount={gatedCount}
         reachableCount={reachableCount}

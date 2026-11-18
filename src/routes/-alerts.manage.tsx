@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { m } from '../paraglide/messages';
 import {
@@ -8,9 +8,9 @@ import {
   type ManageSearch,
 } from './-alerts.manage-loader';
 
+import { describeJobAlert } from '@/board/job-alert-description';
 import {
-  jobAlertMatch,
-  searchKeywordsText,
+  type AlertFilterNames,
   type AnchorJobPaths,
 } from '@/board/job-alert-match';
 import { AnchorJobTitle } from '@/components/anchor-job-title';
@@ -31,37 +31,70 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
-import { enumLabel } from '@/lib/enum-labels';
 import type { JobAlertPreference } from '@cavuno/board';
 
-function PreferenceSummary({
+/**
+ * One alert in words: its name or what it matches, the rest of its
+ * filters, and a badge only when it alone isn't sending (paused, or the
+ * address isn't confirmed yet). A sending alert stays quiet.
+ */
+function PreferenceRow({
   preference,
   anchorJobPaths,
+  filterNames,
+  confirmed,
+  unsubscribed,
+  pending,
+  onDelete,
 }: {
   preference: JobAlertPreference;
   anchorJobPaths: AnchorJobPaths;
+  filterNames: AlertFilterNames;
+  confirmed: boolean;
+  unsubscribed: boolean;
+  pending: boolean;
+  onDelete: () => void;
 }) {
-  const match = jobAlertMatch(preference);
-  // Similar-job alerts name their anchor job; the rest list their filters.
-  if (match.kind === 'similar_job') {
-    const slug = match.anchorJob?.slug;
-    return (
-      <AnchorJobTitle
-        anchorJob={match.anchorJob}
-        path={slug ? anchorJobPaths[slug] : undefined}
-      />
-    );
-  }
-  return [
-    searchKeywordsText(match) ?? m.alertsManage_allJobsText(),
-    // Wire enums resolve through the catalog — never string-munged into
-    // pseudo-English ('on site') on a localized page.
-    (preference.filters.remoteOptions ?? [])
-      .map((option) => enumLabel(option) ?? option.replaceAll('_', ' '))
-      .join(', '),
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const { headline, criteria } = describeJobAlert(preference, filterNames);
+  const slug = preference.anchorJob?.slug;
+  // Unsubscribed, every alert is off and the page says so once; nothing
+  // sends to an address that isn't confirmed yet; past that, an alert that
+  // isn't active is paused.
+  const status = unsubscribed
+    ? null
+    : !confirmed
+      ? m.alertsManage_awaitingBadge()
+      : preference.isActive
+        ? null
+        : m.alertsManage_pausedBadge();
+  return (
+    <Item variant="outline">
+      <ItemContent>
+        <ItemTitle>
+          {headline ?? (
+            <AnchorJobTitle
+              anchorJob={preference.anchorJob}
+              path={slug ? anchorJobPaths[slug] : undefined}
+            />
+          )}
+          {status ? <Badge variant="secondary">{status}</Badge> : null}
+        </ItemTitle>
+        {criteria.length ? (
+          <ItemDescription>{criteria.join(' · ')}</ItemDescription>
+        ) : null}
+      </ItemContent>
+      <ItemActions>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={pending}
+          onClick={onDelete}
+        >
+          {m.alertsManage_deleteLabel()}
+        </Button>
+      </ItemActions>
+    </Item>
+  );
 }
 
 function ManageNotice({ title, body }: { title: string; body: string }) {
@@ -83,22 +116,22 @@ export function ManagePageView({
   data,
   search,
   invalidate,
-  clearUnsubscribeIntent,
   dependencies = alertManageDependencies,
 }: {
   data: ManageData;
   search: ManageSearch;
   invalidate: () => Promise<void>;
-  clearUnsubscribeIntent: () => void;
   dependencies?: AlertManageDependencies;
 }) {
   const [pending, setPending] = useState(false);
   const [actionError, setActionError] = useState<
     'mutation' | 'reconciliation' | null
   >(null);
-  const { subscription, token } = search;
+  const { link } = search;
   const state = 'state' in data ? data.state : null;
   const anchorJobPaths = 'state' in data ? data.anchorJobPaths : {};
+  const filterNames =
+    'state' in data ? data.filterNames : { categories: {}, places: {} };
 
   const run = async (action: () => Promise<void>) => {
     setPending(true);
@@ -106,8 +139,11 @@ export function ManagePageView({
     try {
       await action();
     } catch {
-      setPending(false);
       setActionError('mutation');
+      // Reloads the page's state; when the hour-long cookie has gone, the
+      // page then says to use the link from a recent email.
+      await invalidate().catch(() => undefined);
+      setPending(false);
       return;
     }
     try {
@@ -118,28 +154,6 @@ export function ManagePageView({
     setPending(false);
   };
 
-  // One-click unsubscribe from the email link. The ref keeps it to a single
-  // request (StrictMode double-runs effects); once handled, the param goes so
-  // a reload doesn't unsubscribe again after a resubscribe.
-  const unsubscribeHandled = useRef(false);
-  const wantsUnsubscribe = Boolean(
-    search.unsubscribe && state && subscription && token,
-  );
-  useEffect(() => {
-    if (!wantsUnsubscribe || unsubscribeHandled.current) return;
-    unsubscribeHandled.current = true;
-    if (state?.unsubscribed) {
-      clearUnsubscribeIntent();
-      return;
-    }
-    void run(async () => {
-      await dependencies.unsubscribeJobAlert({
-        data: { subscriptionId: subscription!, token: token! },
-      });
-    }).then(clearUnsubscribeIntent);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per arrival
-  }, [wantsUnsubscribe]);
-
   if ('empty' in data) {
     return (
       <ManageNotice
@@ -148,7 +162,7 @@ export function ManagePageView({
       />
     );
   }
-  if (!state || !subscription || !token) {
+  if (!state || !link) {
     return (
       <ManageNotice
         title={m.alertsManage_invalidTitle()}
@@ -161,11 +175,30 @@ export function ManagePageView({
     <Page width="narrow">
       <PageContent>
         <div className="space-y-6 py-4">
-          <header className="space-y-1">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              {m.alertsManage_title()}
-            </h1>
-            <p className="text-muted-foreground text-sm">{state.email}</p>
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                {m.alertsManage_title()}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {m.alertsManage_description({ email: state.email })}
+              </p>
+            </div>
+            {/* The page's way out, not its main action; opening the
+                email's Unsubscribe link changed nothing. */}
+            {state.unsubscribed ? null : (
+              <Button
+                variant="outline"
+                disabled={pending}
+                onClick={() =>
+                  run(async () => {
+                    await dependencies.unsubscribeJobAlert({ data: { link } });
+                  })
+                }
+              >
+                {m.alertsManage_unsubscribeAllLabel()}
+              </Button>
+            )}
           </header>
 
           {actionError ? (
@@ -182,14 +215,15 @@ export function ManagePageView({
 
           {state.unsubscribed ? (
             <Alert role="status">
-              <AlertDescription className="space-y-2">
-                <p>{m.alertsManage_unsubscribedText()}</p>
+              <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span>{m.alertsManage_unsubscribedText()}</span>
                 <Button
+                  size="sm"
                   disabled={pending}
                   onClick={() =>
                     run(async () => {
                       await dependencies.resubscribeJobAlert({
-                        data: { subscriptionId: subscription, token },
+                        data: { link },
                       });
                     })
                   }
@@ -198,67 +232,30 @@ export function ManagePageView({
                 </Button>
               </AlertDescription>
             </Alert>
-          ) : (
-            <Button
-              variant="outline"
-              disabled={pending}
-              onClick={() =>
-                run(async () => {
-                  await dependencies.unsubscribeJobAlert({
-                    data: { subscriptionId: subscription, token },
-                  });
-                })
-              }
-            >
-              {m.alertsManage_unsubscribeAllLabel()}
-            </Button>
-          )}
+          ) : null}
 
           <ul className="space-y-3">
             {state.preferences.map((preference) => (
               <li key={preference.id}>
-                <Item variant="outline">
-                  <ItemContent>
-                    <ItemTitle>
-                      <Badge
-                        variant={preference.isActive ? 'default' : 'secondary'}
-                      >
-                        {preference.isActive
-                          ? m.alertsManage_activeBadge()
-                          : m.alertsManage_pausedBadge()}
-                      </Badge>
-                      <span className="text-muted-foreground">
-                        {m.alertManager_frequencyWeekly()}
-                      </span>
-                    </ItemTitle>
-                    <ItemDescription>
-                      <PreferenceSummary
-                        preference={preference}
-                        anchorJobPaths={anchorJobPaths}
-                      />
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pending}
-                      onClick={() =>
-                        run(async () => {
-                          await dependencies.deleteJobAlertPreference({
-                            data: {
-                              subscriptionId: subscription,
-                              preferenceId: preference.id,
-                              token: preference.manageToken,
-                            },
-                          });
-                        })
-                      }
-                    >
-                      {m.alertsManage_deleteLabel()}
-                    </Button>
-                  </ItemActions>
-                </Item>
+                <PreferenceRow
+                  preference={preference}
+                  anchorJobPaths={anchorJobPaths}
+                  filterNames={filterNames}
+                  confirmed={state.confirmed}
+                  unsubscribed={state.unsubscribed}
+                  pending={pending}
+                  onDelete={() =>
+                    run(async () => {
+                      await dependencies.deleteJobAlertPreference({
+                        data: {
+                          link,
+                          preferenceId: preference.id,
+                          token: preference.manageToken,
+                        },
+                      });
+                    })
+                  }
+                />
               </li>
             ))}
           </ul>

@@ -173,6 +173,45 @@
   "alertManager_searchAlertLabel": "Recherche d’emploi",
   "alertManager_similarJobsAlertLabel": "Offres similaires",
   "jobAlertMatch_quotedQuery": "« {query} »",
+  "jobAlertMatch_salaryUpTo": "Jusqu'à {amount}",
+  "jobAlertMatch_salaryFrom": "À partir de {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Offres en {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Offres en {categories} et {count} autre",
+        "countPlural=*": "Offres en {categories} et {count} autres"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Offres pour « {query} »",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} autre lieu",
+        "countPlural=*": "{count} autres lieux"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} lieu",
+        "countPlural=*": "{count} lieux"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Offres similaires à {title}",
   "alertManager_saveChangesLabel": "Enregistrer les modifications",
   "alertManager_saveError": "Impossible d'enregistrer l'alerte — vous pouvez en avoir 10 au maximum.",
@@ -191,8 +230,9 @@
   "alertsConfirm_waitlistedBody": "Votre alerte emploi est confirmée. Elle démarrera dès que le site pourra envoyer à davantage de personnes.",
   "alertsConfirm_waitlistedHeading": "Vous êtes sur la liste d'attente",
   "alertsManage_actionErrorText": "Une erreur s’est produite. Réessayez.",
-  "alertsManage_activeBadge": "Active",
   "alertsManage_allJobsText": "Toutes les offres",
+  "alertsManage_awaitingBadge": "En attente de confirmation",
+  "alertsManage_description": "Alertes pour {email}, envoyées une fois par semaine.",
   "alertsManage_deleteLabel": "Supprimer",
   "alertsManage_emptyBody": "Vous avez supprimé toutes vos alertes emploi : vous ne recevrez plus d'e-mails d'alerte.",
   "alertsManage_emptyTitle": "Plus aucune alerte emploi",
@@ -538,6 +578,7 @@
     }
   ],
   "categoryPage_notFoundText": "Catégorie introuvable.",
+  "categoryPage_salariesLink": "Voir les salaires {category}",
   "commandDialog_searchPlaceholder": "Rechercher une commande…",
   "commandDialog_title": "Palette de commandes",
   "common_closeLabel": "Fermer",
@@ -619,6 +660,7 @@
   "companySalaries_categoryHeading": "Salaires {category} chez {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Données de salaire {category} chez {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Salaires {category} chez {company} : {range}/an sur {jobCount} offres.",
+  "companySalaries_companyJobsLink": "Offres chez {company}",
   "companySalaries_heading": "Salaires chez {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +696,7 @@
   "companySalaries_notFoundCompanyCategory": "Aucune donnée de salaire pour cette entreprise et cette catégorie.",
   "companySalaries_otherCompaniesHiringLabel": "Autres entreprises qui recrutent en {category}",
   "companySalaries_otherCompaniesLabel": "Autres entreprises",
+  "companySalaries_roleSalariesLink": "Salaires {category} dans toutes les entreprises",
   "companySalaries_salariesByRoleLabel": "Salaires par poste",
   "companySalaries_seniorityHeading": "Salaire par niveau d’expérience",
   "companySalaries_topLocationsLabel": "Meilleurs lieux",
@@ -1411,6 +1454,10 @@
   "jobDetail_additionalDetailsHeading": "Informations complémentaires",
   "jobDetail_breadcrumbAriaLabel": "Fil d'Ariane",
   "jobDetail_categoriesHeading": "Catégories",
+  "jobDetail_companyJobsFallbackLink": "Toutes les offres de cette entreprise",
+  "jobDetail_companyJobsLink": "Toutes les offres chez {company}",
+  "jobDetail_companySalariesFallbackLink": "Salaires dans cette entreprise",
+  "jobDetail_companySalariesLink": "Salaires chez {company}",
   "jobDetail_customFieldNoLabel": "Non",
   "jobDetail_customFieldYesLabel": "Oui",
   "jobDetail_educationLabel": "Formation",
@@ -2389,6 +2436,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Salaires à {place} : {range}/an sur {jobCount} offres.",
   "salaryDetail_relatedSkills": "Compétences similaires",
   "salaryDetail_relatedTitles": "Intitulés similaires",
+  "salaryDetail_roleJobsLink": "Voir les offres {title}",
   "salaryDetail_seeAllLocationsLabel": "Voir tous les lieux",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Voir toutes les compétences à {place}",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Voir tous les intitulés à {place}",
@@ -2544,14 +2592,17 @@
   "settings_backToAccountLabel": "Retour au compte",
   "settings_channelApplicationUpdate": "suivi de candidature",
   "settings_channelMessage": "message",
+  "settings_channelRecommendedJobs": "offres correspondantes",
   "settings_emailNotificationsText": "Notifications par e-mail",
-  "settings_goToAccountLabel": "Accéder au compte",
   "settings_linkExpiredBody": "Ce lien de désabonnement est invalide ou a expiré. Connectez-vous pour gérer vos préférences d'e-mail.",
   "settings_linkExpiredHeading": "Lien expiré",
-  "settings_signInLabel": "Se connecter",
+  "settings_allEmailSettingsLink": "Connectez-vous pour gérer tous vos paramètres d'e-mail",
+  "settings_unsubscribeBody": "Cela n'arrête que les e-mails « {channel} ». Vos autres e-mails de {board} ne changent pas.",
+  "settings_unsubscribeTitle": "Arrêter les e-mails « {channel} » de {board}",
   "settings_title": "Paramètres",
   "settings_unsubscribedBody": "Vous ne recevrez plus les e-mails « {channel} ». Vous pouvez les réactiver à tout moment depuis les paramètres de votre compte.",
   "settings_unsubscribedHeading": "Vous êtes désabonné",
+  "settings_unsubscribeCta": "Se désabonner des e-mails « {channel} »",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Compte",
   "siteHeader_addNewCompanyLabel": "Ajouter une nouvelle entreprise",
@@ -2664,6 +2715,20 @@
   "talentLists_sourcedHeading": "Candidats sourcés",
   "talentLists_triggerLabel": "Recherches enregistrées",
   "talentMessage_description": "Présentez-vous et expliquez la raison de votre prise de contact.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "C’est votre dernière conversation gratuite.",
+        "countPlural=*": "Cela lance l’une de vos {countLabel} conversations gratuites."
+      }
+    }
+  ],
   "talentMessage_title": "Contacter {name}",
   "talentSave_jobLabel": "Présélectionner pour",
   "talentSave_saveLabel": "Enregistrer",
@@ -2890,6 +2955,20 @@
       "match": {
         "countPlural=one": "{countLabel} déblocage restant.",
         "countPlural=*": "{countLabel} déblocages restants."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "C’est votre dernier déblocage de profil gratuit.",
+        "countPlural=*": "Cela utilise l’un de vos {countLabel} déblocages de profil gratuits."
       }
     }
   ],
@@ -3331,19 +3410,27 @@
   "emailPreferences_jobAlertsTitle": "Alertes d'emploi",
   "emailPreferences_jobAlertsOff": "Les alertes d'emploi sont désactivées.",
   "emailPreferences_jobAlertsNone": "Vous n'avez aucune alerte d'emploi.",
-  "emailPreferences_alertWeekly": "Hebdomadaire",
+  "emailPreferences_jobAlertsAll": "Envoyer mes alertes d'emploi",
+  "emailPreferences_jobAlertsDescription": "Un e-mail hebdomadaire avec les nouvelles offres pour chaque alerte.",
+  "emailPreferences_jobAlertsLinkSent": "Consultez votre boîte de réception : un lien pour confirmer votre adresse e-mail est en route. Vos alertes commenceront dès que vous cliquerez dessus.",
+  "emailPreferences_jobAlertsThrottled": "Un e-mail de confirmation a été demandé il y a un instant. Réessayez dans quelques minutes.",
+  "emailPreferences_jobAlertsSuppressed": "Nous ne pouvons pas envoyer d'e-mails à cette adresse, aucun lien de confirmation n'a donc été envoyé. Vos alertes restent désactivées.",
   "emailPreferences_alertAwaiting": "Pas encore envoyée : cliquez sur le lien de l'e-mail de confirmation de cette alerte.",
-  "emailPreferences_deleteAlert": "Supprimer",
-  "emailPreferences_deleteAlertLabel": "Supprimer l'alerte d'emploi : {label}",
+  "emailPreferences_alertActionsLabel": "Actions pour l'alerte d'emploi : {label}",
+  "emailPreferences_pauseAlert": "Mettre l'alerte en pause",
+  "emailPreferences_resumeAlert": "Reprendre l'alerte",
+  "emailPreferences_deleteAlert": "Supprimer l'alerte",
   "emailPreferences_jobMatchesTitle": "Offres correspondantes chaque semaine",
   "emailPreferences_jobMatchesDescription": "Des offres adaptées à votre profil, une fois par semaine.",
   "emailPreferences_jobMatchesWaitlisted": "Activé. Les e-mails commenceront dès que {board} aura de la place.",
   "emailPreferences_marketingTitle": "Actualités et offres",
   "emailPreferences_marketingConsent": "Envoyez-moi les actualités et offres de {board}.",
+  "emailPreferences_otherEmailsTitle": "Autres e-mails",
   "emailPreferences_topicsTitle": "Sujets",
   "emailPreferences_topicsOffHint": "Activez les actualités et offres pour choisir des sujets.",
   "emailPreferences_topicConsent": "Envoyez-moi les e-mails {topic} de {board}.",
   "emailPreferences_unsubscribeAll": "Se désabonner de tout",
+  "emailPreferences_unsubscribeAllHint": "Arrêtez en une fois les alertes d'emploi, les offres correspondantes et les actualités de {board}.",
   "emailPreferences_unsubscribeAllTitle": "Se désabonner de tous les e-mails ?",
   "emailPreferences_unsubscribeAllBody": "Cela désactive vos alertes d'emploi, offres correspondantes et actualités de {board}. Vous pouvez vous réinscrire à tout moment.",
   "emailPreferences_unsubscribeAllConfirm": "Se désabonner",

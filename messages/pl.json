@@ -181,6 +181,51 @@
   "alertManager_searchAlertLabel": "Wyszukiwanie ofert",
   "alertManager_similarJobsAlertLabel": "Podobne oferty",
   "jobAlertMatch_quotedQuery": "„{query}”",
+  "jobAlertMatch_salaryUpTo": "Do {amount}",
+  "jobAlertMatch_salaryFrom": "Od {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Oferty: {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Oferty: {categories} i {count} inna",
+        "countPlural=few": "Oferty: {categories} i {count} inne",
+        "countPlural=many": "Oferty: {categories} i {count} innych",
+        "countPlural=*": "Oferty: {categories} i {count} innych"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Oferty dla „{query}”",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} inne miejsce",
+        "countPlural=few": "{count} inne miejsca",
+        "countPlural=many": "{count} innych miejsc",
+        "countPlural=*": "{count} innego miejsca"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} miejsce",
+        "countPlural=few": "{count} miejsca",
+        "countPlural=many": "{count} miejsc",
+        "countPlural=*": "{count} miejsca"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Oferty podobne do {title}",
   "alertManager_saveChangesLabel": "Zapisz zmiany",
   "alertManager_saveError": "Nie udało się zapisać alertu — możesz mieć maksymalnie 10.",
@@ -199,8 +244,9 @@
   "alertsConfirm_waitlistedBody": "Twój alert o ofertach pracy jest potwierdzony. Zacznie działać, gdy serwis będzie mógł wysyłać do większej liczby osób.",
   "alertsConfirm_waitlistedHeading": "Jesteś na liście oczekujących",
   "alertsManage_actionErrorText": "Coś poszło nie tak. Spróbuj ponownie.",
-  "alertsManage_activeBadge": "Aktywny",
   "alertsManage_allJobsText": "Wszystkie oferty",
+  "alertsManage_awaitingBadge": "Czeka na potwierdzenie",
+  "alertsManage_description": "Alerty dla {email}, wysyłane raz w tygodniu.",
   "alertsManage_deleteLabel": "Usuń",
   "alertsManage_emptyBody": "Usunięto wszystkie Twoje alerty o ofertach pracy, więc nie będziesz już otrzymywać e-maili z alertami.",
   "alertsManage_emptyTitle": "Nie masz już alertów o ofertach pracy",
@@ -548,6 +594,7 @@
     }
   ],
   "categoryPage_notFoundText": "Nie znaleziono kategorii.",
+  "categoryPage_salariesLink": "Zobacz wynagrodzenia: {category}",
   "commandDialog_searchPlaceholder": "Wyszukaj polecenie do uruchomienia...",
   "commandDialog_title": "Paleta poleceń",
   "common_closeLabel": "Zamknij",
@@ -635,6 +682,7 @@
   "companySalaries_categoryHeading": "Wynagrodzenia: {category} w firmie {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Dane o wynagrodzeniach: {category} w firmie {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Wynagrodzenia: {category} w firmie {company} — {range}/rok. Liczba ofert: {jobCount}.",
+  "companySalaries_companyJobsLink": "Oferty firmy {company}",
   "companySalaries_heading": "Wynagrodzenia w firmie {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -674,6 +722,7 @@
   "companySalaries_notFoundCompanyCategory": "Brak danych o wynagrodzeniach dla tej firmy i kategorii.",
   "companySalaries_otherCompaniesHiringLabel": "Inne firmy rekrutujące: {category}",
   "companySalaries_otherCompaniesLabel": "Inne firmy",
+  "companySalaries_roleSalariesLink": "Wynagrodzenia: {category} we wszystkich firmach",
   "companySalaries_salariesByRoleLabel": "Wynagrodzenia według stanowiska",
   "companySalaries_seniorityHeading": "Wynagrodzenie według poziomu stanowiska",
   "companySalaries_topLocationsLabel": "Najczęstsze lokalizacje",
@@ -1463,6 +1512,10 @@
   "jobDetail_additionalDetailsHeading": "Dodatkowe informacje",
   "jobDetail_breadcrumbAriaLabel": "Ścieżka nawigacji",
   "jobDetail_categoriesHeading": "Kategorie",
+  "jobDetail_companyJobsFallbackLink": "Wszystkie oferty tej firmy",
+  "jobDetail_companyJobsLink": "Wszystkie oferty firmy {company}",
+  "jobDetail_companySalariesFallbackLink": "Wynagrodzenia w tej firmie",
+  "jobDetail_companySalariesLink": "Wynagrodzenia w firmie {company}",
   "jobDetail_customFieldNoLabel": "Nie",
   "jobDetail_customFieldYesLabel": "Tak",
   "jobDetail_educationLabel": "Wykształcenie",
@@ -2493,6 +2546,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Wynagrodzenia: {place} — {range}/rok. Liczba ofert: {jobCount}.",
   "salaryDetail_relatedSkills": "Powiązane umiejętności",
   "salaryDetail_relatedTitles": "Powiązane stanowiska",
+  "salaryDetail_roleJobsLink": "Zobacz oferty: {title}",
   "salaryDetail_seeAllLocationsLabel": "Zobacz wszystkie lokalizacje",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Zobacz wszystkie umiejętności: {place}",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Zobacz wszystkie stanowiska: {place}",
@@ -2654,14 +2708,17 @@
   "settings_backToAccountLabel": "Wróć do konta",
   "settings_channelApplicationUpdate": "aktualizacje aplikacji",
   "settings_channelMessage": "wiadomości",
+  "settings_channelRecommendedJobs": "dopasowane oferty",
   "settings_emailNotificationsText": "Powiadomienia e-mail",
-  "settings_goToAccountLabel": "Przejdź do konta",
   "settings_linkExpiredBody": "Ten link rezygnacji jest nieprawidłowy lub wygasł. Zaloguj się, aby zarządzać preferencjami e-mail.",
   "settings_linkExpiredHeading": "Link wygasł",
-  "settings_signInLabel": "Zaloguj się",
+  "settings_allEmailSettingsLink": "Zaloguj się, aby zarządzać wszystkimi ustawieniami e-mail",
+  "settings_unsubscribeBody": "To wyłączy tylko powiadomienia: {channel}. Pozostałe e-maile od {board} się nie zmienią.",
+  "settings_unsubscribeTitle": "Wyłącz powiadomienia: {channel} od {board}",
   "settings_title": "Ustawienia",
   "settings_unsubscribedBody": "Nie będziesz już otrzymywać powiadomień: {channel}. Możesz je włączyć ponownie w ustawieniach konta.",
   "settings_unsubscribedHeading": "Zrezygnowano z subskrypcji",
+  "settings_unsubscribeCta": "Zrezygnuj z powiadomień: {channel}",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Konto",
   "siteHeader_addNewCompanyLabel": "Dodaj nową firmę",
@@ -2778,6 +2835,22 @@
   "talentLists_sourcedHeading": "Pozyskani kandydaci",
   "talentLists_triggerLabel": "Zapisane wyszukiwania",
   "talentMessage_description": "Przedstaw się i wyjaśnij, dlaczego się kontaktujesz.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "To Twoja ostatnia bezpłatna rozmowa.",
+        "countPlural=few": "Rozpoczynasz jedną z Twoich {countLabel} bezpłatnych rozmów.",
+        "countPlural=many": "Rozpoczynasz jedną z Twoich {countLabel} bezpłatnych rozmów.",
+        "countPlural=*": "Rozpoczynasz jedną z Twoich {countLabel} bezpłatnych rozmów."
+      }
+    }
+  ],
   "talentMessage_title": "Napisz do: {name}",
   "talentSave_jobLabel": "Dodaj do krótkiej listy oferty",
   "talentSave_saveLabel": "Zapisz",
@@ -3020,6 +3093,22 @@
         "countPlural=few": "Pozostały Ci {countLabel} odblokowania.",
         "countPlural=many": "Pozostało Ci {countLabel} odblokowań.",
         "countPlural=*": "Pozostało Ci {countLabel} odblokowania."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "To Twoje ostatnie bezpłatne odblokowanie profilu.",
+        "countPlural=few": "To jedno z Twoich {countLabel} bezpłatnych odblokowań profilu.",
+        "countPlural=many": "To jedno z Twoich {countLabel} bezpłatnych odblokowań profilu.",
+        "countPlural=*": "To jedno z Twoich {countLabel} bezpłatnych odblokowań profilu."
       }
     }
   ],
@@ -3479,19 +3568,27 @@
   "emailPreferences_jobAlertsTitle": "Alerty o ofertach pracy",
   "emailPreferences_jobAlertsOff": "Alerty o ofertach pracy są wyłączone.",
   "emailPreferences_jobAlertsNone": "Nie masz alertów o ofertach pracy.",
-  "emailPreferences_alertWeekly": "Co tydzień",
+  "emailPreferences_jobAlertsAll": "Wysyłaj moje alerty o ofertach pracy",
+  "emailPreferences_jobAlertsDescription": "Cotygodniowy e-mail z nowymi ofertami dla każdego alertu.",
+  "emailPreferences_jobAlertsLinkSent": "Sprawdź skrzynkę: link do potwierdzenia adresu e-mail jest w drodze. Alerty zaczną przychodzić, gdy go klikniesz.",
+  "emailPreferences_jobAlertsThrottled": "Przed chwilą poproszono o e-mail potwierdzający. Spróbuj ponownie za kilka minut.",
+  "emailPreferences_jobAlertsSuppressed": "Nie możemy wysyłać e-maili na ten adres, więc nie wysłano linku potwierdzającego. Alerty pozostają wyłączone.",
   "emailPreferences_alertAwaiting": "Jeszcze nie wysyłamy: kliknij link w e-mailu potwierdzającym ten alert.",
-  "emailPreferences_deleteAlert": "Usuń",
-  "emailPreferences_deleteAlertLabel": "Usuń alert o ofertach pracy: {label}",
+  "emailPreferences_alertActionsLabel": "Działania dla alertu: {label}",
+  "emailPreferences_pauseAlert": "Wstrzymaj alert",
+  "emailPreferences_resumeAlert": "Wznów alert",
+  "emailPreferences_deleteAlert": "Usuń alert",
   "emailPreferences_jobMatchesTitle": "Dopasowane oferty co tydzień",
   "emailPreferences_jobMatchesDescription": "Oferty pasujące do Twojego profilu, raz w tygodniu.",
   "emailPreferences_jobMatchesWaitlisted": "Włączone. E-maile zaczną przychodzić, gdy {board} będzie mieć na nie miejsce.",
   "emailPreferences_marketingTitle": "Nowości i oferty",
   "emailPreferences_marketingConsent": "Wysyłajcie mi nowości i oferty od {board}.",
+  "emailPreferences_otherEmailsTitle": "Inne e-maile",
   "emailPreferences_topicsTitle": "Tematy",
   "emailPreferences_topicsOffHint": "Włącz nowości i oferty, aby wybrać tematy.",
   "emailPreferences_topicConsent": "Wysyłajcie mi e-maile z tematu {topic} od {board}.",
   "emailPreferences_unsubscribeAll": "Wypisz mnie ze wszystkiego",
+  "emailPreferences_unsubscribeAllHint": "Wyłącz naraz alerty o ofertach, dopasowane oferty i nowości od {board}.",
   "emailPreferences_unsubscribeAllTitle": "Wypisać się ze wszystkich e-maili?",
   "emailPreferences_unsubscribeAllBody": "Wyłączy to alerty o ofertach, dopasowane oferty i nowości od {board}. W każdej chwili możesz zapisać się ponownie.",
   "emailPreferences_unsubscribeAllConfirm": "Wypisz mnie",

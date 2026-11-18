@@ -131,3 +131,51 @@ export async function resolveAnchorJobPaths(
   if (!jobSlugs.length) return {};
   return getAnchorJobPaths({ data: { jobSlugs } }).catch(() => ({}));
 }
+
+/** Category slug → name and place id → name, for describing alerts. */
+export type AlertFilterNames = {
+  categories: Record<string, string>;
+  places: Record<string, string>;
+};
+
+/** A stored job alert with every filter it can carry. */
+export interface DescribableJobAlert extends JobAlertMatchSource {
+  label: string | null;
+  filters: JobAlertMatchSource['filters'] & {
+    seniorityLevels?: string[];
+    remoteOptions?: string[];
+    placeIds?: string[];
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    salaryCurrency?: string | null;
+  };
+}
+
+/**
+ * Names for the alerts' categories and places, each asked for once. Display
+ * only: if they can't be read, the alerts show category slugs as words and
+ * count their places.
+ */
+export async function resolveAlertFilterNames(
+  alerts: readonly DescribableJobAlert[],
+  getAlertFilterNames: (options: {
+    data: { categorySlugs: string[]; placeIds: string[] };
+  }) => Promise<AlertFilterNames>,
+): Promise<AlertFilterNames> {
+  const categorySlugs = [
+    ...new Set(
+      alerts.flatMap((alert) => {
+        const match = jobAlertMatch(alert);
+        return match.kind === 'similar_job' ? [] : match.roles;
+      }),
+    ),
+  ];
+  const placeIds = [
+    ...new Set(alerts.flatMap((alert) => alert.filters.placeIds ?? [])),
+  ];
+  const none = { categories: {}, places: {} };
+  if (!categorySlugs.length && !placeIds.length) return none;
+  return getAlertFilterNames({ data: { categorySlugs, placeIds } }).catch(
+    () => none,
+  );
+}

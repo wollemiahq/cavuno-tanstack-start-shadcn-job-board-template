@@ -173,6 +173,45 @@
   "alertManager_searchAlertLabel": "Jobsuche",
   "alertManager_similarJobsAlertLabel": "Ähnliche Jobs",
   "jobAlertMatch_quotedQuery": "„{query}“",
+  "jobAlertMatch_salaryUpTo": "Bis {amount}",
+  "jobAlertMatch_salaryFrom": "Ab {amount}",
+  "jobAlertMatch_salaryRange": "{min}–{max}",
+  "jobAlertMatch_jobsIn": "Jobs in {categories}",
+  "jobAlertMatch_jobsInMore": [
+    {
+      "declarations": [
+        "input categories",
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Jobs in {categories} und {count} weiteren",
+        "countPlural=*": "Jobs in {categories} und {count} weiteren"
+      }
+    }
+  ],
+  "jobAlertMatch_jobsMatching": "Jobs zu „{query}“",
+  "jobAlertMatch_morePlaces": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} weiterer Ort",
+        "countPlural=*": "{count} weitere Orte"
+      }
+    }
+  ],
+  "jobAlertMatch_places": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} Ort",
+        "countPlural=*": "{count} Orte"
+      }
+    }
+  ],
   "jobAlertMatch_similarTo": "Jobs ähnlich wie {title}",
   "alertManager_saveChangesLabel": "Änderungen speichern",
   "alertManager_saveError": "Benachrichtigung konnte nicht gespeichert werden — du kannst höchstens 10 haben.",
@@ -191,8 +230,9 @@
   "alertsConfirm_waitlistedBody": "Dein Jobalarm ist bestätigt. Er startet, sobald das Board an weitere Personen senden kann.",
   "alertsConfirm_waitlistedHeading": "Du stehst auf der Warteliste",
   "alertsManage_actionErrorText": "Etwas ist schiefgelaufen. Versuche es erneut.",
-  "alertsManage_activeBadge": "Aktiv",
   "alertsManage_allJobsText": "Alle Jobs",
+  "alertsManage_awaitingBadge": "Wartet auf Bestätigung",
+  "alertsManage_description": "Jobalarme für {email}, einmal pro Woche.",
   "alertsManage_deleteLabel": "Löschen",
   "alertsManage_emptyBody": "Du hast alle deine Job-Alerts gelöscht und bekommst keine Alert-E-Mails mehr.",
   "alertsManage_emptyTitle": "Keine Job-Alerts mehr",
@@ -538,6 +578,7 @@
     }
   ],
   "categoryPage_notFoundText": "Kategorie nicht gefunden.",
+  "categoryPage_salariesLink": "Gehälter für {category} ansehen",
   "commandDialog_searchPlaceholder": "Befehl suchen…",
   "commandDialog_title": "Befehlspalette",
   "common_closeLabel": "Schließen",
@@ -619,6 +660,7 @@
   "companySalaries_categoryHeading": "Gehälter für {category} bei {company}",
   "companySalaries_categoryMetaDescriptionEmpty": "Gehaltsdaten für {category} bei {company}.",
   "companySalaries_categoryMetaDescriptionWithData": "Gehälter für {category} bei {company}: {range}/Jahr aus {jobCount} Jobs.",
+  "companySalaries_companyJobsLink": "Jobs bei {company}",
   "companySalaries_heading": "Gehälter bei {company}",
   "companySalaries_metaDescriptionCategories": [
     {
@@ -654,6 +696,7 @@
   "companySalaries_notFoundCompanyCategory": "Keine Gehaltsdaten für dieses Unternehmen und diese Kategorie.",
   "companySalaries_otherCompaniesHiringLabel": "Weitere Unternehmen, die {category} einstellen",
   "companySalaries_otherCompaniesLabel": "Weitere Unternehmen",
+  "companySalaries_roleSalariesLink": "Gehälter für {category} bei allen Unternehmen",
   "companySalaries_salariesByRoleLabel": "Gehälter nach Rolle",
   "companySalaries_seniorityHeading": "Gehalt nach Erfahrungslevel",
   "companySalaries_topLocationsLabel": "Top-Standorte",
@@ -1411,6 +1454,10 @@
   "jobDetail_additionalDetailsHeading": "Weitere Details",
   "jobDetail_breadcrumbAriaLabel": "Seitenpfad",
   "jobDetail_categoriesHeading": "Kategorien",
+  "jobDetail_companyJobsFallbackLink": "Alle Jobs bei diesem Unternehmen",
+  "jobDetail_companyJobsLink": "Alle Jobs bei {company}",
+  "jobDetail_companySalariesFallbackLink": "Gehälter bei diesem Unternehmen",
+  "jobDetail_companySalariesLink": "Gehälter bei {company}",
   "jobDetail_customFieldNoLabel": "Nein",
   "jobDetail_customFieldYesLabel": "Ja",
   "jobDetail_educationLabel": "Ausbildung",
@@ -2389,6 +2436,7 @@
   "salaryDetail_placeMetaDescriptionWithData": "Gehälter in {place}: {range}/Jahr aus {jobCount} Jobs.",
   "salaryDetail_relatedSkills": "Ähnliche Fähigkeiten",
   "salaryDetail_relatedTitles": "Ähnliche Jobtitel",
+  "salaryDetail_roleJobsLink": "{title}-Jobs ansehen",
   "salaryDetail_seeAllLocationsLabel": "Alle Standorte anzeigen",
   "salaryDetail_seeAllSkillsInPlaceLabel": "Alle Fähigkeiten in {place} anzeigen",
   "salaryDetail_seeAllTitlesInPlaceLabel": "Alle Jobtitel in {place} anzeigen",
@@ -2544,14 +2592,17 @@
   "settings_backToAccountLabel": "Zurück zum Konto",
   "settings_channelApplicationUpdate": "Bewerbungsupdate",
   "settings_channelMessage": "Nachrichten",
+  "settings_channelRecommendedJobs": "Job-Match",
   "settings_emailNotificationsText": "E-Mail-Benachrichtigungen",
-  "settings_goToAccountLabel": "Zum Konto",
   "settings_linkExpiredBody": "Dieser Abmeldelink ist ungültig oder abgelaufen. Melde dich an, um deine E-Mail-Einstellungen zu verwalten.",
   "settings_linkExpiredHeading": "Link abgelaufen",
-  "settings_signInLabel": "Anmelden",
+  "settings_allEmailSettingsLink": "Anmelden, um alle E-Mail-Einstellungen zu verwalten",
+  "settings_unsubscribeBody": "Damit stoppst du nur die {channel}-E-Mails. Deine anderen E-Mails von {board} bleiben, wie sie sind.",
+  "settings_unsubscribeTitle": "{channel}-E-Mails von {board} stoppen",
   "settings_title": "Einstellungen",
   "settings_unsubscribedBody": "Du erhältst keine {channel}-E-Mails mehr. Du kannst sie jederzeit in deinen Kontoeinstellungen wieder aktivieren.",
   "settings_unsubscribedHeading": "Du hast dich abgemeldet",
+  "settings_unsubscribeCta": "{channel}-E-Mails abbestellen",
   "siteFooter_cavunoLabel": "Cavuno",
   "siteHeader_accountLabel": "Konto",
   "siteHeader_addNewCompanyLabel": "Neues Unternehmen hinzufügen",
@@ -2664,6 +2715,20 @@
   "talentLists_sourcedHeading": "Aus der Talentsuche",
   "talentLists_triggerLabel": "Gespeicherte Suchen",
   "talentMessage_description": "Stelle dich kurz vor und erkläre, warum du Kontakt aufnimmst.",
+  "talentMessage_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Damit beginnst du dein letztes kostenloses Gespräch.",
+        "countPlural=*": "Damit beginnst du eines deiner {countLabel} kostenlosen Gespräche."
+      }
+    }
+  ],
   "talentMessage_title": "Nachricht an {name}",
   "talentSave_jobLabel": "Auf die Shortlist für",
   "talentSave_saveLabel": "Speichern",
@@ -2890,6 +2955,20 @@
       "match": {
         "countPlural=one": "{countLabel} Freischaltung übrig.",
         "countPlural=*": "{countLabel} Freischaltungen übrig."
+      }
+    }
+  ],
+  "talentUnlock_freeTrialBody": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Das ist deine letzte kostenlose Profil-Freischaltung.",
+        "countPlural=*": "Das nutzt eine deiner {countLabel} kostenlosen Profil-Freischaltungen."
       }
     }
   ],
@@ -3331,19 +3410,27 @@
   "emailPreferences_jobAlertsTitle": "Jobalarme",
   "emailPreferences_jobAlertsOff": "Jobalarme sind ausgeschaltet.",
   "emailPreferences_jobAlertsNone": "Du hast keine Jobalarme.",
-  "emailPreferences_alertWeekly": "Wöchentlich",
+  "emailPreferences_jobAlertsAll": "Meine Jobalarme senden",
+  "emailPreferences_jobAlertsDescription": "Eine wöchentliche E-Mail mit neuen Jobs für jeden Alarm.",
+  "emailPreferences_jobAlertsLinkSent": "Sieh in deinen Posteingang: Ein Link zur Bestätigung deiner E-Mail-Adresse ist unterwegs. Deine Alarme starten, sobald du darauf klickst.",
+  "emailPreferences_jobAlertsThrottled": "Gerade eben wurde eine Bestätigungs-E-Mail angefordert. Versuche es in ein paar Minuten noch einmal.",
+  "emailPreferences_jobAlertsSuppressed": "Wir können an diese Adresse keine E-Mails senden, daher wurde kein Bestätigungslink verschickt. Deine Alarme bleiben aus.",
   "emailPreferences_alertAwaiting": "Noch nicht aktiv: Klicke auf den Link in der Bestätigungs-E-Mail dieses Alarms.",
-  "emailPreferences_deleteAlert": "Löschen",
-  "emailPreferences_deleteAlertLabel": "Jobalarm löschen: {label}",
+  "emailPreferences_alertActionsLabel": "Aktionen für Jobalarm: {label}",
+  "emailPreferences_pauseAlert": "Alarm pausieren",
+  "emailPreferences_resumeAlert": "Alarm fortsetzen",
+  "emailPreferences_deleteAlert": "Alarm löschen",
   "emailPreferences_jobMatchesTitle": "Wöchentliche passende Jobs",
   "emailPreferences_jobMatchesDescription": "Jobs, die zu deinem Profil passen, einmal pro Woche.",
   "emailPreferences_jobMatchesWaitlisted": "An. Die E-Mails starten, sobald {board} Platz dafür hat.",
   "emailPreferences_marketingTitle": "Neuigkeiten und Angebote",
   "emailPreferences_marketingConsent": "Schickt mir Neuigkeiten und Angebote von {board}.",
+  "emailPreferences_otherEmailsTitle": "Weitere E-Mails",
   "emailPreferences_topicsTitle": "Themen",
   "emailPreferences_topicsOffHint": "Schalte Neuigkeiten und Angebote ein, um Themen zu wählen.",
   "emailPreferences_topicConsent": "Schickt mir E-Mails zu {topic} von {board}.",
   "emailPreferences_unsubscribeAll": "Von allem abmelden",
+  "emailPreferences_unsubscribeAllHint": "Jobalarme, passende Jobs und Neuigkeiten von {board} auf einmal abbestellen.",
   "emailPreferences_unsubscribeAllTitle": "Von allen E-Mails abmelden?",
   "emailPreferences_unsubscribeAllBody": "Damit schaltest du Jobalarme, passende Jobs und Neuigkeiten von {board} aus. Du kannst dich jederzeit wieder anmelden.",
   "emailPreferences_unsubscribeAllConfirm": "Abmelden",

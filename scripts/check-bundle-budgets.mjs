@@ -273,7 +273,20 @@ const BUDGETS = {
     // wraps them, src/lib/scrollable-tables.ts): measured 127,768 B raw /
     // 49,618 B gzip against main's 127,575 / 49,487 (+193 / +131). Raised by
     // exactly the measured growth, keeping main's headroom.
-    '/p/$handle': { raw: 128_060, gzip: 49_722 },
+    // The free talent trial (#401): the unlock gate and confirmation say
+    // when an unlock is free, with its plural message. Measured 128,759 B
+    // raw / 49,917 B gzip against main's 127,781 / 49,657 (+978 / +260).
+    // Raised by exactly the measured growth, keeping main's headroom.
+    '/p/$handle': { raw: 129_038, gzip: 49_982 },
+    // /email-preferences as section cards: one switch for all job alerts,
+    // and a ⋯ menu per alert to pause, resume or delete it. Main measured
+    // 79,619 B raw / 29,653 B gzip against the 80,000 / 30,000 default
+    // (381 / 347 B left); this measured 162,326 / 60,712 (+82,707 /
+    // +31,059). Nearly all of it is Base UI's Menu (the DropdownMenu, its
+    // positioner and pointer interactions), which the approved design uses
+    // for the per-alert menu. Raised by exactly the measured growth, keeping
+    // main's headroom; accepted by the operator on 2026-11-18.
+    '/email-preferences': { raw: 162_707, gzip: 61_059 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },
