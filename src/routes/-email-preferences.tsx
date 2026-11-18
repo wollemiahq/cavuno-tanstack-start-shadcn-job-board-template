@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 import { isBoardApiError } from '@cavuno/board';
+import { MoreHorizontal } from 'lucide-react';
 
 import {
   emailPreferencesDependencies,
@@ -8,7 +9,8 @@ import {
   type EmailPreferencesDependencies,
 } from './-email-preferences-loader';
 
-import { jobAlertMatch, searchKeywordsText } from '@/board/job-alert-match';
+import { describeJobAlert } from '@/board/job-alert-description';
+import type { AlertFilterNames } from '@/board/job-alert-match';
 import { Page, PageContent } from '@/components/layout/page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -22,7 +24,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Empty,
   EmptyDescription,
@@ -33,15 +43,12 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldGroup,
   FieldLabel,
+  FieldSeparator,
+  FieldTitle,
 } from '@/components/ui/field';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { m } from '@/paraglide/messages';
 import type {
@@ -59,18 +66,6 @@ type PreferenceAlert = EmailPreferences['jobAlerts']['alerts'][number];
 type ErrorMessages = {
   [code in (typeof BOARD_API_ERROR_CODES)[number]]?: string;
 };
-
-/** The alert's own name, else what it matches, as `/alerts/manage` says it. */
-function alertLabel(alert: PreferenceAlert) {
-  if (alert.label) return alert.label;
-  const match = jobAlertMatch(alert);
-  if (match.kind === 'similar_job') {
-    return match.anchorJob
-      ? m.jobAlertMatch_similarTo({ title: match.anchorJob.title })
-      : m.alertManager_similarJobsAlertLabel();
-  }
-  return searchKeywordsText(match) ?? m.alertsManage_allJobsText();
-}
 
 /**
  * Every change is a click that sends only what changed, and the page shows
@@ -200,7 +195,7 @@ export function EmailPreferencesPageView({
   return (
     <Page width="narrow">
       <PageContent>
-        <div className="space-y-8 py-4">
+        <div className="space-y-6 py-4">
           <header className="space-y-1">
             <h1 className="font-heading text-3xl font-semibold tracking-tight">
               {m.emailPreferences_title()}
@@ -221,14 +216,14 @@ export function EmailPreferencesPageView({
             </Alert>
           ) : null}
 
-          <section className="space-y-3" aria-labelledby="ep-job-alerts">
-            <h2 id="ep-job-alerts" className="text-lg font-semibold">
-              {m.emailPreferences_jobAlertsTitle()}
-            </h2>
+          <PreferenceCard
+            id="ep-job-alerts"
+            title={m.emailPreferences_jobAlertsTitle()}
+          >
             {jobAlerts.alerts.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
+              <FieldDescription>
                 {m.emailPreferences_jobAlertsNone()}
-              </p>
+              </FieldDescription>
             ) : (
               <>
                 <PreferenceSwitch
@@ -246,207 +241,265 @@ export function EmailPreferencesPageView({
                   disabled={pending}
                   onCheckedChange={setJobAlerts}
                 />
-                <ul className="space-y-3">
-                  {jobAlerts.alerts.map((alert) => (
-                    <li key={alert.id}>
-                      <AlertRow
-                        alert={alert}
-                        jobAlertsOff={jobAlerts.unsubscribed}
-                        pending={pending}
-                        onPausedChange={(paused) =>
-                          update({ alerts: [{ id: alert.id, paused }] })
-                        }
-                        onDelete={() =>
-                          update({ alerts: [{ id: alert.id, delete: true }] })
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
+                {jobAlerts.alerts.map((alert) => (
+                  <Fragment key={alert.id}>
+                    <FieldSeparator />
+                    <AlertRow
+                      alert={alert}
+                      filterNames={data.filterNames}
+                      pending={pending}
+                      onPausedChange={(paused) =>
+                        update({ alerts: [{ id: alert.id, paused }] })
+                      }
+                      onDelete={() =>
+                        update({ alerts: [{ id: alert.id, delete: true }] })
+                      }
+                    />
+                  </Fragment>
+                ))}
               </>
             )}
-          </section>
+          </PreferenceCard>
 
-          {jobMatches !== null ? (
+          <PreferenceCard
+            id="ep-other"
+            title={m.emailPreferences_otherEmailsTitle()}
+          >
+            {jobMatches !== null ? (
+              <>
+                <PreferenceSwitch
+                  id="ep-job-matches"
+                  title={m.emailPreferences_jobMatchesTitle()}
+                  description={
+                    jobMatches.waitlisted
+                      ? m.emailPreferences_jobMatchesWaitlisted({ board })
+                      : m.emailPreferences_jobMatchesDescription()
+                  }
+                  checked={jobMatches.subscribed}
+                  disabled={pending}
+                  onCheckedChange={(checked) => update({ jobMatches: checked })}
+                />
+                <FieldSeparator />
+              </>
+            ) : null}
             <PreferenceSwitch
-              id="ep-job-matches"
-              title={m.emailPreferences_jobMatchesTitle()}
-              description={
-                jobMatches.waitlisted
-                  ? m.emailPreferences_jobMatchesWaitlisted({ board })
-                  : m.emailPreferences_jobMatchesDescription()
-              }
-              checked={jobMatches.subscribed}
+              id="ep-marketing"
+              title={m.emailPreferences_marketingTitle()}
+              description={marketingConsent}
+              checked={marketingOn}
               disabled={pending}
-              onCheckedChange={(checked) => update({ jobMatches: checked })}
+              onCheckedChange={(checked) =>
+                update(
+                  checked
+                    ? { marketing: true, ...optIn(marketingConsent) }
+                    : { marketing: false },
+                )
+              }
             />
-          ) : null}
-
-          <PreferenceSwitch
-            id="ep-marketing"
-            title={m.emailPreferences_marketingTitle()}
-            description={marketingConsent}
-            checked={marketingOn}
-            disabled={pending}
-            onCheckedChange={(checked) =>
-              update(
-                checked
-                  ? { marketing: true, ...optIn(marketingConsent) }
-                  : { marketing: false },
-              )
-            }
-          />
+          </PreferenceCard>
 
           {topics.length > 0 ? (
-            <section className="space-y-3" aria-labelledby="ep-topics">
-              <h2 id="ep-topics" className="text-lg font-semibold">
-                {m.emailPreferences_topicsTitle()}
-              </h2>
-              {!marketingOn ? (
-                <p className="text-muted-foreground text-sm">
-                  {m.emailPreferences_topicsOffHint()}
-                </p>
-              ) : null}
-              <ul className="space-y-3">
-                {topics.map((topic) => {
-                  const change = (subscribed: boolean) => ({
-                    topics: [{ key: topic.key, subscribed }],
-                  });
-                  return (
-                    <li key={topic.key}>
-                      <PreferenceSwitch
-                        id={`ep-topic-${topic.key}`}
-                        title={topic.name}
-                        // A topic narrows marketing: off with it.
-                        checked={marketingOn && topic.subscribed}
-                        disabled={pending || !marketingOn}
-                        onCheckedChange={(checked) =>
-                          update(
-                            checked
-                              ? {
-                                  ...change(true),
-                                  ...optIn(
-                                    m.emailPreferences_topicConsent({
-                                      topic: topic.name,
-                                      board,
-                                    }),
-                                  ),
-                                }
-                              : change(false),
-                          )
-                        }
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
+            <PreferenceCard
+              id="ep-topics"
+              title={m.emailPreferences_topicsTitle()}
+              description={
+                marketingOn ? undefined : m.emailPreferences_topicsOffHint()
+              }
+            >
+              {topics.map((topic, index) => {
+                const change = (subscribed: boolean) => ({
+                  topics: [{ key: topic.key, subscribed }],
+                });
+                return (
+                  <Fragment key={topic.key}>
+                    {index > 0 ? <FieldSeparator /> : null}
+                    <PreferenceSwitch
+                      id={`ep-topic-${topic.key}`}
+                      title={topic.name}
+                      // A topic narrows marketing: off with it.
+                      checked={marketingOn && topic.subscribed}
+                      disabled={pending || !marketingOn}
+                      onCheckedChange={(checked) =>
+                        update(
+                          checked
+                            ? {
+                                ...change(true),
+                                ...optIn(
+                                  m.emailPreferences_topicConsent({
+                                    topic: topic.name,
+                                    board,
+                                  }),
+                                ),
+                              }
+                            : change(false),
+                        )
+                      }
+                    />
+                  </Fragment>
+                );
+              })}
+            </PreferenceCard>
           ) : null}
 
-          {everythingOff ? (
-            <Alert role="status">
-              <AlertDescription>
-                {m.emailPreferences_unsubscribedAll({ board })}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <AlertDialog open={confirming} onOpenChange={setConfirming}>
-              <AlertDialogTrigger
-                render={<Button variant="outline" disabled={pending} />}
-              >
-                {m.emailPreferences_unsubscribeAll()}
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {m.emailPreferences_unsubscribeAllTitle()}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {m.emailPreferences_unsubscribeAllBody({ board })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>
-                    {m.emailPreferences_cancel()}
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    disabled={pending}
-                    onClick={() => {
-                      setConfirming(false);
-                      void run(() =>
-                        dependencies.unsubscribeAllEmailPreferences({
-                          data: { person },
-                        }),
-                      );
-                    }}
+          {/* The way out of everything, after the cards: what it stops, then
+              the button; once everything is off, the same place says so. */}
+          <Separator />
+          <footer className="space-y-3">
+            {everythingOff ? (
+              <Alert role="status">
+                <AlertDescription>
+                  {m.emailPreferences_unsubscribedAll({ board })}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <p className="text-muted-foreground text-sm">
+                  {m.emailPreferences_unsubscribeAllHint({ board })}
+                </p>
+                <AlertDialog open={confirming} onOpenChange={setConfirming}>
+                  <AlertDialogTrigger
+                    render={
+                      <Button variant="outline" size="sm" disabled={pending} />
+                    }
                   >
-                    {m.emailPreferences_unsubscribeAllConfirm()}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+                    {m.emailPreferences_unsubscribeAll()}
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {m.emailPreferences_unsubscribeAllTitle()}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {m.emailPreferences_unsubscribeAllBody({ board })}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>
+                        {m.emailPreferences_cancel()}
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        disabled={pending}
+                        onClick={() => {
+                          setConfirming(false);
+                          void run(() =>
+                            dependencies.unsubscribeAllEmailPreferences({
+                              data: { person },
+                            }),
+                          );
+                        }}
+                      >
+                        {m.emailPreferences_unsubscribeAllConfirm()}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
+          </footer>
         </div>
       </PageContent>
     </Page>
   );
 }
 
+/** One section: its title, then a card whose rows are split by dividers. */
+function PreferenceCard({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id: string;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3" aria-labelledby={id}>
+      <h2 id={id} className="text-lg font-semibold">
+        {title}
+      </h2>
+      {description ? (
+        <p className="text-muted-foreground text-sm">{description}</p>
+      ) : null}
+      <Card>
+        <CardContent>
+          <FieldGroup>{children}</FieldGroup>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
 /**
- * One alert: its switch (on while it isn't paused; off and disabled while
- * job alerts are off) and Delete. One waiting for its confirmation link has
- * no switch, because the page can't start it.
+ * One alert, named as `/alerts/manage` names it, with what else it matches
+ * (or, while it waits for its confirmation link, that) and a Paused badge.
+ * It has no switch: the job alerts switch is the only one. Its ⋯ menu
+ * pauses or resumes it and deletes it; one waiting for its link can only be
+ * deleted, because the page can't start it.
  */
 function AlertRow({
   alert,
-  jobAlertsOff,
+  filterNames,
   pending,
   onPausedChange,
   onDelete,
 }: {
   alert: PreferenceAlert;
-  jobAlertsOff: boolean;
+  filterNames: AlertFilterNames;
   pending: boolean;
   onPausedChange: (paused: boolean) => void;
   onDelete: () => void;
 }) {
-  const label = alertLabel(alert);
-  // The line says only what is true of this alert: while job alerts are off,
-  // the switch above already says nothing sends, so a row isn't "Weekly".
-  const status = alert.awaitingConfirmation
+  const { headline, criteria } = describeJobAlert(alert, filterNames);
+  // A similar-job alert without a name is named by its job, unlinked here.
+  const label =
+    headline ??
+    (alert.anchorJob
+      ? m.jobAlertMatch_similarTo({ title: alert.anchorJob.title })
+      : m.alertManager_similarJobsAlertLabel());
+  const detail = alert.awaitingConfirmation
     ? m.emailPreferences_alertAwaiting()
-    : alert.paused
-      ? m.alertsManage_pausedBadge()
-      : jobAlertsOff
-        ? null
-        : m.emailPreferences_alertWeekly();
+    : criteria.join(' · ');
   return (
-    <Item variant="outline">
-      <ItemContent>
-        <ItemTitle>{label}</ItemTitle>
-        {status ? <ItemDescription>{status}</ItemDescription> : null}
-      </ItemContent>
-      <ItemActions>
-        {alert.awaitingConfirmation ? null : (
-          <Switch
-            aria-label={label}
-            checked={!jobAlertsOff && !alert.paused}
-            disabled={pending || jobAlertsOff}
-            onCheckedChange={(on) => onPausedChange(!on)}
-          />
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          aria-label={m.emailPreferences_deleteAlertLabel({ label })}
-          onClick={onDelete}
+    <Field orientation="horizontal">
+      <FieldContent>
+        <FieldTitle>
+          {label}
+          {alert.paused && !alert.awaitingConfirmation ? (
+            <Badge variant="secondary">{m.alertsManage_pausedBadge()}</Badge>
+          ) : null}
+        </FieldTitle>
+        {detail ? <FieldDescription>{detail}</FieldDescription> : null}
+      </FieldContent>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={pending}
+              aria-label={m.emailPreferences_alertActionsLabel({ label })}
+            />
+          }
         >
-          {m.emailPreferences_deleteAlert()}
-        </Button>
-      </ItemActions>
-    </Item>
+          <MoreHorizontal aria-hidden="true" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {alert.awaitingConfirmation ? null : (
+            <DropdownMenuItem onClick={() => onPausedChange(!alert.paused)}>
+              {alert.paused
+                ? m.emailPreferences_resumeAlert()
+                : m.emailPreferences_pauseAlert()}
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem variant="destructive" onClick={onDelete}>
+            {m.emailPreferences_deleteAlert()}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </Field>
   );
 }
 

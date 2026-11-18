@@ -8,6 +8,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,6 +24,7 @@ import { m } from '@/paraglide/messages';
 import type { EmailPreferences } from '@cavuno/board';
 
 const BOARD = 'Example Board';
+const NO_NAMES = { categories: {}, places: {} };
 const PERSON = '0123456789abcdef';
 
 const prefs = {
@@ -61,6 +63,8 @@ function dependencies() {
     getEmailPreferences:
       vi.fn<EmailPreferencesDependencies['getEmailPreferences']>(),
     getSeoBase: vi.fn(async () => ({ boardName: BOARD })),
+    getAlertFilterNames:
+      vi.fn<EmailPreferencesDependencies['getAlertFilterNames']>(),
     updateEmailPreferences:
       vi.fn<EmailPreferencesDependencies['updateEmailPreferences']>(),
     unsubscribeAllEmailPreferences:
@@ -74,11 +78,39 @@ function renderPage(
 ) {
   render(
     <EmailPreferencesPageView
-      data={{ prefs, person: PERSON, seo: { boardName: BOARD }, ...data }}
+      data={{
+        prefs,
+        person: PERSON,
+        seo: { boardName: BOARD },
+        filterNames: NO_NAMES,
+        ...data,
+      }}
       dependencies={deps}
     />,
   );
   return deps;
+}
+
+/** The ⋯ button of the alert with this name. */
+function alertActions(label: string) {
+  return screen.getByRole('button', {
+    name: m.emailPreferences_alertActionsLabel({ label }),
+  });
+}
+
+/** The row of the alert with this name. */
+function alertRow(label: string) {
+  const row = alertActions(label).closest('[data-slot="field"]');
+  expect(row).toBeInstanceOf(HTMLElement);
+  // SAFETY: checked to be an HTMLElement on the line above.
+  return row as HTMLElement;
+}
+
+/** Opens an alert's ⋯ menu and returns the names of its items. */
+async function openAlertMenu(label: string) {
+  fireEvent.click(alertActions(label));
+  const items = await screen.findAllByRole('menuitem');
+  return items.map((item) => item.textContent);
 }
 
 afterEach(() => {
@@ -120,7 +152,10 @@ describe('email preferences loader', () => {
       prefs,
       person: PERSON,
       seo: { boardName: BOARD },
+      filterNames: NO_NAMES,
     });
+    // A named alert with no category or place needs no names.
+    expect(deps.getAlertFilterNames).not.toHaveBeenCalled();
     expect(deps.getEmailPreferences).toHaveBeenCalledWith({
       data: { person: PERSON },
     });
@@ -223,7 +258,7 @@ describe('email preferences page', () => {
     });
   });
 
-  it('deleting an alert sends only that alert', async () => {
+  it('deleting an alert from its menu sends only that alert', async () => {
     const deps = dependencies();
     deps.updateEmailPreferences.mockResolvedValue({
       ...prefs,
@@ -231,10 +266,9 @@ describe('email preferences page', () => {
     });
     renderPage({}, deps);
 
+    await openAlertMenu('Design jobs');
     fireEvent.click(
-      screen.getByRole('button', {
-        name: m.emailPreferences_deleteAlertLabel({ label: 'Design jobs' }),
-      }),
+      screen.getByRole('menuitem', { name: m.emailPreferences_deleteAlert() }),
     );
     await waitFor(() =>
       expect(
@@ -249,14 +283,17 @@ describe('email preferences page', () => {
     });
   });
 
-  it('shows a paused alert and a waitlisted board as not sending', () => {
+  it('shows a paused alert with a badge and a waitlisted board as not sending, with one job alerts switch', () => {
     renderPage({
       prefs: {
         ...prefs,
         jobAlerts: {
           ...prefs.jobAlerts,
           waitlisted: true,
-          alerts: [{ ...prefs.jobAlerts.alerts[0], paused: true }],
+          alerts: [
+            { ...prefs.jobAlerts.alerts[0], paused: true },
+            { ...prefs.jobAlerts.alerts[0], id: 'alert-2', label: 'Ops jobs' },
+          ],
         },
       },
     });
@@ -265,42 +302,109 @@ describe('email preferences page', () => {
         m.emailPreferences_jobMatchesWaitlisted({ board: BOARD }),
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText(m.alertsManage_pausedBadge())).toBeInTheDocument();
     expect(
-      screen.queryByText(m.emailPreferences_alertWeekly()),
+      within(alertRow('Design jobs')).getByText(m.alertsManage_pausedBadge()),
+    ).toBeInTheDocument();
+    expect(
+      within(alertRow('Ops jobs')).queryByText(m.alertsManage_pausedBadge()),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('switch', { name: 'Design jobs' }),
-    ).not.toBeChecked();
-    expect(
+    // The job alerts switch is the only one in the card; rows have none.
+    const card = screen.getByRole('region', {
+      name: m.emailPreferences_jobAlertsTitle(),
+    });
+    expect(within(card).getAllByRole('switch')).toEqual([
       screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
-    ).toBeChecked();
+    ]);
+    expect(within(card).getAllByRole('switch')[0]).toBeChecked();
   });
 
-  it('keeps the alerts listed while job alerts are off, each switched off and disabled', () => {
-    renderPage({
-      prefs: {
-        ...prefs,
-        jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
-      },
-    });
+  it('keeps the alerts and their menus while job alerts are off', async () => {
+    const deps = dependencies();
+    const off = {
+      ...prefs,
+      jobAlerts: { ...prefs.jobAlerts, unsubscribed: true },
+    };
+    deps.updateEmailPreferences.mockResolvedValue(off);
+    renderPage({ prefs: off }, deps);
     expect(
       screen.getByText(m.emailPreferences_jobAlertsOff()),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
     ).not.toBeChecked();
-    const alert = screen.getByRole('switch', { name: 'Design jobs' });
-    expect(alert).not.toBeChecked();
-    // Base UI marks a disabled switch with aria-disabled, not `disabled`.
-    expect(alert).toHaveAttribute('aria-disabled', 'true');
-    // Nothing sends, so no row reads as sending.
     expect(
-      screen.queryByText(m.emailPreferences_alertWeekly()),
+      within(alertRow('Design jobs')).queryByRole('switch'),
     ).not.toBeInTheDocument();
+
+    await openAlertMenu('Design jobs');
+    fireEvent.click(
+      screen.getByRole('menuitem', { name: m.emailPreferences_pauseAlert() }),
+    );
+    await waitFor(() =>
+      expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
+        data: {
+          person: PERSON,
+          changes: { alerts: [{ id: 'alert-1', paused: true }] },
+        },
+      }),
+    );
   });
 
-  it('gives an alert waiting for its confirmation link no switch', () => {
+  it('names each alert from its filters, as /alerts/manage does, with no cadence', async () => {
+    const base = { ...prefs.jobAlerts.alerts[0], label: null };
+    const withAlerts = {
+      ...prefs,
+      jobAlerts: {
+        ...prefs.jobAlerts,
+        alerts: [
+          {
+            ...base,
+            id: 'alert-search',
+            kind: 'search' as const,
+            filters: {
+              query: 'pilot',
+              jobFunctions: ['flight-ops'],
+              placeIds: ['place-berlin'],
+            },
+          },
+          {
+            ...base,
+            id: 'alert-roles',
+            filters: { jobFunctions: ['a', 'b', 'c', 'd'] },
+          },
+        ],
+      },
+    };
+    const names = {
+      categories: { 'flight-ops': 'Flight operations', a: 'A', b: 'B' },
+      places: { 'place-berlin': 'Berlin' },
+    };
+    // The loader reads the names once, for every alert.
+    const deps = dependencies();
+    deps.getEmailPreferences.mockResolvedValue(withAlerts);
+    deps.getAlertFilterNames.mockResolvedValue(names);
+    const loaded = await createEmailPreferencesLoader(deps)({
+      deps: { person: PERSON },
+    });
+    expect(deps.getAlertFilterNames).toHaveBeenCalledExactlyOnceWith({
+      data: {
+        categorySlugs: ['flight-ops', 'a', 'b', 'c', 'd'],
+        placeIds: ['place-berlin'],
+      },
+    });
+    expect(loaded.filterNames).toEqual(names);
+
+    renderPage({ prefs: withAlerts, filterNames: names });
+    const search = alertRow(m.jobAlertMatch_jobsMatching({ query: 'pilot' }));
+    expect(
+      within(search).getByText('Flight operations · Berlin'),
+    ).toBeInTheDocument();
+    expect(
+      alertRow(m.jobAlertMatch_jobsInMore({ categories: 'A, B', count: 2 })),
+    ).toBeInTheDocument();
+  });
+
+  it('lets an alert waiting for its confirmation link only be deleted', async () => {
     renderPage({
       prefs: {
         ...prefs,
@@ -313,19 +417,21 @@ describe('email preferences page', () => {
       },
     });
     expect(
-      screen.getByText(m.emailPreferences_alertAwaiting()),
+      within(alertRow('Design jobs')).getByText(
+        m.emailPreferences_alertAwaiting(),
+      ),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('switch', { name: 'Design jobs' }),
-    ).not.toBeInTheDocument();
+    expect(await openAlertMenu('Design jobs')).toEqual([
+      m.emailPreferences_deleteAlert(),
+    ]);
   });
 
   it.each([
-    [false, true],
-    [true, false],
+    [false, m.emailPreferences_pauseAlert, true],
+    [true, m.emailPreferences_resumeAlert, false],
   ])(
-    'switching an alert that is paused=%s sends only that alert, paused=%s',
-    async (paused, next) => {
+    'an alert that is paused=%s offers %s in its menu, which sends only that alert',
+    async (paused, item, next) => {
       const deps = dependencies();
       const before = {
         ...prefs,
@@ -336,7 +442,11 @@ describe('email preferences page', () => {
       };
       deps.updateEmailPreferences.mockResolvedValue(before);
       renderPage({ prefs: before }, deps);
-      fireEvent.click(screen.getByRole('switch', { name: 'Design jobs' }));
+      expect(await openAlertMenu('Design jobs')).toEqual([
+        item(),
+        m.emailPreferences_deleteAlert(),
+      ]);
+      fireEvent.click(screen.getByRole('menuitem', { name: item() }));
       await waitFor(() =>
         expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
           data: {

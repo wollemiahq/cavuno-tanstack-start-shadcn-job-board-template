@@ -278,12 +278,15 @@ const BUDGETS = {
     // raw / 49,917 B gzip against main's 127,781 / 49,657 (+978 / +260).
     // Raised by exactly the measured growth, keeping main's headroom.
     '/p/$handle': { raw: 129_038, gzip: 49_982 },
-    // Job alert switches on /email-preferences: one for all job alerts and
-    // one per alert, with their notices. Main measured 79,619 B raw / 29,653
-    // B gzip against the 80,000 / 30,000 default (381 B raw left); this
-    // measured 81,129 / 30,139 (+1,510 / +486). Raised by exactly the
-    // measured growth, keeping main's headroom.
-    '/email-preferences': { raw: 81_510, gzip: 30_486 },
+    // /email-preferences as section cards: one switch for all job alerts,
+    // and a ⋯ menu per alert to pause, resume or delete it. Main measured
+    // 79,619 B raw / 29,653 B gzip against the 80,000 / 30,000 default
+    // (381 / 347 B left); this measured 161,964 / 60,629 (+82,345 /
+    // +30,976). Nearly all of it is Base UI's Menu (the DropdownMenu, its
+    // positioner and pointer interactions), which the approved design uses
+    // for the per-alert menu. Raised by exactly the measured growth, keeping
+    // main's headroom; accepted by the operator (Abi, 18 Nov).
+    '/email-preferences': { raw: 162_345, gzip: 60_976 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },
