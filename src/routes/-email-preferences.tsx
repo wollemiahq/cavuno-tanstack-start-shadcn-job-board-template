@@ -44,12 +44,18 @@ import {
 } from '@/components/ui/item';
 import { Switch } from '@/components/ui/switch';
 import { m } from '@/paraglide/messages';
+import type { BOARD_API_ERROR_CODES } from '@cavuno/board';
 import type { EmailPreferences, EmailPreferencesUpdate } from '@cavuno/board';
 
 /** Recorded as the consent's `source`. */
 const SOURCE = 'email-preferences';
 
 type PreferenceAlert = EmailPreferences['jobAlerts']['alerts'][number];
+
+/** Messages for the Board API codes a change can fail with. */
+type ErrorMessages = {
+  [code in (typeof BOARD_API_ERROR_CODES)[number]]?: string;
+};
 
 /** The alert's own name, else what it matches, as `/alerts/manage` says it. */
 function alertLabel(alert: PreferenceAlert) {
@@ -83,8 +89,10 @@ export function EmailPreferencesPageView({
   const [prefs, setPrefs] = useState(data.prefs);
   const [pending, setPending] = useState(false);
   // What the last change says: why it failed, or a link on its way.
-  const [failed, setFailed] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [message, setMessage] = useState<{
+    tone: 'error' | 'status';
+    text: string;
+  } | null>(null);
   const [confirming, setConfirming] = useState(false);
 
   // Set whenever there are preferences to show: they were read for them.
@@ -116,25 +124,26 @@ export function EmailPreferencesPageView({
     );
   }
 
+  /** Applies a change and returns what the API says now; null if it failed. */
   const run = async (
     action: () => Promise<EmailPreferences>,
-    after?: {
-      notice?: (prefs: EmailPreferences) => string | null;
-      errors?: Partial<Record<string, string>>;
-    },
-  ) => {
+    errors?: ErrorMessages,
+  ): Promise<EmailPreferences | null> => {
     setPending(true);
-    setFailed(null);
-    setNotice(null);
+    setMessage(null);
     try {
       const next = await action();
       setPrefs(next);
-      setNotice(after?.notice?.(next) ?? null);
+      return next;
     } catch (error) {
-      setFailed(
-        (isBoardApiError(error) ? after?.errors?.[error.code] : undefined) ??
-          m.emailPreferences_actionError(),
-      );
+      setMessage({
+        tone: 'error',
+        text:
+          (isBoardApiError(error)
+            ? // SAFETY: a code with no message here reads undefined.
+              errors?.[error.code as keyof ErrorMessages]
+            : undefined) ?? m.emailPreferences_actionError(),
+      });
       // Show what is true now: a link that stopped working, or a token no
       // longer kept, turns into its notice, and an alert or topic removed
       // elsewhere goes.
@@ -143,34 +152,36 @@ export function EmailPreferencesPageView({
       } catch {
         // Keep what the page shows; the error says the change didn't save.
       }
+      return null;
     } finally {
       setPending(false);
     }
   };
-  const update = (
-    changes: EmailPreferencesUpdate,
-    after?: Parameters<typeof run>[1],
-  ) =>
+  const update = (changes: EmailPreferencesUpdate, errors?: ErrorMessages) =>
     run(
       () => dependencies.updateEmailPreferences({ data: { person, changes } }),
-      after,
+      errors,
     );
   // Back on, alerts that wait for a confirmation link get a fresh one; when
   // it can't go out, nothing changes and the API says why.
-  const setJobAlerts = (on: boolean) =>
-    update(
+  const setJobAlerts = async (on: boolean) => {
+    const next = await update(
       { jobAlerts: on },
-      {
-        notice: (next) =>
-          on && next.jobAlerts.alerts.some((a) => a.awaitingConfirmation)
-            ? m.emailPreferences_jobAlertsLinkSent()
-            : null,
-        errors: {
-          rate_limited: m.emailPreferences_jobAlertsThrottled(),
-          job_alert_email_suppressed: m.emailPreferences_jobAlertsSuppressed(),
-        },
-      },
+      on
+        ? {
+            rate_limited: m.emailPreferences_jobAlertsThrottled(),
+            job_alert_email_suppressed:
+              m.emailPreferences_jobAlertsSuppressed(),
+          }
+        : undefined,
     );
+    if (on && next?.jobAlerts.alerts.some((a) => a.awaitingConfirmation)) {
+      setMessage({
+        tone: 'status',
+        text: m.emailPreferences_jobAlertsLinkSent(),
+      });
+    }
+  };
   // Turning something on is the person's opt-in, recorded with the wording
   // they saw; turning it off sends only the change.
   const optIn = (consentText: string) => ({ consentText, source: SOURCE });
@@ -197,14 +208,13 @@ export function EmailPreferencesPageView({
             <p className="text-muted-foreground text-sm">{prefs.email}</p>
           </header>
 
-          {failed ? (
+          {message?.tone === 'error' ? (
             <Alert variant="destructive">
-              <AlertDescription>{failed}</AlertDescription>
+              <AlertDescription>{message.text}</AlertDescription>
             </Alert>
-          ) : null}
-          {notice ? (
+          ) : message ? (
             <Alert role="status">
-              <AlertDescription>{notice}</AlertDescription>
+              <AlertDescription>{message.text}</AlertDescription>
             </Alert>
           ) : null}
 
@@ -226,7 +236,7 @@ export function EmailPreferencesPageView({
                     jobAlerts.unsubscribed
                       ? m.emailPreferences_jobAlertsOff()
                       : jobAlerts.waitlisted
-                        ? m.emailPreferences_jobAlertsWaitlisted({ board })
+                        ? m.emailPreferences_jobMatchesWaitlisted({ board })
                         : m.emailPreferences_jobAlertsDescription()
                   }
                   checked={!jobAlerts.unsubscribed}
@@ -399,17 +409,20 @@ function AlertRow({
   onDelete: () => void;
 }) {
   const label = alertLabel(alert);
+  // The line says only what is true of this alert: while job alerts are off,
+  // the switch above already says nothing sends, so a row isn't "Weekly".
+  const status = alert.awaitingConfirmation
+    ? m.emailPreferences_alertAwaiting()
+    : alert.paused
+      ? m.alertsManage_pausedBadge()
+      : jobAlertsOff
+        ? null
+        : m.emailPreferences_alertWeekly();
   return (
     <Item variant="outline">
       <ItemContent>
         <ItemTitle>{label}</ItemTitle>
-        <ItemDescription>
-          {alert.awaitingConfirmation
-            ? m.emailPreferences_alertAwaiting()
-            : alert.paused
-              ? m.emailPreferences_alertPaused()
-              : m.emailPreferences_alertWeekly()}
-        </ItemDescription>
+        {status ? <ItemDescription>{status}</ItemDescription> : null}
       </ItemContent>
       <ItemActions>
         {alert.awaitingConfirmation ? null : (

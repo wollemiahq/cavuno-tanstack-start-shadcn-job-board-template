@@ -281,9 +281,9 @@ const BUDGETS = {
     // Job alert switches on /email-preferences: one for all job alerts and
     // one per alert, with their notices. Main measured 79,619 B raw / 29,653
     // B gzip against the 80,000 / 30,000 default (381 B raw left); this
-    // measured 81,183 / 30,175 (+1,564 / +522). Raised by exactly the
+    // measured 81,129 / 30,139 (+1,510 / +486). Raised by exactly the
     // measured growth, keeping main's headroom.
-    '/email-preferences': { raw: 81_564, gzip: 30_522 },
+    '/email-preferences': { raw: 81_510, gzip: 30_486 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     '/auth/verify-email-required': { raw: 89_000, gzip: 36_000 },
     '/employers/invites/accept': { raw: 77_000, gzip: 31_000 },

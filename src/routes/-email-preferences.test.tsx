@@ -262,12 +262,10 @@ describe('email preferences page', () => {
     });
     expect(
       screen.getByText(
-        m.emailPreferences_jobAlertsWaitlisted({ board: BOARD }),
+        m.emailPreferences_jobMatchesWaitlisted({ board: BOARD }),
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(m.emailPreferences_alertPaused()),
-    ).toBeInTheDocument();
+    expect(screen.getByText(m.alertsManage_pausedBadge())).toBeInTheDocument();
     expect(
       screen.queryByText(m.emailPreferences_alertWeekly()),
     ).not.toBeInTheDocument();
@@ -296,22 +294,59 @@ describe('email preferences page', () => {
     expect(alert).not.toBeChecked();
     // Base UI marks a disabled switch with aria-disabled, not `disabled`.
     expect(alert).toHaveAttribute('aria-disabled', 'true');
+    // Nothing sends, so no row reads as sending.
+    expect(
+      screen.queryByText(m.emailPreferences_alertWeekly()),
+    ).not.toBeInTheDocument();
   });
 
-  it('pausing an alert sends only that alert', async () => {
-    const deps = dependencies();
-    deps.updateEmailPreferences.mockResolvedValue(prefs);
-    renderPage({}, deps);
-    fireEvent.click(screen.getByRole('switch', { name: 'Design jobs' }));
-    await waitFor(() =>
-      expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
-        data: {
-          person: PERSON,
-          changes: { alerts: [{ id: 'alert-1', paused: true }] },
+  it('gives an alert waiting for its confirmation link no switch', () => {
+    renderPage({
+      prefs: {
+        ...prefs,
+        jobAlerts: {
+          ...prefs.jobAlerts,
+          alerts: [
+            { ...prefs.jobAlerts.alerts[0], awaitingConfirmation: true },
+          ],
         },
-      }),
-    );
+      },
+    });
+    expect(
+      screen.getByText(m.emailPreferences_alertAwaiting()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('switch', { name: 'Design jobs' }),
+    ).not.toBeInTheDocument();
   });
+
+  it.each([
+    [false, true],
+    [true, false],
+  ])(
+    'switching an alert that is paused=%s sends only that alert, paused=%s',
+    async (paused, next) => {
+      const deps = dependencies();
+      const before = {
+        ...prefs,
+        jobAlerts: {
+          ...prefs.jobAlerts,
+          alerts: [{ ...prefs.jobAlerts.alerts[0], paused }],
+        },
+      };
+      deps.updateEmailPreferences.mockResolvedValue(before);
+      renderPage({ prefs: before }, deps);
+      fireEvent.click(screen.getByRole('switch', { name: 'Design jobs' }));
+      await waitFor(() =>
+        expect(deps.updateEmailPreferences).toHaveBeenCalledWith({
+          data: {
+            person: PERSON,
+            changes: { alerts: [{ id: 'alert-1', paused: next }] },
+          },
+        }),
+      );
+    },
+  );
 
   it('turning job alerts back on says a confirmation link is on its way', async () => {
     const deps = dependencies();
@@ -371,6 +406,29 @@ describe('email preferences page', () => {
       ).not.toBeInTheDocument();
     },
   );
+
+  it('turning job alerts off never blames a confirmation email', async () => {
+    const deps = dependencies();
+    deps.updateEmailPreferences.mockRejectedValue(
+      new BoardApiError({
+        status: 429,
+        code: 'rate_limited',
+        message: 'rate_limited',
+        raw: null,
+      }),
+    );
+    deps.getEmailPreferences.mockResolvedValue(prefs);
+    renderPage({}, deps);
+    fireEvent.click(
+      screen.getByRole('switch', { name: m.emailPreferences_jobAlertsAll() }),
+    );
+    expect(
+      await screen.findByText(m.emailPreferences_actionError()),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(m.emailPreferences_jobAlertsThrottled()),
+    ).not.toBeInTheDocument();
+  });
 
   it('shows an error and the preferences as they are now when a change fails', async () => {
     const deps = dependencies();
