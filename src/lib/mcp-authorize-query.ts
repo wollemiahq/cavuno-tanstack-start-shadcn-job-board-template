@@ -11,7 +11,7 @@
  * reads it back out (`mcpAuthorizeQuery`).
  */
 import { AUTH_CONVERSION_PARAMS } from './board-datalayer-events';
-import { canonicalPathname, localizePath } from './localized-path';
+import { canonicalPathname } from './localized-path';
 
 /** The consent page's canonical path; served under the board's own word. */
 export const MCP_CONSENT_PATH = '/authorize';
@@ -97,14 +97,4 @@ export function mcpAuthorizeQuery(search: string): string {
     // own error step.
     return '';
   }
-}
-
-/**
- * This page, in the board's words, with the query of the Board API's
- * `returnTo` (which names Cavuno's `/oauth/authorize`): sign-in comes back
- * here directly.
- */
-export function mcpConsentReturnTo(returnTo: string): string {
-  const { search } = new URL(returnTo, 'https://board.invalid');
-  return `${localizePath(MCP_CONSENT_PATH)}${search}`;
 }

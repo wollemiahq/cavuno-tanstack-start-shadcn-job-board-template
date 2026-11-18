@@ -19,7 +19,8 @@ import {
   consentTrust,
 } from '../board/mcp-consent-copy';
 import { AuthCard, FormError } from '../components/auth-form';
-import { mcpConsentReturnTo } from '../lib/mcp-authorize-query';
+import { localizePath } from '../lib/localized-path';
+import { MCP_CONSENT_PATH } from '../lib/mcp-authorize-query';
 import { m } from '../paraglide/messages';
 import {
   getMcpConsentStep,
@@ -37,6 +38,17 @@ export type McpConsentPageStep = Extract<
   McpConsentStep,
   { next: 'consent' | 'redirect' | 'error' }
 >;
+
+/**
+ * This page, in the board's words, with the query of the Board API's
+ * `returnTo` (which names Cavuno's `/oauth/authorize`): sign-in comes back
+ * here directly. Kept beside the page, out of the module the shared shell
+ * loads.
+ */
+function mcpConsentReturnTo(returnTo: string): string {
+  const { search } = new URL(returnTo, 'https://board.invalid');
+  return `${localizePath(MCP_CONSENT_PATH)}${search}`;
+}
 
 export async function loadMcpConsent(
   search: string,
