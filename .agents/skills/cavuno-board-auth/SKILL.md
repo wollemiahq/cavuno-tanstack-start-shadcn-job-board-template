@@ -29,6 +29,7 @@ await board.auth.register({
   password: 'a-strong-password',
   displayName: 'Ada',
   timeZone: browserTimeZone, // read in the browser, sent with the form
+  locale: pageLocale, // the language of the page, such as 'de'
 });
 
 const session = await board.auth.login({
@@ -42,6 +43,8 @@ const session = await board.auth.login({
 For alternate entry points, use `requestMagicLink` / `consumeMagicLink` or the OAuth authorization and exchange methods exposed under `board.auth`.
 
 Pass `timeZone` to `register` and `consumeMagicLink`: the person's IANA time zone from `Intl.DateTimeFormat().resolvedOptions().timeZone`, read in their browser (such as `Europe/Berlin`). On your server it returns the server's zone, so never fill it in there. The board keeps the first value it gets for a person and ignores an invalid one, so it never fails the sign-up.
+
+Pass `locale` to the same two methods: the language of the page the person is signing up from, such as `de` (the board language or one of its Interface locales). The board keeps the first value it gets for a person and ignores a language it does not offer.
 
 **Complete when:** the chosen entry flow returns a session and `board.me.retrieve()` resolves as that board user.
 
@@ -77,6 +80,32 @@ await board.auth.logout({ refreshToken });
 Successful logout revokes the refresh token and clears SDK storage. A failed logout request retains stored tokens so the app can retry revocation or deliberately choose a local-only sign-out.
 
 **Complete when:** logout revokes the server session, clears the app-owned cookie or browser store, and an authenticated read is handled as signed out.
+
+## Mistyped email addresses
+
+Under the email field, offer a one-tap fix for a mistyped domain: `suggestEmailAddress` from `@cavuno/board/email` compares the domain with common mailbox providers and returns the corrected address, or `null`. It never changes the part before the @, and it runs in the browser, so call it on blur. The API also refuses an address whose domain has no mail server (no MX, A or AAAA record) with 422 `email_domain_undeliverable`, before anything is created or emailed; `details.suggestion` carries the same correction when there is one.
+
+```ts snippet
+import { BoardApiError } from '@cavuno/board';
+import { suggestEmailAddress } from '@cavuno/board/email';
+
+// On blur: 'jane@gmial.com' gives 'jane@gmail.com'; a likely-fine address gives null.
+const hint = suggestEmailAddress(email);
+
+try {
+  await board.auth.register({ role: 'candidate', method: 'emailpass', email, password, displayName });
+} catch (error) {
+  if (
+    error instanceof BoardApiError &&
+    error.code === 'email_domain_undeliverable'
+  ) {
+    const { suggestion } = (error.details ?? {}) as { suggestion?: string };
+    // Show "Did you mean {suggestion}?", or ask them to check the address.
+  } else {
+    throw error;
+  }
+}
+```
 
 ## Verification and recovery
 

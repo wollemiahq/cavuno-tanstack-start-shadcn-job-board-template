@@ -15,6 +15,7 @@ Every sign-up is double opt-in. The person gets a confirmation email, and nothin
 - A `source` label for the form, such as `blog-footer` or `homepage-hero` (lowercase letters, digits and hyphens). It shows as the person's Source in the board's dashboard, so give each form its own.
 - A hidden `website` field people leave empty. Bots fill it in; the API then answers as usual and does nothing.
 - The person's time zone as `timeZone`: read `Intl.DateTimeFormat().resolvedOptions().timeZone` in their browser (such as `Europe/Berlin`) and send it with the form. On your server it returns the server's zone, so never fill it in there. The board keeps the first value it gets for a person and ignores an invalid one.
+- The language of the page as `locale`, such as `de` (the board language or one of its Interface locales). The board keeps the first value it gets for a person and ignores a language it does not offer.
 
 Read the board's name from `board.context()` rather than typing it.
 
@@ -29,6 +30,7 @@ const result = await board.subscribe({
   source: 'blog-footer',
   website: honeypotValue,
   timeZone: browserTimeZone, // read in the browser, sent with the form
+  locale: pageLocale, // the language of the page, such as 'de'
 });
 
 if (result.sendingPaused) {
@@ -87,10 +89,37 @@ const message = !subscribed
     : 'Your job alert is confirmed.';
 ```
 
+## Mistyped email addresses
+
+Under the email field, offer a one-tap fix for a mistyped domain: `suggestEmailAddress` from `@cavuno/board/email` compares the domain with common mailbox providers and returns the corrected address, or `null`. It never changes the part before the @, and it runs in the browser, so call it on blur. The API also refuses an address whose domain has no mail server (no MX, A or AAAA record) with 422 `email_domain_undeliverable`, before anything is created or emailed; `details.suggestion` carries the same correction when there is one.
+
+```ts snippet
+import { BoardApiError } from '@cavuno/board';
+import { suggestEmailAddress } from '@cavuno/board/email';
+
+// On blur: 'jane@gmial.com' gives 'jane@gmail.com'; a likely-fine address gives null.
+const hint = suggestEmailAddress(email);
+
+try {
+  await board.subscribe({ email, consent: true, consentText, source: 'footer' });
+} catch (error) {
+  if (
+    error instanceof BoardApiError &&
+    error.code === 'email_domain_undeliverable'
+  ) {
+    const { suggestion } = (error.details ?? {}) as { suggestion?: string };
+    // Show "Did you mean {suggestion}?", or ask them to check the address.
+  } else {
+    throw error;
+  }
+}
+```
+
 ## Errors
 
 - `validation_bad_request` (400): a field is missing or malformed, `consent` isn't `true`, or `consentText` doesn't name the board.
 - `subscribe_unknown_topic` (400): a key in `topics` isn't one of the board's live topics.
+- `email_domain_undeliverable` (422): the address's domain has no mail server, usually a typo; `details.suggestion` is the corrected address when there is one.
 - `rate_limited` (429): 3 sign-ups a minute per address across all boards, or 10 requests a minute per IP. A self-hosted site calls from its own server, so all its visitors share that IP limit with every other sign-in and sign-up call from that server; on a builder site Cavuno hosts it counts each visitor separately, plus 6 sign-ups a minute per visitor. `details.retryAfterSeconds` says when to try again.
 - `rate_limit_unavailable` (503): retry shortly.
 
