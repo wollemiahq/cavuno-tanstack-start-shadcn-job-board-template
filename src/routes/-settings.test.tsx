@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
+import { formatDate } from '@cavuno/board/format';
 import {
   RouterProvider,
   isRedirect,
@@ -26,8 +27,10 @@ import {
   type SettingsRouteDependencies,
 } from './-settings';
 
+import type { ConnectedAssistant } from '../server/settings';
 import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 
 const requestEmailChange =
   vi.fn<SettingsRouteDependencies['requestEmailChange']>();
@@ -44,6 +47,10 @@ const unsubscribeWithLink =
   vi.fn<SettingsRouteDependencies['unsubscribeWithLink']>();
 const getNotificationPreferences =
   vi.fn<SettingsRouteDependencies['getNotificationPreferences']>();
+const getConnectedAssistants =
+  vi.fn<SettingsRouteDependencies['getConnectedAssistants']>();
+const disconnectAssistant =
+  vi.fn<SettingsRouteDependencies['disconnectAssistant']>();
 const dependencies: SettingsRouteDependencies = {
   ...settingsRouteDependencies,
   getSeoBase: vi.fn().mockResolvedValue({ boardName: 'Acme Board' }),
@@ -55,6 +62,8 @@ const dependencies: SettingsRouteDependencies = {
   getUnsubscribeLinkChannel,
   unsubscribeWithLink,
   getNotificationPreferences,
+  getConnectedAssistants,
+  disconnectAssistant,
 };
 
 const LINK = '0123456789abcdef';
@@ -111,6 +120,7 @@ async function renderSettings(
     hasPassword?: boolean;
     role?: 'candidate' | 'employer';
     jobRecommendationsEnabled?: boolean;
+    assistants?: ConnectedAssistant[];
     preferences?: {
       object: 'notification_preference';
       channel: 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
@@ -152,6 +162,8 @@ async function renderSettings(
         hasPassword: overrides.hasPassword ?? true,
         role: overrides.role ?? account.role,
       },
+      assistants: overrides.assistants ?? [],
+      seo: { boardName: 'Acme Board' },
     },
     overrides.jobRecommendationsEnabled,
   );
@@ -615,5 +627,120 @@ describe('signed-in settings account cards', () => {
     expect(
       await screen.findByText(m.settingsPassword_checkInbox()),
     ).toBeInTheDocument();
+  });
+});
+
+describe('signed-in settings connected assistants', () => {
+  const claude: ConnectedAssistant = {
+    id: 'assistant-1',
+    object: 'assistant',
+    name: 'Claude',
+    host: 'claude.ai',
+    scopes: ['candidate'],
+    connectedAt: '2026-10-02T09:00:00.000Z',
+    lastUsedAt: '2026-11-18T09:00:00.000Z',
+  };
+  const local: ConnectedAssistant = {
+    id: 'assistant-2',
+    object: 'assistant',
+    name: 'Local agent',
+    host: null,
+    scopes: ['candidate'],
+    connectedAt: '2026-09-01T09:00:00.000Z',
+    lastUsedAt: '2026-09-03T09:00:00.000Z',
+  };
+  const card = () =>
+    document.querySelector<HTMLElement>(
+      '[data-test="settings-assistants-card"]',
+    );
+  const disconnectButton = (name: string) =>
+    screen.getByRole('button', {
+      name: m.settingsAssistants_disconnectAriaLabel({ name }),
+    });
+
+  it('lists each assistant with its website and dates, before the danger zone', async () => {
+    await renderSettings({ assistants: [claude, local] });
+
+    const assistants = card();
+    const danger = document.querySelector('[data-test="danger-zone"]');
+    if (!assistants || !danger) throw new Error('Expected both cards');
+    expect(
+      assistants.compareDocumentPosition(danger) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    const view = within(assistants);
+    expect(
+      view.getByRole('heading', { name: m.settingsAssistants_title() }),
+    ).toBeInTheDocument();
+    const rows = view.getAllByRole('listitem');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent(claude.name);
+    expect(rows[0]).toHaveTextContent('claude.ai');
+    expect(rows[0]).toHaveTextContent(
+      m.settingsAssistants_datesText({
+        connected: formatDate(getLocale(), claude.connectedAt) ?? '',
+        lastUsed: formatDate(getLocale(), claude.lastUsedAt) ?? '',
+      }),
+    );
+    expect(rows[1]).toHaveTextContent(local.name);
+    expect(rows[1].querySelector('[data-slot="item-description"]')).toBeNull();
+  });
+
+  it('is absent when no assistant is connected', async () => {
+    await renderSettings({ assistants: [] });
+
+    expect(card()).toBeNull();
+    expect(
+      screen.queryByRole('heading', { name: m.settingsAssistants_title() }),
+    ).toBeNull();
+  });
+
+  it('disconnects through the server function and removes the row', async () => {
+    disconnectAssistant.mockResolvedValue({ ok: true });
+    await renderSettings({ assistants: [claude, local] });
+
+    fireEvent.click(disconnectButton(claude.name));
+
+    await waitFor(() => {
+      expect(screen.queryByText(claude.name)).toBeNull();
+    });
+    expect(disconnectAssistant).toHaveBeenCalledExactlyOnceWith({
+      data: { assistantId: claude.id },
+    });
+    expect(screen.getByText(local.name)).toBeInTheDocument();
+    expect(getConnectedAssistants).not.toHaveBeenCalled();
+  });
+
+  it('treats an assistant that is already gone as removed and refreshes the list', async () => {
+    disconnectAssistant.mockResolvedValue({
+      ok: false,
+      code: 'assistant_not_found',
+      message: 'Assistant not found',
+    });
+    getConnectedAssistants.mockResolvedValue([]);
+    await renderSettings({ assistants: [claude] });
+
+    fireEvent.click(disconnectButton(claude.name));
+
+    await waitFor(() => {
+      expect(card()).toBeNull();
+    });
+    expect(getConnectedAssistants).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the row when the disconnect fails', async () => {
+    disconnectAssistant.mockResolvedValue({
+      ok: false,
+      code: 'rate_limited',
+      message: 'Too many requests',
+    });
+    await renderSettings({ assistants: [claude] });
+
+    fireEvent.click(disconnectButton(claude.name));
+
+    await waitFor(() => {
+      expect(disconnectButton(claude.name)).toBeEnabled();
+    });
+    expect(screen.getByText(claude.name)).toBeInTheDocument();
   });
 });

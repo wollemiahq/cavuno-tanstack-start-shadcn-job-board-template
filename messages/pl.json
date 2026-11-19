@@ -3629,5 +3629,11 @@
   "emailPreferences_unsubscribeAllConfirm": "Wypisz mnie",
   "emailPreferences_cancel": "Anuluj",
   "emailPreferences_unsubscribedAll": "Wypisano Cię ze wszystkich e-maili od {board}.",
-  "emailPreferences_actionError": "Nie zapisano. Spróbuj ponownie."
+  "emailPreferences_actionError": "Nie zapisano. Spróbuj ponownie.",
+  "settingsAssistants_title": "Połączeni asystenci",
+  "settingsAssistants_description": "Asystenci AI z dostępem do Twojego konta na {board}.",
+  "settingsAssistants_datesText": "Połączono {connected} · Ostatnio użyto {lastUsed}",
+  "settingsAssistants_disconnectLabel": "Odłącz",
+  "settingsAssistants_disconnectAriaLabel": "Odłącz {name}",
+  "settingsAssistants_disconnectedText": "Odłączono: {name}."
 }

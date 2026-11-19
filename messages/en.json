@@ -3471,5 +3471,11 @@
   "emailPreferences_unsubscribeAllConfirm": "Unsubscribe",
   "emailPreferences_cancel": "Cancel",
   "emailPreferences_unsubscribedAll": "You're unsubscribed from all email from {board}.",
-  "emailPreferences_actionError": "That didn't save. Try again."
+  "emailPreferences_actionError": "That didn't save. Try again.",
+  "settingsAssistants_title": "Connected assistants",
+  "settingsAssistants_description": "AI assistants you’ve allowed to use your account on {board}.",
+  "settingsAssistants_datesText": "Connected {connected} · Last used {lastUsed}",
+  "settingsAssistants_disconnectLabel": "Disconnect",
+  "settingsAssistants_disconnectAriaLabel": "Disconnect {name}",
+  "settingsAssistants_disconnectedText": "{name} is disconnected."
 }
