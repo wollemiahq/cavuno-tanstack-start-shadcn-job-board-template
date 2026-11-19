@@ -8,7 +8,7 @@
  * that sends job alerts, and a hidden honeypot field. Refusals from the Board
  * API are worded under the field they concern.
  */
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
@@ -112,6 +112,7 @@ export function ProductCheckoutForm({
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [missing, setMissing] = useState<Set<string>>(new Set());
   const emailSuggestion = useEmailSuggestion();
+  const warnedEmail = useRef<string | null>(null);
 
   function clearMissing(questionId: string) {
     setMissing((previous) => {
@@ -179,6 +180,19 @@ export function ProductCheckoutForm({
       jobAlertOptIn: offerJobAlertOptIn ? jobAlertOptIn : undefined,
       website: website || undefined,
     };
+    // Checkout has no server-side refusal for a mistyped domain, and the
+    // blur check can lose the race with a click on the button (or not run,
+    // on Enter). So the first submit of an address with a likely correction
+    // stops and shows it; submitting the same address again sends it.
+    if (warnedEmail.current !== payload.email) {
+      const { suggestEmailAddress } = await import('@cavuno/board/email');
+      const suggestion = suggestEmailAddress(payload.email);
+      if (suggestion) {
+        warnedEmail.current = payload.email;
+        emailSuggestion.offer(suggestion);
+        return;
+      }
+    }
     setPending(true);
     try {
       const refusal = await onSubmit(payload);

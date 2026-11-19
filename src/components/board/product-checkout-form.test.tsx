@@ -118,7 +118,14 @@ describe('ProductCheckoutForm', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       m.product_emailSuggestionText({ email: 'ada@gmail.com' }),
     );
-    fireEvent.click(screen.getByRole('button', { name: 'ada@gmail.com' }));
+    // Editing hides a hint that no longer matches the address.
+    fillEmail('ada@gmial.co');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    fillEmail('ada@gmial.com');
+    fireEvent.blur(email);
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'ada@gmail.com' }),
+    );
     expect(email).toHaveValue('ada@gmail.com');
     expect(screen.getByText(m.product_emailHelpText())).toBeInTheDocument();
 
@@ -127,6 +134,39 @@ describe('ProductCheckoutForm', () => {
     expect(onSubmit.mock.calls[0]![0]).toMatchObject({
       email: 'ada@gmail.com',
     });
+  });
+
+  it('stops the first checkout of a likely typo, and sends it on the second', async () => {
+    const onSubmit = vi.fn(
+      (_values: { email: string }) => new Promise<undefined>(() => {}),
+    );
+    render(
+      <ProductCheckoutForm
+        product={product({ questions: [] })}
+        onSubmit={onSubmit}
+        offerJobAlertOptIn={false}
+      />,
+    );
+    const email = screen.getByLabelText(m.product_emailLabel());
+
+    // Submitted without the field ever losing focus (Enter, or a click
+    // that beats the blur check).
+    fillEmail('ada@gmial.com');
+    submit();
+    const hint = await screen.findByRole('button', { name: 'ada@gmail.com' });
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    submit();
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({
+      email: 'ada@gmial.com',
+    });
+
+    // The checkout is pending: taking the correction now would change the
+    // address under a request already sent.
+    await vi.waitFor(() => expect(hint).toBeDisabled());
+    fireEvent.click(hint);
+    expect(email).toHaveValue('ada@gmial.com');
   });
 
   it('refuses a pay-what-you-want amount under the minimum', async () => {
