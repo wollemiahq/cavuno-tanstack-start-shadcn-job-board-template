@@ -36,11 +36,9 @@ vi.mock('@tanstack/react-router', () => ({
 type TestSession = {
   user: { id: string; email: string; emailVerified?: boolean } | null;
 };
-const session = vi.hoisted(
-  (): TestSession => ({
-    user: null,
-  }),
-);
+const session = vi.hoisted((): TestSession => ({
+  user: null,
+}));
 
 vi.mock('@/components/root-session', () => ({
   useRootSession: () => ({ ready: true, user: session.user }),
