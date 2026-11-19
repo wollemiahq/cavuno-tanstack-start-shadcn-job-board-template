@@ -60,7 +60,7 @@ function product(overrides: Partial<Product> = {}): Product {
 }
 
 function fillEmail(value = 'ada@example.com') {
-  fireEvent.change(screen.getByLabelText(m.product_emailLabel()), {
+  fireEvent.change(screen.getByLabelText(m.product_emailForDownloadLabel()), {
     target: { value },
   });
 }
@@ -107,12 +107,12 @@ describe('ProductCheckoutForm', () => {
         boardName={BOARD}
       />,
     );
-    const email = screen.getByLabelText(m.product_emailLabel());
+    const email = screen.getByLabelText(m.product_emailForDownloadLabel());
 
     fillEmail('ada@example.com');
     fireEvent.blur(email);
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(screen.getByText(m.product_emailHelpText())).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
 
     fillEmail('ada@gmial.com');
     fireEvent.blur(email);
@@ -128,7 +128,7 @@ describe('ProductCheckoutForm', () => {
       await screen.findByRole('button', { name: 'ada@gmail.com' }),
     );
     expect(email).toHaveValue('ada@gmail.com');
-    expect(screen.getByText(m.product_emailHelpText())).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
 
     submit();
     await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -148,7 +148,7 @@ describe('ProductCheckoutForm', () => {
         boardName={BOARD}
       />,
     );
-    const email = screen.getByLabelText(m.product_emailLabel());
+    const email = screen.getByLabelText(m.product_emailForDownloadLabel());
 
     // Submitted without the field ever losing focus (Enter, or a click
     // that beats the blur check).
@@ -237,6 +237,13 @@ describe('ProductCheckoutForm', () => {
       // The API refuses consent wording that doesn't name the board.
       expect(wording).toContain(BOARD);
       const box = screen.getByRole('checkbox', { name: wording });
+      expect(
+        screen.getByLabelText(
+          price.kind === 'free'
+            ? m.product_emailLabel()
+            : m.product_emailForDownloadLabel(),
+        ),
+      ).toHaveValue('ada@example.com');
       expect(box).not.toBeChecked();
       const send = () =>
         fireEvent.click(

@@ -3087,7 +3087,7 @@
   "product_freeStepTitle": "Waar mogen we het naartoe sturen?",
   "product_paidStepTitle": "Voordat je betaalt",
   "product_emailLabel": "E-mail",
-  "product_emailHelpText": "Je downloadlink komt hier naartoe.",
+  "product_emailForDownloadLabel": "E-mail voor je download",
   "product_emailSuggestionText": "Bedoelde je {email}?",
   "product_amountLabel": "Jouw prijs",
   "product_amountHelpText": "Betaal {minimum} of meer.",

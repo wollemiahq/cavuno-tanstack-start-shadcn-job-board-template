@@ -215,6 +215,10 @@ export function ProductCheckoutForm({
     }
   }
 
+  // A free product's title already asks where to send it.
+  const emailLabel = free
+    ? m.product_emailLabel()
+    : m.product_emailForDownloadLabel();
   const ctaLabel = free
     ? m.product_sendFilesAction()
     : m.product_continueToPaymentAction();
@@ -229,9 +233,7 @@ export function ProductCheckoutForm({
     >
       <FieldGroup className="gap-4">
         <Field data-invalid={Boolean(errors.email) || undefined}>
-          <FieldLabel htmlFor={`${id}-email`}>
-            {m.product_emailLabel()}
-          </FieldLabel>
+          <FieldLabel htmlFor={`${id}-email`}>{emailLabel}</FieldLabel>
           <Input
             id={`${id}-email`}
             type="email"
@@ -259,9 +261,7 @@ export function ProductCheckoutForm({
                 emailSuggestion.clear();
               }}
             />
-          ) : (
-            <FieldDescription>{m.product_emailHelpText()}</FieldDescription>
-          )}
+          ) : null}
         </Field>
 
         {payWhatYouWant ? (
