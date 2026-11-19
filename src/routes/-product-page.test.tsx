@@ -772,7 +772,7 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
     });
     await waitFor(() =>
       expect(
-        within(dialog).getByLabelText(m.product_emailLabel()),
+        within(dialog).getByLabelText(m.product_emailForDownloadLabel()),
       ).toHaveFocus(),
     );
 
@@ -797,9 +797,10 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
     const dialog = await screen.findByRole('dialog', {
       name: m.product_paidStepTitle(),
     });
-    fireEvent.change(within(dialog).getByLabelText(m.product_emailLabel()), {
-      target: { value: 'ada@example.com' },
-    });
+    const email = within(dialog).getByLabelText(
+      m.product_emailForDownloadLabel(),
+    );
+    fireEvent.change(email, { target: { value: 'ada@example.com' } });
     fireEvent.click(
       within(dialog).getByRole('button', {
         name: m.product_continueToPaymentAction(),
@@ -832,9 +833,10 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
     const dialog = await screen.findByRole('dialog', {
       name: m.product_paidStepTitle(),
     });
-    fireEvent.change(within(dialog).getByLabelText(m.product_emailLabel()), {
-      target: { value: 'ada@example.com' },
-    });
+    const email = within(dialog).getByLabelText(
+      m.product_emailForDownloadLabel(),
+    );
+    fireEvent.change(email, { target: { value: 'ada@example.com' } });
     fireEvent.click(
       within(dialog).getByRole('button', {
         name: m.product_continueToPaymentAction(),

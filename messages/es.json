@@ -3087,7 +3087,7 @@
   "product_freeStepTitle": "¿A dónde te lo enviamos?",
   "product_paidStepTitle": "Antes de pagar",
   "product_emailLabel": "Correo electrónico",
-  "product_emailHelpText": "Tu enlace de descarga llegará aquí.",
+  "product_emailForDownloadLabel": "Correo electrónico para tu descarga",
   "product_emailSuggestionText": "¿Querías decir {email}?",
   "product_amountLabel": "Tu precio",
   "product_amountHelpText": "Paga {minimum} o más.",

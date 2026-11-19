@@ -3227,7 +3227,7 @@
   "product_freeStepTitle": "Gdzie mamy to wysłać?",
   "product_paidStepTitle": "Zanim zapłacisz",
   "product_emailLabel": "E-mail",
-  "product_emailHelpText": "Tu wyślemy link do pobrania.",
+  "product_emailForDownloadLabel": "E-mail na link do pobrania",
   "product_emailSuggestionText": "Czy chodziło o {email}?",
   "product_amountLabel": "Twoja cena",
   "product_amountHelpText": "Zapłać {minimum} lub więcej.",
