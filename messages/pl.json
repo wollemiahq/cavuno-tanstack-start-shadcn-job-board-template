@@ -3229,7 +3229,6 @@
   "product_emailLabel": "E-mail",
   "product_emailHelpText": "Tu wyślemy link do pobrania.",
   "product_emailSuggestionText": "Czy chodziło o {email}?",
-  "product_emailSuggestionAction": "Użyj",
   "product_amountLabel": "Twoja cena",
   "product_amountHelpText": "Zapłać {minimum} lub więcej.",
   "product_amountBelowMinimumText": "Minimalna kwota to {minimum}.",
