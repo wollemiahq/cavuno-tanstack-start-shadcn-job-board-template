@@ -314,6 +314,19 @@ describe('/employers/invites/accept loader', () => {
     });
   });
 
+  it('explains a pending invite the board has overruled by removing access', async () => {
+    mocks.acceptCompanyInvite.mockResolvedValue({
+      ok: false,
+      code: 'company_access_removed',
+      message: 'removed',
+    });
+    mocks.previewCompanyInvite.mockResolvedValue(pendingPreview('employer'));
+
+    expect(await runInviteLoader()).toMatchObject({
+      state: { mode: 'access-removed', company },
+    });
+  });
+
   it('treats a session the API rejects as signed out', async () => {
     mocks.acceptCompanyInvite.mockResolvedValue({
       ok: false,

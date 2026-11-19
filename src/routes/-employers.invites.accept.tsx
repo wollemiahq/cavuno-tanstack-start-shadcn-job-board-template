@@ -168,6 +168,15 @@ export async function loadAcceptInvite(
     };
     return { seo, token, state };
   }
+  // The board removed or denied this person after the invite was sent; the
+  // invite stays pending but only the board can reinstate them.
+  if (result.code === 'company_access_removed') {
+    const state: InviteJoinState = {
+      mode: 'access-removed',
+      company: preview?.company ?? null,
+    };
+    return { seo, token, state };
+  }
   // The invite is still valid, so this accept failed for another reason (rate
   // limit, outage): report it rather than call the invite no longer valid.
   if (preview?.status === 'pending') throw new Error(result.message);

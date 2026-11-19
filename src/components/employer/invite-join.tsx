@@ -79,7 +79,9 @@ export type InviteJoinState =
       company: InviteCompany | null;
     }
   /** The invited email belongs to a job-seeker account. */
-  | { mode: 'candidate'; company: InviteCompany | null; email: string | null };
+  | { mode: 'candidate'; company: InviteCompany | null; email: string | null }
+  /** The board removed this person from the company; only it can reinstate them. */
+  | { mode: 'access-removed'; company: InviteCompany | null };
 
 type ActionFailure = { ok: false; code?: string; message: string };
 
@@ -242,6 +244,8 @@ export function InviteJoinView({
       );
     case 'candidate':
       return <InviteCandidateCard state={state} board={board} />;
+    case 'access-removed':
+      return <InviteAccessRemovedCard state={state} board={board} />;
     case 'unavailable':
       return <InviteUnavailableCard state={state} board={board} />;
   }
@@ -721,6 +725,37 @@ function InviteUnavailableCard({
           {m.employerInviteJoin_unavailableHint()}
         </AlertDescription>
       </Alert>
+      <ContactBoardLink board={board} />
+    </AuthCard>
+  );
+}
+
+function InviteAccessRemovedCard({
+  state,
+  board,
+}: {
+  state: Extract<InviteJoinState, { mode: 'access-removed' }>;
+  board: InviteJoinBoard;
+}) {
+  return (
+    <AuthCard
+      title={m.employerInviteJoin_accessRemovedTitle()}
+      supportingText={
+        state.company
+          ? m.employerInviteJoin_accessRemovedBody({
+              board: board.name,
+              company: state.company.name,
+            })
+          : m.employerInviteJoin_accessRemovedBodyNoCompany({
+              board: board.name,
+            })
+      }
+      mark={
+        state.company ? (
+          <InviteCompanyMark company={state.company} board={board} muted />
+        ) : undefined
+      }
+    >
       <ContactBoardLink board={board} />
     </AuthCard>
   );
