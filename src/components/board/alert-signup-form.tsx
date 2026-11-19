@@ -21,8 +21,9 @@
  * a matching subscription. When the API refuses the address because its
  * domain has no mail server (`email_domain_undeliverable`), resolve with
  * that status and the error's `details.suggestion`: the form says so and
- * offers the correction. The same "Did you mean" hint shows on blur, from
- * the shared `EmailSuggestionHint`.
+ * offers the correction in one line. The same correction shows as a muted
+ * "Did you mean" hint on blur. Both come from the shared
+ * `EmailSuggestionHint`.
  */
 import { useId, useState } from 'react';
 
@@ -102,9 +103,7 @@ export function AlertSignupForm({
       ? vm.messages.submitted
       : status === 'error'
         ? vm.messages.error
-        : status === 'undeliverable'
-          ? vm.messages.undeliverable
-          : null;
+        : null;
 
   return (
     <section aria-label={vm.sectionAriaLabel}>
@@ -206,8 +205,11 @@ export function AlertSignupForm({
                   {status === 'pending' ? vm.subscribingLabel : vm.buttonText}
                 </Button>
               </ButtonGroup>
+              {/* The one message for this field when the domain is refused:
+                  the refusal and its correction in one line. */}
               <EmailSuggestionHint
                 suggestion={emailSuggestion.suggestion}
+                refused={status === 'undeliverable'}
                 disabled={status === 'pending'}
                 onAccept={(suggested) => {
                   setEmail(suggested);

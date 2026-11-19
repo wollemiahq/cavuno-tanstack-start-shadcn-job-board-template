@@ -184,28 +184,40 @@ describe('AlertSignupForm submission', () => {
     expect(onSubscribe).toHaveBeenCalledTimes(1);
   });
 
-  it('says why an undeliverable address was refused and offers the API correction', async () => {
+  it('says in one line why an undeliverable address was refused, with the API correction', async () => {
     const pushes = captureDataLayer();
+    const onSubscribe = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 'email_domain_undeliverable' })
+      .mockResolvedValueOnce({
+        status: 'email_domain_undeliverable',
+        suggestion: 'person@outlook.com',
+      });
     render(
       <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
-        <AlertSignupForm
-          language="en"
-          onSubscribe={vi.fn().mockResolvedValue({
-            status: 'email_domain_undeliverable',
-            suggestion: 'person@outlook.com',
-          })}
-        />
+        <AlertSignupForm language="en" onSubscribe={onSubscribe} />
       </BoardConversionAnalyticsProvider>,
     );
 
     const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
-    // A domain the blur check leaves alone, so the hint can only be the API's.
+    // A domain the blur check leaves alone, so a correction can only be the
+    // API's.
     fireEvent.change(input, { target: { value: 'person@outlook.zz' } });
     fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
-
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      copy.emailUndeliverableText,
+      m.boardError_emailDomainUndeliverableText(),
     );
+
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
+    await screen.findByRole('button', { name: 'person@outlook.com' });
+    // One message under the field: the refusal and its correction together.
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.boardError_emailDomainUndeliverableSuggestionText({
+        email: 'person@outlook.com',
+      }),
+    );
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(pushes).toEqual([]);
 

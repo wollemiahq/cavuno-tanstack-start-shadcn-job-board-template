@@ -226,41 +226,52 @@ describe('/auth/sign-up mistyped email', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('says why an undeliverable address was refused, then signs up with the correction', async () => {
+  it('shows a refused address under the email field, then signs up with the correction', async () => {
     const refusal = {
       ok: false,
       code: 'email_domain_undeliverable',
       message: 'This email address cannot receive mail.',
-      suggestion: 'ada@outlook.com',
     };
     mocks.signUp
       .mockResolvedValueOnce(refusal)
-      .mockResolvedValueOnce(refusal)
+      .mockResolvedValueOnce({ ...refusal, suggestion: 'ada@outlook.com' })
       .mockResolvedValueOnce({ ok: true });
     const email = await renderSignUp();
-    // A domain the blur check leaves alone, so the hint can only be the API's.
+    const emailField = email.closest('[data-slot="field"]');
+    // A domain the blur check leaves alone, so a correction can only be the
+    // API's.
     fireEvent.change(email, { target: { value: 'ada@outlook.zz' } });
     const submit = screen.getByRole('button', {
       name: m.authSignUp_submitLabel(),
     });
     fireEvent.click(submit);
 
-    expect(
-      await screen.findByText(m.boardError_emailDomainUndeliverableText()),
-    ).toBeVisible();
+    const plain = await screen.findByRole('alert');
+    expect(plain).toHaveTextContent(
+      m.boardError_emailDomainUndeliverableText(),
+    );
+    // The email field's own error, not the form's under the password.
+    expect(emailField).toContainElement(plain);
+    expect(email).toHaveAttribute('aria-invalid', 'true');
     // Typing over the refused address takes the refusal away with it.
     fireEvent.change(email, { target: { value: 'ada@outlook.z' } });
-    expect(
-      screen.queryByText(m.boardError_emailDomainUndeliverableText()),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(email).not.toHaveAttribute('aria-invalid');
 
     fireEvent.click(submit);
-    await screen.findByText(m.boardError_emailDomainUndeliverableText());
-    fireEvent.click(screen.getByRole('button', { name: 'ada@outlook.com' }));
+    const accept = await screen.findByRole('button', {
+      name: 'ada@outlook.com',
+    });
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.boardError_emailDomainUndeliverableSuggestionText({
+        email: 'ada@outlook.com',
+      }),
+    );
+    expect(emailField).toContainElement(screen.getByRole('alert'));
+    fireEvent.click(accept);
     expect(email).toHaveValue('ada@outlook.com');
-    expect(
-      screen.queryByText(m.boardError_emailDomainUndeliverableText()),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
     fireEvent.click(submit);
     await screen.findByRole('link', { name: m.authSignUp_goToAccountLabel() });

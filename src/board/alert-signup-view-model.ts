@@ -29,11 +29,8 @@ export interface AlertSignupVM {
   submitAriaLabel: string;
   subscribingLabel: string;
   buttonText: string;
-  /**
-   * The privacy-preserving subscribe result and failure messages, plus the
-   * refusal of an address whose domain has no mail server.
-   */
-  messages: { submitted: string; error: string; undeliverable: string };
+  /** The privacy-preserving subscribe result and failure messages. */
+  messages: { submitted: string; error: string };
 }
 
 export function toAlertSignupVM(_language: string): AlertSignupVM {
@@ -49,7 +46,6 @@ export function toAlertSignupVM(_language: string): AlertSignupVM {
     messages: {
       submitted: copy.jobAlertSuccessToast,
       error: copy.jobAlertErrorToast,
-      undeliverable: copy.emailUndeliverableText,
     },
   };
 }

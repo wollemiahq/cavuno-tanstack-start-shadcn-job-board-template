@@ -335,16 +335,15 @@ function RegistrationForm({
   const [consentChecked, setConsentChecked] = useState(false);
   const [email, setEmail] = useState('');
   const emailSuggestion = useEmailSuggestion();
+  // A refused domain is the email field's error, shown under that field
+  // rather than as the form's error under the password.
+  const emailRefused =
+    status.state === 'error' && status.code === 'email_domain_undeliverable';
   const changeEmail = (next: string) => {
     setEmail(next);
     emailSuggestion.clear();
-    // A refused domain was about the address just replaced.
-    if (
-      status.state === 'error' &&
-      status.code === 'email_domain_undeliverable'
-    ) {
-      onStatusChange({ state: 'idle' });
-    }
+    // The refusal was about the address just replaced.
+    if (emailRefused) onStatusChange({ state: 'idle' });
   };
 
   return (
@@ -398,9 +397,11 @@ function RegistrationForm({
         value={email}
         onChange={changeEmail}
         onBlur={emailSuggestion.check}
+        invalid={emailRefused}
       >
         <EmailSuggestionHint
           suggestion={emailSuggestion.suggestion}
+          refused={emailRefused}
           disabled={pending}
           onAccept={changeEmail}
         />
@@ -443,7 +444,7 @@ function RegistrationForm({
           </span>
         </FieldLabel>
       ) : null}
-      {status.state === 'error' ? (
+      {status.state === 'error' && !emailRefused ? (
         <FieldError>{status.message}</FieldError>
       ) : null}
       <Button
@@ -468,6 +469,7 @@ function RegistrationField({
   value,
   onChange,
   onBlur,
+  invalid = false,
   children,
 }: {
   label: string;
@@ -479,6 +481,8 @@ function RegistrationField({
   value?: string;
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
+  /** The field's value was refused; its message goes in `children`. */
+  invalid?: boolean;
   /** Shown under the input, such as a hint. */
   children?: React.ReactNode;
 }) {
@@ -492,6 +496,7 @@ function RegistrationField({
         autoComplete={autoComplete}
         minLength={minLength}
         required
+        aria-invalid={invalid || undefined}
         value={value}
         onChange={
           onChange ? (event) => onChange(event.target.value) : undefined

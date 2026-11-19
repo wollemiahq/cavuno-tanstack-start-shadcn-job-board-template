@@ -126,8 +126,8 @@ const BUDGETS = {
     // Home head + ItemList JSON-LD live in getHomePage, so the ~5 KiB gzip
     // seo client chunk no longer rides the `/` route increment. Rebaseline
     // to measured post-move increment + small headroom.
-    // Typo hint (see /auth/verify-email-required): +1,977 / +1,173.
-    '/': { raw: 49_977, gzip: 21_173 },
+    // Typo hint (see /auth/verify-email-required): +2,223 / +1,334.
+    '/': { raw: 50_223, gzip: 21_334 },
     // Rebaselined for the intentional RTL-aware Recharts axis support. Keep
     // the increase narrow: the measured route is ~800.6 kB raw.
     '/employers/companies/$slug/profile': { raw: 1_057_500, gzip: 342_000 },
@@ -265,8 +265,8 @@ const BUDGETS = {
     // Custom field display (see /talent/): +10,550 / +4,623.
     '/saved-jobs': { raw: 133_550, gzip: 50_623 },
     // Custom field display (see /talent/): +10,566 / +4,639.
-    // Typo hint (see /auth/verify-email-required): +1,788 / +1,032.
-    '/companies/$companySlug/jobs/$jobSlug': { raw: 124_854, gzip: 50_171 },
+    // Typo hint (see /auth/verify-email-required): +2,034 / +1,194.
+    '/companies/$companySlug/jobs/$jobSlug': { raw: 125_100, gzip: 50_333 },
     // The public profile's "Verified" badge on experience and education
     // (#332), with its two labels: measured 113,502 B raw / 43,120 B gzip
     // against main's 112,747 / 42,815 (+755 / +305). Raised by exactly the
@@ -284,9 +284,9 @@ const BUDGETS = {
     // when an unlock is free, with its plural message. Measured 128,759 B
     // raw / 49,917 B gzip against main's 127,781 / 49,657 (+978 / +260).
     // Raised by exactly the measured growth, keeping main's headroom.
-    // Typo hint (see /auth/verify-email-required): +267 / +183, the
+    // Typo hint (see /auth/verify-email-required): +267 / +217, the
     // refused-domain message in the shared error messages.
-    '/p/$handle': { raw: 129_305, gzip: 50_165 },
+    '/p/$handle': { raw: 129_305, gzip: 50_199 },
     // /email-preferences as section cards: one switch for all job alerts,
     // and a ⋯ menu per alert to pause, resume or delete it. Main measured
     // 79,619 B raw / 29,653 B gzip against the 80,000 / 30,000 default
@@ -298,14 +298,14 @@ const BUDGETS = {
     '/email-preferences': { raw: 162_707, gzip: 61_059 },
     '/settings': { raw: 100_500, gzip: 37_500 },
     // The email typo hint ("Did you mean jane@gmail.com?") on sign-up and
-    // the job alert form: the hint, its message and the refused-domain
-    // message. The domain checker itself loads on the first blur. Raised
+    // the job alert form: the hint, its message, and the refused-domain
+    // messages (alone, and with the correction in the same line). The domain checker itself loads on the first blur. Raised
     // by exactly the measured growth over main, keeping main's headroom.
-    // Measured 90,051 B raw / 37,032 B gzip against main's 87,951 / 35,791
-    // (+2,100 / +1,241); the sign-up form shares this route's auth chunk.
-    '/auth/verify-email-required': { raw: 91_100, gzip: 37_241 },
-    // Typo hint (see /auth/verify-email-required): +1,911 / +1,088.
-    '/employers/invites/accept': { raw: 78_911, gzip: 32_088 },
+    // Measured 90,536 B raw / 37,266 B gzip against main's 87,951 / 35,768
+    // (+2,585 / +1,498); the sign-up form shares this route's auth chunk.
+    '/auth/verify-email-required': { raw: 91_585, gzip: 37_498 },
+    // Typo hint (see /auth/verify-email-required): +2,396 / +1,349.
+    '/employers/invites/accept': { raw: 79_396, gzip: 32_349 },
   },
 };
 
