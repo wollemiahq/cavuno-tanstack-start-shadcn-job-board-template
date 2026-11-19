@@ -30,6 +30,7 @@ import { dottedCodec, emailLink } from './email-link';
 import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
+  ListEnvelope,
   UnsubscribeBody,
   UpdateNotificationPreferenceBody,
 } from '@cavuno/board';
@@ -256,17 +257,9 @@ export interface ConnectedAssistant {
   lastUsedAt: string;
 }
 
-interface ConnectedAssistantList {
-  object: 'list';
-  data: ConnectedAssistant[];
-  hasMore: boolean;
-  nextCursor: string | null;
-}
-
 /**
  * The person's connected assistants, newest first (up to 50). Empty, with
- * no call, while the board doesn't serve its MCP server (`features.mcp`),
- * and from an API that predates the endpoint (404).
+ * no call, while the board doesn't serve its MCP server (`features.mcp`).
  */
 export const getConnectedAssistants = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
@@ -276,16 +269,10 @@ export const getConnectedAssistants = createServerFn({ method: 'GET' })
       if (!readMcpServerFlag(features)) return [];
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
-      try {
-        const list = await getBoard().client.fetch<ConnectedAssistantList>(
-          '/me/assistants',
-          { headers },
-        );
-        return list.data;
-      } catch (error) {
-        if (isBoardApiError(error) && error.status === 404) return [];
-        throw error;
-      }
+      const list = await getBoard().client.fetch<
+        ListEnvelope<ConnectedAssistant>
+      >('/me/assistants', { headers });
+      return list.data;
     }),
   );
 

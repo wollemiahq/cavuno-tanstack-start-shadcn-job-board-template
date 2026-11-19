@@ -175,7 +175,13 @@ export function createSettingsLoader(
         dependencies.getNotificationPreferences(),
         dependencies.getMarketingConsent(),
         dependencies.getSettingsAccount(),
-        dependencies.getConnectedAssistants(),
+        // The assistants card is optional: a failed read (an API that
+        // predates the endpoint, a 5xx, rate limiting) hides it instead of
+        // failing the page. Redirects and sign-in problems still apply.
+        dependencies.getConnectedAssistants().catch((error) => {
+          if (isRedirect(error) || candidateLoaderError(error)) throw error;
+          return [];
+        }),
       ]);
       return {
         mode: 'settings' as const,
@@ -476,7 +482,6 @@ function SignedInSettings({
           assistants={assistants}
           board={boardName}
           disconnect={dependencies.disconnectAssistant}
-          listAssistants={dependencies.getConnectedAssistants}
         />
         <DangerZone />
       </div>

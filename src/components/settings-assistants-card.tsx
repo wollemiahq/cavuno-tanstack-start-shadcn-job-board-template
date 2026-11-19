@@ -8,7 +8,6 @@ import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import {
   disconnectAssistant,
-  getConnectedAssistants,
   type ConnectedAssistant,
 } from '../server/settings';
 
@@ -43,14 +42,12 @@ export function SettingsAssistantsCard({
   assistants: initialAssistants,
   board,
   disconnect = disconnectAssistant,
-  listAssistants = getConnectedAssistants,
 }: {
   assistants: ConnectedAssistant[];
   board: string;
   disconnect?: (options: {
     data: { assistantId: string };
   }) => ReturnType<typeof disconnectAssistant>;
-  listAssistants?: () => ReturnType<typeof getConnectedAssistants>;
 }) {
   const [assistants, setAssistants] = useState(initialAssistants);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -74,11 +71,6 @@ export function SettingsAssistantsCard({
       void toastActionSuccess(
         m.settingsAssistants_disconnectedText({ name: assistant.name }),
       );
-      if (!result.ok) {
-        // Already gone (disconnected elsewhere): read the list again. The
-        // row is dropped either way, so a failed read changes nothing.
-        listAssistants().then(setAssistants, () => undefined);
-      }
     } catch {
       void toastActionError();
     } finally {

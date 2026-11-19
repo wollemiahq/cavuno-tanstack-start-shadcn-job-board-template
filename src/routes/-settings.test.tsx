@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { BoardApiError } from '@cavuno/board';
-import { formatDate } from '@cavuno/board/format';
 import {
   RouterProvider,
   isRedirect,
@@ -30,7 +29,6 @@ import {
 import type { ConnectedAssistant } from '../server/settings';
 import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
-import { getLocale } from '@/paraglide/runtime';
 
 const requestEmailChange =
   vi.fn<SettingsRouteDependencies['requestEmailChange']>();
@@ -676,12 +674,10 @@ describe('signed-in settings connected assistants', () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toHaveTextContent(claude.name);
     expect(rows[0]).toHaveTextContent('claude.ai');
-    expect(rows[0]).toHaveTextContent(
-      m.settingsAssistants_datesText({
-        connected: formatDate(getLocale(), claude.connectedAt) ?? '',
-        lastUsed: formatDate(getLocale(), claude.lastUsedAt) ?? '',
-      }),
-    );
+    // Formatting is the SDK's to pin; here, both dates are shown, not raw.
+    expect(rows[0].querySelector('p')).not.toBeNull();
+    expect(rows[0]).not.toHaveTextContent(claude.connectedAt);
+    expect(rows[0]).not.toHaveTextContent(claude.lastUsedAt);
     expect(rows[1]).toHaveTextContent(local.name);
     expect(rows[1].querySelector('[data-slot="item-description"]')).toBeNull();
   });
@@ -711,13 +707,12 @@ describe('signed-in settings connected assistants', () => {
     expect(getConnectedAssistants).not.toHaveBeenCalled();
   });
 
-  it('treats an assistant that is already gone as removed and refreshes the list', async () => {
+  it('treats an assistant that is already gone as removed', async () => {
     disconnectAssistant.mockResolvedValue({
       ok: false,
       code: 'assistant_not_found',
       message: 'Assistant not found',
     });
-    getConnectedAssistants.mockResolvedValue([]);
     await renderSettings({ assistants: [claude] });
 
     fireEvent.click(disconnectButton(claude.name));
@@ -725,7 +720,21 @@ describe('signed-in settings connected assistants', () => {
     await waitFor(() => {
       expect(card()).toBeNull();
     });
-    expect(getConnectedAssistants).toHaveBeenCalledOnce();
+  });
+
+  it('still loads the page when the assistants read fails', async () => {
+    getConnectedAssistants.mockRejectedValue(new Error('Board API 503'));
+    const loader = createSettingsLoader({
+      ...dependencies,
+      getNotificationPreferences: vi.fn().mockResolvedValue({ data: [] }),
+      getMarketingConsent: vi.fn().mockResolvedValue(null),
+      getSettingsAccount: vi.fn().mockResolvedValue(account),
+    });
+
+    await expect(loader(settingsLoaderContext({}))).resolves.toMatchObject({
+      mode: 'settings',
+      assistants: [],
+    });
   });
 
   it('keeps the row when the disconnect fails', async () => {
