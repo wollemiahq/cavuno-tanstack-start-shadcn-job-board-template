@@ -7,6 +7,10 @@ import { m } from '../paraglide/messages';
 import { AuthDivider } from './auth-form';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import {
+  EmailSuggestionHint,
+  useEmailSuggestion,
+} from '@/components/email-suggestion-hint';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -150,7 +154,13 @@ type RegistrationCopy = {
 
 type RegistrationResult =
   | { ok: true }
-  | { ok: false; code?: string; message: string };
+  | {
+      ok: false;
+      code?: string;
+      message: string;
+      /** The API's corrected address for an `email_domain_undeliverable` refusal. */
+      suggestion?: string;
+    };
 type RegistrationSubmitValues = {
   displayName: string;
   email: string;
@@ -177,7 +187,7 @@ export type MarketingConsentCopy = {
 type RegistrationStatus =
   | { state: 'idle' }
   | { state: 'pending' }
-  | { state: 'error'; message: string }
+  | { state: 'error'; message: string; code?: string }
   | { state: 'success' };
 
 export function RegistrationPage({
@@ -323,6 +333,18 @@ function RegistrationForm({
 }) {
   const pending = status.state === 'pending';
   const [consentChecked, setConsentChecked] = useState(false);
+  const [email, setEmail] = useState('');
+  const emailSuggestion = useEmailSuggestion();
+  // A refused domain is the email field's error, shown under that field
+  // rather than as the form's error under the password.
+  const emailRefused =
+    status.state === 'error' && status.code === 'email_domain_undeliverable';
+  const changeEmail = (next: string) => {
+    setEmail(next);
+    emailSuggestion.clear();
+    // The refusal was about the address just replaced.
+    if (emailRefused) onStatusChange({ state: 'idle' });
+  };
 
   return (
     <form
@@ -342,10 +364,17 @@ function RegistrationForm({
             values.marketingConsent = consentChecked;
           }
           const result = await onSubmit(values);
+          if (!result.ok && result.code === 'email_domain_undeliverable') {
+            emailSuggestion.offer(result.suggestion);
+          }
           onStatusChange(
             result.ok
               ? { state: 'success' }
-              : { state: 'error', message: boardErrorMessage(result) },
+              : {
+                  state: 'error',
+                  message: boardErrorMessage(result),
+                  code: result.code,
+                },
           );
         } catch {
           onStatusChange({
@@ -365,7 +394,18 @@ function RegistrationForm({
         name="email"
         type="email"
         autoComplete="email"
-      />
+        value={email}
+        onChange={changeEmail}
+        onBlur={emailSuggestion.check}
+        invalid={emailRefused}
+      >
+        <EmailSuggestionHint
+          suggestion={emailSuggestion.suggestion}
+          refused={emailRefused}
+          disabled={pending}
+          onAccept={changeEmail}
+        />
+      </RegistrationField>
       <RegistrationField
         label={copy.passwordLabel}
         name="password"
@@ -404,7 +444,7 @@ function RegistrationForm({
           </span>
         </FieldLabel>
       ) : null}
-      {status.state === 'error' ? (
+      {status.state === 'error' && !emailRefused ? (
         <FieldError>{status.message}</FieldError>
       ) : null}
       <Button
@@ -426,12 +466,25 @@ function RegistrationField({
   type = 'text',
   autoComplete,
   minLength,
+  value,
+  onChange,
+  onBlur,
+  invalid = false,
+  children,
 }: {
   label: string;
   name: string;
   type?: string;
   autoComplete?: string;
   minLength?: number;
+  /** Set together with `onChange` to control the field. */
+  value?: string;
+  onChange?: (value: string) => void;
+  onBlur?: (value: string) => void;
+  /** The field's value was refused; its message goes in `children`. */
+  invalid?: boolean;
+  /** Shown under the input, such as a hint. */
+  children?: React.ReactNode;
 }) {
   return (
     <FormField>
@@ -443,7 +496,14 @@ function RegistrationField({
         autoComplete={autoComplete}
         minLength={minLength}
         required
+        aria-invalid={invalid || undefined}
+        value={value}
+        onChange={
+          onChange ? (event) => onChange(event.target.value) : undefined
+        }
+        onBlur={onBlur ? (event) => onBlur(event.target.value) : undefined}
       />
+      {children}
     </FormField>
   );
 }
