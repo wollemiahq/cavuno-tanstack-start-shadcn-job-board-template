@@ -208,6 +208,7 @@ export function AlertSignupForm({
               </ButtonGroup>
               <EmailSuggestionHint
                 suggestion={emailSuggestion.suggestion}
+                disabled={status === 'pending'}
                 onAccept={(suggested) => {
                   setEmail(suggested);
                   emailSuggestion.clear();

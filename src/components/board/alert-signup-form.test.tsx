@@ -8,6 +8,7 @@ import { AlertSignupForm } from './alert-signup-form';
 import { BoardConversionAnalyticsProvider } from '@/components/board-conversion-analytics';
 import { alertsCopy } from '@/copy-groups/alerts';
 import type { BoardDataLayerEvent } from '@/lib/board-datalayer-events';
+import { m } from '@/paraglide/messages';
 
 const copy = alertsCopy();
 
@@ -124,18 +125,42 @@ describe('AlertSignupForm submission', () => {
     const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
     fireEvent.change(input, { target: { value: 'person@example.com' } });
     fireEvent.blur(input);
-    expect(
-      screen.queryByRole('button', { name: 'person@gmail.com' }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'person@gmial.com' } });
+    fireEvent.blur(input);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      m.product_emailSuggestionText({ email: 'person@gmail.com' }),
+    );
+    // Editing the address hides a hint about the old one.
+    fireEvent.change(input, { target: { value: 'person@gmial.co' } });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
 
     fireEvent.change(input, { target: { value: 'person@gmial.com' } });
     fireEvent.blur(input);
     fireEvent.click(screen.getByRole('button', { name: 'person@gmail.com' }));
 
     expect(input).toHaveValue('person@gmail.com');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('keeps the hint inert while a subscribe is pending', () => {
+    const onSubscribe = vi.fn(
+      () => new Promise<{ status: 'submitted' }>(() => {}),
+    );
+    render(<AlertSignupForm language="en" onSubscribe={onSubscribe} />);
+
+    const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
+    fireEvent.change(input, { target: { value: 'person@gmial.com' } });
+    fireEvent.blur(input);
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
+    fireEvent.click(screen.getByRole('button', { name: 'person@gmail.com' }));
+
+    expect(input).toHaveValue('person@gmial.com');
     expect(
-      screen.queryByRole('button', { name: 'person@gmail.com' }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('button', { name: copy.submitAriaLabel }),
+    ).toBeDisabled();
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('says why an undeliverable address was refused and offers the API correction', async () => {

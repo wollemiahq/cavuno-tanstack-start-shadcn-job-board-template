@@ -187,7 +187,7 @@ export type MarketingConsentCopy = {
 type RegistrationStatus =
   | { state: 'idle' }
   | { state: 'pending' }
-  | { state: 'error'; message: string }
+  | { state: 'error'; message: string; code?: string }
   | { state: 'success' };
 
 export function RegistrationPage({
@@ -335,6 +335,17 @@ function RegistrationForm({
   const [consentChecked, setConsentChecked] = useState(false);
   const [email, setEmail] = useState('');
   const emailSuggestion = useEmailSuggestion();
+  const changeEmail = (next: string) => {
+    setEmail(next);
+    emailSuggestion.clear();
+    // A refused domain was about the address just replaced.
+    if (
+      status.state === 'error' &&
+      status.code === 'email_domain_undeliverable'
+    ) {
+      onStatusChange({ state: 'idle' });
+    }
+  };
 
   return (
     <form
@@ -360,7 +371,11 @@ function RegistrationForm({
           onStatusChange(
             result.ok
               ? { state: 'success' }
-              : { state: 'error', message: boardErrorMessage(result) },
+              : {
+                  state: 'error',
+                  message: boardErrorMessage(result),
+                  code: result.code,
+                },
           );
         } catch {
           onStatusChange({
@@ -381,20 +396,13 @@ function RegistrationForm({
         type="email"
         autoComplete="email"
         value={email}
-        onChange={(next) => {
-          setEmail(next);
-          emailSuggestion.clear();
-        }}
+        onChange={changeEmail}
         onBlur={emailSuggestion.check}
       >
         <EmailSuggestionHint
           suggestion={emailSuggestion.suggestion}
-          onAccept={(suggested) => {
-            setEmail(suggested);
-            emailSuggestion.clear();
-            // The refusal was about the address just replaced.
-            if (status.state === 'error') onStatusChange({ state: 'idle' });
-          }}
+          disabled={pending}
+          onAccept={changeEmail}
         />
       </RegistrationField>
       <RegistrationField

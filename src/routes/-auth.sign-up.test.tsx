@@ -215,6 +215,9 @@ describe('/auth/sign-up mistyped email', () => {
     const email = await renderSignUp();
     fireEvent.change(email, { target: { value: 'ada@hotmial.com' } });
     fireEvent.blur(email);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      m.product_emailSuggestionText({ email: 'ada@hotmail.com' }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'ada@hotmail.com' }));
 
     expect(email).toHaveValue('ada@hotmail.com');
@@ -224,13 +227,15 @@ describe('/auth/sign-up mistyped email', () => {
   });
 
   it('says why an undeliverable address was refused, then signs up with the correction', async () => {
+    const refusal = {
+      ok: false,
+      code: 'email_domain_undeliverable',
+      message: 'This email address cannot receive mail.',
+      suggestion: 'ada@outlook.com',
+    };
     mocks.signUp
-      .mockResolvedValueOnce({
-        ok: false,
-        code: 'email_domain_undeliverable',
-        message: 'This email address cannot receive mail.',
-        suggestion: 'ada@outlook.com',
-      })
+      .mockResolvedValueOnce(refusal)
+      .mockResolvedValueOnce(refusal)
       .mockResolvedValueOnce({ ok: true });
     const email = await renderSignUp();
     // A domain the blur check leaves alone, so the hint can only be the API's.
@@ -243,6 +248,14 @@ describe('/auth/sign-up mistyped email', () => {
     expect(
       await screen.findByText(m.boardError_emailDomainUndeliverableText()),
     ).toBeVisible();
+    // Typing over the refused address takes the refusal away with it.
+    fireEvent.change(email, { target: { value: 'ada@outlook.z' } });
+    expect(
+      screen.queryByText(m.boardError_emailDomainUndeliverableText()),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(submit);
+    await screen.findByText(m.boardError_emailDomainUndeliverableText());
     fireEvent.click(screen.getByRole('button', { name: 'ada@outlook.com' }));
     expect(email).toHaveValue('ada@outlook.com');
     expect(

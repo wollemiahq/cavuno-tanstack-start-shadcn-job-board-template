@@ -491,7 +491,6 @@
   "boardError_companyRequiredText": "Wybierz firmę, aby kontynuować.",
   "boardError_emailTakenText": "Konto z tym adresem e-mail już istnieje.",
   "boardError_emailDomainUndeliverableText": "Nie możemy wysłać e-maila na ten adres. Sprawdź, czy nie ma w nim literówki.",
-  "emailSuggestion_didYouMeanText": "Czy chodziło Ci o {email}?",
   "boardError_forbiddenText": "Nie masz uprawnień do tej operacji.",
   "boardError_freeEmailWebsiteText": "Nie możesz używać darmowych domen e-mail jako strony internetowej firmy.",
   "boardError_genericText": "Coś poszło nie tak. Spróbuj ponownie.",

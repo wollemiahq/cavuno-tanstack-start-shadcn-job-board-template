@@ -30,27 +30,34 @@ export function useEmailSuggestion() {
 
 const EMAIL_SLOT = '\u0000';
 
-/** "Did you mean jane@gmail.com?", where one tap on the address takes it. */
+/**
+ * "Did you mean jane@gmail.com?", where one tap on the address takes it.
+ * Pass `disabled` while the form is submitting: taking a correction then
+ * would change the address under a request already sent.
+ */
 export function EmailSuggestionHint({
   suggestion,
   onAccept,
+  disabled = false,
 }: {
   suggestion: string | null;
   onAccept: (email: string) => void;
+  disabled?: boolean;
 }) {
   if (!suggestion) return null;
   // The sentence is one message so each language orders it its own way; the
   // address is the button inside it.
   const [before = '', after = ''] = m
-    .emailSuggestion_didYouMeanText({ email: EMAIL_SLOT })
+    .product_emailSuggestionText({ email: EMAIL_SLOT })
     .split(EMAIL_SLOT);
   return (
-    <FieldDescription data-test="email-suggestion">
+    <FieldDescription role="status" data-test="email-suggestion">
       {before}
       <button
         type="button"
         className={textActionClass}
         data-test="email-suggestion-accept"
+        disabled={disabled}
         onClick={() => onAccept(suggestion)}
       >
         {suggestion}
