@@ -728,6 +728,13 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
           : m.product_paidStepTitle(),
       });
       expect(within(dialog).getByRole('form')).toBeInTheDocument();
+      // The box names the seller: the API checks the wording for it.
+      const boxName = m.emailPreferences_marketingConsent({
+        board: 'Example Board',
+      });
+      expect(
+        within(dialog).getByRole('checkbox', { name: boxName }),
+      ).not.toBeChecked();
       expect(
         within(railBehindDialog()).getByRole('button', {
           name: buyLabel,

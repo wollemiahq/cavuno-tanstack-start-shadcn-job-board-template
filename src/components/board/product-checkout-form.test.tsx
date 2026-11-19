@@ -234,6 +234,8 @@ describe('ProductCheckoutForm', () => {
         />,
       );
       const wording = m.emailPreferences_marketingConsent({ board: BOARD });
+      // The API refuses consent wording that doesn't name the board.
+      expect(wording).toContain(BOARD);
       const box = screen.getByRole('checkbox', { name: wording });
       expect(box).not.toBeChecked();
       const send = () =>
