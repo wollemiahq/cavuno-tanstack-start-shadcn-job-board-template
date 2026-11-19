@@ -3471,5 +3471,11 @@
   "emailPreferences_unsubscribeAllConfirm": "Se désabonner",
   "emailPreferences_cancel": "Annuler",
   "emailPreferences_unsubscribedAll": "Vous êtes désabonné(e) de tous les e-mails de {board}.",
-  "emailPreferences_actionError": "Ce n'a pas été enregistré. Réessayez."
+  "emailPreferences_actionError": "Ce n'a pas été enregistré. Réessayez.",
+  "settingsAssistants_title": "Assistants connectés",
+  "settingsAssistants_description": "Les assistants IA que vous avez autorisés à utiliser votre compte sur {board}.",
+  "settingsAssistants_datesText": "Connecté le {connected} · Dernière utilisation le {lastUsed}",
+  "settingsAssistants_disconnectLabel": "Déconnecter",
+  "settingsAssistants_disconnectAriaLabel": "Déconnecter {name}",
+  "settingsAssistants_disconnectedText": "{name} est déconnecté."
 }

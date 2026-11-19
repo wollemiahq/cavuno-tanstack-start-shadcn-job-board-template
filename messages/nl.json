@@ -3471,5 +3471,11 @@
   "emailPreferences_unsubscribeAllConfirm": "Afmelden",
   "emailPreferences_cancel": "Annuleren",
   "emailPreferences_unsubscribedAll": "Je bent afgemeld voor alle e-mails van {board}.",
-  "emailPreferences_actionError": "Dat is niet opgeslagen. Probeer het opnieuw."
+  "emailPreferences_actionError": "Dat is niet opgeslagen. Probeer het opnieuw.",
+  "settingsAssistants_title": "Gekoppelde assistenten",
+  "settingsAssistants_description": "AI-assistenten die je toegang hebt gegeven tot je account op {board}.",
+  "settingsAssistants_datesText": "Gekoppeld op {connected} · Laatst gebruikt op {lastUsed}",
+  "settingsAssistants_disconnectLabel": "Ontkoppelen",
+  "settingsAssistants_disconnectAriaLabel": "{name} ontkoppelen",
+  "settingsAssistants_disconnectedText": "{name} is ontkoppeld."
 }

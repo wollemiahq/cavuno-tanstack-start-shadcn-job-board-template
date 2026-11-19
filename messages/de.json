@@ -3471,5 +3471,11 @@
   "emailPreferences_unsubscribeAllConfirm": "Abmelden",
   "emailPreferences_cancel": "Abbrechen",
   "emailPreferences_unsubscribedAll": "Du bist von allen E-Mails von {board} abgemeldet.",
-  "emailPreferences_actionError": "Das wurde nicht gespeichert. Versuche es noch einmal."
+  "emailPreferences_actionError": "Das wurde nicht gespeichert. Versuche es noch einmal.",
+  "settingsAssistants_title": "Verbundene Assistenten",
+  "settingsAssistants_description": "KI-Assistenten, denen du erlaubt hast, dein Konto auf {board} zu nutzen.",
+  "settingsAssistants_datesText": "Verbunden am {connected} · Zuletzt genutzt am {lastUsed}",
+  "settingsAssistants_disconnectLabel": "Trennen",
+  "settingsAssistants_disconnectAriaLabel": "{name} trennen",
+  "settingsAssistants_disconnectedText": "{name} ist getrennt."
 }

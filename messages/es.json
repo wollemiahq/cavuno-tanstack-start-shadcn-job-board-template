@@ -3471,5 +3471,11 @@
   "emailPreferences_unsubscribeAllConfirm": "Darme de baja",
   "emailPreferences_cancel": "Cancelar",
   "emailPreferences_unsubscribedAll": "Te has dado de baja de todos los correos de {board}.",
-  "emailPreferences_actionError": "No se guardó. Inténtalo de nuevo."
+  "emailPreferences_actionError": "No se guardó. Inténtalo de nuevo.",
+  "settingsAssistants_title": "Asistentes conectados",
+  "settingsAssistants_description": "Asistentes de IA a los que has permitido usar tu cuenta en {board}.",
+  "settingsAssistants_datesText": "Conectado el {connected} · Último uso el {lastUsed}",
+  "settingsAssistants_disconnectLabel": "Desconectar",
+  "settingsAssistants_disconnectAriaLabel": "Desconectar {name}",
+  "settingsAssistants_disconnectedText": "{name} se ha desconectado."
 }

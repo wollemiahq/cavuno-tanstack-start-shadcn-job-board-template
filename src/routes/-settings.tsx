@@ -19,12 +19,15 @@ import { isRedirect, Link, redirect } from '@tanstack/react-router';
 import { DangerZone } from '../components/danger-zone';
 import { MarketingConsentSettings } from '../components/marketing-consent-settings';
 import { NotificationSettings } from '../components/notification-settings';
+import { SettingsAssistantsCard } from '../components/settings-assistants-card';
 import { SettingsEmailCard } from '../components/settings-email-card';
 import { SettingsPasswordCard } from '../components/settings-password-card';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
 import { m } from '../paraglide/messages';
 import { getSeoBase } from '../server/queries';
 import {
+  disconnectAssistant,
+  getConnectedAssistants,
   getMarketingConsent,
   getNotificationPreferences,
   getSettingsAccount,
@@ -35,6 +38,7 @@ import {
   unsubscribeWithLink,
   updateNotificationPreference,
   updatePassword,
+  type ConnectedAssistant,
   type StarterUnsubscribeBody,
   type StarterUpdateNotificationPreferenceBody,
 } from '../server/settings';
@@ -75,6 +79,10 @@ export type SettingsSearch = {
 };
 
 export type SettingsRouteDependencies = {
+  disconnectAssistant: (options: {
+    data: { assistantId: string };
+  }) => ReturnType<typeof disconnectAssistant>;
+  getConnectedAssistants: () => ReturnType<typeof getConnectedAssistants>;
   getMarketingConsent: () => ReturnType<typeof getMarketingConsent>;
   getNotificationPreferences: () => ReturnType<
     typeof getNotificationPreferences
@@ -105,6 +113,8 @@ export type SettingsRouteDependencies = {
 };
 
 export const settingsRouteDependencies: SettingsRouteDependencies = {
+  disconnectAssistant,
+  getConnectedAssistants,
   getMarketingConsent,
   getNotificationPreferences,
   getSeoBase,
@@ -161,16 +171,24 @@ export function createSettingsLoader(
         : { mode: 'unsubscribe-failed' as const, seo };
     }
     try {
-      const [preferences, consent, account] = await Promise.all([
+      const [preferences, consent, account, assistants] = await Promise.all([
         dependencies.getNotificationPreferences(),
         dependencies.getMarketingConsent(),
         dependencies.getSettingsAccount(),
+        // The assistants card is optional: a failed read (an API that
+        // predates the endpoint, a 5xx, rate limiting) hides it instead of
+        // failing the page. Redirects and sign-in problems still apply.
+        dependencies.getConnectedAssistants().catch((error) => {
+          if (isRedirect(error) || candidateLoaderError(error)) throw error;
+          return [];
+        }),
       ]);
       return {
         mode: 'settings' as const,
         preferences: preferences.data,
         consent,
         account,
+        assistants,
         seo,
       };
     } catch (error) {
@@ -239,6 +257,8 @@ export function SettingsPageView({
         preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
         consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
         account: SettingsAccount;
+        assistants: ConnectedAssistant[];
+        seo: { boardName: string };
       };
   jobRecommendationsEnabled?: boolean;
   dependencies?: SettingsRouteDependencies;
@@ -263,6 +283,8 @@ export function SettingsPageView({
       preferences={data.preferences}
       consent={data.consent}
       account={data.account}
+      assistants={data.assistants}
+      boardName={data.seo.boardName}
       jobRecommendationsEnabled={jobRecommendationsEnabled}
       dependencies={dependencies}
     />
@@ -411,12 +433,16 @@ function SignedInSettings({
   preferences,
   consent,
   account,
+  assistants,
+  boardName,
   jobRecommendationsEnabled,
   dependencies,
 }: {
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
   consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
   account: SettingsAccount;
+  assistants: ConnectedAssistant[];
+  boardName: string;
   jobRecommendationsEnabled: boolean;
   dependencies: SettingsRouteDependencies;
 }) {
@@ -451,6 +477,11 @@ function SignedInSettings({
           email={account.email}
           requestPassword={dependencies.requestSetPassword}
           updateCurrentPassword={dependencies.updatePassword}
+        />
+        <SettingsAssistantsCard
+          assistants={assistants}
+          board={boardName}
+          disconnect={dependencies.disconnectAssistant}
         />
         <DangerZone />
       </div>

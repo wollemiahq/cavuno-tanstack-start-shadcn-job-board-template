@@ -296,7 +296,13 @@ const BUDGETS = {
     // for the per-alert menu. Raised by exactly the measured growth, keeping
     // main's headroom; accepted by the operator on 2026-11-18.
     '/email-preferences': { raw: 162_707, gzip: 61_059 },
-    '/settings': { raw: 100_500, gzip: 37_500 },
+    // The Connected assistants card (list and disconnect the AI assistants
+    // a person has signed in to the board's MCP server). Main measured
+    // 99,432 B raw / 37,069 B gzip against 100,500 / 37,500 (1,068 / 431 B
+    // left); this measured 104,028 / 38,690 (+4,596 / +1,621): the card,
+    // its messages and the Item list component's chunk. Raised by exactly
+    // the measured growth, keeping main's headroom.
+    '/settings': { raw: 105_096, gzip: 39_121 },
     // The email typo hint ("Did you mean jane@gmail.com?") on sign-up and
     // the job alert form: the hint, its message, and the refused-domain
     // messages (alone, and with the correction in the same line). The domain checker itself loads on the first blur. Raised

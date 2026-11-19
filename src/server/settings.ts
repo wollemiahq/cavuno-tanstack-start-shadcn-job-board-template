@@ -11,11 +11,13 @@
 import { isBoardApiError } from '@cavuno/board';
 import { createServerFn } from '@tanstack/react-start';
 
+import { readMcpServerFlag } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import { persistAuthSession } from '../lib/data-source.server';
 import { EMAIL_LINK_PREFIXES } from '../lib/email-link-cookies';
 import { MARKETING_CONSENT } from '../lib/marketing-consent';
@@ -28,6 +30,7 @@ import { dottedCodec, emailLink } from './email-link';
 import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
+  ListEnvelope,
   UnsubscribeBody,
   UpdateNotificationPreferenceBody,
 } from '@cavuno/board';
@@ -227,6 +230,68 @@ export const updatePassword = createServerFn({ method: 'POST' })
         headers,
       });
       persistAuthSession(session);
+      return { ok: true as const };
+    } catch (error) {
+      return actionError(error);
+    }
+  });
+
+// ─── Connected assistants ───────────────────────────────────────────────────
+//
+// The AI assistants (Claude, ChatGPT…) the person allowed to use their
+// account through the board's MCP server. Until the SDK this site pins has
+// `board.me.assistants`, the two calls go through `client.fetch` with types
+// written here from the published schema (`GET` and
+// `DELETE /me/assistants/{assistantId}`); switch to the typed method then.
+
+export interface ConnectedAssistant {
+  id: string;
+  object: 'assistant';
+  name: string;
+  /** The assistant's website, e.g. `claude.ai`. */
+  host: string | null;
+  scopes: string[];
+  /** ISO 8601. */
+  connectedAt: string;
+  /** ISO 8601. */
+  lastUsedAt: string;
+}
+
+/**
+ * The person's connected assistants, newest first (up to 50). Empty, with
+ * no call, while the board doesn't serve its MCP server (`features.mcp`).
+ */
+export const getConnectedAssistants = createServerFn({ method: 'GET' })
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(({ context }) =>
+    gatedRead(context, async (): Promise<ConnectedAssistant[]> => {
+      const { features } = await readBoardContext();
+      if (!readMcpServerFlag(features)) return [];
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      const list = await getBoard().client.fetch<
+        ListEnvelope<ConnectedAssistant>
+      >('/me/assistants', { headers });
+      return list.data;
+    }),
+  );
+
+/**
+ * Disconnects one assistant. `assistant_not_found` (unknown, someone
+ * else's, or already disconnected) comes back as an error for the card to
+ * treat as already gone.
+ */
+export const disconnectAssistant = createServerFn({ method: 'POST' })
+  .validator((input: { assistantId: string }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    try {
+      const headers = authedHeaders(context);
+      await requireVerifiedBoardUser(headers);
+      await getBoard().client.fetch<void>(
+        `/me/assistants/${encodeURIComponent(data.assistantId)}`,
+        { method: 'DELETE', headers },
+      );
       return { ok: true as const };
     } catch (error) {
       return actionError(error);
