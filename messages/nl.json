@@ -3085,7 +3085,6 @@
   "product_emailLabel": "E-mail",
   "product_emailHelpText": "Je downloadlink komt hier naartoe.",
   "product_emailSuggestionText": "Bedoelde je {email}?",
-  "product_emailSuggestionAction": "Gebruiken",
   "product_amountLabel": "Jouw prijs",
   "product_amountHelpText": "Betaal {minimum} of meer.",
   "product_amountBelowMinimumText": "Het minimum is {minimum}.",

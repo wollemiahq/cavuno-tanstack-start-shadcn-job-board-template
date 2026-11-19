@@ -97,6 +97,38 @@ describe('ProductCheckoutForm', () => {
     expect(onSubmit.mock.calls[0]![0].website).toBeUndefined();
   });
 
+  it('offers a likely correction on blur, and checks out with it', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ProductCheckoutForm
+        product={product({ questions: [] })}
+        onSubmit={onSubmit}
+        offerJobAlertOptIn={false}
+      />,
+    );
+    const email = screen.getByLabelText(m.product_emailLabel());
+
+    fillEmail('ada@example.com');
+    fireEvent.blur(email);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByText(m.product_emailHelpText())).toBeInTheDocument();
+
+    fillEmail('ada@gmial.com');
+    fireEvent.blur(email);
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      m.product_emailSuggestionText({ email: 'ada@gmail.com' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'ada@gmail.com' }));
+    expect(email).toHaveValue('ada@gmail.com');
+    expect(screen.getByText(m.product_emailHelpText())).toBeInTheDocument();
+
+    submit();
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({
+      email: 'ada@gmail.com',
+    });
+  });
+
   it('refuses a pay-what-you-want amount under the minimum', async () => {
     const onSubmit = vi.fn();
     render(

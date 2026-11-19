@@ -18,6 +18,10 @@ import {
   minimumAmountCents,
   parseAmountCents,
 } from '@/board/product-view-model';
+import {
+  EmailSuggestionHint,
+  useEmailSuggestion,
+} from '@/components/email-suggestion-hint';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -40,7 +44,6 @@ import {
   NativeSelectOption,
 } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
-import { suggestEmailFix } from '@/lib/email-typo';
 import { productErrorMessage } from '@/lib/product-error-message';
 import type { Product, ProductCheckoutBody } from '@cavuno/board';
 
@@ -108,7 +111,7 @@ export function ProductCheckoutForm({
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [missing, setMissing] = useState<Set<string>>(new Set());
-  const suggestion = suggestEmailFix(email);
+  const emailSuggestion = useEmailSuggestion();
 
   function clearMissing(questionId: string) {
     setMissing((previous) => {
@@ -219,23 +222,22 @@ export function ProductCheckoutForm({
             aria-invalid={Boolean(errors.email) || undefined}
             onChange={(event) => {
               setEmail(event.target.value);
+              emailSuggestion.clear();
               if (errors.email) setErrors({ ...errors, email: undefined });
             }}
+            onBlur={(event) => emailSuggestion.check(event.target.value)}
           />
           {errors.email ? (
             <FieldError>{errors.email}</FieldError>
-          ) : suggestion ? (
-            <FieldDescription role="status">
-              {m.product_emailSuggestionText({ email: suggestion })}{' '}
-              <Button
-                type="button"
-                variant="link"
-                size="inline"
-                onClick={() => setEmail(suggestion)}
-              >
-                {m.product_emailSuggestionAction()}
-              </Button>
-            </FieldDescription>
+          ) : emailSuggestion.suggestion ? (
+            <EmailSuggestionHint
+              suggestion={emailSuggestion.suggestion}
+              disabled={pending}
+              onAccept={(suggested) => {
+                setEmail(suggested);
+                emailSuggestion.clear();
+              }}
+            />
           ) : (
             <FieldDescription>{m.product_emailHelpText()}</FieldDescription>
           )}

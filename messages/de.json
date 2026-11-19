@@ -3085,7 +3085,6 @@
   "product_emailLabel": "E-Mail",
   "product_emailHelpText": "Dein Download-Link geht an diese Adresse.",
   "product_emailSuggestionText": "Meintest du {email}?",
-  "product_emailSuggestionAction": "Übernehmen",
   "product_amountLabel": "Dein Preis",
   "product_amountHelpText": "Zahle {minimum} oder mehr.",
   "product_amountBelowMinimumText": "Der Mindestbetrag ist {minimum}.",

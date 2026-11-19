@@ -3085,7 +3085,6 @@
   "product_emailLabel": "Correo electrónico",
   "product_emailHelpText": "Tu enlace de descarga llegará aquí.",
   "product_emailSuggestionText": "¿Querías decir {email}?",
-  "product_emailSuggestionAction": "Usar",
   "product_amountLabel": "Tu precio",
   "product_amountHelpText": "Paga {minimum} o más.",
   "product_amountBelowMinimumText": "El mínimo es {minimum}.",
