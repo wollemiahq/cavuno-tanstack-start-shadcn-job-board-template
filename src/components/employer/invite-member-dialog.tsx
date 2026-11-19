@@ -36,6 +36,8 @@ function inviteErrorMessage(code: string): string {
   if (code === 'already_invited')
     return m.employerMembers_alreadyInvitedError();
   if (code === 'invalid_email') return m.employerMembers_invalidEmailError();
+  if (code === 'company_access_removed')
+    return m.employerMembers_accessRemovedError();
   return boardErrorMessage({ code });
 }
 
