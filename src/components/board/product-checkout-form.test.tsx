@@ -18,6 +18,7 @@ import type { Product } from '@cavuno/board';
 afterEach(cleanup);
 
 const WAIVER_ID = 'q_waiver';
+const BOARD = 'Acme Jobs';
 
 function product(overrides: Partial<Product> = {}): Product {
   return {
@@ -77,7 +78,7 @@ describe('ProductCheckoutForm', () => {
       <ProductCheckoutForm
         product={product()}
         onSubmit={onSubmit}
-        offerJobAlertOptIn
+        boardName={BOARD}
       />,
     );
     fillEmail();
@@ -103,7 +104,7 @@ describe('ProductCheckoutForm', () => {
       <ProductCheckoutForm
         product={product({ questions: [] })}
         onSubmit={onSubmit}
-        offerJobAlertOptIn={false}
+        boardName={BOARD}
       />,
     );
     const email = screen.getByLabelText(m.product_emailLabel());
@@ -144,7 +145,7 @@ describe('ProductCheckoutForm', () => {
       <ProductCheckoutForm
         product={product({ questions: [] })}
         onSubmit={onSubmit}
-        offerJobAlertOptIn={false}
+        boardName={BOARD}
       />,
     );
     const email = screen.getByLabelText(m.product_emailLabel());
@@ -184,7 +185,7 @@ describe('ProductCheckoutForm', () => {
           },
         })}
         onSubmit={onSubmit}
-        offerJobAlertOptIn
+        boardName={BOARD}
       />,
     );
     fillEmail();
@@ -207,7 +208,7 @@ describe('ProductCheckoutForm', () => {
       <ProductCheckoutForm
         product={product({ questions: [] })}
         onSubmit={onSubmit}
-        offerJobAlertOptIn
+        boardName={BOARD}
       />,
     );
     fillEmail();
@@ -217,43 +218,46 @@ describe('ProductCheckoutForm', () => {
     );
   });
 
-  it('offers the job-alert opt-in on free products only', () => {
-    render(
-      <ProductCheckoutForm
-        product={product({
-          questions: [],
-          price: { kind: 'free', currency: null, amountCents: 0 },
-        })}
-        onSubmit={vi.fn()}
-        offerJobAlertOptIn
-      />,
-    );
-    expect(
-      screen.getByRole('checkbox', { name: m.product_jobAlertOptInLabel() }),
-    ).not.toBeChecked();
-  });
+  it.each([
+    ['a free', { kind: 'free', currency: null, amountCents: 0 }],
+    ['a paid', { kind: 'fixed', currency: 'eur', amountCents: 1900 }],
+  ] as const)(
+    'asks %s checkout for marketing email, unticked, and sends its wording only once ticked',
+    async (_, price) => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      render(
+        <ProductCheckoutForm
+          product={product({ questions: [], price })}
+          defaultEmail="ada@example.com"
+          onSubmit={onSubmit}
+          boardName={BOARD}
+        />,
+      );
+      const wording = m.emailPreferences_marketingConsent({ board: BOARD });
+      const box = screen.getByRole('checkbox', { name: wording });
+      expect(box).not.toBeChecked();
+      const send = () =>
+        fireEvent.click(
+          screen.getByRole('button', {
+            name:
+              price.kind === 'free'
+                ? m.product_sendFilesAction()
+                : m.product_continueToPaymentAction(),
+          }),
+        );
 
-  it('leaves the opt-in out on a board that sends no job alerts', async () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(
-      <ProductCheckoutForm
-        product={product({
-          questions: [],
-          price: { kind: 'free', currency: null, amountCents: 0 },
-        })}
-        defaultEmail="ada@example.com"
-        onSubmit={onSubmit}
-        offerJobAlertOptIn={false}
-      />,
-    );
-    expect(
-      screen.queryByRole('checkbox', { name: m.product_jobAlertOptInLabel() }),
-    ).toBeNull();
+      send();
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0]?.[0].marketingConsent).toBeUndefined();
+      expect(onSubmit.mock.calls[0]?.[0]).not.toHaveProperty('jobAlertOptIn');
 
-    fireEvent.click(
-      screen.getByRole('button', { name: m.product_sendFilesAction() }),
-    );
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit.mock.calls[0]?.[0].jobAlertOptIn).toBeUndefined();
-  });
+      fireEvent.click(box);
+      send();
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+      expect(onSubmit.mock.calls[1]?.[0].marketingConsent).toEqual({
+        granted: true,
+        text: wording,
+      });
+    },
+  );
 });

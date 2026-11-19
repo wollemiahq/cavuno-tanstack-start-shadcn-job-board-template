@@ -3236,7 +3236,6 @@
   "product_answerRequiredText": "Odpowiedz na to pytanie, aby kontynuować.",
   "product_checkboxRequiredText": "Zaznacz to pole, aby kontynuować.",
   "product_requiredLabel": "(wymagane)",
-  "product_jobAlertOptInLabel": "Wysyłaj mi też nowe oferty pracy z tego serwisu",
   "product_sendFilesAction": "Wyślij mi pliki",
   "product_continueToPaymentAction": "Przejdź do płatności",
   "product_checkoutDialogDescription": "{productName} · {price}",

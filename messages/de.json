@@ -3096,7 +3096,6 @@
   "product_answerRequiredText": "Beantworte diese Frage, um fortzufahren.",
   "product_checkboxRequiredText": "Setze dieses Häkchen, um fortzufahren.",
   "product_requiredLabel": "(erforderlich)",
-  "product_jobAlertOptInLabel": "Schick mir auch neue Jobs von dieser Plattform",
   "product_sendFilesAction": "Schick mir die Dateien",
   "product_continueToPaymentAction": "Weiter zur Zahlung",
   "product_checkoutDialogDescription": "{productName} · {price}",

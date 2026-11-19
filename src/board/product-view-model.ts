@@ -178,30 +178,21 @@ export function ownedPurchase(
   );
 }
 
-/** Free products offer the job-alert opt-in on a board that sends job alerts. */
-export function offersJobAlertOptIn(
-  product: Pick<Product, 'price'>,
-  { jobAlertsEnabled }: { jobAlertsEnabled: boolean },
-): boolean {
-  return product.price.kind === 'free' && jobAlertsEnabled;
-}
-
 /**
  * The email a signed-in visitor can buy with straight away, skipping the
  * "Before you pay" step, or null when the step has something to ask: a
  * guest or an unverified email (where the link goes), a pay-what-you-want
- * amount, the product's own questions, or the job-alert opt-in a free
- * product offers when the board sends job alerts.
+ * amount, or the product's own questions. The step's optional marketing
+ * checkbox doesn't hold a buyer back: skipping the step only leaves it
+ * unticked.
  */
 export function directCheckoutEmail(
   product: Pick<Product, 'price' | 'questions'>,
   user: Pick<BoardUser, 'email' | 'emailVerified'> | null,
-  { jobAlertsEnabled }: { jobAlertsEnabled: boolean },
 ): string | null {
   if (!user?.emailVerified || !user.email) return null;
   if (product.questions.length > 0) return null;
   if (product.price.kind === 'pay_what_you_want') return null;
-  if (offersJobAlertOptIn(product, { jobAlertsEnabled })) return null;
   return user.email;
 }
 

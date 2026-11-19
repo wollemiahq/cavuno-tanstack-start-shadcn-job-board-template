@@ -33,7 +33,6 @@ import { getLocale } from '../paraglide/runtime';
 import {
   directCheckoutEmail,
   fileTypeLabels,
-  offersJobAlertOptIn,
   formatRating,
   ownedPurchase,
   productFactRows,
@@ -429,7 +428,6 @@ export function ProductPageView({
   sessionId,
   startInCheckout = false,
   showProductsLink = true,
-  jobAlertsEnabled,
   dependencies,
   onPurchase,
 }: {
@@ -450,8 +448,6 @@ export function ProductPageView({
    * go back to.
    */
   showProductsLink?: boolean;
-  /** The board sends job alerts: free products offer the opt-in. */
-  jobAlertsEnabled: boolean;
   dependencies: ProductPageDependencies;
   /** Go to the purchase's download page. */
   onPurchase: (purchaseToken: string) => void;
@@ -487,7 +483,7 @@ export function ProductPageView({
 
   // A signed-in buyer with a verified email and nothing to answer goes
   // straight to payment (or to the download page for a free product).
-  const directEmail = directCheckoutEmail(product, user, { jobAlertsEnabled });
+  const directEmail = directCheckoutEmail(product, user);
 
   function buy(source: BuySource) {
     if (!directEmail) {
@@ -909,9 +905,7 @@ export function ProductPageView({
             })}
             product={product}
             defaultEmail={user?.email ?? null}
-            offerJobAlertOptIn={offersJobAlertOptIn(product, {
-              jobAlertsEnabled,
-            })}
+            boardName={seller.name}
             onSubmit={submit}
           />
         </Suspense>

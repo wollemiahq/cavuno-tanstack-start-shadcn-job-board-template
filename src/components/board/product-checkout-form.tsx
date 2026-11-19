@@ -4,8 +4,8 @@
  * The "Before you pay" form, shown in the product page's buy dialog (which
  * owns the title): the email the link goes to, the amount for pay what you
  * want, the product's buyer questions (a required checkbox covers the EU
- * right-to-cancel waiver), the job-alert opt-in on free products of a board
- * that sends job alerts, and a hidden honeypot field. Refusals from the Board
+ * right-to-cancel waiver), an unticked checkbox asking for the board's own
+ * email (news and offers), and a hidden honeypot field. Refusals from the Board
  * API are worded under the field they concern.
  */
 import { useId, useRef, useState, type FormEvent } from 'react';
@@ -51,7 +51,7 @@ export type ProductCheckoutValues = {
   email: string;
   answers: NonNullable<ProductCheckoutBody['answers']>;
   amountCents?: number;
-  jobAlertOptIn?: boolean;
+  marketingConsent?: ProductCheckoutBody['marketingConsent'];
   website?: string;
 };
 
@@ -81,13 +81,13 @@ export function refusalField(code: string | null): FieldKey {
 export function ProductCheckoutForm({
   product,
   defaultEmail,
-  offerJobAlertOptIn,
+  boardName,
   onSubmit,
 }: {
   product: Product;
   defaultEmail?: string | null;
-  /** Show the job-alert opt-in (`offersJobAlertOptIn`). */
-  offerJobAlertOptIn: boolean;
+  /** The board's name, which the marketing checkbox's wording names. */
+  boardName: string;
   /** Resolves with a refusal to show, or nothing once the step moved on. */
   onSubmit: (
     values: ProductCheckoutValues,
@@ -106,12 +106,15 @@ export function ProductCheckoutForm({
   );
   const [texts, setTexts] = useState<Record<string, string>>({});
   const [ticks, setTicks] = useState<Record<string, boolean>>({});
-  const [jobAlertOptIn, setJobAlertOptIn] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [website, setWebsite] = useState('');
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [missing, setMissing] = useState<Set<string>>(new Set());
   const emailSuggestion = useEmailSuggestion();
+  const marketingText = m.emailPreferences_marketingConsent({
+    board: boardName,
+  });
   const warnedEmail = useRef<string | null>(null);
 
   function clearMissing(questionId: string) {
@@ -177,7 +180,11 @@ export function ProductCheckoutForm({
         },
       ),
       amountCents,
-      jobAlertOptIn: offerJobAlertOptIn ? jobAlertOptIn : undefined,
+      // Sent only when ticked, with the exact wording the buyer saw; with no
+      // topics, they get the topics the board adds to new sign-ups.
+      marketingConsent: marketingOptIn
+        ? { granted: true, text: marketingText }
+        : undefined,
       website: website || undefined,
     };
     // Checkout has no server-side refusal for a mistyped domain, and the
@@ -367,18 +374,16 @@ export function ProductCheckoutForm({
         })}
         {errors.answers ? <FieldError>{errors.answers}</FieldError> : null}
 
-        {offerJobAlertOptIn ? (
-          <Field orientation="horizontal">
-            <Checkbox
-              id={`${id}-alerts`}
-              checked={jobAlertOptIn}
-              onCheckedChange={(checked) => setJobAlertOptIn(checked === true)}
-            />
-            <FieldLabel htmlFor={`${id}-alerts`} className="font-normal">
-              {m.product_jobAlertOptInLabel()}
-            </FieldLabel>
-          </Field>
-        ) : null}
+        <Field orientation="horizontal">
+          <Checkbox
+            id={`${id}-marketing`}
+            checked={marketingOptIn}
+            onCheckedChange={(checked) => setMarketingOptIn(checked === true)}
+          />
+          <FieldLabel htmlFor={`${id}-marketing`} className="font-normal">
+            {marketingText}
+          </FieldLabel>
+        </Field>
 
         {/* Honeypot: hidden from people and assistive tech, left empty. */}
         <div aria-hidden="true" className="sr-only">

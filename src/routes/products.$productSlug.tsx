@@ -94,7 +94,6 @@ function ProductPage() {
       sessionId={sessionId ?? null}
       startInCheckout={buy === true}
       showProductsLink={offerGate.hasProductsPage}
-      jobAlertsEnabled={board.features.jobAlerts}
       dependencies={dependencies}
       onPurchase={(purchaseToken) =>
         void navigate({
