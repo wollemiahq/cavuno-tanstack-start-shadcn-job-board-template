@@ -116,7 +116,10 @@ describe('magic-link request binding', () => {
         },
       }),
     ).toMatchObject({ ok: true });
-    expect(mocks.consume).toHaveBeenCalledWith({ token: 'valid-link-a' });
+    expect(mocks.consume).toHaveBeenCalledWith({
+      token: 'valid-link-a',
+      locale: expect.any(String),
+    });
     expect(mocks.persist).toHaveBeenCalledOnce();
     expect(mocks.append).toHaveBeenCalledWith(
       'Set-Cookie',

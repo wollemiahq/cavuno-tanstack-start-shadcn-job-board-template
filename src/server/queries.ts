@@ -605,7 +605,9 @@ export const searchBlogSuggestions = createServerFn({ method: 'GET' })
 
 export const subscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: JobAlertSubscribeInput) => input)
-  .handler(({ data }) => getBoard().jobAlerts.subscribe(data));
+  .handler(({ data }) =>
+    getBoard().jobAlerts.subscribe({ ...data, locale: getLocale() }),
+  );
 
 export const confirmJobAlert = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)

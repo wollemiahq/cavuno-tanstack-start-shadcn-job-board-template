@@ -46,6 +46,7 @@ import {
 } from '../lib/oauth-browser-binding';
 import { safeRedirectPath } from '../lib/safe-redirect-path';
 import { sessionMiddleware } from '../lib/session-middleware';
+import { getLocale } from '../paraglide/runtime';
 
 /** Presence only: credentials stay in their httpOnly flow cookies. */
 export const getAuthFlowState = createServerFn({ method: 'GET' })
@@ -117,6 +118,7 @@ export const signUp = createServerFn({ method: 'POST' })
         role: 'candidate',
         method: 'emailpass',
         ...data,
+        locale: getLocale(),
       });
       persistAuthSession(session);
       appendResponseHeader(
@@ -153,6 +155,7 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
         role: 'employer',
         method: 'emailpass',
         ...data,
+        locale: getLocale(),
       });
       persistAuthSession(session);
       appendResponseHeader(
@@ -189,6 +192,7 @@ export const signUpInvitedEmployer = createServerFn({ method: 'POST' })
         role: 'employer',
         method: 'emailpass',
         ...data,
+        locale: getLocale(),
       });
       persistAuthSession(session);
       appendResponseHeader(
@@ -406,6 +410,7 @@ export const consumeMagicLink = createServerFn({ method: 'POST' })
       }
       const session = await getBoard().auth.consumeMagicLink({
         token: resolveAuthFlowToken('magic-link', data.token),
+        locale: getLocale(),
       });
       if (
         data.confirmed !== true &&
