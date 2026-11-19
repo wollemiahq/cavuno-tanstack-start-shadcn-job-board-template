@@ -68,9 +68,9 @@ describe('sign-ups carry the page language', () => {
     displayName: 'Fixture',
   };
 
-  it('sends the request locale on registration, over any client value', async () => {
-    const withClientLocale = { ...account, locale: 'fr' };
-    await signUp({ data: withClientLocale });
+  it('sends the request locale and the form role, over any client value', async () => {
+    const withClientValues = { ...account, locale: 'fr', role: 'employer' };
+    await signUp({ data: withClientValues });
     await signUpEmployer({ data: account });
     expect(mocks.register).toHaveBeenNthCalledWith(
       1,

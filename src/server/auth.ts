@@ -115,9 +115,9 @@ export const signUp = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.register({
+        ...data,
         role: 'candidate',
         method: 'emailpass',
-        ...data,
         locale: getLocale(),
       });
       persistAuthSession(session);
@@ -152,9 +152,9 @@ export const signUpEmployer = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.register({
+        ...data,
         role: 'employer',
         method: 'emailpass',
-        ...data,
         locale: getLocale(),
       });
       persistAuthSession(session);
@@ -189,9 +189,9 @@ export const signUpInvitedEmployer = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     try {
       const session = await getBoard().auth.register({
+        ...data,
         role: 'employer',
         method: 'emailpass',
-        ...data,
         locale: getLocale(),
       });
       persistAuthSession(session);
