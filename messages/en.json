@@ -3096,7 +3096,6 @@
   "product_answerRequiredText": "Answer this question to continue.",
   "product_checkboxRequiredText": "Tick this box to continue.",
   "product_requiredLabel": "(required)",
-  "product_jobAlertOptInLabel": "Also email me new jobs from this board",
   "product_sendFilesAction": "Send me the files",
   "product_continueToPaymentAction": "Continue to payment",
   "product_checkoutDialogDescription": "{productName} · {price}",

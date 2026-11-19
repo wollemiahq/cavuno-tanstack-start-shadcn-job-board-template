@@ -3096,7 +3096,6 @@
   "product_answerRequiredText": "Responde a esta pregunta para continuar.",
   "product_checkboxRequiredText": "Marca esta casilla para continuar.",
   "product_requiredLabel": "(obligatorio)",
-  "product_jobAlertOptInLabel": "Envíame también las nuevas ofertas de este sitio",
   "product_sendFilesAction": "Envíame los archivos",
   "product_continueToPaymentAction": "Continuar al pago",
   "product_checkoutDialogDescription": "{productName} · {price}",

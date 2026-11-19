@@ -108,14 +108,12 @@ function page(
   {
     onFilledChange = () => {},
     sessionId = null,
-    jobAlertsEnabled = false,
     onPurchase = vi.fn(),
     showProductsLink = true,
   }: {
     showProductsLink?: boolean;
     onFilledChange?: (filled: boolean) => void;
     sessionId?: string | null;
-    jobAlertsEnabled?: boolean;
     onPurchase?: (purchaseToken: string) => void;
   } = {},
 ) {
@@ -128,7 +126,6 @@ function page(
         shareUrl="https://board.example/products/resume-pack"
         returnPath="/products/resume-pack"
         sessionId={sessionId}
-        jobAlertsEnabled={jobAlertsEnabled}
         showProductsLink={showProductsLink}
         dependencies={dependencies}
         onPurchase={onPurchase}
@@ -701,36 +698,24 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
     await waitFor(() => expect(onPurchase).toHaveBeenCalledWith('tok_free'));
     expect(
       vi.mocked(dependencies.startCheckout).mock.calls[0]?.[0].data,
-    ).not.toHaveProperty('jobAlertOptIn');
+    ).not.toHaveProperty('marketingConsent');
     expect(screen.queryByRole('form')).toBeNull();
   });
 
-  const keepsStep: Array<
-    [
-      string,
-      TestSession['user'],
-      Partial<Product>,
-      { jobAlertsEnabled?: boolean },
-    ]
-  > = [
-    ['a guest', null, {}, {}],
-    ['an unverified email', { ...verified, emailVerified: false }, {}, {}],
-    ['checkout questions', verified, { questions: [question] }, {}],
-    ['pay what you want', verified, { price: payWhatYouWant }, {}],
-    [
-      'the job-alert opt-in on a free product',
-      verified,
-      { price: free },
-      { jobAlertsEnabled: true },
-    ],
+  type KeepsStep = [string, TestSession['user'], Partial<Product>];
+  const keepsStep: KeepsStep[] = [
+    ['a guest', null, {}],
+    ['an unverified email', { ...verified, emailVerified: false }, {}],
+    ['checkout questions', verified, { questions: [question] }],
+    ['pay what you want', verified, { price: payWhatYouWant }],
   ];
 
   it.each(keepsStep)(
     'asks in the "Before you pay" dialog for %s, leaving the price card as it was',
-    async (_, user, overrides, options) => {
+    async (_, user, overrides) => {
       session.user = user;
       const freeProduct = overrides.price?.kind === 'free';
-      renderPage(overrides, null, options);
+      renderPage(overrides);
       const buyLabel = freeProduct
         ? m.product_getFreeAction()
         : m.product_buyAction();
@@ -743,6 +728,13 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
           : m.product_paidStepTitle(),
       });
       expect(within(dialog).getByRole('form')).toBeInTheDocument();
+      // The box names the seller: the API checks the wording for it.
+      const boxName = m.emailPreferences_marketingConsent({
+        board: 'Example Board',
+      });
+      expect(
+        within(dialog).getByRole('checkbox', { name: boxName }),
+      ).not.toBeChecked();
       expect(
         within(railBehindDialog()).getByRole('button', {
           name: buyLabel,

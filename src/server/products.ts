@@ -270,7 +270,7 @@ export type ProductCheckoutInput = {
   email: string;
   answers: ProductCheckoutBody['answers'];
   amountCents?: number;
-  jobAlertOptIn?: boolean;
+  marketingConsent?: ProductCheckoutBody['marketingConsent'];
   website?: string;
   returnPath: string;
 };
@@ -293,7 +293,7 @@ export const startProductCheckout = createServerFn({ method: 'POST' })
           email: data.email,
           answers: data.answers ?? [],
           amountCents: data.amountCents,
-          jobAlertOptIn: data.jobAlertOptIn,
+          marketingConsent: data.marketingConsent,
           // Omitted unless a bot filled the hidden field.
           website: data.website || undefined,
           returnPath: data.returnPath,
