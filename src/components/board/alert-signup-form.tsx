@@ -18,7 +18,11 @@
  * `board.jobAlerts.subscribe(input)`; behind a server function/action,
  * forward the input and return the result's `submitted` status. The API uses
  * one uniform result so the UI never reveals whether an address already has
- * a matching subscription.
+ * a matching subscription. When the API refuses the address because its
+ * domain has no mail server (`email_domain_undeliverable`), resolve with
+ * that status and the error's `details.suggestion`: the form says so and
+ * offers the correction. The same "Did you mean" hint shows on blur, from
+ * the shared `EmailSuggestionHint`.
  */
 import { useId, useState } from 'react';
 
@@ -26,6 +30,10 @@ import { BellIcon } from 'lucide-react';
 
 import { toAlertSignupVM } from '@/board/alert-signup-view-model';
 import { useBoardConversionAnalytics } from '@/components/board-conversion-analytics';
+import {
+  EmailSuggestionHint,
+  useEmailSuggestion,
+} from '@/components/email-suggestion-hint';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import {
@@ -47,7 +55,7 @@ import type { JobAlertSubscribeDataLayerEvent } from '@/lib/board-datalayer-even
 import { pushBoardConversionEvent } from '@/lib/board-pixel-conversions';
 import { cn } from '@/lib/utils';
 import type { JobAlertSubscribeInput } from '@cavuno/board';
-type Status = 'idle' | 'pending' | 'submitted' | 'error';
+type Status = 'idle' | 'pending' | 'submitted' | 'error' | 'undeliverable';
 
 export function AlertSignupForm({
   filters,
@@ -63,7 +71,10 @@ export function AlertSignupForm({
   /** Perform the subscribe (see wiring docs); resolve with the API status. */
   onSubscribe: (
     input: JobAlertSubscribeInput,
-  ) => Promise<{ status: 'submitted' }>;
+  ) => Promise<
+    | { status: 'submitted' }
+    | { status: 'email_domain_undeliverable'; suggestion?: string | null }
+  >;
   /** Board language (ISO code) from `board.context()`. */
   language: string;
   title?: string;
@@ -81,6 +92,8 @@ export function AlertSignupForm({
   const conversion = useBoardConversionAnalytics();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  const emailSuggestion = useEmailSuggestion();
+  const invalid = status === 'error' || status === 'undeliverable';
 
   const vm = toAlertSignupVM(language);
 
@@ -89,7 +102,9 @@ export function AlertSignupForm({
       ? vm.messages.submitted
       : status === 'error'
         ? vm.messages.error
-        : null;
+        : status === 'undeliverable'
+          ? vm.messages.undeliverable
+          : null;
 
   return (
     <section aria-label={vm.sectionAriaLabel}>
@@ -111,13 +126,18 @@ export function AlertSignupForm({
               event.preventDefault();
               setStatus('pending');
               try {
-                await onSubscribe({
+                const result = await onSubscribe({
                   email,
                   consent: true,
                   frequency: 'weekly',
                   filters,
                   context,
                 });
+                if (result.status === 'email_domain_undeliverable') {
+                  emailSuggestion.offer(result.suggestion);
+                  setStatus('undeliverable');
+                  return;
+                }
                 if (conversion) {
                   const conversionEvent: JobAlertSubscribeDataLayerEvent = {
                     event: 'job_alert_subscribe',
@@ -135,12 +155,13 @@ export function AlertSignupForm({
                 }
                 setStatus('submitted');
                 setEmail('');
+                emailSuggestion.clear();
               } catch {
                 setStatus('error');
               }
             }}
           >
-            <Field data-invalid={status === 'error'}>
+            <Field data-invalid={invalid}>
               <FieldLabel className="sr-only" htmlFor={emailInputId}>
                 {vm.emailAriaLabel}
               </FieldLabel>
@@ -154,7 +175,7 @@ export function AlertSignupForm({
                     type="email"
                     name="email"
                     aria-label={vm.emailAriaLabel}
-                    aria-invalid={status === 'error'}
+                    aria-invalid={invalid}
                     inputMode="email"
                     autoComplete="email"
                     placeholder={vm.emailPlaceholder}
@@ -163,11 +184,15 @@ export function AlertSignupForm({
                     disabled={status === 'pending'}
                     onChange={(event) => {
                       setEmail(event.target.value);
+                      emailSuggestion.clear();
                       // Clear a stale submitted/error message once the user
                       // edits the address.
                       if (status !== 'idle' && status !== 'pending')
                         setStatus('idle');
                     }}
+                    onBlur={(event) =>
+                      emailSuggestion.check(event.target.value)
+                    }
                   />
                 </InputGroup>
                 <Button
@@ -181,8 +206,16 @@ export function AlertSignupForm({
                   {status === 'pending' ? vm.subscribingLabel : vm.buttonText}
                 </Button>
               </ButtonGroup>
+              <EmailSuggestionHint
+                suggestion={emailSuggestion.suggestion}
+                onAccept={(suggested) => {
+                  setEmail(suggested);
+                  emailSuggestion.clear();
+                  setStatus('idle');
+                }}
+              />
               {message ? (
-                status === 'error' ? (
+                invalid ? (
                   <FieldError>{message}</FieldError>
                 ) : (
                   <FieldDescription role="status">{message}</FieldDescription>

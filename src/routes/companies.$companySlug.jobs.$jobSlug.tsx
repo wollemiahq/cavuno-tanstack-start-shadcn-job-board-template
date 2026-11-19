@@ -199,10 +199,7 @@ function JobDetailPage() {
               filters={defaults.filters}
               context={defaults.context}
               language={board.language}
-              onSubscribe={async (input) => {
-                const result = await subscribeJobAlert({ data: input });
-                return { status: result.status };
-              }}
+              onSubscribe={(input) => subscribeJobAlert({ data: input })}
               // Job-page alert variant — the hosted board stores these as
               // jobCardLabels.jobAlertJob{Title,Description}; resolve the
               // stored override with the starter's English as the floor

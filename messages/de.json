@@ -476,6 +476,8 @@
   "boardError_companyNotFoundText": "Dieses Unternehmen existiert nicht mehr. Aktualisiere die Seite und versuche es erneut.",
   "boardError_companyRequiredText": "Wähle zuerst ein Unternehmen aus.",
   "boardError_emailTakenText": "Ein Konto mit dieser E-Mail existiert bereits.",
+  "boardError_emailDomainUndeliverableText": "An diese Adresse können wir keine E-Mail senden. Prüfe sie auf Tippfehler.",
+  "emailSuggestion_didYouMeanText": "Meintest du {email}?",
   "boardError_forbiddenText": "Dafür hast du keine Berechtigung.",
   "boardError_freeEmailWebsiteText": "Du kannst keine kostenlosen E-Mail-Domains als Unternehmenswebsite verwenden.",
   "boardError_genericText": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",

@@ -33,7 +33,10 @@ export function SignUpView({
       marketingConsent?: boolean;
       returnTo?: string;
     };
-  }) => Promise<{ ok: true } | { ok: false; code?: string; message: string }>;
+  }) => Promise<
+    | { ok: true }
+    | { ok: false; code?: string; message: string; suggestion?: string }
+  >;
   getOAuthAuthorizationUrlAction: (input: {
     data: {
       provider: 'google' | 'linkedin';

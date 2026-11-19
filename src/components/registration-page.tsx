@@ -7,6 +7,10 @@ import { m } from '../paraglide/messages';
 import { AuthDivider } from './auth-form';
 
 import { GoogleIcon, LinkedInIcon } from '@/components/brand-icons';
+import {
+  EmailSuggestionHint,
+  useEmailSuggestion,
+} from '@/components/email-suggestion-hint';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -150,7 +154,13 @@ type RegistrationCopy = {
 
 type RegistrationResult =
   | { ok: true }
-  | { ok: false; code?: string; message: string };
+  | {
+      ok: false;
+      code?: string;
+      message: string;
+      /** The API's corrected address for an `email_domain_undeliverable` refusal. */
+      suggestion?: string;
+    };
 type RegistrationSubmitValues = {
   displayName: string;
   email: string;
@@ -323,6 +333,8 @@ function RegistrationForm({
 }) {
   const pending = status.state === 'pending';
   const [consentChecked, setConsentChecked] = useState(false);
+  const [email, setEmail] = useState('');
+  const emailSuggestion = useEmailSuggestion();
 
   return (
     <form
@@ -342,6 +354,9 @@ function RegistrationForm({
             values.marketingConsent = consentChecked;
           }
           const result = await onSubmit(values);
+          if (!result.ok && result.code === 'email_domain_undeliverable') {
+            emailSuggestion.offer(result.suggestion);
+          }
           onStatusChange(
             result.ok
               ? { state: 'success' }
@@ -365,7 +380,23 @@ function RegistrationForm({
         name="email"
         type="email"
         autoComplete="email"
-      />
+        value={email}
+        onChange={(next) => {
+          setEmail(next);
+          emailSuggestion.clear();
+        }}
+        onBlur={emailSuggestion.check}
+      >
+        <EmailSuggestionHint
+          suggestion={emailSuggestion.suggestion}
+          onAccept={(suggested) => {
+            setEmail(suggested);
+            emailSuggestion.clear();
+            // The refusal was about the address just replaced.
+            if (status.state === 'error') onStatusChange({ state: 'idle' });
+          }}
+        />
+      </RegistrationField>
       <RegistrationField
         label={copy.passwordLabel}
         name="password"
@@ -426,12 +457,22 @@ function RegistrationField({
   type = 'text',
   autoComplete,
   minLength,
+  value,
+  onChange,
+  onBlur,
+  children,
 }: {
   label: string;
   name: string;
   type?: string;
   autoComplete?: string;
   minLength?: number;
+  /** Set together with `onChange` to control the field. */
+  value?: string;
+  onChange?: (value: string) => void;
+  onBlur?: (value: string) => void;
+  /** Shown under the input, such as a hint. */
+  children?: React.ReactNode;
 }) {
   return (
     <FormField>
@@ -443,7 +484,13 @@ function RegistrationField({
         autoComplete={autoComplete}
         minLength={minLength}
         required
+        value={value}
+        onChange={
+          onChange ? (event) => onChange(event.target.value) : undefined
+        }
+        onBlur={onBlur ? (event) => onBlur(event.target.value) : undefined}
       />
+      {children}
     </FormField>
   );
 }

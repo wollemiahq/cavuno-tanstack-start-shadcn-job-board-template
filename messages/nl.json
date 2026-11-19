@@ -476,6 +476,8 @@
   "boardError_companyNotFoundText": "Dit bedrijf bestaat niet meer. Vernieuw de pagina en probeer het opnieuw.",
   "boardError_companyRequiredText": "Kies een bedrijf voordat je doorgaat.",
   "boardError_emailTakenText": "Er bestaat al een account met dit e-mailadres.",
+  "boardError_emailDomainUndeliverableText": "We kunnen geen e-mail naar dit adres sturen. Controleer het op typefouten.",
+  "emailSuggestion_didYouMeanText": "Bedoelde je {email}?",
   "boardError_forbiddenText": "Je hebt geen toestemming om dit te doen.",
   "boardError_freeEmailWebsiteText": "Je kunt geen gratis e-maildomein als bedrijfswebsite gebruiken.",
   "boardError_genericText": "Er is iets misgegaan. Probeer het opnieuw.",

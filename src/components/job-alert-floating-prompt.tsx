@@ -22,10 +22,7 @@ export function JobAlertFloatingPrompt({
     <JobAlertFloatingPromptView
       defaults={defaults}
       language={language}
-      subscribe={async (input) => {
-        const result = await subscribeJobAlert({ data: input });
-        return { status: result.status };
-      }}
+      subscribe={(input) => subscribeJobAlert({ data: input })}
     />
   );
 }

@@ -190,3 +190,69 @@ describe('/auth/sign-up search contract', () => {
     },
   );
 });
+
+describe('/auth/sign-up mistyped email', () => {
+  async function renderSignUp() {
+    await renderRouted(
+      <SignUpView
+        boardName="Cavuno Jobs"
+        returnTo="/account"
+        signUpAction={mocks.signUp}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText(m.authSignUp_nameLabel()), {
+      target: { value: 'Ada Lovelace' },
+    });
+    fireEvent.change(screen.getByLabelText(m.authSignUp_passwordLabel()), {
+      target: { value: 'correct-horse' },
+    });
+    return screen.getByLabelText(m.authSignUp_emailLabel());
+  }
+
+  it('offers a likely correction on blur, and one tap takes it', async () => {
+    const email = await renderSignUp();
+    fireEvent.change(email, { target: { value: 'ada@hotmial.com' } });
+    fireEvent.blur(email);
+    fireEvent.click(screen.getByRole('button', { name: 'ada@hotmail.com' }));
+
+    expect(email).toHaveValue('ada@hotmail.com');
+    expect(
+      screen.queryByRole('button', { name: 'ada@hotmail.com' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('says why an undeliverable address was refused, then signs up with the correction', async () => {
+    mocks.signUp
+      .mockResolvedValueOnce({
+        ok: false,
+        code: 'email_domain_undeliverable',
+        message: 'This email address cannot receive mail.',
+        suggestion: 'ada@outlook.com',
+      })
+      .mockResolvedValueOnce({ ok: true });
+    const email = await renderSignUp();
+    // A domain the blur check leaves alone, so the hint can only be the API's.
+    fireEvent.change(email, { target: { value: 'ada@outlook.zz' } });
+    const submit = screen.getByRole('button', {
+      name: m.authSignUp_submitLabel(),
+    });
+    fireEvent.click(submit);
+
+    expect(
+      await screen.findByText(m.boardError_emailDomainUndeliverableText()),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'ada@outlook.com' }));
+    expect(email).toHaveValue('ada@outlook.com');
+    expect(
+      screen.queryByText(m.boardError_emailDomainUndeliverableText()),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(submit);
+    await screen.findByRole('link', { name: m.authSignUp_goToAccountLabel() });
+    expect(mocks.signUp).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({ email: 'ada@outlook.com' }),
+    });
+  });
+});

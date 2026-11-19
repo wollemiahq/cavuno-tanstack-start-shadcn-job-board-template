@@ -2,6 +2,7 @@ import { m } from '../paraglide/messages';
 
 export function alertsCopy() {
   return {
+    emailUndeliverableText: m.boardError_emailDomainUndeliverableText(),
     emailAriaLabel: m.alerts_emailAriaLabel(),
     jobAlertButtonText: m.alerts_jobAlertButtonText(),
     jobAlertEmailPlaceholder: m.alerts_jobAlertEmailPlaceholder(),

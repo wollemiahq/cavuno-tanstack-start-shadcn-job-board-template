@@ -113,6 +113,61 @@ describe('AlertSignupForm submission', () => {
     expect(input).toHaveValue('person@example.com');
   });
 
+  it('offers a likely correction on blur, and one tap takes it', () => {
+    render(
+      <AlertSignupForm
+        language="en"
+        onSubscribe={vi.fn().mockResolvedValue({ status: 'submitted' })}
+      />,
+    );
+
+    const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
+    fireEvent.change(input, { target: { value: 'person@example.com' } });
+    fireEvent.blur(input);
+    expect(
+      screen.queryByRole('button', { name: 'person@gmail.com' }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: 'person@gmial.com' } });
+    fireEvent.blur(input);
+    fireEvent.click(screen.getByRole('button', { name: 'person@gmail.com' }));
+
+    expect(input).toHaveValue('person@gmail.com');
+    expect(
+      screen.queryByRole('button', { name: 'person@gmail.com' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('says why an undeliverable address was refused and offers the API correction', async () => {
+    const pushes = captureDataLayer();
+    render(
+      <BoardConversionAnalyticsProvider boardSlug="acme" analytics={analytics}>
+        <AlertSignupForm
+          language="en"
+          onSubscribe={vi.fn().mockResolvedValue({
+            status: 'email_domain_undeliverable',
+            suggestion: 'person@outlook.com',
+          })}
+        />
+      </BoardConversionAnalyticsProvider>,
+    );
+
+    const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
+    // A domain the blur check leaves alone, so the hint can only be the API's.
+    fireEvent.change(input, { target: { value: 'person@outlook.zz' } });
+    fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      copy.emailUndeliverableText,
+    );
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(pushes).toEqual([]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'person@outlook.com' }));
+    expect(input).toHaveValue('person@outlook.com');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('fires job_alert_subscribe after a successful subscribe', async () => {
     const pushes = captureDataLayer();
     render(

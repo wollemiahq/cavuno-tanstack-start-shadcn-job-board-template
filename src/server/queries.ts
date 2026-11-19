@@ -40,6 +40,7 @@ import {
   hasEmployerOfferPage,
   hasPaidCandidatePlans,
 } from '../lib/candidate-pricing';
+import { emailDomainRefusal } from '../lib/email-domain-refusal';
 import { readPublicOrigin } from '../lib/public-origin';
 import { boardGlobalReadCache } from '../lib/read-cache';
 import { requestNear } from '../lib/request-near';
@@ -605,9 +606,22 @@ export const searchBlogSuggestions = createServerFn({ method: 'GET' })
 
 export const subscribeJobAlert = createServerFn({ method: 'POST' })
   .validator((input: JobAlertSubscribeInput) => input)
-  .handler(({ data }) =>
-    getBoard().jobAlerts.subscribe({ ...data, locale: getLocale() }),
-  );
+  .handler(async ({ data }) => {
+    try {
+      return await getBoard().jobAlerts.subscribe({
+        ...data,
+        locale: getLocale(),
+      });
+    } catch (error) {
+      // A mistyped domain is the person's to fix, so the form gets it as a
+      // result (with the API's correction) rather than a generic failure.
+      const refusal = emailDomainRefusal(error);
+      if (refusal) {
+        return { status: 'email_domain_undeliverable' as const, ...refusal };
+      }
+      throw error;
+    }
+  });
 
 export const confirmJobAlert = createServerFn({ method: 'POST' })
   .validator((input: { token: string }) => input)

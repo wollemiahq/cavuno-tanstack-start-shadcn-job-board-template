@@ -27,6 +27,7 @@ import {
   parseSessionForSource,
   serializeSessionForSource,
 } from '../lib/data-source.server';
+import { emailDomainRefusal } from '../lib/email-domain-refusal';
 import {
   hasMagicLinkIntent,
   MAGIC_LINK_BROWSER_BINDING_PARAM,
@@ -73,11 +74,20 @@ type AuthActionError = {
   ok: false;
   code: string;
   message: string;
+  /** The corrected address when a sign-up's email domain was refused. */
+  suggestion?: string;
 };
 
 function authError<T>(error: T): AuthActionError {
   if (isBoardApiError(error)) {
-    return { ok: false, code: error.code, message: error.message };
+    const result: AuthActionError = {
+      ok: false,
+      code: error.code,
+      message: error.message,
+    };
+    const suggestion = emailDomainRefusal(error)?.suggestion;
+    if (suggestion) result.suggestion = suggestion;
+    return result;
   }
   throw error;
 }
