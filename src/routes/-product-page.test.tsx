@@ -704,7 +704,8 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
     expect(screen.queryByRole('form')).toBeNull();
   });
 
-  const keepsStep: Array<[string, TestSession['user'], Partial<Product>]> = [
+  type KeepsStep = [string, TestSession['user'], Partial<Product>];
+  const keepsStep: KeepsStep[] = [
     ['a guest', null, {}],
     ['an unverified email', { ...verified, emailVerified: false }, {}],
     ['checkout questions', verified, { questions: [question] }],
