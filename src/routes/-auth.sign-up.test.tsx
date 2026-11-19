@@ -215,7 +215,7 @@ describe('/auth/sign-up mistyped email', () => {
     const email = await renderSignUp();
     fireEvent.change(email, { target: { value: 'ada@hotmial.com' } });
     fireEvent.blur(email);
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(await screen.findByRole('status')).toHaveTextContent(
       m.product_emailSuggestionText({ email: 'ada@hotmail.com' }),
     );
     fireEvent.click(screen.getByRole('button', { name: 'ada@hotmail.com' }));

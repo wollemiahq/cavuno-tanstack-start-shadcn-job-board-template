@@ -114,7 +114,7 @@ describe('AlertSignupForm submission', () => {
     expect(input).toHaveValue('person@example.com');
   });
 
-  it('offers a likely correction on blur, and one tap takes it', () => {
+  it('offers a likely correction on blur, and one tap takes it', async () => {
     render(
       <AlertSignupForm
         language="en"
@@ -123,28 +123,46 @@ describe('AlertSignupForm submission', () => {
     );
 
     const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
-    fireEvent.change(input, { target: { value: 'person@example.com' } });
-    fireEvent.blur(input);
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-
     fireEvent.change(input, { target: { value: 'person@gmial.com' } });
     fireEvent.blur(input);
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(await screen.findByRole('status')).toHaveTextContent(
       m.product_emailSuggestionText({ email: 'person@gmail.com' }),
     );
     // Editing the address hides a hint about the old one.
-    fireEvent.change(input, { target: { value: 'person@gmial.co' } });
+    fireEvent.change(input, { target: { value: 'person@example.com' } });
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    fireEvent.blur(input);
 
     fireEvent.change(input, { target: { value: 'person@gmial.com' } });
     fireEvent.blur(input);
-    fireEvent.click(screen.getByRole('button', { name: 'person@gmail.com' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'person@gmail.com' }),
+    );
 
     expect(input).toHaveValue('person@gmail.com');
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('keeps the hint inert while a subscribe is pending', () => {
+  it('drops a check that finishes after the address was edited', async () => {
+    render(
+      <AlertSignupForm
+        language="en"
+        onSubscribe={vi.fn().mockResolvedValue({ status: 'submitted' })}
+      />,
+    );
+
+    const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
+    fireEvent.change(input, { target: { value: 'person@gmial.com' } });
+    fireEvent.blur(input);
+    // Edited before the checker has loaded.
+    fireEvent.change(input, { target: { value: 'person@example.com' } });
+    await import('@cavuno/board/email');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('keeps the hint inert while a subscribe is pending', async () => {
     const onSubscribe = vi.fn(
       () => new Promise<{ status: 'submitted' }>(() => {}),
     );
@@ -153,8 +171,11 @@ describe('AlertSignupForm submission', () => {
     const input = screen.getByRole('textbox', { name: copy.emailAriaLabel });
     fireEvent.change(input, { target: { value: 'person@gmial.com' } });
     fireEvent.blur(input);
+    const hint = await screen.findByRole('button', {
+      name: 'person@gmail.com',
+    });
     fireEvent.click(screen.getByRole('button', { name: copy.submitAriaLabel }));
-    fireEvent.click(screen.getByRole('button', { name: 'person@gmail.com' }));
+    fireEvent.click(hint);
 
     expect(input).toHaveValue('person@gmial.com');
     expect(

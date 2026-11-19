@@ -1,6 +1,4 @@
-import { useCallback, useState } from 'react';
-
-import { suggestEmailAddress } from '@cavuno/board/email';
+import { useCallback, useRef, useState } from 'react';
 
 import { m } from '../paraglide/messages';
 
@@ -13,18 +11,30 @@ import { textActionClass } from '@/lib/text-link';
  * `offer` shows the correction the API sent with a refused submit
  * (`email_domain_undeliverable`), and `clear` hides it once the person edits
  * the address or takes the correction.
+ *
+ * The checker (`@cavuno/board/email`, mostly a list of mail domains) is
+ * imported on the first blur, so the job and sign-up pages that carry these
+ * forms don't load it up front. Each call bumps `latest`, so a check that
+ * resolves after the person edited or took a correction is dropped.
  */
 export function useEmailSuggestion() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
-  const check = useCallback(
-    (email: string) => setSuggestion(suggestEmailAddress(email)),
-    [],
-  );
+  const latest = useRef(0);
+  const show = useCallback((email: string | null) => {
+    latest.current += 1;
+    setSuggestion(email);
+  }, []);
+  const check = useCallback((email: string) => {
+    const call = (latest.current += 1);
+    void import('@cavuno/board/email').then(({ suggestEmailAddress }) => {
+      if (call === latest.current) setSuggestion(suggestEmailAddress(email));
+    });
+  }, []);
   const offer = useCallback(
-    (email: string | null | undefined) => setSuggestion(email ?? null),
-    [],
+    (email: string | null | undefined) => show(email ?? null),
+    [show],
   );
-  const clear = useCallback(() => setSuggestion(null), []);
+  const clear = useCallback(() => show(null), [show]);
   return { suggestion, check, offer, clear };
 }
 
