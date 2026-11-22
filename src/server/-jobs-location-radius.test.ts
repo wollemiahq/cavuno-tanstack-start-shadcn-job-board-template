@@ -608,3 +608,67 @@ describe('location listing read order on a cold slug', () => {
     );
   });
 });
+
+describe('single-country combination canonical', () => {
+  function canonicalHref(result: Awaited<ReturnType<typeof getJobsLocationCategoryPage>>) {
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    return result.head.links;
+  }
+
+  it('canonicalises a country + category page to the plain category page the API names', async () => {
+    mocks.resolve.mockResolvedValue(resolution('country', 'NL'));
+    mocks.list.mockResolvedValue({
+      ...emptyList,
+      canonicalPath: '/jobs/ai-engineer',
+    });
+
+    const result = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'ai-engineer' },
+    });
+
+    expect(canonicalHref(result)).toEqual([
+      {
+        rel: 'canonical',
+        href: `https://fixture.example${localizePath('/jobs/ai-engineer')}`,
+      },
+    ]);
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    // The page stays live and indexable: only the canonical moves.
+    expect(robots(result.head)).toBeUndefined();
+  });
+
+  it('canonicalises a country + skill page to the plain skill page the API names', async () => {
+    mocks.resolve.mockResolvedValue(resolution('country', 'NL'));
+    mocks.list.mockResolvedValue({
+      ...emptyList,
+      canonicalPath: '/jobs/skills/python',
+    });
+
+    const result = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'python' },
+    });
+
+    if (result.kind !== 'ok') throw new Error('expected a listing');
+    expect(result.head.links).toEqual([
+      {
+        rel: 'canonical',
+        href: `https://fixture.example${localizePath('/jobs/skills/python')}`,
+      },
+    ]);
+  });
+
+  it('stays self-canonical when the API names no canonical', async () => {
+    mocks.resolve.mockResolvedValue(resolution('country', 'NL'));
+
+    const result = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'ai-engineer' },
+    });
+
+    expect(canonicalHref(result)).toEqual([
+      {
+        rel: 'canonical',
+        href: `https://fixture.example${localizePath('/jobs/locations/fixture-place/ai-engineer')}`,
+      },
+    ]);
+  });
+});
