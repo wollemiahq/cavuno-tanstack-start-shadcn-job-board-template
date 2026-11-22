@@ -47,6 +47,7 @@ import {
   placeListingSort,
 } from './listing-place-cache';
 import {
+  listingCanonicalPath,
   noindexFollow,
   resolveOrNull,
   settled,
@@ -1043,7 +1044,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           }),
           origin: seo.origin,
           path: localizePath(
-            `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+            listingCanonicalPath(
+              list,
+              `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
+            ),
           ),
           description: listingMetaDescription({
             heading: heading,
@@ -1226,7 +1230,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           }),
           origin: seo.origin,
           path: localizePath(
-            `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+            listingCanonicalPath(
+              list,
+              `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
+            ),
           ),
           description: listingMetaDescription({
             heading: heading,
