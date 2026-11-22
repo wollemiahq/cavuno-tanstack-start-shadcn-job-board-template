@@ -609,7 +609,7 @@ describe('location listing read order on a cold slug', () => {
   });
 });
 
-describe('single-country combination canonical', () => {
+describe('combination canonical from the API', () => {
   function canonicalHref(
     result: Awaited<ReturnType<typeof getJobsLocationCategoryPage>>,
   ) {

@@ -123,9 +123,9 @@ type ListingCanonical = { readonly canonicalPath?: string } & object;
 
 /**
  * The path a location × category or location × skill page puts in its
- * canonical: the listing's `canonicalPath` when the API sends one (a
- * single-country board's country page canonicalises to the plain category or
- * skill page), else the page's own path. The page stays live either way.
+ * canonical: the listing's `canonicalPath` when the API sends one (the page
+ * whose results this listing duplicates), else the page's own path. The page
+ * stays live either way.
  */
 export function listingCanonicalPath(
   list: ListingCanonical,
