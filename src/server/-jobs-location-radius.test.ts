@@ -610,7 +610,9 @@ describe('location listing read order on a cold slug', () => {
 });
 
 describe('single-country combination canonical', () => {
-  function canonicalHref(result: Awaited<ReturnType<typeof getJobsLocationCategoryPage>>) {
+  function canonicalHref(
+    result: Awaited<ReturnType<typeof getJobsLocationCategoryPage>>,
+  ) {
     if (result.kind !== 'ok') throw new Error('expected a listing');
     return result.head.links;
   }
