@@ -252,6 +252,9 @@ export const getHelpCategoryPage = createServerFn({ method: 'GET' })
     }),
   );
 
+/** How many other articles of its category an article page lists. */
+const HELP_ARTICLE_MORE_LIMIT = 5;
+
 /**
  * `/help/articles/<slug>` — one article with its body. An old slug still
  * resolves, with `redirected` and `newSlug` set; the route loader answers
@@ -271,6 +274,22 @@ export const getHelpArticlePage = createServerFn({ method: 'GET' })
         ),
         seoBase(),
       ]);
+      // An old slug redirects before anything renders, so it needs no list.
+      const siblings = article.redirected
+        ? null
+        : await helpRead(() =>
+            board.help.articles.list(
+              {
+                categorySlug: article.category.slug,
+                // One spare, since the list can include this article.
+                limit: HELP_ARTICLE_MORE_LIMIT + 1,
+              },
+              { headers },
+            ),
+          );
+      const others = (siblings?.data ?? []).filter(
+        (other) => other.id !== article.id,
+      );
       const crumbs = breadcrumbsCopy();
       const { breadcrumbTrail, breadcrumbJsonLd } = trail(seo.origin, [
         { name: crumbs.home, path: BOARD_PATHS.home },
@@ -284,6 +303,12 @@ export const getHelpArticlePage = createServerFn({ method: 'GET' })
       const canonical = selfUrl(seo.origin, helpArticlePath(article.slug));
       return {
         article,
+        moreInCategory: {
+          articles: others.slice(0, HELP_ARTICLE_MORE_LIMIT),
+          hasMore:
+            Boolean(siblings?.hasMore) ||
+            others.length > HELP_ARTICLE_MORE_LIMIT,
+        },
         head: {
           meta: [
             { title: headTitle(seo.boardName, article.title) },

@@ -234,6 +234,20 @@ function HelpContactPrompt({
   );
 }
 
+/** The last row of a card that shows part of a category: on to the rest. */
+function HelpViewAllLink({ categorySlug }: { categorySlug: string }) {
+  return (
+    <Link
+      to="/help/categories/$helpCategorySlug"
+      params={{ helpCategorySlug: categorySlug }}
+      className="border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:ring-ring/50 flex items-center gap-1.5 border-t px-(--card-spacing) py-3.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-inset"
+    >
+      {m.help_viewAllLabel()}
+      <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+    </Link>
+  );
+}
+
 /** One category on the help home: what it covers and its first articles. */
 function HelpCategoryCard({
   group: { category, articles },
@@ -276,16 +290,7 @@ function HelpCategoryCard({
           />
         </div>
       ) : null}
-      {showViewAll ? (
-        <Link
-          to="/help/categories/$helpCategorySlug"
-          params={{ helpCategorySlug: category.slug }}
-          className="border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:ring-ring/50 flex items-center gap-1.5 border-t px-(--card-spacing) py-3.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-inset"
-        >
-          {m.help_viewAllLabel()}
-          <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
-        </Link>
-      ) : null}
+      {showViewAll ? <HelpViewAllLink categorySlug={category.slug} /> : null}
     </Card>
   );
 }
@@ -474,6 +479,14 @@ export function HelpCategoryPage({
 
 export interface HelpArticlePageProps {
   article: PublicHelpArticle;
+  /**
+   * Other articles of the same category, in the board's order. `hasMore`
+   * when the category holds more than these.
+   */
+  moreInCategory?: {
+    articles: PublicHelpArticleSummary[];
+    hasMore: boolean;
+  } | null;
   /** "Updated 12 March 2026", already formatted for the viewer's locale. */
   updatedLabel: string | null;
   /** How to reach the board, for "Still need help?". */
@@ -482,15 +495,18 @@ export interface HelpArticlePageProps {
 
 /**
  * One article: where it sits, its title, summary and last update, then the
- * body on the reading column, with its sections listed beside it. The body
+ * body on the reading column, with its sections listed beside it and the
+ * category's other articles after it. The body
  * is `article.html`, which the Board API sanitized; `Prose` renders it and
  * no other string is rendered as HTML here.
  */
 export function HelpArticlePage({
   article,
+  moreInCategory,
   updatedLabel,
   contact,
 }: HelpArticlePageProps) {
+  const moreTitleId = useId();
   const headings = extractToc(article.html);
   const bodyHtml = withHeadingAnchors(article.html);
   const hasToc = headings.length >= 2;
@@ -532,22 +548,45 @@ export function HelpArticlePage({
             ) : null}
             {bodyHtml ? <Prose html={bodyHtml} /> : null}
             <footer className="border-border flex flex-col gap-6 border-t pt-8">
-              <Link
-                to="/help/categories/$helpCategorySlug"
-                params={{ helpCategorySlug: article.category.slug }}
-                className={`${buttonVariants({ variant: 'outline' })} self-start`}
-              >
-                <ArrowLeft
-                  aria-hidden
-                  data-icon="inline-start"
-                  className="rtl:rotate-180"
-                />
-                <span dir="auto">
-                  {m.helpCategory_articlesLabel({
-                    category: article.category.title,
-                  })}
-                </span>
-              </Link>
+              {moreInCategory && moreInCategory.articles.length > 0 ? (
+                <section
+                  aria-labelledby={moreTitleId}
+                  className="flex flex-col gap-3"
+                >
+                  <h2
+                    id={moreTitleId}
+                    className="font-heading text-lg font-semibold"
+                    dir="auto"
+                  >
+                    {m.helpArticle_moreInCategoryTitle({
+                      category: article.category.title,
+                    })}
+                  </h2>
+                  <Card className="gap-0 py-0">
+                    <HelpArticleRows articles={moreInCategory.articles} />
+                    {moreInCategory.hasMore ? (
+                      <HelpViewAllLink categorySlug={article.category.slug} />
+                    ) : null}
+                  </Card>
+                </section>
+              ) : (
+                <Link
+                  to="/help/categories/$helpCategorySlug"
+                  params={{ helpCategorySlug: article.category.slug }}
+                  className={`${buttonVariants({ variant: 'outline' })} self-start`}
+                >
+                  <ArrowLeft
+                    aria-hidden
+                    data-icon="inline-start"
+                    className="rtl:rotate-180"
+                  />
+                  <span dir="auto">
+                    {m.helpCategory_articlesLabel({
+                      category: article.category.title,
+                    })}
+                  </span>
+                </Link>
+              )}
               <HelpContactPrompt contact={contact} />
             </footer>
           </article>

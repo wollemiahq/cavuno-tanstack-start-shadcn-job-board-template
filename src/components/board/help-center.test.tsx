@@ -11,7 +11,11 @@ import {
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { HelpHomePage, type HelpCategoryGroup } from './help-center';
+import {
+  HelpArticlePage,
+  HelpHomePage,
+  type HelpCategoryGroup,
+} from './help-center';
 
 import { m } from '@/paraglide/messages';
 import type { PublicHelpArticleSummary } from '@cavuno/board';
@@ -120,5 +124,35 @@ describe('HelpHomePage', () => {
     expect(
       within(results).getByRole('link', { name: m.help_searchResetLabel() }),
     ).toHaveAttribute('href', '/help');
+  });
+});
+
+describe('HelpArticlePage', () => {
+  it("lists the category's other articles after the body and links to the rest", async () => {
+    renderHome(
+      <HelpArticlePage
+        article={{
+          ...refunds,
+          html: '<p>We refund within 48 hours.</p>',
+          redirected: false,
+          newSlug: null,
+        }}
+        moreInCategory={{
+          articles: [article('invoices', 'Where to find an invoice')],
+          hasMore: true,
+        }}
+        updatedLabel={null}
+      />,
+    );
+
+    const more = await screen.findByRole('region', {
+      name: m.helpArticle_moreInCategoryTitle({ category: 'Billing' }),
+    });
+    expect(
+      within(more).getByRole('link', { name: 'Where to find an invoice' }),
+    ).toHaveAttribute('href', '/help/articles/invoices');
+    expect(
+      within(more).getByRole('link', { name: m.help_viewAllLabel() }),
+    ).toHaveAttribute('href', '/help/categories/billing');
   });
 });

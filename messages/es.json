@@ -1455,6 +1455,7 @@
   "helpCategory_notFoundTitle": "Categoría no encontrada",
   "helpArticle_notFoundTitle": "Artículo no encontrado",
   "helpArticle_updatedText": "Actualizado el {date}",
+  "helpArticle_moreInCategoryTitle": "Más en {category}",
   "home_blogDescription": "Guías y consejos de contratación de nuestro equipo.",
   "home_blogHeading": "Del blog",
   "home_candidateCtaButton": "Crear un perfil de candidato",

@@ -1455,6 +1455,7 @@
   "helpCategory_notFoundTitle": "Kategorie nicht gefunden",
   "helpArticle_notFoundTitle": "Artikel nicht gefunden",
   "helpArticle_updatedText": "Aktualisiert am {date}",
+  "helpArticle_moreInCategoryTitle": "Mehr in {category}",
   "home_blogDescription": "Tipps und Einblicke rund ums Recruiting von unserem Team.",
   "home_blogHeading": "Aus dem Blog",
   "home_candidateCtaButton": "Kandidatenprofil erstellen",
