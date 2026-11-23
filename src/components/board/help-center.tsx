@@ -30,14 +30,6 @@ import {
 } from '@/components/layout/page';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
@@ -87,74 +79,17 @@ function articleCountLabel(count: number) {
 }
 
 /**
- * The full-bleed band every help page opens with, on the readable column the
- * help center keeps. Category and article pages use the grey band of the
- * company and job pages; the home's is the board's primary colour, so the
- * front door of the help center reads as the board's own.
+ * The full-bleed band the help home opens with, in the board's primary
+ * colour and on the readable column the help center keeps. Category and
+ * article pages open like the blog's: the title straight on the page.
  */
-function HelpBand({
-  tone = 'quiet',
-  children,
-}: {
-  tone?: 'quiet' | 'brand';
-  children: ReactNode;
-}) {
+function HelpBand({ children }: { children: ReactNode }) {
   return (
     <Bleed>
-      <div
-        className={
-          tone === 'brand'
-            ? 'bg-primary text-primary-foreground'
-            : 'border-border bg-secondary border-b'
-        }
-      >
+      <div className="bg-primary text-primary-foreground">
         <Container width="content">{children}</Container>
       </div>
     </Bleed>
-  );
-}
-
-/**
- * Where the page sits in the help center, above its title. The page's full
- * trail from the board home stays in the footer, where the shell renders it.
- */
-function HelpTrail({
-  category,
-  current = false,
-}: {
-  category: Pick<PublicHelpCategory, 'slug' | 'title'>;
-  /** The category is the page being viewed, so it is not a link. */
-  current?: boolean;
-}) {
-  return (
-    <Breadcrumb aria-label={m.help_title()}>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink render={<Link to="/help" />} className={focusRing}>
-            {m.help_title()}
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          {current ? (
-            <BreadcrumbPage dir="auto">{category.title}</BreadcrumbPage>
-          ) : (
-            <BreadcrumbLink
-              render={
-                <Link
-                  to="/help/categories/$helpCategorySlug"
-                  params={{ helpCategorySlug: category.slug }}
-                />
-              }
-              className={focusRing}
-              dir="auto"
-            >
-              {category.title}
-            </BreadcrumbLink>
-          )}
-        </BreadcrumbItem>
-      </BreadcrumbList>
-    </Breadcrumb>
   );
 }
 
@@ -340,7 +275,7 @@ export function HelpHomePage({
     <Page width="content">
       <PageContent
         header={
-          <HelpBand tone="brand">
+          <HelpBand>
             <header className="flex flex-col items-center gap-3 py-10 text-center md:py-14">
               <p className="text-primary-foreground/70 text-sm font-medium">
                 {m.help_title()}
@@ -443,25 +378,20 @@ export function HelpCategoryPage({
     <Page width="content">
       <PageContent
         header={
-          <HelpBand>
-            <div className="pb-(--header-space)">
-              <PageHeader
-                eyebrow={<HelpTrail category={category} current />}
-                title={<span dir="auto">{category.title}</span>}
-                description={
-                  category.description ? (
-                    <span dir="auto">{category.description}</span>
-                  ) : undefined
-                }
-              >
-                {articleCount === undefined ? null : (
-                  <p className="text-muted-foreground text-sm">
-                    {articleCountLabel(articleCount)}
-                  </p>
-                )}
-              </PageHeader>
-            </div>
-          </HelpBand>
+          <PageHeader
+            title={<span dir="auto">{category.title}</span>}
+            description={
+              category.description ? (
+                <span dir="auto">{category.description}</span>
+              ) : undefined
+            }
+          >
+            {articleCount === undefined ? null : (
+              <p className="text-muted-foreground text-sm">
+                {articleCountLabel(articleCount)}
+              </p>
+            )}
+          </PageHeader>
         }
       >
         {articles.length > 0 ? (
@@ -515,29 +445,25 @@ export function HelpArticlePage({
     <Page width="wide">
       <PageContent
         header={
-          <HelpBand>
-            <div className="pb-(--header-space)">
-              <PageHeader
-                eyebrow={<HelpTrail category={article.category} />}
-                title={<span dir="auto">{article.title}</span>}
-                description={
-                  article.summary ? (
-                    <span dir="auto">{article.summary}</span>
-                  ) : undefined
-                }
-              >
-                {updatedLabel ? (
-                  <p className="text-muted-foreground text-sm">
-                    {updatedLabel}
-                  </p>
-                ) : null}
-              </PageHeader>
-            </div>
-          </HelpBand>
+          // On the reading column, so the title lines up with the body.
+          <div className="mx-auto w-full max-w-3xl">
+            <PageHeader
+              title={<span dir="auto">{article.title}</span>}
+              description={
+                article.summary ? (
+                  <span dir="auto">{article.summary}</span>
+                ) : undefined
+              }
+            >
+              {updatedLabel ? (
+                <p className="text-muted-foreground text-sm">{updatedLabel}</p>
+              ) : null}
+            </PageHeader>
+          </div>
         }
       >
-        {/* The reading column stays centred under the band's title; from xl
-            the section list rides the margin beside it. */}
+        {/* The reading column stays centred under the title; from xl the
+            section list rides the margin beside it. */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_minmax(0,48rem)_1fr]">
           <article className="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-10 xl:col-start-2">
             {hasToc ? (
