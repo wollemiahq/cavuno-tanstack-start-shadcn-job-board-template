@@ -23,7 +23,10 @@ import { mcpAuthorizeQuery } from '../lib/mcp-authorize-query';
 import { gatedRead } from './board-access';
 
 import { boardErrorMessage } from '@/lib/board-error-message';
-import type { McpConsentStep as BoardMcpConsentStep } from '@cavuno/board';
+import type {
+  McpConsentDecision,
+  McpConsentStep as BoardMcpConsentStep,
+} from '@cavuno/board';
 
 type BoardStep<Next extends BoardMcpConsentStep['next']> = Extract<
   BoardMcpConsentStep,
@@ -66,10 +69,8 @@ export type McpConsentSubject = NonNullable<
   BoardStep<'consent'>['access']['employer']
 >['reads'][number];
 
-export type McpConsentDecision = Extract<
-  McpConsentStep,
-  { next: 'redirect' | 'error' }
->;
+/** Allow or Cancel's answer: the assistant's callback, or an error. */
+export type { McpConsentDecision };
 
 export type McpConsentResult =
   | { ok: true; data: McpConsentDecision }

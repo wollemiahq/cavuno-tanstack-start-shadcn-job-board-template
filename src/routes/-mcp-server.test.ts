@@ -9,10 +9,8 @@
 import { createMemoryHistory, createRouter } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { localizePath } from '../lib/localized-path';
 import { localizedRedirectLocation } from '../lib/localized-url-redirect';
 import {
-  MCP_CONSENT_PATH,
   mcpAuthorizeQuery,
   mcpAuthorizeRedirect,
 } from '../lib/mcp-authorize-query';
@@ -37,6 +35,26 @@ const env = vi.hoisted(() => ({
   current: { apiUrl: 'https://api.example.test', board: 'pk_test_board' },
 }));
 vi.mock('../lib/env', () => ({ getServerEnv: () => env.current }));
+
+// The board's language, switchable within this module instance: an English
+// board serves canonical URLs, a Dutch one its words (src/url-words.json).
+const boardLanguage = vi.hoisted(() => ({ current: 'en' }));
+vi.mock('../paraglide/runtime', async (importOriginal) => {
+  const runtime = await importOriginal<typeof import('../paraglide/runtime')>();
+  return {
+    ...runtime,
+    get baseLocale() {
+      return boardLanguage.current;
+    },
+    getLocale: () => boardLanguage.current,
+    isLocale: (tag: string) => tag === boardLanguage.current,
+    localizeHref: (href: string) => href,
+  };
+});
+vi.mock('virtual:url-words', async () => {
+  const words = (await import('../url-words.json')).default;
+  return { default: { nl: words.nl } };
+});
 
 const UPSTREAM = 'https://api.example.test/v1/boards/pk_test_board';
 const SITE = 'https://board.example.com';
@@ -110,24 +128,27 @@ type RouteHandler = (
   context: ReturnType<typeof handlerContext<string>>,
 ) => Promise<Response>;
 
-/** Any of the route modules above, served by its handler for the method. */
+/**
+ * Any of the sign-in route modules above: each hands every method to the
+ * SDK handler (`ANY`), which owns the method policy.
+ */
 async function serveRoute(
   route: { options: { server?: { handlers?: object } } },
   request: Request,
 ): Promise<Response> {
   // SAFETY: these route modules declare their handlers as an object keyed by
-  // method, each returning mcpHandler's response; a missing method fails.
+  // method, returning mcpHandler's response; a missing ANY fails below.
   const handlers = route.options.server?.handlers as
     | Record<string, RouteHandler | undefined>
     | undefined;
-  const handle = handlers?.[request.method];
-  if (!handle) throw new Error(`no ${request.method} handler`);
-  return handle(handlerContext(request, new URL(request.url).pathname));
+  if (!handlers?.ANY) throw new Error('expected an ANY server handler');
+  return handlers.ANY(handlerContext(request, new URL(request.url).pathname));
 }
 
 afterEach(() => {
   vi.unstubAllGlobals();
   env.current = { apiUrl: 'https://api.example.test', board: 'pk_test_board' };
+  boardLanguage.current = 'en';
 });
 
 describe('MCP server mount', () => {
@@ -232,15 +253,55 @@ describe('sign-in from assistants', () => {
 
     expect(res.status).toBe(302);
     const location = res.headers.get('location') ?? '';
-    expect(location).toBe(`${localizePath(MCP_CONSENT_PATH)}${RAW_QUERY}`);
+    expect(location).toBe(`/authorize${RAW_QUERY}`);
     expect(fetchMock).not.toHaveBeenCalled();
 
     // The consent page then keeps the query as it is for the Board API.
     const kept = mcpAuthorizeRedirect(new Request(`${SITE}${location}`));
     expect(kept?.status).toBe(307);
     const keptUrl = new URL(kept?.headers.get('location') ?? '', SITE);
-    expect(keptUrl.pathname).toBe(localizePath(MCP_CONSENT_PATH));
+    expect(keptUrl.pathname).toBe('/authorize');
     expect(mcpAuthorizeQuery(keptUrl.search)).toBe(RAW_QUERY);
+  });
+
+  it('sends /oauth/authorize to the consent page in the board’s URL words', async () => {
+    mockUpstream('', 'text/plain');
+    const authorize = () =>
+      serveRoute(
+        AuthorizeRoute,
+        new Request(`${SITE}/oauth/authorize${RAW_QUERY}`),
+      );
+
+    // An English board first, so the handler made for it is the one held.
+    expect((await authorize()).headers.get('location')).toBe(
+      `/authorize${RAW_QUERY}`,
+    );
+    boardLanguage.current = 'nl';
+    expect((await authorize()).headers.get('location')).toBe(
+      `/autoriseren${RAW_QUERY}`,
+    );
+  });
+
+  it('leaves the method policy to the SDK handler', async () => {
+    const fetchMock = mockUpstream('', 'text/plain');
+
+    // The SDK's own preflight answer, on the authorize path too.
+    const preflight = await serveRoute(
+      AuthorizeRoute,
+      new Request(`${SITE}/oauth/authorize`, { method: 'OPTIONS' }),
+    );
+    expect(preflight.status).toBe(204);
+    expect(preflight.headers.get('access-control-allow-methods')).toBe(
+      'GET, POST, OPTIONS',
+    );
+
+    const wrongMethod = await serveRoute(
+      TokenRoute,
+      new Request(`${SITE}/oauth/token`),
+    );
+    expect(wrongMethod.status).toBe(405);
+    expect(wrongMethod.headers.get('allow')).toBe('POST');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it.each(DISCOVERY)(

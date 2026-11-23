@@ -13,7 +13,7 @@
  */
 import { useState, type ReactNode } from 'react';
 
-import { isBoardApiError } from '@cavuno/board';
+import { isBoardApiError, type Assistant } from '@cavuno/board';
 import { isRedirect, Link, redirect } from '@tanstack/react-router';
 
 import { DangerZone } from '../components/danger-zone';
@@ -38,7 +38,6 @@ import {
   unsubscribeWithLink,
   updateNotificationPreference,
   updatePassword,
-  type ConnectedAssistant,
   type StarterUnsubscribeBody,
   type StarterUpdateNotificationPreferenceBody,
 } from '../server/settings';
@@ -257,7 +256,7 @@ export function SettingsPageView({
         preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
         consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
         account: SettingsAccount;
-        assistants: ConnectedAssistant[];
+        assistants: Assistant[];
         seo: { boardName: string };
       };
   jobRecommendationsEnabled?: boolean;
@@ -441,7 +440,7 @@ function SignedInSettings({
   preferences: Parameters<typeof NotificationSettings>[0]['preferences'];
   consent: Parameters<typeof MarketingConsentSettings>[0]['consent'];
   account: SettingsAccount;
-  assistants: ConnectedAssistant[];
+  assistants: Assistant[];
   boardName: string;
   jobRecommendationsEnabled: boolean;
   dependencies: SettingsRouteDependencies;

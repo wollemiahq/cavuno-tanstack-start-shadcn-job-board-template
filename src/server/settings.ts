@@ -241,9 +241,6 @@ export const updatePassword = createServerFn({ method: 'POST' })
 // The AI assistants (Claude, ChatGPT…) the person allowed to use their
 // account through the board's MCP server (`board.me.assistants`).
 
-/** One connected assistant; `host` is its website, e.g. `claude.ai`. */
-export type ConnectedAssistant = Assistant;
-
 /**
  * The person's connected assistants, newest first (up to 50). Empty, with
  * no call, while the board doesn't serve its MCP server (`features.mcp`).
@@ -251,7 +248,7 @@ export type ConnectedAssistant = Assistant;
 export const getConnectedAssistants = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ context }) =>
-    gatedRead(context, async (): Promise<ConnectedAssistant[]> => {
+    gatedRead(context, async (): Promise<Assistant[]> => {
       const { features } = await readBoardContext();
       if (!readMcpServerFlag(features)) return [];
       const headers = authedHeaders(context);

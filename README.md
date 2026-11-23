@@ -394,9 +394,10 @@ Sign-in turns on automatically when `CAVUNO_BOARD` is the board's `pk_…`
 publishable key and the site's origin is registered for that key in the
 dashboard (**Settings → SDK**: the self-hosted domain, plus development
 origins such as your local dev server). The assistant opens the site's own
-consent page (`/authorize`), and people disconnect assistants from
-`/settings`. With a board slug instead of a key, the MCP server stays
-anonymous. On Cavuno's Builder the platform answers these paths itself.
+consent page (`/authorize` in the board's URL words, e.g. `/autoriseren` on
+a Dutch board), and people disconnect assistants from `/settings`. With a
+board slug instead of a key, the MCP server stays anonymous. On Cavuno's
+Builder the platform answers these paths itself.
 
 ### Use the Workers Paid plan
 
