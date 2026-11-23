@@ -2,16 +2,20 @@
  * The board MCP server's consent step, on this site's own consent page
  * (`/authorize`, the `assistantConsent` page). The Board API checks the assistant's OAuth request and
  * the signed-in visitor and says which step comes next; this site only
- * renders that step and passes the visitor's Allow or Cancel back.
+ * renders that step and passes the visitor's Allow or Cancel back
+ * (`board.mcpConsent.get` and `submit`).
  *
- * Until the SDK this site pins has `board.mcpConsent`, the two calls go
- * through `client.fetch` with types written here from the published schema
- * (`getBoardMcpConsent`, `submitBoardMcpConsent`).
+ * Both calls name this site in `MCP_SITE_HEADER`: the request URL's origin,
+ * the same one the MCP handler sends (src/routes/-mcp-handler.ts), which is
+ * the sign-in's issuer. A self-hosted site needs it; on a Builder site the
+ * API takes the site's origin from the gateway's signed identity first and
+ * reads the header only from a publishable-key (`external-sdk`) caller.
  */
 import { isBoardApiError } from '@cavuno/board';
+import { MCP_SITE_HEADER } from '@cavuno/board/mcp';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { setResponseHeader } from '@tanstack/react-start/server';
+import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
@@ -19,61 +23,54 @@ import { mcpAuthorizeQuery } from '../lib/mcp-authorize-query';
 import { gatedRead } from './board-access';
 
 import { boardErrorMessage } from '@/lib/board-error-message';
+import type {
+  McpConsentDecision,
+  McpConsentStep as BoardMcpConsentStep,
+} from '@cavuno/board';
 
-/** Why the person can't connect; `rate_limited` is this site's own. */
-export type McpConsentErrorCode =
-  | 'invalid_link'
-  | 'unknown_client'
-  | 'client_rejected'
-  | 'redirect_mismatch'
-  | 'not_signed_in'
-  | 'no_account'
-  | 'expired'
-  | 'unavailable'
-  | 'rate_limited';
-
-export type McpConsentAccountScope = 'candidate' | 'employer';
-
-export type McpConsentSubject = 'profiles' | 'jobs' | 'applicants';
+type BoardStep<Next extends BoardMcpConsentStep['next']> = Extract<
+  BoardMcpConsentStep,
+  { next: Next }
+>;
 
 /**
- * The step as facts, which the page words in the board's language. The API
- * also sends the step in English (`heading`, `trust`, `scopes`, …); only an
+ * The API also sends the step in English; the page words it in the board's
+ * language from the facts instead.
+ */
+type EnglishWording = 'heading' | 'trust' | 'scopes' | 'redirectNotice';
+
+/** Too many tries, said on the page: this site's own error code. */
+type RateLimitedStep = {
+  next: 'error';
+  code: 'rate_limited';
+  message: string;
+};
+
+/**
+ * The step as facts, which the page words in the board's language. Only an
  * error's `message` is read, for a code this site doesn't know yet.
  */
 export type McpConsentStep =
-  | {
-      next: 'consent';
-      /** Carried back unchanged with the decision. */
-      request: string;
-      consentToken: string;
-      clientName: string;
-      knownAssistant: string | null;
-      email: string;
-      trustLevel: 'domain_verified' | 'verified' | 'unverified';
-      publisherHost: string | null;
-      redirectHost: string;
-      access: {
-        candidate: 'account' | 'searches' | null;
-        employer: {
-          reads: McpConsentSubject[];
-          changes: McpConsentSubject[];
-        } | null;
-      };
-    }
-  | { next: 'sign_in' | 'verify_email'; returnTo: string }
-  | { next: 'redirect'; location: string }
-  | {
-      next: 'error';
-      code: McpConsentErrorCode;
-      message: string;
-      accountScopes?: McpConsentAccountScope[];
-    };
+  | Omit<BoardStep<'consent'>, EnglishWording>
+  | Exclude<BoardMcpConsentStep, { next: 'consent' }>
+  | RateLimitedStep;
 
-export type McpConsentDecision = Extract<
+/** Why the person can't connect; `rate_limited` is this site's own. */
+export type McpConsentErrorCode = Extract<
   McpConsentStep,
-  { next: 'redirect' | 'error' }
->;
+  { next: 'error' }
+>['code'];
+
+export type McpConsentAccountScope = NonNullable<
+  BoardStep<'error'>['accountScopes']
+>[number];
+
+export type McpConsentSubject = NonNullable<
+  BoardStep<'consent'>['access']['employer']
+>['reads'][number];
+
+/** Allow or Cancel's answer: the assistant's callback, or an error. */
+export type { McpConsentDecision };
 
 export type McpConsentResult =
   | { ok: true; data: McpConsentDecision }
@@ -84,6 +81,14 @@ function noStore() {
   setResponseHeader('cache-control', 'private, no-store');
 }
 
+/** The visitor's bearer and grant, and this site's origin. */
+function consentHeaders(headers: Record<string, string>) {
+  return {
+    ...headers,
+    [MCP_SITE_HEADER]: new URL(getRequest().url).origin,
+  };
+}
+
 export const getMcpConsentStep = createServerFn({ method: 'GET' })
   .validator((input: { search: string }) => input)
   .middleware([boardAccessMiddleware])
@@ -92,10 +97,9 @@ export const getMcpConsentStep = createServerFn({ method: 'GET' })
       noStore();
       const query = mcpAuthorizeQuery(data.search);
       try {
-        return await getBoard().client.fetch<McpConsentStep>(
-          `/mcp/consent${query}`,
-          { headers },
-        );
+        return await getBoard().mcpConsent.get(query, {
+          headers: consentHeaders(headers),
+        });
       } catch (error) {
         if (!isBoardApiError(error)) throw error;
         // The board has no MCP sign-in for this site: no such page.
@@ -128,10 +132,9 @@ export const decideMcpConsent = createServerFn({ method: 'POST' })
     gatedRead(context, async (headers): Promise<McpConsentResult> => {
       noStore();
       try {
-        const decision = await getBoard().client.fetch<McpConsentDecision>(
-          '/mcp/consent',
-          { method: 'POST', body: data, headers },
-        );
+        const decision = await getBoard().mcpConsent.submit(data, {
+          headers: consentHeaders(headers),
+        });
         return { ok: true, data: decision };
       } catch (error) {
         if (isBoardApiError(error)) {

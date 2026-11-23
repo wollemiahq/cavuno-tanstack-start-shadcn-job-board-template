@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { BoardApiError } from '@cavuno/board';
+import { BoardApiError, type Assistant } from '@cavuno/board';
 import {
   RouterProvider,
   isRedirect,
@@ -26,7 +26,6 @@ import {
   type SettingsRouteDependencies,
 } from './-settings';
 
-import type { ConnectedAssistant } from '../server/settings';
 import { localizePath } from '@/lib/localized-path';
 import { m } from '@/paraglide/messages';
 
@@ -118,7 +117,7 @@ async function renderSettings(
     hasPassword?: boolean;
     role?: 'candidate' | 'employer';
     jobRecommendationsEnabled?: boolean;
-    assistants?: ConnectedAssistant[];
+    assistants?: Assistant[];
     preferences?: {
       object: 'notification_preference';
       channel: 'messageEmails' | 'applicationEmails' | 'recommendedJobEmails';
@@ -629,7 +628,7 @@ describe('signed-in settings account cards', () => {
 });
 
 describe('signed-in settings connected assistants', () => {
-  const claude: ConnectedAssistant = {
+  const claude: Assistant = {
     id: 'assistant-1',
     object: 'assistant',
     name: 'Claude',
@@ -638,7 +637,7 @@ describe('signed-in settings connected assistants', () => {
     connectedAt: '2026-10-02T09:00:00.000Z',
     lastUsedAt: '2026-11-18T09:00:00.000Z',
   };
-  const local: ConnectedAssistant = {
+  const local: Assistant = {
     id: 'assistant-2',
     object: 'assistant',
     name: 'Local agent',

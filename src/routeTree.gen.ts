@@ -40,6 +40,7 @@ import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TipRouteImport } from './routes/tip'
 import { Route as DotwellKnownAiCatalogDotjsonRouteImport } from './routes/[.]well-known.ai-catalog[.]json'
 import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
+import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known.oauth-authorization-server'
 import { Route as AccountAccessRouteImport } from './routes/account_.access'
 import { Route as AlertsConfirmRouteImport } from './routes/alerts.confirm'
 import { Route as AlertsManageRouteImport } from './routes/alerts.manage'
@@ -74,6 +75,10 @@ import { Route as MeAlertsRouteImport } from './routes/me.alerts'
 import { Route as MeApplicationsRouteImport } from './routes/me.applications'
 import { Route as MePurchasesRouteImport } from './routes/me.purchases'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages.$conversationId'
+import { Route as OauthAuthorizeRouteImport } from './routes/oauth.authorize'
+import { Route as OauthRegisterRouteImport } from './routes/oauth.register'
+import { Route as OauthRevokeRouteImport } from './routes/oauth.revoke'
+import { Route as OauthTokenRouteImport } from './routes/oauth.token'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as PostCheckoutCanceledRouteImport } from './routes/post_.checkout-canceled'
 import { Route as PostSuccessRouteImport } from './routes/post_.success'
@@ -83,6 +88,8 @@ import { Route as PurchasesPurchaseTokenRouteImport } from './routes/purchases.$
 import { Route as SalariesIndexRouteImport } from './routes/salaries.index'
 import { Route as SitemapFileRouteImport } from './routes/sitemap.$file'
 import { Route as TalentIndexRouteImport } from './routes/talent.index'
+import { Route as DotwellKnownOauthProtectedResourceIndexRouteImport } from './routes/[.]well-known.oauth-protected-resource.index'
+import { Route as DotwellKnownOauthProtectedResourceMcpRouteImport } from './routes/[.]well-known.oauth-protected-resource.mcp'
 import { Route as AuthEmployerSignUpRouteImport } from './routes/auth.employer.sign-up'
 import { Route as BlogPostSlugOgRouteImport } from './routes/blog.$postSlug.og'
 import { Route as BlogAuthorAuthorSlugRouteImport } from './routes/blog.author.$authorSlug'
@@ -285,6 +292,12 @@ const DotwellKnownCavunoDotjsonRoute =
     path: '/.well-known/cavuno.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotwellKnownOauthAuthorizationServerRoute =
+  DotwellKnownOauthAuthorizationServerRouteImport.update({
+    id: '/.well-known/oauth-authorization-server',
+    path: '/.well-known/oauth-authorization-server',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AccountAccessRoute = AccountAccessRouteImport.update({
   id: '/account_/access',
   path: '/account/access',
@@ -455,6 +468,26 @@ const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
   path: '/$conversationId',
   getParentRoute: () => MessagesRoute,
 } as any)
+const OauthAuthorizeRoute = OauthAuthorizeRouteImport.update({
+  id: '/oauth/authorize',
+  path: '/oauth/authorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthRegisterRoute = OauthRegisterRouteImport.update({
+  id: '/oauth/register',
+  path: '/oauth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthRevokeRoute = OauthRevokeRouteImport.update({
+  id: '/oauth/revoke',
+  path: '/oauth/revoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthTokenRoute = OauthTokenRouteImport.update({
+  id: '/oauth/token',
+  path: '/oauth/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PHandleRoute = PHandleRouteImport.update({
   id: '/p/$handle',
   path: '/p/$handle',
@@ -500,6 +533,18 @@ const TalentIndexRoute = TalentIndexRouteImport.update({
   path: '/talent/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownOauthProtectedResourceIndexRoute =
+  DotwellKnownOauthProtectedResourceIndexRouteImport.update({
+    id: '/.well-known/oauth-protected-resource/',
+    path: '/.well-known/oauth-protected-resource/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotwellKnownOauthProtectedResourceMcpRoute =
+  DotwellKnownOauthProtectedResourceMcpRouteImport.update({
+    id: '/.well-known/oauth-protected-resource/mcp',
+    path: '/.well-known/oauth-protected-resource/mcp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthEmployerSignUpRoute = AuthEmployerSignUpRouteImport.update({
   id: '/auth/employer/sign-up',
   path: '/auth/employer/sign-up',
@@ -777,6 +822,7 @@ export interface FileRoutesByFullPath {
   '/tip': typeof TipRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/account/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
@@ -805,6 +851,10 @@ export interface FileRoutesByFullPath {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
+  '/oauth/register': typeof OauthRegisterRoute
+  '/oauth/revoke': typeof OauthRevokeRoute
+  '/oauth/token': typeof OauthTokenRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
@@ -820,6 +870,7 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
   '/talent/': typeof TalentIndexRoute
+  '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/auth/employer/sign-up': typeof AuthEmployerSignUpRoute
   '/blog/$postSlug/og': typeof BlogPostSlugOgRoute
   '/blog/author/$authorSlug': typeof BlogAuthorAuthorSlugRoute
@@ -831,6 +882,7 @@ export interface FileRoutesByFullPath {
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
   '/jobs/skills/$skill': typeof JobsSkillsSkillRoute
   '/talent/locations/$location': typeof TalentLocationsLocationRoute
+  '/.well-known/oauth-protected-resource/': typeof DotwellKnownOauthProtectedResourceIndexRoute
   '/companies/$companySlug/': typeof CompaniesCompanySlugIndexRoute
   '/jobs/locations/': typeof JobsLocationsIndexRoute
   '/salaries/companies/': typeof SalariesCompaniesIndexRoute
@@ -897,6 +949,7 @@ export interface FileRoutesByTo {
   '/tip': typeof TipRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/account/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
@@ -925,6 +978,10 @@ export interface FileRoutesByTo {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
+  '/oauth/register': typeof OauthRegisterRoute
+  '/oauth/revoke': typeof OauthRevokeRoute
+  '/oauth/token': typeof OauthTokenRoute
   '/p/$handle': typeof PHandleRoute
   '/post/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post/success': typeof PostSuccessRoute
@@ -940,6 +997,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/salaries': typeof SalariesIndexRoute
   '/talent': typeof TalentIndexRoute
+  '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/auth/employer/sign-up': typeof AuthEmployerSignUpRoute
   '/blog/$postSlug/og': typeof BlogPostSlugOgRoute
   '/blog/author/$authorSlug': typeof BlogAuthorAuthorSlugRoute
@@ -951,6 +1009,7 @@ export interface FileRoutesByTo {
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
   '/jobs/skills/$skill': typeof JobsSkillsSkillRoute
   '/talent/locations/$location': typeof TalentLocationsLocationRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceIndexRoute
   '/companies/$companySlug': typeof CompaniesCompanySlugIndexRoute
   '/jobs/locations': typeof JobsLocationsIndexRoute
   '/salaries/companies': typeof SalariesCompaniesIndexRoute
@@ -1018,6 +1077,7 @@ export interface FileRoutesById {
   '/tip': typeof TipRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/account_/access': typeof AccountAccessRoute
   '/alerts/confirm': typeof AlertsConfirmRoute
   '/alerts/manage': typeof AlertsManageRoute
@@ -1046,6 +1106,10 @@ export interface FileRoutesById {
   '/me/applications': typeof MeApplicationsRoute
   '/me/purchases': typeof MePurchasesRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/oauth/authorize': typeof OauthAuthorizeRoute
+  '/oauth/register': typeof OauthRegisterRoute
+  '/oauth/revoke': typeof OauthRevokeRoute
+  '/oauth/token': typeof OauthTokenRoute
   '/p/$handle': typeof PHandleRoute
   '/post_/checkout-canceled': typeof PostCheckoutCanceledRoute
   '/post_/success': typeof PostSuccessRoute
@@ -1061,6 +1125,7 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/salaries/': typeof SalariesIndexRoute
   '/talent/': typeof TalentIndexRoute
+  '/.well-known/oauth-protected-resource/mcp': typeof DotwellKnownOauthProtectedResourceMcpRoute
   '/auth/employer/sign-up': typeof AuthEmployerSignUpRoute
   '/blog/$postSlug/og': typeof BlogPostSlugOgRoute
   '/blog/author/$authorSlug': typeof BlogAuthorAuthorSlugRoute
@@ -1072,6 +1137,7 @@ export interface FileRoutesById {
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
   '/jobs/skills/$skill': typeof JobsSkillsSkillRoute
   '/talent/locations/$location': typeof TalentLocationsLocationRoute
+  '/.well-known/oauth-protected-resource/': typeof DotwellKnownOauthProtectedResourceIndexRoute
   '/companies/$companySlug/': typeof CompaniesCompanySlugIndexRoute
   '/jobs/locations/': typeof JobsLocationsIndexRoute
   '/salaries/companies/': typeof SalariesCompaniesIndexRoute
@@ -1140,6 +1206,7 @@ export interface FileRouteTypes {
     | '/tip'
     | '/.well-known/ai-catalog.json'
     | '/.well-known/cavuno.json'
+    | '/.well-known/oauth-authorization-server'
     | '/account/access'
     | '/alerts/confirm'
     | '/alerts/manage'
@@ -1168,6 +1235,10 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
+    | '/oauth/authorize'
+    | '/oauth/register'
+    | '/oauth/revoke'
+    | '/oauth/token'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
@@ -1183,6 +1254,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/salaries/'
     | '/talent/'
+    | '/.well-known/oauth-protected-resource/mcp'
     | '/auth/employer/sign-up'
     | '/blog/$postSlug/og'
     | '/blog/author/$authorSlug'
@@ -1194,6 +1266,7 @@ export interface FileRouteTypes {
     | '/employers/onboarding/$slug'
     | '/jobs/skills/$skill'
     | '/talent/locations/$location'
+    | '/.well-known/oauth-protected-resource/'
     | '/companies/$companySlug/'
     | '/jobs/locations/'
     | '/salaries/companies/'
@@ -1260,6 +1333,7 @@ export interface FileRouteTypes {
     | '/tip'
     | '/.well-known/ai-catalog.json'
     | '/.well-known/cavuno.json'
+    | '/.well-known/oauth-authorization-server'
     | '/account/access'
     | '/alerts/confirm'
     | '/alerts/manage'
@@ -1288,6 +1362,10 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
+    | '/oauth/authorize'
+    | '/oauth/register'
+    | '/oauth/revoke'
+    | '/oauth/token'
     | '/p/$handle'
     | '/post/checkout-canceled'
     | '/post/success'
@@ -1303,6 +1381,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/salaries'
     | '/talent'
+    | '/.well-known/oauth-protected-resource/mcp'
     | '/auth/employer/sign-up'
     | '/blog/$postSlug/og'
     | '/blog/author/$authorSlug'
@@ -1314,6 +1393,7 @@ export interface FileRouteTypes {
     | '/employers/onboarding/$slug'
     | '/jobs/skills/$skill'
     | '/talent/locations/$location'
+    | '/.well-known/oauth-protected-resource'
     | '/companies/$companySlug'
     | '/jobs/locations'
     | '/salaries/companies'
@@ -1380,6 +1460,7 @@ export interface FileRouteTypes {
     | '/tip'
     | '/.well-known/ai-catalog.json'
     | '/.well-known/cavuno.json'
+    | '/.well-known/oauth-authorization-server'
     | '/account_/access'
     | '/alerts/confirm'
     | '/alerts/manage'
@@ -1408,6 +1489,10 @@ export interface FileRouteTypes {
     | '/me/applications'
     | '/me/purchases'
     | '/messages/$conversationId'
+    | '/oauth/authorize'
+    | '/oauth/register'
+    | '/oauth/revoke'
+    | '/oauth/token'
     | '/p/$handle'
     | '/post_/checkout-canceled'
     | '/post_/success'
@@ -1423,6 +1508,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/salaries/'
     | '/talent/'
+    | '/.well-known/oauth-protected-resource/mcp'
     | '/auth/employer/sign-up'
     | '/blog/$postSlug/og'
     | '/blog/author/$authorSlug'
@@ -1434,6 +1520,7 @@ export interface FileRouteTypes {
     | '/employers/onboarding/$slug'
     | '/jobs/skills/$skill'
     | '/talent/locations/$location'
+    | '/.well-known/oauth-protected-resource/'
     | '/companies/$companySlug/'
     | '/jobs/locations/'
     | '/salaries/companies/'
@@ -1501,6 +1588,7 @@ export interface RootRouteChildren {
   TipRoute: typeof TipRoute
   DotwellKnownAiCatalogDotjsonRoute: typeof DotwellKnownAiCatalogDotjsonRoute
   DotwellKnownCavunoDotjsonRoute: typeof DotwellKnownCavunoDotjsonRoute
+  DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRoute
   AccountAccessRoute: typeof AccountAccessRoute
   AlertsConfirmRoute: typeof AlertsConfirmRoute
   AlertsManageRoute: typeof AlertsManageRoute
@@ -1528,6 +1616,10 @@ export interface RootRouteChildren {
   MeAlertsRoute: typeof MeAlertsRoute
   MeApplicationsRoute: typeof MeApplicationsRoute
   MePurchasesRoute: typeof MePurchasesRoute
+  OauthAuthorizeRoute: typeof OauthAuthorizeRoute
+  OauthRegisterRoute: typeof OauthRegisterRoute
+  OauthRevokeRoute: typeof OauthRevokeRoute
+  OauthTokenRoute: typeof OauthTokenRoute
   PHandleRoute: typeof PHandleRoute
   PostCheckoutCanceledRoute: typeof PostCheckoutCanceledRoute
   PostSuccessRoute: typeof PostSuccessRoute
@@ -1543,6 +1635,7 @@ export interface RootRouteChildren {
   ProductsIndexRoute: typeof ProductsIndexRoute
   SalariesIndexRoute: typeof SalariesIndexRoute
   TalentIndexRoute: typeof TalentIndexRoute
+  DotwellKnownOauthProtectedResourceMcpRoute: typeof DotwellKnownOauthProtectedResourceMcpRoute
   AuthEmployerSignUpRoute: typeof AuthEmployerSignUpRoute
   BlogAuthorAuthorSlugRoute: typeof BlogAuthorAuthorSlugRoute
   BlogOgChar123postSlugChar125DotjsonRoute: typeof BlogOgChar123postSlugChar125DotjsonRoute
@@ -1553,6 +1646,7 @@ export interface RootRouteChildren {
   EmployersOnboardingSlugRoute: typeof EmployersOnboardingSlugRoute
   JobsSkillsSkillRoute: typeof JobsSkillsSkillRoute
   TalentLocationsLocationRoute: typeof TalentLocationsLocationRoute
+  DotwellKnownOauthProtectedResourceIndexRoute: typeof DotwellKnownOauthProtectedResourceIndexRoute
   CompaniesCompanySlugIndexRoute: typeof CompaniesCompanySlugIndexRoute
   JobsLocationsIndexRoute: typeof JobsLocationsIndexRoute
   SalariesCompaniesIndexRoute: typeof SalariesCompaniesIndexRoute
@@ -1806,6 +1900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownCavunoDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-authorization-server': {
+      id: '/.well-known/oauth-authorization-server'
+      path: '/.well-known/oauth-authorization-server'
+      fullPath: '/.well-known/oauth-authorization-server'
+      preLoaderRoute: typeof DotwellKnownOauthAuthorizationServerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account_/access': {
       id: '/account_/access'
       path: '/account/access'
@@ -2044,6 +2145,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesConversationIdRouteImport
       parentRoute: typeof MessagesRoute
     }
+    '/oauth/authorize': {
+      id: '/oauth/authorize'
+      path: '/oauth/authorize'
+      fullPath: '/oauth/authorize'
+      preLoaderRoute: typeof OauthAuthorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/register': {
+      id: '/oauth/register'
+      path: '/oauth/register'
+      fullPath: '/oauth/register'
+      preLoaderRoute: typeof OauthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/revoke': {
+      id: '/oauth/revoke'
+      path: '/oauth/revoke'
+      fullPath: '/oauth/revoke'
+      preLoaderRoute: typeof OauthRevokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/token': {
+      id: '/oauth/token'
+      path: '/oauth/token'
+      fullPath: '/oauth/token'
+      preLoaderRoute: typeof OauthTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$handle': {
       id: '/p/$handle'
       path: '/p/$handle'
@@ -2105,6 +2234,20 @@ declare module '@tanstack/react-router' {
       path: '/talent'
       fullPath: '/talent/'
       preLoaderRoute: typeof TalentIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource/': {
+      id: '/.well-known/oauth-protected-resource/'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource/'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource/mcp': {
+      id: '/.well-known/oauth-protected-resource/mcp'
+      path: '/.well-known/oauth-protected-resource/mcp'
+      fullPath: '/.well-known/oauth-protected-resource/mcp'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceMcpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/employer/sign-up': {
@@ -2489,6 +2632,8 @@ const rootRouteChildren: RootRouteChildren = {
   TipRoute: TipRoute,
   DotwellKnownAiCatalogDotjsonRoute: DotwellKnownAiCatalogDotjsonRoute,
   DotwellKnownCavunoDotjsonRoute: DotwellKnownCavunoDotjsonRoute,
+  DotwellKnownOauthAuthorizationServerRoute:
+    DotwellKnownOauthAuthorizationServerRoute,
   AccountAccessRoute: AccountAccessRoute,
   AlertsConfirmRoute: AlertsConfirmRoute,
   AlertsManageRoute: AlertsManageRoute,
@@ -2516,6 +2661,10 @@ const rootRouteChildren: RootRouteChildren = {
   MeAlertsRoute: MeAlertsRoute,
   MeApplicationsRoute: MeApplicationsRoute,
   MePurchasesRoute: MePurchasesRoute,
+  OauthAuthorizeRoute: OauthAuthorizeRoute,
+  OauthRegisterRoute: OauthRegisterRoute,
+  OauthRevokeRoute: OauthRevokeRoute,
+  OauthTokenRoute: OauthTokenRoute,
   PHandleRoute: PHandleRoute,
   PostCheckoutCanceledRoute: PostCheckoutCanceledRoute,
   PostSuccessRoute: PostSuccessRoute,
@@ -2531,6 +2680,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIndexRoute: ProductsIndexRoute,
   SalariesIndexRoute: SalariesIndexRoute,
   TalentIndexRoute: TalentIndexRoute,
+  DotwellKnownOauthProtectedResourceMcpRoute:
+    DotwellKnownOauthProtectedResourceMcpRoute,
   AuthEmployerSignUpRoute: AuthEmployerSignUpRoute,
   BlogAuthorAuthorSlugRoute: BlogAuthorAuthorSlugRoute,
   BlogOgChar123postSlugChar125DotjsonRoute:
@@ -2542,6 +2693,8 @@ const rootRouteChildren: RootRouteChildren = {
   EmployersOnboardingSlugRoute: EmployersOnboardingSlugRoute,
   JobsSkillsSkillRoute: JobsSkillsSkillRoute,
   TalentLocationsLocationRoute: TalentLocationsLocationRoute,
+  DotwellKnownOauthProtectedResourceIndexRoute:
+    DotwellKnownOauthProtectedResourceIndexRoute,
   CompaniesCompanySlugIndexRoute: CompaniesCompanySlugIndexRoute,
   JobsLocationsIndexRoute: JobsLocationsIndexRoute,
   SalariesCompaniesIndexRoute: SalariesCompaniesIndexRoute,

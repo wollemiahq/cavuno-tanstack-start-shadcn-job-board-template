@@ -6,10 +6,7 @@ import { formatDate } from '@cavuno/board/format';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
-import {
-  disconnectAssistant,
-  type ConnectedAssistant,
-} from '../server/settings';
+import { disconnectAssistant } from '../server/settings';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +25,7 @@ import {
 } from '@/components/ui/item';
 import { toastActionError, toastActionSuccess } from '@/lib/action-toast';
 import { boardErrorMessage } from '@/lib/board-error-message';
+import type { Assistant } from '@cavuno/board';
 
 function day(iso: string): string {
   return formatDate(getLocale(), iso) ?? iso.slice(0, 10);
@@ -43,7 +41,7 @@ export function SettingsAssistantsCard({
   board,
   disconnect = disconnectAssistant,
 }: {
-  assistants: ConnectedAssistant[];
+  assistants: Assistant[];
   board: string;
   disconnect?: (options: {
     data: { assistantId: string };
@@ -59,7 +57,7 @@ export function SettingsAssistantsCard({
       current.filter((assistant) => assistant.id !== id),
     );
 
-  const onDisconnect = async (assistant: ConnectedAssistant) => {
+  const onDisconnect = async (assistant: Assistant) => {
     setPendingId(assistant.id);
     try {
       const result = await disconnect({ data: { assistantId: assistant.id } });

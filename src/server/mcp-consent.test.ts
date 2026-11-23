@@ -1,4 +1,4 @@
-import { BoardApiError } from '@cavuno/board';
+import { BoardApiError, createBoardClient } from '@cavuno/board';
 import {
   defaultParseSearch,
   defaultStringifySearch,
@@ -33,10 +33,12 @@ vi.mock('@tanstack/react-start', () => ({
 }));
 vi.mock('@tanstack/react-start/server', () => ({
   setResponseHeader: mocks.setHeader,
+  getRequest: () => new Request('https://board.test/_serverFn/consent'),
 }));
-vi.mock('../lib/board', () => ({
-  getBoard: () => ({ client: { fetch: mocks.fetch } }),
-}));
+// The SDK's own `mcpConsent` calls, with the request itself mocked.
+const board = createBoardClient({ board: 'pk_test_board' });
+board.client.fetch = mocks.fetch;
+vi.mock('../lib/board', () => ({ getBoard: () => board }));
 vi.mock('../lib/board-access-middleware', () => ({
   boardAccessMiddleware: {},
 }));
@@ -54,7 +56,7 @@ import { decideMcpConsent, getMcpConsentStep } from './mcp-consent';
 beforeEach(() => vi.clearAllMocks());
 
 describe('getMcpConsentStep', () => {
-  it('sends the Board API the query the assistant sent', async () => {
+  it('sends the Board API the query the assistant sent, naming this site', async () => {
     mocks.fetch.mockResolvedValue({ next: 'error', message: 'x' });
     // Values the router would change: `1e3` becomes `1000`.
     // `request` is also a standard OAuth parameter (RFC 9101).
@@ -76,7 +78,10 @@ describe('getMcpConsentStep', () => {
     await getMcpConsentStep({ data: { search: routerCopy(kept.search) } });
 
     expect(mocks.fetch).toHaveBeenCalledWith(`/mcp/consent${raw}`, {
-      headers: { authorization: 'Bearer at' },
+      headers: {
+        authorization: 'Bearer at',
+        'x-cavuno-mcp-site': 'https://board.test',
+      },
     });
     expect(mocks.setHeader).toHaveBeenCalledWith(
       'cache-control',
@@ -152,7 +157,7 @@ describe('getMcpConsentStep', () => {
 });
 
 describe('decideMcpConsent', () => {
-  it('posts the decision with the visitor’s session', async () => {
+  it('posts the decision with the visitor’s session, naming this site', async () => {
     const decision = { next: 'redirect', location: 'https://a.test/cb' };
     mocks.fetch.mockResolvedValue(decision);
     const data = {
@@ -168,7 +173,10 @@ describe('decideMcpConsent', () => {
     expect(mocks.fetch).toHaveBeenCalledWith('/mcp/consent', {
       method: 'POST',
       body: data,
-      headers: { authorization: 'Bearer at' },
+      headers: {
+        authorization: 'Bearer at',
+        'x-cavuno-mcp-site': 'https://board.test',
+      },
     });
   });
 });
