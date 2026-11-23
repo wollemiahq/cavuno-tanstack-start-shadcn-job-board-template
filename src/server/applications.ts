@@ -19,11 +19,13 @@ import {
   setResponseHeader,
 } from '@tanstack/react-start/server';
 
+import { resolveRuntimeFeatureFlags } from '../board/board-feature-flags';
 import { getBoard } from '../lib/board';
 import {
   boardAccessMiddleware,
   type BoardAccessContext,
 } from '../lib/board-access-middleware';
+import { readBoardContext } from '../lib/board-context-cache';
 import {
   requireSessionMiddleware,
   type SessionContext,
@@ -95,13 +97,18 @@ export const myApplicationForJob = createServerFn({ method: 'GET' })
   .middleware([requireSessionMiddleware, boardAccessMiddleware])
   .handler(({ data, context }) =>
     gatedRead(context, async () => {
+      // A native-off board has no native applications to find, so skip the
+      // lookup instead of asking the Board API for a 422 on every job view.
+      const { features } = await readBoardContext();
+      if (!resolveRuntimeFeatureFlags(features).nativeApplications) return null;
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
       try {
         return await getBoard().jobs.myApplication(data.jobSlug, { headers });
       } catch (error) {
         if (isNotFound(error)) return null;
-        // Native-off boards 422 this lookup. Treat as "no native
+        // The board context is memoized briefly, so a board switched off
+        // moments ago can still 422 here. Treat that as "no native
         // application" so an external URL is not blocked behind a retry
         // that can never succeed.
         if (
