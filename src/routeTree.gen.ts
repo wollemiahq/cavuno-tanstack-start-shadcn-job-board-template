@@ -65,6 +65,7 @@ import { Route as EmployerIndexRouteImport } from './routes/employer.index'
 import { Route as EmployersIndexRouteImport } from './routes/employers.index'
 import { Route as EmployersDashboardRouteImport } from './routes/employers.dashboard'
 import { Route as GoSplatRouteImport } from './routes/go.$'
+import { Route as HelpIndexRouteImport } from './routes/help.index'
 import { Route as JobsIndexRouteImport } from './routes/jobs.index'
 import { Route as JobsKeywordRouteImport } from './routes/jobs.$keyword'
 import { Route as JobsRssDotxmlRouteImport } from './routes/jobs.rss[.]xml'
@@ -100,6 +101,8 @@ import { Route as CompaniesMarketsMarketRouteImport } from './routes/companies.m
 import { Route as EmployerInvitesAcceptRouteImport } from './routes/employer.invites.accept'
 import { Route as EmployersInvitesAcceptRouteImport } from './routes/employers.invites.accept'
 import { Route as EmployersOnboardingSlugRouteImport } from './routes/employers.onboarding.$slug'
+import { Route as HelpArticlesHelpArticleSlugRouteImport } from './routes/help.articles.$helpArticleSlug'
+import { Route as HelpCategoriesHelpCategorySlugRouteImport } from './routes/help.categories.$helpCategorySlug'
 import { Route as JobsLocationsIndexRouteImport } from './routes/jobs.locations.index'
 import { Route as JobsSkillsSkillRouteImport } from './routes/jobs.skills.$skill'
 import { Route as SalariesCompaniesIndexRouteImport } from './routes/salaries.companies.index'
@@ -418,6 +421,11 @@ const GoSplatRoute = GoSplatRouteImport.update({
   path: '/go/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpIndexRoute = HelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JobsIndexRoute = JobsIndexRouteImport.update({
   id: '/jobs/',
   path: '/jobs/',
@@ -597,6 +605,18 @@ const EmployersOnboardingSlugRoute = EmployersOnboardingSlugRouteImport.update({
   path: '/employers/onboarding/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpArticlesHelpArticleSlugRoute =
+  HelpArticlesHelpArticleSlugRouteImport.update({
+    id: '/help/articles/$helpArticleSlug',
+    path: '/help/articles/$helpArticleSlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const HelpCategoriesHelpCategorySlugRoute =
+  HelpCategoriesHelpCategorySlugRouteImport.update({
+    id: '/help/categories/$helpCategorySlug',
+    path: '/help/categories/$helpCategorySlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const JobsLocationsIndexRoute = JobsLocationsIndexRouteImport.update({
   id: '/jobs/locations/',
   path: '/jobs/locations/',
@@ -865,6 +885,7 @@ export interface FileRoutesByFullPath {
   '/companies/': typeof CompaniesIndexRoute
   '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
+  '/help/': typeof HelpIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/mcp/': typeof McpIndexRoute
   '/products/': typeof ProductsIndexRoute
@@ -880,6 +901,8 @@ export interface FileRoutesByFullPath {
   '/employer/invites/accept': typeof EmployerInvitesAcceptRoute
   '/employers/invites/accept': typeof EmployersInvitesAcceptRoute
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
+  '/help/articles/$helpArticleSlug': typeof HelpArticlesHelpArticleSlugRoute
+  '/help/categories/$helpCategorySlug': typeof HelpCategoriesHelpCategorySlugRoute
   '/jobs/skills/$skill': typeof JobsSkillsSkillRoute
   '/talent/locations/$location': typeof TalentLocationsLocationRoute
   '/.well-known/oauth-protected-resource/': typeof DotwellKnownOauthProtectedResourceIndexRoute
@@ -992,6 +1015,7 @@ export interface FileRoutesByTo {
   '/companies': typeof CompaniesIndexRoute
   '/employer': typeof EmployerIndexRoute
   '/employers': typeof EmployersIndexRoute
+  '/help': typeof HelpIndexRoute
   '/jobs': typeof JobsIndexRoute
   '/mcp': typeof McpIndexRoute
   '/products': typeof ProductsIndexRoute
@@ -1007,6 +1031,8 @@ export interface FileRoutesByTo {
   '/employer/invites/accept': typeof EmployerInvitesAcceptRoute
   '/employers/invites/accept': typeof EmployersInvitesAcceptRoute
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
+  '/help/articles/$helpArticleSlug': typeof HelpArticlesHelpArticleSlugRoute
+  '/help/categories/$helpCategorySlug': typeof HelpCategoriesHelpCategorySlugRoute
   '/jobs/skills/$skill': typeof JobsSkillsSkillRoute
   '/talent/locations/$location': typeof TalentLocationsLocationRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceIndexRoute
@@ -1120,6 +1146,7 @@ export interface FileRoutesById {
   '/companies/': typeof CompaniesIndexRoute
   '/employer/': typeof EmployerIndexRoute
   '/employers/': typeof EmployersIndexRoute
+  '/help/': typeof HelpIndexRoute
   '/jobs/': typeof JobsIndexRoute
   '/mcp/': typeof McpIndexRoute
   '/products/': typeof ProductsIndexRoute
@@ -1135,6 +1162,8 @@ export interface FileRoutesById {
   '/employer/invites/accept': typeof EmployerInvitesAcceptRoute
   '/employers/invites/accept': typeof EmployersInvitesAcceptRoute
   '/employers/onboarding/$slug': typeof EmployersOnboardingSlugRoute
+  '/help/articles/$helpArticleSlug': typeof HelpArticlesHelpArticleSlugRoute
+  '/help/categories/$helpCategorySlug': typeof HelpCategoriesHelpCategorySlugRoute
   '/jobs/skills/$skill': typeof JobsSkillsSkillRoute
   '/talent/locations/$location': typeof TalentLocationsLocationRoute
   '/.well-known/oauth-protected-resource/': typeof DotwellKnownOauthProtectedResourceIndexRoute
@@ -1249,6 +1278,7 @@ export interface FileRouteTypes {
     | '/companies/'
     | '/employer/'
     | '/employers/'
+    | '/help/'
     | '/jobs/'
     | '/mcp/'
     | '/products/'
@@ -1264,6 +1294,8 @@ export interface FileRouteTypes {
     | '/employer/invites/accept'
     | '/employers/invites/accept'
     | '/employers/onboarding/$slug'
+    | '/help/articles/$helpArticleSlug'
+    | '/help/categories/$helpCategorySlug'
     | '/jobs/skills/$skill'
     | '/talent/locations/$location'
     | '/.well-known/oauth-protected-resource/'
@@ -1376,6 +1408,7 @@ export interface FileRouteTypes {
     | '/companies'
     | '/employer'
     | '/employers'
+    | '/help'
     | '/jobs'
     | '/mcp'
     | '/products'
@@ -1391,6 +1424,8 @@ export interface FileRouteTypes {
     | '/employer/invites/accept'
     | '/employers/invites/accept'
     | '/employers/onboarding/$slug'
+    | '/help/articles/$helpArticleSlug'
+    | '/help/categories/$helpCategorySlug'
     | '/jobs/skills/$skill'
     | '/talent/locations/$location'
     | '/.well-known/oauth-protected-resource'
@@ -1503,6 +1538,7 @@ export interface FileRouteTypes {
     | '/companies/'
     | '/employer/'
     | '/employers/'
+    | '/help/'
     | '/jobs/'
     | '/mcp/'
     | '/products/'
@@ -1518,6 +1554,8 @@ export interface FileRouteTypes {
     | '/employer/invites/accept'
     | '/employers/invites/accept'
     | '/employers/onboarding/$slug'
+    | '/help/articles/$helpArticleSlug'
+    | '/help/categories/$helpCategorySlug'
     | '/jobs/skills/$skill'
     | '/talent/locations/$location'
     | '/.well-known/oauth-protected-resource/'
@@ -1630,6 +1668,7 @@ export interface RootRouteChildren {
   CompaniesIndexRoute: typeof CompaniesIndexRoute
   EmployerIndexRoute: typeof EmployerIndexRoute
   EmployersIndexRoute: typeof EmployersIndexRoute
+  HelpIndexRoute: typeof HelpIndexRoute
   JobsIndexRoute: typeof JobsIndexRoute
   McpIndexRoute: typeof McpIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
@@ -1644,6 +1683,8 @@ export interface RootRouteChildren {
   EmployerInvitesAcceptRoute: typeof EmployerInvitesAcceptRoute
   EmployersInvitesAcceptRoute: typeof EmployersInvitesAcceptRoute
   EmployersOnboardingSlugRoute: typeof EmployersOnboardingSlugRoute
+  HelpArticlesHelpArticleSlugRoute: typeof HelpArticlesHelpArticleSlugRoute
+  HelpCategoriesHelpCategorySlugRoute: typeof HelpCategoriesHelpCategorySlugRoute
   JobsSkillsSkillRoute: typeof JobsSkillsSkillRoute
   TalentLocationsLocationRoute: typeof TalentLocationsLocationRoute
   DotwellKnownOauthProtectedResourceIndexRoute: typeof DotwellKnownOauthProtectedResourceIndexRoute
@@ -2075,6 +2116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GoSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help/': {
+      id: '/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof HelpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jobs/': {
       id: '/jobs/'
       path: '/jobs'
@@ -2318,6 +2366,20 @@ declare module '@tanstack/react-router' {
       path: '/employers/onboarding/$slug'
       fullPath: '/employers/onboarding/$slug'
       preLoaderRoute: typeof EmployersOnboardingSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/articles/$helpArticleSlug': {
+      id: '/help/articles/$helpArticleSlug'
+      path: '/help/articles/$helpArticleSlug'
+      fullPath: '/help/articles/$helpArticleSlug'
+      preLoaderRoute: typeof HelpArticlesHelpArticleSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/categories/$helpCategorySlug': {
+      id: '/help/categories/$helpCategorySlug'
+      path: '/help/categories/$helpCategorySlug'
+      fullPath: '/help/categories/$helpCategorySlug'
+      preLoaderRoute: typeof HelpCategoriesHelpCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs/locations/': {
@@ -2675,6 +2737,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompaniesIndexRoute: CompaniesIndexRoute,
   EmployerIndexRoute: EmployerIndexRoute,
   EmployersIndexRoute: EmployersIndexRoute,
+  HelpIndexRoute: HelpIndexRoute,
   JobsIndexRoute: JobsIndexRoute,
   McpIndexRoute: McpIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
@@ -2691,6 +2754,8 @@ const rootRouteChildren: RootRouteChildren = {
   EmployerInvitesAcceptRoute: EmployerInvitesAcceptRoute,
   EmployersInvitesAcceptRoute: EmployersInvitesAcceptRoute,
   EmployersOnboardingSlugRoute: EmployersOnboardingSlugRoute,
+  HelpArticlesHelpArticleSlugRoute: HelpArticlesHelpArticleSlugRoute,
+  HelpCategoriesHelpCategorySlugRoute: HelpCategoriesHelpCategorySlugRoute,
   JobsSkillsSkillRoute: JobsSkillsSkillRoute,
   TalentLocationsLocationRoute: TalentLocationsLocationRoute,
   DotwellKnownOauthProtectedResourceIndexRoute:

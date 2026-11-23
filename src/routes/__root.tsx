@@ -437,6 +437,7 @@ function RootChrome({
     jobSeekers: m.candidateLanding_title(),
     memberships: m.memberships_title(),
     tip: m.footer_tipLabel(),
+    help: m.help_title(),
     mcp: m.footer_mcpLabel(),
   };
   const shellBreadcrumb = resolveShellBreadcrumb({

@@ -40,6 +40,7 @@ function features(
     mcp: false,
     tipJar: false,
     products: false,
+    helpCenter: false,
     ...extra,
   };
 }

@@ -152,6 +152,25 @@ describe('/.well-known/cavuno.json mount', () => {
     expect(manifest.roles.emailPreferences).toBe('/email-preferences');
   });
 
+  it('real src/routes file tree publishes the help center roles', () => {
+    const routesDir = resolve(process.cwd(), 'src/routes');
+    const paths = readdirSync(routesDir)
+      .filter((name) => !name.startsWith('-') && /\.(tsx?|jsx?)$/.test(name))
+      .map((name) => join('src/routes', name));
+    const markers = new Map(
+      paths.flatMap((path) => {
+        const role = extractCavunoPageMarker(readFileSync(path, 'utf8'));
+        return role ? [[path, role] as const] : [];
+      }),
+    );
+    const { manifest } = compileManifest(enumerateRouteEntries(paths), markers);
+    expect(manifest.roles.help).toBe('/help');
+    expect(manifest.roles.helpCategory).toBe(
+      '/help/categories/:helpCategorySlug',
+    );
+    expect(manifest.roles.helpArticle).toBe('/help/articles/:helpArticleSlug');
+  });
+
   it('routeEntriesFromTanStackRouteTree converts $param → :param', () => {
     const entries = routeEntriesFromTanStackRouteTree(starterRoleTree);
     expect(entries.map((e) => e.template)).toContain(

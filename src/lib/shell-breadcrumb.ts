@@ -26,6 +26,8 @@ export interface ShellBreadcrumbLabels {
   jobSeekers: string;
   memberships: string;
   tip: string;
+  /** The help center (`/help`); its pages inject the rest of the trail. */
+  help: string;
   /** The MCP setup page (`/mcp/docs`), labelled like its footer link. */
   mcp: string;
 }
@@ -495,6 +497,7 @@ export function resolveShellBreadcrumb({
     'job-seekers': labels.jobSeekers,
     memberships: labels.memberships,
     tip: labels.tip,
+    help: labels.help,
     mcp: labels.mcp,
   }[section];
   items.push({ name: knownPage ?? readableSegment(section) });
