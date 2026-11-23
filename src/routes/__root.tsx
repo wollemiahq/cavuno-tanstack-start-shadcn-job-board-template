@@ -24,6 +24,7 @@ import { createIsomorphicFn } from '@tanstack/react-start';
 
 import Footer from '../components/Footer';
 import Header from '../components/Header';
+import { isCredentialRoute } from '../lib/credential-routes';
 import { localeDirection } from '../lib/locale-direction';
 import { toPreviewBoardConfig } from '../lib/preview';
 import { requestOrigin } from '../lib/request-origin';
@@ -332,6 +333,12 @@ function RootChrome({
         .at(-1),
   });
   const location = useRouterState({ select: (s) => s.location });
+  // Sign-in, password and token pages load no analytics or ad scripts (see
+  // src/lib/credential-routes.ts). A script loaded on an earlier page stays
+  // active after a soft navigation here; token links open with a full load.
+  const credentialPage = useRouterState({
+    select: (s) => isCredentialRoute(s.matches),
+  });
   // The location whose matches are rendered. `location` moves to the next URL
   // as soon as a navigation starts, while `matches` (and so the header's
   // loader labels) stay on the previous page until its loaders finish; the
@@ -644,10 +651,14 @@ function RootChrome({
             {/* Analytics + footer are below-the-fold / post-consent — keep them out
           of the initial public JS budget (PageSpeed unused-JS on index). */}
 
-            <Suspense fallback={null}>
-              <LazyAnalyticsScripts analytics={board.analytics} />
-            </Suspense>
-            <BoardAnalyticsBoot publishableKey={publishableKey} />
+            {credentialPage ? null : (
+              <>
+                <Suspense fallback={null}>
+                  <LazyAnalyticsScripts analytics={board.analytics} />
+                </Suspense>
+                <BoardAnalyticsBoot publishableKey={publishableKey} />
+              </>
+            )}
             <BoardAuthConversionTracker />
             <FloatingStackProvider>
               <NavigationProgress />
@@ -695,13 +706,15 @@ function RootChrome({
                 />
               </Suspense>
               <CookieConsentBanner />
-              <BoardAdsBoot
-                key={location.pathname}
-                adPage={isBoardAdPage(location.pathname)}
-                hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$|\/products\/[^/]+\/?$/.test(
-                  location.pathname,
-                )}
-              />
+              {credentialPage ? null : (
+                <BoardAdsBoot
+                  key={location.pathname}
+                  adPage={isBoardAdPage(location.pathname)}
+                  hasMobileBottomBar={/\/companies\/[^/]+\/jobs\/[^/]+\/?$|\/products\/[^/]+\/?$/.test(
+                    location.pathname,
+                  )}
+                />
+              )}
               {user &&
               user.emailVerified &&
               board.features.messaging &&

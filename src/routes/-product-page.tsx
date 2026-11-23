@@ -258,6 +258,8 @@ function DownloadPageLink({
     <Link
       to="/purchases/$purchaseToken"
       params={{ purchaseToken: purchase.purchaseToken }}
+      // Full page load: analytics on this page would record the token URL.
+      reloadDocument
       className={cn(buttonVariants({ size }), 'hover:no-underline', className)}
     >
       {m.product_openDownloadPageAction()}

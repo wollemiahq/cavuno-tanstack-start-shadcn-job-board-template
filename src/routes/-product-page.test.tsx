@@ -25,8 +25,13 @@ vi.mock('@tanstack/react-router', () => ({
   Link: ({
     to,
     children,
+    reloadDocument: _reloadDocument,
     ...props
-  }: React.PropsWithChildren<{ to: string; className?: string }>) => (
+  }: React.PropsWithChildren<{
+    to: string;
+    className?: string;
+    reloadDocument?: boolean;
+  }>) => (
     <a href={to} {...props}>
       {children}
     </a>

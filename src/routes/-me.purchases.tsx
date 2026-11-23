@@ -94,6 +94,9 @@ export function PurchasesPageView({
               <Link
                 to="/purchases/$purchaseToken"
                 params={{ purchaseToken: purchase.purchaseToken }}
+                // Full page load: analytics already running on this page
+                // would record the token URL on a client navigation.
+                reloadDocument
                 className={buttonVariants()}
               >
                 {m.mePurchases_openAction()}

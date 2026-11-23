@@ -100,6 +100,8 @@ function ProductPage() {
           to: '/purchases/$purchaseToken',
           params: { purchaseToken },
           replace: Boolean(sessionId),
+          // Full page load: analytics on this page would record the token URL.
+          reloadDocument: true,
         })
       }
     />
