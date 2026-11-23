@@ -60,6 +60,38 @@ describe('/auth/sign-up search contract', () => {
     });
   });
 
+  it('keeps a plausible ?email= for prefill and drops anything else', () => {
+    const validate = Route.options.validateSearch;
+    if (!validate || 'parse' in validate || '~standard' in validate) {
+      throw new Error('The candidate sign-up route must validate search');
+    }
+
+    expect(
+      validate({ returnTo: '/matches', email: '  ada@example.com ' }),
+    ).toEqual({ returnTo: '/matches', email: 'ada@example.com' });
+    expect(validate({ email: 'not-an-email' })).toEqual({});
+    expect(validate({ email: `${'a'.repeat(310)}@example.com` })).toEqual({});
+    expect(validate({ email: ['ada@example.com'] })).toEqual({});
+  });
+
+  it('pre-fills the email field without submitting', async () => {
+    await renderRouted(
+      <SignUpView
+        boardName="Cavuno Jobs"
+        returnTo="/matches"
+        initialEmail="ada@example.com"
+        signUpAction={mocks.signUp}
+        getOAuthAuthorizationUrlAction={mocks.getOAuthAuthorizationUrl}
+        invalidate={mocks.invalidate}
+      />,
+    );
+
+    expect(screen.getByLabelText(m.authSignUp_emailLabel())).toHaveValue(
+      'ada@example.com',
+    );
+    expect(mocks.signUp).not.toHaveBeenCalled();
+  });
+
   it('offers the same Google and LinkedIn account entry points as sign-in', async () => {
     const returnTo = '/jobs?q=design';
     mocks.getOAuthAuthorizationUrl.mockResolvedValue({
