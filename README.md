@@ -386,6 +386,18 @@ these values.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wollemiahq/cavuno-tanstack-start-shadcn-job-board-template)
 
+### Sign-in from AI assistants
+
+Deployed on its own, the site serves the board's MCP server at `/mcp`, and
+people can connect an AI assistant (Claude, ChatGPT…) to their own account.
+Sign-in turns on automatically when `CAVUNO_BOARD` is the board's `pk_…`
+publishable key and the site's origin is registered for that key in the
+dashboard (**Settings → SDK**: the self-hosted domain, plus development
+origins such as your local dev server). The assistant opens the site's own
+consent page (`/authorize`), and people disconnect assistants from
+`/settings`. With a board slug instead of a key, the MCP server stays
+anonymous. On Cavuno's Builder the platform answers these paths itself.
+
 ### Use the Workers Paid plan
 
 Every uncached page is server-rendered, which takes roughly 10–30 ms of CPU

@@ -30,7 +30,7 @@ import { dottedCodec, emailLink } from './email-link';
 import { requireVerifiedBoardUser } from './me-verification';
 
 import type {
-  ListEnvelope,
+  Assistant,
   UnsubscribeBody,
   UpdateNotificationPreferenceBody,
 } from '@cavuno/board';
@@ -239,23 +239,10 @@ export const updatePassword = createServerFn({ method: 'POST' })
 // ─── Connected assistants ───────────────────────────────────────────────────
 //
 // The AI assistants (Claude, ChatGPT…) the person allowed to use their
-// account through the board's MCP server. Until the SDK this site pins has
-// `board.me.assistants`, the two calls go through `client.fetch` with types
-// written here from the published schema (`GET` and
-// `DELETE /me/assistants/{assistantId}`); switch to the typed method then.
+// account through the board's MCP server (`board.me.assistants`).
 
-export interface ConnectedAssistant {
-  id: string;
-  object: 'assistant';
-  name: string;
-  /** The assistant's website, e.g. `claude.ai`. */
-  host: string | null;
-  scopes: string[];
-  /** ISO 8601. */
-  connectedAt: string;
-  /** ISO 8601. */
-  lastUsedAt: string;
-}
+/** One connected assistant; `host` is its website, e.g. `claude.ai`. */
+export type ConnectedAssistant = Assistant;
 
 /**
  * The person's connected assistants, newest first (up to 50). Empty, with
@@ -269,9 +256,9 @@ export const getConnectedAssistants = createServerFn({ method: 'GET' })
       if (!readMcpServerFlag(features)) return [];
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
-      const list = await getBoard().client.fetch<
-        ListEnvelope<ConnectedAssistant>
-      >('/me/assistants', { headers });
+      const list = await getBoard().me.assistants.list(undefined, {
+        headers,
+      });
       return list.data;
     }),
   );
@@ -288,10 +275,9 @@ export const disconnectAssistant = createServerFn({ method: 'POST' })
     try {
       const headers = authedHeaders(context);
       await requireVerifiedBoardUser(headers);
-      await getBoard().client.fetch<void>(
-        `/me/assistants/${encodeURIComponent(data.assistantId)}`,
-        { method: 'DELETE', headers },
-      );
+      await getBoard().me.assistants.revoke(data.assistantId, undefined, {
+        headers,
+      });
       return { ok: true as const };
     } catch (error) {
       return actionError(error);
