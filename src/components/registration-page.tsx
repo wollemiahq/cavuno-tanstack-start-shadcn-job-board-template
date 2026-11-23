@@ -199,11 +199,14 @@ export function RegistrationPage({
   footer,
   marketingConsent,
   onOAuthStart,
+  initialEmail,
 }: {
   title: string;
   supportingText: React.ReactNode;
   copy: RegistrationCopy;
   successHref: string;
+  /** Pre-fills the email field, e.g. from a job alert email's link. */
+  initialEmail?: string;
   onSubmit: (values: RegistrationSubmitValues) => Promise<RegistrationResult>;
   footer?: React.ReactNode;
   marketingConsent?: MarketingConsentCopy;
@@ -240,6 +243,7 @@ export function RegistrationPage({
             onSubmit={onSubmit}
             onStatusChange={setStatus}
             marketingConsent={marketingConsent}
+            initialEmail={initialEmail}
           />
           {onOAuthStart ? (
             <>
@@ -324,16 +328,18 @@ function RegistrationForm({
   onSubmit,
   onStatusChange,
   marketingConsent,
+  initialEmail,
 }: {
   copy: RegistrationCopy;
   status: RegistrationStatus;
   onSubmit: (values: RegistrationSubmitValues) => Promise<RegistrationResult>;
   onStatusChange: (status: RegistrationStatus) => void;
   marketingConsent?: MarketingConsentCopy;
+  initialEmail?: string;
 }) {
   const pending = status.state === 'pending';
   const [consentChecked, setConsentChecked] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail ?? '');
   const emailSuggestion = useEmailSuggestion();
   // A refused domain is the email field's error, shown under that field
   // rather than as the form's error under the password.
