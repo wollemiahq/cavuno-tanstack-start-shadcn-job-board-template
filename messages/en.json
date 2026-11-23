@@ -1414,6 +1414,42 @@
   "help_viewAllLabel": "See all articles",
   "help_backLabel": "Back to the help center",
   "help_notFoundDescription": "This page is unavailable or no longer published.",
+  "help_heroHeadline": "How can we help?",
+  "help_searchPlaceholder": "Search for answers…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} article",
+        "countPlural=*": "{countLabel} articles"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} result for “{query}”",
+        "countPlural=*": "{countLabel} results for “{query}”"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "No articles match “{query}”",
+  "help_searchEmptyDescription": "Try different words, or browse the categories.",
+  "help_searchResetLabel": "Show all categories",
+  "help_contactTitle": "Still need help?",
+  "help_contactDescription": "Send us a message and we'll get back to you.",
   "helpCategory_metaDescription": "Help articles about {category} from {boardName}.",
   "helpCategory_articlesLabel": "Articles in {category}",
   "helpCategory_notFoundTitle": "Category not found",

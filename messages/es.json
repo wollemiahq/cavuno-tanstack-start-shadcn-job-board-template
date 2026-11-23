@@ -1414,6 +1414,42 @@
   "help_viewAllLabel": "Ver todos los artículos",
   "help_backLabel": "Volver al centro de ayuda",
   "help_notFoundDescription": "Esta página no está disponible o ya no está publicada.",
+  "help_heroHeadline": "¿Cómo podemos ayudarte?",
+  "help_searchPlaceholder": "Buscar respuestas…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} artículo",
+        "countPlural=*": "{countLabel} artículos"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} resultado para «{query}»",
+        "countPlural=*": "{countLabel} resultados para «{query}»"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "Ningún artículo coincide con «{query}»",
+  "help_searchEmptyDescription": "Prueba con otras palabras o explora las categorías.",
+  "help_searchResetLabel": "Ver todas las categorías",
+  "help_contactTitle": "¿Necesitas más ayuda?",
+  "help_contactDescription": "Envíanos un mensaje y te responderemos.",
   "helpCategory_metaDescription": "Artículos de ayuda sobre {category} de {boardName}.",
   "helpCategory_articlesLabel": "Artículos de {category}",
   "helpCategory_notFoundTitle": "Categoría no encontrada",

@@ -1414,6 +1414,42 @@
   "help_viewAllLabel": "Alle Artikel anzeigen",
   "help_backLabel": "Zurück zum Hilfe-Center",
   "help_notFoundDescription": "Diese Seite ist nicht verfügbar oder nicht mehr veröffentlicht.",
+  "help_heroHeadline": "Wie können wir helfen?",
+  "help_searchPlaceholder": "Antworten suchen…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Artikel",
+        "countPlural=*": "{countLabel} Artikel"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} Ergebnis für „{query}“",
+        "countPlural=*": "{countLabel} Ergebnisse für „{query}“"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "Keine Artikel passen zu „{query}“",
+  "help_searchEmptyDescription": "Versuche es mit anderen Begriffen oder stöbere in den Kategorien.",
+  "help_searchResetLabel": "Alle Kategorien anzeigen",
+  "help_contactTitle": "Brauchst du weitere Hilfe?",
+  "help_contactDescription": "Schreib uns eine Nachricht, wir melden uns bei dir.",
   "helpCategory_metaDescription": "Hilfeartikel zu {category} von {boardName}.",
   "helpCategory_articlesLabel": "Artikel in {category}",
   "helpCategory_notFoundTitle": "Kategorie nicht gefunden",

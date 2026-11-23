@@ -11,7 +11,8 @@ export type HeaderSearchScope =
   | 'companies'
   | 'talent'
   | 'blog'
-  | 'products';
+  | 'products'
+  | 'help';
 
 export interface HeaderSearchLocation {
   slug: string;

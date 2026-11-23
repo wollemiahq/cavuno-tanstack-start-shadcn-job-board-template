@@ -1,8 +1,27 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useId, type ReactNode } from 'react';
 
 import { Link } from '@tanstack/react-router';
-import { ChevronRight, LifeBuoy } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronRight,
+  LifeBuoy,
+  Search,
+} from 'lucide-react';
 
+import { m } from '../../paraglide/messages';
+import { getLocale } from '../../paraglide/runtime';
+
+import { ArticleToc } from '@/components/article-toc';
+import {
+  BoardContactButton,
+  canContactBoard,
+  type BoardContact,
+} from '@/components/board/board-contact-button';
+import { Bleed } from '@/components/layout/bleed';
+import { Container } from '@/components/layout/container';
 import {
   Page,
   PageContent,
@@ -11,7 +30,21 @@ import {
 } from '@/components/layout/page';
 import { PageLayout } from '@/components/layout/page-layout';
 import { Prose } from '@/components/prose';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { buttonVariants } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardHeader,
+} from '@/components/ui/card';
 import {
   Empty,
   EmptyContent,
@@ -27,6 +60,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@/components/ui/item';
+import { extractToc, withHeadingAnchors } from '@/lib/article-toc';
 import type {
   PublicHelpArticle,
   PublicHelpArticleSummary,
@@ -38,102 +72,341 @@ export interface HelpCategoryGroup {
   articles: PublicHelpArticleSummary[];
 }
 
-/** One article per row, in the order the API returned them. */
-function HelpArticleList({
-  articles,
+/** How many of a category's articles its card on the help home previews. */
+const HOME_PREVIEW_LIMIT = 5;
+
+const focusRing =
+  'focus-visible:ring-ring/50 rounded-sm outline-none focus-visible:ring-3';
+
+/** "12 articles", pluralized and number-formatted for the viewer's locale. */
+function articleCountLabel(count: number) {
+  return m.help_articleCountText({
+    count,
+    countLabel: new Intl.NumberFormat(getLocale()).format(count),
+  });
+}
+
+/**
+ * The full-bleed band every help page opens with, on the readable column the
+ * help center keeps. Category and article pages use the grey band of the
+ * company and job pages; the home's is the board's primary colour, so the
+ * front door of the help center reads as the board's own.
+ */
+function HelpBand({
+  tone = 'quiet',
+  children,
 }: {
-  articles: PublicHelpArticleSummary[];
+  tone?: 'quiet' | 'brand';
+  children: ReactNode;
 }) {
   return (
-    <ul className="flex flex-col gap-3">
+    <Bleed>
+      <div
+        className={
+          tone === 'brand'
+            ? 'bg-primary text-primary-foreground'
+            : 'border-border bg-secondary border-b'
+        }
+      >
+        <Container width="content">{children}</Container>
+      </div>
+    </Bleed>
+  );
+}
+
+/**
+ * Where the page sits in the help center, above its title. The page's full
+ * trail from the board home stays in the footer, where the shell renders it.
+ */
+function HelpTrail({
+  category,
+  current = false,
+}: {
+  category: Pick<PublicHelpCategory, 'slug' | 'title'>;
+  /** The category is the page being viewed, so it is not a link. */
+  current?: boolean;
+}) {
+  return (
+    <Breadcrumb aria-label={m.help_title()}>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink render={<Link to="/help" />} className={focusRing}>
+            {m.help_title()}
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          {current ? (
+            <BreadcrumbPage dir="auto">{category.title}</BreadcrumbPage>
+          ) : (
+            <BreadcrumbLink
+              render={
+                <Link
+                  to="/help/categories/$helpCategorySlug"
+                  params={{ helpCategorySlug: category.slug }}
+                />
+              }
+              className={focusRing}
+              dir="auto"
+            >
+              {category.title}
+            </BreadcrumbLink>
+          )}
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
+/**
+ * Article rows that share one card: a divider between them, the whole row
+ * the link. They carry the card's own inset, so they must sit inside a Card.
+ */
+function HelpArticleRows({
+  articles,
+  detail = 'title',
+  label,
+}: {
+  articles: PublicHelpArticleSummary[];
+  /** `summary` adds the article's summary; `category` adds its category too. */
+  detail?: 'title' | 'summary' | 'category';
+  label?: string;
+}) {
+  return (
+    <ul aria-label={label} className="divide-border divide-y">
       {articles.map((article) => (
         <li key={article.id}>
-          <Item
-            variant="outline"
-            render={
-              <Link
-                to="/help/articles/$helpArticleSlug"
-                params={{ helpArticleSlug: article.slug }}
-              />
-            }
+          <Link
+            to="/help/articles/$helpArticleSlug"
+            params={{ helpArticleSlug: article.slug }}
+            className="group/row hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring/50 flex items-center gap-4 px-(--card-spacing) py-3.5 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-inset"
           >
-            <ItemContent>
-              <ItemTitle dir="auto">{article.title}</ItemTitle>
-              {article.summary ? (
-                <ItemDescription dir="auto">{article.summary}</ItemDescription>
+            <span className="flex min-w-0 flex-1 flex-col gap-1">
+              {detail === 'category' ? (
+                <span
+                  className="text-muted-foreground text-xs font-medium"
+                  dir="auto"
+                >
+                  {article.category.title}
+                </span>
               ) : null}
-            </ItemContent>
-            <ItemActions>
-              <ChevronRight
-                aria-hidden
-                className="text-muted-foreground size-4 rtl:rotate-180"
-              />
-            </ItemActions>
-          </Item>
+              <span className="text-base font-medium" dir="auto">
+                {article.title}
+              </span>
+              {detail !== 'title' && article.summary ? (
+                <span
+                  className="text-muted-foreground line-clamp-2 text-sm"
+                  dir="auto"
+                >
+                  {article.summary}
+                </span>
+              ) : null}
+            </span>
+            <ChevronRight
+              aria-hidden
+              className="text-muted-foreground size-4 shrink-0 transition-transform group-hover/row:translate-x-0.5 motion-reduce:transition-none rtl:rotate-180 rtl:group-hover/row:-translate-x-0.5"
+            />
+          </Link>
         </li>
       ))}
     </ul>
   );
 }
 
-export interface HelpHomePageProps {
-  title: string;
-  description: string;
-  groups: HelpCategoryGroup[];
-  /**
-   * The home read one page of articles and more exist, so every category
-   * links to its own page for the rest.
-   */
-  hasMoreArticles: boolean;
-  viewAllLabel: string;
+/** "Still need help?" with the board's contact route; nothing without one. */
+function HelpContactPrompt({
+  contact,
+}: {
+  contact: BoardContact | null | undefined;
+}) {
+  if (!canContactBoard(contact)) return null;
+  return (
+    <Item variant="muted">
+      <ItemContent>
+        <ItemTitle>{m.help_contactTitle()}</ItemTitle>
+        <ItemDescription>{m.help_contactDescription()}</ItemDescription>
+      </ItemContent>
+      {/* Under the text on a phone, where the two do not fit side by side. */}
+      <ItemActions className="max-sm:basis-full">
+        <BoardContactButton contact={contact} />
+      </ItemActions>
+    </Item>
+  );
 }
 
-/** The help home: each category with its articles under it. */
+/** One category on the help home: what it covers and its first articles. */
+function HelpCategoryCard({
+  group: { category, articles },
+  hasMoreArticles,
+}: {
+  group: HelpCategoryGroup;
+  hasMoreArticles: boolean;
+}) {
+  const preview = articles.slice(0, HOME_PREVIEW_LIMIT);
+  // The card shows only part of the category, or the home did not load all
+  // of the board's articles and cannot tell.
+  const showViewAll = hasMoreArticles || articles.length > preview.length;
+  return (
+    <Card className="gap-0 py-0">
+      <CardHeader className="py-(--card-spacing)">
+        <h2 className="font-heading text-lg font-semibold">
+          <Link
+            to="/help/categories/$helpCategorySlug"
+            params={{ helpCategorySlug: category.slug }}
+            className={`${focusRing} hover:underline`}
+            dir="auto"
+          >
+            {category.title}
+          </Link>
+        </h2>
+        {category.description ? (
+          <CardDescription dir="auto">{category.description}</CardDescription>
+        ) : null}
+        {hasMoreArticles ? null : (
+          <CardAction className="text-muted-foreground text-sm">
+            {articleCountLabel(articles.length)}
+          </CardAction>
+        )}
+      </CardHeader>
+      {preview.length > 0 ? (
+        <div className="border-border border-t">
+          <HelpArticleRows
+            articles={preview}
+            label={m.helpCategory_articlesLabel({ category: category.title })}
+          />
+        </div>
+      ) : null}
+      {showViewAll ? (
+        <Link
+          to="/help/categories/$helpCategorySlug"
+          params={{ helpCategorySlug: category.slug }}
+          className="border-border text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:ring-ring/50 flex items-center gap-1.5 border-t px-(--card-spacing) py-3.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-inset"
+        >
+          {m.help_viewAllLabel()}
+          <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+        </Link>
+      ) : null}
+    </Card>
+  );
+}
+
+export interface HelpSearchResults {
+  /** What the visitor searched for, as the page shows it back. */
+  query: string;
+  /** The matching articles, best first. */
+  results: PublicHelpArticleSummary[];
+}
+
+export interface HelpHomePageProps {
+  groups: HelpCategoryGroup[];
+  /**
+   * The home read one page of articles and more exist. The home then cannot
+   * count a category, so it shows no counts and every category links to its
+   * own page for the rest.
+   */
+  hasMoreArticles: boolean;
+  /**
+   * A search from the header's field (`/help?q=…`). Its results replace the
+   * categories.
+   */
+  search?: HelpSearchResults | null;
+  /** How to reach the board, for "Still need help?". */
+  contact?: BoardContact | null;
+}
+
+/**
+ * The help home: each category with its first articles, or the results of a
+ * search. The search field itself is the header's, on every help page.
+ */
 export function HelpHomePage({
-  title,
-  description,
   groups,
   hasMoreArticles,
-  viewAllLabel,
+  search,
+  contact,
 }: HelpHomePageProps) {
+  const resultsHeadingId = useId();
+  const results = search?.results;
+  // A category the home knows to be empty has nothing to open.
+  const shownGroups = hasMoreArticles
+    ? groups
+    : groups.filter((group) => group.articles.length > 0);
+
   return (
     <Page width="content">
       <PageContent
-        header={<PageHeader title={title} description={description} />}
+        header={
+          <HelpBand tone="brand">
+            <header className="flex flex-col items-center gap-3 py-10 text-center md:py-14">
+              <p className="text-primary-foreground/70 text-sm font-medium">
+                {m.help_title()}
+              </p>
+              <h1 className="font-heading text-4xl font-semibold tracking-tight text-balance md:text-5xl">
+                {m.help_heroHeadline()}
+              </h1>
+              <p className="text-primary-foreground/80 text-base text-balance md:text-lg">
+                {m.help_subtitleText()}
+              </p>
+            </header>
+          </HelpBand>
+        }
       >
-        {groups.map(({ category, articles }) => (
-          <PageSection
-            key={category.id}
-            title={
-              <Link
-                to="/help/categories/$helpCategorySlug"
-                params={{ helpCategorySlug: category.slug }}
-                className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
-                dir="auto"
-              >
-                {category.title}
-              </Link>
-            }
-            description={
-              category.description ? (
-                <span dir="auto">{category.description}</span>
-              ) : undefined
-            }
+        {search && results ? (
+          <section
+            aria-labelledby={resultsHeadingId}
+            className="flex flex-col gap-6"
           >
-            {articles.length > 0 ? (
-              <HelpArticleList articles={articles} />
-            ) : null}
-            {hasMoreArticles ? (
-              <Link
-                to="/help/categories/$helpCategorySlug"
-                params={{ helpCategorySlug: category.slug }}
-                className={buttonVariants({ variant: 'outline' })}
-              >
-                {viewAllLabel}
-              </Link>
-            ) : null}
-          </PageSection>
-        ))}
+            <h2
+              id={resultsHeadingId}
+              className="font-heading text-xl font-semibold"
+            >
+              {results.length > 0
+                ? m.help_searchResultsHeading({
+                    count: results.length,
+                    countLabel: new Intl.NumberFormat(getLocale()).format(
+                      results.length,
+                    ),
+                    query: search.query,
+                  })
+                : m.help_searchEmptyTitle({ query: search.query })}
+            </h2>
+            {results.length > 0 ? (
+              <Card className="gap-0 py-0">
+                <HelpArticleRows articles={results} detail="category" />
+              </Card>
+            ) : (
+              <Empty className="border">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Search aria-hidden />
+                  </EmptyMedia>
+                  <EmptyDescription>
+                    {m.help_searchEmptyDescription()}
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Link
+                    to="/help"
+                    className={buttonVariants({ variant: 'outline' })}
+                  >
+                    {m.help_searchResetLabel()}
+                  </Link>
+                </EmptyContent>
+              </Empty>
+            )}
+          </section>
+        ) : (
+          <ul className="flex flex-col gap-6">
+            {shownGroups.map((group) => (
+              <li key={group.category.id}>
+                <HelpCategoryCard
+                  group={group}
+                  hasMoreArticles={hasMoreArticles}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+        <HelpContactPrompt contact={contact} />
       </PageContent>
     </Page>
   );
@@ -142,6 +415,11 @@ export function HelpHomePage({
 export interface HelpCategoryPageProps {
   category: PublicHelpCategory;
   articles: PublicHelpArticleSummary[];
+  /**
+   * How many articles the category holds, when this page shows all of them;
+   * absent on a page of a longer list, which cannot count it.
+   */
+  articleCount?: number;
   /** Label of the article list for assistive technology. */
   listLabel: string;
   /** Route-owned Previous/Next cursor pagination. */
@@ -152,6 +430,7 @@ export interface HelpCategoryPageProps {
 export function HelpCategoryPage({
   category,
   articles,
+  articleCount,
   listLabel,
   pagination,
 }: HelpCategoryPageProps) {
@@ -159,19 +438,34 @@ export function HelpCategoryPage({
     <Page width="content">
       <PageContent
         header={
-          <PageHeader
-            title={<span dir="auto">{category.title}</span>}
-            description={
-              category.description ? (
-                <span dir="auto">{category.description}</span>
-              ) : undefined
-            }
-          />
+          <HelpBand>
+            <div className="pb-(--header-space)">
+              <PageHeader
+                eyebrow={<HelpTrail category={category} current />}
+                title={<span dir="auto">{category.title}</span>}
+                description={
+                  category.description ? (
+                    <span dir="auto">{category.description}</span>
+                  ) : undefined
+                }
+              >
+                {articleCount === undefined ? null : (
+                  <p className="text-muted-foreground text-sm">
+                    {articleCountLabel(articleCount)}
+                  </p>
+                )}
+              </PageHeader>
+            </div>
+          </HelpBand>
         }
       >
-        <PageSection ariaLabel={listLabel}>
-          <HelpArticleList articles={articles} />
-        </PageSection>
+        {articles.length > 0 ? (
+          <PageSection ariaLabel={listLabel}>
+            <Card className="gap-0 py-0">
+              <HelpArticleRows articles={articles} detail="summary" />
+            </Card>
+          </PageSection>
+        ) : null}
         {pagination}
       </PageContent>
     </Page>
@@ -182,45 +476,92 @@ export interface HelpArticlePageProps {
   article: PublicHelpArticle;
   /** "Updated 12 March 2026", already formatted for the viewer's locale. */
   updatedLabel: string | null;
+  /** How to reach the board, for "Still need help?". */
+  contact?: BoardContact | null;
 }
 
 /**
- * One article: its category, title and last update, then the body. The body
+ * One article: where it sits, its title, summary and last update, then the
+ * body on the reading column, with its sections listed beside it. The body
  * is `article.html`, which the Board API sanitized; `Prose` renders it and
  * no other string is rendered as HTML here.
  */
 export function HelpArticlePage({
   article,
   updatedLabel,
+  contact,
 }: HelpArticlePageProps) {
+  const headings = extractToc(article.html);
+  const bodyHtml = withHeadingAnchors(article.html);
+  const hasToc = headings.length >= 2;
+
   return (
-    <PageLayout>
-      {/* The readable measure the legal pages and blog articles use. */}
-      <article className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <p className="text-muted-foreground text-sm font-medium">
-            <Link
-              to="/help/categories/$helpCategorySlug"
-              params={{ helpCategorySlug: article.category.slug }}
-              className="focus-visible:ring-ring/30 rounded-sm outline-none hover:underline focus-visible:ring-3"
-              dir="auto"
-            >
-              {article.category.title}
-            </Link>
-          </p>
-          <h1
-            className="font-heading text-3xl font-semibold tracking-tight"
-            dir="auto"
-          >
-            {article.title}
-          </h1>
-          {updatedLabel ? (
-            <p className="text-muted-foreground text-sm">{updatedLabel}</p>
+    <Page width="wide">
+      <PageContent
+        header={
+          <HelpBand>
+            <div className="pb-(--header-space)">
+              <PageHeader
+                eyebrow={<HelpTrail category={article.category} />}
+                title={<span dir="auto">{article.title}</span>}
+                description={
+                  article.summary ? (
+                    <span dir="auto">{article.summary}</span>
+                  ) : undefined
+                }
+              >
+                {updatedLabel ? (
+                  <p className="text-muted-foreground text-sm">
+                    {updatedLabel}
+                  </p>
+                ) : null}
+              </PageHeader>
+            </div>
+          </HelpBand>
+        }
+      >
+        {/* The reading column stays centred under the band's title; from xl
+            the section list rides the margin beside it. */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_minmax(0,48rem)_1fr]">
+          <article className="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-10 xl:col-start-2">
+            {hasToc ? (
+              <ArticleToc
+                headings={headings}
+                className="bg-muted rounded-3xl p-5 xl:hidden"
+              />
+            ) : null}
+            {bodyHtml ? <Prose html={bodyHtml} /> : null}
+            <footer className="border-border flex flex-col gap-6 border-t pt-8">
+              <Link
+                to="/help/categories/$helpCategorySlug"
+                params={{ helpCategorySlug: article.category.slug }}
+                className={`${buttonVariants({ variant: 'outline' })} self-start`}
+              >
+                <ArrowLeft
+                  aria-hidden
+                  data-icon="inline-start"
+                  className="rtl:rotate-180"
+                />
+                <span dir="auto">
+                  {m.helpCategory_articlesLabel({
+                    category: article.category.title,
+                  })}
+                </span>
+              </Link>
+              <HelpContactPrompt contact={contact} />
+            </footer>
+          </article>
+          {hasToc ? (
+            <aside className="hidden ps-10 xl:col-start-3 xl:block">
+              <ArticleToc
+                headings={headings}
+                className="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto"
+              />
+            </aside>
           ) : null}
-        </header>
-        {article.html ? <Prose html={article.html} /> : null}
-      </article>
-    </PageLayout>
+        </div>
+      </PageContent>
+    </Page>
   );
 }
 

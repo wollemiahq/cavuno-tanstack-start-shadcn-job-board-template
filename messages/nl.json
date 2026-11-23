@@ -1414,6 +1414,42 @@
   "help_viewAllLabel": "Alle artikelen bekijken",
   "help_backLabel": "Terug naar het helpcentrum",
   "help_notFoundDescription": "Deze pagina is niet beschikbaar of niet meer gepubliceerd.",
+  "help_heroHeadline": "Hoe kunnen we helpen?",
+  "help_searchPlaceholder": "Zoek naar antwoorden…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} artikel",
+        "countPlural=*": "{countLabel} artikelen"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} resultaat voor ‘{query}’",
+        "countPlural=*": "{countLabel} resultaten voor ‘{query}’"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "Geen artikelen gevonden voor ‘{query}’",
+  "help_searchEmptyDescription": "Probeer andere woorden of blader door de categorieën.",
+  "help_searchResetLabel": "Alle categorieën tonen",
+  "help_contactTitle": "Nog steeds hulp nodig?",
+  "help_contactDescription": "Stuur ons een bericht, dan nemen we contact met je op.",
   "helpCategory_metaDescription": "Helpartikelen over {category} van {boardName}.",
   "helpCategory_articlesLabel": "Artikelen in {category}",
   "helpCategory_notFoundTitle": "Categorie niet gevonden",

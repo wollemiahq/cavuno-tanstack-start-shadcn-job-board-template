@@ -1,9 +1,10 @@
 /**
- * `/help` — the board's help center: every category with its articles. A
- * board with nothing published has no help center, so the page is a 404 and
- * the footer link is hidden.
+ * `/help` — the board's help center: every category with its first articles,
+ * or the results of a search from the header's field (`/help?q=…`). A board
+ * with nothing published has no help center, so the page is a 404 and the
+ * footer link is hidden.
  */
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getHelpHomePage } from '../server/help-pages';
@@ -11,13 +12,24 @@ import { getHelpHomePage } from '../server/help-pages';
 import { HelpHomePage, HelpNotFound } from '@/components/board/help-center';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { jsonLdHeadScripts } from '@/components/json-ld';
+import { searchQueryString, type UrlSearchInput } from '@/lib/pagination';
+
+const rootApi = getRouteApi('__root__');
+
+interface HelpSearch {
+  q?: string;
+}
 
 export const Route = createFileRoute('/help/')({
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: { fullBleed: true, ownsMain: true, headerSearchScope: 'help' },
   pendingComponent: () => (
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
-  loader: () => getHelpHomePage(),
+  validateSearch: (search: UrlSearchInput): HelpSearch => ({
+    q: searchQueryString(search.q),
+  }),
+  loaderDeps: ({ search }) => search,
+  loader: ({ deps }) => getHelpHomePage({ data: { q: deps.q } }),
   head: ({ loaderData }) =>
     loaderData
       ? { ...loaderData.head, scripts: jsonLdHeadScripts(loaderData.jsonLd) }
@@ -33,14 +45,18 @@ export const Route = createFileRoute('/help/')({
 });
 
 function HelpPage() {
-  const { groups, hasMoreArticles } = Route.useLoaderData();
+  const { groups, hasMoreArticles, search } = Route.useLoaderData();
+  const { board, contactEnabled } = rootApi.useLoaderData();
   return (
     <HelpHomePage
-      title={m.help_title()}
-      description={m.help_subtitleText()}
       groups={groups}
       hasMoreArticles={hasMoreArticles}
-      viewAllLabel={m.help_viewAllLabel()}
+      search={search}
+      contact={{
+        boardName: board.name,
+        contactPage: contactEnabled,
+        email: board.footer.contactEmail,
+      }}
     />
   );
 }

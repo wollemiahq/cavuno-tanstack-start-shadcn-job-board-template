@@ -1472,6 +1472,46 @@
   "help_viewAllLabel": "Zobacz wszystkie artykuły",
   "help_backLabel": "Wróć do centrum pomocy",
   "help_notFoundDescription": "Ta strona jest niedostępna lub nie jest już opublikowana.",
+  "help_heroHeadline": "Jak możemy pomóc?",
+  "help_searchPlaceholder": "Szukaj odpowiedzi…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} artykuł",
+        "countPlural=few": "{countLabel} artykuły",
+        "countPlural=many": "{countLabel} artykułów",
+        "countPlural=*": "{countLabel} artykułu"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} wynik dla „{query}”",
+        "countPlural=few": "{countLabel} wyniki dla „{query}”",
+        "countPlural=many": "{countLabel} wyników dla „{query}”",
+        "countPlural=*": "{countLabel} wyniku dla „{query}”"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "Brak artykułów pasujących do „{query}”",
+  "help_searchEmptyDescription": "Spróbuj użyć innych słów lub przejrzyj kategorie.",
+  "help_searchResetLabel": "Pokaż wszystkie kategorie",
+  "help_contactTitle": "Nadal potrzebujesz pomocy?",
+  "help_contactDescription": "Napisz do nas, a odpowiemy.",
   "helpCategory_metaDescription": "Artykuły pomocy w kategorii {category} – {boardName}.",
   "helpCategory_articlesLabel": "Artykuły w kategorii {category}",
   "helpCategory_notFoundTitle": "Nie znaleziono kategorii",

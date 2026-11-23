@@ -513,6 +513,11 @@ function RootChrome({
       return;
     }
 
+    if (scope === 'help') {
+      void navigate({ to: '/help', search: { q: query } });
+      return;
+    }
+
     if (scope === 'talent') {
       // SAFETY: the current route's search is URL-serializable input.
       const next = talentSearchFromHeader(location.search as UrlSearchInput, {

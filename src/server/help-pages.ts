@@ -24,6 +24,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
+import { searchHelpArticles } from '../lib/help-search';
 import { headTitle } from '../lib/page-title';
 import { readPublicOrigin } from '../lib/public-origin';
 import { selfUrl } from '../lib/self-url';
@@ -34,6 +35,12 @@ import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
 
 /** The most categories and articles the help home reads: one page of each. */
 const HELP_HOME_LIMIT = 100;
+
+/**
+ * The most pages of articles a search reads. A board holds at most 500
+ * published articles, so five pages of `HELP_HOME_LIMIT` are all of them.
+ */
+const HELP_SEARCH_MAX_PAGES = 5;
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -82,19 +89,45 @@ const helpRead = async <T>(read: () => Promise<T>): Promise<T> => {
   }
 };
 
-/** `/help` — every category with its articles, in the operator's order. */
+/**
+ * `/help` — every category with its articles, in the operator's order. With
+ * a query (`/help?q=…`, from the header's search field) it answers the
+ * articles that match instead, read from every page of the board's articles.
+ */
 export const getHelpHomePage = createServerFn({ method: 'GET' })
+  .validator((input: { q?: string }) => input)
   .middleware([boardAccessMiddleware])
-  .handler(({ context }) =>
+  .handler(({ data, context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
+      const readArticles = (cursor?: string) =>
+        helpRead(() =>
+          board.help.articles.list(
+            { limit: HELP_HOME_LIMIT, cursor },
+            { headers },
+          ),
+        );
+      // A search matches against every article; the browse view shows the
+      // first page and sends each category to its own page for the rest.
+      const readAllArticles = async () => {
+        const first = await readArticles();
+        const all = [...first.data];
+        let page = first;
+        for (
+          let read = 1;
+          read < HELP_SEARCH_MAX_PAGES && page.hasMore && page.nextCursor;
+          read += 1
+        ) {
+          page = await readArticles(page.nextCursor);
+          all.push(...page.data);
+        }
+        return { ...first, data: all, hasMore: false };
+      };
       const [categories, articles, seo] = await Promise.all([
         helpRead(() =>
           board.help.categories.list({ limit: HELP_HOME_LIMIT }, { headers }),
         ),
-        helpRead(() =>
-          board.help.articles.list({ limit: HELP_HOME_LIMIT }, { headers }),
-        ),
+        data.q ? readAllArticles() : readArticles(),
         seoBase(),
       ]);
       // Nothing published: the help center does not exist yet.
@@ -111,15 +144,24 @@ export const getHelpHomePage = createServerFn({ method: 'GET' })
       });
       const canonical = selfUrl(seo.origin, BOARD_PATHS.help);
       return {
-        groups: categories.data.map((category) => ({
-          category,
-          articles: articles.data.filter(
-            (article) => article.category.id === category.id,
-          ),
-        })),
+        // A search shows its results in place of the categories.
+        groups: data.q
+          ? []
+          : categories.data.map((category) => ({
+              category,
+              articles: articles.data.filter(
+                (article) => article.category.id === category.id,
+              ),
+            })),
         // The page of articles is not all of them: each category links to
         // its own page for the rest.
         hasMoreArticles: articles.hasMore === true,
+        search: data.q
+          ? {
+              query: data.q,
+              results: searchHelpArticles(articles.data, data.q),
+            }
+          : null,
         head: {
           meta: [
             { title: headTitle(seo.boardName, m.help_title()) },

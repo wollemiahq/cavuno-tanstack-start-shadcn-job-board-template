@@ -27,7 +27,7 @@ interface HelpCategorySearch {
 }
 
 export const Route = createFileRoute('/help/categories/$helpCategorySlug')({
-  staticData: { fullBleed: true, ownsMain: true },
+  staticData: { fullBleed: true, ownsMain: true, headerSearchScope: 'help' },
   pendingComponent: () => (
     <PublicContentPending label={m.publicContent_loadingLabel()} />
   ),
@@ -67,6 +67,10 @@ function CategoryPage() {
     <HelpCategoryPage
       category={category}
       articles={articles.data}
+      // Only a list that fits one page can be counted from what was read.
+      articleCount={
+        !search.cursor && !articles.hasMore ? articles.data.length : undefined
+      }
       listLabel={m.helpCategory_articlesLabel({ category: category.title })}
       pagination={
         <CursorPagination

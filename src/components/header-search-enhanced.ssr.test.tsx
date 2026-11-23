@@ -63,6 +63,7 @@ describe('header search on the server', () => {
           talentPlaceholder="talent-placeholder"
           blogPlaceholder="blog-placeholder"
           productsPlaceholder="products-placeholder"
+          helpPlaceholder="help-placeholder"
         />,
       );
       expect(html).not.toContain('header-search-fallback');
