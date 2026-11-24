@@ -295,7 +295,12 @@ const BUDGETS = {
     // positioner and pointer interactions), which the approved design uses
     // for the per-alert menu. Raised by exactly the measured growth, keeping
     // main's headroom; accepted by the operator on 2026-11-18.
-    '/email-preferences': { raw: 162_707, gzip: 61_059 },
+    // One Job emails card (#421): a switch per alert and for job matches,
+    // and the master switch that turns them all off or back on. Measured
+    // 163,080 B raw / 61,243 B gzip against main's 162,428 / 60,943 (+652 /
+    // +300), all route code and messages; the ⋯ menu was already loaded.
+    // Raised by exactly the measured growth, keeping main's headroom.
+    '/email-preferences': { raw: 163_359, gzip: 61_359 },
     // The Connected assistants card (list and disconnect the AI assistants
     // a person has signed in to the board's MCP server). Main measured
     // 99,432 B raw / 37,069 B gzip against 100,500 / 37,500 (1,068 / 431 B
