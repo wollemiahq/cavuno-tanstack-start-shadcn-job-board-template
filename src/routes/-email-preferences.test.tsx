@@ -60,6 +60,7 @@ const prefs = {
     ],
   },
   jobMatches: null,
+  jobMatchesOffered: false,
   marketing: { subscribed: false },
   topics: [
     { key: 'events', name: 'Events', subscribed: true },

@@ -38,6 +38,7 @@ function features(
     messaging: true,
     contactPage: true,
     mcp: false,
+    helpCenter: false,
     tipJar: false,
     products: false,
     ...extra,

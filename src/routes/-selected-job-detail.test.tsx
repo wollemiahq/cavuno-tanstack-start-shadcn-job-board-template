@@ -111,6 +111,7 @@ const board = {
     mcp: false,
     tipJar: false,
     products: false,
+    helpCenter: false,
   },
   analytics: {
     ga4MeasurementId: null,

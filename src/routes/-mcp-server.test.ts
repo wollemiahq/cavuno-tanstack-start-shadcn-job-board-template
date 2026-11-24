@@ -1,7 +1,8 @@
 /**
  * Mount contract for the board's MCP server on its own host. The SDK's own
  * suite pins createMcpHandler's semantics; these tests pin that the starter
- * routes `/mcp`, `/mcp/server-card` and `/.well-known/ai-catalog.json` to it
+ * routes `/mcp`, `/mcp/server-card`, `/.well-known/ard.json` and
+ * `/.well-known/ai-catalog.json` to it
  * with the board's key, that `/mcp/docs` stays the starter's own page, and
  * that sign-in from assistants (the OAuth paths) is on only with a `pk_…`
  * key and reaches this site's consent page with the query intact.
@@ -18,6 +19,7 @@ import { mdUrlRedirectLocation } from '../lib/md-url-redirect';
 import { routeTree } from '../routeTree.gen';
 import URL_WORDS from '../url-words.json';
 import { Route as AiCatalogRoute } from './[.]well-known.ai-catalog[.]json';
+import { Route as ArdRoute } from './[.]well-known.ard[.]json';
 import { Route as AuthorizationServerRoute } from './[.]well-known.oauth-authorization-server';
 import { Route as ProtectedResourceRoute } from './[.]well-known.oauth-protected-resource.index';
 import { Route as McpProtectedResourceRoute } from './[.]well-known.oauth-protected-resource.mcp';
@@ -115,6 +117,18 @@ async function serveAiCatalog(request: Request): Promise<Response> {
   return result;
 }
 
+async function serveArd(request: Request): Promise<Response> {
+  const handlers = ArdRoute.options.server?.handlers;
+  if (!handlers || !('GET' in handlers) || !handlers.GET) {
+    throw new Error('expected the ARD manifest to declare a GET handler');
+  }
+  const result = await handlers.GET(
+    handlerContext(request, '/.well-known/ard.json'),
+  );
+  if (!(result instanceof Response)) throw new Error('expected a Response');
+  return result;
+}
+
 function mockUpstream(body: string, contentType: string) {
   const fetchMock = vi.fn(
     async (_url: string, _init?: RequestInit) =>
@@ -189,6 +203,7 @@ describe('MCP server mount', () => {
 
   it.each([
     ['/mcp/server-card', ServerCardRoute, serveServerCard, 'server-card'],
+    ['/.well-known/ard.json', ArdRoute, serveArd, 'ai-catalog'],
     [
       '/.well-known/ai-catalog.json',
       AiCatalogRoute,

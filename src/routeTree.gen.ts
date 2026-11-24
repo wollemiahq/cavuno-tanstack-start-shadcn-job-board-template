@@ -39,6 +39,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TipRouteImport } from './routes/tip'
 import { Route as DotwellKnownAiCatalogDotjsonRouteImport } from './routes/[.]well-known.ai-catalog[.]json'
+import { Route as DotwellKnownArdDotjsonRouteImport } from './routes/[.]well-known.ard[.]json'
 import { Route as DotwellKnownCavunoDotjsonRouteImport } from './routes/[.]well-known.cavuno[.]json'
 import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known.oauth-authorization-server'
 import { Route as AccountAccessRouteImport } from './routes/account_.access'
@@ -286,6 +287,11 @@ const DotwellKnownAiCatalogDotjsonRoute =
     path: '/.well-known/ai-catalog.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotwellKnownArdDotjsonRoute = DotwellKnownArdDotjsonRouteImport.update({
+  id: '/.well-known/ard.json',
+  path: '/.well-known/ard.json',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DotwellKnownCavunoDotjsonRoute =
   DotwellKnownCavunoDotjsonRouteImport.update({
     id: '/.well-known/cavuno.json',
@@ -821,6 +827,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tip': typeof TipRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
+  '/.well-known/ard.json': typeof DotwellKnownArdDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/account/access': typeof AccountAccessRoute
@@ -948,6 +955,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tip': typeof TipRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
+  '/.well-known/ard.json': typeof DotwellKnownArdDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/account/access': typeof AccountAccessRoute
@@ -1076,6 +1084,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tip': typeof TipRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
+  '/.well-known/ard.json': typeof DotwellKnownArdDotjsonRoute
   '/.well-known/cavuno.json': typeof DotwellKnownCavunoDotjsonRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/account_/access': typeof AccountAccessRoute
@@ -1205,6 +1214,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tip'
     | '/.well-known/ai-catalog.json'
+    | '/.well-known/ard.json'
     | '/.well-known/cavuno.json'
     | '/.well-known/oauth-authorization-server'
     | '/account/access'
@@ -1332,6 +1342,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tip'
     | '/.well-known/ai-catalog.json'
+    | '/.well-known/ard.json'
     | '/.well-known/cavuno.json'
     | '/.well-known/oauth-authorization-server'
     | '/account/access'
@@ -1459,6 +1470,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tip'
     | '/.well-known/ai-catalog.json'
+    | '/.well-known/ard.json'
     | '/.well-known/cavuno.json'
     | '/.well-known/oauth-authorization-server'
     | '/account_/access'
@@ -1587,6 +1599,7 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TipRoute: typeof TipRoute
   DotwellKnownAiCatalogDotjsonRoute: typeof DotwellKnownAiCatalogDotjsonRoute
+  DotwellKnownArdDotjsonRoute: typeof DotwellKnownArdDotjsonRoute
   DotwellKnownCavunoDotjsonRoute: typeof DotwellKnownCavunoDotjsonRoute
   DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRoute
   AccountAccessRoute: typeof AccountAccessRoute
@@ -1891,6 +1904,13 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/ai-catalog.json'
       fullPath: '/.well-known/ai-catalog.json'
       preLoaderRoute: typeof DotwellKnownAiCatalogDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/ard.json': {
+      id: '/.well-known/ard.json'
+      path: '/.well-known/ard.json'
+      fullPath: '/.well-known/ard.json'
+      preLoaderRoute: typeof DotwellKnownArdDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/cavuno.json': {
@@ -2631,6 +2651,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   TipRoute: TipRoute,
   DotwellKnownAiCatalogDotjsonRoute: DotwellKnownAiCatalogDotjsonRoute,
+  DotwellKnownArdDotjsonRoute: DotwellKnownArdDotjsonRoute,
   DotwellKnownCavunoDotjsonRoute: DotwellKnownCavunoDotjsonRoute,
   DotwellKnownOauthAuthorizationServerRoute:
     DotwellKnownOauthAuthorizationServerRoute,
