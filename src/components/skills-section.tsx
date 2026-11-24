@@ -53,7 +53,9 @@ export function SkillsSection({ skills }: { skills: string[] }) {
     <TagListSection
       id="skills"
       items={skills}
-      persist={(next) => replaceSkills({ data: { skills: next } })}
+      persist={async (next) => {
+        await replaceSkills({ data: { skills: next } });
+      }}
       copy={{
         emptyIcon: Sparkles,
         heading: m.skillsSection_heading(),
@@ -77,7 +79,9 @@ export function InterestedRolesSection({ roles }: { roles: string[] }) {
     <TagListSection
       id="interested-roles"
       items={roles}
-      persist={(next) => replaceInterestedRoles({ data: { roles: next } })}
+      persist={async (next) => {
+        await replaceInterestedRoles({ data: { roles: next } });
+      }}
       copy={{
         emptyIcon: Target,
         heading: m.interestedRolesSection_heading(),
@@ -99,7 +103,7 @@ function TagListSection({
 }: {
   id: string;
   items: string[];
-  persist: (next: string[]) => Promise<unknown>;
+  persist: (next: string[]) => Promise<void>;
   copy: TagListCopy;
 }) {
   const router = useRouter();
@@ -217,7 +221,9 @@ function TagListSection({
               className="space-y-4"
             >
               <Field className="gap-1.5">
-                <FieldLabel htmlFor={`${id}-name`}>{copy.fieldLabel}</FieldLabel>
+                <FieldLabel htmlFor={`${id}-name`}>
+                  {copy.fieldLabel}
+                </FieldLabel>
                 <Input
                   id={`${id}-name`}
                   disabled={pending}
