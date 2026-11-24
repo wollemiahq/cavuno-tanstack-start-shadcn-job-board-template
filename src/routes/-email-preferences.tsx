@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 
 import { isBoardApiError } from '@cavuno/board';
+import { Link } from '@tanstack/react-router';
 import { MoreHorizontal } from 'lucide-react';
 
 import {
@@ -25,7 +26,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -47,7 +47,6 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-  FieldTitle,
 } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
@@ -161,13 +160,13 @@ export function EmailPreferencesPageView({
       () => dependencies.updateEmailPreferences({ data: { person, changes } }),
       errors,
     );
-  // Back on, alerts that wait for a confirmation link get a fresh one, and
-  // the API says when it queued one; when it can't go out, nothing changes
-  // and the API says why.
-  const setJobAlerts = async (on: boolean) => {
+  // Job alerts back on: alerts that wait for a confirmation link get a fresh
+  // one, and the API says when it queued one; when it can't go out, nothing
+  // changes and the API says why.
+  const changeJobEmails = async (changes: EmailPreferencesUpdate) => {
     const next = await update(
-      { jobAlerts: on },
-      on
+      changes,
+      changes.jobAlerts
         ? {
             rate_limited: m.emailPreferences_jobAlertsThrottled(),
             job_alert_email_suppressed:
@@ -189,6 +188,60 @@ export function EmailPreferencesPageView({
   const marketingConsent = m.emailPreferences_marketingConsent({ board });
   const marketingOn = prefs.marketing.subscribed;
   const { jobAlerts, jobMatches, topics } = prefs;
+  const { alerts } = jobAlerts;
+  const alertsOn = !jobAlerts.unsubscribed;
+  // On while job alerts are on and it isn't paused; one waiting for its
+  // confirmation link counts, since it starts once the link is clicked.
+  const alertOn = (alert: PreferenceAlert) => alertsOn && !alert.paused;
+  // Pausable: confirmed, and not waiting for a link (the API refuses both).
+  const pausable = (alert: PreferenceAlert) =>
+    jobAlerts.confirmed && !alert.awaitingConfirmation;
+  const matchesOn = jobMatches?.subscribed === true;
+  const jobEmailsOn = alerts.some(alertOn) || matchesOn;
+  // Until the board's API says it offers job matches, a person without them
+  // gets no setup link.
+  const matchesSetup =
+    jobMatches === null &&
+    'jobMatchesOffered' in prefs &&
+    prefs.jobMatchesOffered === true;
+
+  // Off turns every source off, as the weekly email's Unsubscribe does. On
+  // turns them all back on, and resumes paused alerts when every alert was
+  // paused, so on always sends something.
+  const setJobEmails = (on: boolean) => {
+    const changes: EmailPreferencesUpdate = {};
+    if (!on) {
+      if (alertsOn && alerts.length > 0) changes.jobAlerts = false;
+      if (matchesOn) changes.jobMatches = false;
+      return changeJobEmails(changes);
+    }
+    if (alerts.length > 0 && !alertsOn) changes.jobAlerts = true;
+    if (alerts.every((alert) => alert.paused)) {
+      const resume = alerts.filter(pausable);
+      if (resume.length) {
+        changes.alerts = resume.map((alert) => ({
+          id: alert.id,
+          paused: false,
+        }));
+      }
+    }
+    if (jobMatches && !matchesOn) changes.jobMatches = true;
+    return changeJobEmails(changes);
+  };
+  // One alert's switch pauses or resumes it. Turned on while job alerts are
+  // off, job alerts come back on with only this one: the others that showed
+  // as off are paused.
+  const setAlertOn = (alert: PreferenceAlert, on: boolean) => {
+    if (alertsOn) {
+      return changeJobEmails({ alerts: [{ id: alert.id, paused: !on }] });
+    }
+    const changes: EmailPreferencesUpdate = { jobAlerts: true };
+    const others = alerts
+      .filter((other) => pausable(other) && (other === alert || !other.paused))
+      .map((other) => ({ id: other.id, paused: other !== alert }));
+    if (others.length) changes.alerts = others;
+    return changeJobEmails(changes);
+  };
   const everythingOff =
     (jobAlerts.unsubscribed || jobAlerts.alerts.length === 0) &&
     !jobMatches?.subscribed &&
@@ -219,76 +272,82 @@ export function EmailPreferencesPageView({
           ) : null}
 
           <PreferenceCard
-            id="ep-job-alerts"
-            title={m.emailPreferences_jobAlertsTitle()}
+            id="ep-job-emails"
+            title={m.emailPreferences_jobEmailsTitle()}
           >
-            {jobAlerts.alerts.length === 0 ? (
+            {alerts.length === 0 && jobMatches === null ? (
               <FieldDescription>
                 {m.emailPreferences_jobAlertsNone()}
               </FieldDescription>
             ) : (
-              <>
-                <PreferenceSwitch
-                  id="ep-job-alerts-all"
-                  title={m.emailPreferences_jobAlertsAll()}
-                  // Neither off nor waiting for room reads as sending.
-                  description={
-                    jobAlerts.unsubscribed
-                      ? m.emailPreferences_jobAlertsOff()
-                      : jobAlerts.waitlisted
-                        ? m.emailPreferences_jobMatchesWaitlisted({ board })
-                        : m.emailPreferences_jobAlertsDescription()
-                  }
-                  checked={!jobAlerts.unsubscribed}
-                  disabled={pending}
-                  onCheckedChange={setJobAlerts}
-                />
-                <FieldSeparator />
-                <ul className="flex flex-col gap-6">
-                  {jobAlerts.alerts.map((alert, index) => (
-                    <li key={alert.id} className="flex flex-col gap-6">
-                      {index > 0 ? <FieldSeparator /> : null}
-                      <AlertRow
-                        alert={alert}
-                        filterNames={data.filterNames}
-                        canPause={jobAlerts.confirmed}
-                        jobAlertsOff={jobAlerts.unsubscribed}
-                        pending={pending}
-                        onPausedChange={(paused) =>
-                          update({ alerts: [{ id: alert.id, paused }] })
-                        }
-                        onDelete={() =>
-                          update({ alerts: [{ id: alert.id, delete: true }] })
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </>
+              <PreferenceSwitch
+                id="ep-job-emails-all"
+                title={m.emailPreferences_jobEmailsAll()}
+                description={
+                  jobEmailsOn && alertsOn && jobAlerts.waitlisted
+                    ? m.emailPreferences_jobMatchesWaitlisted({ board })
+                    : m.emailPreferences_jobEmailsDescription()
+                }
+                checked={jobEmailsOn}
+                disabled={pending}
+                onCheckedChange={(on) => void setJobEmails(on)}
+              />
             )}
+            {alerts.map((alert) => (
+              <Fragment key={alert.id}>
+                <FieldSeparator />
+                <AlertRow
+                  alert={alert}
+                  filterNames={data.filterNames}
+                  checked={alertOn(alert)}
+                  // Waiting for its link: off, it turns on to send a fresh
+                  // one; on, it can only wait. Unconfirmed: nothing pauses.
+                  switchable={
+                    alertsOn
+                      ? pausable(alert)
+                      : alert.awaitingConfirmation || pausable(alert)
+                  }
+                  jobAlertsOff={!alertsOn}
+                  pending={pending}
+                  onCheckedChange={(on) => void setAlertOn(alert, on)}
+                  onDelete={() =>
+                    update({ alerts: [{ id: alert.id, delete: true }] })
+                  }
+                />
+              </Fragment>
+            ))}
+            {jobMatches !== null ? (
+              <>
+                <FieldSeparator />
+                <PreferenceSwitch
+                  id="ep-job-matches"
+                  title={m.emailPreferences_jobMatchesRow()}
+                  description={
+                    jobMatches.waitlisted
+                      ? m.emailPreferences_jobMatchesWaitlisted({ board })
+                      : undefined
+                  }
+                  checked={matchesOn}
+                  disabled={pending}
+                  onCheckedChange={(checked) => update({ jobMatches: checked })}
+                />
+              </>
+            ) : matchesSetup ? (
+              <>
+                <FieldSeparator />
+                <FieldDescription>
+                  <Link to="/matches">
+                    {m.emailPreferences_jobMatchesSetup()}
+                  </Link>
+                </FieldDescription>
+              </>
+            ) : null}
           </PreferenceCard>
 
           <PreferenceCard
             id="ep-other"
             title={m.emailPreferences_otherEmailsTitle()}
           >
-            {jobMatches !== null ? (
-              <>
-                <PreferenceSwitch
-                  id="ep-job-matches"
-                  title={m.emailPreferences_jobMatchesTitle()}
-                  description={
-                    jobMatches.waitlisted
-                      ? m.emailPreferences_jobMatchesWaitlisted({ board })
-                      : m.emailPreferences_jobMatchesDescription()
-                  }
-                  checked={jobMatches.subscribed}
-                  disabled={pending}
-                  onCheckedChange={(checked) => update({ jobMatches: checked })}
-                />
-                <FieldSeparator />
-              </>
-            ) : null}
             <PreferenceSwitch
               id="ep-marketing"
               title={m.emailPreferences_marketingTitle()}
@@ -440,85 +499,98 @@ function PreferenceCard({
 }
 
 /**
- * One alert, named as `/alerts/manage` names it, with what else it matches
- * (or, while it waits for its confirmation link, that, and with job alerts
- * off, how to get a fresh link) and a Paused badge.
- * It has no switch: the job alerts switch is the only one. Its ⋯ menu
- * pauses or resumes it and deletes it; one waiting for its link can only be
- * deleted, because the page can't start it.
+ * One alert, titled with the sentence its digest heading uses ("Jobs
+ * matching “designer” near Berlin", "Jobs similar to Product Designer"),
+ * with what else it matches (or, while it waits for its confirmation link,
+ * that). Its switch pauses or resumes it; its ⋯ menu deletes it.
  */
 function AlertRow({
   alert,
   filterNames,
-  canPause,
+  checked,
+  switchable,
   jobAlertsOff,
   pending,
-  onPausedChange,
+  onCheckedChange,
   onDelete,
 }: {
   alert: PreferenceAlert;
   filterNames: AlertFilterNames;
-  /** False when the hub would ignore a pause: an unconfirmed person. */
-  canPause: boolean;
-  /** Job alerts are off, so an alert waiting for its link needs them on. */
+  checked: boolean;
+  /** False when the API would refuse the change, so the switch is off-limits. */
+  switchable: boolean;
+  /** Job alerts are off, so an alert waiting for its link turns on for one. */
   jobAlertsOff: boolean;
   pending: boolean;
-  onPausedChange: (paused: boolean) => void;
+  onCheckedChange: (on: boolean) => void;
   onDelete: () => void;
 }) {
-  const { headline, criteria } = describeJobAlert(alert, filterNames);
-  // A similar-job alert without a name is named by its job, unlinked here.
-  const label = headline ?? anchorJobTitleText(alert.anchorJob);
+  const { headline, criteria, places } = describeJobAlert(alert, filterNames);
+  // A similar-job alert without a name is named by its job, unlinked here;
+  // an unnamed alert says where, as its digest does, and names a place once.
+  const label =
+    headline === null
+      ? anchorJobTitleText(alert.anchorJob)
+      : places && !alert.label
+        ? m.emailPreferences_alertNear({ jobs: headline, place: places })
+        : headline;
+  const rest = criteria.filter(
+    (part) =>
+      !(places && !alert.label && part === places) &&
+      part !== m.jobAlertMatch_anyCriteria(),
+  );
   const detail = !alert.awaitingConfirmation
-    ? criteria.join(' · ')
+    ? rest.join(' · ')
     : jobAlertsOff
       ? m.emailPreferences_alertAwaitingJobAlertsOff()
       : m.emailPreferences_alertAwaiting();
+  const id = `ep-alert-${alert.id}`;
   return (
     <Field orientation="horizontal">
       <FieldContent>
-        <FieldTitle>
-          {label}
-          {alert.paused && !alert.awaitingConfirmation ? (
-            <Badge variant="secondary">{m.alertsManage_pausedBadge()}</Badge>
-          ) : null}
-        </FieldTitle>
-        {detail ? <FieldDescription>{detail}</FieldDescription> : null}
+        <FieldLabel id={`${id}-label`} htmlFor={id}>
+          <span className="line-clamp-2" title={label}>
+            {label}
+          </span>
+        </FieldLabel>
+        {detail ? (
+          <FieldDescription id={`${id}-description`}>{detail}</FieldDescription>
+        ) : null}
       </FieldContent>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            // Stays enabled while a change saves, so the menu can hand focus
-            // back to it; the items wait instead.
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={m.emailPreferences_alertActionsLabel({ label })}
-            />
-          }
-        >
-          <MoreHorizontal aria-hidden="true" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {alert.awaitingConfirmation || !canPause ? null : (
-            <DropdownMenuItem
-              disabled={pending}
-              onClick={() => onPausedChange(!alert.paused)}
-            >
-              {alert.paused
-                ? m.emailPreferences_resumeAlert()
-                : m.emailPreferences_pauseAlert()}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            variant="destructive"
-            disabled={pending}
-            onClick={onDelete}
+      <div className="flex items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              // Stays enabled while a change saves, so the menu can hand
+              // focus back to it; the item waits instead.
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={m.emailPreferences_alertActionsLabel({ label })}
+              />
+            }
           >
-            {m.emailPreferences_deleteAlert()}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <MoreHorizontal aria-hidden="true" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={pending}
+              onClick={onDelete}
+            >
+              {m.emailPreferences_deleteAlert()}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Switch
+          id={id}
+          checked={checked}
+          disabled={pending || !switchable}
+          aria-labelledby={`${id}-label`}
+          aria-describedby={detail ? `${id}-description` : undefined}
+          onCheckedChange={onCheckedChange}
+        />
+      </div>
     </Field>
   );
 }
