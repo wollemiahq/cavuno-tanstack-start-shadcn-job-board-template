@@ -342,7 +342,8 @@ async function suggestedPlaceIndexJobCount(
  * pages get inlinks. None for a suggested place or a work arrangement, whose
  * combinations are never indexed, nor for a listing widened by a radius,
  * whose chip counts include nearby jobs and so are no floor on the place's
- * own. A place that duplicates another links inside that one.
+ * own. A place that duplicates another links inside that one, where the chip
+ * counts are only an estimate.
  */
 export function relatedSearchesPlace(
   place: Pick<TaxonomyResolution, 'canonicalSlug' | 'suggested'>,
