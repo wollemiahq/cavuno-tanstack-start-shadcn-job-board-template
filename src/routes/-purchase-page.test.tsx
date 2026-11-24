@@ -14,7 +14,9 @@ import {
   type PurchasePageDependencies,
 } from './-purchase-page';
 
+import { formatMoneyExact } from '@/board/product-view-model';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import type { Purchase } from '@cavuno/board';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -164,6 +166,10 @@ describe('purchase page: offer after the purchase', () => {
   };
 
   it('shows the discounted offer and opens it with the purchase email', () => {
+    // In the board language; the DOM matchers collapse no-break spaces.
+    const money = (cents: number) =>
+      formatMoneyExact(getLocale(), cents, 'usd').replace(/\s+/gu, ' ');
+    const text = (value: string) => value.replace(/\s+/gu, ' ');
     const deps = dependencies();
     render(
       <PurchaseReadyView
@@ -173,11 +179,15 @@ describe('purchase page: offer after the purchase', () => {
       />,
     );
     expect(
-      screen.getByText(m.purchase_offerUsualPrice({ price: '$19.99' })),
+      screen.getByText(
+        text(m.purchase_offerUsualPrice({ price: money(1999) })),
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText(m.purchase_offerJustForYou())).toBeInTheDocument();
     const action = screen.getByRole('button', {
-      name: m.purchase_offerBuyAction({ price: '$14.99' }),
+      name: m.purchase_offerBuyAction({
+        price: formatMoneyExact(getLocale(), 1499, 'usd'),
+      }),
     });
     fireEvent.click(action);
     expect(deps.openOffer).toHaveBeenCalledWith({

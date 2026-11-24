@@ -476,7 +476,7 @@ function OfferSection({
             // No cover: nothing to show in its place.
             offer.coverImageUrl
               ? '@min-[620px]:grid-cols-[10rem_1fr_13rem]'
-              : '@min-[620px]:grid-cols-[1fr_13rem]',
+              : '@min-[620px]:grid-cols-[1fr_auto]',
           )}
         >
           {offer.coverImageUrl ? (
@@ -513,48 +513,66 @@ function OfferSection({
               ) : null}
             </div>
           </div>
-          <div className="flex flex-col gap-1 px-4 pt-3 pb-4 @min-[620px]:p-0">
-            {badge ? (
-              <span className="bg-destructive text-destructive-foreground w-fit rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums">
-                {badge}
-              </span>
-            ) : null}
-            <p className="text-foreground flex items-start gap-2 leading-none">
-              {discounted ? (
-                <span className="text-destructive text-2xl font-light">
-                  {new Intl.NumberFormat(locale, {
-                    style: 'percent',
-                    signDisplay: 'always',
-                  }).format(-offer.discountPercent / 100)}
+          <div
+            className={cn(
+              'flex flex-col gap-1 px-4 pt-3 pb-4 @min-[620px]:p-0',
+              // No cover: one row, price beside the button, like the file rows.
+              !offer.coverImageUrl &&
+                '@min-[620px]:flex-row @min-[620px]:items-center @min-[620px]:gap-5',
+            )}
+          >
+            <div className="flex flex-col gap-1">
+              {badge ? (
+                <span className="bg-destructive text-destructive-foreground w-fit rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums">
+                  {badge}
                 </span>
               ) : null}
-              {/* Read as one amount; the split is visual only. */}
-              <span className="sr-only">{price}</span>
-              <span aria-hidden="true" className="flex items-start font-medium">
-                {parts.before ? (
-                  <span className="mt-0.5 text-xs">{parts.before}</span>
+              <p className="text-foreground flex items-start gap-2 leading-none">
+                {discounted ? (
+                  <span className="text-destructive text-2xl font-light">
+                    {new Intl.NumberFormat(locale, {
+                      style: 'percent',
+                      signDisplay: 'always',
+                    }).format(-offer.discountPercent / 100)}
+                  </span>
                 ) : null}
-                <span className="text-3xl">{parts.whole}</span>
-                {parts.fraction ? (
-                  <span className="mt-0.5 text-xs">{parts.fraction}</span>
-                ) : null}
-                {parts.after ? (
-                  <span className="ms-0.5 mt-0.5 text-xs">{parts.after}</span>
-                ) : null}
-              </span>
-            </p>
-            {discounted ? (
-              <p className="text-muted-foreground text-xs">
-                {m.purchase_offerUsualPrice({
-                  price: formatMoneyExact(
-                    locale,
-                    offer.fullPriceCents,
-                    offer.currency,
-                  ),
-                })}
+                {/* Read as one amount; the split is visual only. */}
+                <span className="sr-only">{price}</span>
+                <span
+                  aria-hidden="true"
+                  className="flex items-start font-medium"
+                >
+                  {parts.before ? (
+                    <span className="mt-0.5 text-xs">{parts.before}</span>
+                  ) : null}
+                  <span className="text-3xl">{parts.whole}</span>
+                  {parts.fraction ? (
+                    <span className="mt-0.5 text-xs">{parts.fraction}</span>
+                  ) : null}
+                  {parts.after ? (
+                    <span className="ms-0.5 mt-0.5 text-xs">{parts.after}</span>
+                  ) : null}
+                </span>
               </p>
-            ) : null}
-            <Button className="mt-2 w-full" onClick={() => onOpen(offer)}>
+              {discounted ? (
+                <p className="text-muted-foreground text-xs">
+                  {m.purchase_offerUsualPrice({
+                    price: formatMoneyExact(
+                      locale,
+                      offer.fullPriceCents,
+                      offer.currency,
+                    ),
+                  })}
+                </p>
+              ) : null}
+            </div>
+            <Button
+              className={cn(
+                'mt-2 w-full',
+                !offer.coverImageUrl && '@min-[620px]:mt-0 @min-[620px]:w-auto',
+              )}
+              onClick={() => onOpen(offer)}
+            >
               {discounted
                 ? m.purchase_offerBuyAction({ price })
                 : m.purchase_offerViewAction()}

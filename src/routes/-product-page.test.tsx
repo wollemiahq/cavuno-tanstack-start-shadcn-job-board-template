@@ -13,7 +13,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProductPageView, type ProductPageDependencies } from './-product-page';
 
-import { formatRating, formatShare } from '@/board/product-view-model';
+import {
+  formatMoneyExact,
+  formatRating,
+  formatShare,
+} from '@/board/product-view-model';
 import { productPriceText } from '@/components/board/product-ui';
 import { HeaderRouteActionsProvider } from '@/components/header-route-actions';
 import { copyLinkCopy } from '@/copy-groups/copy-link';
@@ -675,7 +679,11 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
       email: 'Ada@Example.com',
     };
     renderPage({}, null, { offer });
-    expect(within(rail()).getByText('$14.25')).toBeInTheDocument();
+    expect(
+      within(rail()).getByText(
+        formatMoneyExact(getLocale(), 1425, 'usd').replace(/\s+/gu, ' '),
+      ),
+    ).toBeInTheDocument();
     fireEvent.click(buyButton());
     await screen.findByText(m.product_completePurchaseTitle());
     expect(dependencies.startCheckout).toHaveBeenLastCalledWith({
