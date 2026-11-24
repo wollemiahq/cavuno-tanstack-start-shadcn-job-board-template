@@ -26,6 +26,7 @@ import { EmptyState } from '@/components/empty-state';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { PageLayout } from '@/components/layout/page-layout';
 import { searchString, type UrlSearchInput } from '@/lib/pagination';
+import { offerForProduct } from '@/lib/product-offer';
 
 export const cavunoPage = 'product';
 
@@ -81,6 +82,9 @@ function ProductPage() {
   const { session_id: sessionId, buy } = Route.useSearch();
   const { board, offerGate } = rootApi.useLoaderData();
   const pathname = useLocation({ select: (location) => location.pathname });
+  const stateOffer = useLocation({
+    select: (location) => location.state.productOffer,
+  });
   const navigate = useNavigate();
 
   return (
@@ -94,6 +98,7 @@ function ProductPage() {
       sessionId={sessionId ?? null}
       startInCheckout={buy === true}
       showProductsLink={offerGate.hasProductsPage}
+      offer={offerForProduct(stateOffer, product.slug)}
       dependencies={dependencies}
       onPurchase={(purchaseToken) =>
         void navigate({

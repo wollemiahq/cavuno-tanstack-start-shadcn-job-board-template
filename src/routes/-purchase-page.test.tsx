@@ -73,6 +73,7 @@ function purchase(downloadAllAvailable: boolean): Purchase {
     review: null,
     purchaseToken: 'token',
     confirmationToken: null,
+    offer: null,
   };
 }
 
@@ -87,6 +88,7 @@ function dependencies(
     resend: vi.fn(),
     openUrl: vi.fn(),
     invalidate: vi.fn(async () => {}),
+    openOffer: vi.fn(),
     ...overrides,
   };
 }
@@ -144,5 +146,54 @@ describe('purchase page: Download all', () => {
     ).toBeInTheDocument();
     await waitFor(() => expect(deps.invalidate).toHaveBeenCalledTimes(1));
     expect(deps.openUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe('purchase page: offer after the purchase', () => {
+  const offer = {
+    token: 'offer-token',
+    slug: 'interview-guide',
+    name: 'Interview guide',
+    summary: null,
+    coverImageUrl: null,
+    currency: 'usd',
+    fullPriceCents: 1999,
+    priceCents: 1499,
+    discountPercent: 25,
+    discountEndsAt: null,
+  };
+
+  it('shows the discounted offer and opens it with the purchase email', () => {
+    const deps = dependencies();
+    render(
+      <PurchaseReadyView
+        purchase={{ ...purchase(false), offer }}
+        purchaseToken="token"
+        dependencies={deps}
+      />,
+    );
+    expect(
+      screen.getByText(m.purchase_offerUsualPrice({ price: '$19.99' })),
+    ).toBeInTheDocument();
+    expect(screen.getByText(m.purchase_offerJustForYou())).toBeInTheDocument();
+    const action = screen.getByRole('button', {
+      name: m.purchase_offerBuyAction({ price: '$14.99' }),
+    });
+    fireEvent.click(action);
+    expect(deps.openOffer).toHaveBeenCalledWith({
+      ...offer,
+      email: purchase(false).email,
+    });
+  });
+
+  it('shows no offer card without an offer', () => {
+    render(
+      <PurchaseReadyView
+        purchase={purchase(false)}
+        purchaseToken="token"
+        dependencies={dependencies()}
+      />,
+    );
+    expect(screen.queryByText(m.purchase_offerHeading())).toBeNull();
   });
 });

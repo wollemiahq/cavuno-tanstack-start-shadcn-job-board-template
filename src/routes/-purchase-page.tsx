@@ -13,6 +13,7 @@ import {
   CircleCheck,
   Download,
   ExternalLink,
+  FileText,
   Lock,
   MailCheck,
   Star,
@@ -25,7 +26,9 @@ import {
   fileBadge,
   formatFileSize,
   formatMoneyExact,
+  moneyParts,
 } from '@/board/product-view-model';
+import { useOfferTimeLeft } from '@/components/board/product-offer-countdown';
 import { EmptyState } from '@/components/empty-state';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -46,6 +49,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { candidateAuthSearch } from '@/lib/candidate-return-to';
 import { productErrorMessage } from '@/lib/product-error-message';
+import type { ProductOffer } from '@/lib/product-offer';
 import { cn } from '@/lib/utils';
 import type {
   Purchase,
@@ -83,6 +87,8 @@ export type PurchasePageDependencies = {
   openUrl: (url: string) => void;
   /** Re-read the page (counts, states, the confirmation step). */
   invalidate: () => Promise<void>;
+  /** Open the offered product's page with the offer applied. */
+  openOffer: (offer: ProductOffer) => void;
 };
 
 type PurchaseFile = Purchase['files'][number];
@@ -282,6 +288,14 @@ export function PurchaseReadyView({
           </p>
         ) : null}
       </section>
+      {purchase.offer ? (
+        <OfferSection
+          offer={purchase.offer}
+          onOpen={(offer) =>
+            dependencies.openOffer({ ...offer, email: purchase.email })
+          }
+        />
+      ) : null}
     </PageLayout>
   );
 }
@@ -404,6 +418,130 @@ function safeHost(url: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The offer after this purchase, under the files: another of the board's
+ * products the buyer doesn't own. The card follows its own width: a
+ * product card (cover on top) when narrow, cover | text | price when wide.
+ * Everything about the deal sits in one price stack: the countdown badge,
+ * the percent beside the price, the usual price, the button.
+ */
+function OfferSection({
+  offer,
+  onOpen,
+}: {
+  offer: NonNullable<Purchase['offer']>;
+  onOpen: (offer: NonNullable<Purchase['offer']>) => void;
+}) {
+  const locale = getLocale();
+  const left = useOfferTimeLeft(offer.discountEndsAt);
+  const discounted = offer.discountPercent > 0;
+  const price = formatMoneyExact(locale, offer.priceCents, offer.currency);
+  const parts = moneyParts(locale, offer.priceCents, offer.currency);
+  // No badge once a timed discount has run out in an open tab.
+  const badge = !discounted
+    ? null
+    : offer.discountEndsAt === null
+      ? m.purchase_offerJustForYou()
+      : left === null
+        ? null
+        : left.days > 0
+          ? m.purchase_offerCardEndsInDays({
+              days: left.days,
+              hours: left.hours,
+            })
+          : m.purchase_offerCardEndsInHours({
+              hours: left.hours,
+              minutes: left.minutes,
+            });
+  return (
+    <section
+      aria-labelledby="purchase-offer-heading"
+      className="@container flex flex-col gap-3 pb-8"
+      data-slot="purchase-offer"
+    >
+      <h2
+        id="purchase-offer-heading"
+        className="text-foreground text-xl font-semibold"
+      >
+        {m.purchase_offerHeading()}
+      </h2>
+      <Card className="gap-0 overflow-hidden py-0">
+        <div className="grid @min-[620px]:grid-cols-[10rem_1fr_13rem] @min-[620px]:items-center @min-[620px]:gap-5 @min-[620px]:p-4">
+          {offer.coverImageUrl ? (
+            <img
+              src={offer.coverImageUrl}
+              alt=""
+              loading="lazy"
+              className="aspect-[16/10] w-full object-cover @min-[620px]:aspect-[4/3] @min-[620px]:rounded-xl"
+            />
+          ) : (
+            <div className="bg-muted text-muted-foreground grid aspect-[16/10] w-full place-items-center @min-[620px]:aspect-[4/3] @min-[620px]:rounded-xl">
+              <FileText aria-hidden="true" className="size-8" />
+            </div>
+          )}
+          <div className="flex flex-col gap-1 px-4 pt-3 @min-[620px]:p-0">
+            <p className="text-foreground text-base font-semibold" dir="auto">
+              {offer.name}
+            </p>
+            {offer.summary ? (
+              <p className="text-muted-foreground text-sm" dir="auto">
+                {offer.summary}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-1 px-4 pt-3 pb-4 @min-[620px]:p-0">
+            {badge ? (
+              <span className="bg-destructive text-destructive-foreground w-fit rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums">
+                {badge}
+              </span>
+            ) : null}
+            <p className="text-foreground flex items-start gap-2 leading-none">
+              {discounted ? (
+                <span className="text-destructive text-2xl font-light">
+                  {new Intl.NumberFormat(locale, {
+                    style: 'percent',
+                    signDisplay: 'always',
+                  }).format(-offer.discountPercent / 100)}
+                </span>
+              ) : null}
+              {/* Read as one amount; the split is visual only. */}
+              <span className="sr-only">{price}</span>
+              <span aria-hidden="true" className="flex items-start font-medium">
+                {parts.before ? (
+                  <span className="mt-0.5 text-xs">{parts.before}</span>
+                ) : null}
+                <span className="text-3xl">{parts.whole}</span>
+                {parts.fraction ? (
+                  <span className="mt-0.5 text-xs">{parts.fraction}</span>
+                ) : null}
+                {parts.after ? (
+                  <span className="ms-0.5 mt-0.5 text-xs">{parts.after}</span>
+                ) : null}
+              </span>
+            </p>
+            {discounted ? (
+              <p className="text-muted-foreground text-xs">
+                {m.purchase_offerUsualPrice({
+                  price: formatMoneyExact(
+                    locale,
+                    offer.fullPriceCents,
+                    offer.currency,
+                  ),
+                })}
+              </p>
+            ) : null}
+            <Button className="mt-2 w-full" onClick={() => onOpen(offer)}>
+              {discounted
+                ? m.purchase_offerBuyAction({ price })
+                : m.purchase_offerViewAction()}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </section>
+  );
 }
 
 function OrderCard({

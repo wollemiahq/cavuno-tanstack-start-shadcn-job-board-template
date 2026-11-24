@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { productFactRows, ratingHistogramRows } from './product-view-model';
+import {
+  moneyParts,
+  productFactRows,
+  ratingHistogramRows,
+} from './product-view-model';
 
 describe('productFactRows', () => {
   const computed = [
@@ -88,5 +92,30 @@ describe('ratingHistogramRows', () => {
 
   it('gives every row a zero share when nothing is counted', () => {
     expect(ratingHistogramRows([]).every((row) => row.share === 0)).toBe(true);
+  });
+});
+
+describe('moneyParts', () => {
+  it('splits the sign and cents off in the locale’s own order', () => {
+    expect(moneyParts('en-US', 1425, 'usd')).toEqual({
+      before: '$',
+      whole: '14',
+      fraction: '25',
+      after: '',
+    });
+    // German euros: the sign after the amount.
+    expect(moneyParts('de-DE', 123456, 'eur')).toMatchObject({
+      before: '',
+      whole: '1.234',
+      fraction: '56',
+      after: '€',
+    });
+    // Yen has no minor unit: ¥2,000 is 2000, with no fraction.
+    expect(moneyParts('en-US', 2000, 'jpy')).toEqual({
+      before: '¥',
+      whole: '2,000',
+      fraction: '',
+      after: '',
+    });
   });
 });

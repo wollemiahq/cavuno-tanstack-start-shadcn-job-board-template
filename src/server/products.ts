@@ -273,6 +273,8 @@ export type ProductCheckoutInput = {
   marketingConsent?: ProductCheckoutBody['marketingConsent'];
   website?: string;
   returnPath: string;
+  /** The offer after a purchase this checkout redeems (`src/lib/product-offer.ts`). */
+  offerToken?: string;
 };
 
 /**
@@ -297,6 +299,7 @@ export const startProductCheckout = createServerFn({ method: 'POST' })
           // Omitted unless a bot filled the hidden field.
           website: data.website || undefined,
           returnPath: data.returnPath,
+          offerToken: data.offerToken,
         },
         { headers: viewerHeaders(context), cache: 'no-store' },
       ),

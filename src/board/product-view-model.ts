@@ -37,6 +37,45 @@ export function formatMoneyExact(
   }).format(amountCents / 100);
 }
 
+/**
+ * An amount split for a deal price ("$14²⁵"): the currency sign and the
+ * fraction set small, in the locale's own order ("14,25 €" keeps the sign
+ * after). Zero-decimal currencies have no fraction.
+ */
+export function moneyParts(
+  locale: string,
+  amountCents: number,
+  currency: string,
+) {
+  const format = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  });
+  const digits = format.resolvedOptions().maximumFractionDigits ?? 2;
+  const parts = format.formatToParts(amountCents / 10 ** digits);
+  const result = { before: '', whole: '', fraction: '', after: '' };
+  let seenNumber = false;
+  for (const part of parts) {
+    if (part.type === 'integer' || part.type === 'group') {
+      result.whole += part.value;
+      seenNumber = true;
+    } else if (part.type === 'fraction') {
+      result.fraction = part.value;
+    } else if (part.type === 'decimal') {
+      // Implied by the raised fraction.
+    } else if (seenNumber) {
+      result.after += part.value;
+    } else {
+      result.before += part.value;
+    }
+  }
+  return {
+    ...result,
+    before: result.before.trim(),
+    after: result.after.trim(),
+  };
+}
+
 export type PriceLabel =
   | { kind: 'free' }
   | { kind: 'fixed'; amount: string }
