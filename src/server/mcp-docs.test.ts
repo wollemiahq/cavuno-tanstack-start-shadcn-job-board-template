@@ -7,15 +7,26 @@ const reply = {
   id: 1,
   result: {
     tools: [
-      { name: 'search_jobs', description: 'Search `jobs`.', inputSchema: {} },
+      {
+        name: 'search_jobs',
+        description: 'Search `jobs`.',
+        inputSchema: {},
+        _meta: { securitySchemes: [{ type: 'noauth' }] },
+      },
       { name: 'get_job' },
+      {
+        name: 'save_job',
+        _meta: { securitySchemes: [{ type: 'oauth2', scopes: ['saved'] }] },
+      },
     ],
   },
 };
 
 const expected = [
-  { name: 'search_jobs', description: 'Search `jobs`.' },
-  { name: 'get_job', description: '' },
+  { name: 'search_jobs', description: 'Search `jobs`.', signIn: false },
+  { name: 'get_job', description: '', signIn: false },
+  // Only a tool that takes an OAuth token needs the person signed in.
+  { name: 'save_job', description: '', signIn: true },
 ];
 
 describe('parseMcpToolsList', () => {
