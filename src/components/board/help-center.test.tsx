@@ -207,4 +207,33 @@ describe('HelpArticlePage', () => {
       within(more).getByRole('link', { name: m.help_viewAllLabel() }),
     ).toHaveAttribute('href', '/help/categories/billing');
   });
+
+  it("lists related articles in place of the category's other articles", async () => {
+    renderHome(
+      <HelpArticlePage
+        article={{
+          ...refunds,
+          html: '<p>We refund within 48 hours.</p>',
+          redirected: false,
+          newSlug: null,
+        }}
+        related={[article('payouts', 'When payouts arrive')]}
+        moreInCategory={{
+          articles: [article('invoices', 'Where to find an invoice')],
+          hasMore: true,
+        }}
+        updatedLabel={null}
+      />,
+    );
+
+    const related = await screen.findByRole('region', {
+      name: m.helpArticle_relatedTitle(),
+    });
+    expect(
+      within(related).getByRole('link', { name: 'When payouts arrive' }),
+    ).toHaveAttribute('href', '/help/articles/payouts');
+    expect(
+      screen.queryByRole('link', { name: 'Where to find an invoice' }),
+    ).toBeNull();
+  });
 });

@@ -1456,6 +1456,7 @@
   "helpArticle_notFoundTitle": "Article not found",
   "helpArticle_updatedText": "Updated {date}",
   "helpArticle_moreInCategoryTitle": "More in {category}",
+  "helpArticle_relatedTitle": "Related articles",
   "home_blogDescription": "Guides and hiring insight from our team.",
   "home_blogHeading": "From the blog",
   "home_candidateCtaButton": "Create a candidate profile",

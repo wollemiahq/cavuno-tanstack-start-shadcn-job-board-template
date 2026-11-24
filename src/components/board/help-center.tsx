@@ -392,6 +392,11 @@ export function HelpCategoryPage({
 export interface HelpArticlePageProps {
   article: PublicHelpArticle;
   /**
+   * Articles nearest in meaning to this one, from any category, nearest
+   * first. When there are any, they are listed in place of `moreInCategory`.
+   */
+  related?: PublicHelpArticleSummary[];
+  /**
    * Other articles of the same category, in the board's order. `hasMore`
    * when the category holds more than these.
    */
@@ -407,13 +412,14 @@ export interface HelpArticlePageProps {
 
 /**
  * One article: where it sits, its title, summary and last update, then the
- * body on the reading column, with its sections listed beside it and the
- * category's other articles after it. The body
+ * body on the reading column, with its sections listed beside it and its
+ * related articles, or the category's other articles, after it. The body
  * is `article.html`, which the Board API sanitized; `Prose` renders it and
  * no other string is rendered as HTML here.
  */
 export function HelpArticlePage({
   article,
+  related,
   moreInCategory,
   updatedLabel,
   contact,
@@ -456,7 +462,22 @@ export function HelpArticlePage({
             ) : null}
             {bodyHtml ? <Prose html={bodyHtml} /> : null}
             <footer className="border-border flex flex-col gap-6 border-t pt-8">
-              {moreInCategory && moreInCategory.articles.length > 0 ? (
+              {related && related.length > 0 ? (
+                <section
+                  aria-labelledby={moreTitleId}
+                  className="flex flex-col gap-3"
+                >
+                  <h2
+                    id={moreTitleId}
+                    className="font-heading text-lg font-semibold"
+                  >
+                    {m.helpArticle_relatedTitle()}
+                  </h2>
+                  <Card className="gap-0 py-0">
+                    <HelpArticleRows articles={related} />
+                  </Card>
+                </section>
+              ) : moreInCategory && moreInCategory.articles.length > 0 ? (
                 <section
                   aria-labelledby={moreTitleId}
                   className="flex flex-col gap-3"

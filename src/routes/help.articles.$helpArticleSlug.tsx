@@ -38,13 +38,14 @@ export const Route = createFileRoute('/help/articles/$helpArticleSlug')({
 });
 
 function ArticlePage() {
-  const { article, moreInCategory } = Route.useLoaderData();
+  const { article, related, moreInCategory } = Route.useLoaderData();
   const { board, contactEnabled } = rootApi.useLoaderData();
   const updated = formatDate(getLocale(), article.updatedAt);
 
   return (
     <HelpArticlePage
       article={article}
+      related={related}
       moreInCategory={moreInCategory}
       updatedLabel={
         updated ? m.helpArticle_updatedText({ date: updated }) : null

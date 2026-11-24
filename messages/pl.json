@@ -1518,6 +1518,7 @@
   "helpArticle_notFoundTitle": "Nie znaleziono artykułu",
   "helpArticle_updatedText": "Zaktualizowano {date}",
   "helpArticle_moreInCategoryTitle": "Więcej w kategorii {category}",
+  "helpArticle_relatedTitle": "Powiązane artykuły",
   "home_blogDescription": "Poradniki i wiedza o rekrutacji od naszego zespołu.",
   "home_blogHeading": "Z bloga",
   "home_candidateCtaButton": "Utwórz profil kandydata",

@@ -24,6 +24,7 @@ function pageFor(article: {
       html: '<p>Body</p>',
       ...article,
     },
+    related: [],
     moreInCategory: { articles: [], hasMore: false },
     head: { meta: [], links: [] },
     jsonLd: [],

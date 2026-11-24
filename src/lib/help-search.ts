@@ -8,7 +8,8 @@ function searchable(text: string) {
 /**
  * The articles whose title or summary holds every word of the query, title
  * matches first; otherwise the operator's order. A query with no words
- * matches nothing.
+ * matches nothing. The help home uses this while the board's help search
+ * cannot answer.
  */
 export function searchHelpArticles(
   articles: PublicHelpArticleSummary[],

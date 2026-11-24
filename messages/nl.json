@@ -1456,6 +1456,7 @@
   "helpArticle_notFoundTitle": "Artikel niet gevonden",
   "helpArticle_updatedText": "Bijgewerkt op {date}",
   "helpArticle_moreInCategoryTitle": "Meer in {category}",
+  "helpArticle_relatedTitle": "Gerelateerde artikelen",
   "home_blogDescription": "Gidsen en inzichten over werving van ons team.",
   "home_blogHeading": "Van onze blog",
   "home_candidateCtaButton": "Kandidaatprofiel aanmaken",
