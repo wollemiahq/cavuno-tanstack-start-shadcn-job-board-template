@@ -5,8 +5,9 @@ import { localizePath } from '../lib/localized-path';
 import { MCP_CONSENT_PATH } from '../lib/mcp-authorize-query';
 
 /**
- * The board's public MCP server on its own host: `/mcp`, `/mcp/server-card`
- * and `/.well-known/ai-catalog.json` forward to the Board API through the
+ * The board's public MCP server on its own host: `/mcp`, `/mcp/server-card`,
+ * `/.well-known/ard.json` and `/.well-known/ai-catalog.json` forward to the
+ * Board API through the
  * SDK's `createMcpHandler`. The setup page `/mcp/docs` stays this starter's
  * own route (src/routes/mcp.docs.tsx).
  *
