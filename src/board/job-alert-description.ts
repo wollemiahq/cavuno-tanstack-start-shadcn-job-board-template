@@ -64,6 +64,8 @@ function placesText(
 export type JobAlertDescription = {
   headline: string | null;
   criteria: string[];
+  /** Its places in words, also one of `criteria`; null when it has none. */
+  places: string | null;
 };
 
 /**
@@ -79,7 +81,7 @@ export function describeJobAlert(
 ): JobAlertDescription {
   const match = jobAlertMatch(alert);
   if (match.kind === 'similar_job') {
-    return { headline: alert.label, criteria: [] };
+    return { headline: alert.label, criteria: [], places: null };
   }
   const list = (values: string[]) => (values.length ? values.join(', ') : null);
   // A category the board no longer resolves still reads as words.
@@ -106,10 +108,11 @@ export function describeJobAlert(
       ? m.jobAlertMatch_jobsMatching({ query: match.keywords })
       : (rolesTitle ?? m.alertsManage_allJobsText()));
   const { filters } = alert;
+  const places = placesText(filters.placeIds ?? [], names.places);
   const criteria = [
     alert.label ? keywords : null,
     alert.label || match.keywords ? roles : null,
-    placesText(filters.placeIds ?? [], names.places),
+    places,
     list(
       (filters.remoteOptions ?? []).map(
         (option) => enumLabel(option) ?? option.replaceAll('_', ' '),
@@ -127,5 +130,6 @@ export function describeJobAlert(
   return {
     headline,
     criteria: criteria.length ? criteria : [m.jobAlertMatch_anyCriteria()],
+    places,
   };
 }
