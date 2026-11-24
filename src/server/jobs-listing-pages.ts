@@ -21,10 +21,9 @@
 import {
   BOARD_PATHS,
   jobsCategoryPath,
-  jobsLocationCategoryPath,
   jobsLocationPath,
-  jobsLocationSkillPath,
   jobsSkillPath,
+  resolveJobLandingPage,
 } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 import { MIN_JOBS_PER_INDEXED_PAGE } from '@cavuno/board/sitemap';
@@ -34,6 +33,10 @@ import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { contentLocaleQuery } from '../lib/content-locale';
+import {
+  jobLandingCanonicalPath,
+  jobLandingConsolidation,
+} from '../lib/job-landing';
 import { localizePath } from '../lib/localized-path';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
@@ -47,7 +50,6 @@ import {
   placeListingSort,
 } from './listing-place-cache';
 import {
-  listingCanonicalPath,
   noindexFollow,
   resolveOrNull,
   settled,
@@ -103,6 +105,7 @@ import type {
   Seniority,
   TaxonomyResolution,
 } from '@cavuno/board';
+import type { JobLandingConsolidationMap } from '@cavuno/board/paths';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -161,6 +164,11 @@ function listFilters(
 function startedEarly<T>(read: Promise<T>): Promise<T> {
   read.catch(() => undefined);
   return read;
+}
+
+/** Memoized with the context `seoBase` reads, and kept out of the payload. */
+async function readConsolidation() {
+  return jobLandingConsolidation(await readBoardContext());
 }
 
 async function seoBase() {
@@ -334,16 +342,19 @@ async function suggestedPlaceIndexJobCount(
  * pages get inlinks. None for a suggested place or a work arrangement, whose
  * combinations are never indexed, nor for a listing widened by a radius,
  * whose chip counts include nearby jobs and so are no floor on the place's
- * own.
+ * own. A place that duplicates another links inside that one.
  */
 export function relatedSearchesPlace(
   place: Pick<TaxonomyResolution, 'canonicalSlug' | 'suggested'>,
   arrangement: string | null,
   searchRadius: PlaceSearchRadius | null,
+  consolidation?: JobLandingConsolidationMap,
 ): string | null {
-  return arrangement || place.suggested || searchRadius?.selected
-    ? null
-    : place.canonicalSlug;
+  if (arrangement || place.suggested || searchRadius?.selected) return null;
+  return resolveJobLandingPage(
+    { placeSlug: place.canonicalSlug },
+    consolidation,
+  ).placeSlug;
 }
 
 /**
@@ -683,9 +694,10 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [places, seo] = await Promise.all([
+      const [places, seo, consolidation] = await Promise.all([
         board.taxonomy.places.list(undefined, { headers }),
         seoBase(),
+        readConsolidation(),
       ]);
       const head = listingHead({
         title: listingPageTitle({
@@ -710,7 +722,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
           ],
         }),
       );
-      return { places, seo, head, jsonLd };
+      return { places, seo, head, jsonLd, consolidation };
     }),
   );
 
@@ -813,6 +825,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
+      const consolidation = await readConsolidation();
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const searchRadius = placeSearchRadius(
@@ -832,7 +845,9 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...(arrangement
           ? [{ name: heading }]
-          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place)),
+          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
+              consolidation,
+            })),
       ];
       const headCopy = landingDocument(place, data, {
         title: listingPageTitle({
@@ -853,7 +868,12 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         listingHead({
           title: headCopy.title,
           origin: seo.origin,
-          path: localizePath(`/jobs/locations/${data.locationSlug}`),
+          path: localizePath(
+            jobLandingCanonicalPath(
+              { placeSlug: data.locationSlug },
+              consolidation,
+            ),
+          ),
           description: headCopy.description,
         }),
         // A suggested place is indexed at its default distance with enough
@@ -894,6 +914,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           place,
           arrangement,
           searchRadius,
+          consolidation,
         ),
         searchRadius,
         head,
@@ -1006,6 +1027,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
+      const consolidation = await readConsolidation();
       const searchRadius = placeSearchRadius(
         place,
         data.within,
@@ -1028,8 +1050,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           ? [workArrangementCrumb(arrangement, place)]
           : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
               linkCurrent: true,
-              ancestorPath: (slug) =>
-                jobsLocationCategoryPath(slug, category.canonicalSlug),
+              term: { categorySlug: category.canonicalSlug },
+              consolidation,
             })),
         { name: category.displayName },
       ];
@@ -1044,9 +1066,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           }),
           origin: seo.origin,
           path: localizePath(
-            listingCanonicalPath(
+            jobLandingCanonicalPath(
+              { placeSlug: data.locationSlug, categorySlug: data.categorySlug },
+              consolidation,
               list,
-              `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
             ),
           ),
           description: listingMetaDescription({
@@ -1084,6 +1107,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           place,
           arrangement,
           searchRadius,
+          consolidation,
         ),
         searchRadius,
         head,
@@ -1192,6 +1216,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
+      const consolidation = await readConsolidation();
       const searchRadius = placeSearchRadius(
         place,
         data.within,
@@ -1214,8 +1239,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           ? [workArrangementCrumb(arrangement, place)]
           : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
               linkCurrent: true,
-              ancestorPath: (slug) =>
-                jobsLocationSkillPath(slug, skill.canonicalSlug),
+              term: { skillSlug: skill.canonicalSlug },
+              consolidation,
             })),
         { name: skill.displayName },
       ];
@@ -1230,9 +1255,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           }),
           origin: seo.origin,
           path: localizePath(
-            listingCanonicalPath(
+            jobLandingCanonicalPath(
+              { placeSlug: data.locationSlug, skillSlug: data.skillSlug },
+              consolidation,
               list,
-              `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
             ),
           ),
           description: listingMetaDescription({
@@ -1270,6 +1296,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           place,
           arrangement,
           searchRadius,
+          consolidation,
         ),
         searchRadius,
         head,

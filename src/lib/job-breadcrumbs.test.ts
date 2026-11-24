@@ -120,6 +120,27 @@ describe('jobBreadcrumbItems', () => {
   });
 });
 
+describe('consolidated place crumbs', () => {
+  it('link the page a place duplicates', () => {
+    const items = jobBreadcrumbItems(
+      job({
+        placeHierarchy: [
+          {
+            slug: 'region',
+            name: 'Region',
+            canonicalSlug: 'region',
+          },
+        ],
+      }),
+      { places: { region: 'city' } },
+    );
+    expect(items).toContainEqual({
+      name: 'Region',
+      href: '/jobs/locations/city',
+    });
+  });
+});
+
 describe('jobBreadcrumbJsonLd', () => {
   it('mirrors the visible trail with localized paths', () => {
     expect(

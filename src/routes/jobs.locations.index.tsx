@@ -17,6 +17,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { MapPin } from 'lucide-react';
 
 import { jsonLdHeadScripts } from '../components/json-ld';
+import { jobLandingPath } from '../lib/job-landing';
 import { m } from '../paraglide/messages';
 import { getJobsLocationsIndexPage } from '../server/jobs-listing-pages';
 
@@ -41,7 +42,7 @@ export const Route = createFileRoute('/jobs/locations/')({
 });
 
 function LocationsIndexPage() {
-  const { places } = Route.useLoaderData();
+  const { places, consolidation } = Route.useLoaderData();
 
   return (
     <Page width="wide">
@@ -65,6 +66,9 @@ function LocationsIndexPage() {
             places={places.data}
             count={(place) => place.jobCount}
             route="/jobs/locations/$location"
+            placePath={(placeSlug) =>
+              jobLandingPath({ placeSlug }, consolidation)
+            }
           />
         )}
       </PageContent>

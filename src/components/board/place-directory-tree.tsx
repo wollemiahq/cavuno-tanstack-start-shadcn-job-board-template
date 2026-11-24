@@ -62,10 +62,12 @@ function PlaceTree<T extends DirectoryPlace>({
   nodes,
   count,
   route,
+  placePath,
 }: {
   nodes: PlaceNode<T>[];
   count: (place: T) => number;
   route: PlaceDirectoryRoute;
+  placePath?: (slug: string) => string;
 }) {
   return (
     <ul className="flex flex-col gap-1">
@@ -76,8 +78,9 @@ function PlaceTree<T extends DirectoryPlace>({
             <div className="flex items-center gap-2">
               {slug ? (
                 <Link
-                  to={route}
-                  params={{ location: slug }}
+                  {...(placePath
+                    ? { to: placePath(slug) }
+                    : { to: route, params: { location: slug } })}
                   className="text-foreground hover:text-primary focus-visible:ring-ring/30 rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:ring-3 focus-visible:outline-none"
                 >
                   {node.place.displayName}
@@ -93,7 +96,12 @@ function PlaceTree<T extends DirectoryPlace>({
             </div>
             {node.children.length > 0 ? (
               <div className="border-border ms-4 mt-1 border-s ps-3">
-                <PlaceTree nodes={node.children} count={count} route={route} />
+                <PlaceTree
+                  nodes={node.children}
+                  count={count}
+                  route={route}
+                  placePath={placePath}
+                />
               </div>
             ) : null}
           </li>
@@ -107,17 +115,21 @@ export function PlaceDirectoryTree<T extends DirectoryPlace>({
   places,
   count,
   route,
+  placePath,
 }: {
   places: readonly T[];
   /** The place's subtree count: jobs, or candidates. */
   count: (place: T) => number;
   route: PlaceDirectoryRoute;
+  /** The path to link a place by, when not its own page on `route`. */
+  placePath?: (slug: string) => string;
 }) {
   return (
     <PlaceTree
       nodes={buildPlaceHierarchy(places, count)}
       count={count}
       route={route}
+      placePath={placePath}
     />
   );
 }
