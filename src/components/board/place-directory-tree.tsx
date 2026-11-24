@@ -79,7 +79,11 @@ function PlaceTree<T extends DirectoryPlace>({
               {slug ? (
                 <Link
                   {...(placePath
-                    ? { to: placePath(slug) }
+                    ? {
+                        to: placePath(slug),
+                        // A place can link `/jobs`, a prefix of this page.
+                        activeOptions: { exact: true },
+                      }
                     : { to: route, params: { location: slug } })}
                   className="text-foreground hover:text-primary focus-visible:ring-ring/30 rounded-sm underline-offset-4 transition-colors hover:underline focus-visible:ring-3 focus-visible:outline-none"
                 >

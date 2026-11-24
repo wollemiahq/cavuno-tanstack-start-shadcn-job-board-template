@@ -166,12 +166,12 @@ function startedEarly<T>(read: Promise<T>): Promise<T> {
   return read;
 }
 
-/** Memoized with the context `seoBase` reads, and kept out of the payload. */
-async function readConsolidation() {
-  return jobLandingConsolidation(await readBoardContext());
+async function seoBase() {
+  return (await placeSeoBase()).seo;
 }
 
-async function seoBase() {
+/** The SEO base plus the consolidation map, from one context read. */
+async function placeSeoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
   const [boardContext, origin] = await Promise.all([
@@ -179,9 +179,12 @@ async function seoBase() {
     readPublicOrigin(),
   ]);
   return {
-    boardName: boardContext.name,
-    language: boardContext.language,
-    origin,
+    seo: {
+      boardName: boardContext.name,
+      language: boardContext.language,
+      origin,
+    },
+    consolidation: jobLandingConsolidation(boardContext),
   };
 }
 
@@ -695,10 +698,9 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [places, seo, consolidation] = await Promise.all([
+      const [places, { seo, consolidation }] = await Promise.all([
         board.taxonomy.places.list(undefined, { headers }),
-        seoBase(),
-        readConsolidation(),
+        placeSeoBase(),
       ]);
       const head = listingHead({
         title: listingPageTitle({
@@ -761,7 +763,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
       // the SEO, breadcrumb and taxonomy reads as well.
-      const seoRead = startedEarly(seoBase());
+      const seoRead = startedEarly(placeSeoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
@@ -782,43 +784,44 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         placeRead,
         headers,
       );
-      const [place, listResult, seo, placeTree] = await Promise.all([
-        placeRead,
-        settled(
-          readReachablePage(data.offset, data.limit, (offset) =>
-            data.q
-              ? board.jobs.search(
-                  {
-                    query: data.q,
-                    filters: {
+      const [place, listResult, { seo, consolidation }, placeTree] =
+        await Promise.all([
+          placeRead,
+          settled(
+            readReachablePage(data.offset, data.limit, (offset) =>
+              data.q
+                ? board.jobs.search(
+                    {
+                      query: data.q,
+                      filters: {
+                        location: data.locationSlug,
+                        ...radiusParams,
+                        remoteOption: filters.remoteOption,
+                        employmentType: filters.employmentType,
+                        customEmploymentType: filters.customEmploymentType,
+                        seniority: filters.seniority,
+                      },
+                      sort: filters.sort,
+                      offset,
+                      limit: filters.limit,
+                    } satisfies JobsSearchBody,
+                    undefined,
+                    { headers },
+                  )
+                : board.jobs.list(
+                    {
+                      ...filters,
+                      offset,
                       location: data.locationSlug,
                       ...radiusParams,
-                      remoteOption: filters.remoteOption,
-                      employmentType: filters.employmentType,
-                      customEmploymentType: filters.customEmploymentType,
-                      seniority: filters.seniority,
                     },
-                    sort: filters.sort,
-                    offset,
-                    limit: filters.limit,
-                  } satisfies JobsSearchBody,
-                  undefined,
-                  { headers },
-                )
-              : board.jobs.list(
-                  {
-                    ...filters,
-                    offset,
-                    location: data.locationSlug,
-                    ...radiusParams,
-                  },
-                  { headers },
-                ),
+                    { headers },
+                  ),
+            ),
           ),
-        ),
-        seoRead,
-        placeTreeRead,
-      ]);
+          seoRead,
+          placeTreeRead,
+        ]);
       const indexJobCount = await indexJobCountRead;
       if (!place) return { kind: 'not_found' as const };
       if (place.redirectTo) {
@@ -826,7 +829,6 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const consolidation = await readConsolidation();
       const relatedSearches =
         'relatedSearches' in list ? list.relatedSearches : undefined;
       const searchRadius = placeSearchRadius(
@@ -961,7 +963,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
       // the SEO, breadcrumb and taxonomy reads as well.
-      const seoRead = startedEarly(seoBase());
+      const seoRead = startedEarly(placeSeoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
@@ -991,33 +993,39 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         data.within,
         () => radiusKmRead,
       );
-      const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
-        await Promise.all([
-          placeRead,
-          categoryRead,
-          settled(
-            readReachablePage(data.offset, data.limit, (offset) =>
-              board.jobs.list(
-                {
-                  ...filters,
-                  offset,
-                  location: data.locationSlug,
-                  ...radiusParams,
-                  category: data.categorySlug,
-                },
-                { headers },
-              ),
+      const [
+        place,
+        category,
+        listResult,
+        { seo, consolidation },
+        placeTree,
+        inPlaceJobCount,
+      ] = await Promise.all([
+        placeRead,
+        categoryRead,
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              {
+                ...filters,
+                offset,
+                location: data.locationSlug,
+                ...radiusParams,
+                category: data.categorySlug,
+              },
+              { headers },
             ),
           ),
-          seoRead,
-          placeTreeRead,
-          combinationInPlaceJobCount(
-            data,
-            { category: data.categorySlug },
-            radiusKmRead,
-            headers,
-          ),
-        ]);
+        ),
+        seoRead,
+        placeTreeRead,
+        combinationInPlaceJobCount(
+          data,
+          { category: data.categorySlug },
+          radiusKmRead,
+          headers,
+        ),
+      ]);
       if (!place || !category) return { kind: 'not_found' as const };
       if (place.redirectTo || category.redirectTo) {
         return {
@@ -1028,7 +1036,6 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const consolidation = await readConsolidation();
       const searchRadius = placeSearchRadius(
         place,
         data.within,
@@ -1150,7 +1157,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
       // the SEO, breadcrumb and taxonomy reads as well.
-      const seoRead = startedEarly(seoBase());
+      const seoRead = startedEarly(placeSeoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
@@ -1180,33 +1187,39 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         data.within,
         () => radiusKmRead,
       );
-      const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
-        await Promise.all([
-          placeRead,
-          skillRead,
-          settled(
-            readReachablePage(data.offset, data.limit, (offset) =>
-              board.jobs.list(
-                {
-                  ...filters,
-                  offset,
-                  location: data.locationSlug,
-                  ...radiusParams,
-                  skill: data.skillSlug,
-                },
-                { headers },
-              ),
+      const [
+        place,
+        skill,
+        listResult,
+        { seo, consolidation },
+        placeTree,
+        inPlaceJobCount,
+      ] = await Promise.all([
+        placeRead,
+        skillRead,
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              {
+                ...filters,
+                offset,
+                location: data.locationSlug,
+                ...radiusParams,
+                skill: data.skillSlug,
+              },
+              { headers },
             ),
           ),
-          seoRead,
-          placeTreeRead,
-          combinationInPlaceJobCount(
-            data,
-            { skill: data.skillSlug },
-            radiusKmRead,
-            headers,
-          ),
-        ]);
+        ),
+        seoRead,
+        placeTreeRead,
+        combinationInPlaceJobCount(
+          data,
+          { skill: data.skillSlug },
+          radiusKmRead,
+          headers,
+        ),
+      ]);
       if (!place || !skill) return { kind: 'not_found' as const };
       if (place.redirectTo || skill.redirectTo) {
         return {
@@ -1217,7 +1230,6 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       }
       if (!listResult.ok) throw listResult.error;
       const list = listResult.value;
-      const consolidation = await readConsolidation();
       const searchRadius = placeSearchRadius(
         place,
         data.within,
