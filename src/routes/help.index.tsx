@@ -20,6 +20,14 @@ interface HelpSearch {
   q?: string;
 }
 
+/**
+ * Route-contract features this site supports. `helpCategoryIcons`: the help
+ * home shows the icon each help category carries, so the dashboard offers
+ * the icon field on a category. Remove it if the help pages stop showing
+ * `category.icon`.
+ */
+export const cavunoFeatures = ['helpCategoryIcons'] as const;
+
 export const Route = createFileRoute('/help/')({
   staticData: { fullBleed: true, ownsMain: true, headerSearchScope: 'help' },
   pendingComponent: () => (

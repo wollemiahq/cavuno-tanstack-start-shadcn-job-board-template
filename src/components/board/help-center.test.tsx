@@ -43,6 +43,7 @@ const groups: HelpCategoryGroup[] = [
       ...billing,
       object: 'public_help_category',
       description: 'Invoices, refunds and receipts.',
+      icon: null,
     },
     articles: [refunds, article('invoices', 'Where to find an invoice')],
   },
@@ -85,6 +86,57 @@ describe('HelpHomePage', () => {
     expect(
       screen.getByRole('link', { name: 'Where to find an invoice' }),
     ).toHaveAttribute('href', '/help/articles/invoices');
+  });
+
+  it("shows each category's icon, and a folder for none or a kind it does not know", async () => {
+    const withIcon = (
+      title: string,
+      icon: HelpCategoryGroup['category']['icon'],
+    ): HelpCategoryGroup => ({
+      category: { ...groups[0]!.category, id: title, slug: title, title, icon },
+      // The home leaves out a category with no article.
+      articles: [refunds],
+    });
+    const { container } = renderHome(
+      <HelpHomePage
+        groups={[
+          withIcon('emoji', { type: 'emoji', value: '💳' }),
+          withIcon('built-in', {
+            type: 'icon',
+            svg: '<svg viewBox="0 0 24 24"><path d="M22 10H2"/></svg>',
+          }),
+          withIcon('image', { type: 'image', url: 'https://cdn.test/i.webp' }),
+          withIcon('none', null),
+          // SAFETY: a kind a later API version adds, which this site's types
+          // do not have yet.
+          withIcon('unknown-kind', {
+            type: 'video',
+          } as never),
+        ]}
+        hasMoreArticles={false}
+      />,
+    );
+    await screen.findByRole('heading', { name: 'emoji' });
+
+    const marks = [
+      ...container.querySelectorAll('[data-slot="help-category-icon"]'),
+    ].map((tile) => {
+      const mark = tile.firstElementChild!;
+      if (mark.tagName === 'IMG') return mark.getAttribute('src');
+      // The API's own drawing, put in the page as it is.
+      if (mark.matches('[data-slot="help-category-icon-drawing"]')) {
+        return mark.querySelector('path')?.getAttribute('d');
+      }
+      if (mark.tagName === 'SPAN') return mark.textContent;
+      return [...mark.classList].find((name) => name.startsWith('lucide-'));
+    });
+    expect(marks).toEqual([
+      '💳',
+      'M22 10H2',
+      'https://cdn.test/i.webp',
+      'lucide-folder',
+      'lucide-folder',
+    ]);
   });
 
   it('shows the matching articles in place of the categories for a search', async () => {

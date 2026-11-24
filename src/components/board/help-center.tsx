@@ -20,6 +20,7 @@ import {
   canContactBoard,
   type BoardContact,
 } from '@/components/board/board-contact-button';
+import { HelpCategoryIcon } from '@/components/board/help-category-icon';
 import {
   Page,
   PageContent,
@@ -181,19 +182,26 @@ function HelpCategoryCard({
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="py-(--card-spacing)">
-        <h2 className="font-heading text-lg font-semibold">
-          <Link
-            to="/help/categories/$helpCategorySlug"
-            params={{ helpCategorySlug: category.slug }}
-            className={`${focusRing} hover:underline`}
-            dir="auto"
-          >
-            {category.title}
-          </Link>
-        </h2>
-        {category.description ? (
-          <CardDescription dir="auto">{category.description}</CardDescription>
-        ) : null}
+        <div className="flex items-start gap-3">
+          <HelpCategoryIcon icon={category.icon} />
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="font-heading text-lg font-semibold">
+              <Link
+                to="/help/categories/$helpCategorySlug"
+                params={{ helpCategorySlug: category.slug }}
+                className={`${focusRing} hover:underline`}
+                dir="auto"
+              >
+                {category.title}
+              </Link>
+            </h2>
+            {category.description ? (
+              <CardDescription dir="auto">
+                {category.description}
+              </CardDescription>
+            ) : null}
+          </div>
+        </div>
         {hasMoreArticles ? null : (
           <CardAction className="text-muted-foreground text-sm">
             {articleCountLabel(articles.length)}
