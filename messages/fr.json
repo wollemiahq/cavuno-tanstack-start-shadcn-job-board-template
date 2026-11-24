@@ -477,7 +477,7 @@
   "boardError_companyRequiredText": "Choisissez une entreprise avant de continuer.",
   "boardError_emailTakenText": "Un compte avec cet e-mail existe déjà.",
   "boardError_emailDomainUndeliverableText": "Nous ne pouvons pas envoyer d’e-mail à cette adresse. Vérifiez qu’elle ne contient pas de faute de frappe.",
-  "boardError_emailDomainUndeliverableSuggestionText": "Nous ne pouvons pas envoyer d’e-mail à cette adresse. Vouliez-vous dire {email} ?",
+  "boardError_emailDomainUndeliverableSuggestionText": "Nous ne pouvons pas envoyer d’e-mail à {domain}. Vouliez-vous dire {email} ?",
   "boardError_forbiddenText": "Vous n’avez pas l’autorisation d’effectuer cette action.",
   "boardError_freeEmailWebsiteText": "Vous ne pouvez pas utiliser un domaine de messagerie gratuit comme site web de votre entreprise.",
   "boardError_genericText": "Une erreur est survenue. Veuillez réessayer.",

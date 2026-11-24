@@ -269,6 +269,61 @@ describe('/auth/sign-in search contract', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows a refused magic-link address as one email-field error, then sends to the correction', async () => {
+    mocks.requestMagicLink
+      .mockResolvedValueOnce({
+        ok: false,
+        code: 'email_domain_undeliverable',
+        message: 'This email address cannot receive mail.',
+        suggestion: 'ada@outlook.com',
+      })
+      .mockResolvedValueOnce({ ok: true });
+    const { container } = renderSignIn('/jobs');
+    fireEvent.click(
+      await screen.findByRole('radio', {
+        name: m.authSignIn_magicLinkTabLabel(),
+      }),
+    );
+    const email = container.querySelector<HTMLInputElement>(
+      'input[name="email"]',
+    )!;
+    // A domain the blur check leaves alone, so a correction can only be the
+    // API's.
+    fireEvent.change(email, { target: { value: 'ada@outlook.zz' } });
+    const send = await screen.findByRole('button', {
+      name: m.authSignIn_sendMagicLinkLabel(),
+    });
+    fireEvent.click(send);
+
+    const accept = await screen.findByRole('button', {
+      name: 'ada@outlook.com',
+    });
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      m.boardError_emailDomainUndeliverableSuggestionText({
+        domain: 'outlook.zz',
+        email: 'ada@outlook.com',
+      }),
+    );
+    expect(email.closest('[data-slot="field"]')).toContainElement(
+      screen.getByRole('alert'),
+    );
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+
+    fireEvent.click(accept);
+    expect(email).toHaveValue('ada@outlook.com');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(email).not.toHaveAttribute('aria-invalid');
+
+    fireEvent.click(send);
+    expect(
+      await screen.findByText(m.authSignIn_magicLinkSentTitle()),
+    ).toBeInTheDocument();
+    expect(mocks.requestMagicLink).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({ email: 'ada@outlook.com' }),
+    });
+  });
+
   it('includes the validated destination in an OAuth request', async () => {
     const returnTo = '/companies/acme/jobs/platform-engineer?source=search';
     mocks.getOAuthAuthorizationUrl.mockResolvedValue({

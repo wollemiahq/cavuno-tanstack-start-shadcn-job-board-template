@@ -407,7 +407,7 @@ function RegistrationForm({
       >
         <EmailSuggestionHint
           suggestion={emailSuggestion.suggestion}
-          refused={emailRefused}
+          refusedEmail={emailRefused ? email : null}
           disabled={pending}
           onAccept={changeEmail}
         />
@@ -466,7 +466,7 @@ function RegistrationForm({
   );
 }
 
-function RegistrationField({
+export function RegistrationField({
   label,
   name,
   type = 'text',

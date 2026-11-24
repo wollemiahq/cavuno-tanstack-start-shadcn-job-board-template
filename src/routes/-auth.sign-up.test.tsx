@@ -297,6 +297,7 @@ describe('/auth/sign-up mistyped email', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(screen.getByRole('alert')).toHaveTextContent(
       m.boardError_emailDomainUndeliverableSuggestionText({
+        domain: 'outlook.z',
         email: 'ada@outlook.com',
       }),
     );

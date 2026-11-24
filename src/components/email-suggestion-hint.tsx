@@ -44,9 +44,9 @@ const EMAIL_SLOT = '\u0000';
 /**
  * The one message under an email field, in one of three forms:
  * - after blur: "Did you mean jane@gmail.com?", muted;
- * - after the API refused the domain (`refused`), with a correction:
- *   "We can't send email to this address. Did you mean jane@gmail.com?" as
- *   the field's error;
+ * - after the API refused the domain (`refusedEmail`), with a correction:
+ *   "We can't send email to gmail.con. Did you mean jane@gmail.com?" as the
+ *   field's error;
  * - refused with no correction: "We can't send email to this address.
  *   Check it for a typo."
  * The address is a button that takes the correction. Pass `disabled` while
@@ -56,14 +56,16 @@ const EMAIL_SLOT = '\u0000';
 export function EmailSuggestionHint({
   suggestion,
   onAccept,
-  refused = false,
+  refusedEmail = null,
   disabled = false,
 }: {
   suggestion: string | null;
   onAccept: (email: string) => void;
-  refused?: boolean;
+  /** The address the API refused (`email_domain_undeliverable`), if any. */
+  refusedEmail?: string | null;
   disabled?: boolean;
 }) {
+  const refused = refusedEmail !== null;
   if (refused && !suggestion) {
     return (
       <FieldError data-test="email-refused">
@@ -77,6 +79,7 @@ export function EmailSuggestionHint({
   const [before = '', after = ''] = (
     refused
       ? m.boardError_emailDomainUndeliverableSuggestionText({
+          domain: refusedEmail.slice(refusedEmail.lastIndexOf('@') + 1),
           email: EMAIL_SLOT,
         })
       : m.product_emailSuggestionText({ email: EMAIL_SLOT })

@@ -214,6 +214,7 @@ describe('AlertSignupForm submission', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(1);
     expect(screen.getByRole('alert')).toHaveTextContent(
       m.boardError_emailDomainUndeliverableSuggestionText({
+        domain: 'outlook.zz',
         email: 'person@outlook.com',
       }),
     );

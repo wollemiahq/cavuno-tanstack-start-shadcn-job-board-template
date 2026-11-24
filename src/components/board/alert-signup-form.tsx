@@ -209,7 +209,7 @@ export function AlertSignupForm({
                   the refusal and its correction in one line. */}
               <EmailSuggestionHint
                 suggestion={emailSuggestion.suggestion}
-                refused={status === 'undeliverable'}
+                refusedEmail={status === 'undeliverable' ? email : null}
                 disabled={status === 'pending'}
                 onAccept={(suggested) => {
                   setEmail(suggested);
