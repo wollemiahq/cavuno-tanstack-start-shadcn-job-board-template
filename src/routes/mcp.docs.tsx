@@ -55,6 +55,7 @@ const VERBATIM = {
   chatgptPluginsMenu: 'Plugins',
   chatgptPlusButton: '+',
   chatgptCustomServer: 'Add custom MCP server',
+  postJobTool: 'post_job_public',
   cursorConfigFile: '~/.cursor/mcp.json',
   vscodeConfigFile: '.vscode/mcp.json',
 } as const;
@@ -96,6 +97,31 @@ function withInlineCode(text: string): ReactNode[] {
     );
 }
 
+/**
+ * What the tools can and can't change: what the public tools do (with or
+ * without the job posting tool), what the signed-in ones do when the page
+ * lists any, then the rate limits.
+ */
+function limits(view: {
+  boardName: string;
+  signIn: boolean;
+  posting: boolean;
+}): ReactNode[] {
+  const { boardName } = view;
+  const publicTools = view.posting
+    ? richMessage(
+        view.signIn ? m.mcpDocs_limitsSignInPosting : m.mcpDocs_limitsPosting,
+        { postTool: <code>{VERBATIM.postJobTool}</code>, boardName },
+      )
+    : [view.signIn ? m.mcpDocs_limitsSignIn() : m.mcpDocs_limits()];
+  return [
+    ...publicTools,
+    ...(view.signIn ? [' ', m.mcpDocs_limitsAccount({ boardName })] : []),
+    ' ',
+    m.mcpDocs_limitsRate(),
+  ];
+}
+
 function McpDocsPage() {
   const view = Route.useLoaderData();
   const { boardName } = view;
@@ -112,7 +138,11 @@ function McpDocsPage() {
             })}
           </p>
           <CopyBlock value={view.mcpUrl} label={m.mcpDocs_copyUrlLabel()} />
-          <p>{m.mcpDocs_access({ boardName })}</p>
+          <p>
+            {view.signIn
+              ? m.mcpDocs_accessSignIn({ boardName })
+              : m.mcpDocs_access({ boardName })}
+          </p>
 
           <h2>{m.mcpDocs_assistantsHeading()}</h2>
           <h3>{m.mcpDocs_claudeHeading()}</h3>
@@ -130,11 +160,18 @@ function McpDocsPage() {
           <CopyBlock value={view.claudeCodeCommand} label={copyCode} />
           <h3>{m.mcpDocs_chatgptHeading()}</h3>
           <p>
-            {richMessage(m.mcpDocs_chatgptSteps, {
-              pluginsMenu: <strong>{VERBATIM.chatgptPluginsMenu}</strong>,
-              plusButton: <strong>{VERBATIM.chatgptPlusButton}</strong>,
-              customServer: <strong>{VERBATIM.chatgptCustomServer}</strong>,
-            })}
+            {view.signIn
+              ? richMessage(m.mcpDocs_chatgptStepsSignIn, {
+                  pluginsMenu: <strong>{VERBATIM.chatgptPluginsMenu}</strong>,
+                  plusButton: <strong>{VERBATIM.chatgptPlusButton}</strong>,
+                  customServer: <strong>{VERBATIM.chatgptCustomServer}</strong>,
+                  boardName,
+                })
+              : richMessage(m.mcpDocs_chatgptSteps, {
+                  pluginsMenu: <strong>{VERBATIM.chatgptPluginsMenu}</strong>,
+                  plusButton: <strong>{VERBATIM.chatgptPlusButton}</strong>,
+                  customServer: <strong>{VERBATIM.chatgptCustomServer}</strong>,
+                })}
           </p>
           <h3>{m.mcpDocs_cursorHeading()}</h3>
           <p>
@@ -166,7 +203,7 @@ function McpDocsPage() {
           </ul>
 
           <h2>{m.mcpDocs_limitsHeading()}</h2>
-          <p>{m.mcpDocs_limits()}</p>
+          <p>{limits(view)}</p>
         </Prose>
       </div>
     </PageLayout>
