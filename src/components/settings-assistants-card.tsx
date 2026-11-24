@@ -4,10 +4,12 @@ import { useState } from 'react';
 
 import { formatDate } from '@cavuno/board/format';
 
+import { scopeLabel } from '../board/mcp-scope-labels';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { disconnectAssistant } from '../server/settings';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,7 +35,7 @@ function day(iso: string): string {
 
 /**
  * The AI assistants the person connected to the board's MCP server, each
- * with a Disconnect button. Nothing renders without one, so a board whose
+ * with its website, what it was allowed to do and a Disconnect button. Nothing renders without one, so a board whose
  * MCP server is off (the list is then empty) never shows the card.
  */
 export function SettingsAssistantsCard({
@@ -95,6 +97,18 @@ export function SettingsAssistantsCard({
                   <ItemTitle>{assistant.name}</ItemTitle>
                   {assistant.host ? (
                     <ItemDescription>{assistant.host}</ItemDescription>
+                  ) : null}
+                  {assistant.scopes.length > 0 ? (
+                    <ul
+                      aria-label={m.settingsAssistants_scopesLabel()}
+                      className="flex flex-wrap gap-1.5"
+                    >
+                      {assistant.scopes.map((scope) => (
+                        <li key={scope}>
+                          <Badge variant="secondary">{scopeLabel(scope)}</Badge>
+                        </li>
+                      ))}
+                    </ul>
                   ) : null}
                   <p className="text-muted-foreground text-xs">
                     {m.settingsAssistants_datesText({
