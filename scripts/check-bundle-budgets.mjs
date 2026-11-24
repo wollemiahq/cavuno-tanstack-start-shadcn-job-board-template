@@ -307,7 +307,21 @@ const BUDGETS = {
     // left); this measured 104,028 / 38,690 (+4,596 / +1,621): the card,
     // its messages and the Item list component's chunk. Raised by exactly
     // the measured growth, keeping main's headroom.
-    '/settings': { raw: 105_096, gzip: 39_121 },
+    // Scopes on the Connected assistants card (#425): each connection's
+    // approved access as labels, in the board's language (the labels chunk,
+    // without the consent page's descriptions). Measured 106,206 B raw /
+    // 39,422 B gzip against main's 103,983 / 38,691 (+2,223 / +731).
+    // Raised by exactly the measured growth, keeping main's headroom;
+    // accepted by the operator on 2026-11-24.
+    '/settings': { raw: 107_319, gzip: 39_852 },
+    // The MCP consent page's scope picker (#425): a checkbox per scope with
+    // its translated label, sentence and badges, for personal agents that
+    // ask for fine scopes. Main measured 68,490 B raw / 27,925 B gzip
+    // against the 80,000 / 30,000 default; this measured 75,353 / 30,081
+    // (+6,863 / +2,156). Raised by exactly the measured growth over the
+    // default, keeping main's headroom; accepted by the operator on
+    // 2026-11-24.
+    '/authorize': { raw: 86_863, gzip: 32_156 },
     // The email typo hint ("Did you mean jane@gmail.com?") on sign-up and
     // the job alert form: the hint, its message, and the refused-domain
     // messages (alone, and with the correction in the same line). The domain checker itself loads on the first blur. Raised
