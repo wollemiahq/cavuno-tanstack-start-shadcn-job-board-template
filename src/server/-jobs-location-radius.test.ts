@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   list: vi.fn(),
   search: vi.fn(),
   tree: vi.fn(),
+  context: vi.fn(),
 }));
 vi.mock('@tanstack/react-start', () => ({
   createServerFn: () => {
@@ -30,7 +31,7 @@ vi.mock('../lib/board-access-middleware', () => ({
   boardAccessMiddleware: {},
 }));
 vi.mock('../lib/board-context-cache', () => ({
-  readBoardContext: async () => ({ name: 'Fixture', language: 'en' }),
+  readBoardContext: mocks.context,
 }));
 vi.mock('../lib/public-origin', () => ({
   readPublicOrigin: async () => 'https://fixture.example',
@@ -117,6 +118,7 @@ function robots(head: { meta: HeadMeta[] }) {
 }
 
 beforeEach(() => {
+  mocks.context.mockResolvedValue({ name: 'Fixture', language: 'en' });
   vi.clearAllMocks();
   placeRadiusGeoCache.clear();
   combinationInPlaceCountCache.clear();
@@ -672,5 +674,41 @@ describe('combination canonical from the API', () => {
         href: `https://fixture.example${localizePath('/jobs/locations/fixture-place/ai-engineer')}`,
       },
     ]);
+  });
+});
+
+describe('canonical from the consolidation map', () => {
+  const href = (path: string) => [
+    {
+      rel: 'canonical',
+      href: `https://fixture.example${localizePath(path)}`,
+    },
+  ];
+
+  it('names the page a place duplicates on its bare and combination pages', async () => {
+    mocks.context.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      jobLandingConsolidation: { places: { 'fixture-place': 'fixture-city' } },
+    });
+    mocks.resolve.mockResolvedValue(resolution('region', 'NL'));
+
+    const bare = await getJobsLocationPage({ data: page });
+    const category = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'ai-engineer' },
+    });
+    const skill = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'python' },
+    });
+    if (bare.kind !== 'ok' || category.kind !== 'ok' || skill.kind !== 'ok') {
+      throw new Error('expected listings');
+    }
+    expect(bare.head.links).toEqual(href('/jobs/locations/fixture-city'));
+    expect(category.head.links).toEqual(
+      href('/jobs/locations/fixture-city/ai-engineer'),
+    );
+    expect(skill.head.links).toEqual(
+      href('/jobs/locations/fixture-city/skills/python'),
+    );
   });
 });

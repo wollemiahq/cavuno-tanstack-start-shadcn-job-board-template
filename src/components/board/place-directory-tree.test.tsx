@@ -45,4 +45,19 @@ describe('PlaceDirectoryTree', () => {
     ]);
     expect(country.parentElement).toHaveTextContent('8');
   });
+
+  it('links a place by the path given for it', async () => {
+    await renderRouted(
+      <PlaceDirectoryTree
+        places={[place('nh', null, 'region', null, 'Region', 4)]}
+        count={(entry) => entry.candidateCount}
+        route="/jobs/locations/$location"
+        placePath={() => '/jobs/locations/city'}
+      />,
+    );
+    expect(screen.getByRole('link', { name: 'Region' })).toHaveAttribute(
+      'href',
+      '/jobs/locations/city',
+    );
+  });
 });

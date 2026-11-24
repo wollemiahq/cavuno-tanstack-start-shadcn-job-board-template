@@ -21,10 +21,9 @@
 import {
   BOARD_PATHS,
   jobsCategoryPath,
-  jobsLocationCategoryPath,
   jobsLocationPath,
-  jobsLocationSkillPath,
   jobsSkillPath,
+  resolveJobLandingPage,
 } from '@cavuno/board/paths';
 import { listingHead, listingJsonLd } from '@cavuno/board/seo';
 import { MIN_JOBS_PER_INDEXED_PAGE } from '@cavuno/board/sitemap';
@@ -34,6 +33,10 @@ import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
 import { readBoardContext } from '../lib/board-context-cache';
 import { contentLocaleQuery } from '../lib/content-locale';
+import {
+  jobLandingCanonicalPath,
+  jobLandingConsolidation,
+} from '../lib/job-landing';
 import { localizePath } from '../lib/localized-path';
 import { readPublicOrigin } from '../lib/public-origin';
 import { m } from '../paraglide/messages';
@@ -47,7 +50,6 @@ import {
   placeListingSort,
 } from './listing-place-cache';
 import {
-  listingCanonicalPath,
   noindexFollow,
   resolveOrNull,
   settled,
@@ -103,6 +105,7 @@ import type {
   Seniority,
   TaxonomyResolution,
 } from '@cavuno/board';
+import type { JobLandingConsolidationMap } from '@cavuno/board/paths';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -164,6 +167,11 @@ function startedEarly<T>(read: Promise<T>): Promise<T> {
 }
 
 async function seoBase() {
+  return (await placeSeoBase()).seo;
+}
+
+/** The SEO base plus the consolidation map, from one context read. */
+async function placeSeoBase() {
   // Board context is an OPEN read (password wall does not gate it), matching
   // getSeoBase / getJobDetailPage.
   const [boardContext, origin] = await Promise.all([
@@ -171,9 +179,12 @@ async function seoBase() {
     readPublicOrigin(),
   ]);
   return {
-    boardName: boardContext.name,
-    language: boardContext.language,
-    origin,
+    seo: {
+      boardName: boardContext.name,
+      language: boardContext.language,
+      origin,
+    },
+    consolidation: jobLandingConsolidation(boardContext),
   };
 }
 
@@ -334,16 +345,20 @@ async function suggestedPlaceIndexJobCount(
  * pages get inlinks. None for a suggested place or a work arrangement, whose
  * combinations are never indexed, nor for a listing widened by a radius,
  * whose chip counts include nearby jobs and so are no floor on the place's
- * own.
+ * own. A place that duplicates another links inside that one, where the chip
+ * counts are only an estimate.
  */
 export function relatedSearchesPlace(
   place: Pick<TaxonomyResolution, 'canonicalSlug' | 'suggested'>,
   arrangement: string | null,
   searchRadius: PlaceSearchRadius | null,
+  consolidation?: JobLandingConsolidationMap,
 ): string | null {
-  return arrangement || place.suggested || searchRadius?.selected
-    ? null
-    : place.canonicalSlug;
+  if (arrangement || place.suggested || searchRadius?.selected) return null;
+  return resolveJobLandingPage(
+    { placeSlug: place.canonicalSlug },
+    consolidation,
+  ).placeSlug;
 }
 
 /**
@@ -683,9 +698,9 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
   .handler(({ context }) =>
     gatedRead(context, async (headers) => {
       const board = getBoard();
-      const [places, seo] = await Promise.all([
+      const [places, { seo, consolidation }] = await Promise.all([
         board.taxonomy.places.list(undefined, { headers }),
-        seoBase(),
+        placeSeoBase(),
       ]);
       const head = listingHead({
         title: listingPageTitle({
@@ -710,7 +725,7 @@ export const getJobsLocationsIndexPage = createServerFn({ method: 'GET' })
           ],
         }),
       );
-      return { places, seo, head, jsonLd };
+      return { places, seo, head, jsonLd, consolidation };
     }),
   );
 
@@ -748,7 +763,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
       // the SEO, breadcrumb and taxonomy reads as well.
-      const seoRead = startedEarly(seoBase());
+      const seoRead = startedEarly(placeSeoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
@@ -769,43 +784,44 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         placeRead,
         headers,
       );
-      const [place, listResult, seo, placeTree] = await Promise.all([
-        placeRead,
-        settled(
-          readReachablePage(data.offset, data.limit, (offset) =>
-            data.q
-              ? board.jobs.search(
-                  {
-                    query: data.q,
-                    filters: {
+      const [place, listResult, { seo, consolidation }, placeTree] =
+        await Promise.all([
+          placeRead,
+          settled(
+            readReachablePage(data.offset, data.limit, (offset) =>
+              data.q
+                ? board.jobs.search(
+                    {
+                      query: data.q,
+                      filters: {
+                        location: data.locationSlug,
+                        ...radiusParams,
+                        remoteOption: filters.remoteOption,
+                        employmentType: filters.employmentType,
+                        customEmploymentType: filters.customEmploymentType,
+                        seniority: filters.seniority,
+                      },
+                      sort: filters.sort,
+                      offset,
+                      limit: filters.limit,
+                    } satisfies JobsSearchBody,
+                    undefined,
+                    { headers },
+                  )
+                : board.jobs.list(
+                    {
+                      ...filters,
+                      offset,
                       location: data.locationSlug,
                       ...radiusParams,
-                      remoteOption: filters.remoteOption,
-                      employmentType: filters.employmentType,
-                      customEmploymentType: filters.customEmploymentType,
-                      seniority: filters.seniority,
                     },
-                    sort: filters.sort,
-                    offset,
-                    limit: filters.limit,
-                  } satisfies JobsSearchBody,
-                  undefined,
-                  { headers },
-                )
-              : board.jobs.list(
-                  {
-                    ...filters,
-                    offset,
-                    location: data.locationSlug,
-                    ...radiusParams,
-                  },
-                  { headers },
-                ),
+                    { headers },
+                  ),
+            ),
           ),
-        ),
-        seoRead,
-        placeTreeRead,
-      ]);
+          seoRead,
+          placeTreeRead,
+        ]);
       const indexJobCount = await indexJobCountRead;
       if (!place) return { kind: 'not_found' as const };
       if (place.redirectTo) {
@@ -832,7 +848,9 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         { name: crumbs.jobs, href: BOARD_PATHS.jobs },
         ...(arrangement
           ? [{ name: heading }]
-          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place)),
+          : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
+              consolidation,
+            })),
       ];
       const headCopy = landingDocument(place, data, {
         title: listingPageTitle({
@@ -853,7 +871,12 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         listingHead({
           title: headCopy.title,
           origin: seo.origin,
-          path: localizePath(`/jobs/locations/${data.locationSlug}`),
+          path: localizePath(
+            jobLandingCanonicalPath(
+              { placeSlug: data.locationSlug },
+              consolidation,
+            ),
+          ),
           description: headCopy.description,
         }),
         // A suggested place is indexed at its default distance with enough
@@ -894,6 +917,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
           place,
           arrangement,
           searchRadius,
+          consolidation,
         ),
         searchRadius,
         head,
@@ -939,7 +963,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
       // the SEO, breadcrumb and taxonomy reads as well.
-      const seoRead = startedEarly(seoBase());
+      const seoRead = startedEarly(placeSeoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
@@ -969,33 +993,39 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         data.within,
         () => radiusKmRead,
       );
-      const [place, category, listResult, seo, placeTree, inPlaceJobCount] =
-        await Promise.all([
-          placeRead,
-          categoryRead,
-          settled(
-            readReachablePage(data.offset, data.limit, (offset) =>
-              board.jobs.list(
-                {
-                  ...filters,
-                  offset,
-                  location: data.locationSlug,
-                  ...radiusParams,
-                  category: data.categorySlug,
-                },
-                { headers },
-              ),
+      const [
+        place,
+        category,
+        listResult,
+        { seo, consolidation },
+        placeTree,
+        inPlaceJobCount,
+      ] = await Promise.all([
+        placeRead,
+        categoryRead,
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              {
+                ...filters,
+                offset,
+                location: data.locationSlug,
+                ...radiusParams,
+                category: data.categorySlug,
+              },
+              { headers },
             ),
           ),
-          seoRead,
-          placeTreeRead,
-          combinationInPlaceJobCount(
-            data,
-            { category: data.categorySlug },
-            radiusKmRead,
-            headers,
-          ),
-        ]);
+        ),
+        seoRead,
+        placeTreeRead,
+        combinationInPlaceJobCount(
+          data,
+          { category: data.categorySlug },
+          radiusKmRead,
+          headers,
+        ),
+      ]);
       if (!place || !category) return { kind: 'not_found' as const };
       if (place.redirectTo || category.redirectTo) {
         return {
@@ -1028,8 +1058,8 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           ? [workArrangementCrumb(arrangement, place)]
           : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
               linkCurrent: true,
-              ancestorPath: (slug) =>
-                jobsLocationCategoryPath(slug, category.canonicalSlug),
+              term: { categorySlug: category.canonicalSlug },
+              consolidation,
             })),
         { name: category.displayName },
       ];
@@ -1044,9 +1074,10 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           }),
           origin: seo.origin,
           path: localizePath(
-            listingCanonicalPath(
+            jobLandingCanonicalPath(
+              { placeSlug: data.locationSlug, categorySlug: data.categorySlug },
+              consolidation,
               list,
-              `/jobs/locations/${data.locationSlug}/${data.categorySlug}`,
             ),
           ),
           description: listingMetaDescription({
@@ -1084,6 +1115,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
           place,
           arrangement,
           searchRadius,
+          consolidation,
         ),
         searchRadius,
         head,
@@ -1125,7 +1157,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       // Reads that do not depend on the radius start now. Only a cold slug
       // waits on the place resolve for its radius, and it must not hold back
       // the SEO, breadcrumb and taxonomy reads as well.
-      const seoRead = startedEarly(seoBase());
+      const seoRead = startedEarly(placeSeoBase());
       // Breadcrumb enrichment only: the place directory carries the ancestor
       // chain; on failure the trail degrades to the place itself. A work
       // arrangement has no ancestors.
@@ -1155,33 +1187,39 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         data.within,
         () => radiusKmRead,
       );
-      const [place, skill, listResult, seo, placeTree, inPlaceJobCount] =
-        await Promise.all([
-          placeRead,
-          skillRead,
-          settled(
-            readReachablePage(data.offset, data.limit, (offset) =>
-              board.jobs.list(
-                {
-                  ...filters,
-                  offset,
-                  location: data.locationSlug,
-                  ...radiusParams,
-                  skill: data.skillSlug,
-                },
-                { headers },
-              ),
+      const [
+        place,
+        skill,
+        listResult,
+        { seo, consolidation },
+        placeTree,
+        inPlaceJobCount,
+      ] = await Promise.all([
+        placeRead,
+        skillRead,
+        settled(
+          readReachablePage(data.offset, data.limit, (offset) =>
+            board.jobs.list(
+              {
+                ...filters,
+                offset,
+                location: data.locationSlug,
+                ...radiusParams,
+                skill: data.skillSlug,
+              },
+              { headers },
             ),
           ),
-          seoRead,
-          placeTreeRead,
-          combinationInPlaceJobCount(
-            data,
-            { skill: data.skillSlug },
-            radiusKmRead,
-            headers,
-          ),
-        ]);
+        ),
+        seoRead,
+        placeTreeRead,
+        combinationInPlaceJobCount(
+          data,
+          { skill: data.skillSlug },
+          radiusKmRead,
+          headers,
+        ),
+      ]);
       if (!place || !skill) return { kind: 'not_found' as const };
       if (place.redirectTo || skill.redirectTo) {
         return {
@@ -1214,8 +1252,8 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           ? [workArrangementCrumb(arrangement, place)]
           : toJobsLocationHierarchyCrumbs(placeTree?.data ?? [], place, {
               linkCurrent: true,
-              ancestorPath: (slug) =>
-                jobsLocationSkillPath(slug, skill.canonicalSlug),
+              term: { skillSlug: skill.canonicalSlug },
+              consolidation,
             })),
         { name: skill.displayName },
       ];
@@ -1230,9 +1268,10 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           }),
           origin: seo.origin,
           path: localizePath(
-            listingCanonicalPath(
+            jobLandingCanonicalPath(
+              { placeSlug: data.locationSlug, skillSlug: data.skillSlug },
+              consolidation,
               list,
-              `/jobs/locations/${data.locationSlug}/skills/${data.skillSlug}`,
             ),
           ),
           description: listingMetaDescription({
@@ -1270,6 +1309,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
           place,
           arrangement,
           searchRadius,
+          consolidation,
         ),
         searchRadius,
         head,

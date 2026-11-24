@@ -15,11 +15,11 @@
  * fallback when the place is absent from the tree), and ancestors link by
  * their board-language `canonicalSlug`.
  */
-import { jobsLocationPath } from '@cavuno/board/paths';
-
+import { jobLandingPath } from '../lib/job-landing';
 import { placeLinkSlug } from './place-link';
 
 import type { PublicPlace, TaxonomyResolution } from '@cavuno/board';
+import type { JobLandingConsolidationMap } from '@cavuno/board/paths';
 
 export interface LocationHierarchyCrumb {
   name: string;
@@ -30,6 +30,9 @@ type HierarchyPlace = Pick<
   PublicPlace,
   'id' | 'parentId' | 'slug' | 'canonicalSlug' | 'displayName'
 >;
+
+/** The category or skill of a combo page. */
+type JobLandingTerm = { categorySlug: string } | { skillSlug: string };
 
 type HierarchyCurrent = {
   sourceSlug: string;
@@ -47,11 +50,14 @@ type HierarchyCurrent = {
  * The leaf links by `canonicalSlug` (the 308 target the route already emits),
  * ancestors by their directory `canonicalSlug` (falling back to `slug`).
  *
- * `ancestorPath` overrides the ancestor href builder for the combo pages:
- * ancestors ride the caller's axis (`{ancestor}/{keyword}` — facet
- * relaxation, "same jobs, wider area") while the leaf keeps its bare
- * `jobsLocationPath` (dropping the keyword is the real one-level-up; a
- * keyword-scoped leaf link would be a self-link to the page being rendered).
+ * On the combo pages (`term`) ancestors ride the page's own axis
+ * (`{ancestor}/{keyword}` — facet relaxation, "same jobs, wider area") while
+ * the leaf keeps its bare place page (dropping the keyword is the real
+ * one-level-up; a keyword-scoped leaf link would be a self-link to the page
+ * being rendered).
+ *
+ * Links follow the board's `consolidation` map. An ancestor that resolves to
+ * the page being rendered stays unlinked.
  *
  * A suggested place is not in the directory: its resolution carries its
  * ancestors instead, and one the board has no page for (`canonicalSlug`
@@ -62,31 +68,44 @@ export function toJobsLocationHierarchyCrumbs(
   current: HierarchyCurrent,
   options?: {
     linkCurrent?: boolean;
-    ancestorPath?: (slug: string) => string;
+    term?: JobLandingTerm;
+    consolidation?: JobLandingConsolidationMap;
   },
 ): LocationHierarchyCrumb[] {
+  const placePath = (placeSlug: string) =>
+    jobLandingPath({ placeSlug }, options?.consolidation);
+  const scopedPath = (placeSlug: string) =>
+    jobLandingPath({ placeSlug, ...options?.term }, options?.consolidation);
+  const ownPath = jobLandingPath(
+    { placeSlug: current.canonicalSlug, ...options?.term },
+    undefined,
+  );
+  const ancestorPath = (slug: string) => {
+    const path = scopedPath(slug);
+    return path === ownPath ? undefined : path;
+  };
   if (current.ancestors) {
-    const ancestorPath = options?.ancestorPath ?? jobsLocationPath;
     return [
-      ...current.ancestors.map((ancestor) =>
-        ancestor.canonicalSlug
-          ? {
-              name: ancestor.displayName,
-              href: ancestorPath(ancestor.canonicalSlug),
-            }
-          : { name: ancestor.displayName },
-      ),
+      ...current.ancestors.map((ancestor) => {
+        const href = ancestor.canonicalSlug
+          ? ancestorPath(ancestor.canonicalSlug)
+          : undefined;
+        return href
+          ? { name: ancestor.displayName, href }
+          : { name: ancestor.displayName };
+      }),
       options?.linkCurrent
         ? {
             name: current.displayName,
-            href: jobsLocationPath(current.canonicalSlug),
+            href: placePath(current.canonicalSlug),
           }
         : { name: current.displayName },
     ];
   }
   return toPlaceHierarchyCrumbs(places, current, {
-    ...options,
-    placePath: jobsLocationPath,
+    linkCurrent: options?.linkCurrent,
+    placePath,
+    ancestorPath,
   });
 }
 
@@ -103,7 +122,7 @@ export function toPlaceHierarchyCrumbs(
   options: {
     placePath: (slug: string) => string;
     linkCurrent?: boolean;
-    ancestorPath?: (slug: string) => string;
+    ancestorPath?: (slug: string) => string | undefined;
   },
 ): LocationHierarchyCrumb[] {
   const linkCurrent = options.linkCurrent ?? false;

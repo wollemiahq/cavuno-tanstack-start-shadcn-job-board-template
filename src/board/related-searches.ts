@@ -50,7 +50,8 @@ export function relatedSearchesToChips(
  * On a place's pages a category or skill chip links that place's combination
  * page (`/jobs/locations/{place}/{category}`), which nothing else links. Only
  * when the term has enough jobs: `count` counts this page of results, so it is
- * a floor on the place's jobs for the term and the combination is never thin.
+ * a floor on the place's jobs for the term and the combination is never thin
+ * (an estimate when `placeSlug` is the page a duplicate place links inside).
  * Below the floor, and off a place, the chip links the board-wide page.
  */
 function chipHref(r: RelatedSearch, placeSlug?: string | null): string {

@@ -76,7 +76,7 @@ describe('toJobsLocationHierarchyCrumbs', () => {
         sydneyResolution,
         {
           linkCurrent: true,
-          ancestorPath: (slug) => `/jobs/locations/${slug}/engineering`,
+          term: { categorySlug: 'engineering' },
         },
       ),
     ).toEqual([
@@ -85,6 +85,27 @@ describe('toJobsLocationHierarchyCrumbs', () => {
         name: 'New South Wales',
         href: '/jobs/locations/new-south-wales/engineering',
       },
+      { name: 'Sydney', href: '/jobs/locations/sydney' },
+    ]);
+  });
+
+  it('links ancestors through the consolidation map, never to the page itself', () => {
+    const consolidation = {
+      places: { australia: null, 'new-south-wales': 'sydney' },
+    };
+    expect(
+      toJobsLocationHierarchyCrumbs(
+        [sydney, nsw, australia],
+        sydneyResolution,
+        {
+          linkCurrent: true,
+          term: { categorySlug: 'engineering' },
+          consolidation,
+        },
+      ),
+    ).toEqual([
+      { name: 'Australia', href: '/jobs/engineering' },
+      { name: 'New South Wales' },
       { name: 'Sydney', href: '/jobs/locations/sydney' },
     ]);
   });
@@ -247,7 +268,7 @@ describe('toJobsLocationHierarchyCrumbs', () => {
     expect(
       toJobsLocationHierarchyCrumbs([], mullumbimby, {
         linkCurrent: true,
-        ancestorPath: (slug) => `/jobs/locations/${slug}/nursing`,
+        term: { categorySlug: 'nursing' },
       }),
     ).toEqual([
       { name: 'Australia', href: '/jobs/locations/australia/nursing' },

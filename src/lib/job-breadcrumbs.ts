@@ -1,13 +1,11 @@
-import {
-  BOARD_PATHS,
-  companyPath,
-  jobsLocationPath,
-} from '@cavuno/board/paths';
+import { BOARD_PATHS, companyPath } from '@cavuno/board/paths';
 
 import { breadcrumbsCopy } from '../copy-groups/breadcrumbs';
+import { jobLandingPath } from './job-landing';
 import { localizePath } from './localized-path';
 
 import type { PublicJob } from '@cavuno/board';
+import type { JobLandingConsolidationMap } from '@cavuno/board/paths';
 
 export interface JobBreadcrumbItem {
   name: string;
@@ -19,11 +17,15 @@ export interface JobBreadcrumbItem {
  *
  * Owned here because SDK `buildJobBreadcrumbs` inserts the primary category
  * and omits the company. Place crumbs link to
- * `/jobs/locations/:canonicalSlug`; the company links to its profile; the
+ * `/jobs/locations/:canonicalSlug`, or the page that place duplicates on the
+ * board's consolidation map; the company links to its profile; the
  * title is the current page (no href).
  * The job URL itself stays `/companies/:company/jobs/:slug`.
  */
-export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
+export function jobBreadcrumbItems(
+  job: PublicJob,
+  consolidation?: JobLandingConsolidationMap,
+): JobBreadcrumbItem[] {
   const crumbs = breadcrumbsCopy();
   const items: JobBreadcrumbItem[] = [
     { name: crumbs.home, href: BOARD_PATHS.home },
@@ -36,7 +38,10 @@ export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
     // `slug` 308s to it on a translated board.
     const slug = place.canonicalSlug.trim();
     if (!name || !slug) continue;
-    items.push({ name, href: jobsLocationPath(slug) });
+    items.push({
+      name,
+      href: jobLandingPath({ placeSlug: slug }, consolidation),
+    });
   }
 
   const companyName = job.company?.name?.trim();
@@ -54,8 +59,9 @@ export function jobBreadcrumbItems(job: PublicJob): JobBreadcrumbItem[] {
  * a /fr/ page's BreadcrumbList must link the /fr/ cluster, not English. */
 export function jobBreadcrumbJsonLd(
   job: PublicJob,
+  consolidation?: JobLandingConsolidationMap,
 ): Array<{ name: string; path?: string }> {
-  return jobBreadcrumbItems(job).map((crumb) =>
+  return jobBreadcrumbItems(job, consolidation).map((crumb) =>
     crumb.href
       ? { name: crumb.name, path: localizePath(crumb.href) }
       : { name: crumb.name },
