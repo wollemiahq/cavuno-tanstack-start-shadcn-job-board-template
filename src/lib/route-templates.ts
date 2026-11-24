@@ -47,6 +47,7 @@ export const ROUTE_TEMPLATES = [
   '/terms-of-service',
   '/tip',
   '/.well-known/ai-catalog.json',
+  '/.well-known/ard.json',
   '/.well-known/cavuno.json',
   '/.well-known/oauth-authorization-server',
   '/.well-known/oauth-protected-resource/',

@@ -24,6 +24,15 @@ afterEach(() => {
 
 const consent: Extract<McpConsentStep, { next: 'consent' }> = {
   next: 'consent',
+  requestedScopes: [
+    {
+      id: 'employer',
+      label: 'Your employer account',
+      description: 'Read your company profile and jobs, and change your jobs.',
+      changes: 'reversible',
+      personalData: true,
+    },
+  ],
   request: 'sealed-request',
   consentToken: 'token-1',
   clientName: '<b>Evil</b> Assistant',
