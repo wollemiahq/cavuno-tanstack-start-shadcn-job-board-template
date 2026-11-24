@@ -2,12 +2,18 @@ import { useState } from 'react';
 
 import { Link } from '@tanstack/react-router';
 
-import { AuthCard, Field, FormError } from '../components/auth-form';
+import { AuthCard, FormError } from '../components/auth-form';
 import { candidateAuthSearch } from '../lib/candidate-return-to';
 import { m } from '../paraglide/messages';
 
+import {
+  EmailSuggestionHint,
+  useEmailSuggestion,
+} from '@/components/email-suggestion-hint';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
+import { RegistrationField } from '@/components/registration-page';
 import { Button } from '@/components/ui/button';
+import { boardErrorMessage } from '@/lib/board-error-message';
 import { textLinkClass } from '@/lib/text-link';
 
 export function ForgotPasswordView({
@@ -17,11 +23,20 @@ export function ForgotPasswordView({
   returnTo: string;
   forgotPasswordAction: (input: {
     data: { email: string };
-  }) => Promise<{ ok: true }>;
+  }) => Promise<
+    | { ok: true }
+    | { ok: false; code: string; message: string; suggestion?: string }
+  >;
 }) {
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const emailSuggestion = useEmailSuggestion();
+  const changeEmail = (next: string) => {
+    setEmail(next);
+    emailSuggestion.clear();
+  };
 
   if (sentTo) {
     return (
@@ -52,13 +67,22 @@ export function ForgotPasswordView({
           event.preventDefault();
           setPending(true);
           setError(null);
-          const form = new FormData(event.currentTarget);
-          const email = String(form.get('email'));
+          emailSuggestion.clear();
+          // Read the field, not state: an address the browser filled in
+          // before hydration never reached onChange.
+          const email = String(new FormData(event.currentTarget).get('email'));
+          setEmail(email);
           try {
-            await forgotPasswordAction({
+            const result = await forgotPasswordAction({
               data: { email },
             });
-            setSentTo(email);
+            if (result.ok) {
+              setSentTo(email);
+            } else if (result.code === 'email_domain_undeliverable') {
+              emailSuggestion.refuse(email, result.suggestion);
+            } else {
+              setError(boardErrorMessage(result));
+            }
           } catch {
             setError(m.candidateAction_errorText());
           } finally {
@@ -66,12 +90,23 @@ export function ForgotPasswordView({
           }
         }}
       >
-        <Field
+        <RegistrationField
           label={m.authForgotPassword_emailLabel()}
           name="email"
           type="email"
           autoComplete="email"
-        />
+          value={email}
+          onChange={changeEmail}
+          onBlur={emailSuggestion.check}
+          invalid={emailSuggestion.refusedEmail !== null}
+        >
+          <EmailSuggestionHint
+            suggestion={emailSuggestion.suggestion}
+            refusedEmail={emailSuggestion.refusedEmail}
+            disabled={pending}
+            onAccept={changeEmail}
+          />
+        </RegistrationField>
         <FormError message={error} />
         <Button type="submit" size="lg" className="w-full" disabled={pending}>
           {pending

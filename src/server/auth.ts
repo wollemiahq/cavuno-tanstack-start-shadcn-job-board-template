@@ -74,7 +74,7 @@ type AuthActionError = {
   ok: false;
   code: string;
   message: string;
-  /** The corrected address when a sign-up's email domain was refused. */
+  /** The corrected address the API sent with a refused email domain. */
   suggestion?: string;
 };
 
@@ -335,9 +335,15 @@ export const resendOtp = createServerFn({ method: 'POST' })
 export const forgotPassword = createServerFn({ method: 'POST' })
   .validator((input: { email: string }) => input)
   .handler(async ({ data }) => {
-    // Always 204 server-side (no account enumeration) — mirror that.
-    await getBoard().auth.forgotPassword(data);
-    return { ok: true as const };
+    // 204 whether or not the address has an account (no enumeration). The
+    // API refuses only an address whose domain takes no mail
+    // (`email_domain_undeliverable`), judged on the domain alone.
+    try {
+      await getBoard().auth.forgotPassword(data);
+      return { ok: true as const };
+    } catch (error) {
+      return authError(error);
+    }
   });
 
 export const resetPassword = createServerFn({ method: 'POST' })

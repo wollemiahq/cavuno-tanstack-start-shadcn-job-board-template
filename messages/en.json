@@ -477,7 +477,7 @@
   "boardError_companyRequiredText": "Choose a company before continuing.",
   "boardError_emailTakenText": "An account with that email already exists.",
   "boardError_emailDomainUndeliverableText": "We can’t send email to this address. Check it for a typo.",
-  "boardError_emailDomainUndeliverableSuggestionText": "We can’t send email to this address. Did you mean {email}?",
+  "boardError_emailDomainUndeliverableSuggestionText": "We can’t send email to {domain}. Did you mean {email}?",
   "boardError_forbiddenText": "You don’t have permission to do that.",
   "boardError_freeEmailWebsiteText": "You can’t use free email domains as your company website.",
   "boardError_genericText": "Something went wrong. Please try again.",
