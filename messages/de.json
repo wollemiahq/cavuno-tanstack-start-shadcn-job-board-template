@@ -2638,6 +2638,11 @@
     }
   ],
   "skillPage_notFoundText": "Skill nicht gefunden.",
+  "interestedRolesSection_addLabel": "Rolle hinzufügen",
+  "interestedRolesSection_addRoleLabel": "Rolle",
+  "interestedRolesSection_emptyText": "Noch keine Rollen hinzugefügt.",
+  "interestedRolesSection_heading": "Gewünschte Rollen",
+  "interestedRolesSection_removeRoleAriaLabel": "{role} entfernen",
   "skillsSection_addLabel": "Fähigkeit hinzufügen",
   "skillsSection_addSkillLabel": "Fähigkeit",
   "skillsSection_cancelLabel": "Abbrechen",

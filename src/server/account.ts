@@ -268,6 +268,21 @@ export const replaceSkills = createServerFn({ method: 'POST' })
     return getBoard().me.profile.updateSkills(data, { headers });
   });
 
+/** Interested roles are replaced in full (profile merge-patch of the list). */
+export const replaceInterestedRoles = createServerFn({ method: 'POST' })
+  .validator((input: { roles: string[] }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    await getBoard().me.profile.update(
+      { interestedRoles: data.roles },
+      undefined,
+      { headers },
+    );
+    return { ok: true as const };
+  });
+
 /** Languages are replaced in full (whole-set PUT). */
 export const replaceLanguages = createServerFn({ method: 'POST' })
   .validator(

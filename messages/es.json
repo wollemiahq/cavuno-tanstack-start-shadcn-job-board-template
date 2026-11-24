@@ -2638,6 +2638,11 @@
     }
   ],
   "skillPage_notFoundText": "Competencia no encontrada.",
+  "interestedRolesSection_addLabel": "Añadir puesto",
+  "interestedRolesSection_addRoleLabel": "Puesto",
+  "interestedRolesSection_emptyText": "Aún no has añadido puestos.",
+  "interestedRolesSection_heading": "Puestos de interés",
+  "interestedRolesSection_removeRoleAriaLabel": "Eliminar {role}",
   "skillsSection_addLabel": "Añadir competencia",
   "skillsSection_addSkillLabel": "Competencia",
   "skillsSection_cancelLabel": "Cancelar",

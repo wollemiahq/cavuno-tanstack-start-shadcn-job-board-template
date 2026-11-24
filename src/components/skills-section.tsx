@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles, Target, X, type LucideIcon } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
-import { replaceSkills } from '../server/account';
+import { replaceInterestedRoles, replaceSkills } from '../server/account';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,14 +34,76 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
 
+type TagListCopy = {
+  emptyIcon: LucideIcon;
+  heading: string;
+  emptyText: string;
+  addLabel: string;
+  fieldLabel: string;
+  removeAriaLabel: (item: string) => string;
+};
+
 /**
  * Skills — badges over the whole-set replace
  * (`board.me.profile.updateSkills`). Adding happens in an "Add skill" dialog
  * (the LinkedIn flow); add and remove each persist immediately with one PUT.
  */
-export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
+export function SkillsSection({ skills }: { skills: string[] }) {
+  return (
+    <TagListSection
+      id="skills"
+      items={skills}
+      persist={(next) => replaceSkills({ data: { skills: next } })}
+      copy={{
+        emptyIcon: Sparkles,
+        heading: m.skillsSection_heading(),
+        emptyText: m.skillsSection_emptyText(),
+        addLabel: m.skillsSection_addLabel(),
+        fieldLabel: m.skillsSection_addSkillLabel(),
+        removeAriaLabel: (skill) =>
+          m.skillsSection_removeSkillAriaLabel({ skill }),
+      }}
+    />
+  );
+}
+
+/**
+ * Interested roles — the same badge list over the profile's `interestedRoles`
+ * (`board.me.profile.update`, which replaces the list). Job matches rank on
+ * skills and interested roles.
+ */
+export function InterestedRolesSection({ roles }: { roles: string[] }) {
+  return (
+    <TagListSection
+      id="interested-roles"
+      items={roles}
+      persist={(next) => replaceInterestedRoles({ data: { roles: next } })}
+      copy={{
+        emptyIcon: Target,
+        heading: m.interestedRolesSection_heading(),
+        emptyText: m.interestedRolesSection_emptyText(),
+        addLabel: m.interestedRolesSection_addLabel(),
+        fieldLabel: m.interestedRolesSection_addRoleLabel(),
+        removeAriaLabel: (role) =>
+          m.interestedRolesSection_removeRoleAriaLabel({ role }),
+      }}
+    />
+  );
+}
+
+function TagListSection({
+  id,
+  items: initialValues,
+  persist,
+  copy,
+}: {
+  id: string;
+  items: string[];
+  persist: (next: string[]) => Promise<unknown>;
+  copy: TagListCopy;
+}) {
   const router = useRouter();
-  const [skills, setValues] = useState(initialValues);
+  const [items, setValues] = useState(initialValues);
   useEffect(() => setValues(initialValues), [initialValues]);
   const [adding, setAdding] = useState(false);
   const [input, setInput] = useState('');
@@ -51,7 +113,7 @@ export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
     if (pending) return false;
     setPending(true);
     try {
-      await replaceSkills({ data: { skills: next } });
+      await persist(next);
       setValues(next);
       await reconcileCommittedAction(() => router.invalidate());
       return true;
@@ -67,12 +129,12 @@ export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
     if (pending) return;
     const name = input.trim();
     if (!name) return;
-    if (skills.includes(name)) {
+    if (items.includes(name)) {
       setInput('');
       setAdding(false);
       return;
     }
-    if (await save([...skills, name])) {
+    if (await save([...items, name])) {
       setInput('');
       setAdding(false);
     }
@@ -88,47 +150,47 @@ export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
         setAdding(true);
       }}
     >
-      {m.skillsSection_addLabel()}
+      {copy.addLabel}
     </Button>
   );
 
   return (
-    <Card data-test="skills-section" id="skills">
+    <Card data-test={`${id}-section`} id={id}>
       <CardHeader>
         <CardTitle>
-          <h2>{m.skillsSection_heading()}</h2>
+          <h2>{copy.heading}</h2>
         </CardTitle>
-        {skills.length > 0 ? <CardAction>{addButton}</CardAction> : null}
+        {items.length > 0 ? <CardAction>{addButton}</CardAction> : null}
       </CardHeader>
       <CardContent className="space-y-3">
-        {skills.length === 0 ? (
+        {items.length === 0 ? (
           <Empty className="border-0 p-8">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <Sparkles aria-hidden="true" />
+                <copy.emptyIcon aria-hidden="true" />
               </EmptyMedia>
-              <EmptyDescription>{m.skillsSection_emptyText()}</EmptyDescription>
+              <EmptyDescription>{copy.emptyText}</EmptyDescription>
             </EmptyHeader>
             <EmptyContent>{addButton}</EmptyContent>
           </Empty>
         ) : (
           <ul className="flex flex-wrap gap-2">
-            {skills.map((skill) => (
+            {items.map((item) => (
               <Badge
-                key={skill}
+                key={item}
                 variant="secondary"
                 render={<li />}
                 className="h-6 gap-0.5 pe-0.5"
               >
-                {skill}
+                {item}
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-xs"
-                  aria-label={m.skillsSection_removeSkillAriaLabel({ skill })}
+                  aria-label={copy.removeAriaLabel(item)}
                   className="text-muted-foreground hover:text-foreground size-5 rounded-full"
                   disabled={pending}
-                  onClick={() => void save(skills.filter((s) => s !== skill))}
+                  onClick={() => void save(items.filter((i) => i !== item))}
                 >
                   <X className="size-3.5" />
                 </Button>
@@ -145,7 +207,7 @@ export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
         >
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{m.skillsSection_addLabel()}</DialogTitle>
+              <DialogTitle>{copy.addLabel}</DialogTitle>
             </DialogHeader>
             <form
               onSubmit={(event) => {
@@ -155,11 +217,9 @@ export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
               className="space-y-4"
             >
               <Field className="gap-1.5">
-                <FieldLabel htmlFor="skill-name">
-                  {m.skillsSection_addSkillLabel()}
-                </FieldLabel>
+                <FieldLabel htmlFor={`${id}-name`}>{copy.fieldLabel}</FieldLabel>
                 <Input
-                  id="skill-name"
+                  id={`${id}-name`}
                   disabled={pending}
                   required
                   value={input}

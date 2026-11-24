@@ -2638,6 +2638,11 @@
     }
   ],
   "skillPage_notFoundText": "Compétence introuvable.",
+  "interestedRolesSection_addLabel": "Ajouter un poste",
+  "interestedRolesSection_addRoleLabel": "Poste",
+  "interestedRolesSection_emptyText": "Aucun poste ajouté pour l'instant.",
+  "interestedRolesSection_heading": "Postes recherchés",
+  "interestedRolesSection_removeRoleAriaLabel": "Supprimer {role}",
   "skillsSection_addLabel": "Ajouter une compétence",
   "skillsSection_addSkillLabel": "Compétence",
   "skillsSection_cancelLabel": "Annuler",

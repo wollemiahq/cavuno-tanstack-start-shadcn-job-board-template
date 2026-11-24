@@ -2638,6 +2638,11 @@
     }
   ],
   "skillPage_notFoundText": "Vaardigheid niet gevonden.",
+  "interestedRolesSection_addLabel": "Functie toevoegen",
+  "interestedRolesSection_addRoleLabel": "Functie",
+  "interestedRolesSection_emptyText": "Je hebt nog geen functies toegevoegd.",
+  "interestedRolesSection_heading": "Gewenste functies",
+  "interestedRolesSection_removeRoleAriaLabel": "{role} verwijderen",
   "skillsSection_addLabel": "Vaardigheid toevoegen",
   "skillsSection_addSkillLabel": "Vaardigheid",
   "skillsSection_cancelLabel": "Annuleren",

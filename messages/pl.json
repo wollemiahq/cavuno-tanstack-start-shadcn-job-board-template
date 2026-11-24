@@ -2756,6 +2756,11 @@
     }
   ],
   "skillPage_notFoundText": "Nie znaleziono umiejętności.",
+  "interestedRolesSection_addLabel": "Dodaj stanowisko",
+  "interestedRolesSection_addRoleLabel": "Stanowisko",
+  "interestedRolesSection_emptyText": "Nie dodano jeszcze stanowisk.",
+  "interestedRolesSection_heading": "Interesujące stanowiska",
+  "interestedRolesSection_removeRoleAriaLabel": "Usuń: {role}",
   "skillsSection_addLabel": "Dodaj umiejętność",
   "skillsSection_addSkillLabel": "Umiejętność",
   "skillsSection_cancelLabel": "Anuluj",

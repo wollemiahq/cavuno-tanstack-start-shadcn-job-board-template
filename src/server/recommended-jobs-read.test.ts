@@ -15,13 +15,14 @@ const headers = { authorization: 'Bearer token' };
 const retrieveMe = vi.fn();
 const listRecommended = vi.fn();
 const listSkills = vi.fn();
+const retrieveProfile = vi.fn();
 const retrieveResume = vi.fn();
 
 const board = {
   me: {
     retrieve: retrieveMe,
     recommendedJobs: { list: listRecommended },
-    profile: { listSkills },
+    profile: { listSkills, retrieve: retrieveProfile },
     resume: { retrieve: retrieveResume },
   },
 } satisfies RecommendedJobsBoard;
@@ -49,6 +50,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   listRecommended.mockResolvedValue(emptyList);
   listSkills.mockResolvedValue(emptyList);
+  retrieveProfile.mockResolvedValue({
+    object: 'candidate_profile',
+    interestedRoles: [],
+  });
   retrieveResume.mockResolvedValue({ object: 'resume', parseStatus: null });
 });
 
@@ -71,6 +76,7 @@ describe('readRecommendedJobs', () => {
       employerOnly: false,
       data: [],
       skillCount: 0,
+      interestedRoleCount: 0,
       parseStatus: null,
     });
     expect(listRecommended).toHaveBeenCalledOnce();

@@ -2638,6 +2638,11 @@
     }
   ],
   "skillPage_notFoundText": "Skill not found.",
+  "interestedRolesSection_addLabel": "Add role",
+  "interestedRolesSection_addRoleLabel": "Role",
+  "interestedRolesSection_emptyText": "No roles added yet.",
+  "interestedRolesSection_heading": "Interested roles",
+  "interestedRolesSection_removeRoleAriaLabel": "Remove {role}",
   "skillsSection_addLabel": "Add skill",
   "skillsSection_addSkillLabel": "Skill",
   "skillsSection_cancelLabel": "Cancel",
