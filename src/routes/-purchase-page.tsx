@@ -10,6 +10,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import {
+  FileText,
   CircleCheck,
   Download,
   ExternalLink,
@@ -488,18 +489,29 @@ function OfferSection({
           ) : null}
           <div
             className={cn(
-              'flex flex-col gap-1 px-4 @min-[620px]:p-0',
+              'flex items-center gap-3 px-4 @min-[620px]:p-0',
               offer.coverImageUrl ? 'pt-3' : 'pt-4',
             )}
           >
-            <p className="text-foreground text-base font-semibold" dir="auto">
-              {offer.name}
-            </p>
-            {offer.summary ? (
-              <p className="text-muted-foreground text-sm" dir="auto">
-                {offer.summary}
+            {offer.coverImageUrl ? null : (
+              // No cover: the small tile the file rows above use.
+              <span
+                aria-hidden="true"
+                className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg"
+              >
+                <FileText className="size-4" />
+              </span>
+            )}
+            <div className="flex min-w-0 flex-col gap-1">
+              <p className="text-foreground text-base font-semibold" dir="auto">
+                {offer.name}
               </p>
-            ) : null}
+              {offer.summary ? (
+                <p className="text-muted-foreground text-sm" dir="auto">
+                  {offer.summary}
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="flex flex-col gap-1 px-4 pt-3 pb-4 @min-[620px]:p-0">
             {badge ? (
