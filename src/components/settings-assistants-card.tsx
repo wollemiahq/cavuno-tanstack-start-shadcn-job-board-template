@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { formatDate } from '@cavuno/board/format';
 
-import { scopeLabel } from '../board/mcp-scope-copy';
+import { scopeLabel } from '../board/mcp-scope-labels';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { disconnectAssistant } from '../server/settings';
