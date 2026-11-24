@@ -2,7 +2,6 @@ import { MCP_SITE_HEADER } from '@cavuno/board/mcp';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { getRequest } from '@tanstack/react-start/server';
 
 import { readMcpServerFlag } from '../board/board-feature-flags';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
@@ -86,14 +85,14 @@ export function parseMcpToolsList(body: string): McpDocsTool[] {
  * The tools the board's own MCP server lists on this site, so the page names
  * exactly what an assistant gets (the salary tools only when the board shows
  * salaries, the signed-in tools only where people can sign in). The call
- * names this site in `MCP_SITE_HEADER`, as the `/mcp` forward and the
- * consent page do: a self-hosted site needs it for the signed-in tools, and
- * a Builder site gets them from the gateway's signed identity. A failed read
- * serves the last good list; with none, it throws.
+ * names the site whose `/mcp` the page shows, its public origin, in
+ * `MCP_SITE_HEADER`: a self-hosted site gets the signed-in tools for its
+ * key's registered origin, and a Builder site, which the gateway's signed
+ * identity names, once it says it asks. A failed read serves the last good
+ * list; with none, it throws.
  */
-async function readMcpTools(): Promise<McpDocsTool[]> {
+async function readMcpTools(site: string): Promise<McpDocsTool[]> {
   const { apiUrl, board } = getServerEnv();
-  const site = new URL(getRequest().url).origin;
   const key = `${board} ${site}`;
   const cached = mcpTools.get(key);
   if (cached) return cached;
@@ -142,7 +141,7 @@ export const getMcpDocsView = createServerFn({ method: 'GET' })
       const key = mcpServerKey(boardName);
       const title = m.mcpDocs_title({ boardName });
       const url = selfUrl(origin, '/mcp/docs');
-      const tools = await readMcpTools();
+      const tools = await readMcpTools(new URL(origin).origin);
       const signIn = tools.some((tool) => tool.signIn);
       const description = signIn
         ? m.mcpDocs_descriptionSignIn({ boardName })
