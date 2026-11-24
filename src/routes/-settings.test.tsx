@@ -642,7 +642,7 @@ describe('signed-in settings connected assistants', () => {
     object: 'assistant',
     name: 'Local agent',
     host: null,
-    scopes: ['candidate'],
+    scopes: ['profile.read', 'jobs.publish', 'future.scope'],
     connectedAt: '2026-09-01T09:00:00.000Z',
     lastUsedAt: '2026-09-03T09:00:00.000Z',
   };
@@ -669,7 +669,7 @@ describe('signed-in settings connected assistants', () => {
     expect(
       view.getByRole('heading', { name: m.settingsAssistants_title() }),
     ).toBeInTheDocument();
-    const rows = view.getAllByRole('listitem');
+    const rows = Array.from(assistants.querySelector('ul')?.children ?? []);
     expect(rows).toHaveLength(2);
     expect(rows[0]).toHaveTextContent(claude.name);
     expect(rows[0]).toHaveTextContent('claude.ai');
@@ -679,6 +679,29 @@ describe('signed-in settings connected assistants', () => {
     expect(rows[0]).not.toHaveTextContent(claude.lastUsedAt);
     expect(rows[1]).toHaveTextContent(local.name);
     expect(rows[1].querySelector('[data-slot="item-description"]')).toBeNull();
+  });
+
+  it('shows what each assistant was allowed to do, in the board’s words', async () => {
+    await renderSettings({ assistants: [claude, local] });
+
+    const [umbrella, fine] = within(card()!).getAllByRole('list', {
+      name: m.settingsAssistants_scopesLabel(),
+    });
+    expect(
+      within(umbrella!)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual([m.mcpScope_candidateLabel()]);
+    // A scope this site doesn't know yet is shown by its ID.
+    expect(
+      within(fine!)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual([
+      m.mcpScope_profileReadLabel(),
+      m.mcpScope_jobsPublishLabel(),
+      'future.scope',
+    ]);
   });
 
   it('is absent when no assistant is connected', async () => {

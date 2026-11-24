@@ -14,6 +14,14 @@ import { headTitle } from '@/lib/page-title';
 
 export const cavunoPage = 'assistantConsent';
 
+/**
+ * Route-contract features this site supports. `assistantConsentScopes`:
+ * this page lists the scopes an assistant asks for to tick, so Cavuno sends
+ * it sign-ins that ask for fine scopes (`profile.read`, `jobs.publish`)
+ * too; without it Cavuno shows its own page for those.
+ */
+export const cavunoFeatures = ['assistantConsentScopes'] as const;
+
 const rootApi = getRouteApi('__root__');
 
 const assignLocation = (url: string) => window.location.assign(url);

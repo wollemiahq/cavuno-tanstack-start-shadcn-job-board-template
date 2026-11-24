@@ -125,6 +125,7 @@ export const decideMcpConsent = createServerFn({ method: 'POST' })
       request: string;
       consentToken: string;
       decision: 'allow' | 'deny';
+      approvedScopes?: string[];
     }) => input,
   )
   .middleware([boardAccessMiddleware])
