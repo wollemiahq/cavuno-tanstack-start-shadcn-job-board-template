@@ -7,11 +7,16 @@ import { textActionClass } from '@/lib/text-link';
 import { cn } from '@/lib/utils';
 
 /**
- * A corrected address for a likely domain typo (`jane@gmial.com` →
- * `jane@gmail.com`), offered under an email field. `check` runs on blur,
- * `offer` shows the correction the API sent with a refused submit
- * (`email_domain_undeliverable`), and `clear` hides it once the person edits
- * the address or takes the correction.
+ * The state behind an email field's one message: a corrected address for a
+ * likely domain typo (`jane@gmial.com` → `jane@gmail.com`), and the address
+ * the API refused (`email_domain_undeliverable`), if any. `check` runs on
+ * blur, `offer` shows a correction found before submitting, `refuse` records a refused submit with the correction the API sent,
+ * and `clear` drops both once the person edits the address, takes the
+ * correction or submits again.
+ *
+ * While a refusal shows, `check` does nothing: the blur that comes with
+ * tapping the correction would otherwise replace the API's correction with
+ * the local checker's (often none) and remove the button being tapped.
  *
  * The checker (`@cavuno/board/email`, mostly a list of mail domains) is
  * imported on the first blur, so the job and sign-up pages that carry these
@@ -20,23 +25,34 @@ import { cn } from '@/lib/utils';
  */
 export function useEmailSuggestion() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [refusedEmail, setRefusedEmail] = useState<string | null>(null);
   const latest = useRef(0);
-  const show = useCallback((email: string | null) => {
-    latest.current += 1;
-    setSuggestion(email);
-  }, []);
+  const refused = useRef(false);
+  const show = useCallback(
+    (email: string | null, refusal: string | null = null) => {
+      latest.current += 1;
+      refused.current = refusal !== null;
+      setSuggestion(email);
+      setRefusedEmail(refusal);
+    },
+    [],
+  );
   const check = useCallback((email: string) => {
+    if (refused.current) return;
     const call = (latest.current += 1);
     void import('@cavuno/board/email').then(({ suggestEmailAddress }) => {
       if (call === latest.current) setSuggestion(suggestEmailAddress(email));
     });
   }, []);
-  const offer = useCallback(
-    (email: string | null | undefined) => show(email ?? null),
+  const refuse = useCallback(
+    (email: string, correction: string | null | undefined) =>
+      show(correction ?? null, email),
     [show],
   );
+  /** Shows a correction found before submitting, with no refusal. */
+  const offer = useCallback((email: string) => show(email), [show]);
   const clear = useCallback(() => show(null), [show]);
-  return { suggestion, check, offer, clear };
+  return { suggestion, refusedEmail, check, offer, refuse, clear };
 }
 
 const EMAIL_SLOT = '\u0000';

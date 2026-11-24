@@ -8,6 +8,7 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -310,6 +311,13 @@ describe('/auth/sign-in search contract', () => {
     );
     expect(email).toHaveAttribute('aria-invalid', 'true');
 
+    // A mouse tap on the correction blurs the field first; the blur check
+    // must not replace the API's correction and remove the button.
+    fireEvent.blur(email);
+    await act(async () => {
+      await import('@cavuno/board/email');
+    });
+    expect(accept).toBeInTheDocument();
     fireEvent.click(accept);
     expect(email).toHaveValue('ada@outlook.com');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

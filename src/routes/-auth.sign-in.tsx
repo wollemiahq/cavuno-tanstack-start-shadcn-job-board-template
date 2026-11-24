@@ -46,7 +46,7 @@ export function SignInView({
     data: { email: string; password: string };
   }) => Promise<
     | { ok: true; boardUser?: Pick<BoardUser, 'role'> }
-    | { ok: false; code: string; message: string }
+    | { ok: false; code: string; message: string; suggestion?: string }
   >;
   requestMagicLinkAction: (input: {
     data: { email: string; returnTo?: string; intent?: 'sign_in' };
@@ -71,15 +71,9 @@ export function SignInView({
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const emailSuggestion = useEmailSuggestion();
-  /**
-   * The address whose domain the API refused for a magic link. Its message is
-   * the email field's error, not the form's.
-   */
-  const [refusedEmail, setRefusedEmail] = useState<string | null>(null);
   const changeEmail = (next: string) => {
     setEmail(next);
     emailSuggestion.clear();
-    setRefusedEmail(null);
   };
 
   async function startOAuth(provider: 'google' | 'linkedin') {
@@ -168,7 +162,7 @@ export function SignInView({
         onValueChange={(next) => {
           setMode(next);
           setError(null);
-          setRefusedEmail(null);
+          emailSuggestion.clear();
         }}
         ariaLabel={m.authSignIn_title()}
       />
@@ -180,8 +174,12 @@ export function SignInView({
           event.preventDefault();
           setPending(true);
           setError(null);
-          setRefusedEmail(null);
+          emailSuggestion.clear();
           const form = new FormData(event.currentTarget);
+          // Read the field, not state: an address the browser filled in
+          // before hydration never reached onChange.
+          const email = String(form.get('email'));
+          setEmail(email);
           let result:
             | Awaited<ReturnType<typeof signInAction>>
             | Awaited<ReturnType<typeof requestMagicLinkAction>>;
@@ -227,10 +225,7 @@ export function SignInView({
           if (result.ok) {
             setSentTo(email);
           } else if (result.code === 'email_domain_undeliverable') {
-            emailSuggestion.offer(
-              'suggestion' in result ? result.suggestion : null,
-            );
-            setRefusedEmail(email);
+            emailSuggestion.refuse(email, result.suggestion);
           } else {
             setError(boardErrorMessage(result));
           }
@@ -245,11 +240,11 @@ export function SignInView({
           value={email}
           onChange={changeEmail}
           onBlur={emailSuggestion.check}
-          invalid={refusedEmail !== null}
+          invalid={emailSuggestion.refusedEmail !== null}
         >
           <EmailSuggestionHint
             suggestion={emailSuggestion.suggestion}
-            refusedEmail={refusedEmail}
+            refusedEmail={emailSuggestion.refusedEmail}
             disabled={pending}
             onAccept={changeEmail}
           />

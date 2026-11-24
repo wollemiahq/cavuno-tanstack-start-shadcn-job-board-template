@@ -371,7 +371,7 @@ function RegistrationForm({
           }
           const result = await onSubmit(values);
           if (!result.ok && result.code === 'email_domain_undeliverable') {
-            emailSuggestion.offer(result.suggestion);
+            emailSuggestion.refuse(values.email, result.suggestion);
           }
           onStatusChange(
             result.ok
@@ -407,7 +407,7 @@ function RegistrationForm({
       >
         <EmailSuggestionHint
           suggestion={emailSuggestion.suggestion}
-          refusedEmail={emailRefused ? email : null}
+          refusedEmail={emailRefused ? emailSuggestion.refusedEmail : null}
           disabled={pending}
           onAccept={changeEmail}
         />

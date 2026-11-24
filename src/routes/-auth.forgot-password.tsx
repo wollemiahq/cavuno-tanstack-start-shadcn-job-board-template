@@ -33,12 +33,9 @@ export function ForgotPasswordView({
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const emailSuggestion = useEmailSuggestion();
-  /** The address whose domain the API refused; the email field's error. */
-  const [refusedEmail, setRefusedEmail] = useState<string | null>(null);
   const changeEmail = (next: string) => {
     setEmail(next);
     emailSuggestion.clear();
-    setRefusedEmail(null);
   };
 
   if (sentTo) {
@@ -70,7 +67,11 @@ export function ForgotPasswordView({
           event.preventDefault();
           setPending(true);
           setError(null);
-          setRefusedEmail(null);
+          emailSuggestion.clear();
+          // Read the field, not state: an address the browser filled in
+          // before hydration never reached onChange.
+          const email = String(new FormData(event.currentTarget).get('email'));
+          setEmail(email);
           try {
             const result = await forgotPasswordAction({
               data: { email },
@@ -78,8 +79,7 @@ export function ForgotPasswordView({
             if (result.ok) {
               setSentTo(email);
             } else if (result.code === 'email_domain_undeliverable') {
-              emailSuggestion.offer(result.suggestion);
-              setRefusedEmail(email);
+              emailSuggestion.refuse(email, result.suggestion);
             } else {
               setError(boardErrorMessage(result));
             }
@@ -98,11 +98,11 @@ export function ForgotPasswordView({
           value={email}
           onChange={changeEmail}
           onBlur={emailSuggestion.check}
-          invalid={refusedEmail !== null}
+          invalid={emailSuggestion.refusedEmail !== null}
         >
           <EmailSuggestionHint
             suggestion={emailSuggestion.suggestion}
-            refusedEmail={refusedEmail}
+            refusedEmail={emailSuggestion.refusedEmail}
             disabled={pending}
             onAccept={changeEmail}
           />

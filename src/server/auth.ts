@@ -74,7 +74,7 @@ type AuthActionError = {
   ok: false;
   code: string;
   message: string;
-  /** The corrected address when a sign-up's email domain was refused. */
+  /** The corrected address the API sent with a refused email domain. */
   suggestion?: string;
 };
 
