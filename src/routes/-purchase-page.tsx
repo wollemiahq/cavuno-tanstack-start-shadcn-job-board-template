@@ -232,7 +232,9 @@ export function PurchaseReadyView({
     >
       <section
         aria-labelledby="purchase-files-heading"
-        className="flex flex-col gap-4 pb-8"
+        // The page layout spaces it from the offer below; alone, it keeps
+        // its own room at the bottom.
+        className={cn('flex flex-col gap-4', !purchase.offer && 'pb-8')}
       >
         <div className="flex items-center gap-3">
           <h2
@@ -458,7 +460,7 @@ function OfferSection({
   return (
     <section
       aria-labelledby="purchase-offer-heading"
-      className="@container flex flex-col gap-3 pb-8"
+      className="@container flex flex-col gap-4"
       data-slot="purchase-offer"
     >
       <h2
