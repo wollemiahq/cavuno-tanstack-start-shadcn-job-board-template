@@ -20,8 +20,6 @@ import {
   canContactBoard,
   type BoardContact,
 } from '@/components/board/board-contact-button';
-import { Bleed } from '@/components/layout/bleed';
-import { Container } from '@/components/layout/container';
 import {
   Page,
   PageContent,
@@ -76,21 +74,6 @@ function articleCountLabel(count: number) {
     count,
     countLabel: new Intl.NumberFormat(getLocale()).format(count),
   });
-}
-
-/**
- * The full-bleed band the help home opens with, in the board's primary
- * colour and on the readable column the help center keeps. Category and
- * article pages open like the blog's: the title straight on the page.
- */
-function HelpBand({ children }: { children: ReactNode }) {
-  return (
-    <Bleed>
-      <div className="bg-primary text-primary-foreground">
-        <Container width="content">{children}</Container>
-      </div>
-    </Bleed>
-  );
 }
 
 /**
@@ -275,19 +258,10 @@ export function HelpHomePage({
     <Page width="content">
       <PageContent
         header={
-          <HelpBand>
-            <header className="flex flex-col items-center gap-3 py-10 text-center md:py-14">
-              <p className="text-primary-foreground/70 text-sm font-medium">
-                {m.help_title()}
-              </p>
-              <h1 className="font-heading text-4xl font-semibold tracking-tight text-balance md:text-5xl">
-                {m.help_heroHeadline()}
-              </h1>
-              <p className="text-primary-foreground/80 text-base text-balance md:text-lg">
-                {m.help_subtitleText()}
-              </p>
-            </header>
-          </HelpBand>
+          <PageHeader
+            title={m.help_heroHeadline()}
+            description={m.help_subtitleText()}
+          />
         }
       >
         {search && results ? (
