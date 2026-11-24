@@ -13,7 +13,6 @@ import {
   CircleCheck,
   Download,
   ExternalLink,
-  FileText,
   Lock,
   MailCheck,
   Star,
@@ -470,7 +469,15 @@ function OfferSection({
         {m.purchase_offerHeading()}
       </h2>
       <Card className="gap-0 overflow-hidden py-0">
-        <div className="grid @min-[620px]:grid-cols-[10rem_1fr_13rem] @min-[620px]:items-center @min-[620px]:gap-5 @min-[620px]:p-4">
+        <div
+          className={cn(
+            'grid @min-[620px]:items-center @min-[620px]:gap-5 @min-[620px]:p-4',
+            // No cover: nothing to show in its place.
+            offer.coverImageUrl
+              ? '@min-[620px]:grid-cols-[10rem_1fr_13rem]'
+              : '@min-[620px]:grid-cols-[1fr_13rem]',
+          )}
+        >
           {offer.coverImageUrl ? (
             <img
               src={offer.coverImageUrl}
@@ -478,12 +485,13 @@ function OfferSection({
               loading="lazy"
               className="aspect-[16/10] w-full object-cover @min-[620px]:aspect-[4/3] @min-[620px]:rounded-xl"
             />
-          ) : (
-            <div className="bg-muted text-muted-foreground grid aspect-[16/10] w-full place-items-center @min-[620px]:aspect-[4/3] @min-[620px]:rounded-xl">
-              <FileText aria-hidden="true" className="size-8" />
-            </div>
-          )}
-          <div className="flex flex-col gap-1 px-4 pt-3 @min-[620px]:p-0">
+          ) : null}
+          <div
+            className={cn(
+              'flex flex-col gap-1 px-4 @min-[620px]:p-0',
+              offer.coverImageUrl ? 'pt-3' : 'pt-4',
+            )}
+          >
             <p className="text-foreground text-base font-semibold" dir="auto">
               {offer.name}
             </p>
