@@ -10,6 +10,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { formatDate } from '@cavuno/board/format';
 import { Link } from '@tanstack/react-router';
 import {
+  FileText,
   CircleCheck,
   Download,
   ExternalLink,
@@ -25,7 +26,9 @@ import {
   fileBadge,
   formatFileSize,
   formatMoneyExact,
+  moneyParts,
 } from '@/board/product-view-model';
+import { useOfferTimeLeft } from '@/components/board/product-offer-countdown';
 import { EmptyState } from '@/components/empty-state';
 import { Container } from '@/components/layout/container';
 import { Page, PageContent, PageHeader } from '@/components/layout/page';
@@ -46,6 +49,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { candidateAuthSearch } from '@/lib/candidate-return-to';
 import { productErrorMessage } from '@/lib/product-error-message';
+import type { ProductOffer } from '@/lib/product-offer';
 import { cn } from '@/lib/utils';
 import type {
   Purchase,
@@ -83,6 +87,8 @@ export type PurchasePageDependencies = {
   openUrl: (url: string) => void;
   /** Re-read the page (counts, states, the confirmation step). */
   invalidate: () => Promise<void>;
+  /** Open the offered product's page with the offer applied. */
+  openOffer: (offer: ProductOffer) => void;
 };
 
 type PurchaseFile = Purchase['files'][number];
@@ -226,7 +232,9 @@ export function PurchaseReadyView({
     >
       <section
         aria-labelledby="purchase-files-heading"
-        className="flex flex-col gap-4 pb-8"
+        // The page layout spaces it from the offer below; alone, it keeps
+        // its own room at the bottom.
+        className={cn('flex flex-col gap-4', !purchase.offer && 'pb-8')}
       >
         <div className="flex items-center gap-3">
           <h2
@@ -282,6 +290,14 @@ export function PurchaseReadyView({
           </p>
         ) : null}
       </section>
+      {purchase.offer ? (
+        <OfferSection
+          offer={purchase.offer}
+          onOpen={(offer) =>
+            dependencies.openOffer({ ...offer, email: purchase.email })
+          }
+        />
+      ) : null}
     </PageLayout>
   );
 }
@@ -404,6 +420,168 @@ function safeHost(url: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The offer after this purchase, under the files: another of the board's
+ * products the buyer doesn't own. The card follows its own width: a
+ * product card (cover on top) when narrow, cover | text | price when wide.
+ * Everything about the deal sits in one price stack: the countdown badge,
+ * the percent beside the price, the usual price, the button.
+ */
+function OfferSection({
+  offer,
+  onOpen,
+}: {
+  offer: NonNullable<Purchase['offer']>;
+  onOpen: (offer: NonNullable<Purchase['offer']>) => void;
+}) {
+  const locale = getLocale();
+  const left = useOfferTimeLeft(offer.discountEndsAt);
+  const discounted = offer.discountPercent > 0;
+  const price = formatMoneyExact(locale, offer.priceCents, offer.currency);
+  const parts = moneyParts(locale, offer.priceCents, offer.currency);
+  // No badge once a timed discount has run out in an open tab.
+  const badge = !discounted
+    ? null
+    : offer.discountEndsAt === null
+      ? m.purchase_offerJustForYou()
+      : left === null
+        ? null
+        : left.days > 0
+          ? m.purchase_offerCardEndsInDays({
+              days: left.days,
+              hours: left.hours,
+            })
+          : m.purchase_offerCardEndsInHours({
+              hours: left.hours,
+              minutes: left.minutes,
+            });
+  return (
+    <section
+      aria-labelledby="purchase-offer-heading"
+      className="@container flex flex-col gap-4"
+      data-slot="purchase-offer"
+    >
+      <h2
+        id="purchase-offer-heading"
+        className="text-foreground text-xl font-semibold"
+      >
+        {m.purchase_offerHeading()}
+      </h2>
+      <Card className="gap-0 overflow-hidden py-0">
+        <div
+          className={cn(
+            'grid @min-[620px]:items-center @min-[620px]:gap-5 @min-[620px]:p-4',
+            // No cover: nothing to show in its place.
+            offer.coverImageUrl
+              ? '@min-[620px]:grid-cols-[10rem_1fr_13rem]'
+              : '@min-[620px]:grid-cols-[1fr_auto]',
+          )}
+        >
+          {offer.coverImageUrl ? (
+            <img
+              src={offer.coverImageUrl}
+              alt=""
+              loading="lazy"
+              className="aspect-[16/10] w-full object-cover @min-[620px]:aspect-[4/3] @min-[620px]:rounded-xl"
+            />
+          ) : null}
+          <div
+            className={cn(
+              'flex items-center gap-3 px-4 @min-[620px]:p-0',
+              offer.coverImageUrl ? 'pt-3' : 'pt-4',
+            )}
+          >
+            {offer.coverImageUrl ? null : (
+              // No cover: the small tile the file rows above use.
+              <span
+                aria-hidden="true"
+                className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg"
+              >
+                <FileText className="size-4" />
+              </span>
+            )}
+            <div className="flex min-w-0 flex-col gap-1">
+              <p className="text-foreground text-base font-semibold" dir="auto">
+                {offer.name}
+              </p>
+              {offer.summary ? (
+                <p className="text-muted-foreground text-sm" dir="auto">
+                  {offer.summary}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div
+            className={cn(
+              'flex flex-col gap-1 px-4 pt-3 pb-4 @min-[620px]:p-0',
+              // No cover: one row, price beside the button, like the file rows.
+              !offer.coverImageUrl &&
+                '@min-[620px]:flex-row @min-[620px]:items-center @min-[620px]:gap-5',
+            )}
+          >
+            <div className="flex flex-col gap-1">
+              {badge ? (
+                <span className="bg-destructive text-destructive-foreground w-fit rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums">
+                  {badge}
+                </span>
+              ) : null}
+              <p className="text-foreground flex items-start gap-2 leading-none">
+                {discounted ? (
+                  <span className="text-destructive text-2xl font-light">
+                    {new Intl.NumberFormat(locale, {
+                      style: 'percent',
+                      signDisplay: 'always',
+                    }).format(-offer.discountPercent / 100)}
+                  </span>
+                ) : null}
+                {/* Read as one amount; the split is visual only. */}
+                <span className="sr-only">{price}</span>
+                <span
+                  aria-hidden="true"
+                  className="flex items-start font-medium"
+                >
+                  {parts.before ? (
+                    <span className="mt-0.5 text-xs">{parts.before}</span>
+                  ) : null}
+                  <span className="text-3xl">{parts.whole}</span>
+                  {parts.fraction ? (
+                    <span className="mt-0.5 text-xs">{parts.fraction}</span>
+                  ) : null}
+                  {parts.after ? (
+                    <span className="ms-0.5 mt-0.5 text-xs">{parts.after}</span>
+                  ) : null}
+                </span>
+              </p>
+              {discounted ? (
+                <p className="text-muted-foreground text-xs">
+                  {m.purchase_offerUsualPrice({
+                    price: formatMoneyExact(
+                      locale,
+                      offer.fullPriceCents,
+                      offer.currency,
+                    ),
+                  })}
+                </p>
+              ) : null}
+            </div>
+            <Button
+              className={cn(
+                'mt-2 w-full',
+                !offer.coverImageUrl && '@min-[620px]:mt-0 @min-[620px]:w-auto',
+              )}
+              onClick={() => onOpen(offer)}
+            >
+              {discounted
+                ? m.purchase_offerBuyAction({ price })
+                : m.purchase_offerViewAction()}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </section>
+  );
 }
 
 function OrderCard({

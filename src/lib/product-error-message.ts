@@ -15,6 +15,7 @@ export const PRODUCT_CODE_MESSAGES = {
   product_amount_below_minimum: m.boardError_productAmountBelowMinimumText,
   product_amount_invalid: m.boardError_productAmountInvalidText,
   product_answers_invalid: m.boardError_productAnswersInvalidText,
+  product_offer_invalid: m.boardError_productOfferInvalidText,
   purchase_email_mismatch: m.boardError_purchaseEmailMismatchText,
   purchase_file_preparing: m.boardError_purchaseFilePreparingText,
   purchase_download_limit_reached: m.boardError_purchaseDownloadLimitText,

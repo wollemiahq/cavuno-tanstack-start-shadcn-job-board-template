@@ -57,6 +57,13 @@ function PurchasePage() {
     resend: resendPurchaseLink,
     openUrl: (url) => window.location.assign(url),
     invalidate: () => router.invalidate(),
+    // History state, not the URL: the token and email stay off analytics.
+    openOffer: (offer) =>
+      void router.navigate({
+        to: '/products/$productSlug',
+        params: { productSlug: offer.slug },
+        state: (previous) => ({ ...previous, productOffer: offer }),
+      }),
   };
 
   if (data.state === 'confirm') {
