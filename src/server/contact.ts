@@ -3,6 +3,7 @@ import { createServerFn, createServerOnlyFn } from '@tanstack/react-start';
 
 import { getBoard } from '../lib/board';
 import { boardAccessMiddleware } from '../lib/board-access-middleware';
+import { sessionMiddleware } from '../lib/session-middleware';
 import { gatedRead } from './board-access';
 
 export type BoardContact = {
@@ -91,9 +92,14 @@ export const getContactForRoot = createServerOnlyFn(
   },
 );
 
+/**
+ * Sends the visitor's session when they are signed in, so the operator's
+ * inbox shows the message as theirs instead of matching it by the typed
+ * email. Signed-out visitors send it as guests.
+ */
 export const submitContact = createServerFn({ method: 'POST' })
   .validator(validateContactInput)
-  .middleware([boardAccessMiddleware])
+  .middleware([sessionMiddleware, boardAccessMiddleware])
   .handler(({ context, data }) =>
     gatedRead(context, async (headers): Promise<ContactSubmissionResult> => {
       try {
@@ -106,7 +112,7 @@ export const submitContact = createServerFn({ method: 'POST' })
           {
             method: 'POST',
             body: data,
-            headers,
+            headers: { ...context.authHeaders, ...headers },
           },
         );
         return { ok: true, data: result };
