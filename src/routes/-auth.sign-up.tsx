@@ -19,12 +19,14 @@ import { textLinkClass } from '@/lib/text-link';
 export function SignUpView({
   boardName,
   returnTo,
+  initialEmail,
   signUpAction,
   getOAuthAuthorizationUrlAction,
   invalidate,
 }: {
   boardName: string;
   returnTo: string;
+  initialEmail?: string;
   signUpAction: (input: {
     data: {
       email: string;
@@ -72,6 +74,7 @@ export function SignUpView({
         successActionLabel: m.authSignUp_goToAccountLabel(),
       }}
       marketingConsent={marketingConsent}
+      initialEmail={initialEmail}
       successHref={buildVerifyEmailRedirectPath(returnTo)}
       onSubmit={async (values) => {
         // The emailed verification link returns here too, not only the

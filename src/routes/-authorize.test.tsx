@@ -10,6 +10,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { consentScopes } from '../board/mcp-consent-copy';
 import { loadMcpConsent, McpConsentView } from './-authorize';
 
 import { boardErrorMessage } from '@/lib/board-error-message';
@@ -24,6 +25,15 @@ afterEach(() => {
 
 const consent: Extract<McpConsentStep, { next: 'consent' }> = {
   next: 'consent',
+  requestedScopes: [
+    {
+      id: 'employer',
+      label: 'Your employer account',
+      description: 'Read your company profile and jobs, and change your jobs.',
+      changes: 'reversible',
+      personalData: true,
+    },
+  ],
   request: 'sealed-request',
   consentToken: 'token-1',
   clientName: '<b>Evil</b> Assistant',
@@ -90,6 +100,150 @@ describe('/authorize loader', () => {
   });
 });
 
+const fine: Extract<McpConsentStep, { next: 'consent' }> = {
+  ...consent,
+  knownAssistant: null,
+  clientName: 'Muse',
+  requestedScopes: [
+    {
+      id: 'profile.read',
+      label: 'API label for profile.read',
+      description: 'API description for profile.read.',
+      changes: 'none',
+      personalData: true,
+    },
+    {
+      id: 'jobs.publish',
+      label: 'API label for jobs.publish',
+      description: 'API description for jobs.publish.',
+      changes: 'irreversible',
+      personalData: false,
+    },
+    {
+      id: 'future.scope',
+      label: 'API label for a scope this site doesn’t know',
+      description: 'API description for a scope this site doesn’t know.',
+      changes: 'reversible',
+      personalData: false,
+    },
+  ],
+};
+
+function renderPicker(decide = vi.fn()) {
+  render(
+    <McpConsentView
+      step={fine}
+      boardName={BOARD}
+      boardLogoUrl={null}
+      decide={decide}
+      assignLocation={vi.fn()}
+    />,
+  );
+  const checkbox = (name: string) => screen.getByRole('checkbox', { name });
+  const allow = () =>
+    fireEvent.click(
+      screen.getByRole('button', { name: m.mcpConsent_allowLabel() }),
+    );
+  return { decide, checkbox, allow };
+}
+
+describe('/authorize scope picker', () => {
+  it('lists each requested scope ticked, in the board’s words, with the API’s for a scope it doesn’t know', () => {
+    const { checkbox } = renderPicker();
+
+    expect(
+      screen.getByRole('group', {
+        name: m.mcpConsent_scopesLegend({ client: 'Muse' }),
+      }),
+    ).toBeInTheDocument();
+    for (const name of [
+      m.mcpScope_profileReadLabel(),
+      m.mcpScope_jobsPublishLabel(),
+      'API label for a scope this site doesn’t know',
+    ]) {
+      expect(checkbox(name)).toHaveAttribute('aria-checked', 'true');
+    }
+    expect(checkbox(m.mcpScope_profileReadLabel())).toHaveAccessibleDescription(
+      `${m.mcpScope_profileReadText()} ${m.mcpConsent_scopePersonalDataBadge()}`,
+    );
+    expect(checkbox(m.mcpScope_jobsPublishLabel())).toHaveAccessibleDescription(
+      `${m.mcpScope_jobsPublishText()} ${m.mcpConsent_scopeIrreversibleBadge()}`,
+    );
+    expect(
+      checkbox('API label for a scope this site doesn’t know'),
+    ).toHaveAccessibleDescription(
+      'API description for a scope this site doesn’t know.',
+    );
+    expect(screen.queryByText('API label for profile.read')).toBeNull();
+    // The umbrella paragraphs are for umbrella-only requests.
+    for (const paragraph of consentScopes(fine, BOARD)) {
+      expect(screen.queryByText(paragraph)).toBeNull();
+    }
+  });
+
+  it('allows only the ticked scopes', async () => {
+    const decide = vi.fn().mockResolvedValue({
+      ok: true,
+      data: { next: 'redirect', location: 'https://assistant.test/cb' },
+    });
+    const { checkbox, allow } = renderPicker(decide);
+
+    fireEvent.click(checkbox(m.mcpScope_jobsPublishLabel()));
+    expect(checkbox(m.mcpScope_jobsPublishLabel())).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
+    allow();
+
+    await waitFor(() => expect(decide).toHaveBeenCalledOnce());
+    expect(decide).toHaveBeenCalledWith({
+      data: {
+        request: 'sealed-request',
+        consentToken: 'token-1',
+        decision: 'allow',
+        approvedScopes: ['profile.read', 'future.scope'],
+      },
+    });
+  });
+
+  it('refuses Allow with nothing ticked, and still lets the person cancel', async () => {
+    const decide = vi.fn().mockResolvedValue({
+      ok: true,
+      data: { next: 'redirect', location: 'https://assistant.test/cb' },
+    });
+    const { checkbox, allow } = renderPicker(decide);
+
+    for (const scope of fine.requestedScopes) {
+      fireEvent.click(
+        checkbox(
+          {
+            'profile.read': m.mcpScope_profileReadLabel(),
+            'jobs.publish': m.mcpScope_jobsPublishLabel(),
+          }[scope.id] ?? scope.label,
+        ),
+      );
+    }
+    allow();
+
+    expect(
+      await screen.findByText(m.mcpConsent_scopesNoneError()),
+    ).toBeInTheDocument();
+    expect(decide).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: m.mcpConsent_cancelLabel() }),
+    );
+    await waitFor(() => expect(decide).toHaveBeenCalledOnce());
+    expect(decide.mock.calls[0]?.[0]).toEqual({
+      data: {
+        request: 'sealed-request',
+        consentToken: 'token-1',
+        decision: 'deny',
+      },
+    });
+  });
+});
+
 describe('/authorize view', () => {
   it('shows the request as text and allows it', async () => {
     const decide = vi.fn().mockResolvedValue({
@@ -120,6 +274,8 @@ describe('/authorize view', () => {
     expect(
       screen.getByText(m.mcpConsent_trustUnverifiedText()),
     ).toBeInTheDocument();
+    // An umbrella-only request reads as before: no scopes to tick.
+    expect(screen.queryByRole('checkbox')).toBeNull();
 
     fireEvent.click(
       screen.getByRole('button', { name: m.mcpConsent_allowLabel() }),

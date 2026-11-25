@@ -7,8 +7,8 @@ This standalone starter owns the complete shadcn (Base UI) source set generated 
 - Base: Base UI through the `base-rhea` style.
 - Theme: `src/theme.css`.
 - Icons: Lucide.
-- Installed source: 60 UI components plus `src/hooks/use-mobile.ts` (61 files total).
-- Production adoption: 42 used, 18 available.
+- Installed source: 61 UI components plus `src/hooks/use-mobile.ts` (62 files total).
+- Production adoption: 43 used, 18 available.
 
 Installing every primitive is a source-ownership and discoverability decision. It is not a requirement to render every primitive: use the semantic component that fits the interaction instead of manufacturing UI solely to increase the used count.
 
@@ -17,65 +17,66 @@ Installing every primitive is a source-ownership and discoverability decision. I
 | Component | Status | Production references |
 | --- | --- | --- |
 | `accordion` | Available | Installed for adoption when the product needs this behavior. |
-| `alert` | Used (17) | `src/components/board/apply-button.tsx`<br>`src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>+14 more in the JSON ledger |
-| `alert-dialog` | Used (8) | `src/components/board/apply-location-dialog.tsx`<br>`src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+5 more in the JSON ledger |
+| `alert` | Used (20) | `src/components/board/apply-button.tsx`<br>`src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-detail-state.tsx`<br>+17 more in the JSON ledger |
+| `alert-dialog` | Used (9) | `src/components/board/apply-location-dialog.tsx`<br>`src/components/danger-zone.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>+6 more in the JSON ledger |
 | `aspect-ratio` | Available | Installed for adoption when the product needs this behavior. |
-| `attachment` | Used (2) | `src/components/post-job-form.tsx`<br>`src/components/resume-upload.tsx` |
-| `avatar` | Used (14) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+11 more in the JSON ledger |
-| `badge` | Used (41) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+38 more in the JSON ledger |
+| `attachment` | Used (3) | `src/components/custom-field-files-input.tsx`<br>`src/components/post-job-form.tsx`<br>`src/components/resume-upload.tsx` |
+| `avatar` | Used (15) | `src/components/account-shell.tsx`<br>`src/components/avatar-upload.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+12 more in the JSON ledger |
+| `badge` | Used (50) | `src/components/Footer.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/board/blog-article-content.tsx`<br>+47 more in the JSON ledger |
 | `breadcrumb` | Used (1) | `src/components/board/breadcrumb.tsx` |
 | `bubble` | Used (1) | `src/components/messages/message-bubble.tsx` |
-| `button` | Used (107) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+104 more in the JSON ledger |
+| `button` | Used (137) | `src/components/Header.tsx`<br>`src/components/alert-manager.tsx`<br>`src/components/app-not-found.tsx`<br>+134 more in the JSON ledger |
 | `button-group` | Used (2) | `src/components/board/alert-signup-form.tsx`<br>`src/components/header-search-enhanced.tsx` |
 | `calendar` | Available | Installed for adoption when the product needs this behavior. |
-| `card` | Used (40) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/company-card.tsx`<br>`src/components/board/company-search-result-detail.tsx`<br>+37 more in the JSON ledger |
+| `card` | Used (51) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/candidate-paywall-lock.tsx`<br>`src/components/board/company-card.tsx`<br>+48 more in the JSON ledger |
 | `carousel` | Available | Installed for adoption when the product needs this behavior. |
 | `chart` | Used (2) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx` |
-| `checkbox` | Used (12) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/custom-fields-group.tsx`<br>+9 more in the JSON ledger |
+| `checkbox` | Used (15) | `src/components/alert-manager.tsx`<br>`src/components/board/custom-field-filter-fields.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+12 more in the JSON ledger |
 | `collapsible` | Available | Installed for adoption when the product needs this behavior. |
-| `combobox` | Used (8) | `src/components/board/talent-list-job-link.tsx`<br>`src/components/board/talent-save-to-job.tsx`<br>`src/components/company-search-combobox.tsx`<br>+5 more in the JSON ledger |
+| `combobox` | Used (8) | `src/components/board/talent-list-job-link.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/keyword-combobox.tsx`<br>+5 more in the JSON ledger |
+| `combobox-chips` | Used (1) | `src/components/tag-list-dialog.tsx` |
 | `command` | Available | Installed for adoption when the product needs this behavior. |
 | `context-menu` | Available | Installed for adoption when the product needs this behavior. |
-| `dialog` | Used (12) | `src/components/alert-manager.tsx`<br>`src/components/board/apply-button.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>+9 more in the JSON ledger |
-| `direction` | Used (3) | `src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>`src/routes/__root.tsx` |
+| `dialog` | Used (16) | `src/components/alert-manager.tsx`<br>`src/components/board/apply-button.tsx`<br>`src/components/board/product-checkout-dialog.tsx`<br>+13 more in the JSON ledger |
+| `direction` | Used (4) | `src/components/board/product-carousel.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>`src/components/employer/employer-stats-chart.tsx`<br>+1 more in the JSON ledger |
 | `drawer` | Available | Installed for adoption when the product needs this behavior. |
-| `dropdown-menu` | Used (7) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer/applicant-pipeline-board.tsx`<br>`src/components/header-account-menu.tsx`<br>+4 more in the JSON ledger |
-| `empty` | Used (45) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+42 more in the JSON ledger |
-| `field` | Used (30) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+27 more in the JSON ledger |
+| `dropdown-menu` | Used (10) | `src/components/board/search-radius-scope.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>`src/components/board/talent-save-to-job.tsx`<br>+7 more in the JSON ledger |
+| `empty` | Used (50) | `src/components/app-not-found.tsx`<br>`src/components/app-route-error.tsx`<br>`src/components/board/blog-archive-page.tsx`<br>+47 more in the JSON ledger |
+| `field` | Used (46) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/alert-signup-form.tsx`<br>+43 more in the JSON ledger |
 | `hover-card` | Available | Installed for adoption when the product needs this behavior. |
-| `input` | Used (24) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+21 more in the JSON ledger |
-| `input-group` | Used (13) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-search-band.tsx`<br>`src/components/company-search-combobox.tsx`<br>+10 more in the JSON ledger |
-| `input-otp` | Used (1) | `src/routes/-auth.verify-email-required.tsx` |
-| `item` | Used (8) | `src/components/alert-manager.tsx`<br>`src/components/education-section.tsx`<br>`src/components/experience-section.tsx`<br>+5 more in the JSON ledger |
+| `input` | Used (29) | `src/components/alert-manager.tsx`<br>`src/components/auth-form.tsx`<br>`src/components/board/apply-button.tsx`<br>+26 more in the JSON ledger |
+| `input-group` | Used (20) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/listing-search-band.tsx`<br>`src/components/board/product-checkout-form.tsx`<br>+17 more in the JSON ledger |
+| `input-otp` | Used (2) | `src/components/item-verification-dialog.tsx`<br>`src/routes/-auth.verify-email-required.tsx` |
+| `item` | Used (11) | `src/components/alert-manager.tsx`<br>`src/components/collection-verification-card.tsx`<br>`src/components/education-section.tsx`<br>+8 more in the JSON ledger |
 | `kbd` | Available | Installed for adoption when the product needs this behavior. |
-| `label` | Used (7) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer-job-form.tsx`<br>`src/components/experience-section.tsx`<br>+4 more in the JSON ledger |
+| `label` | Used (9) | `src/components/board/employer-company-select.tsx`<br>`src/components/board/membership-plans.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>+6 more in the JSON ledger |
 | `marker` | Used (1) | `src/components/messages/thread-view.tsx` |
 | `menubar` | Available | Installed for adoption when the product needs this behavior. |
 | `message` | Used (1) | `src/components/messages/message-bubble.tsx` |
 | `message-scroller` | Used (1) | `src/components/messages/thread-view.tsx` |
-| `native-select` | Used (4) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/profile-form.tsx`<br>`src/routes/-employers.talent-access.tsx`<br>+1 more in the JSON ledger |
+| `native-select` | Used (6) | `src/components/board/employer-company-select.tsx`<br>`src/components/board/membership-plans.tsx`<br>`src/components/board/product-checkout-form.tsx`<br>+3 more in the JSON ledger |
 | `navigation-menu` | Available | Installed for adoption when the product needs this behavior. |
 | `pagination` | Used (2) | `src/components/board/cursor-pagination.tsx`<br>`src/components/board/listing-pagination.tsx` |
 | `popover` | Used (2) | `src/components/preview/preview-toolbar.tsx`<br>`src/components/rich-text-editor.tsx` |
 | `progress` | Used (1) | `src/components/profile-completeness-card.tsx` |
-| `radio-group` | Used (5) | `src/components/board/talent-lists-picker.tsx`<br>`src/components/employer-job-form.tsx`<br>`src/components/post-job-form.tsx`<br>+2 more in the JSON ledger |
+| `radio-group` | Used (6) | `src/components/auth-form.tsx`<br>`src/components/board/talent-lists-picker.tsx`<br>`src/components/employer-job-form.tsx`<br>+3 more in the JSON ledger |
 | `resizable` | Available | Installed for adoption when the product needs this behavior. |
 | `scroll-area` | Available | Installed for adoption when the product needs this behavior. |
-| `select` | Used (12) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/board/talent-filters.tsx`<br>+9 more in the JSON ledger |
-| `separator` | Used (4) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/preview/preview-emails.tsx`<br>`src/components/preview/preview-toolbar.tsx`<br>+1 more in the JSON ledger |
-| `sheet` | Used (9) | `src/components/alert-manager.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/board/talent-filters.tsx`<br>+6 more in the JSON ledger |
+| `select` | Used (14) | `src/components/board/jobs-filter-controls.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>`src/components/board/talent-filters.tsx`<br>+11 more in the JSON ledger |
+| `separator` | Used (6) | `src/components/board/candidate-paywall-lock.tsx`<br>`src/components/preview/preview-board-settings.tsx`<br>`src/components/preview/preview-emails.tsx`<br>+3 more in the JSON ledger |
+| `sheet` | Used (11) | `src/components/alert-manager.tsx`<br>`src/components/board/company-filters.tsx`<br>`src/components/board/jobs-filter-toolbar.tsx`<br>+8 more in the JSON ledger |
 | `sidebar` | Available | Installed for adoption when the product needs this behavior. |
-| `skeleton` | Used (7) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+4 more in the JSON ledger |
+| `skeleton` | Used (9) | `src/components/board/company-search-detail-state.tsx`<br>`src/components/board/job-search-result-detail.tsx`<br>`src/components/board/public-content-pending.tsx`<br>+6 more in the JSON ledger |
 | `slider` | Available | Installed for adoption when the product needs this behavior. |
-| `sonner` | Used (1) | `src/routes/__root.tsx` |
-| `spinner` | Used (20) | `src/components/board/alert-signup-form.tsx`<br>`src/components/company-search-combobox.tsx`<br>`src/components/employer/employer-profile-views-stat.tsx`<br>+17 more in the JSON ledger |
-| `switch` | Used (1) | `src/components/preview/preview-board-settings.tsx` |
+| `sonner` | Used (1) | `src/components/deferred-toaster.tsx` |
+| `spinner` | Used (31) | `src/components/board/alert-signup-form.tsx`<br>`src/components/board/membership-join-gate.tsx`<br>`src/components/board/membership-post-gate.tsx`<br>+28 more in the JSON ledger |
+| `switch` | Used (3) | `src/components/preview/preview-board-settings.tsx`<br>`src/components/profile-form.tsx`<br>`src/routes/-email-preferences.tsx` |
 | `table` | Used (3) | `src/components/board/salary-sections.tsx`<br>`src/components/employer/company-members-table.tsx`<br>`src/routes/-employers.company-jobs.tsx` |
 | `tabs` | Available | Installed for adoption when the product needs this behavior. |
-| `textarea` | Used (7) | `src/components/board/apply-button.tsx`<br>`src/components/custom-fields-group.tsx`<br>`src/components/education-section.tsx`<br>+4 more in the JSON ledger |
+| `textarea` | Used (10) | `src/components/board/apply-button.tsx`<br>`src/components/contact-form.tsx`<br>`src/components/custom-fields-group.tsx`<br>+7 more in the JSON ledger |
 | `toggle` | Used (1) | `src/components/rich-text-editor.tsx` |
 | `toggle-group` | Available | Installed for adoption when the product needs this behavior. |
-| `tooltip` | Used (2) | `src/components/employer/company-members-table.tsx`<br>`src/components/rich-text-editor.tsx` |
+| `tooltip` | Used (3) | `src/components/employer/company-members-table.tsx`<br>`src/components/item-verification-verified-tick.tsx`<br>`src/components/rich-text-editor.tsx` |
 
 ## Registry compositions
 

@@ -114,22 +114,3 @@ export function isSalaryPageNoindex(payload: SalaryIndexable): boolean {
 export function isSalaryHubNoindex(items: readonly SalaryIndexable[]): boolean {
   return !items.some((item) => item.indexable !== false);
 }
-
-/**
- * A job listing that may name its landing page's canonical. `& object` lets
- * an older SDK type without the field pass the weak-type check.
- */
-type ListingCanonical = { readonly canonicalPath?: string } & object;
-
-/**
- * The path a location × category or location × skill page puts in its
- * canonical: the listing's `canonicalPath` when the API sends one (the page
- * whose results this listing duplicates), else the page's own path. The page
- * stays live either way.
- */
-export function listingCanonicalPath(
-  list: ListingCanonical,
-  ownPath: string,
-): string {
-  return list.canonicalPath ?? ownPath;
-}

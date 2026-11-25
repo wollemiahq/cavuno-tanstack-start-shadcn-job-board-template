@@ -149,4 +149,40 @@ describe('/auth/forgot-password continuation', () => {
       }),
     ).toBeEnabled();
   });
+
+  it('shows a refused address as the email field’s error and clears it on edit', async () => {
+    forgotPassword.mockResolvedValue({
+      ok: false,
+      code: 'email_domain_undeliverable',
+      message: 'This email address cannot receive mail.',
+    });
+    const { container } = renderRouted(
+      <ForgotPasswordView
+        returnTo="/account"
+        forgotPasswordAction={forgotPassword}
+      />,
+    );
+    await screen.findByRole('button');
+    const email = container.querySelector<HTMLInputElement>(
+      'input[name="email"]',
+    )!;
+    fireEvent.change(email, { target: { value: 'candidate@nomail.zz' } });
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.authForgotPassword_submitLabel(),
+      }),
+    );
+
+    const refusal = await screen.findByRole('alert');
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(refusal).toHaveTextContent(
+      m.boardError_emailDomainUndeliverableText(),
+    );
+    expect(email.closest('[data-slot="field"]')).toContainElement(refusal);
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+
+    fireEvent.change(email, { target: { value: 'candidate@nomail.z' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(email).not.toHaveAttribute('aria-invalid');
+  });
 });

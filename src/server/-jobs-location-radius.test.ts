@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   list: vi.fn(),
   search: vi.fn(),
   tree: vi.fn(),
+  context: vi.fn(),
 }));
 vi.mock('@tanstack/react-start', () => ({
   createServerFn: () => {
@@ -30,7 +31,7 @@ vi.mock('../lib/board-access-middleware', () => ({
   boardAccessMiddleware: {},
 }));
 vi.mock('../lib/board-context-cache', () => ({
-  readBoardContext: async () => ({ name: 'Fixture', language: 'en' }),
+  readBoardContext: mocks.context,
 }));
 vi.mock('../lib/public-origin', () => ({
   readPublicOrigin: async () => 'https://fixture.example',
@@ -110,13 +111,18 @@ const emptyList = {
 
 const page = { locationSlug: 'fixture-place', offset: 0, limit: 24 };
 
-type HeadMeta = { name?: string; content?: string };
+type HeadMeta = { name?: string; content?: string; title?: string };
 
 function robots(head: { meta: HeadMeta[] }) {
   return head.meta.find((entry) => entry.name === 'robots');
 }
 
+function documentTitle(head: { meta: HeadMeta[] }) {
+  return head.meta.find((entry) => entry.title !== undefined)?.title;
+}
+
 beforeEach(() => {
+  mocks.context.mockResolvedValue({ name: 'Fixture', language: 'en' });
   vi.clearAllMocks();
   placeRadiusGeoCache.clear();
   combinationInPlaceCountCache.clear();
@@ -672,5 +678,77 @@ describe('combination canonical from the API', () => {
         href: `https://fixture.example${localizePath('/jobs/locations/fixture-place/ai-engineer')}`,
       },
     ]);
+  });
+});
+
+describe('canonical from the consolidation map', () => {
+  const href = (path: string) => [
+    {
+      rel: 'canonical',
+      href: `https://fixture.example${localizePath(path)}`,
+    },
+  ];
+
+  it('names the page a place duplicates on its bare and combination pages', async () => {
+    mocks.context.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      jobLandingConsolidation: { places: { 'fixture-place': 'fixture-city' } },
+    });
+    mocks.resolve.mockResolvedValue(resolution('region', 'NL'));
+
+    const bare = await getJobsLocationPage({ data: page });
+    const category = await getJobsLocationCategoryPage({
+      data: { ...page, categorySlug: 'ai-engineer' },
+    });
+    const skill = await getJobsLocationSkillPage({
+      data: { ...page, skillSlug: 'python' },
+    });
+    if (bare.kind !== 'ok' || category.kind !== 'ok' || skill.kind !== 'ok') {
+      throw new Error('expected listings');
+    }
+    expect(bare.head.links).toEqual(href('/jobs/locations/fixture-city'));
+    expect(category.head.links).toEqual(
+      href('/jobs/locations/fixture-city/ai-engineer'),
+    );
+    expect(skill.head.links).toEqual(
+      href('/jobs/locations/fixture-city/skills/python'),
+    );
+  });
+
+  it('names a wider area that folds into the page after the place', async () => {
+    mocks.context.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      jobLandingConsolidation: {
+        places: { 'fixture-region': 'fixture-place' },
+      },
+    });
+    mocks.tree.mockResolvedValue({
+      data: [
+        {
+          id: 'region',
+          parentId: null,
+          slug: 'fixture-region',
+          canonicalSlug: 'fixture-region',
+          displayName: 'Fixture Region',
+          jobCount: 3,
+        },
+        {
+          id: 'place',
+          parentId: 'region',
+          slug: 'fixture-place',
+          canonicalSlug: 'fixture-place',
+          displayName: 'Fixture Place',
+          jobCount: 3,
+        },
+      ],
+    });
+    mocks.resolve.mockResolvedValue(resolution('city', 'NL'));
+
+    const bare = await getJobsLocationPage({ data: page });
+    if (bare.kind !== 'ok') throw new Error('expected a listing');
+    expect(bare.headingPlace.displayName).toBe('Fixture Place, Fixture Region');
+    expect(documentTitle(bare.head)).toContain('Fixture Place, Fixture Region');
   });
 });

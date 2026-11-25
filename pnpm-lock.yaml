@@ -24,8 +24,8 @@ importers:
         specifier: ^1.8.0
         version: 1.8.0(@date-fns/tz@1.5.0)(@types/react@19.3.0)(date-fns@4.4.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@cavuno/board':
-        specifier: ^4.79.0
-        version: 4.79.0
+        specifier: ^4.82.0
+        version: 4.82.0
       '@cloudflare/vite-plugin':
         specifier: 1.62.2
         version: 1.62.2(patch_hash=5582f91e640cee5bee578e4db9f5dc163bfe85054a906a0825beb2e9dd343566)(@types/node@24.13.3)(@voidzero-dev/vite-plus-core@8.3.8000(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.0))(wrangler@4.144.0(@types/node@24.13.3))
@@ -558,8 +558,8 @@ packages:
   '@bytecodealliance/preview3-shim@0.6.1':
     resolution: {integrity: sha512-61mEfjfgGmZhEMA0H3waawPKvYd3za9y0vJ7pmQz/9yvm4FR6Ef+cmqhnxDE7ezsM07MY1btP92ymmgsgFwxmg==}
 
-  '@cavuno/board@4.79.0':
-    resolution: {integrity: sha512-dexXUIbNl2eShkxXnHDGoVj8+bMpSCOlCvbhzA9ylUvlrxZFkvhmOsTCB9JKhjcE3gvaOi9m9R7m72VAZsAhEQ==}
+  '@cavuno/board@4.82.0':
+    resolution: {integrity: sha512-dEK1cU/+ybx9rsKtMB6ttg8nMf6JpPjDDoEr2ZvWP6BR9RExL6Xw+5qx77bmQTZZL6y3bd2na9MjgILALTKrvw==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -5594,10 +5594,12 @@ packages:
   yuku-core@0.19.0:
     resolution: {integrity: sha512-kYK9e1XdfirNhkipzW0wmMcSWcVF/CWnuugodfVYRCUwvoBefweL9HzB96OiKEhsx78V5WbUxbJqlizMX869Qg==}
     engines: {node: '>=14.18.0'}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   yuku-parser@0.19.0:
     resolution: {integrity: sha512-XrBh9ZiQK5mJVRxZBAvD6LwRyAYrK3MFtH3+onyuxFL5hFD44EC3QOmIC1FjTj6H2MMwq46/NAI+NZxLZPZgxg==}
     engines: {node: '>=14.18.0'}
+    deprecated: 'Yuku is now one package with one core. Use "yuku" instead: https://yuku.fyi/javascript/. Existing installs keep working but get no more fixes.'
 
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
@@ -5922,7 +5924,7 @@ snapshots:
       '@bytecodealliance/jco-node-fs': 0.3.2
       '@bytecodealliance/preview2-shim': 0.25.0
 
-  '@cavuno/board@4.79.0': {}
+  '@cavuno/board@4.82.0': {}
 
   '@clack/core@1.4.3':
     dependencies:

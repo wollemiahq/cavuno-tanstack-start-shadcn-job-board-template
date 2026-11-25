@@ -18,7 +18,12 @@ import {
 import { signInReturnTo } from '../lib/employer-return-to';
 import { m } from '../paraglide/messages';
 
+import {
+  EmailSuggestionHint,
+  useEmailSuggestion,
+} from '@/components/email-suggestion-hint';
 import { AuthMailAppLinks } from '@/components/mail-app-links';
+import { RegistrationField } from '@/components/registration-page';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { appendAuthConversionQuery } from '@/lib/board-datalayer-events';
@@ -41,11 +46,14 @@ export function SignInView({
     data: { email: string; password: string };
   }) => Promise<
     | { ok: true; boardUser?: Pick<BoardUser, 'role'> }
-    | { ok: false; code: string; message: string }
+    | { ok: false; code: string; message: string; suggestion?: string }
   >;
   requestMagicLinkAction: (input: {
     data: { email: string; returnTo?: string; intent?: 'sign_in' };
-  }) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+  }) => Promise<
+    | { ok: true }
+    | { ok: false; code: string; message: string; suggestion?: string }
+  >;
   getOAuthAuthorizationUrlAction: (input: {
     data: { provider: 'google' | 'linkedin'; returnTo?: string };
   }) => Promise<
@@ -61,6 +69,12 @@ export function SignInView({
   const [pending, setPending] = useState(false);
   /** The address a magic link was sent to — non-null swaps in the sent state. */
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const emailSuggestion = useEmailSuggestion();
+  const changeEmail = (next: string) => {
+    setEmail(next);
+    emailSuggestion.clear();
+  };
 
   async function startOAuth(provider: 'google' | 'linkedin') {
     setPending(true);
@@ -148,6 +162,7 @@ export function SignInView({
         onValueChange={(next) => {
           setMode(next);
           setError(null);
+          emailSuggestion.clear();
         }}
         ariaLabel={m.authSignIn_title()}
       />
@@ -159,8 +174,12 @@ export function SignInView({
           event.preventDefault();
           setPending(true);
           setError(null);
+          emailSuggestion.clear();
           const form = new FormData(event.currentTarget);
+          // Read the field, not state: an address the browser filled in
+          // before hydration never reached onChange.
           const email = String(form.get('email'));
+          setEmail(email);
           let result:
             | Awaited<ReturnType<typeof signInAction>>
             | Awaited<ReturnType<typeof requestMagicLinkAction>>;
@@ -205,18 +224,31 @@ export function SignInView({
           }
           if (result.ok) {
             setSentTo(email);
+          } else if (result.code === 'email_domain_undeliverable') {
+            emailSuggestion.refuse(email, result.suggestion);
           } else {
             setError(boardErrorMessage(result));
           }
           setPending(false);
         }}
       >
-        <Field
+        <RegistrationField
           label={m.authSignIn_emailLabel()}
           name="email"
           type="email"
           autoComplete="email"
-        />
+          value={email}
+          onChange={changeEmail}
+          onBlur={emailSuggestion.check}
+          invalid={emailSuggestion.refusedEmail !== null}
+        >
+          <EmailSuggestionHint
+            suggestion={emailSuggestion.suggestion}
+            refusedEmail={emailSuggestion.refusedEmail}
+            disabled={pending}
+            onAccept={changeEmail}
+          />
+        </RegistrationField>
         {mode === 'password' ? (
           <Field
             label={m.authSignIn_passwordLabel()}

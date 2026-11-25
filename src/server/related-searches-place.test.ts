@@ -30,4 +30,13 @@ describe('relatedSearchesPlace', () => {
       null,
     );
   });
+
+  it('links inside the page a place duplicates', () => {
+    expect(
+      relatedSearchesPlace(city, null, null, { places: { berlin: 'mitte' } }),
+    ).toBe('mitte');
+    expect(
+      relatedSearchesPlace(city, null, null, { places: { berlin: null } }),
+    ).toBeNull();
+  });
 });

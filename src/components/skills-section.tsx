@@ -1,197 +1,178 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { Sparkles, X } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
-import { replaceSkills } from '../server/account';
+import { replaceInterestedRoles, replaceSkills } from '../server/account';
 
+import type { TagListDialogCopy } from './tag-list-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from '@/components/ui/empty';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
+import { reconcileCommittedAction } from '@/lib/action-toast';
+import { boardErrorMessage } from '@/lib/board-error-message';
+
+type SaveResult = { ok: true } | { ok: false; code: string; message: string };
+
+type TagListCopy = TagListDialogCopy & {
+  description: string;
+  addLabel: string;
+};
+
+// The editor (Dialog + combobox chips) loads on first open, so the profile
+// page does not carry it in its first load.
+const LazyTagListDialog = lazy(() =>
+  import('./tag-list-dialog').then(({ TagListDialog }) => ({
+    default: TagListDialog,
+  })),
+);
 
 /**
- * Skills — badges over the whole-set replace
- * (`board.me.profile.updateSkills`). Adding happens in an "Add skill" dialog
- * (the LinkedIn flow); add and remove each persist immediately with one PUT.
+ * Skills — read-only chips, edited in a dialog and saved as a whole-set
+ * replace (`board.me.profile.updateSkills`).
  */
-export function SkillsSection({ skills: initialValues }: { skills: string[] }) {
+export function SkillsSection({ skills }: { skills: string[] }) {
+  return (
+    <TagListSection
+      id="skills"
+      items={skills}
+      persist={(next) => replaceSkills({ data: { skills: next } })}
+      copy={{
+        heading: m.skillsSection_heading(),
+        description: m.skillsSection_description(),
+        addLabel: m.skillsSection_addLabel(),
+        placeholder: m.skillsSection_inputPlaceholder(),
+        removeAriaLabel: (skill) =>
+          m.skillsSection_removeSkillAriaLabel({ skill }),
+        // `UpdateSkillsBody.skills` maxItems; skill names have no length cap.
+        maxItems: 200,
+        tooManyText: (max) => m.skillsSection_tooManyError({ max }),
+      }}
+    />
+  );
+}
+
+/**
+ * Interested roles — the same card and dialog over the profile's `interestedRoles`
+ * (`board.me.profile.update`, which replaces the list). Job matches rank on
+ * skills and interested roles.
+ */
+export function InterestedRolesSection({ roles }: { roles: string[] }) {
+  return (
+    <TagListSection
+      id="interested-roles"
+      items={roles}
+      persist={(next) => replaceInterestedRoles({ data: { roles: next } })}
+      copy={{
+        heading: m.interestedRolesSection_heading(),
+        description: m.interestedRolesSection_description(),
+        addLabel: m.interestedRolesSection_addLabel(),
+        placeholder: m.interestedRolesSection_inputPlaceholder(),
+        removeAriaLabel: (role) =>
+          m.interestedRolesSection_removeRoleAriaLabel({ role }),
+        // `UpdateCandidateProfileBody.interestedRoles`: maxItems and each
+        // role's maxLength.
+        maxItems: 50,
+        maxLength: 100,
+        tooManyText: (max) => m.interestedRolesSection_tooManyError({ max }),
+        tooLongText: (max) => m.interestedRolesSection_tooLongError({ max }),
+      }}
+    />
+  );
+}
+
+function TagListSection({
+  id,
+  items: initialValues,
+  persist,
+  copy,
+}: {
+  id: string;
+  items: string[];
+  persist: (next: string[]) => Promise<SaveResult>;
+  copy: TagListCopy;
+}) {
   const router = useRouter();
-  const [skills, setValues] = useState(initialValues);
+  const [items, setValues] = useState(initialValues);
   useEffect(() => setValues(initialValues), [initialValues]);
-  const [adding, setAdding] = useState(false);
-  const [input, setInput] = useState('');
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const save = async (next: string[]): Promise<boolean> => {
-    if (pending) return false;
+  const save = async (next: string[]) => {
+    if (pending) return;
+    setError(null);
     setPending(true);
     try {
-      await replaceSkills({ data: { skills: next } });
+      const result = await persist(next);
+      if (!result.ok) {
+        setError(boardErrorMessage(result));
+        return;
+      }
       setValues(next);
+      setOpen(false);
       await reconcileCommittedAction(() => router.invalidate());
-      return true;
     } catch {
-      void toastActionError();
-      return false;
+      setError(m.candidateAction_errorText());
     } finally {
       setPending(false);
     }
   };
 
-  const submitAdd = async () => {
-    if (pending) return;
-    const name = input.trim();
-    if (!name) return;
-    if (skills.includes(name)) {
-      setInput('');
-      setAdding(false);
-      return;
-    }
-    if (await save([...skills, name])) {
-      setInput('');
-      setAdding(false);
-    }
-  };
-
-  const addButton = (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={pending}
-      onClick={() => {
-        setInput('');
-        setAdding(true);
-      }}
-    >
-      {m.skillsSection_addLabel()}
-    </Button>
-  );
-
   return (
-    <Card data-test="skills-section" id="skills">
+    <Card data-test={`${id}-section`} id={id}>
       <CardHeader>
         <CardTitle>
-          <h2>{m.skillsSection_heading()}</h2>
+          <h2>{copy.heading}</h2>
         </CardTitle>
-        {skills.length > 0 ? <CardAction>{addButton}</CardAction> : null}
+        <CardDescription>{copy.description}</CardDescription>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() => {
+              setError(null);
+              setOpen(true);
+            }}
+          >
+            {items.length > 0 ? m.skillsSection_editLabel() : copy.addLabel}
+          </Button>
+        </CardAction>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {skills.length === 0 ? (
-          <Empty className="border-0 p-8">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Sparkles aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyDescription>{m.skillsSection_emptyText()}</EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>{addButton}</EmptyContent>
-          </Empty>
-        ) : (
+      {items.length > 0 ? (
+        <CardContent>
           <ul className="flex flex-wrap gap-2">
-            {skills.map((skill) => (
-              <Badge
-                key={skill}
-                variant="secondary"
-                render={<li />}
-                className="h-6 gap-0.5 pe-0.5"
-              >
-                {skill}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={m.skillsSection_removeSkillAriaLabel({ skill })}
-                  className="text-muted-foreground hover:text-foreground size-5 rounded-full"
-                  disabled={pending}
-                  onClick={() => void save(skills.filter((s) => s !== skill))}
-                >
-                  <X className="size-3.5" />
-                </Button>
+            {items.map((item) => (
+              <Badge key={item} variant="secondary" render={<li />}>
+                {item}
               </Badge>
             ))}
           </ul>
-        )}
-
-        <Dialog
-          open={adding}
-          onOpenChange={(open) => {
-            if (!open && !pending) setAdding(false);
-          }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{m.skillsSection_addLabel()}</DialogTitle>
-            </DialogHeader>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void submitAdd();
-              }}
-              className="space-y-4"
-            >
-              <Field className="gap-1.5">
-                <FieldLabel htmlFor="skill-name">
-                  {m.skillsSection_addSkillLabel()}
-                </FieldLabel>
-                <Input
-                  id="skill-name"
-                  disabled={pending}
-                  required
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                />
-              </Field>
-              {/* Overlay editors right-align their footer, Cancel before the
-                  primary — the Dialog/Sheet/AlertDialog convention. */}
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => setAdding(false)}
-                >
-                  {m.skillsSection_cancelLabel()}
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={pending || !input.trim()}
-                >
-                  {pending
-                    ? m.skillsSection_savingLabel()
-                    : m.skillsSection_saveLabel()}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
+        </CardContent>
+      ) : null}
+      {open ? (
+        <Suspense fallback={null}>
+          <LazyTagListDialog
+            id={id}
+            items={items}
+            copy={copy}
+            pending={pending}
+            error={error}
+            onCancel={() => setOpen(false)}
+            onSave={(next) => void save(next)}
+          />
+        </Suspense>
+      ) : null}
     </Card>
   );
 }

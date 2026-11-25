@@ -1,3 +1,4 @@
+import { MCP_SITE_HEADER } from '@cavuno/board/mcp';
 import { createBreadcrumbJsonLd } from '@cavuno/board/seo';
 import { notFound } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
@@ -34,6 +35,8 @@ export function mcpServerKey(boardName: string): string {
 export interface McpDocsTool {
   name: string;
   description: string;
+  /** Whether it uses the person's own account, so they sign in first. */
+  signIn: boolean;
 }
 
 const MCP_TOOLS_TTL_MS = 10 * 60_000;
@@ -55,27 +58,43 @@ export function parseMcpToolsList(body: string): McpDocsTool[] {
         .map((line) => line.slice('data:'.length).trim())
         .join('');
   // SAFETY: the Board API's MCP server answers tools/list with the MCP
-  // spec's result shape: every tool has a string `name` and an optional
-  // string `description`.
+  // spec's result shape: every tool has a string `name`, an optional string
+  // `description` and optional `_meta`, where the Board API puts the
+  // tool's `securitySchemes` (`noauth`, or `oauth2` for a signed-in tool).
   const reply = JSON.parse(json) as {
-    result?: { tools?: Array<{ name: string; description?: string }> };
+    result?: {
+      tools?: Array<{
+        name: string;
+        description?: string;
+        _meta?: { securitySchemes?: Array<{ type?: string }> };
+      }>;
+    };
   };
   const tools = reply.result?.tools;
   if (!tools) throw new Error('MCP tools/list reply has no tools');
   return tools.map((tool) => ({
     name: tool.name,
     description: tool.description ?? '',
+    signIn:
+      tool._meta?.securitySchemes?.some((scheme) => scheme.type === 'oauth2') ??
+      false,
   }));
 }
 
 /**
- * The tools the board's own MCP server lists, so the page names exactly
- * what an assistant gets (the salary tools only when the board shows
- * salaries). A failed read serves the last good list; with none, it throws.
+ * The tools the board's own MCP server lists on this site, so the page names
+ * exactly what an assistant gets (the salary tools only when the board shows
+ * salaries, the signed-in tools only where people can sign in). The call
+ * names the site whose `/mcp` the page shows, its public origin, in
+ * `MCP_SITE_HEADER`: a self-hosted site gets the signed-in tools for its
+ * key's registered origin, and a Builder site, which the gateway's signed
+ * identity names, once it says it asks. A failed read serves the last good
+ * list; with none, it throws.
  */
-async function readMcpTools(): Promise<McpDocsTool[]> {
+async function readMcpTools(site: string): Promise<McpDocsTool[]> {
   const { apiUrl, board } = getServerEnv();
-  const cached = mcpTools.get(board);
+  const key = `${board} ${site}`;
+  const cached = mcpTools.get(key);
   if (cached) return cached;
   const readAt = Date.now();
   try {
@@ -86,6 +105,7 @@ async function readMcpTools(): Promise<McpDocsTool[]> {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json, text/event-stream',
+          [MCP_SITE_HEADER]: site,
         },
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
       },
@@ -94,10 +114,10 @@ async function readMcpTools(): Promise<McpDocsTool[]> {
       throw new Error(`MCP tools/list answered ${response.status}`);
     }
     const tools = parseMcpToolsList(await response.text());
-    mcpTools.set(board, tools, readAt);
+    mcpTools.set(key, tools, readAt);
     return tools;
   } catch (error) {
-    const stale = mcpTools.getStale(board);
+    const stale = mcpTools.getStale(key);
     if (stale) return stale;
     throw error;
   }
@@ -120,9 +140,12 @@ export const getMcpDocsView = createServerFn({ method: 'GET' })
       const mcpUrl = `${origin}/mcp`;
       const key = mcpServerKey(boardName);
       const title = m.mcpDocs_title({ boardName });
-      const description = m.mcpDocs_description({ boardName });
       const url = selfUrl(origin, '/mcp/docs');
-      const tools = await readMcpTools();
+      const tools = await readMcpTools(new URL(origin).origin);
+      const signIn = tools.some((tool) => tool.signIn);
+      const description = signIn
+        ? m.mcpDocs_descriptionSignIn({ boardName })
+        : m.mcpDocs_description({ boardName });
 
       return {
         boardName,
@@ -139,6 +162,8 @@ export const getMcpDocsView = createServerFn({ method: 'GET' })
           2,
         ),
         tools,
+        signIn,
+        posting: tools.some((tool) => tool.name === 'post_job_public'),
         head: {
           meta: [{ title }, { name: 'description', content: description }],
           links: [{ rel: 'canonical', href: url }],

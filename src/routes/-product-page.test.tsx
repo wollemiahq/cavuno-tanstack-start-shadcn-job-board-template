@@ -13,10 +13,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProductPageView, type ProductPageDependencies } from './-product-page';
 
-import { formatRating, formatShare } from '@/board/product-view-model';
+import {
+  formatMoneyExact,
+  formatRating,
+  formatShare,
+} from '@/board/product-view-model';
 import { productPriceText } from '@/components/board/product-ui';
 import { HeaderRouteActionsProvider } from '@/components/header-route-actions';
 import { copyLinkCopy } from '@/copy-groups/copy-link';
+import type { ProductOffer } from '@/lib/product-offer';
 import { m } from '@/paraglide/messages';
 import { getLocale } from '@/paraglide/runtime';
 import type { Product, PurchaseSummary } from '@cavuno/board';
@@ -115,8 +120,10 @@ function page(
     sessionId = null,
     onPurchase = vi.fn(),
     showProductsLink = true,
+    offer = null,
   }: {
     showProductsLink?: boolean;
+    offer?: ProductOffer | null;
     onFilledChange?: (filled: boolean) => void;
     sessionId?: string | null;
     onPurchase?: (purchaseToken: string) => void;
@@ -132,6 +139,7 @@ function page(
         returnPath="/products/resume-pack"
         sessionId={sessionId}
         showProductsLink={showProductsLink}
+        offer={offer}
         dependencies={dependencies}
         onPurchase={onPurchase}
       />
@@ -651,6 +659,49 @@ describe('ProductPageView — buying without the "Before you pay" step', () => {
   function stepForm() {
     return screen.queryByRole('form', { name: m.product_paidStepTitle() });
   }
+
+  it('charges the offer price with its token, only for the email it was made for', async () => {
+    vi.mocked(dependencies.startCheckout).mockResolvedValue({
+      ok: true,
+      data: openCheckout,
+    });
+    const offer: ProductOffer = {
+      token: 'offer-token',
+      slug: 'resume-pack',
+      name: 'Resume pack',
+      summary: null,
+      coverImageUrl: null,
+      currency: 'usd',
+      fullPriceCents: 1900,
+      priceCents: 1425,
+      discountPercent: 25,
+      discountEndsAt: null,
+      email: 'Ada@Example.com',
+    };
+    renderPage({}, null, { offer });
+    expect(
+      within(rail()).getByText(
+        formatMoneyExact(getLocale(), 1425, 'usd').replace(/\s+/gu, ' '),
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(buyButton());
+    await screen.findByText(m.product_completePurchaseTitle());
+    expect(dependencies.startCheckout).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        email: 'ada@example.com',
+        offerToken: 'offer-token',
+      }),
+    });
+
+    cleanup();
+    vi.mocked(dependencies.startCheckout).mockClear();
+    renderPage({}, null, { offer: { ...offer, email: 'someone@else.com' } });
+    fireEvent.click(buyButton());
+    await screen.findByText(m.product_completePurchaseTitle());
+    expect(
+      vi.mocked(dependencies.startCheckout).mock.calls[0]![0].data.offerToken,
+    ).toBeUndefined();
+  });
 
   it('takes a signed-in buyer of a fixed-price product straight to payment', async () => {
     vi.mocked(dependencies.startCheckout).mockResolvedValue({

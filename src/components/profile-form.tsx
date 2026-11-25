@@ -265,6 +265,7 @@ export type TalentFormEntry = ProfileFormEntry<TalentFormBuiltinKey>;
 
 /** The profile sections that render outside this form, as layout keys. */
 export type TalentSectionKey =
+  | 'interestedRoles'
   | 'experience'
   | 'education'
   | 'skills'
@@ -274,6 +275,7 @@ export type TalentSectionKey =
 const OUTSIDE_FORM: ReadonlySet<TalentFormBuiltinKey> = new Set([
   'avatar',
   'email',
+  'interestedRoles',
   'experience',
   'education',
   'skills',
@@ -554,6 +556,10 @@ export function ProfileForm({
       case 'education':
         return sectionCounts.education === 0
           ? m.educationSection_heading()
+          : null;
+      case 'interestedRoles':
+        return sectionCounts.interestedRoles === 0
+          ? m.interestedRolesSection_heading()
           : null;
       case 'skills':
         return sectionCounts.skills === 0 ? m.skillsSection_heading() : null;

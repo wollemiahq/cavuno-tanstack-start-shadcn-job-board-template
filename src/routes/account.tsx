@@ -30,7 +30,10 @@ import {
   type TalentSectionKey,
 } from '../components/profile-form';
 import { ResumeImportDialog } from '../components/resume-import-dialog';
-import { SkillsSection } from '../components/skills-section';
+import {
+  InterestedRolesSection,
+  SkillsSection,
+} from '../components/skills-section';
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
 import { getAccount, type AccountData } from '../server/account';
@@ -69,6 +72,7 @@ const LazyCollectionVerificationCard = lazy(() =>
 );
 
 const SECTION_KEYS: readonly TalentSectionKey[] = [
+  'interestedRoles',
   'experience',
   'education',
   'skills',
@@ -117,7 +121,9 @@ function CandidateAccountPage({
   const shown = new Set<string>(
     entries.flatMap((entry) => (entry.kind === 'builtin' ? [entry.key] : [])),
   );
+  const interestedRoles = profile.interestedRoles ?? [];
   const sectionCounts = {
+    interestedRoles: interestedRoles.length,
     experience: experience.data.length,
     education: education.data.length,
     skills: skills.data.length,
@@ -139,6 +145,7 @@ function CandidateAccountPage({
         verifications={board.verification?.education ? verifications : null}
       />
     ),
+    interestedRoles: <InterestedRolesSection roles={interestedRoles} />,
     skills: <SkillsSection skills={skills.data.map((skill) => skill.name)} />,
     languages: (
       <LanguagesSection
@@ -184,6 +191,12 @@ function CandidateAccountPage({
       key: 'resume',
       label: m.resumeUpload_heading(),
       done: resume.hasResumeOnFile,
+    },
+    {
+      key: 'interestedRoles',
+      label: m.interestedRolesSection_heading(),
+      done: interestedRoles.length > 0,
+      href: '#interested-roles',
     },
     {
       key: 'experience',

@@ -25,6 +25,7 @@ import { isLocale } from '../paraglide/runtime';
 import { gatedRead } from './board-access';
 
 import { jobBreadcrumbItems, jobBreadcrumbJsonLd } from '@/lib/job-breadcrumbs';
+import { jobLandingConsolidation } from '@/lib/job-landing';
 
 /**
  * JSON-LD is schema.org-shaped nested objects. TanStack Start's server-fn
@@ -125,7 +126,8 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
         links: canonical ? [{ rel: 'canonical', href: canonical }] : [],
       };
 
-      const breadcrumbTrail = jobBreadcrumbItems(job);
+      const consolidation = jobLandingConsolidation(boardContext);
+      const breadcrumbTrail = jobBreadcrumbItems(job, consolidation);
       const jsonLd = asJsonObjects(
         [
           // links.public is null when the job lacks a company slug — then
@@ -144,7 +146,7 @@ export const getJobDetailPage = createServerFn({ method: 'GET' })
             : null,
           ...listingJsonLd({
             origin,
-            breadcrumbs: jobBreadcrumbJsonLd(job),
+            breadcrumbs: jobBreadcrumbJsonLd(job, consolidation),
           }),
         ].filter((entry) => entry !== null),
       );

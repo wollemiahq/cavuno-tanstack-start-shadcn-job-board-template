@@ -38,6 +38,9 @@ const TARGETS = {
   clsWorst: 0.05,
 };
 
+// How many times each route is fetched without any cache in front of it.
+const UNCACHED_DOCUMENT_SAMPLES = 5;
+
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -401,6 +404,45 @@ function routeFailures(route) {
   return failures;
 }
 
+/**
+ * Time one document rendered by the Worker itself, with no cache in front.
+ *
+ * The Lighthouse pass cannot show this. It measures a cached document, and
+ * its simulated throttling takes the median response time of an origin, so
+ * one slow document is outvoted by the fast static assets beside it.
+ */
+async function timeUncachedDocument(routePath) {
+  // The Worker's own HTML cache keys on the full URL, so a query string it
+  // has never seen cannot be answered from a stored copy.
+  const url = new URL(routePath, UPSTREAM_ORIGIN);
+  url.searchParams.set('uncached', crypto.randomUUID());
+  const started = performance.now();
+  const response = await fetch(url, { headers: { accept: 'text/html' } });
+  const ttfb = performance.now() - started;
+  await response.arrayBuffer();
+  if (!response.ok) {
+    throw new Error(
+      `Uncached render failed for ${routePath}: ${response.status}`,
+    );
+  }
+  return { ttfb, total: performance.now() - started };
+}
+
+async function measureUncachedDocument(route) {
+  const samples = [];
+  for (let sample = 0; sample < UNCACHED_DOCUMENT_SAMPLES; sample += 1) {
+    samples.push(await timeUncachedDocument(route.path));
+  }
+  const ttfbs = samples.map((sample) => sample.ttfb);
+  return {
+    ...route,
+    ttfbMedian: median(ttfbs),
+    ttfbWorst: Math.max(...ttfbs),
+    totalWorst: Math.max(...samples.map((sample) => sample.total)),
+    samples,
+  };
+}
+
 let preview;
 let proxy;
 
@@ -472,12 +514,31 @@ try {
     results.push(summarizeRoute(route, samples));
   }
 
+  // The first view of a page: nothing cached, so the visitor waits for the
+  // Worker to read the Board API and render. Reported, not budgeted: the time
+  // is mostly Board API round trips, which depend on where the lab runs.
+  console.log('\nUncached document (Worker renders, no HTML cache):');
+  const uncachedDocuments = [];
+  for (const route of routes) {
+    const document = await measureUncachedDocument(route);
+    uncachedDocuments.push(document);
+    console.log(
+      `${route.name.padEnd(15)} TTFB median ${Math.round(document.ttfbMedian)}ms, worst ${Math.round(document.ttfbWorst)}ms`,
+    );
+  }
+
   const output = {
     generatedAt: new Date().toISOString(),
     origin: PROXY_ORIGIN,
     cacheModel: 'warmed anonymous HTML edge cache',
     targets: TARGETS,
     routes: results,
+    uncachedDocuments: {
+      origin: UPSTREAM_ORIGIN,
+      cacheModel: 'no HTML cache: the Worker renders every document',
+      samplesPerRoute: UNCACHED_DOCUMENT_SAMPLES,
+      routes: uncachedDocuments,
+    },
   };
   await writeFile(
     path.join(REPORT_DIR, 'summary.json'),

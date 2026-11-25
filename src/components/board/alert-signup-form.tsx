@@ -133,7 +133,7 @@ export function AlertSignupForm({
                   context,
                 });
                 if (result.status === 'email_domain_undeliverable') {
-                  emailSuggestion.offer(result.suggestion);
+                  emailSuggestion.refuse(email, result.suggestion);
                   setStatus('undeliverable');
                   return;
                 }
@@ -209,7 +209,11 @@ export function AlertSignupForm({
                   the refusal and its correction in one line. */}
               <EmailSuggestionHint
                 suggestion={emailSuggestion.suggestion}
-                refused={status === 'undeliverable'}
+                refusedEmail={
+                  status === 'undeliverable'
+                    ? emailSuggestion.refusedEmail
+                    : null
+                }
                 disabled={status === 'pending'}
                 onAccept={(suggested) => {
                   setEmail(suggested);

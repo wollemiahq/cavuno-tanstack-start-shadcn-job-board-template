@@ -14,7 +14,9 @@ import {
   type PurchasePageDependencies,
 } from './-purchase-page';
 
+import { formatMoneyExact } from '@/board/product-view-model';
 import { m } from '@/paraglide/messages';
+import { getLocale } from '@/paraglide/runtime';
 import type { Purchase } from '@cavuno/board';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -73,6 +75,7 @@ function purchase(downloadAllAvailable: boolean): Purchase {
     review: null,
     purchaseToken: 'token',
     confirmationToken: null,
+    offer: null,
   };
 }
 
@@ -87,6 +90,7 @@ function dependencies(
     resend: vi.fn(),
     openUrl: vi.fn(),
     invalidate: vi.fn(async () => {}),
+    openOffer: vi.fn(),
     ...overrides,
   };
 }
@@ -144,5 +148,62 @@ describe('purchase page: Download all', () => {
     ).toBeInTheDocument();
     await waitFor(() => expect(deps.invalidate).toHaveBeenCalledTimes(1));
     expect(deps.openUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe('purchase page: offer after the purchase', () => {
+  const offer = {
+    token: 'offer-token',
+    slug: 'interview-guide',
+    name: 'Interview guide',
+    summary: null,
+    coverImageUrl: null,
+    currency: 'usd',
+    fullPriceCents: 1999,
+    priceCents: 1499,
+    discountPercent: 25,
+    discountEndsAt: null,
+  };
+
+  it('shows the discounted offer and opens it with the purchase email', () => {
+    // In the board language; the DOM matchers collapse no-break spaces.
+    const money = (cents: number) =>
+      formatMoneyExact(getLocale(), cents, 'usd').replace(/\s+/gu, ' ');
+    const text = (value: string) => value.replace(/\s+/gu, ' ');
+    const deps = dependencies();
+    render(
+      <PurchaseReadyView
+        purchase={{ ...purchase(false), offer }}
+        purchaseToken="token"
+        dependencies={deps}
+      />,
+    );
+    expect(
+      screen.getByText(
+        text(m.purchase_offerUsualPrice({ price: money(1999) })),
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText(m.purchase_offerJustForYou())).toBeInTheDocument();
+    const action = screen.getByRole('button', {
+      name: m.purchase_offerBuyAction({
+        price: formatMoneyExact(getLocale(), 1499, 'usd'),
+      }),
+    });
+    fireEvent.click(action);
+    expect(deps.openOffer).toHaveBeenCalledWith({
+      ...offer,
+      email: purchase(false).email,
+    });
+  });
+
+  it('shows no offer card without an offer', () => {
+    render(
+      <PurchaseReadyView
+        purchase={purchase(false)}
+        purchaseToken="token"
+        dependencies={dependencies()}
+      />,
+    );
+    expect(screen.queryByText(m.purchase_offerHeading())).toBeNull();
   });
 });

@@ -33,6 +33,7 @@ import { getLocale } from '../paraglide/runtime';
 import {
   directCheckoutEmail,
   fileTypeLabels,
+  formatMoneyExact,
   formatRating,
   ownedPurchase,
   productFactRows,
@@ -43,6 +44,7 @@ import type {
   ProductCheckoutRefusal,
   ProductCheckoutValues,
 } from '@/components/board/product-checkout-form';
+import { ProductOfferCountdown } from '@/components/board/product-offer-countdown';
 import { ProductRatingHistogram } from '@/components/board/product-rating-histogram';
 import {
   RatingSummary,
@@ -64,6 +66,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import type { ProductOffer } from '@/lib/product-offer';
 import { cn } from '@/lib/utils';
 import type {
   Product,
@@ -115,7 +118,11 @@ type ActionResult<T> =
 
 export type ProductPageDependencies = {
   startCheckout: (input: {
-    data: ProductCheckoutValues & { productSlug: string; returnPath: string };
+    data: ProductCheckoutValues & {
+      productSlug: string;
+      returnPath: string;
+      offerToken?: string;
+    };
   }) => Promise<ActionResult<ProductCheckout>>;
   getCheckoutState: (input: {
     data: { productSlug: string; sessionId: string };
@@ -430,6 +437,7 @@ export function ProductPageView({
   sessionId,
   startInCheckout = false,
   showProductsLink = true,
+  offer = null,
   dependencies,
   onPurchase,
 }: {
@@ -450,6 +458,8 @@ export function ProductPageView({
    * go back to.
    */
   showProductsLink?: boolean;
+  /** The buyer came from an offer after a purchase (`src/lib/product-offer.ts`). */
+  offer?: ProductOffer | null;
   dependencies: ProductPageDependencies;
   /** Go to the purchase's download page. */
   onPurchase: (purchaseToken: string) => void;
@@ -469,7 +479,11 @@ export function ProductPageView({
   const [railElement, setRailElement] = useState<HTMLElement | null>(null);
   const buyCardInView = useInView(buyCardElement);
   const railFits = useFitsViewport(railElement);
-  const priceLabel = productPriceText(product.price);
+  const fullPriceLabel = productPriceText(product.price);
+  const discounted = offer !== null && offer.discountPercent > 0;
+  const priceLabel = offer
+    ? formatMoneyExact(getLocale(), offer.priceCents, offer.currency)
+    : fullPriceLabel;
   const ctaLabel = productButtonText(product);
   const owned = useOwnedPurchase(
     product.slug,
@@ -533,8 +547,14 @@ export function ProductPageView({
     | { outcome: 'refused'; refusal: ProductCheckoutRefusal }
     | { outcome: 'complete' | 'paying' }
   > {
+    // The offer is bound to the email it was made for; another email buys
+    // at the usual price.
+    const offerToken =
+      offer && values.email.trim().toLowerCase() === offer.email.toLowerCase()
+        ? offer.token
+        : undefined;
     const result = await dependencies.startCheckout({
-      data: { ...values, productSlug: product.slug, returnPath },
+      data: { ...values, productSlug: product.slug, returnPath, offerToken },
     });
     if (!result.ok) {
       return {
@@ -652,12 +672,27 @@ export function ProductPageView({
               <span className="text-foreground text-3xl font-semibold lg:text-[2rem] lg:tracking-tight">
                 {priceLabel}
               </span>
+              {discounted ? (
+                <s className="text-muted-foreground text-sm">
+                  {fullPriceLabel}
+                </s>
+              ) : null}
               {product.price.kind === 'pay_what_you_want' ? (
                 <span className="text-muted-foreground text-sm">
                   {m.product_payWhatYouWantHint()}
                 </span>
               ) : null}
             </div>
+            {discounted ? (
+              <div className="flex flex-col gap-1" data-slot="product-offer">
+                <Badge variant="secondary" className="w-fit">
+                  {m.purchase_offerDiscountBadge({
+                    percent: offer.discountPercent,
+                  })}
+                </Badge>
+                <ProductOfferCountdown endsAt={offer.discountEndsAt} />
+              </div>
+            ) : null}
             {product.soldOut ? (
               <p
                 role="status"
@@ -906,7 +941,7 @@ export function ProductPageView({
               price: priceLabel,
             })}
             product={product}
-            defaultEmail={user?.email ?? null}
+            defaultEmail={offer?.email ?? user?.email ?? null}
             boardName={seller.name}
             onSubmit={submit}
           />

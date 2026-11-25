@@ -2,6 +2,7 @@ import { talentLocationPath } from '@cavuno/board/paths';
 import { describe, expect, it } from 'vitest';
 
 import {
+  consolidatedPlaceName,
   toJobsLocationHierarchyCrumbs,
   toPlaceHierarchyCrumbs,
 } from './jobs-location-hierarchy';
@@ -76,7 +77,7 @@ describe('toJobsLocationHierarchyCrumbs', () => {
         sydneyResolution,
         {
           linkCurrent: true,
-          ancestorPath: (slug) => `/jobs/locations/${slug}/engineering`,
+          term: { categorySlug: 'engineering' },
         },
       ),
     ).toEqual([
@@ -85,6 +86,27 @@ describe('toJobsLocationHierarchyCrumbs', () => {
         name: 'New South Wales',
         href: '/jobs/locations/new-south-wales/engineering',
       },
+      { name: 'Sydney', href: '/jobs/locations/sydney' },
+    ]);
+  });
+
+  it('links ancestors through the consolidation map, never to the page itself', () => {
+    const consolidation = {
+      places: { australia: null, 'new-south-wales': 'sydney' },
+    };
+    expect(
+      toJobsLocationHierarchyCrumbs(
+        [sydney, nsw, australia],
+        sydneyResolution,
+        {
+          linkCurrent: true,
+          term: { categorySlug: 'engineering' },
+          consolidation,
+        },
+      ),
+    ).toEqual([
+      { name: 'Australia', href: '/jobs/engineering' },
+      { name: 'New South Wales' },
       { name: 'Sydney', href: '/jobs/locations/sydney' },
     ]);
   });
@@ -247,7 +269,7 @@ describe('toJobsLocationHierarchyCrumbs', () => {
     expect(
       toJobsLocationHierarchyCrumbs([], mullumbimby, {
         linkCurrent: true,
-        ancestorPath: (slug) => `/jobs/locations/${slug}/nursing`,
+        term: { categorySlug: 'nursing' },
       }),
     ).toEqual([
       { name: 'Australia', href: '/jobs/locations/australia/nursing' },
@@ -309,5 +331,51 @@ describe('toPlaceHierarchyCrumbs', () => {
         linkCurrent: true,
       }).at(-1),
     ).toEqual({ name: 'Zürich', href: '/talent/locations/zuerich' });
+  });
+});
+
+describe('consolidatedPlaceName', () => {
+  const tree = [sydney, nsw, australia];
+
+  it('names the nearest ancestor that folds into this page after the place', () => {
+    const consolidation = {
+      places: { australia: 'sydney', 'new-south-wales': 'sydney' },
+    };
+    expect(
+      consolidatedPlaceName(tree, sydneyResolution, { consolidation }),
+    ).toBe('Sydney, New South Wales');
+    expect(
+      consolidatedPlaceName(tree, sydneyResolution, {
+        term: { categorySlug: 'engineering' },
+        consolidation,
+      }),
+    ).toBe('Sydney, New South Wales');
+  });
+
+  it('keeps the place name without a map or with an empty one', () => {
+    expect(consolidatedPlaceName(tree, sydneyResolution)).toBe('Sydney');
+    expect(
+      consolidatedPlaceName(tree, sydneyResolution, {
+        consolidation: { places: {} },
+      }),
+    ).toBe('Sydney');
+  });
+
+  it('does not repeat a same-named region', () => {
+    expect(
+      consolidatedPlaceName(
+        tree,
+        { ...sydneyResolution, displayName: 'new south wales' },
+        { consolidation: { places: { 'new-south-wales': 'sydney' } } },
+      ),
+    ).toBe('new south wales');
+  });
+
+  it('keeps the place name when the ancestor folds into another page', () => {
+    expect(
+      consolidatedPlaceName(tree, sydneyResolution, {
+        consolidation: { places: { 'new-south-wales': 'newcastle' } },
+      }),
+    ).toBe('Sydney');
   });
 });

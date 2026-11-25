@@ -78,6 +78,7 @@ const profile = {
   locationPlace: null,
   commuteRadiusKm: null,
   commuteRadiusDefaultKm: 50,
+  interestedRoles: [],
 } satisfies CandidateProfile;
 
 afterEach(() => {

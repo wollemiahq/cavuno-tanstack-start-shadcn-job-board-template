@@ -50,6 +50,7 @@ export const Route = createFileRoute('/jobs/locations/$location/')({
 function LocationPage() {
   const {
     place,
+    headingPlace,
     introHtml,
     list,
     relatedSearches,
@@ -60,7 +61,10 @@ function LocationPage() {
   const { location } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { heading, countedHeading } = locationListingCopy(location, place);
+  const { heading, countedHeading } = locationListingCopy(
+    location,
+    headingPlace,
+  );
   return (
     <ProgrammaticJobsView
       heading={heading}

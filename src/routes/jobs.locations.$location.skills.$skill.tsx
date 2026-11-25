@@ -51,6 +51,7 @@ export const Route = createFileRoute('/jobs/locations/$location/skills/$skill')(
 function LocationSkillPage() {
   const {
     place,
+    headingPlace,
     skill,
     list,
     relatedSearches,
@@ -63,7 +64,7 @@ function LocationSkillPage() {
   const navigate = Route.useNavigate();
   const { heading, countedHeading } = locationSkillListingCopy(
     location,
-    place,
+    headingPlace,
     skill,
   );
   return (
