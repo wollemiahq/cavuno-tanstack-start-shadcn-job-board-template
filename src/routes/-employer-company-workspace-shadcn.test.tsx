@@ -1090,17 +1090,24 @@ describe('employer company workspace', () => {
       screen.getByRole('textbox', { name: m.employerCompany_websiteLabel() }),
       { target: { value: 'www.northstar.io/careers' } },
     );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
+    // Save asks for the address in a dialog before anything is sent.
     fireEvent.change(
-      screen.getByRole('textbox', {
+      await screen.findByRole('textbox', {
         name: m.employerCompany_websiteChangeEmailLabel({
           domain: 'northstar.io',
         }),
       }),
       { target: { value: 'sam@northstar.io' } },
     );
+    expect(profileActions.updateCompany).not.toHaveBeenCalled();
     fireEvent.click(
       screen.getByRole('button', {
-        name: m.employerCompany_saveCompanyLabel(),
+        name: m.employerCompany_websiteChangeSendLinkLabel(),
       }),
     );
 
@@ -1115,15 +1122,22 @@ describe('employer company workspace', () => {
     });
   });
 
-  it('refuses a verification address that is not on the new domain', async () => {
+  it('refuses an address off the new domain, and can send for review instead', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
     renderProfile();
 
     fireEvent.change(
       screen.getByRole('textbox', { name: m.employerCompany_websiteLabel() }),
       { target: { value: 'northstar.io' } },
     );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
     fireEvent.change(
-      screen.getByRole('textbox', {
+      await screen.findByRole('textbox', {
         name: m.employerCompany_websiteChangeEmailLabel({
           domain: 'northstar.io',
         }),
@@ -1132,7 +1146,7 @@ describe('employer company workspace', () => {
     );
     fireEvent.click(
       screen.getByRole('button', {
-        name: m.employerCompany_saveCompanyLabel(),
+        name: m.employerCompany_websiteChangeSendLinkLabel(),
       }),
     );
 
@@ -1144,6 +1158,21 @@ describe('employer company workspace', () => {
       ),
     ).toBeInTheDocument();
     expect(profileActions.updateCompany).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_websiteChangeRequestReviewLabel(),
+      }),
+    );
+    await waitFor(() =>
+      expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
+    );
+    expect(
+      profileActions.updateCompany.mock.calls[0]?.[0]?.data.body,
+    ).toMatchObject({
+      website: 'https://northstar.io',
+      websiteChange: {},
+    });
   });
 
   it('uploads a new company logo through the profile logo control', async () => {
