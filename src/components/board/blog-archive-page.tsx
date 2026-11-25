@@ -49,7 +49,7 @@ export interface BlogArchivePageProps {
    * built with the shared `CursorPagination` on the design-system primitives.
    */
   pagination?: ReactNode;
-  /** Optional sign-up block after the posts, such as the newsletter form. */
+  /** Optional sign-up form in the page's top section, under the title. */
   newsletter?: ReactNode;
 }
 
@@ -81,6 +81,7 @@ export function BlogArchivePage({
       <PageContent
         header={
           <PageHeader title={heading} description={description}>
+            {newsletter}
             {search}
             {filters}
           </PageHeader>
@@ -121,8 +122,6 @@ export function BlogArchivePage({
         </PageSection>
 
         {posts.length > 0 ? pagination : null}
-
-        {newsletter}
       </PageContent>
     </Page>
   );

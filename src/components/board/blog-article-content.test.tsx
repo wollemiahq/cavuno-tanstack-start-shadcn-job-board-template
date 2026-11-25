@@ -206,14 +206,16 @@ describe('BlogArticleContent — complete article presentation', () => {
     expect(screen.queryByText(m.blogPost_featuredLabel())).toBeNull();
   });
 
-  it('ends the article with the newsletter sign-up', async () => {
+  it('shows the newsletter sign-up in the sidebar and, for phones, before the body', async () => {
     renderArticle(post, <section aria-label="Newsletter">Sign up</section>);
 
-    const signup = await screen.findByRole('region', { name: 'Newsletter' });
+    const [phone, sidebar] = await screen.findAllByRole('region', {
+      name: 'Newsletter',
+    });
     const body = screen.getByLabelText(m.blogPost_articleBodyLabel());
-    expect(signup.closest('article')).not.toBeNull();
     expect(
-      body.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING,
+      phone!.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    expect(sidebar!.closest('aside')).not.toBeNull();
   });
 });

@@ -89,6 +89,7 @@ function PostPage() {
             boardName={board.name}
             source="blog-article"
             locale={getLocale()}
+            align="start"
             onSubscribe={(input) => subscribeNewsletter({ data: input })}
           />
         }

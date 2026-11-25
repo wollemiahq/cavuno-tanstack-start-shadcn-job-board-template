@@ -249,7 +249,7 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
     ).toHaveAttribute('href', '/blog');
   });
 
-  it('places the newsletter sign-up after the posts', async () => {
+  it('puts the newsletter sign-up in the top section, with the title', async () => {
     renderArchive(
       <BlogArchivePage
         title="Blog"
@@ -260,9 +260,6 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
     );
 
     const signup = await screen.findByRole('region', { name: 'Newsletter' });
-    const card = screen.getByRole('link', { name: new RegExp(post.title) });
-    expect(
-      card.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expect(signup.closest('[data-slot="page-header"]')).not.toBeNull();
   });
 });

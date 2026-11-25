@@ -77,6 +77,7 @@ function BlogPage() {
             boardName={board.name}
             source="blog-index"
             locale={getLocale()}
+            align="start"
             onSubscribe={(input) => subscribeNewsletter({ data: input })}
           />
         }
