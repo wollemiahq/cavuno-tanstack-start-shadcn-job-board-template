@@ -75,6 +75,7 @@ import {
   type ProfileFieldValue,
   type ProfileSelections,
 } from '@/board/profile-field-writes';
+import { websiteDomain } from '@/board/website-domain';
 import type {
   CustomFieldUploadResult,
   CustomFieldUploads,
@@ -96,6 +97,16 @@ import {
   RICH_TEXT_MAX_CHARACTERS,
 } from '@/components/rich-text-editor';
 import { Text } from '@/components/text';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -122,7 +133,18 @@ import type {
   BoardProfileFormField,
   EmployerProfileViewsPoint,
   UpdateEmployerCompanyBody,
+  WorkEmailVerification,
 } from '@cavuno/board';
+
+/** How a website change ended, when its emailed link lands on the profile. */
+export type WebsiteChangeOutcome = NonNullable<
+  WorkEmailVerification['websiteChange']
+>['outcome'];
+
+/** How a save that changes the website domain asks to verify it. */
+type WebsiteChangeRequest = NonNullable<
+  UpdateEmployerCompanyBody['websiteChange']
+>;
 
 // The collection verification card loads only when a field verifies.
 const LazyCollectionVerificationCard = lazy(() =>
@@ -274,6 +296,7 @@ export type CompanyProfileViewData = {
   formLayout?: readonly BoardProfileFormField[] | null;
   members?: { data: unknown[] } | null;
   profileViews?: CompanyProfileLoaderData['profileViews'];
+  websiteOutcome?: WebsiteChangeOutcome;
 };
 
 type ProfileFieldWriteResult =
@@ -358,6 +381,7 @@ export function CompanyProfilePageView({
     profileViews,
     profileFields,
     formLayout,
+    websiteOutcome,
   } = data;
 
   return (
@@ -385,6 +409,22 @@ export function CompanyProfilePageView({
               </a>
             ) : null}
           </header>
+
+          {websiteOutcome ? (
+            <Alert
+              variant={
+                websiteOutcome === 'conflict' ? 'destructive' : 'default'
+              }
+            >
+              <AlertDescription>
+                {{
+                  changed: m.employerCompany_websiteChanged,
+                  pending_review: m.employerCompany_websiteChangeInReview,
+                  conflict: m.employerCompany_websiteChangeConflict,
+                }[websiteOutcome]()}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
           {/* Profile-views stat — deferred (streamed via <Await>) so a slow or
               failing analytics backend never blocks the form. Its zero state
@@ -555,6 +595,18 @@ function ProfileEditorCard({
     'idle' | 'saving' | 'error' | 'committed'
   >('idle');
   const [message, setMessage] = useState('');
+  // Saving a new website domain first asks, in a dialog, for an address on it:
+  // that address gets the link that applies the change. Without one the board
+  // reviews it.
+  const [websiteDialogOpen, setWebsiteDialogOpen] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationEmailError, setVerificationEmailError] = useState<
+    string | null
+  >(null);
+  const savedDomain = websiteDomain(company.website);
+  const typedDomain = websiteDomain(form.website);
+  const newDomain = typedDomain !== savedDomain ? typedDomain : null;
+  const pendingChange = company.pendingWebsiteChange ?? null;
   const [invalidField, setInvalidField] = useState<string | null>(null);
   // The fields the API refused on the last save.
   const [refusal, setRefusal] = useState<ProfileFieldRefusal | null>(null);
@@ -607,7 +659,11 @@ function ProfileEditorCard({
     return null;
   }
 
-  async function save() {
+  /**
+   * `websiteChange` is how a new website domain gets verified: chosen in the
+   * dialog, which a save with a new domain opens instead of saving.
+   */
+  async function save(websiteChange?: WebsiteChangeRequest) {
     if (uploading > 0) return;
     const missing = missingRequired();
     setInvalidField(missing?.id ?? null);
@@ -617,10 +673,15 @@ function ProfileEditorCard({
       setMessage(missing.message);
       return;
     }
+    if (newDomain && shows('website') && !websiteChange) {
+      setVerificationEmailError(null);
+      setWebsiteDialogOpen(true);
+      return;
+    }
     setStatus('saving');
     setMessage('');
     try {
-      await runSave();
+      await runSave(websiteChange);
     } catch {
       // A rejecting call (network drop, 5xx) must not strand the "Saving"
       // state without feedback.
@@ -635,10 +696,15 @@ function ProfileEditorCard({
    * input means "clear it". A hidden field is not sent, so the value already
    * stored on the company is kept.
    */
-  function companyBody(): UpdateEmployerCompanyBody {
+  function companyBody(
+    websiteChange?: WebsiteChangeRequest,
+  ): UpdateEmployerCompanyBody {
     const website = form.website.trim();
     const body: UpdateEmployerCompanyBody = { name: form.name.trim() };
-    if (shows('website')) body.website = website ? `https://${website}` : '';
+    if (shows('website')) {
+      body.website = website ? `https://${website}` : '';
+      if (newDomain && websiteChange) body.websiteChange = websiteChange;
+    }
     if (shows('description')) {
       body.description = isRichTextEmpty(form.description)
         ? ''
@@ -672,9 +738,9 @@ function ProfileEditorCard({
     return body;
   }
 
-  async function runSave() {
+  async function runSave(websiteChange?: WebsiteChangeRequest) {
     const result = await actions.updateCompany({
-      data: { slug, body: companyBody() },
+      data: { slug, body: companyBody(websiteChange) },
     });
     if (!result.ok) {
       setStatus('error');
@@ -724,6 +790,15 @@ function ProfileEditorCard({
         actions.updateCompanyObjectReferences ?? updateCompanyObjectReferences
       )({ data: { slug, body: references } });
       if (!written.ok) return await refused(written);
+    }
+    if (newDomain) {
+      // The website keeps its saved value until the change finishes; the
+      // pending note says what it waits for.
+      setForm((current) => ({
+        ...current,
+        website: stripProtocol(company.website ?? ''),
+      }));
+      setVerificationEmail('');
     }
     setStatus('committed');
     try {
@@ -791,7 +866,8 @@ function ProfileEditorCard({
               <InputGroupInput
                 id="company-website"
                 value={form.website}
-                required={requires('website')}
+                // A company's website can change but not be removed.
+                required={requires('website') || Boolean(company.website)}
                 placeholder={m.employerDashboard_websitePlaceholder()}
                 onChange={(event) =>
                   setForm({
@@ -801,6 +877,17 @@ function ProfileEditorCard({
                 }
               />
             </InputGroup>
+            {!newDomain && pendingChange ? (
+              <FieldDescription>
+                {pendingChange.status === 'awaiting_verification'
+                  ? m.employerCompany_websiteChangeAwaitingLink({
+                      domain: pendingChange.websiteDomain,
+                    })
+                  : m.employerCompany_websiteChangeAwaitingReview({
+                      domain: pendingChange.websiteDomain,
+                    })}
+              </FieldDescription>
+            ) : null}
           </Field>
         );
       case 'summary':
@@ -993,6 +1080,90 @@ function ProfileEditorCard({
             ) : null}
           </div>
         </form>
+        {newDomain ? (
+          <AlertDialog
+            open={websiteDialogOpen}
+            onOpenChange={setWebsiteDialogOpen}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {m.employerCompany_websiteChangeDialogTitle()}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {m.employerCompany_websiteChangeDialogDescription({
+                    domain: newDomain,
+                  })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <form
+                id="company-website-change"
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const email = verificationEmail.trim();
+                  if (!email.toLowerCase().endsWith(`@${newDomain}`)) {
+                    setVerificationEmailError(
+                      m.employerCompany_websiteChangeEmailMismatch({
+                        domain: newDomain,
+                      }),
+                    );
+                    return;
+                  }
+                  setWebsiteDialogOpen(false);
+                  void save({ verificationEmail: email });
+                }}
+              >
+                <Field data-invalid={verificationEmailError ? true : undefined}>
+                  <FieldLabel htmlFor="company-website-email">
+                    {m.employerCompany_websiteChangeEmailLabel({
+                      domain: newDomain,
+                    })}
+                  </FieldLabel>
+                  <Input
+                    id="company-website-email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder={`you@${newDomain}`}
+                    value={verificationEmail}
+                    aria-invalid={verificationEmailError ? true : undefined}
+                    onChange={(event) => {
+                      setVerificationEmail(event.currentTarget.value);
+                      setVerificationEmailError(null);
+                    }}
+                  />
+                  {verificationEmailError ? (
+                    // Same line height as the hint, so the dialog keeps its size.
+                    <FieldError className="leading-normal">
+                      {verificationEmailError}
+                    </FieldError>
+                  ) : (
+                    <FieldDescription>
+                      {m.employerCompany_websiteChangeEmailHint()}
+                    </FieldDescription>
+                  )}
+                </Field>
+              </form>
+              <AlertDialogFooter>
+                <AlertDialogCancel>
+                  {m.employerCompany_websiteChangeCancelLabel()}
+                </AlertDialogCancel>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setWebsiteDialogOpen(false);
+                    void save({});
+                  }}
+                >
+                  {m.employerCompany_websiteChangeRequestReviewLabel()}
+                </Button>
+                <Button type="submit" form="company-website-change">
+                  {m.employerCompany_websiteChangeSendLinkLabel()}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : null}
       </CardContent>
     </Card>
   );
