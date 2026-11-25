@@ -2,18 +2,27 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   type ClipboardEvent,
   type KeyboardEvent,
 } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { Sparkles, Target, type LucideIcon } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { replaceInterestedRoles, replaceSkills } from '../server/account';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Combobox,
   ComboboxChip,
@@ -21,28 +30,30 @@ import {
   ComboboxChipsInput,
 } from '@/components/ui/combobox';
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from '@/components/ui/empty';
-import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { FieldError } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
+import { reconcileCommittedAction } from '@/lib/action-toast';
 import { boardErrorMessage } from '@/lib/board-error-message';
 
 type SaveResult = { ok: true } | { ok: false; code: string; message: string };
 
 type TagListCopy = {
-  emptyIcon: LucideIcon;
   heading: string;
-  emptyText: string;
+  description: string;
+  addLabel: string;
   placeholder: string;
   removeAriaLabel: (item: string) => string;
 };
 
 /**
- * Skills — chips over the whole-set replace
- * (`board.me.profile.updateSkills`). Typing and pressing Enter or a comma
- * adds; each add and remove persists immediately with one PUT.
+ * Skills — read-only chips, edited in a dialog and saved as a whole-set
+ * replace (`board.me.profile.updateSkills`).
  */
 export function SkillsSection({ skills }: { skills: string[] }) {
   return (
@@ -51,9 +62,9 @@ export function SkillsSection({ skills }: { skills: string[] }) {
       items={skills}
       persist={(next) => replaceSkills({ data: { skills: next } })}
       copy={{
-        emptyIcon: Sparkles,
         heading: m.skillsSection_heading(),
-        emptyText: m.skillsSection_emptyText(),
+        description: m.skillsSection_description(),
+        addLabel: m.skillsSection_addLabel(),
         placeholder: m.skillsSection_inputPlaceholder(),
         removeAriaLabel: (skill) =>
           m.skillsSection_removeSkillAriaLabel({ skill }),
@@ -63,7 +74,7 @@ export function SkillsSection({ skills }: { skills: string[] }) {
 }
 
 /**
- * Interested roles — the same chip field over the profile's `interestedRoles`
+ * Interested roles — the same card and dialog over the profile's `interestedRoles`
  * (`board.me.profile.update`, which replaces the list). Job matches rank on
  * skills and interested roles.
  */
@@ -74,9 +85,9 @@ export function InterestedRolesSection({ roles }: { roles: string[] }) {
       items={roles}
       persist={(next) => replaceInterestedRoles({ data: { roles: next } })}
       copy={{
-        emptyIcon: Target,
         heading: m.interestedRolesSection_heading(),
-        emptyText: m.interestedRolesSection_emptyText(),
+        description: m.interestedRolesSection_description(),
+        addLabel: m.interestedRolesSection_addLabel(),
         placeholder: m.interestedRolesSection_inputPlaceholder(),
         removeAriaLabel: (role) =>
           m.interestedRolesSection_removeRoleAriaLabel({ role }),
@@ -116,52 +127,61 @@ function TagListSection({
   const router = useRouter();
   const [items, setValues] = useState(initialValues);
   useEffect(() => setValues(initialValues), [initialValues]);
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<string[]>([]);
   const [input, setInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const save = async (next: string[]): Promise<boolean> => {
-    if (pending) return false;
-    setPending(true);
-    try {
-      const result = await persist(next);
-      if (!result.ok) {
-        void toastActionError(boardErrorMessage(result));
-        return false;
-      }
-      setValues(next);
-      await reconcileCommittedAction(() => router.invalidate());
-      return true;
-    } catch {
-      void toastActionError();
-      return false;
-    } finally {
-      setPending(false);
-    }
+  const startEditing = () => {
+    setDraft(items);
+    setInput('');
+    setError(null);
+    setOpen(true);
   };
 
-  /** Adds every new entry in `text`; the input clears once they are saved. */
-  const add = async (text: string) => {
-    if (pending) return;
-    const added = newTagEntries(items, text);
-    if (added.length === 0) {
-      setInput('');
-      return;
-    }
-    setInput(text);
-    if (await save([...items, ...added])) setInput('');
+  /** Adds every new entry in `text` to the draft and clears the input. */
+  const addToDraft = (text: string) => {
+    setDraft((current) => [...current, ...newTagEntries(current, text)]);
+    setInput('');
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter' && event.key !== ',') return;
     event.preventDefault();
-    void add(input);
+    addToDraft(input);
   };
 
   const onPaste = (event: ClipboardEvent<HTMLInputElement>) => {
     const pasted = event.clipboardData.getData('text');
     if (!/[,\n]/.test(pasted)) return;
     event.preventDefault();
-    void add(input + pasted);
+    addToDraft(input + pasted);
+  };
+
+  const save = async () => {
+    if (pending) return;
+    // Text typed but not yet entered is saved too.
+    const next = [...draft, ...newTagEntries(draft, input)];
+    setDraft(next);
+    setInput('');
+    setError(null);
+    setPending(true);
+    try {
+      const result = await persist(next);
+      if (!result.ok) {
+        setError(boardErrorMessage(result));
+        return;
+      }
+      setValues(next);
+      setOpen(false);
+      await reconcileCommittedAction(() => router.invalidate());
+    } catch {
+      setError(m.candidateAction_errorText());
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -170,47 +190,103 @@ function TagListSection({
         <CardTitle>
           <h2>{copy.heading}</h2>
         </CardTitle>
+        <CardDescription>{copy.description}</CardDescription>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={startEditing}
+          >
+            {items.length > 0 ? m.skillsSection_editLabel() : copy.addLabel}
+          </Button>
+        </CardAction>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {items.length === 0 ? (
-          <Empty className="border-0 p-4">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <copy.emptyIcon aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyDescription>{copy.emptyText}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : null}
-        <Combobox
-          multiple
-          items={[]}
-          value={items}
-          onValueChange={(next) => void save(next)}
-          inputValue={input}
-          onInputValueChange={setInput}
-          readOnly={pending}
-        >
-          <ComboboxChips>
+      {items.length > 0 ? (
+        <CardContent>
+          <ul className="flex flex-wrap gap-2">
             {items.map((item) => (
-              <ComboboxChip
-                key={item}
-                removeAriaLabel={copy.removeAriaLabel(item)}
-              >
+              <Badge key={item} variant="secondary" render={<li />}>
                 {item}
-              </ComboboxChip>
+              </Badge>
             ))}
-            <ComboboxChipsInput
-              id={`${id}-input`}
-              aria-label={copy.heading}
-              // Only while empty: after chips it would be clipped on a phone.
-              placeholder={items.length === 0 ? copy.placeholder : undefined}
-              onKeyDown={onKeyDown}
-              onPaste={onPaste}
-            />
-          </ComboboxChips>
-        </Combobox>
-      </CardContent>
+          </ul>
+        </CardContent>
+      ) : null}
+
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!next && !pending) setOpen(false);
+        }}
+      >
+        <DialogContent initialFocus={inputRef}>
+          <DialogHeader>
+            <DialogTitle>{copy.heading}</DialogTitle>
+          </DialogHeader>
+          <form
+            className="grid gap-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void save();
+            }}
+          >
+            <div className="grid gap-2">
+              <Combobox
+                multiple
+                items={[]}
+                value={draft}
+                onValueChange={setDraft}
+                inputValue={input}
+                onInputValueChange={setInput}
+                readOnly={pending}
+              >
+                <ComboboxChips>
+                  {draft.map((item) => (
+                    <ComboboxChip
+                      key={item}
+                      removeAriaLabel={copy.removeAriaLabel(item)}
+                    >
+                      {item}
+                    </ComboboxChip>
+                  ))}
+                  <ComboboxChipsInput
+                    ref={inputRef}
+                    id={`${id}-input`}
+                    aria-label={copy.heading}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? `${id}-error` : undefined}
+                    placeholder={copy.placeholder}
+                    onKeyDown={onKeyDown}
+                    onPaste={onPaste}
+                  />
+                </ComboboxChips>
+              </Combobox>
+              {error ? (
+                <FieldError id={`${id}-error`}>{error}</FieldError>
+              ) : null}
+            </div>
+            {/* Overlay editors right-align their footer, Cancel before the
+                primary — the Dialog/Sheet/AlertDialog convention. */}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={pending}
+                onClick={() => setOpen(false)}
+              >
+                {m.skillsSection_cancelLabel()}
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {pending ? <Spinner /> : null}
+                {pending
+                  ? m.skillsSection_savingLabel()
+                  : m.skillsSection_saveLabel()}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

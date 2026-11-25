@@ -21,7 +21,6 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { LanguagesSection } from './languages-section';
 import { InterestedRolesSection, SkillsSection } from './skills-section';
 
-import { toastActionError } from '@/lib/action-toast';
 import { m } from '@/paraglide/messages';
 import {
   replaceInterestedRoles,
@@ -33,11 +32,6 @@ vi.mock('@/server/account', () => ({
   replaceSkills: vi.fn(),
   replaceInterestedRoles: vi.fn(),
   replaceLanguages: vi.fn(),
-}));
-
-vi.mock('@/lib/action-toast', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/action-toast')>()),
-  toastActionError: vi.fn(),
 }));
 
 afterEach(() => {
@@ -66,25 +60,41 @@ async function mountWithPendingRefresh(node: ReactElement) {
   return { invalidate, finishRefresh };
 }
 
-it('keeps the committed skill list while refresh is pending and uses it for the next removal', async () => {
+it('keeps the committed skill list while refresh is pending and uses it for the next edit', async () => {
   vi.mocked(replaceSkills).mockResolvedValue({ ok: true });
   const { invalidate, finishRefresh } = await mountWithPendingRefresh(
     <SkillsSection skills={['Alpha', 'Beta']} />,
   );
+  const edit = screen.getByRole('button', {
+    name: m.skillsSection_editLabel(),
+  });
+  fireEvent.click(edit);
   fireEvent.click(
-    screen.getByRole('button', {
+    await screen.findByRole('button', {
       name: m.skillsSection_removeSkillAriaLabel({ skill: 'Alpha' }),
     }),
   );
+  fireEvent.click(
+    screen.getByRole('button', { name: m.skillsSection_saveLabel() }),
+  );
   await waitFor(() => expect(invalidate).toHaveBeenCalledOnce());
-  expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
-  const removeBeta = screen.getByRole('button', {
-    name: m.skillsSection_removeSkillAriaLabel({ skill: 'Beta' }),
+  expect(replaceSkills).toHaveBeenCalledExactlyOnceWith({
+    data: { skills: ['Beta'] },
   });
-  expect(removeBeta).toHaveAttribute('aria-disabled', 'true');
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
+  expect(edit).toBeDisabled();
   await act(async () => finishRefresh());
-  expect(removeBeta).not.toHaveAttribute('aria-disabled', 'true');
-  fireEvent.click(removeBeta);
+  expect(edit).toBeEnabled();
+  fireEvent.click(edit);
+  fireEvent.click(
+    await screen.findByRole('button', {
+      name: m.skillsSection_removeSkillAriaLabel({ skill: 'Beta' }),
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole('button', { name: m.skillsSection_saveLabel() }),
+  );
   await waitFor(() =>
     expect(replaceSkills).toHaveBeenLastCalledWith({ data: { skills: [] } }),
   );
@@ -133,80 +143,116 @@ function rolesInput() {
   });
 }
 
-async function mountRoles(roles: string[]) {
+function saveButton() {
+  return screen.getByRole('button', { name: m.skillsSection_saveLabel() });
+}
+
+/** Mounts the roles card and opens its dialog. */
+async function openRoles(roles: string[]) {
   const { invalidate } = await mountWithPendingRefresh(
     <InterestedRolesSection roles={roles} />,
   );
   invalidate.mockResolvedValue();
+  fireEvent.click(
+    screen.getByRole('button', {
+      name:
+        roles.length > 0
+          ? m.skillsSection_editLabel()
+          : m.interestedRolesSection_addLabel(),
+    }),
+  );
+  await screen.findByRole('dialog');
 }
 
-it('adds what is typed as a chip on Enter or a comma, and clears the input', async () => {
-  vi.mocked(replaceInterestedRoles).mockResolvedValue({ ok: true });
-  await mountRoles(['Pilot']);
-  fireEvent.change(rolesInput(), { target: { value: 'Charter Pilot' } });
-  fireEvent.keyDown(rolesInput(), { key: 'Enter' });
-  await waitFor(() =>
-    expect(replaceInterestedRoles).toHaveBeenLastCalledWith({
-      data: { roles: ['Pilot', 'Charter Pilot'] },
+it('shows read-only chips on the card and an Add button when empty', async () => {
+  await mountWithPendingRefresh(<InterestedRolesSection roles={['Pilot']} />);
+  expect(screen.getByText('Pilot')).toBeInTheDocument();
+  expect(
+    screen.queryByRole('button', {
+      name: m.interestedRolesSection_removeRoleAriaLabel({ role: 'Pilot' }),
     }),
+  ).toBeNull();
+  expect(screen.queryByRole('combobox')).toBeNull();
+  cleanup();
+  await openRoles([]);
+  expect(screen.getByRole('dialog')).toHaveTextContent(
+    m.interestedRolesSection_heading(),
   );
-  await waitFor(() => expect(rolesInput()).toHaveValue(''));
-  expect(screen.getByText('Charter Pilot')).toBeInTheDocument();
-
-  fireEvent.change(rolesInput(), { target: { value: 'Flight Instructor' } });
-  fireEvent.keyDown(rolesInput(), { key: ',' });
-  await waitFor(() =>
-    expect(replaceInterestedRoles).toHaveBeenLastCalledWith({
-      data: { roles: ['Pilot', 'Charter Pilot', 'Flight Instructor'] },
-    }),
-  );
+  await waitFor(() => expect(rolesInput()).toHaveFocus());
 });
 
-it('adds each entry of a comma-separated paste with one save, skipping blanks and repeats', async () => {
+it('adds chips on Enter, a comma or a paste, skipping blanks and repeats, then saves once', async () => {
   vi.mocked(replaceInterestedRoles).mockResolvedValue({ ok: true });
-  await mountRoles(['Pilot']);
+  await openRoles(['Pilot']);
+  fireEvent.change(rolesInput(), { target: { value: 'Charter Pilot' } });
+  fireEvent.keyDown(rolesInput(), { key: 'Enter' });
+  expect(rolesInput()).toHaveValue('');
+  fireEvent.change(rolesInput(), { target: { value: 'PILOT' } });
+  fireEvent.keyDown(rolesInput(), { key: ',' });
   fireEvent.paste(rolesInput(), {
     clipboardData: {
       getData: () =>
-        'pilot, Flight Instructor, , Charter Pilot, flight instructor',
+        'Flight Instructor, , charter pilot, Air Traffic Controller',
     },
   });
+  expect(replaceInterestedRoles).not.toHaveBeenCalled();
+  fireEvent.click(saveButton());
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(replaceInterestedRoles).toHaveBeenCalledExactlyOnceWith({
+    data: {
+      roles: [
+        'Pilot',
+        'Charter Pilot',
+        'Flight Instructor',
+        'Air Traffic Controller',
+      ],
+    },
+  });
+});
+
+it('saves text typed but not yet entered', async () => {
+  vi.mocked(replaceInterestedRoles).mockResolvedValue({ ok: true });
+  await openRoles(['Pilot']);
+  fireEvent.change(rolesInput(), { target: { value: 'Charter Pilot' } });
+  fireEvent.click(saveButton());
   await waitFor(() =>
     expect(replaceInterestedRoles).toHaveBeenCalledExactlyOnceWith({
-      data: { roles: ['Pilot', 'Flight Instructor', 'Charter Pilot'] },
+      data: { roles: ['Pilot', 'Charter Pilot'] },
     }),
   );
 });
 
-it('ignores a blank entry or a case-insensitive repeat without saving', async () => {
-  await mountRoles(['Pilot']);
-  fireEvent.change(rolesInput(), { target: { value: '   ' } });
+it('discards the dialog edits on Cancel', async () => {
+  await openRoles(['Pilot']);
+  fireEvent.change(rolesInput(), { target: { value: 'Charter Pilot' } });
   fireEvent.keyDown(rolesInput(), { key: 'Enter' });
-  fireEvent.change(rolesInput(), { target: { value: 'PILOT' } });
-  fireEvent.keyDown(rolesInput(), { key: 'Enter' });
-  await waitFor(() => expect(rolesInput()).toHaveValue(''));
+  fireEvent.click(
+    screen.getByRole('button', { name: m.skillsSection_cancelLabel() }),
+  );
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   expect(replaceInterestedRoles).not.toHaveBeenCalled();
-  expect(screen.getAllByText('Pilot')).toHaveLength(1);
+  expect(screen.queryByText('Charter Pilot')).toBeNull();
+  fireEvent.click(
+    screen.getByRole('button', { name: m.skillsSection_editLabel() }),
+  );
+  await screen.findByRole('dialog');
+  expect(screen.queryByText('Charter Pilot')).toBeNull();
 });
 
-it('shows the refusal and keeps the typed text when a save fails', async () => {
+it('shows a refusal in the dialog and keeps it open with the edits', async () => {
   vi.mocked(replaceInterestedRoles).mockResolvedValue({
     ok: false,
     code: 'validation_bad_request',
-    message: 'interestedRoles: at most 50 roles',
+    message: 'Request validation failed',
   });
-  await mountRoles(['Pilot']);
+  await openRoles(['Pilot']);
   fireEvent.change(rolesInput(), { target: { value: 'Charter Pilot' } });
   fireEvent.keyDown(rolesInput(), { key: 'Enter' });
-  await waitFor(() =>
-    expect(toastActionError).toHaveBeenCalledWith(
-      m.boardError_validationText(),
-    ),
-  );
-  expect(rolesInput()).toHaveValue('Charter Pilot');
+  fireEvent.click(saveButton());
   expect(
-    screen.queryByText('Charter Pilot', {
-      selector: '[data-slot="combobox-chip"]',
-    }),
-  ).toBeNull();
+    await screen.findByText(m.boardError_validationText()),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('dialog')).toHaveTextContent('Charter Pilot');
+  expect(rolesInput()).toHaveAttribute('aria-invalid', 'true');
+  expect(saveButton()).toBeEnabled();
 });
