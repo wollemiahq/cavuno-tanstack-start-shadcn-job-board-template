@@ -198,6 +198,7 @@ export interface HeaderSearchProps {
   talentPlaceholder: string;
   blogPlaceholder: string;
   productsPlaceholder: string;
+  helpPlaceholder: string;
 }
 
 function HeaderSearch(props: HeaderSearchProps) {
@@ -501,6 +502,7 @@ export default function Header({
           talentPlaceholder={m.talentDirectory_searchPlaceholder()}
           blogPlaceholder={m.blogSearchBar_placeholderText()}
           productsPlaceholder={m.productSearchBar_placeholderText()}
+          helpPlaceholder={m.help_searchPlaceholder()}
         />
       ) : null}
     </div>

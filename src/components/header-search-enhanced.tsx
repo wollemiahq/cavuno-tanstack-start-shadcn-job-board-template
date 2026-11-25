@@ -95,6 +95,7 @@ export function HeaderSearchEnhanced({
   talentPlaceholder,
   blogPlaceholder,
   productsPlaceholder,
+  helpPlaceholder,
 }: HeaderSearchProps) {
   // Field state lives in Header (`fields`), NOT here: the same search form
   // renders twice while the mobile nav sheet is open (page header + sheet
@@ -120,6 +121,7 @@ export function HeaderSearchEnhanced({
     talent: talentPlaceholder,
     blog: blogPlaceholder,
     products: productsPlaceholder,
+    help: helpPlaceholder,
   } satisfies Record<HeaderSearchScope, string>;
 
   return (
@@ -242,7 +244,7 @@ export function HeaderSearchEnhanced({
                 </InputGroupAddon>
               ) : null}
             </InputGroup>
-            {/* Talent pairs the keyword with a place; products search by keyword alone. */}
+            {/* Talent pairs the keyword with a place; products and help search by keyword alone. */}
             {search.scope === 'talent' ? (
               <Suspense fallback={<HeaderSearchFieldsFallback fields={1} />}>
                 <LazyLocationCombobox

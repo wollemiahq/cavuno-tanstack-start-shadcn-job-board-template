@@ -28,6 +28,7 @@ const labels = {
   jobSeekers: 'Job seekers label',
   memberships: 'Memberships label',
   tip: 'Tip label',
+  help: 'Help label',
   mcp: 'MCP label',
 };
 

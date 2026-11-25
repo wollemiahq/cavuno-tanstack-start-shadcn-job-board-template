@@ -1470,6 +1470,7 @@
   "footer_locationsLabel": "Lokalizacje",
   "footer_talentLocationsLabel": "Kandydaci według lokalizacji",
   "footer_tipLabel": "Zostaw napiwek",
+  "footer_helpLabel": "Centrum pomocy",
   "footer_poweredByText": "Obsługiwane przez",
   "footer_privacyPolicyLabel": "Polityka prywatności",
   "footer_resourcesHeading": "Materiały",
@@ -1478,6 +1479,59 @@
   "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Regulamin",
   "footer_websiteLabel": "Strona internetowa",
+  "help_title": "Centrum pomocy",
+  "help_subtitleText": "Poradniki i odpowiedzi na najczęstsze pytania.",
+  "help_metaDescription": "Poradniki i odpowiedzi na najczęstsze pytania dotyczące {boardName}.",
+  "help_viewAllLabel": "Zobacz wszystkie artykuły",
+  "help_backLabel": "Wróć do centrum pomocy",
+  "help_notFoundDescription": "Ta strona jest niedostępna lub nie jest już opublikowana.",
+  "help_heroHeadline": "Centrum pomocy {boardName}",
+  "help_searchPlaceholder": "Szukaj odpowiedzi…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} artykuł",
+        "countPlural=few": "{countLabel} artykuły",
+        "countPlural=many": "{countLabel} artykułów",
+        "countPlural=*": "{countLabel} artykułu"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} wynik dla „{query}”",
+        "countPlural=few": "{countLabel} wyniki dla „{query}”",
+        "countPlural=many": "{countLabel} wyników dla „{query}”",
+        "countPlural=*": "{countLabel} wyniku dla „{query}”"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "Brak artykułów pasujących do „{query}”",
+  "help_searchEmptyDescription": "Spróbuj użyć innych słów lub przejrzyj kategorie.",
+  "help_searchResetLabel": "Pokaż wszystkie kategorie",
+  "help_contactTitle": "Nadal potrzebujesz pomocy?",
+  "help_contactDescription": "Napisz do nas, a odpowiemy.",
+  "helpCategory_metaDescription": "Artykuły pomocy w kategorii {category} – {boardName}.",
+  "helpCategory_articlesLabel": "Artykuły w kategorii {category}",
+  "helpCategory_notFoundTitle": "Nie znaleziono kategorii",
+  "helpArticle_notFoundTitle": "Nie znaleziono artykułu",
+  "helpArticle_updatedText": "Zaktualizowano {date}",
+  "helpArticle_moreInCategoryTitle": "Więcej w kategorii {category}",
+  "helpArticle_relatedTitle": "Powiązane artykuły",
   "home_blogDescription": "Poradniki i wiedza o rekrutacji od naszego zespołu.",
   "home_blogHeading": "Z bloga",
   "home_candidateCtaButton": "Utwórz profil kandydata",

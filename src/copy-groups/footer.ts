@@ -29,6 +29,7 @@ export function footerCopy() {
       chrome.forCandidatesHeading ?? m.footer_forCandidatesHeading(),
     forCompaniesHeading:
       chrome.forCompaniesHeading ?? m.footer_forCompaniesHeading(),
+    helpLabel: m.footer_helpLabel(),
     impressumLabel: chrome.impressumLabel ?? m.footer_impressumLabel(),
     locationsLabel: chrome.locationsLabel ?? m.footer_locationsLabel(),
     poweredByText: chrome.poweredByText ?? m.footer_poweredByText(),
