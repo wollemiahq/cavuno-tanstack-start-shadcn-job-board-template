@@ -248,4 +248,18 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
       screen.getByRole('link', { name: empty.action.label }),
     ).toHaveAttribute('href', '/blog');
   });
+
+  it('puts the newsletter sign-up in the top section, with the title', async () => {
+    renderArchive(
+      <BlogArchivePage
+        title="Blog"
+        posts={[post]}
+        empty={empty}
+        newsletter={<section aria-label="Newsletter">Sign up</section>}
+      />,
+    );
+
+    const signup = await screen.findByRole('region', { name: 'Newsletter' });
+    expect(signup.closest('[data-slot="page-header"]')).not.toBeNull();
+  });
 });

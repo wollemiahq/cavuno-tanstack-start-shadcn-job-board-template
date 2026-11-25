@@ -3595,5 +3595,14 @@
   "settingsAssistants_disconnectLabel": "Ontkoppelen",
   "settingsAssistants_disconnectAriaLabel": "{name} ontkoppelen",
   "settingsAssistants_disconnectedText": "{name} is ontkoppeld.",
-  "settingsAssistants_scopesLabel": "Toegestane toegang"
+  "settingsAssistants_scopesLabel": "Toegestane toegang",
+  "newsletter_title": "Abonneer je op onze nieuwsbrief",
+  "newsletter_consentText": "{boardName} mailt je nieuwe artikelen en nieuws. Je kunt je altijd afmelden.",
+  "newsletter_emailLabel": "E-mailadres",
+  "newsletter_emailPlaceholder": "je@example.com",
+  "newsletter_submitLabel": "Abonneren",
+  "newsletter_subscribingLabel": "Aanmelden…",
+  "newsletter_confirmTitle": "Controleer je inbox",
+  "newsletter_confirmText": "We hebben een link naar {email} gestuurd om je aanmelding te bevestigen.",
+  "newsletter_error": "Er is iets misgegaan. Probeer het opnieuw."
 }

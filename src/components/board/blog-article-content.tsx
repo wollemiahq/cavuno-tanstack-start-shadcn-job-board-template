@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
@@ -19,6 +21,7 @@ import { Prose } from '@/components/prose';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
   EmptyContent,
@@ -52,6 +55,11 @@ export interface BlogArticleContentProps {
   adjacent?: PublicBlogAdjacentPosts;
   related?: PublicBlogPostSummary[];
   ads?: BoardAdsConfig;
+  /**
+   * Optional sign-up form. It sits in a sticky sidebar card on desktop and
+   * with the stacked byline after the intro on phones.
+   */
+  newsletter?: ReactNode;
 }
 
 function shareLinks(permalink: string, title: string) {
@@ -176,6 +184,21 @@ function PostMeta({
   );
 }
 
+/** The card surface; the form inside brings its own heading. */
+function NewsletterCard({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card size="sm" className={className}>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
 /** Complete reusable article presentation for the canonical post route. */
 export function BlogArticleContent({
   breadcrumb: _breadcrumb,
@@ -186,6 +209,7 @@ export function BlogArticleContent({
   adjacent = { object: 'blog_adjacent_posts', previous: null, next: null },
   related = [],
   ads,
+  newsletter,
 }: BlogArticleContentProps) {
   const headings = extractToc(post.html);
   const bodyHtml = withHeadingAnchors(post.html);
@@ -222,6 +246,9 @@ export function BlogArticleContent({
             links={links}
             className="border-border border-t pt-6 lg:hidden"
           />
+          {newsletter ? (
+            <NewsletterCard className="lg:hidden">{newsletter}</NewsletterCard>
+          ) : null}
 
           {post.coverUrl ? (
             <figure className="flex flex-col gap-2">
@@ -340,7 +367,7 @@ export function BlogArticleContent({
               ) : null}
             </div>
 
-            <aside className="hidden space-y-6 lg:col-start-2 lg:row-start-1 lg:block lg:self-start xl:col-start-3">
+            <aside className="hidden space-y-6 lg:col-start-2 lg:row-start-1 lg:block xl:col-start-3">
               <PostMeta post={post} language={language} links={links} />
               <BoardAdSlot
                 placement="blog:post.sidebar"
@@ -348,6 +375,11 @@ export function BlogArticleContent({
                 layout="rectangle"
                 media="(min-width: 1024px)"
               />
+              {newsletter ? (
+                <NewsletterCard className="sticky top-24">
+                  {newsletter}
+                </NewsletterCard>
+              ) : null}
             </aside>
           </div>
 

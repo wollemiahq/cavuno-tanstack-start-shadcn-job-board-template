@@ -1,17 +1,21 @@
 import {
   createFileRoute,
+  getRouteApi,
   useLocation,
   useNavigate,
   useRouter,
 } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
+import { subscribeNewsletter } from '../server/newsletter';
 import { getBoardContext } from '../server/queries';
 import { createBlogIndexLoader, type BlogSearch } from './-blog-index-loader';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogTagChips } from '@/components/board/blog-tag-chips';
 import { CursorPagination } from '@/components/board/cursor-pagination';
+import { NewsletterSignupForm } from '@/components/board/newsletter-signup-form';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import {
@@ -42,8 +46,11 @@ export const Route = createFileRoute('/blog/')({
   component: BlogPage,
 });
 
+const rootApi = getRouteApi('__root__');
+
 function BlogPage() {
   const { page, tags, q } = Route.useLoaderData();
+  const { board } = rootApi.useLoaderData();
   const search = Route.useSearch();
   const location = useLocation();
   const navigate = useNavigate({ from: '/blog/' });
@@ -65,6 +72,15 @@ function BlogPage() {
             ? { label: m.blogIndex_browseAllLabel(), href: '/blog' }
             : undefined,
         }}
+        newsletter={
+          <NewsletterSignupForm
+            boardName={board.name}
+            source="blog-index"
+            locale={getLocale()}
+            align="start"
+            onSubscribe={(input) => subscribeNewsletter({ data: input })}
+          />
+        }
         pagination={
           <CursorPagination
             hasPrevious={Boolean(search.cursor) && !page.restarted}

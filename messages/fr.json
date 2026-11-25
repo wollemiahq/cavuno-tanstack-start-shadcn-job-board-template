@@ -3595,5 +3595,14 @@
   "settingsAssistants_disconnectLabel": "Déconnecter",
   "settingsAssistants_disconnectAriaLabel": "Déconnecter {name}",
   "settingsAssistants_disconnectedText": "{name} est déconnecté.",
-  "settingsAssistants_scopesLabel": "Accès autorisé"
+  "settingsAssistants_scopesLabel": "Accès autorisé",
+  "newsletter_title": "Abonnez-vous à notre newsletter",
+  "newsletter_consentText": "{boardName} vous enverra ses nouveaux articles et actualités par e-mail. Désabonnement à tout moment.",
+  "newsletter_emailLabel": "Adresse e-mail",
+  "newsletter_emailPlaceholder": "vous@exemple.fr",
+  "newsletter_submitLabel": "S’abonner",
+  "newsletter_subscribingLabel": "Abonnement en cours…",
+  "newsletter_confirmTitle": "Vérifiez votre boîte de réception",
+  "newsletter_confirmText": "Nous avons envoyé un lien à {email} pour confirmer votre abonnement.",
+  "newsletter_error": "Une erreur est survenue. Veuillez réessayer."
 }
