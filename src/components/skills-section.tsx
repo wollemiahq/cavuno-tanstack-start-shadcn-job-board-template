@@ -1,18 +1,13 @@
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ClipboardEvent,
-  type KeyboardEvent,
-} from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { useRouter } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { replaceInterestedRoles, replaceSkills } from '../server/account';
 
+import type { TagListDialogCopy } from './tag-list-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,33 +18,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-} from '@/components/ui/combobox';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { FieldError } from '@/components/ui/field';
-import { Spinner } from '@/components/ui/spinner';
 import { reconcileCommittedAction } from '@/lib/action-toast';
 import { boardErrorMessage } from '@/lib/board-error-message';
 
 type SaveResult = { ok: true } | { ok: false; code: string; message: string };
 
-type TagListCopy = {
-  heading: string;
+type TagListCopy = TagListDialogCopy & {
   description: string;
   addLabel: string;
-  placeholder: string;
-  removeAriaLabel: (item: string) => string;
 };
+
+// The editor (Dialog + combobox chips) loads on first open, so the profile
+// page does not carry it in its first load.
+const LazyTagListDialog = lazy(() =>
+  import('./tag-list-dialog').then(({ TagListDialog }) => ({
+    default: TagListDialog,
+  })),
+);
 
 /**
  * Skills — read-only chips, edited in a dialog and saved as a whole-set
@@ -96,23 +81,6 @@ export function InterestedRolesSection({ roles }: { roles: string[] }) {
   );
 }
 
-/**
- * The entries in `text` (split on commas and new lines, trimmed) that are not
- * blank and not already in `items` or earlier in `text`, ignoring case.
- */
-export function newTagEntries(items: string[], text: string): string[] {
-  const seen = new Set(items.map((item) => item.toLowerCase()));
-  const added: string[] = [];
-  for (const part of text.split(/[,\n]/)) {
-    const entry = part.trim();
-    const key = entry.toLowerCase();
-    if (!entry || seen.has(key)) continue;
-    seen.add(key);
-    added.push(entry);
-  }
-  return added;
-}
-
 function TagListSection({
   id,
   items: initialValues,
@@ -128,44 +96,11 @@ function TagListSection({
   const [items, setValues] = useState(initialValues);
   useEffect(() => setValues(initialValues), [initialValues]);
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<string[]>([]);
-  const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const startEditing = () => {
-    setDraft(items);
-    setInput('');
-    setError(null);
-    setOpen(true);
-  };
-
-  /** Adds every new entry in `text` to the draft and clears the input. */
-  const addToDraft = (text: string) => {
-    setDraft((current) => [...current, ...newTagEntries(current, text)]);
-    setInput('');
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' && event.key !== ',') return;
-    event.preventDefault();
-    addToDraft(input);
-  };
-
-  const onPaste = (event: ClipboardEvent<HTMLInputElement>) => {
-    const pasted = event.clipboardData.getData('text');
-    if (!/[,\n]/.test(pasted)) return;
-    event.preventDefault();
-    addToDraft(input + pasted);
-  };
-
-  const save = async () => {
+  const save = async (next: string[]) => {
     if (pending) return;
-    // Text typed but not yet entered is saved too.
-    const next = [...draft, ...newTagEntries(draft, input)];
-    setDraft(next);
-    setInput('');
     setError(null);
     setPending(true);
     try {
@@ -196,7 +131,10 @@ function TagListSection({
             variant="outline"
             size="sm"
             disabled={pending}
-            onClick={startEditing}
+            onClick={() => {
+              setError(null);
+              setOpen(true);
+            }}
           >
             {items.length > 0 ? m.skillsSection_editLabel() : copy.addLabel}
           </Button>
@@ -213,80 +151,19 @@ function TagListSection({
           </ul>
         </CardContent>
       ) : null}
-
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          if (!next && !pending) setOpen(false);
-        }}
-      >
-        <DialogContent initialFocus={inputRef}>
-          <DialogHeader>
-            <DialogTitle>{copy.heading}</DialogTitle>
-          </DialogHeader>
-          <form
-            className="grid gap-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void save();
-            }}
-          >
-            <div className="grid gap-2">
-              <Combobox
-                multiple
-                items={[]}
-                value={draft}
-                onValueChange={setDraft}
-                inputValue={input}
-                onInputValueChange={setInput}
-                readOnly={pending}
-              >
-                <ComboboxChips>
-                  {draft.map((item) => (
-                    <ComboboxChip
-                      key={item}
-                      removeAriaLabel={copy.removeAriaLabel(item)}
-                    >
-                      {item}
-                    </ComboboxChip>
-                  ))}
-                  <ComboboxChipsInput
-                    ref={inputRef}
-                    id={`${id}-input`}
-                    aria-label={copy.heading}
-                    aria-invalid={error ? true : undefined}
-                    aria-describedby={error ? `${id}-error` : undefined}
-                    placeholder={copy.placeholder}
-                    onKeyDown={onKeyDown}
-                    onPaste={onPaste}
-                  />
-                </ComboboxChips>
-              </Combobox>
-              {error ? (
-                <FieldError id={`${id}-error`}>{error}</FieldError>
-              ) : null}
-            </div>
-            {/* Overlay editors right-align their footer, Cancel before the
-                primary — the Dialog/Sheet/AlertDialog convention. */}
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={pending}
-                onClick={() => setOpen(false)}
-              >
-                {m.skillsSection_cancelLabel()}
-              </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? <Spinner /> : null}
-                {pending
-                  ? m.skillsSection_savingLabel()
-                  : m.skillsSection_saveLabel()}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {open ? (
+        <Suspense fallback={null}>
+          <LazyTagListDialog
+            id={id}
+            items={items}
+            copy={copy}
+            pending={pending}
+            error={error}
+            onCancel={() => setOpen(false)}
+            onSave={(next) => void save(next)}
+          />
+        </Suspense>
+      ) : null}
     </Card>
   );
 }
