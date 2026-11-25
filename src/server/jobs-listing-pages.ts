@@ -62,7 +62,10 @@ import {
   customFieldOptionLabel,
 } from '@/board/custom-field-labels';
 import { catalogJobCount } from '@/board/job-catalog-count';
-import { toJobsLocationHierarchyCrumbs } from '@/board/jobs-location-hierarchy';
+import {
+  consolidatedPlaceName,
+  toJobsLocationHierarchyCrumbs,
+} from '@/board/jobs-location-hierarchy';
 import {
   isSearchRadiusViewNoindex,
   placeJobCount,
@@ -836,9 +839,18 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
         data.within,
         place.defaultRadiusKm,
       );
+      // A wider area that folds into this page by the consolidation map is
+      // named after the place ("Amsterdam, Noord-Holland").
+      const headingPlace = {
+        displayName: arrangement
+          ? place.displayName
+          : consolidatedPlaceName(placeTree?.data ?? [], place, {
+              consolidation,
+            }),
+      };
       const { heading, countedHeading } = locationListingCopy(
         data.locationSlug,
-        place,
+        headingPlace,
       );
       // Hosted parity: Home > Jobs > country > … > current place (terminal).
       // A work arrangement page ends on its own heading.
@@ -909,6 +921,7 @@ export const getJobsLocationPage = createServerFn({ method: 'GET' })
       return {
         kind: 'ok' as const,
         place: intro.resolution,
+        headingPlace,
         introHtml: intro.introHtml,
         list,
         seo,
@@ -1041,9 +1054,17 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
         data.within,
         place.defaultRadiusKm,
       );
+      const headingPlace = {
+        displayName: arrangement
+          ? place.displayName
+          : consolidatedPlaceName(placeTree?.data ?? [], place, {
+              term: { categorySlug: category.canonicalSlug },
+              consolidation,
+            }),
+      };
       const { heading, countedHeading } = locationCategoryListingCopy(
         data.locationSlug,
-        place,
+        headingPlace,
         category,
       );
       // Hosted parity: Home > Jobs > country > … > place (linked) > category,
@@ -1107,6 +1128,7 @@ export const getJobsLocationCategoryPage = createServerFn({ method: 'GET' })
       return {
         kind: 'ok' as const,
         place: withoutIntro(place),
+        headingPlace,
         category: withoutIntro(category),
         list,
         seo,
@@ -1235,9 +1257,17 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
         data.within,
         place.defaultRadiusKm,
       );
+      const headingPlace = {
+        displayName: arrangement
+          ? place.displayName
+          : consolidatedPlaceName(placeTree?.data ?? [], place, {
+              term: { skillSlug: skill.canonicalSlug },
+              consolidation,
+            }),
+      };
       const { heading, countedHeading } = locationSkillListingCopy(
         data.locationSlug,
-        place,
+        headingPlace,
         skill,
       );
       // Hosted parity: Home > Jobs > country > … > place (linked) > skill,
@@ -1301,6 +1331,7 @@ export const getJobsLocationSkillPage = createServerFn({ method: 'GET' })
       return {
         kind: 'ok' as const,
         place: withoutIntro(place),
+        headingPlace,
         skill,
         list,
         seo,

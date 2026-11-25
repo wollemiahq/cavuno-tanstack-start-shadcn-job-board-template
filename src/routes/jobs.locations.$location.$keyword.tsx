@@ -48,6 +48,7 @@ export const Route = createFileRoute('/jobs/locations/$location/$keyword')({
 function LocationCategoryPage() {
   const {
     place,
+    headingPlace,
     category,
     list,
     relatedSearches,
@@ -60,7 +61,7 @@ function LocationCategoryPage() {
   const navigate = Route.useNavigate();
   const { heading, countedHeading } = locationCategoryListingCopy(
     location,
-    place,
+    headingPlace,
     category,
   );
   return (

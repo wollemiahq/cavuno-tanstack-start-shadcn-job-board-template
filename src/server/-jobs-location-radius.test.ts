@@ -111,10 +111,14 @@ const emptyList = {
 
 const page = { locationSlug: 'fixture-place', offset: 0, limit: 24 };
 
-type HeadMeta = { name?: string; content?: string };
+type HeadMeta = { name?: string; content?: string; title?: string };
 
 function robots(head: { meta: HeadMeta[] }) {
   return head.meta.find((entry) => entry.name === 'robots');
+}
+
+function documentTitle(head: { meta: HeadMeta[] }) {
+  return head.meta.find((entry) => entry.title !== undefined)?.title;
 }
 
 beforeEach(() => {
@@ -710,5 +714,41 @@ describe('canonical from the consolidation map', () => {
     expect(skill.head.links).toEqual(
       href('/jobs/locations/fixture-city/skills/python'),
     );
+  });
+
+  it('names a wider area that folds into the page after the place', async () => {
+    mocks.context.mockResolvedValue({
+      name: 'Fixture',
+      language: 'en',
+      jobLandingConsolidation: {
+        places: { 'fixture-region': 'fixture-place' },
+      },
+    });
+    mocks.tree.mockResolvedValue({
+      data: [
+        {
+          id: 'region',
+          parentId: null,
+          slug: 'fixture-region',
+          canonicalSlug: 'fixture-region',
+          displayName: 'Fixture Region',
+          jobCount: 3,
+        },
+        {
+          id: 'place',
+          parentId: 'region',
+          slug: 'fixture-place',
+          canonicalSlug: 'fixture-place',
+          displayName: 'Fixture Place',
+          jobCount: 3,
+        },
+      ],
+    });
+    mocks.resolve.mockResolvedValue(resolution('city', 'NL'));
+
+    const bare = await getJobsLocationPage({ data: page });
+    if (bare.kind !== 'ok') throw new Error('expected a listing');
+    expect(bare.headingPlace.displayName).toBe('Fixture Place, Fixture Region');
+    expect(documentTitle(bare.head)).toContain('Fixture Place, Fixture Region');
   });
 });
