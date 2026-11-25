@@ -1,67 +1,60 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from 'react';
 
 import { useRouter } from '@tanstack/react-router';
-import { Sparkles, Target, X, type LucideIcon } from 'lucide-react';
+import { Sparkles, Target, type LucideIcon } from 'lucide-react';
 
 import { m } from '../paraglide/messages';
 import { replaceInterestedRoles, replaceSkills } from '../server/account';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+} from '@/components/ui/combobox';
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
 } from '@/components/ui/empty';
-import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { reconcileCommittedAction, toastActionError } from '@/lib/action-toast';
+import { boardErrorMessage } from '@/lib/board-error-message';
+
+type SaveResult = { ok: true } | { ok: false; code: string; message: string };
 
 type TagListCopy = {
   emptyIcon: LucideIcon;
   heading: string;
   emptyText: string;
-  addLabel: string;
-  fieldLabel: string;
+  placeholder: string;
   removeAriaLabel: (item: string) => string;
 };
 
 /**
- * Skills — badges over the whole-set replace
- * (`board.me.profile.updateSkills`). Adding happens in an "Add skill" dialog
- * (the LinkedIn flow); add and remove each persist immediately with one PUT.
+ * Skills — chips over the whole-set replace
+ * (`board.me.profile.updateSkills`). Typing and pressing Enter or a comma
+ * adds; each add and remove persists immediately with one PUT.
  */
 export function SkillsSection({ skills }: { skills: string[] }) {
   return (
     <TagListSection
       id="skills"
       items={skills}
-      persist={async (next) => {
-        await replaceSkills({ data: { skills: next } });
-      }}
+      persist={(next) => replaceSkills({ data: { skills: next } })}
       copy={{
         emptyIcon: Sparkles,
         heading: m.skillsSection_heading(),
         emptyText: m.skillsSection_emptyText(),
-        addLabel: m.skillsSection_addLabel(),
-        fieldLabel: m.skillsSection_addSkillLabel(),
+        placeholder: m.skillsSection_inputPlaceholder(),
         removeAriaLabel: (skill) =>
           m.skillsSection_removeSkillAriaLabel({ skill }),
       }}
@@ -70,7 +63,7 @@ export function SkillsSection({ skills }: { skills: string[] }) {
 }
 
 /**
- * Interested roles — the same badge list over the profile's `interestedRoles`
+ * Interested roles — the same chip field over the profile's `interestedRoles`
  * (`board.me.profile.update`, which replaces the list). Job matches rank on
  * skills and interested roles.
  */
@@ -79,20 +72,34 @@ export function InterestedRolesSection({ roles }: { roles: string[] }) {
     <TagListSection
       id="interested-roles"
       items={roles}
-      persist={async (next) => {
-        await replaceInterestedRoles({ data: { roles: next } });
-      }}
+      persist={(next) => replaceInterestedRoles({ data: { roles: next } })}
       copy={{
         emptyIcon: Target,
         heading: m.interestedRolesSection_heading(),
         emptyText: m.interestedRolesSection_emptyText(),
-        addLabel: m.interestedRolesSection_addLabel(),
-        fieldLabel: m.interestedRolesSection_addRoleLabel(),
+        placeholder: m.interestedRolesSection_inputPlaceholder(),
         removeAriaLabel: (role) =>
           m.interestedRolesSection_removeRoleAriaLabel({ role }),
       }}
     />
   );
+}
+
+/**
+ * The entries in `text` (split on commas and new lines, trimmed) that are not
+ * blank and not already in `items` or earlier in `text`, ignoring case.
+ */
+export function newTagEntries(items: string[], text: string): string[] {
+  const seen = new Set(items.map((item) => item.toLowerCase()));
+  const added: string[] = [];
+  for (const part of text.split(/[,\n]/)) {
+    const entry = part.trim();
+    const key = entry.toLowerCase();
+    if (!entry || seen.has(key)) continue;
+    seen.add(key);
+    added.push(entry);
+  }
+  return added;
 }
 
 function TagListSection({
@@ -103,13 +110,12 @@ function TagListSection({
 }: {
   id: string;
   items: string[];
-  persist: (next: string[]) => Promise<void>;
+  persist: (next: string[]) => Promise<SaveResult>;
   copy: TagListCopy;
 }) {
   const router = useRouter();
   const [items, setValues] = useState(initialValues);
   useEffect(() => setValues(initialValues), [initialValues]);
-  const [adding, setAdding] = useState(false);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
 
@@ -117,7 +123,11 @@ function TagListSection({
     if (pending) return false;
     setPending(true);
     try {
-      await persist(next);
+      const result = await persist(next);
+      if (!result.ok) {
+        void toastActionError(boardErrorMessage(result));
+        return false;
+      }
       setValues(next);
       await reconcileCommittedAction(() => router.invalidate());
       return true;
@@ -129,34 +139,30 @@ function TagListSection({
     }
   };
 
-  const submitAdd = async () => {
+  /** Adds every new entry in `text`; the input clears once they are saved. */
+  const add = async (text: string) => {
     if (pending) return;
-    const name = input.trim();
-    if (!name) return;
-    if (items.includes(name)) {
+    const added = newTagEntries(items, text);
+    if (added.length === 0) {
       setInput('');
-      setAdding(false);
       return;
     }
-    if (await save([...items, name])) {
-      setInput('');
-      setAdding(false);
-    }
+    setInput(text);
+    if (await save([...items, ...added])) setInput('');
   };
 
-  const addButton = (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={pending}
-      onClick={() => {
-        setInput('');
-        setAdding(true);
-      }}
-    >
-      {copy.addLabel}
-    </Button>
-  );
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' && event.key !== ',') return;
+    event.preventDefault();
+    void add(input);
+  };
+
+  const onPaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const pasted = event.clipboardData.getData('text');
+    if (!/[,\n]/.test(pasted)) return;
+    event.preventDefault();
+    void add(input + pasted);
+  };
 
   return (
     <Card data-test={`${id}-section`} id={id}>
@@ -164,99 +170,46 @@ function TagListSection({
         <CardTitle>
           <h2>{copy.heading}</h2>
         </CardTitle>
-        {items.length > 0 ? <CardAction>{addButton}</CardAction> : null}
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length === 0 ? (
-          <Empty className="border-0 p-8">
+          <Empty className="border-0 p-4">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <copy.emptyIcon aria-hidden="true" />
               </EmptyMedia>
               <EmptyDescription>{copy.emptyText}</EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>{addButton}</EmptyContent>
           </Empty>
-        ) : (
-          <ul className="flex flex-wrap gap-2">
+        ) : null}
+        <Combobox
+          multiple
+          items={[]}
+          value={items}
+          onValueChange={(next) => void save(next)}
+          inputValue={input}
+          onInputValueChange={setInput}
+          readOnly={pending}
+        >
+          <ComboboxChips>
             {items.map((item) => (
-              <Badge
+              <ComboboxChip
                 key={item}
-                variant="secondary"
-                render={<li />}
-                className="h-6 gap-0.5 pe-0.5"
+                removeAriaLabel={copy.removeAriaLabel(item)}
               >
                 {item}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={copy.removeAriaLabel(item)}
-                  className="text-muted-foreground hover:text-foreground size-5 rounded-full"
-                  disabled={pending}
-                  onClick={() => void save(items.filter((i) => i !== item))}
-                >
-                  <X className="size-3.5" />
-                </Button>
-              </Badge>
+              </ComboboxChip>
             ))}
-          </ul>
-        )}
-
-        <Dialog
-          open={adding}
-          onOpenChange={(open) => {
-            if (!open && !pending) setAdding(false);
-          }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{copy.addLabel}</DialogTitle>
-            </DialogHeader>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void submitAdd();
-              }}
-              className="space-y-4"
-            >
-              <Field className="gap-1.5">
-                <FieldLabel htmlFor={`${id}-name`}>
-                  {copy.fieldLabel}
-                </FieldLabel>
-                <Input
-                  id={`${id}-name`}
-                  disabled={pending}
-                  required
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                />
-              </Field>
-              {/* Overlay editors right-align their footer, Cancel before the
-                  primary — the Dialog/Sheet/AlertDialog convention. */}
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => setAdding(false)}
-                >
-                  {m.skillsSection_cancelLabel()}
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={pending || !input.trim()}
-                >
-                  {pending
-                    ? m.skillsSection_savingLabel()
-                    : m.skillsSection_saveLabel()}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+            <ComboboxChipsInput
+              id={`${id}-input`}
+              aria-label={copy.heading}
+              // Only while empty: after chips it would be clipped on a phone.
+              placeholder={items.length === 0 ? copy.placeholder : undefined}
+              onKeyDown={onKeyDown}
+              onPaste={onPaste}
+            />
+          </ComboboxChips>
+        </Combobox>
       </CardContent>
     </Card>
   );
