@@ -3602,7 +3602,7 @@
   "newsletter_emailPlaceholder": "name@beispiel.de",
   "newsletter_submitLabel": "Abonnieren",
   "newsletter_subscribingLabel": "Wird abonniert …",
-  "newsletter_submitted": "Prüfe deine E-Mails, um zu bestätigen.",
-  "newsletter_sendingPaused": "E-Mails von {boardName} können sich verzögern.",
+  "newsletter_confirmTitle": "Prüfe deinen Posteingang",
+  "newsletter_confirmText": "Wir haben einen Link an {email} geschickt, um dein Abo zu bestätigen.",
   "newsletter_error": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
 }

@@ -21,7 +21,7 @@ import { Prose } from '@/components/prose';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Empty,
   EmptyContent,
@@ -184,6 +184,7 @@ function PostMeta({
   );
 }
 
+/** The card surface; the form inside brings its own heading. */
 function NewsletterCard({
   className,
   children,
@@ -193,13 +194,6 @@ function NewsletterCard({
 }) {
   return (
     <Card size="sm" className={className}>
-      <CardHeader>
-        <CardTitle>
-          <h2 className="font-heading text-base font-semibold">
-            {m.newsletter_title()}
-          </h2>
-        </CardTitle>
-      </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
   );

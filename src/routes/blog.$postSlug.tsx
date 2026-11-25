@@ -90,6 +90,9 @@ function PostPage() {
             source="blog-article"
             locale={getLocale()}
             align="start"
+            heading={(text) => (
+              <h2 className="font-heading text-base font-semibold">{text}</h2>
+            )}
             onSubscribe={(input) => subscribeNewsletter({ data: input })}
           />
         }

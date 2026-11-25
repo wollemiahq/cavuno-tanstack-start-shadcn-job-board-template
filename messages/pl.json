@@ -3764,7 +3764,7 @@
   "newsletter_emailPlaceholder": "ty@przyklad.pl",
   "newsletter_submitLabel": "Zapisz się",
   "newsletter_subscribingLabel": "Zapisywanie…",
-  "newsletter_submitted": "Sprawdź e-mail, aby potwierdzić.",
-  "newsletter_sendingPaused": "E-maile od {boardName} mogą się opóźnić.",
+  "newsletter_confirmTitle": "Sprawdź skrzynkę odbiorczą",
+  "newsletter_confirmText": "Wysłaliśmy link na adres {email}, aby potwierdzić subskrypcję.",
   "newsletter_error": "Coś poszło nie tak. Spróbuj ponownie."
 }

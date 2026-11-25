@@ -32,10 +32,6 @@ function renderForm(
 const submit = () =>
   fireEvent.click(screen.getByRole('button', { name: copy.submitLabel }));
 
-async function confirmation() {
-  return (await screen.findByText(copy.submitted)).closest('[role="status"]');
-}
-
 describe('NewsletterSignupForm', () => {
   it('has no consent checkbox; the line under the field names the board and is sent as consentText', () => {
     const onSubscribe = vi.fn(() => new Promise<never>(() => {}));
@@ -76,31 +72,50 @@ describe('NewsletterSignupForm', () => {
     );
   });
 
-  it('replaces the form with the confirmation after sign-up', async () => {
-    renderForm(
-      vi.fn().mockResolvedValue({ status: 'submitted', sendingPaused: false }),
+  it('turns the whole block, heading included, into a confirmation naming the address', async () => {
+    render(
+      <NewsletterSignupForm
+        boardName={boardName}
+        source="footer"
+        locale="en"
+        heading={(text) => <h2>{text}</h2>}
+        onSubscribe={vi
+          .fn()
+          .mockResolvedValue({ status: 'submitted', sendingPaused: true })}
+      />,
     );
+    expect(screen.getByRole('heading', { name: copy.title })).toBeVisible();
+    fireEvent.change(screen.getByRole('textbox', { name: copy.emailLabel }), {
+      target: { value: 'reader@example.com' },
+    });
     submit();
 
-    const status = await confirmation();
-    expect(status).not.toBeNull();
-    expect(status).not.toHaveTextContent(copy.sendingPaused);
+    const heading = await screen.findByRole('heading', {
+      name: copy.confirmTitle,
+    });
+    const status = heading.closest('[role="status"]');
     expect(status).toHaveFocus();
+    expect(status).toHaveTextContent(copy.confirmText('reader@example.com'));
+    // Paused sending is the board's own state; visitors see the same thing.
+    expect(status!.children).toHaveLength(2);
+    expect(screen.queryByRole('heading', { name: copy.title })).toBeNull();
     expect(screen.queryByRole('textbox', { name: copy.emailLabel })).toBeNull();
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.queryByText(copy.consentText)).toBeNull();
   });
 
-  it('adds the delay note as its own line when the board has paused sending', async () => {
+  it('shows the same confirmation where the placement has no heading', async () => {
     renderForm(
-      vi.fn().mockResolvedValue({ status: 'submitted', sendingPaused: true }),
+      vi.fn().mockResolvedValue({ status: 'submitted', sendingPaused: false }),
     );
     submit();
 
-    const status = await confirmation();
-    expect(screen.getByText(copy.submitted)).toBeVisible();
-    expect(status).toContainElement(screen.getByText(copy.sendingPaused));
-    expect(screen.queryByRole('textbox', { name: copy.emailLabel })).toBeNull();
+    expect(
+      await screen.findByRole('heading', { name: copy.confirmTitle }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(copy.confirmText('reader@example.com')),
+    ).toBeVisible();
   });
 
   it('keeps the address and reports a failed request', async () => {

@@ -12,8 +12,8 @@ export function newsletterCopy(boardName: string) {
     emailPlaceholder: m.newsletter_emailPlaceholder(),
     submitLabel: m.newsletter_submitLabel(),
     subscribingLabel: m.newsletter_subscribingLabel(),
-    submitted: m.newsletter_submitted(),
-    sendingPaused: m.newsletter_sendingPaused({ boardName }),
+    confirmTitle: m.newsletter_confirmTitle(),
+    confirmText: (email: string) => m.newsletter_confirmText({ email }),
     error: m.newsletter_error(),
   };
 }

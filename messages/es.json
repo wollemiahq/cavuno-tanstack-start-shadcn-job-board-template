@@ -3602,7 +3602,7 @@
   "newsletter_emailPlaceholder": "tu@ejemplo.com",
   "newsletter_submitLabel": "Suscribirme",
   "newsletter_subscribingLabel": "Suscribiendo…",
-  "newsletter_submitted": "Revisa tu correo para confirmar.",
-  "newsletter_sendingPaused": "Los correos de {boardName} pueden llegar con retraso.",
+  "newsletter_confirmTitle": "Revisa tu bandeja de entrada",
+  "newsletter_confirmText": "Hemos enviado un enlace a {email} para confirmar tu suscripción.",
   "newsletter_error": "Se ha producido un error. Inténtalo de nuevo."
 }

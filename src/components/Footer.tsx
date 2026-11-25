@@ -468,15 +468,17 @@ export default function Footer({
                 {boardName}
               </Link>
               <p className="text-muted-foreground text-sm">{description}</p>
-              <div className="space-y-3 pt-2">
-                <h2 className="text-foreground text-sm font-semibold">
-                  {m.newsletter_title()}
-                </h2>
+              <div className="pt-2">
                 <NewsletterSignupForm
                   boardName={boardName}
                   source="footer"
                   locale={getLocale()}
                   align="start"
+                  heading={(text) => (
+                    <h2 className="text-foreground text-sm font-semibold">
+                      {text}
+                    </h2>
+                  )}
                   onSubscribe={(input) => subscribeNewsletter({ data: input })}
                 />
               </div>

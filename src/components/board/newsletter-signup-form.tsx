@@ -10,16 +10,19 @@
  * Each placement passes its own `source` (such as `blog-index`), which shows
  * as the person's Source in the board's dashboard. The form also sends the
  * browser's time zone, the page language and URL, and a hidden `website`
- * honeypot people leave empty. The surrounding heading and container belong
- * to the placement.
+ * honeypot people leave empty. The surrounding container belongs to the
+ * placement; it passes its heading as `heading`, so the confirmation can
+ * replace it.
  *
  * Wiring: `onSubscribe` forwards the input to `board.subscribe` (the
  * `subscribeNewsletter` server function) and resolves with `submitted` and
  * `sendingPaused`, or with `email_domain_undeliverable` and the API's
- * correction. After a sign-up the confirmation replaces the form; it reads
- * the same whatever the address's state.
+ * correction. After a sign-up the whole block, heading included, becomes the
+ * confirmation naming the address; it reads the same whatever the
+ * address's state. `sendingPaused` is the board's operational state and is
+ * not shown to visitors.
  */
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 import {
   EmailSuggestionHint,
@@ -42,13 +45,7 @@ import { newsletterCopy } from '@/copy-groups/newsletter';
 import { cn } from '@/lib/utils';
 import type { BoardSubscribeInput } from '@cavuno/board';
 
-type Status =
-  | 'idle'
-  | 'pending'
-  | 'submitted'
-  | 'paused'
-  | 'error'
-  | 'undeliverable';
+type Status = 'idle' | 'pending' | 'submitted' | 'error' | 'undeliverable';
 
 export type NewsletterSubscribeResult =
   | { status: 'submitted'; sendingPaused: boolean }
@@ -68,6 +65,7 @@ export function NewsletterSignupForm({
   locale,
   onSubscribe,
   align = 'center',
+  heading,
   className,
 }: {
   /** The board's name from `board.context()`; the consent line names it. */
@@ -81,6 +79,12 @@ export function NewsletterSignupForm({
   ) => Promise<NewsletterSubscribeResult>;
   /** `center` under a centred heading; `start` in a card or footer column. */
   align?: 'center' | 'start';
+  /**
+   * Renders the placement's heading for the given text: the form's title
+   * before a sign-up, "Check your inbox" after. Without it the form has no
+   * heading, and the confirmation uses a plain one.
+   */
+  heading?: (text: string) => ReactNode;
   className?: string;
 }) {
   const emailInputId = useId();
@@ -92,7 +96,7 @@ export function NewsletterSignupForm({
   const copy = newsletterCopy(boardName);
   const pending = status === 'pending';
   const emailInvalid = status === 'error' || status === 'undeliverable';
-  const done = status === 'submitted' || status === 'paused';
+  const done = status === 'submitted';
   const centered = align === 'center';
   // The submit button goes away with the form, so focus moves to the
   // confirmation that replaces it.
@@ -113,111 +117,124 @@ export function NewsletterSignupForm({
           className,
         )}
       >
-        <p className="text-foreground text-sm">{copy.submitted}</p>
-        {status === 'paused' ? (
-          <p className="text-muted-foreground text-sm">{copy.sendingPaused}</p>
-        ) : null}
+        {heading ? (
+          heading(copy.confirmTitle)
+        ) : (
+          <h2 className="text-foreground font-semibold">{copy.confirmTitle}</h2>
+        )}
+        <p className="text-muted-foreground text-sm break-words">
+          {copy.confirmText(email)}
+        </p>
       </div>
     );
   }
 
   return (
-    <form
-      className={cn('flex w-full max-w-md flex-col text-start', className)}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        setStatus('pending');
-        try {
-          const result = await onSubscribe({
-            email,
-            consent: true,
-            consentText: copy.consentText,
-            source,
-            website,
-            timeZone: browserTimeZone(),
-            locale,
-            pageUrl: window.location.href,
-          });
-          if (result.status === 'email_domain_undeliverable') {
-            emailSuggestion.refuse(email, result.suggestion);
-            setStatus('undeliverable');
-            return;
-          }
-          setStatus(result.sendingPaused ? 'paused' : 'submitted');
-        } catch {
-          setStatus('error');
-        }
-      }}
+    <div
+      className={cn(
+        'flex w-full max-w-md flex-col gap-3',
+        centered && 'items-center',
+        className,
+      )}
     >
-      {/* Honeypot: people never see or fill it; bots do. */}
-      <div aria-hidden="true" className="sr-only">
-        <input
-          type="text"
-          name="website"
-          tabIndex={-1}
-          autoComplete="off"
-          value={website}
-          onChange={(event) => setWebsite(event.target.value)}
-        />
-      </div>
-
-      <Field data-invalid={emailInvalid}>
-        <FieldLabel className="sr-only" htmlFor={emailInputId}>
-          {copy.emailLabel}
-        </FieldLabel>
-        <InputGroup className="h-11 rounded-full ps-2">
-          <InputGroupInput
-            id={emailInputId}
-            type="email"
-            name="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder={copy.emailPlaceholder}
-            required
-            aria-invalid={emailInvalid}
-            aria-describedby={consentId}
-            value={email}
-            disabled={pending}
-            onChange={(event) => {
-              setEmail(event.target.value);
-              emailSuggestion.clear();
-              if (!pending && status !== 'idle') setStatus('idle');
-            }}
-            onBlur={(event) => emailSuggestion.check(event.target.value)}
-          />
-          <InputGroupAddon align="inline-end" className="pe-1.5">
-            <InputGroupButton
-              type="submit"
-              variant="default"
-              size="sm"
-              className="h-8 rounded-full px-4"
-              disabled={pending}
-            >
-              {pending ? <Spinner data-icon="inline-start" /> : null}
-              {pending ? copy.subscribingLabel : copy.submitLabel}
-            </InputGroupButton>
-          </InputGroupAddon>
-        </InputGroup>
-        <EmailSuggestionHint
-          suggestion={emailSuggestion.suggestion}
-          refusedEmail={
-            status === 'undeliverable' ? emailSuggestion.refusedEmail : null
+      {heading?.(copy.title)}
+      <form
+        className="flex w-full flex-col text-start"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setStatus('pending');
+          try {
+            const result = await onSubscribe({
+              email,
+              consent: true,
+              consentText: copy.consentText,
+              source,
+              website,
+              timeZone: browserTimeZone(),
+              locale,
+              pageUrl: window.location.href,
+            });
+            if (result.status === 'email_domain_undeliverable') {
+              emailSuggestion.refuse(email, result.suggestion);
+              setStatus('undeliverable');
+              return;
+            }
+            setStatus('submitted');
+          } catch {
+            setStatus('error');
           }
-          disabled={pending}
-          onAccept={(suggested) => {
-            setEmail(suggested);
-            emailSuggestion.clear();
-            setStatus('idle');
-          }}
-        />
-        {status === 'error' ? <FieldError>{copy.error}</FieldError> : null}
-        <FieldDescription
-          id={consentId}
-          className={cn(centered && 'text-center')}
-        >
-          {copy.consentText}
-        </FieldDescription>
-      </Field>
-    </form>
+        }}
+      >
+        {/* Honeypot: people never see or fill it; bots do. */}
+        <div aria-hidden="true" className="sr-only">
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+          />
+        </div>
+
+        <Field data-invalid={emailInvalid}>
+          <FieldLabel className="sr-only" htmlFor={emailInputId}>
+            {copy.emailLabel}
+          </FieldLabel>
+          <InputGroup className="h-11 rounded-full ps-2">
+            <InputGroupInput
+              id={emailInputId}
+              type="email"
+              name="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder={copy.emailPlaceholder}
+              required
+              aria-invalid={emailInvalid}
+              aria-describedby={consentId}
+              value={email}
+              disabled={pending}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                emailSuggestion.clear();
+                if (!pending && status !== 'idle') setStatus('idle');
+              }}
+              onBlur={(event) => emailSuggestion.check(event.target.value)}
+            />
+            <InputGroupAddon align="inline-end" className="pe-1.5">
+              <InputGroupButton
+                type="submit"
+                variant="default"
+                size="sm"
+                className="h-8 rounded-full px-4"
+                disabled={pending}
+              >
+                {pending ? <Spinner data-icon="inline-start" /> : null}
+                {pending ? copy.subscribingLabel : copy.submitLabel}
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+          <EmailSuggestionHint
+            suggestion={emailSuggestion.suggestion}
+            refusedEmail={
+              status === 'undeliverable' ? emailSuggestion.refusedEmail : null
+            }
+            disabled={pending}
+            onAccept={(suggested) => {
+              setEmail(suggested);
+              emailSuggestion.clear();
+              setStatus('idle');
+            }}
+          />
+          {status === 'error' ? <FieldError>{copy.error}</FieldError> : null}
+          <FieldDescription
+            id={consentId}
+            className={cn(centered && 'text-center')}
+          >
+            {copy.consentText}
+          </FieldDescription>
+        </Field>
+      </form>
+    </div>
   );
 }
