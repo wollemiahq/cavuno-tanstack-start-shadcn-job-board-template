@@ -53,6 +53,7 @@ describe('location jobs route — combined keyword and place filtering', () => {
           placeType: 'city',
         },
       },
+      headingPlace: { displayName: 'Sydney' },
       introHtml: undefined,
       list: {
         object: 'list',

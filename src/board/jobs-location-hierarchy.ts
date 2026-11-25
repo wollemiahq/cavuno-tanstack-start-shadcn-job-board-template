@@ -128,24 +128,7 @@ export function toPlaceHierarchyCrumbs(
   const linkCurrent = options.linkCurrent ?? false;
   const ancestorPath = options.ancestorPath ?? options.placePath;
   const leafHref = () => options.placePath(current.canonicalSlug);
-  const byId = new Map(places.map((node) => [node.id, node]));
-  // A resolution's source or canonical slug can match either directory slug.
-  const bySlug = new Map(
-    places.flatMap((node) =>
-      [node.slug, node.canonicalSlug].flatMap((slug) =>
-        slug ? [[slug, node] as const] : [],
-      ),
-    ),
-  );
-  let node =
-    bySlug.get(current.sourceSlug) ?? bySlug.get(current.canonicalSlug);
-  const chain: (typeof places)[number][] = [];
-  const seen = new Set<string>();
-  while (node && !seen.has(node.id)) {
-    seen.add(node.id);
-    chain.unshift(node);
-    node = node.parentId ? byId.get(node.parentId) : undefined;
-  }
+  const chain = placeChain(places, current);
   if (chain.length === 0) {
     return [
       linkCurrent
@@ -167,4 +150,81 @@ export function toPlaceHierarchyCrumbs(
       ? { name: entry.displayName, href }
       : { name: entry.displayName };
   });
+}
+
+/** The directory chain from the country down to the current place. */
+function placeChain<T extends HierarchyPlace>(
+  places: readonly T[],
+  current: HierarchyCurrent,
+): T[] {
+  const byId = new Map(places.map((node) => [node.id, node]));
+  // A resolution's source or canonical slug can match either directory slug.
+  const bySlug = new Map(
+    places.flatMap((node) =>
+      [node.slug, node.canonicalSlug].flatMap((slug) =>
+        slug ? [[slug, node] as const] : [],
+      ),
+    ),
+  );
+  let node =
+    bySlug.get(current.sourceSlug) ?? bySlug.get(current.canonicalSlug);
+  const chain: T[] = [];
+  const seen = new Set<string>();
+  while (node && !seen.has(node.id)) {
+    seen.add(node.id);
+    chain.unshift(node);
+    node = node.parentId ? byId.get(node.parentId) : undefined;
+  }
+  return chain;
+}
+
+/**
+ * The place name a place job landing page uses in its heading, title and
+ * meta description. When an ancestor resolves to this page through the
+ * board's `consolidation` map (the ancestor the crumb trail leaves unlinked
+ * for that reason), the nearest one follows the place, "Amsterdam,
+ * Noord-Holland", so the page still names the wider area that lands here.
+ * Otherwise the place's own `displayName`.
+ */
+export function consolidatedPlaceName(
+  places: readonly HierarchyPlace[],
+  current: HierarchyCurrent,
+  options?: {
+    term?: JobLandingTerm;
+    consolidation?: JobLandingConsolidationMap;
+  },
+): string {
+  const consolidation = options?.consolidation;
+  if (!consolidation) return current.displayName;
+  const ownPath = jobLandingPath(
+    { placeSlug: current.canonicalSlug, ...options?.term },
+    undefined,
+  );
+  const ancestors = current.ancestors
+    ? current.ancestors.map((ancestor) => ({
+        name: ancestor.displayName,
+        slug: ancestor.canonicalSlug,
+      }))
+    : placeChain(places, current)
+        .slice(0, -1)
+        .map((entry) => ({
+          name: entry.displayName,
+          slug: placeLinkSlug(entry),
+        }));
+  const folded = ancestors.findLast(
+    (ancestor) =>
+      ancestor.slug !== null &&
+      jobLandingPath(
+        { placeSlug: ancestor.slug, ...options?.term },
+        consolidation,
+      ) === ownPath,
+  );
+  // A city-state region folds into its same-named city: "Berlin", not
+  // "Berlin, Berlin".
+  return folded &&
+    folded.name.localeCompare(current.displayName, undefined, {
+      sensitivity: 'base',
+    }) !== 0
+    ? `${current.displayName}, ${folded.name}`
+    : current.displayName;
 }
