@@ -1132,13 +1132,25 @@ function ProfileEditorCard({
                       setVerificationEmailError(null);
                     }}
                   />
-                  {verificationEmailError ? (
-                    <FieldError>{verificationEmailError}</FieldError>
-                  ) : (
-                    <FieldDescription>
+                  {/* The error takes the hint's place in one grid cell, so
+                      the dialog keeps its height when it appears. */}
+                  <div className="grid">
+                    <FieldDescription
+                      // nth-last-2 would pull it up once the error follows.
+                      className={
+                        verificationEmailError
+                          ? 'invisible col-start-1 row-start-1 nth-last-2:mt-0'
+                          : 'col-start-1 row-start-1'
+                      }
+                    >
                       {m.employerCompany_websiteChangeEmailHint()}
                     </FieldDescription>
-                  )}
+                    {verificationEmailError ? (
+                      <FieldError className="col-start-1 row-start-1">
+                        {verificationEmailError}
+                      </FieldError>
+                    ) : null}
+                  </div>
                 </Field>
               </form>
               <AlertDialogFooter>
