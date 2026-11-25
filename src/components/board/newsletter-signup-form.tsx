@@ -113,7 +113,7 @@ export function NewsletterSignupForm({
           className,
         )}
       >
-        <p className="text-foreground font-medium">{copy.submitted}</p>
+        <p className="text-foreground text-sm">{copy.submitted}</p>
         {status === 'paused' ? (
           <p className="text-muted-foreground text-sm">{copy.sendingPaused}</p>
         ) : null}
