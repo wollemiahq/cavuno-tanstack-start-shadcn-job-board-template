@@ -1414,7 +1414,7 @@
   "help_viewAllLabel": "Voir tous les articles",
   "help_backLabel": "Retour au centre d’aide",
   "help_notFoundDescription": "Cette page est indisponible ou n’est plus publiée.",
-  "help_heroHeadline": "Comment pouvons-nous vous aider ?",
+  "help_heroHeadline": "Centre d’aide {boardName}",
   "help_searchPlaceholder": "Rechercher des réponses…",
   "help_articleCountText": [
     {

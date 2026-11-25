@@ -229,6 +229,8 @@ export interface HelpSearchResults {
 }
 
 export interface HelpHomePageProps {
+  /** Names the help center in the page's heading. */
+  boardName: string;
   groups: HelpCategoryGroup[];
   /**
    * The home read one page of articles and more exist. The home then cannot
@@ -250,6 +252,7 @@ export interface HelpHomePageProps {
  * search. The search field itself is the header's, on every help page.
  */
 export function HelpHomePage({
+  boardName,
   groups,
   hasMoreArticles,
   search,
@@ -267,7 +270,7 @@ export function HelpHomePage({
       <PageContent
         header={
           <PageHeader
-            title={m.help_heroHeadline()}
+            title={m.help_heroHeadline({ boardName })}
             description={m.help_subtitleText()}
           />
         }

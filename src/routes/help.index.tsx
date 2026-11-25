@@ -57,6 +57,7 @@ function HelpPage() {
   const { board, contactEnabled } = rootApi.useLoaderData();
   return (
     <HelpHomePage
+      boardName={board.name}
       groups={groups}
       hasMoreArticles={hasMoreArticles}
       search={search}

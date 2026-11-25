@@ -1414,7 +1414,7 @@
   "help_viewAllLabel": "Alle artikelen bekijken",
   "help_backLabel": "Terug naar het helpcentrum",
   "help_notFoundDescription": "Deze pagina is niet beschikbaar of niet meer gepubliceerd.",
-  "help_heroHeadline": "Hoe kunnen we helpen?",
+  "help_heroHeadline": "Helpcentrum van {boardName}",
   "help_searchPlaceholder": "Zoek naar antwoorden…",
   "help_articleCountText": [
     {

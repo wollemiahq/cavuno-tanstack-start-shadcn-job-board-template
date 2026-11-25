@@ -78,7 +78,13 @@ function renderHome(element: React.ReactNode) {
 
 describe('HelpHomePage', () => {
   it('lists each category with links to its articles when nothing is searched', async () => {
-    renderHome(<HelpHomePage groups={groups} hasMoreArticles={false} />);
+    renderHome(
+      <HelpHomePage
+        boardName="Fixture"
+        groups={groups}
+        hasMoreArticles={false}
+      />,
+    );
 
     expect(
       await screen.findByRole('link', { name: 'Billing' }),
@@ -99,6 +105,7 @@ describe('HelpHomePage', () => {
     });
     const { container } = renderHome(
       <HelpHomePage
+        boardName="Fixture"
         groups={[
           withIcon('emoji', { type: 'emoji', value: '💳' }),
           withIcon('built-in', {
@@ -142,6 +149,7 @@ describe('HelpHomePage', () => {
   it('shows the matching articles in place of the categories for a search', async () => {
     renderHome(
       <HelpHomePage
+        boardName="Fixture"
         groups={[]}
         hasMoreArticles={false}
         search={{ query: 'refund', results: [refunds] }}
@@ -164,6 +172,7 @@ describe('HelpHomePage', () => {
   it('says a search matched nothing and links back to every article', async () => {
     renderHome(
       <HelpHomePage
+        boardName="Fixture"
         groups={[]}
         hasMoreArticles={false}
         search={{ query: 'visa', results: [] }}

@@ -1414,7 +1414,7 @@
   "help_viewAllLabel": "Alle Artikel anzeigen",
   "help_backLabel": "Zurück zum Hilfe-Center",
   "help_notFoundDescription": "Diese Seite ist nicht verfügbar oder nicht mehr veröffentlicht.",
-  "help_heroHeadline": "Wie können wir helfen?",
+  "help_heroHeadline": "Hilfe-Center von {boardName}",
   "help_searchPlaceholder": "Antworten suchen…",
   "help_articleCountText": [
     {
