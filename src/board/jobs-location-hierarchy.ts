@@ -219,7 +219,12 @@ export function consolidatedPlaceName(
         consolidation,
       ) === ownPath,
   );
-  return folded
+  // A city-state region folds into its same-named city: "Berlin", not
+  // "Berlin, Berlin".
+  return folded &&
+    folded.name.localeCompare(current.displayName, undefined, {
+      sensitivity: 'base',
+    }) !== 0
     ? `${current.displayName}, ${folded.name}`
     : current.displayName;
 }

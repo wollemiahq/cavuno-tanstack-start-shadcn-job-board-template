@@ -361,6 +361,16 @@ describe('consolidatedPlaceName', () => {
     ).toBe('Sydney');
   });
 
+  it('does not repeat a same-named region', () => {
+    expect(
+      consolidatedPlaceName(
+        tree,
+        { ...sydneyResolution, displayName: 'new south wales' },
+        { consolidation: { places: { 'new-south-wales': 'sydney' } } },
+      ),
+    ).toBe('new south wales');
+  });
+
   it('keeps the place name when the ancestor folds into another page', () => {
     expect(
       consolidatedPlaceName(tree, sydneyResolution, {
