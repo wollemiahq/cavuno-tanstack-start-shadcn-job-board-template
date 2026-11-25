@@ -456,6 +456,14 @@ mobile lab, with zero main-thread blocking and near-zero layout shift —
 the HTML rather than behind a client fetch. Run it on your own fork; the
 numbers are only worth what you can reproduce.
 
+Those budgets describe a repeat view: the document comes from the cache. The
+same run also times each route's document with no cache in front of it, the
+first view, where the visitor waits for the Worker to read the Board API and
+render. It prints the median and worst time to first byte per route and writes
+them to `.tmp/lighthouse/summary.json` under `uncachedDocuments`. These times
+are reported and not budgeted, because most of each one is Board API round
+trips from wherever the lab runs.
+
 ---
 
 ## Contributing & license
