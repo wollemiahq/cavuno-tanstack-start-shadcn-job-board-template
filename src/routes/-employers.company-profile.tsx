@@ -75,6 +75,7 @@ import {
   type ProfileFieldValue,
   type ProfileSelections,
 } from '@/board/profile-field-writes';
+import { websiteDomain } from '@/board/website-domain';
 import type {
   CustomFieldUploadResult,
   CustomFieldUploads,
@@ -96,6 +97,7 @@ import {
   RICH_TEXT_MAX_CHARACTERS,
 } from '@/components/rich-text-editor';
 import { Text } from '@/components/text';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -122,7 +124,13 @@ import type {
   BoardProfileFormField,
   EmployerProfileViewsPoint,
   UpdateEmployerCompanyBody,
+  WorkEmailVerification,
 } from '@cavuno/board';
+
+/** How a website change ended, when its emailed link lands on the profile. */
+export type WebsiteChangeOutcome = NonNullable<
+  WorkEmailVerification['websiteChange']
+>['outcome'];
 
 // The collection verification card loads only when a field verifies.
 const LazyCollectionVerificationCard = lazy(() =>
@@ -274,6 +282,7 @@ export type CompanyProfileViewData = {
   formLayout?: readonly BoardProfileFormField[] | null;
   members?: { data: unknown[] } | null;
   profileViews?: CompanyProfileLoaderData['profileViews'];
+  websiteOutcome?: WebsiteChangeOutcome;
 };
 
 type ProfileFieldWriteResult =
@@ -358,6 +367,7 @@ export function CompanyProfilePageView({
     profileViews,
     profileFields,
     formLayout,
+    websiteOutcome,
   } = data;
 
   return (
@@ -385,6 +395,22 @@ export function CompanyProfilePageView({
               </a>
             ) : null}
           </header>
+
+          {websiteOutcome ? (
+            <Alert
+              variant={
+                websiteOutcome === 'conflict' ? 'destructive' : 'default'
+              }
+            >
+              <AlertDescription>
+                {{
+                  changed: m.employerCompany_websiteChanged,
+                  pending_review: m.employerCompany_websiteChangeInReview,
+                  conflict: m.employerCompany_websiteChangeConflict,
+                }[websiteOutcome]()}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
           {/* Profile-views stat — deferred (streamed via <Await>) so a slow or
               failing analytics backend never blocks the form. Its zero state
@@ -555,6 +581,13 @@ function ProfileEditorCard({
     'idle' | 'saving' | 'error' | 'committed'
   >('idle');
   const [message, setMessage] = useState('');
+  // An address on a new website domain gets the link that applies the change;
+  // without one the board reviews it.
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const savedDomain = websiteDomain(company.website);
+  const typedDomain = websiteDomain(form.website);
+  const newDomain = typedDomain !== savedDomain ? typedDomain : null;
+  const pendingChange = company.pendingWebsiteChange ?? null;
   const [invalidField, setInvalidField] = useState<string | null>(null);
   // The fields the API refused on the last save.
   const [refusal, setRefusal] = useState<ProfileFieldRefusal | null>(null);
@@ -564,6 +597,15 @@ function ProfileEditorCard({
    * the rich-text description, the logo, a multi-select, a collection.
    */
   function missingRequired(): { id: string; message: string } | null {
+    const email = verificationEmail.trim().toLowerCase();
+    if (newDomain && email && !email.endsWith(`@${newDomain}`)) {
+      return {
+        id: 'company-website-email',
+        message: m.employerCompany_websiteChangeEmailMismatch({
+          domain: newDomain,
+        }),
+      };
+    }
     for (const entry of entries) {
       if (!entry.required) continue;
       let field: string | null = null;
@@ -638,7 +680,13 @@ function ProfileEditorCard({
   function companyBody(): UpdateEmployerCompanyBody {
     const website = form.website.trim();
     const body: UpdateEmployerCompanyBody = { name: form.name.trim() };
-    if (shows('website')) body.website = website ? `https://${website}` : '';
+    if (shows('website')) {
+      body.website = website ? `https://${website}` : '';
+      if (newDomain) {
+        const email = verificationEmail.trim();
+        body.websiteChange = email ? { verificationEmail: email } : {};
+      }
+    }
     if (shows('description')) {
       body.description = isRichTextEmpty(form.description)
         ? ''
@@ -725,6 +773,15 @@ function ProfileEditorCard({
       )({ data: { slug, body: references } });
       if (!written.ok) return await refused(written);
     }
+    if (newDomain) {
+      // The website keeps its saved value until the change finishes; the
+      // pending note says what it waits for.
+      setForm((current) => ({
+        ...current,
+        website: stripProtocol(company.website ?? ''),
+      }));
+      setVerificationEmail('');
+    }
     setStatus('committed');
     try {
       await actions.invalidate();
@@ -791,7 +848,8 @@ function ProfileEditorCard({
               <InputGroupInput
                 id="company-website"
                 value={form.website}
-                required={requires('website')}
+                // A company's website can change but not be removed.
+                required={requires('website') || Boolean(company.website)}
                 placeholder={m.employerDashboard_websitePlaceholder()}
                 onChange={(event) =>
                   setForm({
@@ -801,6 +859,43 @@ function ProfileEditorCard({
                 }
               />
             </InputGroup>
+            {!newDomain && pendingChange ? (
+              <FieldDescription>
+                {pendingChange.status === 'awaiting_verification'
+                  ? m.employerCompany_websiteChangeAwaitingLink({
+                      domain: pendingChange.websiteDomain,
+                    })
+                  : m.employerCompany_websiteChangeAwaitingReview({
+                      domain: pendingChange.websiteDomain,
+                    })}
+              </FieldDescription>
+            ) : null}
+            {newDomain ? (
+              <Field
+                data-invalid={
+                  invalidField === 'company-website-email' || undefined
+                }
+              >
+                <FieldLabel htmlFor="company-website-email">
+                  {m.employerCompany_websiteChangeEmailLabel({
+                    domain: newDomain,
+                  })}
+                </FieldLabel>
+                <Input
+                  id="company-website-email"
+                  type="email"
+                  autoComplete="email"
+                  value={verificationEmail}
+                  aria-invalid={invalidField === 'company-website-email'}
+                  onChange={(event) =>
+                    setVerificationEmail(event.currentTarget.value)
+                  }
+                />
+                <FieldDescription>
+                  {m.employerCompany_websiteChangeEmailHint()}
+                </FieldDescription>
+              </Field>
+            ) : null}
           </Field>
         );
       case 'summary':

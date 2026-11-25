@@ -13,6 +13,7 @@ import {
 import {
   CompanyProfilePageView,
   createCompanyProfileLoader,
+  type WebsiteChangeOutcome,
 } from './-employers.company-profile';
 
 import { boardForms } from '@/board/form-layout';
@@ -23,8 +24,20 @@ import {
   toastActionSuccess,
 } from '@/lib/action-toast';
 import { headTitle } from '@/lib/page-title';
+import { searchString, type UrlSearchInput } from '@/lib/pagination';
 
 export const Route = createFileRoute('/employers/companies/$slug/profile')({
+  // How a website change ended, when its emailed link lands here.
+  validateSearch: (
+    search: UrlSearchInput,
+  ): { website?: WebsiteChangeOutcome } => {
+    const website = searchString(search.website);
+    return website === 'changed' ||
+      website === 'pending_review' ||
+      website === 'conflict'
+      ? { website }
+      : {};
+  },
   loader: createCompanyProfileLoader(),
   head: ({ loaderData }) => ({
     meta: [
@@ -44,12 +57,17 @@ const rootApi = getRouteApi('__root__');
 
 function CompanyProfilePage() {
   const data = Route.useLoaderData();
+  const { website } = Route.useSearch();
   const { board } = rootApi.useLoaderData();
   const router = useRouter();
   const { refreshSession } = useRootSession();
   return (
     <CompanyProfilePageView
-      data={{ ...data, formLayout: boardForms(board)?.company ?? null }}
+      data={{
+        ...data,
+        formLayout: boardForms(board)?.company ?? null,
+        websiteOutcome: website,
+      }}
       actions={{
         updateCompany,
         uploadCompanyLogo,

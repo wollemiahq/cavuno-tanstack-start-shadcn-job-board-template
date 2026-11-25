@@ -13,6 +13,10 @@ import { searchString, type UrlSearchInput } from '@/lib/pagination';
  * outcome — `approved` on a domain match, else `pending` (awaiting board-owner
  * approval). Mirrors the hosted `/auth/verify-work-email` GET route.
  *
+ * The same link can finish a company website change. Then the employer goes
+ * back to that company's profile with how it ended; the profile route sends
+ * anyone who is not a member of it to the dashboard.
+ *
  * A company slug is deliberately NOT required. This route used to demand one
  * and bail to `verified=invalid` without it — but the emailed link has only a
  * token, so every click failed on the first try looking exactly like an
@@ -32,6 +36,15 @@ export const Route = createFileRoute('/auth/verify-work-email')({
     });
     if (!result.ok) {
       throw redirect({ href: '/employers/dashboard?verified=invalid' });
+    }
+    const change = result.data.websiteChange;
+    const slug = result.data.company.slug;
+    if (change && slug) {
+      throw redirect({
+        to: '/employers/companies/$slug/profile',
+        params: { slug },
+        search: { website: change.outcome },
+      });
     }
     const outcome = result.data.status === 'approved' ? 'approved' : 'pending';
     throw redirect({ href: `/employers/dashboard?verified=${outcome}` });

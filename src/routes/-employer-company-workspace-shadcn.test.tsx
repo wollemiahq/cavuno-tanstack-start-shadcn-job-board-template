@@ -1073,11 +1073,77 @@ describe('employer company workspace', () => {
     await waitFor(() =>
       expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
     );
+    const body = profileActions.updateCompany.mock.calls[0]?.[0]?.data.body;
+    expect(body).toMatchObject({
+      instagramUrl: 'https://instagram.com/flexwork.florida',
+    });
+    // The website kept its domain, so no website change is asked for.
+    expect(body?.websiteChange).toBeUndefined();
+  });
+
+  it('sends a website on a new domain with the address that proves it', async () => {
+    profileActions.updateCompany.mockResolvedValue({ ok: true, data: null });
+    profileActions.invalidate.mockResolvedValue(undefined);
+    renderProfile();
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: m.employerCompany_websiteLabel() }),
+      { target: { value: 'www.northstar.io/careers' } },
+    );
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: m.employerCompany_websiteChangeEmailLabel({
+          domain: 'northstar.io',
+        }),
+      }),
+      { target: { value: 'sam@northstar.io' } },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
+
+    await waitFor(() =>
+      expect(profileActions.updateCompany).toHaveBeenCalledOnce(),
+    );
     expect(
       profileActions.updateCompany.mock.calls[0]?.[0]?.data.body,
     ).toMatchObject({
-      instagramUrl: 'https://instagram.com/flexwork.florida',
+      website: 'https://www.northstar.io/careers',
+      websiteChange: { verificationEmail: 'sam@northstar.io' },
     });
+  });
+
+  it('refuses a verification address that is not on the new domain', async () => {
+    renderProfile();
+
+    fireEvent.change(
+      screen.getByRole('textbox', { name: m.employerCompany_websiteLabel() }),
+      { target: { value: 'northstar.io' } },
+    );
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: m.employerCompany_websiteChangeEmailLabel({
+          domain: 'northstar.io',
+        }),
+      }),
+      { target: { value: 'sam@northstar.example' } },
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: m.employerCompany_saveCompanyLabel(),
+      }),
+    );
+
+    expect(
+      await screen.findByText(
+        m.employerCompany_websiteChangeEmailMismatch({
+          domain: 'northstar.io',
+        }),
+      ),
+    ).toBeInTheDocument();
+    expect(profileActions.updateCompany).not.toHaveBeenCalled();
   });
 
   it('uploads a new company logo through the profile logo control', async () => {
