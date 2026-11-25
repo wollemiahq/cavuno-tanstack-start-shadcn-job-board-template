@@ -113,13 +113,24 @@ const BUDGETS = {
   // measured 714,426 B raw against the 714,300 budget, +896 B over main's
   // 713,530; gzip stayed inside (225,806 of 231,637 B). Accepted by the
   // operator on 2026-11-18; raw rebaselined with ~4 KB headroom.
-  shell: { raw: 718_400, gzip: 231_637 },
+  // The help center (#418: the help home, category and article pages): their
+  // route entries, route templates, the header's help search scope, the
+  // breadcrumb label and the footer link ride the shell; the page code is
+  // split out. Measured 2026-11-25 with @cavuno/board 4.83.0: 721,526 B raw
+  // against the 718,400 budget, +3,779 B over main's 717,747; gzip stayed
+  // inside (229,822 of 231,637 B). Accepted by the operator on 2026-11-25;
+  // raw rebaselined with ~4 KB headroom.
+  shell: { raw: 725_600, gzip: 231_637 },
   // UI kit components that nothing imports are left out of Tailwind's scan
   // at build time (scripts/tailwind-unused-kit-plugin.mjs): measured
   // 180.8 KiB raw / 28.0 KiB gzip against 242.9 / 36.4 before (2026-10-15).
   // Lowered to the measurement plus ~2 KiB gzip of headroom, so a file that
   // brings the whole kit back into the stylesheet fails here.
-  styles: { raw: 196_000, gzip: 30_700 },
+  // The help center pages (#418) measured 196,357 B raw against the 196,000
+  // budget, +1,207 B over main's 195,150; gzip stayed inside (30,385 of
+  // 30,700 B). Accepted by the operator on 2026-11-25; raw rebaselined with
+  // ~2 KB headroom.
+  styles: { raw: 198_400, gzip: 30_700 },
   routeDefault: { raw: 80_000, gzip: 30_000 },
   routes: {
     // The decorative home hero shader is idle-loaded, not initial-route work.
