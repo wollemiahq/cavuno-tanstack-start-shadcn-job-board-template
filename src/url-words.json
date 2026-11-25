@@ -58,7 +58,10 @@
     "checkout-canceled": "betaling-geannuleerd",
     "settings": "instellingen",
     "email-preferences": "e-mailvoorkeuren",
-    "authorize": "autoriseren"
+    "authorize": "autoriseren",
+    "help": "help",
+    "categories": "categorieen",
+    "articles": "artikelen"
   },
   "de": {
     "jobs": "jobs",
@@ -120,7 +123,10 @@
     "checkout-canceled": "zahlung-abgebrochen",
     "settings": "einstellungen",
     "email-preferences": "e-mail-einstellungen",
-    "authorize": "autorisieren"
+    "authorize": "autorisieren",
+    "help": "hilfe",
+    "categories": "kategorien",
+    "articles": "artikel"
   },
   "fr": {
     "jobs": "emplois",
@@ -182,7 +188,10 @@
     "checkout-canceled": "paiement-annule",
     "settings": "parametres",
     "email-preferences": "preferences-email",
-    "authorize": "autoriser"
+    "authorize": "autoriser",
+    "help": "aide",
+    "categories": "categories",
+    "articles": "articles"
   },
   "es": {
     "jobs": "empleos",
@@ -244,7 +253,10 @@
     "checkout-canceled": "pago-cancelado",
     "settings": "ajustes",
     "email-preferences": "preferencias-de-correo",
-    "authorize": "autorizar"
+    "authorize": "autorizar",
+    "help": "ayuda",
+    "categories": "categorias",
+    "articles": "articulos"
   },
   "pt": {
     "jobs": "empregos",
@@ -306,7 +318,10 @@
     "checkout-canceled": "pagamento-cancelado",
     "settings": "configuracoes",
     "email-preferences": "preferencias-de-email",
-    "authorize": "autorizar"
+    "authorize": "autorizar",
+    "help": "ajuda",
+    "categories": "categorias",
+    "articles": "artigos"
   },
   "it": {
     "jobs": "offerte-lavoro",
@@ -368,7 +383,10 @@
     "checkout-canceled": "pagamento-annullato",
     "settings": "impostazioni",
     "email-preferences": "preferenze-email",
-    "authorize": "autorizza"
+    "authorize": "autorizza",
+    "help": "aiuto",
+    "categories": "categorie",
+    "articles": "articoli"
   },
   "pl": {
     "jobs": "praca",
@@ -430,7 +448,10 @@
     "checkout-canceled": "platnosc-anulowana",
     "settings": "ustawienia",
     "email-preferences": "ustawienia-e-mail",
-    "authorize": "autoryzuj"
+    "authorize": "autoryzuj",
+    "help": "pomoc",
+    "categories": "kategorie",
+    "articles": "artykuly"
   },
   "cs": {
     "jobs": "prace",
@@ -492,7 +513,10 @@
     "checkout-canceled": "platba-zrusena",
     "settings": "nastaveni",
     "email-preferences": "nastaveni-e-mailu",
-    "authorize": "autorizovat"
+    "authorize": "autorizovat",
+    "help": "napoveda",
+    "categories": "kategorie",
+    "articles": "clanky"
   },
   "tr": {
     "jobs": "is-ilanlari",
@@ -554,7 +578,10 @@
     "checkout-canceled": "odeme-iptal-edildi",
     "settings": "ayarlar",
     "email-preferences": "e-posta-tercihleri",
-    "authorize": "yetkilendir"
+    "authorize": "yetkilendir",
+    "help": "yardim",
+    "categories": "kategoriler",
+    "articles": "makaleler"
   },
   "sv": {
     "jobs": "lediga-jobb",
@@ -616,7 +643,10 @@
     "checkout-canceled": "betalning-avbruten",
     "settings": "installningar",
     "email-preferences": "e-postinstallningar",
-    "authorize": "auktorisera"
+    "authorize": "auktorisera",
+    "help": "hjalp",
+    "categories": "kategorier",
+    "articles": "artiklar"
   },
   "da": {
     "jobs": "job",
@@ -678,7 +708,10 @@
     "checkout-canceled": "betaling-annulleret",
     "settings": "indstillinger",
     "email-preferences": "e-mail-praeferencer",
-    "authorize": "autoriser"
+    "authorize": "autoriser",
+    "help": "hjaelp",
+    "categories": "kategorier",
+    "articles": "artikler"
   },
   "nb": {
     "jobs": "stillinger",
@@ -740,7 +773,10 @@
     "checkout-canceled": "betaling-avbrutt",
     "settings": "innstillinger",
     "email-preferences": "e-postinnstillinger",
-    "authorize": "autoriser"
+    "authorize": "autoriser",
+    "help": "hjelp",
+    "categories": "kategorier",
+    "articles": "artikler"
   },
   "fi": {
     "jobs": "tyopaikat",
@@ -802,6 +838,9 @@
     "checkout-canceled": "maksu-peruttu",
     "settings": "asetukset",
     "email-preferences": "sahkopostiasetukset",
-    "authorize": "valtuuta"
+    "authorize": "valtuuta",
+    "help": "ohjeet",
+    "categories": "kategoriat",
+    "articles": "artikkelit"
   }
 }

@@ -218,6 +218,8 @@ function renderHeader({
         void navigate({ to: '/blog', search: { q: query } });
       } else if (scope === 'products') {
         void navigate({ to: '/products', search: { q: query } });
+      } else if (scope === 'help') {
+        void navigate({ to: '/help', search: { q: query } });
       } else if (location && term?.type === 'skill') {
         void navigate({
           to: '/jobs/locations/$location/skills/$skill',
@@ -338,6 +340,8 @@ function renderHeader({
       route('/p/$handle'),
       route('/blog'),
       route('/products'),
+      route('/help'),
+      route('/help/articles/$helpArticleSlug'),
       route('/memberships'),
       route('/employers/companies/$slug'),
       route('/employers/companies/$slug/profile'),
@@ -1412,6 +1416,34 @@ describe('Header — pathname-scoped submit-only search', () => {
       expect(router.state.location.pathname).toBe('/products'),
     );
     expect(router.state.location.search).toEqual({ q: 'cover letter' });
+  });
+
+  it('searches help articles from an article page and lands on the help home', async () => {
+    const router = renderHeader({
+      initialEntry: '/help/articles/refunds',
+      routeSearchScope: 'help',
+    });
+
+    const helpSearch = await screen.findByRole('search');
+    expect(helpSearch).toHaveAttribute('data-search-scope', 'help');
+    const searchbox = within(helpSearch).getByRole('searchbox', {
+      name: m.searchBar_keywordAriaLabel(),
+    });
+    expect(searchbox).toHaveAttribute(
+      'placeholder',
+      m.help_searchPlaceholder(),
+    );
+    expect(
+      within(helpSearch).queryByRole('combobox', {
+        name: m.locationCombobox_locationAriaLabel(),
+      }),
+    ).toBeNull();
+
+    fireEvent.change(searchbox, { target: { value: 'refund' } });
+    submitContainingForm(searchbox);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/help'));
+    expect(router.state.location.search).toEqual({ q: 'refund' });
   });
 
   it('stages a canonical Jobs suggestion and navigates only when Search is submitted', async () => {

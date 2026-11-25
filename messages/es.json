@@ -1399,6 +1399,7 @@
   "footer_locationsLabel": "Ubicaciones",
   "footer_talentLocationsLabel": "Talento por ubicación",
   "footer_tipLabel": "Deja una propina",
+  "footer_helpLabel": "Centro de ayuda",
   "footer_poweredByText": "Con la tecnología de",
   "footer_privacyPolicyLabel": "Política de privacidad",
   "footer_resourcesHeading": "Recursos",
@@ -1407,6 +1408,55 @@
   "footer_mcpLabel": "MCP",
   "footer_termsOfServiceLabel": "Términos del servicio",
   "footer_websiteLabel": "Sitio web",
+  "help_title": "Centro de ayuda",
+  "help_subtitleText": "Guías y respuestas a las preguntas más frecuentes.",
+  "help_metaDescription": "Guías y respuestas a las preguntas más frecuentes sobre {boardName}.",
+  "help_viewAllLabel": "Ver todos los artículos",
+  "help_backLabel": "Volver al centro de ayuda",
+  "help_notFoundDescription": "Esta página no está disponible o ya no está publicada.",
+  "help_heroHeadline": "Centro de ayuda de {boardName}",
+  "help_searchPlaceholder": "Buscar respuestas…",
+  "help_articleCountText": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} artículo",
+        "countPlural=*": "{countLabel} artículos"
+      }
+    }
+  ],
+  "help_searchResultsHeading": [
+    {
+      "declarations": [
+        "input count",
+        "input countLabel",
+        "input query",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countLabel} resultado para «{query}»",
+        "countPlural=*": "{countLabel} resultados para «{query}»"
+      }
+    }
+  ],
+  "help_searchEmptyTitle": "Ningún artículo coincide con «{query}»",
+  "help_searchEmptyDescription": "Prueba con otras palabras o explora las categorías.",
+  "help_searchResetLabel": "Ver todas las categorías",
+  "help_contactTitle": "¿Necesitas más ayuda?",
+  "help_contactDescription": "Envíanos un mensaje y te responderemos.",
+  "helpCategory_metaDescription": "Artículos de ayuda sobre {category} de {boardName}.",
+  "helpCategory_articlesLabel": "Artículos de {category}",
+  "helpCategory_notFoundTitle": "Categoría no encontrada",
+  "helpArticle_notFoundTitle": "Artículo no encontrado",
+  "helpArticle_updatedText": "Actualizado el {date}",
+  "helpArticle_moreInCategoryTitle": "Más en {category}",
+  "helpArticle_relatedTitle": "Artículos relacionados",
   "home_blogDescription": "Guías y consejos de contratación de nuestro equipo.",
   "home_blogHeading": "Del blog",
   "home_candidateCtaButton": "Crear un perfil de candidato",

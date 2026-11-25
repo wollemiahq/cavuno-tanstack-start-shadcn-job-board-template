@@ -283,6 +283,19 @@ describe('route-owned search scope', () => {
     }
   });
 
+  it('keeps a help search in the field on the help routes', () => {
+    expect(
+      resolveHeaderSearchState(
+        '/help',
+        { q: 'refund' },
+        undefined,
+        undefined,
+        'talent',
+        'help',
+      ),
+    ).toMatchObject({ scope: 'help', query: 'refund', location: null });
+  });
+
   it('hides shared search on private shells without pinning header markup', () => {
     expect(resolveHeaderSearchState('/account', {}).visible).toBe(false);
     expect(resolveHeaderSearchState('/employers/dashboard', {}).visible).toBe(

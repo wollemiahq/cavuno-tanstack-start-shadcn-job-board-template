@@ -46,6 +46,7 @@ function renderFooter(
       | 'impressumAvailable'
       | 'hasTipPage'
       | 'mcpServerAvailable'
+      | 'features'
     >
   > = {},
 ) {
@@ -171,6 +172,39 @@ describe('Footer Impressum link', () => {
 
     expect(
       screen.queryByRole('link', { name: m.footer_tipLabel() }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('Footer help center link', () => {
+  const features = {
+    blog: false,
+    talentDirectory: 'off',
+    publicJobSubmission: false,
+  } as const;
+
+  it('links the help center in the About column while the board has one', () => {
+    renderFooter(contact, { features: { ...features, helpCenter: true } });
+
+    const about = screen
+      .getByRole('heading', { name: m.footer_aboutHeading() })
+      .closest('div');
+    const link = screen.getByRole('link', { name: m.footer_helpLabel() });
+    expect(about).toContainElement(link);
+    expect(link).toHaveAttribute('href', '/help');
+  });
+
+  it('hides the link on a board without a published help article', () => {
+    renderFooter(contact, { features: { ...features, helpCenter: false } });
+    expect(
+      screen.queryByRole('link', { name: m.footer_helpLabel() }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides the link when the board context has no help center flag', () => {
+    renderFooter(contact);
+    expect(
+      screen.queryByRole('link', { name: m.footer_helpLabel() }),
     ).not.toBeInTheDocument();
   });
 });

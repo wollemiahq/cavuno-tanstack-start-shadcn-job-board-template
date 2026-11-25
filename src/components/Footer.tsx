@@ -212,6 +212,11 @@ export default function Footer({
   features: {
     candidates?: boolean;
     blog: boolean;
+    /**
+     * The board has a published help article, so `/help` exists. Absent on
+     * a board context from an API that predates the help center: no link.
+     */
+    helpCenter?: boolean;
     talentDirectory: 'off' | 'public' | 'employers_only' | boolean;
     publicJobSubmission: boolean;
   };
@@ -363,6 +368,9 @@ export default function Footer({
             },
           ]
         : []),
+    ...(features.helpCenter === true
+      ? [{ href: BOARD_PATHS.help, label: copy.footer.helpLabel }]
+      : []),
     ...(footer?.websiteUrl
       ? [
           {

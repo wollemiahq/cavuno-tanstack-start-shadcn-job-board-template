@@ -437,6 +437,7 @@ function RootChrome({
     jobSeekers: m.candidateLanding_title(),
     memberships: m.memberships_title(),
     tip: m.footer_tipLabel(),
+    help: m.help_title(),
     mcp: m.footer_mcpLabel(),
   };
   const shellBreadcrumb = resolveShellBreadcrumb({
@@ -509,6 +510,11 @@ function RootChrome({
 
     if (scope === 'products') {
       void navigate({ to: '/products', search: { q: query } });
+      return;
+    }
+
+    if (scope === 'help') {
+      void navigate({ to: '/help', search: { q: query } });
       return;
     }
 
