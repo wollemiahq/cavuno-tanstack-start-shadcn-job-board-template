@@ -3595,5 +3595,16 @@
   "settingsAssistants_disconnectLabel": "Disconnect",
   "settingsAssistants_disconnectAriaLabel": "Disconnect {name}",
   "settingsAssistants_disconnectedText": "{name} is disconnected.",
-  "settingsAssistants_scopesLabel": "Allowed access"
+  "settingsAssistants_scopesLabel": "Allowed access",
+  "newsletter_title": "Subscribe to our newsletter",
+  "newsletter_description": "Get new articles and news from {boardName} in your inbox.",
+  "newsletter_emailLabel": "Email address",
+  "newsletter_emailPlaceholder": "you@example.com",
+  "newsletter_submitLabel": "Subscribe",
+  "newsletter_subscribingLabel": "Subscribing…",
+  "newsletter_consentLabel": "Send me news and offers from {boardName}.",
+  "newsletter_consentRequired": "Tick the box to subscribe.",
+  "newsletter_submitted": "Check your email to confirm.",
+  "newsletter_sendingPaused": "Emails from {boardName} may be delayed.",
+  "newsletter_error": "Something went wrong. Please try again."
 }

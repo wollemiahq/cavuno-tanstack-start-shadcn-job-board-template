@@ -3757,5 +3757,16 @@
   "settingsAssistants_disconnectLabel": "Odłącz",
   "settingsAssistants_disconnectAriaLabel": "Odłącz {name}",
   "settingsAssistants_disconnectedText": "Odłączono: {name}.",
-  "settingsAssistants_scopesLabel": "Dozwolony dostęp"
+  "settingsAssistants_scopesLabel": "Dozwolony dostęp",
+  "newsletter_title": "Zapisz się do newslettera",
+  "newsletter_description": "Otrzymuj nowe artykuły i aktualności od {boardName} na swoją skrzynkę.",
+  "newsletter_emailLabel": "Adres e-mail",
+  "newsletter_emailPlaceholder": "ty@przyklad.pl",
+  "newsletter_submitLabel": "Zapisz się",
+  "newsletter_subscribingLabel": "Zapisywanie…",
+  "newsletter_consentLabel": "Wysyłaj mi aktualności i oferty od {boardName}.",
+  "newsletter_consentRequired": "Zaznacz pole, aby się zapisać.",
+  "newsletter_submitted": "Sprawdź e-mail, aby potwierdzić.",
+  "newsletter_sendingPaused": "E-maile od {boardName} mogą się opóźnić.",
+  "newsletter_error": "Coś poszło nie tak. Spróbuj ponownie."
 }

@@ -3595,5 +3595,16 @@
   "settingsAssistants_disconnectLabel": "Trennen",
   "settingsAssistants_disconnectAriaLabel": "{name} trennen",
   "settingsAssistants_disconnectedText": "{name} ist getrennt.",
-  "settingsAssistants_scopesLabel": "Erlaubter Zugriff"
+  "settingsAssistants_scopesLabel": "Erlaubter Zugriff",
+  "newsletter_title": "Abonniere unseren Newsletter",
+  "newsletter_description": "Neue Artikel und News von {boardName} in deinem Posteingang.",
+  "newsletter_emailLabel": "E-Mail-Adresse",
+  "newsletter_emailPlaceholder": "name@beispiel.de",
+  "newsletter_submitLabel": "Abonnieren",
+  "newsletter_subscribingLabel": "Wird abonniert …",
+  "newsletter_consentLabel": "Schickt mir News und Angebote von {boardName}.",
+  "newsletter_consentRequired": "Setze das Häkchen, um zu abonnieren.",
+  "newsletter_submitted": "Prüfe deine E-Mails, um zu bestätigen.",
+  "newsletter_sendingPaused": "E-Mails von {boardName} können sich verzögern.",
+  "newsletter_error": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
 }

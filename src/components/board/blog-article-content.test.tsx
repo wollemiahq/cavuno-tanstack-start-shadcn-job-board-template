@@ -74,7 +74,7 @@ const missingBody = {
 
 afterEach(cleanup);
 
-function renderArticle(article: PublicBlogPost) {
+function renderArticle(article: PublicBlogPost, newsletter?: React.ReactNode) {
   const rootRoute = createRootRoute({
     loader: () => ({ board: { language: 'en' } }),
   });
@@ -95,6 +95,7 @@ function renderArticle(article: PublicBlogPost) {
         language="en"
         permalink={`https://jobs.example/blog/${article.slug}`}
         missingBody={missingBody}
+        newsletter={newsletter}
       />
     ),
   });
@@ -203,5 +204,16 @@ describe('BlogArticleContent — complete article presentation', () => {
     renderArticle({ ...post, featured: false });
     await screen.findByRole('heading', { level: 1, name: post.title });
     expect(screen.queryByText(m.blogPost_featuredLabel())).toBeNull();
+  });
+
+  it('ends the article with the newsletter sign-up', async () => {
+    renderArticle(post, <section aria-label="Newsletter">Sign up</section>);
+
+    const signup = await screen.findByRole('region', { name: 'Newsletter' });
+    const body = screen.getByLabelText(m.blogPost_articleBodyLabel());
+    expect(signup.closest('article')).not.toBeNull();
+    expect(
+      body.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

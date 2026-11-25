@@ -3,11 +3,13 @@ import { createFileRoute, getRouteApi } from '@tanstack/react-router';
 
 import { m } from '../paraglide/messages';
 import { getLocale } from '../paraglide/runtime';
+import { subscribeNewsletter } from '../server/newsletter';
 import { getBoardContext, resolveRedirect } from '../server/queries';
 import { createBlogPostLoader } from './-blog-post-loader';
 
 import { BlogArchivePage } from '@/components/board/blog-archive-page';
 import { BlogArticleContent } from '@/components/board/blog-article-content';
+import { NewsletterSignupForm } from '@/components/board/newsletter-signup-form';
 import { PublicContentPending } from '@/components/board/public-content-pending';
 import { jsonLdHeadScripts } from '@/components/json-ld';
 import { breadcrumbsCopy } from '@/copy-groups/breadcrumbs';
@@ -82,6 +84,14 @@ function PostPage() {
         ads={board.ads}
         adjacent={adjacent}
         related={related}
+        newsletter={
+          <NewsletterSignupForm
+            boardName={board.name}
+            source="blog-article"
+            locale={getLocale()}
+            onSubscribe={(input) => subscribeNewsletter({ data: input })}
+          />
+        }
         missingBody={{
           title: m.blogPost_missingBodyTitle(),
           description: m.blogPost_missingBodyDescription(),

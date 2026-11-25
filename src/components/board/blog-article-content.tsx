@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { Link } from '@tanstack/react-router';
 import { FileWarning } from 'lucide-react';
 
@@ -52,6 +54,8 @@ export interface BlogArticleContentProps {
   adjacent?: PublicBlogAdjacentPosts;
   related?: PublicBlogPostSummary[];
   ads?: BoardAdsConfig;
+  /** Optional sign-up block at the end of the article, such as the newsletter form. */
+  newsletter?: ReactNode;
 }
 
 function shareLinks(permalink: string, title: string) {
@@ -186,6 +190,7 @@ export function BlogArticleContent({
   adjacent = { object: 'blog_adjacent_posts', previous: null, next: null },
   related = [],
   ads,
+  newsletter,
 }: BlogArticleContentProps) {
   const headings = extractToc(post.html);
   const bodyHtml = withHeadingAnchors(post.html);
@@ -350,6 +355,8 @@ export function BlogArticleContent({
               />
             </aside>
           </div>
+
+          {newsletter}
 
           {related.length > 0 ? (
             <PageSection title={m.blogPost_relatedPostsHeading()}>

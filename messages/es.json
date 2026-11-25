@@ -3595,5 +3595,16 @@
   "settingsAssistants_disconnectLabel": "Desconectar",
   "settingsAssistants_disconnectAriaLabel": "Desconectar {name}",
   "settingsAssistants_disconnectedText": "{name} se ha desconectado.",
-  "settingsAssistants_scopesLabel": "Acceso permitido"
+  "settingsAssistants_scopesLabel": "Acceso permitido",
+  "newsletter_title": "Suscríbete a nuestro boletín",
+  "newsletter_description": "Recibe los nuevos artículos y noticias de {boardName} en tu correo.",
+  "newsletter_emailLabel": "Correo electrónico",
+  "newsletter_emailPlaceholder": "tu@ejemplo.com",
+  "newsletter_submitLabel": "Suscribirme",
+  "newsletter_subscribingLabel": "Suscribiendo…",
+  "newsletter_consentLabel": "Envíame noticias y ofertas de {boardName}.",
+  "newsletter_consentRequired": "Marca la casilla para suscribirte.",
+  "newsletter_submitted": "Revisa tu correo para confirmar.",
+  "newsletter_sendingPaused": "Los correos de {boardName} pueden llegar con retraso.",
+  "newsletter_error": "Se ha producido un error. Inténtalo de nuevo."
 }

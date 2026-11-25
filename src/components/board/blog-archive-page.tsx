@@ -49,6 +49,8 @@ export interface BlogArchivePageProps {
    * built with the shared `CursorPagination` on the design-system primitives.
    */
   pagination?: ReactNode;
+  /** Optional sign-up block after the posts, such as the newsletter form. */
+  newsletter?: ReactNode;
 }
 
 /** Shared Page-family presentation for the blog, tag, and author archives. */
@@ -61,6 +63,7 @@ export function BlogArchivePage({
   posts,
   empty,
   pagination,
+  newsletter,
 }: BlogArchivePageProps) {
   const heading = avatar ? (
     <span className="flex items-center gap-3">
@@ -118,6 +121,8 @@ export function BlogArchivePage({
         </PageSection>
 
         {posts.length > 0 ? pagination : null}
+
+        {newsletter}
       </PageContent>
     </Page>
   );

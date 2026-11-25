@@ -274,7 +274,12 @@ const BUDGETS = {
     // shared cursor controls add ~1.6 KiB gzip (42.2 -> 43.8 KiB measured);
     // retain roughly the original 1.3 KiB headroom on this private route.
     // Custom field display (see /talent/): +10,550 / +4,623.
-    '/saved-jobs': { raw: 133_550, gzip: 50_623 },
+    // Blog newsletter sign-up: its Base UI Checkbox splits the shared Base UI
+    // chunk in two (composite + visuallyHidden), which this route loads.
+    // Measured 132,694 B raw / 50,648 B gzip against main's 132,603 / 50,540
+    // (+91 / +108). Raised by exactly the measured growth, keeping main's
+    // headroom; pending the operator's acceptance.
+    '/saved-jobs': { raw: 133_641, gzip: 50_731 },
     // Custom field display (see /talent/): +10,566 / +4,639.
     // Typo hint (see /auth/verify-email-required): +2,034 / +1,194.
     '/companies/$companySlug/jobs/$jobSlug': { raw: 125_100, gzip: 50_333 },
@@ -297,7 +302,9 @@ const BUDGETS = {
     // Raised by exactly the measured growth, keeping main's headroom.
     // Typo hint (see /auth/verify-email-required): +267 / +217, the
     // refused-domain message in the shared error messages.
-    '/p/$handle': { raw: 129_305, gzip: 50_199 },
+    // Blog newsletter sign-up (see /saved-jobs): +91 / +102, the same split
+    // Base UI chunk.
+    '/p/$handle': { raw: 129_396, gzip: 50_301 },
     // /email-preferences as section cards: one switch for all job alerts,
     // and a ⋯ menu per alert to pause, resume or delete it. Main measured
     // 79,619 B raw / 29,653 B gzip against the 80,000 / 30,000 default

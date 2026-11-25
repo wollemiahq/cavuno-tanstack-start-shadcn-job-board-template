@@ -248,4 +248,21 @@ describe('BlogArchivePage — Page-family archive presentation', () => {
       screen.getByRole('link', { name: empty.action.label }),
     ).toHaveAttribute('href', '/blog');
   });
+
+  it('places the newsletter sign-up after the posts', async () => {
+    renderArchive(
+      <BlogArchivePage
+        title="Blog"
+        posts={[post]}
+        empty={empty}
+        newsletter={<section aria-label="Newsletter">Sign up</section>}
+      />,
+    );
+
+    const signup = await screen.findByRole('region', { name: 'Newsletter' });
+    const card = screen.getByRole('link', { name: new RegExp(post.title) });
+    expect(
+      card.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });

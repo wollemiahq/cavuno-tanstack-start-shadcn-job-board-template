@@ -3595,5 +3595,16 @@
   "settingsAssistants_disconnectLabel": "Ontkoppelen",
   "settingsAssistants_disconnectAriaLabel": "{name} ontkoppelen",
   "settingsAssistants_disconnectedText": "{name} is ontkoppeld.",
-  "settingsAssistants_scopesLabel": "Toegestane toegang"
+  "settingsAssistants_scopesLabel": "Toegestane toegang",
+  "newsletter_title": "Abonneer je op onze nieuwsbrief",
+  "newsletter_description": "Ontvang nieuwe artikelen en nieuws van {boardName} in je inbox.",
+  "newsletter_emailLabel": "E-mailadres",
+  "newsletter_emailPlaceholder": "je@example.com",
+  "newsletter_submitLabel": "Abonneren",
+  "newsletter_subscribingLabel": "Aanmelden…",
+  "newsletter_consentLabel": "Stuur me nieuws en aanbiedingen van {boardName}.",
+  "newsletter_consentRequired": "Vink het vakje aan om je te abonneren.",
+  "newsletter_submitted": "Controleer je e-mail om te bevestigen.",
+  "newsletter_sendingPaused": "E-mails van {boardName} kunnen vertraagd zijn.",
+  "newsletter_error": "Er is iets misgegaan. Probeer het opnieuw."
 }
