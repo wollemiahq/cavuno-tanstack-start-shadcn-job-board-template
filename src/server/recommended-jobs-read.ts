@@ -14,7 +14,7 @@ type BoardMe = BoardSdk['me'];
 export type RecommendedJobsBoard = {
   me: Pick<BoardMe, 'retrieve'> & {
     recommendedJobs: Pick<BoardMe['recommendedJobs'], 'list'>;
-    profile: Pick<BoardMe['profile'], 'listSkills'>;
+    profile: Pick<BoardMe['profile'], 'listSkills' | 'retrieve'>;
     resume: Pick<BoardMe['resume'], 'retrieve'>;
   };
 };
@@ -37,11 +37,12 @@ export async function readRecommendedJobs(
   // Job-seeker plan entitlements are per plan and are NOT on the wire, so
   // there is nothing to pre-gate on: make the call, and translate the
   // board's 403 into a signal that survives this function's boundary.
-  const [recommended, skills, resume] = await Promise.all([
+  const [recommended, skills, profile, resume] = await Promise.all([
     board.me.recommendedJobs
       .list({ limit: 20 }, { headers })
       .catch(throwCandidatePaywallSignal),
     board.me.profile.listSkills({ headers }),
+    board.me.profile.retrieve(undefined, { headers }),
     board.me.resume.retrieve({ headers }),
   ]);
   return {
@@ -49,6 +50,7 @@ export async function readRecommendedJobs(
     ...recommended,
     data: recommended.data.filter((item) => item.job != null),
     skillCount: skills.data.length,
+    interestedRoleCount: profile.interestedRoles?.length ?? 0,
     parseStatus: resume.parseStatus,
     resume,
   };

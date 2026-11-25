@@ -265,7 +265,37 @@ export const replaceSkills = createServerFn({ method: 'POST' })
   .handler(async ({ data, context }) => {
     const headers = authedHeaders(context);
     await requireVerifiedBoardUser(headers);
-    return getBoard().me.profile.updateSkills(data, { headers });
+    try {
+      await getBoard().me.profile.updateSkills(data, { headers });
+    } catch (error) {
+      // A refused list (too many, one too long) comes back as a result, so
+      // the section can show the API's error and keep the typed text.
+      if (!isBoardApiError(error)) throw error;
+      return { ok: false as const, code: error.code, message: error.message };
+    }
+    return { ok: true as const };
+  });
+
+/** Interested roles are replaced in full (profile merge-patch of the list). */
+export const replaceInterestedRoles = createServerFn({ method: 'POST' })
+  .validator((input: { roles: string[] }) => input)
+  .middleware([requireSessionMiddleware, boardAccessMiddleware])
+  .handler(async ({ data, context }) => {
+    const headers = authedHeaders(context);
+    await requireVerifiedBoardUser(headers);
+    try {
+      await getBoard().me.profile.update(
+        { interestedRoles: data.roles },
+        undefined,
+        { headers },
+      );
+    } catch (error) {
+      // A refused list (too many, one too long) comes back as a result, so
+      // the section can show the API's error and keep the typed text.
+      if (!isBoardApiError(error)) throw error;
+      return { ok: false as const, code: error.code, message: error.message };
+    }
+    return { ok: true as const };
   });
 
 /** Languages are replaced in full (whole-set PUT). */

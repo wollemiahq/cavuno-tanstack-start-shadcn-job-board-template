@@ -36,6 +36,7 @@ beforeEach(() => {
     hasMore: false,
     nextCursor: null,
     skillCount: 2,
+    interestedRoleCount: 0,
     parseStatus: null,
     resume: {
       object: 'resume',

@@ -379,6 +379,7 @@ export const TALENT_FORM_BUILTINS = [
   'location',
   'bio',
   'jobSearchStatus',
+  'interestedRoles',
   'experience',
   'education',
   'skills',
