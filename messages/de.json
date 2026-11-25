@@ -1007,7 +1007,7 @@
   "employerCompany_viewLabel": "Ansehen",
   "employerCompany_websiteLabel": "Website",
   "employerCompany_websiteChangeEmailLabel": "E-Mail-Adresse auf {domain}",
-  "employerCompany_websiteChangeEmailHint": "Wir senden einen Link an diese Adresse. Ein Klick darauf ändert deine Website.",
+  "employerCompany_websiteChangeEmailHint": "Wir senden dir einen Bestätigungslink.",
   "employerCompany_websiteChangeDialogTitle": "Neue Website bestätigen",
   "employerCompany_websiteChangeDialogDescription": "Um deine Website auf {domain} zu ändern, bestätige eine E-Mail-Adresse auf {domain}. Keine Adresse dort? Lass das Board die Änderung stattdessen prüfen.",
   "employerCompany_websiteChangeSendLinkLabel": "Link senden",

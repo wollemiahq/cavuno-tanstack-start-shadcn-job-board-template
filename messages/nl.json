@@ -1007,7 +1007,7 @@
   "employerCompany_viewLabel": "Bekijken",
   "employerCompany_websiteLabel": "Website",
   "employerCompany_websiteChangeEmailLabel": "E-mailadres op {domain}",
-  "employerCompany_websiteChangeEmailHint": "We sturen een link naar dit adres; als je erop klikt, wordt je website gewijzigd.",
+  "employerCompany_websiteChangeEmailHint": "We sturen je een bevestigingslink.",
   "employerCompany_websiteChangeDialogTitle": "Bevestig je nieuwe website",
   "employerCompany_websiteChangeDialogDescription": "Om je website te wijzigen naar {domain}, bevestig je een e-mailadres op {domain}. Geen adres daar? Laat het board de wijziging beoordelen.",
   "employerCompany_websiteChangeSendLinkLabel": "Link versturen",

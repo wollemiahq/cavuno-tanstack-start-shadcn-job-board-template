@@ -1051,7 +1051,7 @@
   "employerCompany_viewLabel": "Zobacz",
   "employerCompany_websiteLabel": "Strona internetowa",
   "employerCompany_websiteChangeEmailLabel": "E-mail w domenie {domain}",
-  "employerCompany_websiteChangeEmailHint": "Wyślemy link na ten adres. Kliknięcie go zmieni Twoją stronę.",
+  "employerCompany_websiteChangeEmailHint": "Wyślemy Ci link do potwierdzenia.",
   "employerCompany_websiteChangeDialogTitle": "Potwierdź nową stronę",
   "employerCompany_websiteChangeDialogDescription": "Aby zmienić stronę na {domain}, potwierdź adres e-mail w domenie {domain}. Nie masz tam adresu? Poproś zespół serwisu o sprawdzenie zmiany.",
   "employerCompany_websiteChangeSendLinkLabel": "Wyślij link",

@@ -1007,7 +1007,7 @@
   "employerCompany_viewLabel": "Ver",
   "employerCompany_websiteLabel": "Sitio web",
   "employerCompany_websiteChangeEmailLabel": "Correo en {domain}",
-  "employerCompany_websiteChangeEmailHint": "Enviaremos un enlace a esta dirección. Al hacer clic, se cambiará tu sitio web.",
+  "employerCompany_websiteChangeEmailHint": "Te enviaremos un enlace para confirmar.",
   "employerCompany_websiteChangeDialogTitle": "Verifica tu nuevo sitio web",
   "employerCompany_websiteChangeDialogDescription": "Para cambiar tu sitio web a {domain}, confirma una dirección de correo en {domain}. ¿No tienes una? Pide al portal que revise el cambio.",
   "employerCompany_websiteChangeSendLinkLabel": "Enviar enlace",
