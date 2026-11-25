@@ -53,6 +53,9 @@ export function SkillsSection({ skills }: { skills: string[] }) {
         placeholder: m.skillsSection_inputPlaceholder(),
         removeAriaLabel: (skill) =>
           m.skillsSection_removeSkillAriaLabel({ skill }),
+        // `UpdateSkillsBody.skills` maxItems; skill names have no length cap.
+        maxItems: 200,
+        tooManyText: (max) => m.skillsSection_tooManyError({ max }),
       }}
     />
   );
@@ -76,6 +79,12 @@ export function InterestedRolesSection({ roles }: { roles: string[] }) {
         placeholder: m.interestedRolesSection_inputPlaceholder(),
         removeAriaLabel: (role) =>
           m.interestedRolesSection_removeRoleAriaLabel({ role }),
+        // `UpdateCandidateProfileBody.interestedRoles`: maxItems and each
+        // role's maxLength.
+        maxItems: 50,
+        maxLength: 100,
+        tooManyText: (max) => m.interestedRolesSection_tooManyError({ max }),
+        tooLongText: (max) => m.interestedRolesSection_tooLongError({ max }),
       }}
     />
   );

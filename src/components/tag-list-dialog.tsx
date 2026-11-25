@@ -30,7 +30,24 @@ export type TagListDialogCopy = {
   heading: string;
   placeholder: string;
   removeAriaLabel: (item: string) => string;
+  /** The API's limits, checked before Save so the list always fits. */
+  maxItems: number;
+  maxLength?: number;
+  tooManyText: (max: number) => string;
+  tooLongText?: (max: number) => string;
 };
+
+/** Why `list` would be refused by the API, or null when it fits. */
+export function tagListLimitError(
+  list: string[],
+  copy: TagListDialogCopy,
+): string | null {
+  if (list.length > copy.maxItems) return copy.tooManyText(copy.maxItems);
+  const { maxLength, tooLongText } = copy;
+  if (maxLength && tooLongText && list.some((item) => item.length > maxLength))
+    return tooLongText(maxLength);
+  return null;
+}
 
 /**
  * The entries in `text` (split on commas and new lines, trimmed) that are not
@@ -74,6 +91,10 @@ export function TagListDialog({
   const [draft, setDraft] = useState(items);
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  // The list Save would send: the chips plus any text typed but not entered.
+  const pendingList = [...draft, ...newTagEntries(draft, input)];
+  const limitError = tagListLimitError(pendingList, copy);
+  const shownError = limitError ?? error;
 
   /** Adds every new entry in `text` to the draft and clears the input. */
   const addToDraft = (text: string) => {
@@ -109,12 +130,11 @@ export function TagListDialog({
           className="grid gap-6"
           onSubmit={(event) => {
             event.preventDefault();
-            if (pending) return;
+            if (pending || limitError) return;
             // Text typed but not yet entered is saved too.
-            const next = [...draft, ...newTagEntries(draft, input)];
-            setDraft(next);
+            setDraft(pendingList);
             setInput('');
-            onSave(next);
+            onSave(pendingList);
           }}
         >
           <div className="grid gap-2">
@@ -140,15 +160,17 @@ export function TagListDialog({
                   ref={inputRef}
                   id={`${id}-input`}
                   aria-label={copy.heading}
-                  aria-invalid={error ? true : undefined}
-                  aria-describedby={error ? `${id}-error` : undefined}
+                  aria-invalid={shownError ? true : undefined}
+                  aria-describedby={shownError ? `${id}-error` : undefined}
                   placeholder={copy.placeholder}
                   onKeyDown={onKeyDown}
                   onPaste={onPaste}
                 />
               </ComboboxChips>
             </Combobox>
-            {error ? <FieldError id={`${id}-error`}>{error}</FieldError> : null}
+            {shownError ? (
+              <FieldError id={`${id}-error`}>{shownError}</FieldError>
+            ) : null}
           </div>
           {/* Overlay editors right-align their footer, Cancel before the
               primary — the Dialog/Sheet/AlertDialog convention. */}
@@ -161,7 +183,7 @@ export function TagListDialog({
             >
               {m.skillsSection_cancelLabel()}
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending || limitError !== null}>
               {pending ? <Spinner /> : null}
               {pending
                 ? m.skillsSection_savingLabel()

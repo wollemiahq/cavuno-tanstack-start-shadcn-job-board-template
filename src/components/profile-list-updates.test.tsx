@@ -256,3 +256,53 @@ it('shows a refusal in the dialog and keeps it open with the edits', async () =>
   expect(rolesInput()).toHaveAttribute('aria-invalid', 'true');
   expect(saveButton()).toBeEnabled();
 });
+
+it('blocks Save with a message while the list has more roles than the API allows', async () => {
+  const fifty = Array.from({ length: 50 }, (_, i) => `Role ${i + 1}`);
+  await openRoles(fifty);
+  const tooMany = m.interestedRolesSection_tooManyError({ max: 50 });
+  expect(screen.queryByText(tooMany)).toBeNull();
+  expect(saveButton()).toBeEnabled();
+  fireEvent.change(rolesInput(), { target: { value: 'Charter Pilot' } });
+  expect(screen.getByText(tooMany)).toBeInTheDocument();
+  expect(saveButton()).toBeDisabled();
+  fireEvent.keyDown(rolesInput(), { key: 'Enter' });
+  expect(screen.getByText(tooMany)).toBeInTheDocument();
+  fireEvent.submit(saveButton().closest('form')!);
+  expect(replaceInterestedRoles).not.toHaveBeenCalled();
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: m.interestedRolesSection_removeRoleAriaLabel({ role: 'Role 1' }),
+    }),
+  );
+  await waitFor(() => expect(screen.queryByText(tooMany)).toBeNull());
+  expect(saveButton()).toBeEnabled();
+});
+
+it('blocks Save with a message while a role is longer than the API allows', async () => {
+  await openRoles(['Pilot']);
+  const tooLong = m.interestedRolesSection_tooLongError({ max: 100 });
+  fireEvent.change(rolesInput(), { target: { value: 'x'.repeat(101) } });
+  expect(screen.getByText(tooLong)).toBeInTheDocument();
+  expect(saveButton()).toBeDisabled();
+  expect(rolesInput()).toHaveAttribute('aria-invalid', 'true');
+  fireEvent.change(rolesInput(), { target: { value: 'x'.repeat(100) } });
+  expect(screen.queryByText(tooLong)).toBeNull();
+  expect(saveButton()).toBeEnabled();
+});
+
+it('uses the skills limit and wording for Skills', async () => {
+  const skills = Array.from({ length: 200 }, (_, i) => `Skill ${i + 1}`);
+  await mountWithPendingRefresh(<SkillsSection skills={skills} />);
+  fireEvent.click(
+    screen.getByRole('button', { name: m.skillsSection_editLabel() }),
+  );
+  const input = await screen.findByRole('combobox', {
+    name: m.skillsSection_heading(),
+  });
+  fireEvent.change(input, { target: { value: 'x'.repeat(150) } });
+  expect(
+    screen.getByText(m.skillsSection_tooManyError({ max: 200 })),
+  ).toBeInTheDocument();
+  expect(saveButton()).toBeDisabled();
+});
